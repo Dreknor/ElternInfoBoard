@@ -11,10 +11,17 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Auth::routes();
+Route::get('image/{media_id}', 'ImageController@getImage');
+
+Route::group([
+    'middleware' => ['auth'],
+],
+    function () {
+        Route::get('/home', 'Nachrichtencontroller@index');
+        Route::get('/', 'NachrichtenController@index');
+        Route::get('/posts/create', 'NachrichtenController@create');
+        Route::post('/posts/', 'NachrichtenController@store');
 });
 
-Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');

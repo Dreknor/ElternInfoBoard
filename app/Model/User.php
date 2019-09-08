@@ -1,14 +1,19 @@
 <?php
 
-namespace App;
+namespace App\Model;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     use Notifiable;
+    use HasRoles;
+
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
+
 
     /**
      * The attributes that are mass assignable.
@@ -36,4 +41,13 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function groups(){
+        return $this->belongsToMany(groups::class);
+    }
+
+    public function posts(){
+        return $this->hasManyDeep('App\Model\posts', ['groups_user','App\Model\groups','groups_posts']);
+
+    }
 }
