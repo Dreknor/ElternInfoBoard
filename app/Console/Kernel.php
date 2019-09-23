@@ -26,6 +26,11 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')
         //          ->hourly();
+
+        //$schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('10:00');
+        //$schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('13:00');
+        $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5,'17:00');
     }
 
     /**

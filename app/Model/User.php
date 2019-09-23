@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,6 +12,7 @@ class User extends Authenticatable
 {
     use Notifiable;
     use HasRoles;
+    use SoftDeletes;
 
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
@@ -21,7 +23,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password', 'changePassword', 'benachrichtigung', 'lastEmail'
     ];
 
     /**
@@ -40,14 +42,33 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'changePassword'    => 'boolean'
     ];
 
     public function groups(){
-        return $this->belongsToMany(groups::class);
+        return $this->belongsToMany(Groups::class)->withTimestamps();
     }
 
     public function posts(){
-        return $this->hasManyDeep('App\Model\posts', ['groups_user','App\Model\groups','groups_posts']);
+        return $this->hasManyDeep('App\Model\Posts', ['groups_user', 'App\Model\Groups','groups_posts']);
 
     }
+
+    /**
+     * Check if user has an old password that needs to be reset
+     * @return boolean
+     */
+    public function hasOldPassword()
+    {
+        return $this->changePassword;
+    }
+
+    public function userRueckmeldung(){
+        return $this->hasMany(UserRueckmeldungen::class, 'users_id');
+    }
+
+    public function rueckmeldungNachricht($postsId){
+        return $this->hasMany(UserRueckmeldungen::class, 'users_id')->where('posts_id', $postsId)->first();
+    }
+
 }

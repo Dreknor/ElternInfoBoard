@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
 
-    <title>{{env('app_name')}}</title>
+    <title>ElternInfoBoard</title>
 
 
     <!-- CSS Files -->
@@ -37,11 +38,41 @@
                     <p>Nachrichten</p>
                 </a>
             </li>
+            <li class=" ">
+                <a href="{{url('/files')}}">
+                    <i class="fa fa-download"></i>
+                    <p>Downloads</p>
+                </a>
+            </li>
+
+            <li class=" ">
+                <a href="{{url('/feedback')}}">
+                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                    <p>Feedback</p>
+                </a>
+            </li>
+            <li class="border-bottom"></li>
             @if(auth()->user()->can('create posts'))
                 <li class=" ">
                     <a href="{{url('/posts/create')}}">
                         <i class="fas fa-pen"></i>
                         <p>neue Nachricht</p>
+                    </a>
+                </li>
+            @endif
+            @if(auth()->user()->can('upload files'))
+                <li class=" ">
+                    <a href="{{url('/files/create')}}">
+                        <i class="fas fa-upload"></i>
+                        <p>Datei hochladen</p>
+                    </a>
+                </li>
+            @endif
+            @if(auth()->user()->can('edit user'))
+                <li class=" ">
+                    <a href="{{url('/users')}}">
+                        <i class="fas fa-user"></i>
+                        <p>Benutzerzugänge</p>
                     </a>
                 </li>
             @endif
@@ -60,7 +91,7 @@
                         <span class="navbar-toggler-bar bar3"></span>
                     </button>
                 </div>
-                <a class="navbar-brand" href="{{url('/')}}">Eltern-Board</a>
+                <a class="navbar-brand" href="{{url('/')}}">{{env('APP_NAME')}}</a>
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-bar navbar-kebab"></span>
@@ -83,6 +114,11 @@
                                 <p>{{auth()->user()->name}}</p>
                             </a>
                             <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{url('einstellungen')}}">
+                                        Einstellungen
+                                    </a>
+                                </li>
                                 <li>
                                     <a class="dropdown-item" href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                                         Logout
