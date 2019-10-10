@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
+
+        setlocale(LC_TIME, "de_DE");
+        Carbon::setLocale('de_DE');
         /**
          * Paginate a standard Laravel Collection.
          *
@@ -51,6 +56,50 @@ class AppServiceProvider extends ServiceProvider
                     'pageName' => $pageName,
                 ]
             );
+        });
+
+        Builder::macro('whereLike', function ($attributes, string $searchTerm) {
+            $this->where(function (Builder $query) use ($attributes, $searchTerm) {
+                foreach (array_wrap($attributes) as $attribute) {
+                    $query->when(
+                        str_contains($attribute, '.'),
+                        function (Builder $query) use ($attribute, $searchTerm) {
+                            [$relationName, $relationAttribute] = explode('.', $attribute);
+
+                            $query->orWhereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
+                                $query->where($relationAttribute, 'LIKE', "%{$searchTerm}%");
+                            });
+                        },
+                        function (Builder $query) use ($attribute, $searchTerm) {
+                            $query->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
+                        }
+                    );
+                }
+            });
+
+            return $this;
+        });
+
+        Builder::macro('orWhereLike', function ($attributes, string $searchTerm) {
+            $this->orWhere(function (Builder $query) use ($attributes, $searchTerm) {
+                foreach (array_wrap($attributes) as $attribute) {
+                    $query->when(
+                        str_contains($attribute, '.'),
+                        function (Builder $query) use ($attribute, $searchTerm) {
+                            [$relationName, $relationAttribute] = explode('.', $attribute);
+
+                            $query->orWhereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
+                                $query->where($relationAttribute, 'LIKE', "%{$searchTerm}%");
+                            });
+                        },
+                        function (Builder $query) use ($attribute, $searchTerm) {
+                            $query->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
+                        }
+                    );
+                }
+            });
+
+            return $this;
         });
     }
 }

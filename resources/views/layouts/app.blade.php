@@ -22,7 +22,6 @@
 
 <body id="app-layout">
 <div class="sidebar" data-color="white" data-active-color="danger">
-
     <div class="logo" style="word-wrap: normal;">
         <a href="https://www.esz-radebeul.de" class="simple-text">
             <div class="logo-image-small">
@@ -32,20 +31,32 @@
     </div>
     <div class="sidebar-wrapper">
         <ul class="nav">
-            <li class=" ">
+            <li class="@if(request()->segment(1)=="") active @endif">
                 <a href="{{url('/')}}">
                     <i class="far fa-newspaper"></i>
                     <p>Nachrichten</p>
                 </a>
             </li>
-            <li class=" ">
+            <li class="@if(isset($archiv)) active @endif" >
+                <a class="@if(isset($archiv)) active @endif"  href="{{url('/home/archiv')}}">
+                    <i class="fas fa-archive"></i>
+                    <p>Archiv</p>
+                </a>
+            </li>
+            <li class="@if(request()->segment(1)=="files" AND request()->segment(2)!='create' ) active @endif">
                 <a href="{{url('/files')}}">
                     <i class="fa fa-download"></i>
                     <p>Downloads</p>
                 </a>
             </li>
+            <li class="@if(request()->segment(1)=="reinigung" AND request()->segment(2)!='create' ) active @endif">
+                <a href="{{url('/reinigung')}}">
+                    <i class="fas fa-broom"></i>
+                    <p>Reinigungsplan</p>
+                </a>
+            </li>
 
-            <li class=" ">
+            <li class="@if(request()->segment(1)=="feedback") active @endif">
                 <a href="{{url('/feedback')}}">
                     <i class="fa fa-comments-o" aria-hidden="true"></i>
                     <p>Feedback</p>
@@ -53,7 +64,7 @@
             </li>
             <li class="border-bottom"></li>
             @if(auth()->user()->can('create posts'))
-                <li class=" ">
+                <li class="@if(request()->segment(1)=="posts" AND request()->segment(2)=='create' ) active @endif">
                     <a href="{{url('/posts/create')}}">
                         <i class="fas fa-pen"></i>
                         <p>neue Nachricht</p>
@@ -61,7 +72,7 @@
                 </li>
             @endif
             @if(auth()->user()->can('upload files'))
-                <li class=" ">
+                <li class="@if(request()->segment(1)=='files' AND request()->segment(2)=='create' ) active @endif">
                     <a href="{{url('/files/create')}}">
                         <i class="fas fa-upload"></i>
                         <p>Datei hochladen</p>
@@ -69,7 +80,7 @@
                 </li>
             @endif
             @if(auth()->user()->can('edit user'))
-                <li class=" ">
+                <li class="@if(request()->segment(1)=="users" ) active @endif">
                     <a href="{{url('/users')}}">
                         <i class="fas fa-user"></i>
                         <p>Benutzerzugänge</p>
@@ -99,38 +110,50 @@
                 <span class="navbar-toggler-bar navbar-kebab"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navigation">
+                <form class="form-inline mr-4 w-auto" role="search" method="post" action="{{url('search')}}" id="searchForm">
+                    @csrf
+                    <div class="input-group w-100">
+                        <input type="text" class="form-control border border-info  border-right-0 mr-0 my-auto" placeholder="Suchen" name="suche"  id="suchInput">
+                        <div class="input-group-append">
+                            <button class="btn btn-info border border-info  border-left-0 ml-0" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <ul class="navbar-nav nav-bar-right w-auto">
 
-                <ul class="navbar-nav nav-bar-right">
+                            @if (Auth::guest())
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url('/login') }}">Login</a>
+                                </li>
+                            @else
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="far fa-user"></i>
+                                        <p>{{auth()->user()->name}}</p>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{url('einstellungen')}}">
+                                                Einstellungen
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
+                                                Logout
+                                            </a>
+                                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                                @csrf
+                                            </form>
+                                        </li>
+
+                                    </ul>
+                                </li>
+                            @endif
 
                     <!-- Authentication Links -->
-                    @if (Auth::guest())
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/login') }}">Login</a>
-                        </li>
-                    @else
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                                <i class="far fa-user"></i>
-                                <p>{{auth()->user()->name}}</p>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{{url('einstellungen')}}">
-                                        Einstellungen
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                        Logout
-                                    </a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                        @csrf
-                                    </form>
-                                </li>
 
-                            </ul>
-                        </li>
-                    @endif
 
                 </ul>
             </div>
@@ -179,6 +202,19 @@
     <!-- Control Center for Now Ui Dashboard: parallax effects, scripts for the example pages etc -->
     <script src="{{asset('js/paper-dashboard.min.js?v=2.0.0')}}"></script>
 
+<script>
+    $('#suchInput').on('focus',function () {
+       $('#searchForm').addClass('w-75');
+       $('#searchForm').removeClass('w-auto');
+    });
+
+    $('#suchInput').blur(function () {
+       $('#searchForm').addClass('w-auto');
+       $('#searchForm').removeClass('w-75');
+    });
+
+
+</script>
     @stack('js')
 </body>
 </html>

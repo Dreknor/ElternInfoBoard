@@ -35,13 +35,15 @@ class FileController extends Controller
 
 
         if ($user->can('upload files')){
-
+            $gruppen = Groups::all();
             return view('files.indexVerwaltung',[
                 'gruppen' => $gruppen
             ]);
 
 
         } else{
+
+            $gruppen = $user->groups()->with('media')->get();
             $media = new Collection();
 
             foreach ($gruppen as $gruppe){
@@ -81,6 +83,9 @@ class FileController extends Controller
 
         if ($gruppen[0] == "all"){
             $gruppen = Groups::all();
+        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
+            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+            $gruppen = $gruppen->unique();
         } else {
             $gruppen = Groups::find($gruppen);
         }

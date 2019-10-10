@@ -22,21 +22,31 @@ Route::group([
         Route::middleware(['password_expired'])->group(function () {
 
             Route::post('/rueckmeldung/{posts_id}', 'UserRueckmeldungenController@sendRueckmeldung');
+            Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', 'UserRueckmeldungenController@edit');
+            Route::put('/userrueckmeldung/{userRueckmeldungen}', 'UserRueckmeldungenController@update');
+
             Route::post('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@store');
             Route::put('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@update');
 
             //show posts
             Route::get('/home/{archiv?}', 'NachrichtenController@index');
             Route::get('/', 'NachrichtenController@index');
+            Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
+
+            //Reinigungsplan
+            Route::get('reinigung', 'ReinigungController@index');
+            Route::post('reinigung/{Bereich}', 'ReinigungController@store');
+            Route::get('reinigung/create/{Bereich}/{Datum}', 'ReinigungController@create');
 
             //Edit and create posts
             Route::get('/posts/create', 'NachrichtenController@create');
             Route::get('/posts/edit/{posts}', 'NachrichtenController@edit');
             Route::get('/posts/touch/{posts}', 'NachrichtenController@touch');
+            Route::get('/posts/release/{posts}', 'NachrichtenController@release');
             Route::put('/posts/{posts}', 'NachrichtenController@update');
             Route::post('/posts/', 'NachrichtenController@store');
 
-
+            Route::delete("rueckmeldung/{rueckmeldung}", "RueckmeldungenController@destroy");
             //user-Verwaltung
             Route::get('/einstellungen', 'BenutzerController@show');
             Route::put('/einstellungen', 'BenutzerController@update');
@@ -60,8 +70,14 @@ Route::group([
 
             Route::delete("users/{id}", "UserController@destroy");
 
+
+            //Suche
+            Route::post('search','SearchController@search');
+
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
                 Route::resource('users', 'UserController');
+                //Route::get('/daily', 'NachrichtenController@emailDaily');
+
 
 
             });
@@ -77,5 +93,8 @@ Route::group([
             ->name('password.expired');
         Route::post('password/post_expired', 'Auth\ExpiredPasswordController@postExpired')
             ->name('password.post_expired');
+
+
+
 });
 

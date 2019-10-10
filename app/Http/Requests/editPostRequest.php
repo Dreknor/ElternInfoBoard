@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Model\Posts;
 use Illuminate\Foundation\Http\FormRequest;
 
 class editPostRequest extends FormRequest
@@ -14,9 +15,13 @@ class editPostRequest extends FormRequest
     public function authorize()
     {
 
-        if (auth()->user()->can('edit posts')){
+        $posts = $this->route('posts');
+
+
+        if (auth()->user()->can('edit posts') or auth()->user()->id == $posts->author){
             return true;
         }
+
         return false;
     }
 

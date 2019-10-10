@@ -13,7 +13,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-md-5 col-sm-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
@@ -48,7 +48,7 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-12">
+                                        <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
                                                 <label>Benachrichtigung per E-Mail (letzte E-Mail: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
@@ -56,6 +56,16 @@
                                                     <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif>Wöchentlich (Freitags)</option>
                                                 </select>
                                             </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="form-group">
+                                                <label>Kopie von Rückmeldungen erhalten</label>
+                                                <select class="custom-select" name="sendCopy">
+                                                    <option value="1" @if($user->sendCopy == 1) selected @endif >Kopie erhalten</option>
+                                                    <option value="0" @if($user->sendCopy == 0) selected @endif >keine Kopie senden</option>
+                                                </select>
+                                            </div>
+
                                         </div>
                                     </div>
 
@@ -82,7 +92,7 @@
                         </div>
 
                     </div>
-                    <div class="col-5 offset-1">
+                    <div class="col-md-3 col-sm-6">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
@@ -98,6 +108,31 @@
                                         <label for="{{$gruppe->name}}">{{$gruppe->name}}</label>
                                     </div>
                                 @endforeach
+                            </div>
+                            <div class="card-footer">
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    Rechte
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @can('edit permission')
+                                    @foreach($permissions as $permission)
+                                        <div>
+                                            <input type="checkbox" id="{{$permission->name}}" name="permissions[]" value="{{$permission->name}}" @if($user->can($permission->name)) checked @endif>
+                                            <label for="{{$permission->name}}">{{$permission->name}}</label>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p>Kein Recht zur Rechtevergabe</p>
+                                @endcan
                             </div>
                             <div class="card-footer">
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidCurrentUserPassword;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class createNachrichtRequest extends FormRequest
 {
@@ -30,7 +32,8 @@ class createNachrichtRequest extends FormRequest
         return [
             'header'    => "required",
             'news'      => "required",
-            'gruppen'   => "required"
+            'gruppen'   => "required",
+            'password'  => 'required_with:urgent'
         ];
     }
 }

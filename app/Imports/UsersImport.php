@@ -30,6 +30,9 @@ class UsersImport implements ToCollection, WithHeadingRow
         {
             set_time_limit (  20 );
 
+            $user1 = null;
+            $user2 = null;
+
             $row = array_values($row->toArray());
             $Klassenstufe = $this->groups->where('name',"Klassenstufe ".$row[$this->header["klassenstufe"]])->first();
             $Lerngruppe = $this->groups->where('name', $row[$this->header["lerngruppe"]])->first();
@@ -48,6 +51,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     ]);
 
 
+                $user1->touch();
 
                 $user1->groups()->attach([$Klassenstufe->id, $Lerngruppe->id]);
             }
@@ -65,10 +69,24 @@ class UsersImport implements ToCollection, WithHeadingRow
                     ]);
 
 
+                $user2->touch();
                 $user2->groups()->attach([$Klassenstufe->id, $Lerngruppe->id]);
 
             }
 
+            if (isset($user2) and isset($user1) and $user2->id != $user1->id and isset($user2->email) and isset($user1->email) ){
+                $user2->sorg2=$user1->id;
+                $user1->sorg2=$user2->id;
+
+                $user2->save();
+                $user1->save();
+            }
+
+
         }
+
+
+
+
     }
 }

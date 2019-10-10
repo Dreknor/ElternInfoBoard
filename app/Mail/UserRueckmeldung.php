@@ -3,28 +3,30 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class UserRueckmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $user;
+    public $email;
+    public $name;
     public $subject;
-    protected $text;
+    public $text;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($text, $subject)
+    public function __construct($Rueckmeldung)
     {
-        $this->user = auth()->user();
-        $this->text = $text;
-        $this->subject = $subject;
+        $this->email = $Rueckmeldung['email'];
+        $this->name = $Rueckmeldung['name'];
+        $this->text = $Rueckmeldung['text'];
+        $this->subject = $Rueckmeldung['subject'];
 
     }
 
@@ -35,10 +37,11 @@ class UserRueckmeldung extends Mailable
      */
     public function build()
     {
-        return $this->from([
-            $this->user->email,
-            $this->user->name
-        ])->subject($this->subject)
+
+        return $this->from(
+            $this->email,
+            $this->name
+        )->subject($this->subject)
             ->view('emails.userRueckmeldung')->with(["text"  => $this->text]);
     }
 }

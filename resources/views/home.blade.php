@@ -3,40 +3,86 @@
 @section('content')
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-md-10">
+        <div class="col-md-10 col-sm-6">
             <div class="card">
                 <div class="card-header">
-                    <h4>@if(!isset($archiv))
-                            Alle aktuellen Mitteilungen
-                        @else
-                            Ältere Nachrichten
-                        @endif</h4>
+                    <div class="row">
+                        <div class="col-10">
+                            <h4>@if(!isset($archiv))
+                                    Alle aktuellen Mitteilungen
+                                @else
+                                    Ältere Nachrichten
+                                @endif
+                            </h4>
+                        </div>
+
+                    </div>
+
                 </div>
                 <div class="card-body">
-                    <ul class="nav nav-tabs  nav-pills nav-fill" id="myTab" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link @if(!isset($archiv)) active @endif" href="{{url('/home')}}">Aktuelles</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @if(isset($archiv)) active @endif"  href="{{url('/home/archiv')}}">Archiv</a>
-                        </li>
-                    </ul>
+
                 </div>
             </div>
         </div>
-
     </div>
     @if($nachrichten != null and count($nachrichten)>0)
+        <div class="card">
+            <div class="card-header ">
+                <div class="col-12 ">
+                    <div class="card-title">
+                        <h5>
+                            Themen
+                            @if(!isset($archiv))
+                                <a href="{{url('pdf')}}" class="btn btn-sm btn-outline-primary pull-right">
+                                    <i class="far fa-file-pdf"></i>
+                                </a>
+                            @endif
+                        </h5>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#cThemen" aria-expanded="false" aria-controls="collapseThemen">
+                    Themen zeigen
+                </button>
+                <div class="row collapse d-md-block" id="Themen">
+                    <div class="col">
+                        @foreach($nachrichten AS $nachricht)
+                            @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
+                                <a href="#{{$nachricht->id}}" class="btn btn-sm @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
+                                    @if(!is_null($nachricht->rueckmeldung) and (is_null($user->userRueckmeldung->where('posts_id', $nachricht->id)->first() or (!is_null($user->sorgeberechtigter2) and is_null($user->sorgeberechtigter2->userRueckmeldung->where('posts_id', $nachricht->id)->first())))))
+                                        <i class="fas fa-reply text-danger" data-toggle="tooltip" data-placement="top" title="Rückmeldung benötigt"></i>
+                                    @endif
+                                    {{$nachricht->header}}
+
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    <div id="">
+        @include('reinigung.nachricht')
+
         @foreach($nachrichten AS $nachricht)
             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                @include('nachrichten.nachricht')
+                <div class="@foreach($nachricht->groups as $group) {{$group->name}} @endforeach">
+                    @include('nachrichten.nachricht')
+                </div>
             @endif
         @endforeach
+    </div>
 
     <div class="archiv">
         {{$nachrichten->links()}}
     </div>
     @else
+        @include('reinigung.nachricht')
         <div class="card">
             <div class="card-body bg-info">
                 <p>
@@ -48,17 +94,40 @@
 </div>
 @endsection
 
+
+@section('css')
+
+@endsection
 @push('js')
+
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
     <script>tinymce.init({
             selector: 'textarea',
             lang:'de',
-
+            plugins: "autoresize",
             menubar: false,
-
+            toolbar: [
+                "bold italic underline strikethrough |  bullist |  restoredraft |  fontsizeselect | forecolor hilitecolor"
+            ]
         });</script>
+
+    <script>
+        $(document).ready(function () {
+            if ($( window ).width() < 992) {
+                $("table").addClass('table table-responsive');
+            }
+
+            $( window ).resize(function() {
+                if ($( window ).width() < 992) {
+                    $("table").addClass('table table-responsive');
+                } else {
+                    $("table").removeClass('table table-responsive');
+                }
+            });
+        });
+    </script>
 
     @can('edit posts')
         <script src="{{asset('js/plugins/sweetalert2.all.min.js')}}"></script>
@@ -67,8 +136,6 @@
             $('.fileDelete').on('click', function () {
                 var fileId = $(this).data('id');
                 var button = $(this);
-
-                console.log(fileId);
 
                 swal.fire({
                     title: "Datei wirklich entfernen?",
@@ -86,7 +153,6 @@
                                 "_token": "{{csrf_token()}}",
                             },
                             success: function(result) {
-                                console.log(result);
                                 $(button).parent('li').fadeOut();
                             }
                         });
@@ -96,4 +162,22 @@
 
         </script>
     @endcan
+
+
+        <script>
+            $('.btnShow').on('click', function () {
+                var btn = this;
+
+                if ($(btn).hasClass('aktiv')){
+                    $(btn).html( '<i class="fa fa-eye"></i> Text anzeigen') ;
+                    $(btn).removeClass('aktiv');
+                } else {
+                    $(btn).text("ausblenden");
+                    $(btn).addClass('aktiv');
+                }
+
+
+            });
+        </script>
+
 @endpush

@@ -8,14 +8,32 @@
             neue Mitteilung verfassen
         </h6>
     </div>
+    @if ($errors->any())
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+    @endif
     <div class="card-body">
         <form action="{{url('/posts')}}" method="post" class="form form-horizontal" enctype="multipart/form-data">
             @csrf
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-8 col-sm-12">
                     <div class="form-group">
                         <label>Überschrift</label>
                         <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}" required>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12">
+                    <div class="form-group">
+                        <label>Archiv ab</label>
+                        <input type="date" class="form-control border-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
                     </div>
                 </div>
             </div>
@@ -31,53 +49,95 @@
             </div>
             <div class="row">
                 <div class="col-md-2">
-                    <div class="form-group">
-                        <label>Mitteilung veröffentlichen?</label>
-                        <select class="custom-select" name="released">
-                            <option value="1">Ja</option>
-                            <option value="0">Später veröffentlichen</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Für welche Gruppen?</label>
-                        <br>
-                        <input type="checkbox" name="gruppen[]" value="all" id="checkboxAll"/>
-                        <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen</b></label>
-
-
-
-                    @foreach($gruppen as $gruppe)
-                            <div>
-                                <input type="checkbox" id="{{$gruppe->name}}" name="gruppen[]" value="{{$gruppe->id}}">
-                                <label for="{{$gruppe->name}}">{{$gruppe->name}}</label>
-                            </div>
-                        @endforeach
-                    </div>
+                    @include('include.formGroups')
                 </div>
 
                 <div class="col-md-2">
-                    <div class="form-group">
-                        <label>Rückmeldungen benötigt?</label>
-                        <select class="custom-select" name="rueckmeldung">
-                            <option value="1">Ja</option>
-                            <option value="0" selected>nein</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Mitteilung veröffentlichen?</label>
+                                <select class="custom-select" name="released">
+                                    <option value="1" @cannot('release posts') disabled @endcannot>Ja</option>
+                                    @cannot('release posts')
+                                        <option value="0" selected>durch Leitung veröffentlichen</option>
+                                    @else
+                                        <option value="0" >später veröffentlichen</option>
+                                    @endcannot
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Rückmeldungen benötigt?</label>
+                                <select class="custom-select" name="rueckmeldung">
+                                    <option value="1">Ja</option>
+                                    <option value="0" selected>nein</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
 
                 <div class="col-md-8">
-                    <div class="form-group">
-                        <div class="">
-                            <label>Datei-Typ</label>
-                            <select class="custom-select" name="collection" id="selectType">
-                                <option value="images">Bilder</option>
-                                <option value="files" selected>Dateien</option>
-                            </select>
-                            <input type="file"  name="files[]" id="customFile" multiple>
+                    @can('send urgent message')
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card border border-danger">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label>Dringende Rückmeldung (wird direkt versendet)</label>
+                                                    <select class="custom-select" name="urgent">
+                                                        <option value="1">Ja</option>
+                                                        <option value="" selected>nein</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label for="password">Passwort zur Bestätigung</label>
+                                                    <input type="password" class="form-control border-input" name="password" autocomplete="new-password".>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
                         </div>
 
+                    @endcan
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title">
+                                        Dateien anfügen
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <div class="">
+                                            <label>Datei-Typ</label>
+                                            <select class="custom-select" name="collection" id="selectType">
+                                                <option value="images">Bilder</option>
+                                                <option value="files" selected>Dateien</option>
+                                            </select>
+                                            <input type="file"  name="files[]" id="customFile" multiple>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
 
@@ -113,11 +173,16 @@
             height: 500,
             menubar: true,
             plugins: [
-                'advlist autolink lists link charmap anchor',
+                'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
-                'insertdatetime table paste code wordcount'
+                'insertdatetime table paste code wordcount',
+                'contextmenu'
             ],
             toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+            contextmenu: " link image inserttable | cell row column deletetable",
+            @if(auth()->user()->can('use scriptTag'))
+            extended_valid_elements : "script[src|async|defer|type|charset]",
+            @endif
 
         });</script>
 
@@ -147,7 +212,7 @@
         $("#customFile").fileinput({
             'showUpload':false,
             'previewFileType':'any',
-            maxFileSize: 3000,
+            maxFileSize: @if(auth()->user()->can('upload great files')) 300000 @else 3000 @endif ,
             'theme': "fas",
         });
     </script>

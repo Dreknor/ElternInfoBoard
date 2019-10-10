@@ -61,8 +61,14 @@ class RueckmeldungenController extends Controller
      * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Rueckmeldungen $rueckmeldungen)
+    public function destroy(Rueckmeldungen $rueckmeldung)
     {
-        //
+        $rueckmeldung->delete();
+
+        return response()->json([
+            "message" => "Gelöscht".$rueckmeldung
+        ], 200);
     }
+
+
 }

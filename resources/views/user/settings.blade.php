@@ -11,7 +11,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-md-6 col-sm-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
@@ -49,12 +49,21 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-12">
+                                        <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
-                                                <label>Benachrichtigung per E-Mail (letzte E-Mail: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
+                                                <label>Benachrichtigung per E-Mail (zuletzt: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
-                                                    <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif>Täglich (bei neuen Nachrichten)</option>
-                                                    <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif>Wöchentlich (Freitags)</option>
+                                                    <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif disabled>Täglich (bei neuen Nachrichten)</option>
+                                                    <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif >Wöchentlich (Freitags)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="form-group">
+                                                <label>Kopie von Rückmeldungen erhalten</label>
+                                                <select class="custom-select" name="sendCopy">
+                                                    <option value="1" @if($user->sendCopy == 1) selected @endif >Kopie erhalten</option>
+                                                    <option value="0" @if($user->sendCopy == 0) selected @endif >keine Kopie senden</option>
                                                 </select>
                                             </div>
 
@@ -72,7 +81,7 @@
                         </div>
 
                     </div>
-                    <div class="col-5 offset-1">
+                    <div class="col-md-5 offset-md-1 col-sm-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
@@ -94,8 +103,15 @@
                         </div>
                     </div>
                 </div>
-
             </div>
+            @if(!is_null($user->sorgeberechtigter2))
+                <div class="card-footer">
+                    <p>
+                        Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2->name}}</b>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.<br>
+                        Sollte dies nicht korrekt sein, so wenden Sie sich bitte an <a href="mailto://daniel.roehrich@esz-radebeul.de">daniel.roehrich@esz-radebeul.de</a>.
+                    </p>
+                </div>
+            @endif
         </div>
     </div>
 @endsection

@@ -16,4 +16,5 @@ class Rueckmeldungen extends Model
     public function post(){
         return $this->belongsTo(Posts::class);
     }
+
 }

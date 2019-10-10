@@ -41,7 +41,9 @@
                             <th>Name</th>
                             <th>E-Mail</th>
                             <th>Gruppen</th>
+                            <th>Rechte</th>
                             <th>letzte Mail</th>
+                            <th>Verknüpft</th>
                             <td></td>
                         </tr>
                     </thead>
@@ -67,7 +69,20 @@
                                     @endforeach
                                 </td>
                                 <td>
-                                    {{optional($user->lastEmail)->format('d.m.Y')}}
+                                    @foreach($user->permissions as $permission)
+                                        {{$permission->name}}
+                                        @if(!$loop->last)
+                                        ,
+                                        @endif
+                                    @endforeach
+                                </td>
+                                <td>
+                                    {{optional($user->lastEmail)->format('d.m.Y H:i')}}
+                                </td>
+                                <td>
+                                    @if(!is_null($user->sorgeberechtigter2))
+                                       {{$user->sorgeberechtigter2->name}}
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="btn btn-sm btn-danger user-delete" data-id="{{$user->id}}">

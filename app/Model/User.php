@@ -12,7 +12,7 @@ class User extends Authenticatable
 {
     use Notifiable;
     use HasRoles;
-    use SoftDeletes;
+    //use SoftDeletes;
 
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
@@ -23,7 +23,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'changePassword', 'benachrichtigung', 'lastEmail'
+        'name', 'email', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy'
     ];
 
     /**
@@ -42,8 +42,10 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'lastEmail' => 'datetime',
         'changePassword'    => 'boolean'
     ];
+
 
     public function groups(){
         return $this->belongsToMany(Groups::class)->withTimestamps();
@@ -52,6 +54,12 @@ class User extends Authenticatable
     public function posts(){
         return $this->hasManyDeep('App\Model\Posts', ['groups_user', 'App\Model\Groups','groups_posts']);
 
+    }
+
+    //Sorgeberechtigter 2
+
+    public function sorgeberechtigter2(){
+        return $this->hasOne(User::class, 'sorg2');
     }
 
     /**
@@ -67,8 +75,21 @@ class User extends Authenticatable
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
     }
 
-    public function rueckmeldungNachricht($postsId){
-        return $this->hasMany(UserRueckmeldungen::class, 'users_id')->where('posts_id', $postsId)->first();
+    public function Reinigung(){
+        return $this->hasMany(Reinigung::class, 'users_id', 'id');
     }
 
+
+    public function getFamilieNameAttribute(){
+        $Name = explode(' ', $this->name);
+
+        if (count($Name) > 2){
+            $Familienname = "";
+            for ($key=1; $key < count($Name); $key++){
+                $Familienname.= " ".$Name[$key];
+            }
+            return $Familienname;
+        }
+        return $Name[1];
+    }
 }

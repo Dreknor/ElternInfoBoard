@@ -9,7 +9,11 @@
             </h6>
         </div>
         <div class="card-body">
-            <p class="text-info">Hinweis: Der Import bezieht sich auf eine Individuelle Auswertung der Schulsoftware. Ausgehend von den Schülern werden Namen und E-Mail-Adresse sowie Klassenstufe und Lerngruppe der Schüler exportiert. Bitte prüfen, ob die Spaltenangabe zur Überschrift passt und ggf. korrigieren.</p>
+            <p class="text-info">Hinweis Elternimport: Der Import bezieht sich auf eine Individuelle Auswertung der Schulsoftware.
+                Ausgehend von den Schülern werden Namen und E-Mail-Adresse sowie Klassenstufe und Lerngruppe der Schüler exportiert.
+                Bitte prüfen, ob die Spaltenangabe zur Überschrift passt und ggf. korrigieren.
+            </p>
+
         </div>
         <div class="card-body">
             <form action="{{url('/users/import')}}" method="post" class="form form-horizontal" enctype="multipart/form-data">
@@ -79,7 +83,17 @@
                         </div>
                     </div>
 
-
+                <div class="row">
+                    <div class="col">
+                            <div class="form-group">
+                                <label>Import-Typ</label>
+                                <select class="custom-select" name="type">
+                                    <option value="eltern" selected>Eltern-Import</option>
+                                    <option value="mitarbeiter">Mitarbeiter-Import</option>
+                                </select>
+                            </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-12">
                         <button type="submit" class="btn btn-primary btn-block">

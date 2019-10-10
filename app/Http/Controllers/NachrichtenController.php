@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
-use App\Jobs\SendEmailJob;
 use App\Mail\AktuelleInformationen;
+use App\Mail\DringendeInformationen;
 use App\Model\Groups;
 use App\Model\Posts;
+use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\User;
+use App\Support\Collection;
+
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 class NachrichtenController extends Controller
@@ -34,58 +38,42 @@ class NachrichtenController extends Controller
     {
 
         $user = auth()->user();
-        $user->with(['userRueckmeldung']);
+        $user->with(['userRueckmeldung','sorgeberechtigter2' ,'sorgeberechtigter2.userRueckmeldung']);
+        $archivDate=Carbon::now()->endOfDay()->subWeeks(1);
 
-        if (!$user->can('edit posts')) {
+        if (!$user->can('create posts')) {
             $Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
             if ($archiv){
-
-                $Nachrichten = $Nachrichten->filter(function ($nachricht){
-                    return $nachricht->updated_at->lessThan(Carbon::now()->subWeeks(2));
-                });
-                $Nachrichten = $Nachrichten->filter(function ($nachricht){
-                    $date = Carbon::createFromFormat('d.m.', '31.7.');
-                    if (Carbon::now()->month < 7){
-                        $date->subYear();
-                    }
-
-                    return $nachricht->updated_at->greaterThan($date);
-                });
-
+                $Nachrichten = $user->posts()->whereDate('archiv_ab', '<', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             } else {
-                $Nachrichten = $Nachrichten->filter(function ($nachricht){
-                    return $nachricht->updated_at->greaterThanOrEqualTo(Carbon::now()->subWeeks(2));
-                });
-
+                $Nachrichten = $user->posts()->whereDate('archiv_ab', '>=', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             }
 
-            $Nachrichten =$Nachrichten->unique()->sortByDesc('updated_at')->paginate(20);
+            $Reinigung = Reinigung::whereIn('id',[$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
+
         } else {
 
-
+            $Reinigung = Reinigung::whereIn('users_id',[$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
 
             if ($archiv){
-                $Nachrichten = Posts::with('media', 'autor', 'groups', 'rueckmeldung')->get();
-                $Nachrichten = $Nachrichten->filter(function ($nachricht){
-                    return $nachricht->updated_at->lessThan(Carbon::now()->subWeeks(2));
-                })->sortByDesc('updated_at')->unique()->paginate(20);
+                $Nachrichten = Posts::whereDate('archiv_ab', '<', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get()->sortByDesc('updated_at')->unique()->paginate(30);
 
             } else {
-                $Nachrichten = Posts::with('media', 'autor', 'groups', 'rueckmeldung')->get();
-                $Nachrichten = $Nachrichten->filter(function ($nachricht){
-                    return $nachricht->updated_at->greaterThanOrEqualTo(Carbon::now()->subWeeks(2));
-                })->sortByDesc('updated_at')->unique()->paginate(20);
-
+                $Nachrichten = Posts::whereDate('archiv_ab', '>=', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             }
 
         }
+
+        $Nachrichten =$Nachrichten->unique()->sortByDesc('updated_at')->paginate(30);
 
 
         return view('home', [
             "nachrichten"   => $Nachrichten,
             "archiv"    => $archiv,
-            "user"      => $user
+            "user"      => $user,
+            "gruppen"   => Groups::all(),
+            "Reinigung" => $Reinigung
         ]);
     }
 
@@ -106,7 +94,7 @@ class NachrichtenController extends Controller
     }
 
     public function edit(Posts $posts){
-        if (!auth()->user()->can('edit posts')){
+        if (!auth()->user()->can('edit posts') and auth()->user()->id != $posts->author){
             return redirect('/home')->with([
                 'type'   => "danger",
                 "Meldung"    => "Berechtigung fehlt"
@@ -130,61 +118,101 @@ class NachrichtenController extends Controller
 
     public function store(createNachrichtRequest $request){
 
+        $user = auth()->user();
+
         if (!auth()->user()->can('create posts')){
             return redirect('/home')->with([
                 'type'   => "danger",
                 "Meldung"    => "Berechtigung fehlt"
             ]);
+        } elseif($request->has('urgent') and $request->input('urgent')==1 and (!$user->can('send urgent message') or !Hash::check($request->input('password'), $user->password))) {
+                return redirect()->back()->withInput($request->all())->with([
+                    'type'   => "danger",
+                    "Meldung"    => "Berechtigung fehlt für dringende Nachrichten oder Passwort ist falsch"
+                ]);
         }
 
-        $post = new Posts($request->all());
-
-        $post->author = auth()->user()->id;
-        $post->save();
-
-        $gruppen= $request->input('gruppen');
-
-        if ($gruppen[0] == "all"){
-            $gruppen = Groups::all();
-        } else {
-            $gruppen = Groups::find($gruppen);
-        }
-
-        $post->groups()->attach($gruppen);
+            $post = new Posts($request->all());
 
 
-        if ($request->hasFile('files')) {
-            if ($request->input('collection') == 'files') {
-                $post->addAllMediaFromRequest(['files'])
-                    ->each(function ($fileAdder) {
-                        $fileAdder->toMediaCollection('files');
-                    });
+            $post->author = auth()->user()->id;
+            $post->save();
 
+            $gruppen= $request->input('gruppen');
+
+            if ($gruppen[0] == "all"){
+                $gruppen = Groups::all();
+            } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
+                $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+                $gruppen = $gruppen->unique();
             } else {
-                $post->addAllMediaFromRequest(['files'])
-                    ->each(function ($fileAdder) {
-                        $fileAdder->toMediaCollection('images');
-                    });
+                $gruppen = Groups::find($gruppen);
             }
 
 
-        }
+            $post->groups()->attach($gruppen);
 
-        if ($request->input('rueckmeldung') == 0){
-            return redirect('/home')->with([
-                "type"  => "success",
-                "Meldung"   => "Nachricht angelegt"
+            //Dateien verarbeiten
+            if ($request->hasFile('files')) {
+                if (auth()->user()->can('upload great files')){
+                    @ini_set( 'upload_max_size' , '300M' );
+                    @ini_set( 'post_max_size', '300M');
+                }
+
+                if ($request->input('collection') == 'files') {
+                    $post->addAllMediaFromRequest(['files'])
+                        ->each(function ($fileAdder) {
+                            $fileAdder->toMediaCollection('files');
+                        });
+                } else {
+                    $post->addAllMediaFromRequest(['files'])
+                        ->each(function ($fileAdder) {
+                            $fileAdder->toMediaCollection('images');
+                        });
+                }
+            }
+
+
+            //Versenden dringender Nachrichten
+            if ($request->has('urgent') and $request->input('urgent')==1 and $user->can('send urgent message') and Hash::check($request->input('password'), $user->password)){
+                $gruppen->load('users');
+
+                $users = new Collection();
+                foreach ($gruppen as $gruppe){
+                    $newusers = $users->merge($gruppe->users);
+                }
+
+                $newusers = $newusers->unique();
+
+                foreach ($newusers as $mailUser){
+
+                        $header = $post->header;
+                        $news=$post->news;
+                        Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));
+
+                }
+
+            }
+
+            //Umleitung bei Rückmeldungsbedarf
+            if ($request->input('rueckmeldung') == 0){
+                return redirect(url('/home#'.$post->id))->with([
+                    "type"  => "success",
+                    "Meldung"   => "Nachricht angelegt"
+                ]);
+            }
+
+            return view('nachrichten.createRueckmeldung',[
+                "nachricht"  => $post
             ]);
-        }
 
-        return view('nachrichten.createRueckmeldung',[
-           "nachricht"  => $post
-        ]);
+
+
     }
 
     public function update(Posts $posts, editPostRequest $request){
 
-        if (!auth()->user()->can('edit posts')){
+        if (!auth()->user()->can('edit posts')  and auth()->user()->id != $posts->author){
             return redirect('/home')->with([
                 'type'   => "danger",
                 "Meldung"    => "Berechtigung fehlt"
@@ -194,6 +222,7 @@ class NachrichtenController extends Controller
         $posts->fill($request->all());
         $posts->author = auth()->user()->id;
 
+        $posts->updated_at = Carbon::createFromFormat('Y-m-d\TH:i:s',$request->input('updated_at'));
         $posts->save();
 
 
@@ -201,6 +230,9 @@ class NachrichtenController extends Controller
 
         if ($gruppen[0] == "all"){
             $gruppen = Groups::all();
+        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
+            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+            $gruppen = $gruppen->unique();
         } else {
             $gruppen = Groups::find($gruppen);
         }
@@ -225,7 +257,7 @@ class NachrichtenController extends Controller
 
         }
 
-        return redirect('/home')->with([
+        return redirect(url('/home#'.$posts->id))->with([
             "type"  => "success",
             "Meldung"   => "Nachricht bearbeitet"
         ]);
@@ -238,7 +270,15 @@ class NachrichtenController extends Controller
 
         foreach ($users as $user){
 
-            $Nachrichten = $user->posts;
+            if (!$user->can('edit posts')){
+                $Nachrichten = $user->posts;
+
+
+            } else {
+
+                $Nachrichten = Posts::all();
+
+            }
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user){
                 if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail)){
@@ -277,9 +317,102 @@ class NachrichtenController extends Controller
         }
     }
 
-    public function touch(Posts $posts){
-        $posts->touch();
 
-        return redirect()->back();
+
+    public function touch(Posts $posts){
+
+        if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))){
+            $newPost= $posts->duplicate();
+            $newPost->archiv_ab= Carbon::now()->addWeek();
+            $newPost->save();
+
+        } else{
+            $posts->archiv_ab= Carbon::now()->addWeek();
+            $posts->save();
+
+        }
+
+
+        return redirect(url('/'));
+    }
+
+    public function release(Posts $posts){
+        if (!auth()->user()->can('release posts')){
+            return redirect('/home')->with([
+                'type'   => "danger",
+                "Meldung"    => "Berechtigung fehlt"
+            ]);
+        }
+
+        $posts->updated_at = $posts->updated_at;
+        $posts->released = 1;
+        $posts->save();
+
+        return redirect(url('/home#'.$posts->id))->with([
+            "type"  => "success",
+            "Meldung"   => "Nachricht veröffentlicht"
+        ]);
+    }
+
+    public function pdf($archiv = null){
+        $user = auth()->user();
+        $user->with(['userRueckmeldung','sorgeberechtigter2' ,'sorgeberechtigter2.userRueckmeldung']);
+        $archivDate=Carbon::now()->endOfDay()->subWeeks(1);
+
+        if (!$user->can('create posts')) {
+            $Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+
+            if ($archiv){
+
+
+                $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate){
+                    return $nachricht->updated_at->lessThan($archivDate);
+                });
+
+                /*
+                $Nachrichten = $Nachrichten->filter(function ($nachricht){
+                    $date = Carbon::createFromFormat('d.m.', '31.7.');
+                    if (Carbon::now()->month < 7){
+                        $date->subYear();
+                    }
+
+                    return $nachricht->updated_at->greaterThan($date);
+                });
+
+                */
+
+            } else {
+                $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate){
+                    return $nachricht->updated_at->greaterThanOrEqualTo($archivDate);
+                });
+
+            }
+
+            $Nachrichten =$Nachrichten->unique()->sortByDesc('updated_at')->paginate(30);
+        } else {
+
+
+
+            if ($archiv){
+                $Nachrichten = Posts::with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate){
+                    return $nachricht->updated_at->lessThan($archivDate);
+                })->sortByDesc('updated_at')->unique()->paginate(30);
+
+            } else {
+                $Nachrichten = Posts::with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate){
+                    return $nachricht->updated_at->greaterThanOrEqualTo($archivDate);
+                })->sortByDesc('updated_at')->unique()->paginate(30);
+
+            }
+
+        }
+
+        $pdf = \PDF::loadView('pdf.pdf', [
+            "nachrichten"   => $Nachrichten
+        ]);
+        return $pdf->download(\Carbon\Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
+
     }
 }

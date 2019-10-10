@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     <div class="card">
         <div class="card-header">
             <h6 class="card-title">
@@ -13,10 +12,33 @@
                 @csrf
                 @method('put')
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-6 col-sm-12">
                         <div class="form-group">
                             <label>Überschrift</label>
                             <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{$post->header}}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4">
+                        <div class="form-group">
+                            <label>zuletzt bearbeitet:</label>
+                            <input type="datetime-local" class="form-control border-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeLocalString()}}" >
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4">
+                        <div class="form-group">
+                            <label>Archiv ab</label>
+                            <input type="date" class="form-control border-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4">
+                        <div class="form-group">
+                            <div class="">
+                                <label>Autor</label>
+                                <select class="custom-select" name="author" id="selectAuthor">
+                                    <option value="{{$post->author}}" selected>{{$post->autor->name}}</option>
+                                    <option value="{{auth()->user()->id}}">{{auth()->user()->name}}</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -35,49 +57,72 @@
                         <div class="form-group">
                             <label>Mitteilung veröffentlichen?</label>
                             <select class="custom-select" name="released">
-                                <option value="1" @if($post->released ==1) selected @endif>Ja</option>
-                                <option value="0" @if($post->released ==0) selected @endif>Später veröffentlichen</option>
+                                <option value="1" @cannot('release posts') disabled @else @if($post->released ==1) selected @endif @endcannot>Ja</option>
+                                @cannot('release posts')
+                                    <option value="0" selected>durch Leitung veröffentlichen</option>
+                                @else
+                                    <option value="0"  @if($post->released ==0) selected @endif>später veröffentlichen</option>
+                                @endcannot
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        @include('include.formGroups')
 
-
-                            <label>Für welche Gruppen?</label>
-                            <br>
-                            <input type="checkbox" name="gruppen[]" value="all" id="checkboxAll"/>
-                            <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen</b></label>
-
-
-
-                            @foreach($gruppen as $gruppe)
-                                <div>
-                                    <input type="checkbox" id="{{$gruppe->name}}" name="gruppen[]" value="{{$gruppe->id}}" @if($post->groups->contains($gruppe->id)) checked @endif>
-                                    <label for="{{$gruppe->name}}">{{$gruppe->name}}</label>
-                                </div>
-                            @endforeach
-                        </div>
                     </div>
 
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <div class="">
-                                <label>Datei-Typ</label>
-                                <select class="custom-select" name="collection" id="selectType">
-                                    <option value="images">Bilder</option>
-                                    <option value="files" selected>Dateien</option>
-                                </select>
-                                <input type="file"  name="files[]" id="customFile" multiple>
-                            </div>
+                    <div class="col-md-8 col-sm-12">
+                        <div class="row">
+                            @if(count($post->getMedia('images'))>0)
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header border-bottom">
+                                            <p>
+                                                <b>
+                                                   vorhandene Bilder
+                                                </b>
+                                            </p>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group list-group-flush">
+                                                @foreach($post->getMedia('images') as $media)
+                                                    <li class="list-group-item  list-group-item-action ">
+                                                        <a href="{{url('/image/'.$media->id)}}" target="_blank" class="mx-auto ">
+                                                            <i class="fas fa-file-download"></i>
+                                                            {{$media->name}}
+                                                        </a>
+                                                            <div class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$media->id}}">
+                                                                <i class="fas fa-times"></i>
+                                                            </div>
 
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <div class="">
+                                        <label>Datei-Typ</label>
+                                        <select class="custom-select" name="collection" id="selectType">
+                                            <option value="images">Bilder</option>
+                                            <option value="files" selected>Dateien</option>
+                                        </select>
+                                        <input type="file"  name="files[]" id="customFile" multiple>
+                                    </div>
+
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-12">
                         <button type="submit" class="btn btn-primary btn-block">
-                            Absenden
+                            Änderungen speichern
                         </button>
                     </div>
                 </div>
@@ -85,7 +130,12 @@
 
         </div>
     </div>
-    <div class="card">
+    <div class="card" id="rueckmeldungCard">
+        <div class="card-header">
+            <h6 class="card-title">
+                Rückmeldung
+            </h6>
+        </div>
         <div class="card-body">
             <div class="card-body">
                 <form action="{{url("/rueckmeldung/$post->id/create")}}" method="post" class="form form-horizontal">
@@ -117,11 +167,18 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col">
                             <button type="submit" class="btn btn-primary btn-block">
                                 Rückmeldung erstellen
                             </button>
                         </div>
+                        @if(count($post->rueckmeldung)>0)
+                            <div class="col">
+                                <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" @if(count($post->userRueckmeldung)>0) disabled  @endif>
+                                    @if(count($post->userRueckmeldung)>0) Es wurden bereits Rückmeldungen abgegeben @else Rückmeldung löschen @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </form>
 
@@ -154,7 +211,9 @@
                 'insertdatetime table paste code wordcount'
             ],
             toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
-
+            @if(auth()->user()->can('use scriptTag'))
+            extended_valid_elements : "script[src|async|defer|type|charset]",
+            @endif
         });</script>
 
 
@@ -183,10 +242,71 @@
         $("#customFile").fileinput({
             'showUpload':false,
             'previewFileType':'any',
-            maxFileSize: 3000,
+            maxFileSize: @if(auth()->user()->can('upload great files')) 30000 @else 3000 @endif ,
             'theme': "fas",
         });
     </script>
 
 
+        <script src="{{asset('js/plugins/sweetalert2.all.min.js')}}"></script>
+
+        <script>
+            $('.fileDelete').on('click', function () {
+                var fileId = $(this).data('id');
+                var button = $(this);
+
+                swal.fire({
+                    title: "Datei wirklich entfernen?",
+                    type: "warning",
+                    showCancelButton: true,
+                    cancelButtonText: "Datei behalten",
+                    confirmButtonText: "Datei entfernen!",
+                    confirmButtonColor: "danger"
+                }).then((confirmed) => {
+                    if (confirmed.value) {
+                        $.ajax({
+                            url: '{{url("/file/")}}'+'/'+fileId,
+                            type: 'DELETE',
+                            data: {
+                                "_token": "{{csrf_token()}}",
+                            },
+                            success: function(result) {
+                                $(button).parent('li').fadeOut();
+                            }
+                        });
+                    }
+                });
+            });
+
+        </script>
+
+    <script>
+        $('#rueckmeldungLoeschen').on('click', function () {
+            var rueckmeldungId = $(this).data('id');
+            var button = $(this);
+
+            swal.fire({
+                title: "Rückmeldung wirklich entfernen?",
+                type: "warning",
+                showCancelButton: true,
+                cancelButtonText: "Abbrechen",
+                confirmButtonText: "Rückmeldung entfernen!",
+                confirmButtonColor: "danger"
+            }).then((confirmed) => {
+                if (confirmed.value) {
+                    $.ajax({
+                        url: '{{url("/rueckmeldung/")}}'+'/'+rueckmeldungId,
+                        type: 'DELETE',
+                        data: {
+                            "_token": "{{csrf_token()}}",
+                        },
+                        success: function(result) {
+                            $('#rueckmeldungCard').fadeOut();
+                        }
+                    });
+                }
+            });
+        });
+
+    </script>
 @endpush

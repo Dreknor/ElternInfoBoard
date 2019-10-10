@@ -9,6 +9,7 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 
 class UserController extends Controller
 {
@@ -25,7 +26,7 @@ class UserController extends Controller
     public function index()
     {
         return view('user.index', [
-            'users' => User::all()
+            'users' => User::all()->load('groups', 'permissions', 'sorgeberechtigter2')
         ]);
     }
 
@@ -59,6 +60,9 @@ class UserController extends Controller
 
         if ($gruppen[0] == "all"){
             $gruppen = Groups::all();
+        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
+            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+            $gruppen = $gruppen->unique();
         } else {
             $gruppen = Groups::find($gruppen);
         }
@@ -82,7 +86,8 @@ class UserController extends Controller
     {
         return view('user.show',[
             "user" => $user->load('groups'),
-            'gruppen'   => Groups::all()
+            'gruppen'   => Groups::all(),
+            'permissions' => Permission::all()
         ]);
     }
 
@@ -105,8 +110,15 @@ class UserController extends Controller
             $gruppen = Groups::find($gruppen);
         }
 
+
         $user->groups()->detach();
         $user->groups()->attach($gruppen);
+
+        if (auth()->user()->can('edit permission')){
+            $permissions= $request->input('permissions');
+            $user->syncPermissions($permissions);
+        }
+
 
         if ($user->save()){
             return redirect()->back()->with([

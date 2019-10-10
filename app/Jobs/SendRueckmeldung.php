@@ -14,19 +14,15 @@ class SendRueckmeldung implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $text;
-    protected $header;
-    protected $empfaenger;
+    protected $data;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($empfaenger, $header, $text)
+    public function __construct($data)
     {
-        $this->text = $text;
-        $this->empfaenger =$empfaenger;
-        $this->header = $header;
+        $this->data;
     }
 
     /**
@@ -36,9 +32,9 @@ class SendRueckmeldung implements ShouldQueue
      */
     public function handle()
     {
-        $email = new UserRueckmeldung($this->text, $this->header);
+        $email = new UserRueckmeldung($this->data);
 
-        Mail::to($this->empfaenger)->send($email);
+        Mail::to($this->data['empfaenger'])->send($email);
 
     }
 }

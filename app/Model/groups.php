@@ -12,8 +12,8 @@ class Groups extends Model implements HasMedia
     use HasMediaTrait;
 
 
-    protected $fillable = ['name'];
-    protected $visible = ['name'];
+    protected $fillable = ['name', 'bereich'];
+    protected $visible = ['name', 'bereich'];
 
     public function users (){
         return $this->belongsToMany(User::class)->withTimestamps();
