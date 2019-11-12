@@ -10,11 +10,13 @@ use App\Model\Groups;
 use App\Model\Posts;
 use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
+use App\Model\Termin;
 use App\Model\User;
 use App\Support\Collection;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class NachrichtenController extends Controller
@@ -38,16 +40,16 @@ class NachrichtenController extends Controller
     {
 
         $user = auth()->user();
-        $user->with(['userRueckmeldung','sorgeberechtigter2' ,'sorgeberechtigter2.userRueckmeldung']);
+        $user->with(['userRueckmeldung','sorgeberechtigter2' ,'sorgeberechtigter2.userRueckmeldung', 'termine']);
         $archivDate=Carbon::now()->endOfDay()->subWeeks(1);
 
         if (!$user->can('create posts')) {
             $Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
             if ($archiv){
-                $Nachrichten = $user->posts()->whereDate('archiv_ab', '<', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = $user->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             } else {
-                $Nachrichten = $user->posts()->whereDate('archiv_ab', '>=', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = $user->posts()->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             }
 
             $Reinigung = Reinigung::whereIn('id',[$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
@@ -57,23 +59,31 @@ class NachrichtenController extends Controller
             $Reinigung = Reinigung::whereIn('users_id',[$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
 
             if ($archiv){
-                $Nachrichten = Posts::whereDate('archiv_ab', '<', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get()->sortByDesc('updated_at')->unique()->paginate(30);
+                $Nachrichten = Posts::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get()->sortByDesc('updated_at')->unique()->paginate(30);
 
             } else {
-                $Nachrichten = Posts::whereDate('archiv_ab', '>=', Carbon::now()->endOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = Posts::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             }
 
         }
 
         $Nachrichten =$Nachrichten->unique()->sortByDesc('updated_at')->paginate(30);
 
+        if (!$user->can('edit termin')){
+            $Termine = auth()->user()->termine;
+        } else {
+            $Termine = Termin::all()->sortBy('start');
+        }
+
+        $Termine = $Termine->unique();
 
         return view('home', [
             "nachrichten"   => $Nachrichten,
             "archiv"    => $archiv,
             "user"      => $user,
             "gruppen"   => Groups::all(),
-            "Reinigung" => $Reinigung
+            "Reinigung" => $Reinigung,
+            'termine'   => $Termine
         ]);
     }
 
@@ -212,6 +222,8 @@ class NachrichtenController extends Controller
 
     public function update(Posts $posts, editPostRequest $request){
 
+        $user = auth()->user();
+
         if (!auth()->user()->can('edit posts')  and auth()->user()->id != $posts->author){
             return redirect('/home')->with([
                 'type'   => "danger",
@@ -253,6 +265,35 @@ class NachrichtenController extends Controller
                         $fileAdder->toMediaCollection('images');
                     });
             }
+
+
+        }
+
+        if ($request->has('urgent') and $request->input('urgent')==1 and $user->can('send urgent message') ){
+            if (!Hash::check($request->input('password'), $user->password)){
+                return redirect()->back()->with([
+                    "type"  => "danger",
+                    "Meldung"   => "Passwort falsch"
+                ]);
+            }
+            $gruppen->load('users');
+
+            $users = new Collection();
+            foreach ($gruppen as $gruppe){
+                $newusers = $users->merge($gruppe->users);
+            }
+
+            $newusers = $newusers->unique();
+            Log::info('users for Mail', [$newusers]);
+
+            foreach ($newusers as $mailUser){
+                $header = $posts->header;
+                $news=$posts->news;
+                Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));
+            }
+
+            Mail::to($user->email)->queue(new DringendeInformationen("$header", "$news"));
+            Mail::to("daniel.roehrich@esz-radebeul.de")->queue(new DringendeInformationen("$header", "$news"));
 
 
         }
@@ -414,5 +455,24 @@ class NachrichtenController extends Controller
         ]);
         return $pdf->download(\Carbon\Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
 
+    }
+
+    public function destroy (Posts $posts){
+        if ($posts->author == auth()->user()->id){
+
+            $posts->groups()->detach();
+            if (!is_null($posts->rueckmeldung())){
+                $posts->rueckmeldung()->delete();
+            }
+            $posts->delete();
+
+            return response()->json([
+                "message" => "Gelöscht"
+            ], 200);
+        }
+
+        return response()->json([
+            "message" => "Berechtigung fehlt"
+        ], 401);
     }
 }

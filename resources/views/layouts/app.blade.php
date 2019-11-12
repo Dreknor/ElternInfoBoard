@@ -14,8 +14,8 @@
     <link href="{{asset('css/paper-dashboard.css?v=2.0.0')}}" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
 
-    <script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>
-
+    <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
+    <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
     @yield('css')
 
 </head>
@@ -55,10 +55,16 @@
                     <p>Reinigungsplan</p>
                 </a>
             </li>
+ <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)!='create' ) active @endif">
+                <a href="{{url('/listen')}}">
+                    <i class="far fa-list-alt"></i>
+                    <p>Listen</p>
+                </a>
+            </li>
 
             <li class="@if(request()->segment(1)=="feedback") active @endif">
                 <a href="{{url('/feedback')}}">
-                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                    <i class="far fa-comment" aria-hidden="true"></i>
                     <p>Feedback</p>
                 </a>
             </li>
@@ -68,6 +74,23 @@
                     <a href="{{url('/posts/create')}}">
                         <i class="fas fa-pen"></i>
                         <p>neue Nachricht</p>
+                    </a>
+                </li>
+            @endif
+            @if(auth()->user()->can('edit termin'))
+                <li class="@if(request()->segment(1)=="termin" AND request()->segment(2)=='create' ) active @endif">
+                    <a href="{{url('/termin/create')}}">
+                        <i class="far fa-calendar-alt"></i>
+                        <p>neuer Termin</p>
+                    </a>
+                </li>
+            @endif
+
+            @if(auth()->user()->can('create terminliste'))
+                <li class="@if(request()->segment(1)=="termin" AND request()->segment(2)=='create' ) active @endif">
+                    <a href="{{url('/listen/create')}}">
+                        <i class="far fa-list-alt"></i>
+                        <p>neue Liste</p>
                     </a>
                 </li>
             @endif
@@ -165,6 +188,15 @@
 
 
     <div class="content">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         @if(session('Meldung'))
             <div class="container">
                 <div class="row">

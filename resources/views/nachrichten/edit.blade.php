@@ -18,19 +18,13 @@
                             <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{$post->header}}" required>
                         </div>
                     </div>
-                    <div class="col-md-2 col-sm-4">
+                    <div class="col-md-6 col-sm-12">
                         <div class="form-group">
                             <label>zuletzt bearbeitet:</label>
-                            <input type="datetime-local" class="form-control border-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeLocalString()}}" >
+                            <input type="datetime-local" class="form-control border-input date-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeLocalString()}}" >
                         </div>
                     </div>
-                    <div class="col-md-2 col-sm-4">
-                        <div class="form-group">
-                            <label>Archiv ab</label>
-                            <input type="date" class="form-control border-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
-                        </div>
-                    </div>
-                    <div class="col-md-2 col-sm-4">
+                    <div class="col-md-6 col-sm-6">
                         <div class="form-group">
                             <div class="">
                                 <label>Autor</label>
@@ -41,6 +35,13 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6 col-sm-6">
+                        <div class="form-group">
+                            <label>Archiv ab</label>
+                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
+                        </div>
+                    </div>
+
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -71,6 +72,38 @@
                     </div>
 
                     <div class="col-md-8 col-sm-12">
+                        @can('send urgent message')
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card border border-danger">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                        <label>Dringende Nachricht (wird direkt versendet)</label>
+                                                        <select class="custom-select" name="urgent">
+                                                            <option value="1">Ja</option>
+                                                            <option value="" selected>nein</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                        <label for="password">Passwort zur Bestätigung</label>
+                                                        <input type="password" class="form-control border-input" name="password" autocomplete="new-password".>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        @endcan
                         <div class="row">
                             @if(count($post->getMedia('images'))>0)
                                 <div class="col-12">
@@ -120,11 +153,25 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-12">
-                        <button type="submit" class="btn btn-primary btn-block">
-                            Änderungen speichern
-                        </button>
-                    </div>
+
+                    @if($post->author == auth()->user()->id)
+                        <div class="col-l-10 col-md-8 col-sm-6">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                Änderungen speichern
+                            </button>
+                        </div>
+                        <div class="col-l-2 col-md-4 col-sm-6">
+                            <button type="button" id="nachrichtLoeschen" class="btn btn-danger btn-block" data-id="{{$post->id}}">
+                                Nachricht löschen
+                            </button>
+                        </div>
+                    @else
+                        <div class="col-l-12 col-md-12 col-sm-12">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                Änderungen speichern
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </form>
 
@@ -206,14 +253,18 @@
             height: 500,
             menubar: true,
             plugins: [
-                'advlist autolink lists link charmap anchor',
+                'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
-                'insertdatetime table paste code wordcount'
+                'insertdatetime table paste code wordcount',
+                'contextmenu',
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | ',
+            contextmenu: " link image inserttable | cell row column deletetable | pageembed",
             @if(auth()->user()->can('use scriptTag'))
-            extended_valid_elements : "script[src|async|defer|type|charset]",
+            extended_valid_elements : ["script[src|async|defer|type|charset]",
+                "iframe[frameborder|src|width|height|name|align|id|class|style]"],
             @endif
+
         });</script>
 
 
@@ -309,4 +360,42 @@
         });
 
     </script>
+
+    <script>
+        $('#nachrichtLoeschen').on('click', function () {
+            var nachrichtId = $(this).data('id');
+            var button = $(this);
+
+            swal.fire({
+                title: "Nachricht wirklich löschen?",
+                type: "warning",
+                showCancelButton: true,
+                cancelButtonText: "Abbrechen",
+                confirmButtonText: "Nachricht entgültig löschen!",
+                confirmButtonColor: "danger"
+            }).then((confirmed) => {
+                if (confirmed.value) {
+                    $.ajax({
+                        url: '{{url("/posts/")}}'+'/'+nachrichtId,
+                        type: 'DELETE',
+                        data: {
+                            "_token": "{{csrf_token()}}",
+                        },
+                        success: function(result) {
+                            location.replace("{{url('home')}}");
+                        }
+                    });
+                }
+            });
+        });
+
+    </script>
+
+    <!-- Edit Date for Safari-User-->
+    <script>
+        $('.date-input').on('change', function (event) {
+            event.target.value = event.target.value.substr(0, 19);
+        })
+    </script>
+
 @endpush

@@ -67,6 +67,7 @@
             </div>
         </div>
     <div id="">
+        @include('termine.nachricht')
         @include('reinigung.nachricht')
 
         @foreach($nachrichten AS $nachricht)
@@ -82,6 +83,8 @@
         {{$nachrichten->links()}}
     </div>
     @else
+        @include('termine.nachricht')
+
         @include('reinigung.nachricht')
         <div class="card">
             <div class="card-body bg-info">
@@ -99,19 +102,21 @@
 
 @endsection
 @push('js')
-
-    <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
-    <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
-    <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
-    <script>tinymce.init({
-            selector: 'textarea',
-            lang:'de',
-            plugins: "autoresize",
-            menubar: false,
-            toolbar: [
-                "bold italic underline strikethrough |  bullist |  restoredraft |  fontsizeselect | forecolor hilitecolor"
-            ]
-        });</script>
+    @if(is_null($archiv))
+        <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
+        <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
+        <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
+        <script>tinymce.init({
+                selector: 'textarea',
+                lang:'de',
+                plugins: "autoresize",
+                menubar: false,
+                toolbar: [
+                    "bold italic underline strikethrough |  bullist |  restoredraft |  fontsizeselect | forecolor hilitecolor"
+                ]
+            });
+        </script>
+    @endif
 
     <script>
         $(document).ready(function () {
@@ -123,7 +128,7 @@
                 if ($( window ).width() < 992) {
                     $("table").addClass('table table-responsive');
                 } else {
-                    $("table").removeClass('table table-responsive');
+                    $("table").removeClass('table-responsive');
                 }
             });
         });

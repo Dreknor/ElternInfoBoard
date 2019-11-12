@@ -56,6 +56,15 @@ class User extends Authenticatable
 
     }
 
+    public function termine(){
+        return $this->hasManyDeep('App\Model\Termin', ['groups_user', 'App\Model\Groups','groups_termine']);
+
+    }
+    public function termilisten(){
+        return $this->hasManyDeep('App\Model\TerminListe', ['groups_user', 'App\Model\Groups','groups_terminListen']);
+
+    }
+
     //Sorgeberechtigter 2
 
     public function sorgeberechtigter2(){

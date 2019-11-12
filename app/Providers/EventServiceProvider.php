@@ -17,6 +17,13 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+
+        ],
+        'Illuminate\Mail\Events\MessageSending' => [
+            'App\Listeners\LogSendingMessage',
+        ],
+        'Illuminate\Mail\Events\MessageSent' => [
+            'App\Listeners\LogSentMessage',
         ],
     ];
 

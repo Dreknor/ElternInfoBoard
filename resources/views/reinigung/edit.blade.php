@@ -38,7 +38,7 @@
                                             $familie2 = $familien->last();
 
                                             if ($familie1 == $familie2) {
-                                            $familie2=null;
+                                                $familie2=null;
                                             }
 
                                         @endphp

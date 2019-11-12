@@ -21,7 +21,7 @@
 
     @endif
     <div class="card-body">
-        <form action="{{url('/posts')}}" method="post" class="form form-horizontal" enctype="multipart/form-data">
+        <form action="{{url('/posts')}}" method="post" class="form form-horizontal" enctype="multipart/form-data" id="nachrichtenForm">
             @csrf
             <div class="row">
                 <div class="col-md-8 col-sm-12">
@@ -57,13 +57,13 @@
                         <div class="col-12">
                             <div class="form-group">
                                 <label>Mitteilung veröffentlichen?</label>
-                                <select class="custom-select" name="released">
-                                    <option value="1" @cannot('release posts') disabled @endcannot>Ja</option>
+                                <select class="custom-select" name="released" id="veroeffentlichenSelect">
                                     @cannot('release posts')
                                         <option value="0" selected>durch Leitung veröffentlichen</option>
                                     @else
                                         <option value="0" >später veröffentlichen</option>
                                     @endcannot
+                                        <option value="1" @cannot('release posts') disabled @endcannot>Ja</option>
                                 </select>
                             </div>
                         </div>
@@ -89,7 +89,7 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <div class="form-group">
-                                                    <label>Dringende Rückmeldung (wird direkt versendet)</label>
+                                                    <label>Dringende Nachricht (wird direkt versendet)</label>
                                                     <select class="custom-select" name="urgent">
                                                         <option value="1">Ja</option>
                                                         <option value="" selected>nein</option>
@@ -143,8 +143,8 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        Absenden
+                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                        Speichern
                     </button>
                 </div>
             </div>
@@ -176,9 +176,9 @@
                 'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime table paste code wordcount',
-                'contextmenu'
+                'contextmenu',
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | ',
             contextmenu: " link image inserttable | cell row column deletetable",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : "script[src|async|defer|type|charset]",
@@ -217,5 +217,29 @@
         });
     </script>
 
+    <script>
+        $('#veroeffentlichenSelect').change(function(){
+            $('#veroeffentlichenSelect option:selected').each(function(){
+                if($(this).text() == "Ja"){
+                    $('#submitBtn').text('Beitrag veröffentlichen');
+                } else {
+                    $('#submitBtn').text('Beitrag speichern');
 
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+        $('#submitBtn').on('click', function (event) {
+            $("#nachrichtenForm").submit();
+        })
+    </script>
+
+    <script>
+        $('.date-input').on('change', function (event) {
+            event.target.value = event.target.value.substr(0, 19);
+        })
+    </script>
 @endpush

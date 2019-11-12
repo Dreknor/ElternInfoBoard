@@ -1,5 +1,5 @@
 
-<div class="card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
+<div class="nachricht card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom" >
        <div class="row">
            <div class="col-md-10">

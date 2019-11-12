@@ -21,6 +21,9 @@ Route::group([
 
         Route::middleware(['password_expired'])->group(function () {
 
+            //Termine
+            Route::resource('termin', 'TerminController');
+
             Route::post('/rueckmeldung/{posts_id}', 'UserRueckmeldungenController@sendRueckmeldung');
             Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', 'UserRueckmeldungenController@edit');
             Route::put('/userrueckmeldung/{userRueckmeldungen}', 'UserRueckmeldungenController@update');
@@ -32,6 +35,12 @@ Route::group([
             Route::get('/home/{archiv?}', 'NachrichtenController@index');
             Route::get('/', 'NachrichtenController@index');
             Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
+
+            //Terminlisten
+            Route::get('listen', 'TerminListeController@index');
+            Route::post('listen', 'TerminListeController@store');
+            Route::get('listen/create', 'TerminListeController@create');
+            Route::get('listen/{terminListe}', 'TerminListeController@show');
 
             //Reinigungsplan
             Route::get('reinigung', 'ReinigungController@index');
@@ -46,6 +55,7 @@ Route::group([
             Route::put('/posts/{posts}', 'NachrichtenController@update');
             Route::post('/posts/', 'NachrichtenController@store');
 
+            Route::delete('posts/{posts}', 'NachrichtenController@destroy');
             Route::delete("rueckmeldung/{rueckmeldung}", "RueckmeldungenController@destroy");
             //user-Verwaltung
             Route::get('/einstellungen', 'BenutzerController@show');
@@ -77,11 +87,9 @@ Route::group([
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
                 Route::resource('users', 'UserController');
                 //Route::get('/daily', 'NachrichtenController@emailDaily');
-
-
-
             });
         });
+
 
 
         //Feedback
