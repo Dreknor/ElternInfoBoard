@@ -4,11 +4,11 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TerminListe extends Model
+class Liste extends Model
 {
-    protected $table = "terminListen";
+    protected $table = "listen";
 
-    protected $fillable= ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende'];
+    protected $fillable= ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration'];
 
     protected $dates = ['created_at', 'updated_at', 'ende'];
 
@@ -22,10 +22,10 @@ class TerminListe extends Model
     }
 
     public function groups () {
-        return $this->belongsToMany(Groups::class, 'groups_terminListen');
+        return $this->belongsToMany(Groups::class, 'groups_listen', 'liste_id');
     }
 
-    public function termine () {
-        return $this->hasMany(listen_termine::class);
+    public function eintragungen () {
+        return $this->hasMany(listen_termine::class, 'listen_id');
     }
 }

@@ -39,7 +39,7 @@
                                             <div class="form-group">
                                                 <label for="fullDay">Ganztägig?</label>
                                                 <select name="fullDay" id="fullDay" class=custom-select>
-                                                    <option value="0" selected>nein</option>
+                                                    <option value="" selected>nein</option>
                                                     <option value="1">ja</option>
 
                                                 </select>

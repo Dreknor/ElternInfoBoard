@@ -14,24 +14,30 @@
                         <form action="{{url('listen')}}" method="post" class="form-horizontal">
                             @csrf
                             <div class="form-row">
-                                <div class="col-md-6 col-sm-12">
+                                <div class="col-md-4 col-sm-12">
                                     <label for="listenname">
                                         Name der Liste
                                     </label>
                                     <input name="listenname" id="listenname" class="form-control" required>
                                 </div>
-                                <div class="col-md-6 col-sm-12">
+                                <div class="col-md-4 col-sm-8">
                                     <label for="type">
                                         Listentyp
                                     </label>
                                     <select name="type" id="type" class="custom-select">
-                                        <option value="termin">
+                                        <option value="termin" selected>
                                             Terminliste
                                         </option>
-                                        <option value="eintrag">
+                                        <option value="eintrag" disabled>
                                             Eintrageliste
                                         </option>
                                     </select>
+                                </div>
+                                <div class="col-md-4 col-sm-4">
+                                    <label for="duration">
+                                        Dauer (in Minuten)
+                                    </label>
+                                    <input type="number" min="0" name="duration" id="duration" class="form-control" value="30">
                                 </div>
                             </div>
                             <div class="form-row">
@@ -61,13 +67,20 @@
                                 </div>
                             </div>
                             <div class="form-row">
-                                <div class="col-md-12 col-sm-12">
+                                <div class="col-md-6 col-sm-12">
                                     <label for="comment">
                                         Beschreibung der Liste oder Hinweis
                                     </label>
-                                    <textarea name="comment" id="comment" class="form-control" rows="15">
+                                    <textarea name="comment" id="comment" class="form-control">
 
                                     </textarea>
+                                </div>
+                                <div class="col-l-6 col-md-6 col-sm-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            @include('include.formGroups')
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -89,6 +102,7 @@
 @endsection
 
 @push('js')
+    <!--
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
@@ -98,4 +112,5 @@
             height: 300,
 
         });</script>
+        -->
 @endpush

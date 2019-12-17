@@ -55,10 +55,10 @@
                     <p>Reinigungsplan</p>
                 </a>
             </li>
- <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)!='create' ) active @endif">
+            <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)!='create' ) active @endif">
                 <a href="{{url('/listen')}}">
                     <i class="far fa-list-alt"></i>
-                    <p>Listen</p>
+                       Listen
                 </a>
             </li>
 

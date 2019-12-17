@@ -37,10 +37,14 @@ Route::group([
             Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
 
             //Terminlisten
-            Route::get('listen', 'TerminListeController@index');
-            Route::post('listen', 'TerminListeController@store');
-            Route::get('listen/create', 'TerminListeController@create');
-            Route::get('listen/{terminListe}', 'TerminListeController@show');
+            Route::get('listen', 'ListenController@index');
+            Route::post('listen', 'ListenController@store');
+            Route::get('listen/create', 'ListenController@create');
+            Route::get('listen/{terminListe}', 'ListenController@show');
+            Route::get('listen/{terminListe}/auswahl', 'ListenController@auswahl');
+            Route::post('eintragungen/{liste}/store', 'ListenTerminController@store');
+            Route::put('eintragungen/{listen_termine}', 'ListenTerminController@update');
+            Route::delete('eintragungen/{listen_termine}', 'ListenTerminController@destroy');
 
             //Reinigungsplan
             Route::get('reinigung', 'ReinigungController@index');

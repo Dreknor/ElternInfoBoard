@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Model\Termin;
-use App\Model\TerminListe;
+use App\Model\Liste;
 use App\Policies\TerminListenPolicy;
 use App\Policies\TerminPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -19,7 +19,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         // 'App\Model' => 'App\Policies\ModelPolicy',
         Termin::class => TerminPolicy::class,
-        TerminListe::class => TerminListenPolicy::class,
+        Liste::class => TerminListenPolicy::class,
     ];
 
     /**

@@ -60,9 +60,12 @@ class User extends Authenticatable
         return $this->hasManyDeep('App\Model\Termin', ['groups_user', 'App\Model\Groups','groups_termine']);
 
     }
-    public function termilisten(){
-        return $this->hasManyDeep('App\Model\TerminListe', ['groups_user', 'App\Model\Groups','groups_terminListen']);
+    public function listen(){
+        return $this->hasManyDeep('App\Model\Liste', ['groups_user', 'App\Model\Groups','groups_listen']);
 
+    }
+    public function listen_eintragungen(){
+        return $this->hasMany(listen_termine::class, 'reserviert_fuer');
     }
 
     //Sorgeberechtigter 2
@@ -101,4 +104,6 @@ class User extends Authenticatable
         }
         return $Name[1];
     }
+
+
 }

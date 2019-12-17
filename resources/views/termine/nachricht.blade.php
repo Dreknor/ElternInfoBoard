@@ -24,7 +24,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($termin->start->day == $termin->ende->day and !$termin->fullDay)
+                                    @if($termin->start->day == $termin->ende->day and !$termin->fullDay )
                                         {{$termin->start->format('H:i')}} -  {{$termin->ende->format('H:i')}} Uhr
                                     @endif
                                 </td>

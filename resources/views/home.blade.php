@@ -69,9 +69,23 @@
     <div id="">
         @include('termine.nachricht')
         @include('reinigung.nachricht')
-
+        @if($archiv)
+            <div class="card">
+                <div class="card-body bg-warning">
+                    <b>{{$datum->locale('de')->getTranslatedMonthName('Do MMMM')}} {{$datum->format('Y')}}</b>
+                </div>
+            </div>
+        @endif
         @foreach($nachrichten AS $nachricht)
             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
+                @if($nachricht->updated_at->month < $datum->month )
+                    @php($datum = $nachricht->updated_at->copy())
+                    <div class="card">
+                        <div class="card-body bg-warning">
+                            <b>{{$datum->locale('de')->getTranslatedMonthName('Do MMMM')}} {{$datum->format('Y')}}</b>
+                        </div>
+                    </div>
+                @endif
                 <div class="@foreach($nachricht->groups as $group) {{$group->name}} @endforeach">
                     @include('nachrichten.nachricht')
                 </div>
@@ -113,7 +127,13 @@
                 menubar: false,
                 toolbar: [
                     "bold italic underline strikethrough |  bullist |  restoredraft |  fontsizeselect | forecolor hilitecolor"
-                ]
+                ],
+                setup:function(ed) {
+                    ed.on('change', function(e) {
+                        var id = "#btnSave_"+ ed.id;
+                        $(id).show();
+                    });
+                }
             });
         </script>
     @endif
@@ -186,3 +206,4 @@
         </script>
 
 @endpush
+
