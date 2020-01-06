@@ -133,6 +133,7 @@
                 <span class="navbar-toggler-bar navbar-kebab"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navigation">
+
                 <form class="form-inline mr-4 w-auto" role="search" method="post" action="{{url('search')}}" id="searchForm">
                     @csrf
                     <div class="input-group w-100">
@@ -144,7 +145,14 @@
                         </div>
                     </div>
                 </form>
-                <ul class="navbar-nav nav-bar-right w-auto">
+                <ul class="navbar-nav mr-4">
+                    <div class="nav-item">
+                       @include('include.benachrichtigung')
+                    </div>
+
+                </ul>
+
+                <ul class="nav-item navbar-nav nav-bar-right w-auto">
 
                             @if (Auth::guest())
                                 <li class="nav-item">

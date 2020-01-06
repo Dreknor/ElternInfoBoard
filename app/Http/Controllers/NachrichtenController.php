@@ -84,7 +84,7 @@ class NachrichtenController extends Controller
 
         }
 
-        $Nachrichten = $Nachrichten->unique()->sortByDesc('updated_at')->paginate(30);
+        $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at')->paginate(30);
 
 
 
@@ -93,7 +93,7 @@ class NachrichtenController extends Controller
             $Termine = $user->termine->sortBy('start');
         } else {
             $Termine = Termin::all();
-            $Termine = $Termine->unique();
+            $Termine = $Termine->unique('id');
         }
 
         $Termine = $Termine->sortBy('start');
@@ -128,6 +128,7 @@ class NachrichtenController extends Controller
             }
         }
 
+        $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');
 
 
@@ -422,19 +423,19 @@ class NachrichtenController extends Controller
     public function email()
     {
 
-        $users = User::where('benachrichtigung', 'weekly')->with('posts')->get();
+        $users = User::where('benachrichtigung', 'weekly')->get();
 
         foreach ($users as $user) {
 
             if (!$user->can('edit posts')) {
                 $Nachrichten = $user->posts;
 
-
             } else {
 
                 $Nachrichten = Posts::all();
 
             }
+            //$Nachrichten->unique('id')->sortByDesc('updated_at');
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
                 if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now()) ) {
@@ -448,6 +449,8 @@ class NachrichtenController extends Controller
                 $user->lastEmail = Carbon::now();
                 $user->save();
             }
+
+
         }
     }
 
@@ -456,7 +459,7 @@ class NachrichtenController extends Controller
      */
     public function emailDaily()
     {
-
+/*
         $users = User::where('benachrichtigung', 'daily')->with('posts')->get();
 
         foreach ($users as $user) {
@@ -475,6 +478,7 @@ class NachrichtenController extends Controller
                 $user->save();
             }
         }
+*/
     }
 
 

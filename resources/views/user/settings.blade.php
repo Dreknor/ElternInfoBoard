@@ -69,6 +69,17 @@
 
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="form-group">
+                                                <label>Login aufzeichnen um Benachrichtigungen zu erhalten</label>
+                                                <select class="custom-select" name="track_login">
+                                                    <option value="1" @if($user->track_login == true) selected @endif >letzten Login aufzeichnen</option>
+                                                    <option value="0" @if($user->track_login == false) selected @endif >keine Speicherung </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div class="row">
                                         <div class="col-12">

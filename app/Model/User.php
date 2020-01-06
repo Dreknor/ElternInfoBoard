@@ -23,7 +23,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy'
+        'name', 'email', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login'
     ];
 
     /**
@@ -43,7 +43,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'lastEmail' => 'datetime',
-        'changePassword'    => 'boolean'
+        'changePassword'    => 'boolean',
+        'last_online_at'    => "datetime",
+        'track_login'    => 'boolean',
     ];
 
 
@@ -57,13 +59,12 @@ class User extends Authenticatable
     }
 
     public function termine(){
-        return $this->hasManyDeep('App\Model\Termin', ['groups_user', 'App\Model\Groups','groups_termine']);
-
+            return $this->hasManyDeep('App\Model\Termin', ['groups_user', 'App\Model\Groups','groups_termine']);
     }
     public function listen(){
         return $this->hasManyDeep('App\Model\Liste', ['groups_user', 'App\Model\Groups','groups_listen']);
-
     }
+
     public function listen_eintragungen(){
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
     }

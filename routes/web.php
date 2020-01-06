@@ -71,10 +71,12 @@ Route::group([
             Route::get('/files/create', 'FileController@create')->middleware(['permission:upload files']);
             Route::delete('file/{file}', 'FileController@delete');
 
-/*
-            Route::get('email/weekly', 'NachrichtenController@email');
-            Route::get('email/daily', 'NachrichtenController@emailDaily');
-*/
+
+            /*
+              Route::get('email/weekly', 'NachrichtenController@email');
+              Route::get('email/daily', 'NachrichtenController@emailDaily');
+                        */
+
             //Routen für Benutzerverwaltung
 
 

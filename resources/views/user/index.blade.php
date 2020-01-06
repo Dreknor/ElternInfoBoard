@@ -42,7 +42,7 @@
                             <th>E-Mail</th>
                             <th>Gruppen</th>
                             <th>Rechte</th>
-                            <th>letzte Mail</th>
+                            <th>zuletzt online</th>
                             <th>Verknüpft</th>
                             <td></td>
                         </tr>
@@ -77,7 +77,7 @@
                                     @endforeach
                                 </td>
                                 <td>
-                                    {{optional($user->lastEmail)->format('d.m.Y H:i')}}
+                                    {{optional($user->last_online_at)->format('d.m.Y H:i')}}
                                 </td>
                                 <td>
                                     @if(!is_null($user->sorgeberechtigter2))
