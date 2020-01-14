@@ -219,7 +219,7 @@
                                 Rückmeldung erstellen
                             </button>
                         </div>
-                        @if(count($post->rueckmeldung)>0)
+                        @if(!is_null($post->rueckmeldung))
                             <div class="col">
                                 <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" @if(count($post->userRueckmeldung)>0) disabled  @endif>
                                     @if(count($post->userRueckmeldung)>0) Es wurden bereits Rückmeldungen abgegeben @else Rückmeldung löschen @endif

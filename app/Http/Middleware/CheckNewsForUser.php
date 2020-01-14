@@ -31,7 +31,7 @@ class CheckNewsForUser
             foreach ($termine as $termin){
                 $news[]=[
                     'link' => url('/'),
-                    'title' => "Termin: $termin->terminname"
+                    'title' => "<i class=\"far fa-calendar-alt\"></i> $termin->terminname"
                 ];
             }
 
@@ -41,7 +41,7 @@ class CheckNewsForUser
             foreach ($posts as $post){
                 $news[]=[
                     'link' => url('home#'.$post->id),
-                    'title' => "Nachricht: $post->header"
+                    'title' => '<i class="far fa-newspaper"></i> '.$post->header
                 ];
             }
 
@@ -51,7 +51,7 @@ class CheckNewsForUser
             foreach ($listen as $liste){
                 $news[]=[
                     'link' => url('listen/'.$liste->id),
-                    'title' => "Liste: $liste->listenname"
+                    'title' => "<i class=\"far fa-list-alt\"></i> $liste->listenname"
                 ];
             }
 
@@ -72,7 +72,7 @@ class CheckNewsForUser
             foreach ($media as $medium){
                 $news[]=[
                     'link' => url('files'),
-                    'title' => "Datei: $medium->name"
+                    'title' => "<i class=\"fa fa-download\"></i> $medium->name"
                 ];
             }
 

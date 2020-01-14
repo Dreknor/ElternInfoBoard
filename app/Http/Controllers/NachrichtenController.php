@@ -48,7 +48,7 @@ class NachrichtenController extends Controller
 
         $archivDate = Carbon::now()->endOfDay()->subWeeks(1);
 
-        if (!$user->can('edit posts')) {
+        if (!$user->can('view all')) {
             $Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
             if ($archiv) {
@@ -76,7 +76,7 @@ class NachrichtenController extends Controller
             $Reinigung = Reinigung::whereIn('users_id', [$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
 
             if ($archiv) {
-                $Nachrichten = Posts::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get()->sortByDesc('updated_at')->unique()->paginate(30);
+                $Nachrichten = Posts::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
             } else {
                 $Nachrichten = Posts::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
@@ -84,13 +84,13 @@ class NachrichtenController extends Controller
 
         }
 
-        $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at')->paginate(30);
+        $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
 
 
 
         //Termine holen
-        if (!$user->can('edit termin')) {
-            $Termine = $user->termine->sortBy('start');
+        if (!$user->can('edit termin') and !$user->can('view all')) {
+            $Termine = $user->termine;
         } else {
             $Termine = Termin::all();
             $Termine = $Termine->unique('id');
@@ -103,7 +103,7 @@ class NachrichtenController extends Controller
         $listen_termine = $user->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
 
         //Ergänze Listeneintragungen
-        if (count($listen_termine) > 0) {
+        if (!is_null($listen_termine) and count($listen_termine) > 0) {
             foreach ($listen_termine as $termin) {
                 $newTermin = new Termin([
                     "terminname" => $termin->liste->listenname,
@@ -133,7 +133,7 @@ class NachrichtenController extends Controller
 
 
         return view('home', [
-            "nachrichten" => $Nachrichten,
+            "nachrichten" => $Nachrichten->paginate(30),
             'datum'     => Carbon::now(),
             "archiv" => $archiv,
             "user" => $user,
@@ -229,7 +229,6 @@ class NachrichtenController extends Controller
             $gruppen = Groups::find($gruppen);
         }
 
-
         $post->groups()->attach($gruppen);
 
         if (!auth()->user()->can('release posts')){
@@ -265,25 +264,13 @@ class NachrichtenController extends Controller
 
         //Versenden dringender Nachrichten
         if ($request->has('urgent') and $request->input('urgent') == 1 and $user->can('send urgent message') and Hash::check($request->input('password'), $user->password)) {
-            $gruppen->load('users');
 
-            Log::debug($gruppen);
-
-            $users = new Collection();
-
-            foreach ($gruppen as $gruppe) {
-                $newusers = $users->merge($gruppe->users);
-            }
-
-
-            Log::debug($newusers);
-
-            $newusers = $newusers->unique('email');
-
-            Log::debug($newusers);
+            $users = User::whereHas('posts', function($q) use ($gruppen){
+                $q->whereIn('name', $gruppen);
+            })->get();
 
             $sendTo = [];
-            foreach ($newusers as $mailUser) {
+            foreach ($users as $mailUser) {
 
                 $header = $post->header;
                 $news = $post->news;
@@ -306,6 +293,7 @@ class NachrichtenController extends Controller
                 "Meldung" => "Nachricht angelegt."
             ]);
         }
+
 
         return view('nachrichten.createRueckmeldung', [
             "nachricht" => $post
@@ -381,18 +369,13 @@ class NachrichtenController extends Controller
                     "Meldung" => "Passwort falsch"
                 ]);
             }
-            $gruppen->load('users');
+            $users = User::whereHas('posts', function($q) use ($gruppen){
+                $q->whereIn('name', $gruppen);
+            })->get();
 
-            $users = new Collection();
-            foreach ($gruppen as $gruppe) {
-                $newusers = $users->merge($gruppe->users);
-            }
-
-            $newusers = $newusers->unique('email');
-            Log::info('users for Mail', [$newusers]);
             $sendTo = [];
 
-            foreach ($newusers as $mailUser) {
+            foreach ($users as $mailUser) {
                 $header = $posts->header;
                 $news = $posts->news;
                 @Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));

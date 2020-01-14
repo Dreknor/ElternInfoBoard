@@ -28,7 +28,7 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 ]);
 
                 $user->touch();
-                $user->givePermissionTo('create posts');
+                $user->assignRole('Mitarbeiter');
             }
 
         }

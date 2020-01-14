@@ -92,7 +92,7 @@
                         </div>
 
                     </div>
-                    <div class="col-md-3 col-sm-6">
+                    <div class="col-md-2 col-sm-4">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
@@ -100,33 +100,47 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <input type="checkbox" name="gruppen[]" value="all" id="checkboxAll"/>
-                                <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen zuweisen</b></label>
-                            @foreach($gruppen as $gruppe)
-                                    <div>
-                                        <input type="checkbox" id="{{$gruppe->name}}" name="gruppen[]" value="{{$gruppe->id}}" @if($user->groups->contains($gruppe)) checked @endif>
-                                        <label for="{{$gruppe->name}}">{{$gruppe->name}}</label>
-                                    </div>
-                                @endforeach
+                                @include('include.formGroups')
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    Rollen
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @can('edit permission')
+                                    @foreach($roles as $role)
+                                        <div>
+                                            <input type="checkbox" id="{{$role->name}}" name="roles[]" value="{{$role->name}}" @if($user->hasRole($role->name)) checked @endif>
+                                            <label for="{{$role->name}}">{{$role->name}}</label>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p>Kein Recht zur Rollenzuordnung</p>
+                                @endcan
                             </div>
                             <div class="card-footer">
 
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-3 col-sm-6">
+                    <div class="col-md-2 col-sm-4">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
-                                    Rechte
+                                    indiv. Rechte
                                 </h5>
                             </div>
                             <div class="card-body">
                                 @can('edit permission')
                                     @foreach($permissions as $permission)
                                         <div>
-                                            <input type="checkbox" id="{{$permission->name}}" name="permissions[]" value="{{$permission->name}}" @if($user->can($permission->name)) checked @endif>
+                                            <input type="checkbox" id="{{$permission->name}}" name="permissions[]" value="{{$permission->name}}" @if($user->hasDirectPermission($permission->name)) checked @endif>
                                             <label for="{{$permission->name}}">{{$permission->name}}</label>
                                         </div>
                                     @endforeach

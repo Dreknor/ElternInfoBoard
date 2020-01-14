@@ -16,7 +16,7 @@
             @foreach($news as $item)
             <li>
                 <a class="dropdown-item" href="{{$item['link']}}">
-                    {{$item['title']}}
+                    {!! $item['title'] !!}
                 </a>
             </li>
             @endforeach

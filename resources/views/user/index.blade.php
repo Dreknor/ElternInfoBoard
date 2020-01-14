@@ -42,7 +42,6 @@
                             <th>E-Mail</th>
                             <th>Gruppen</th>
                             <th>Rechte</th>
-                            <th>zuletzt online</th>
                             <th>Verknüpft</th>
                             <td></td>
                         </tr>
@@ -69,16 +68,19 @@
                                     @endforeach
                                 </td>
                                 <td>
-                                    @foreach($user->permissions as $permission)
-                                        {{$permission->name}}
-                                        @if(!$loop->last)
-                                        ,
-                                        @endif
+                                    @foreach($user->roles as $role)
+                                        <div class="btn btn-outline-warning btn-sm">
+                                            {{$role->name}}
+                                        </div>
                                     @endforeach
+
+                                        @foreach($user->permissions as $permission)
+                                            <div class="btn btn-outline-danger btn-sm">
+                                                {{$permission->name}}
+                                            </div>
+                                        @endforeach
                                 </td>
-                                <td>
-                                    {{optional($user->last_online_at)->format('d.m.Y H:i')}}
-                                </td>
+
                                 <td>
                                     @if(!is_null($user->sorgeberechtigter2))
                                        {{$user->sorgeberechtigter2->name}}

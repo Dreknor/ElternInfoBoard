@@ -87,7 +87,7 @@
             @endif
 
             @if(auth()->user()->can('create terminliste'))
-                <li class="@if(request()->segment(1)=="termin" AND request()->segment(2)=='create' ) active @endif">
+                <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)=='create' ) active @endif">
                     <a href="{{url('/listen/create')}}">
                         <i class="far fa-list-alt"></i>
                         <p>neue Liste</p>
@@ -110,6 +110,14 @@
                     </a>
                 </li>
             @endif
+            @can('edit user')
+                <li class="@if(request()->segment(1)=="roles" ) active @endif">
+                    <a href="{{url('/roles')}}">
+                        <i class="fas fa-user-tag"></i>
+                        <p>Rollen</p>
+                    </a>
+                </li>
+            @endcan
         </ul>
     </div>
 </div>

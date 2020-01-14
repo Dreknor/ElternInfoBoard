@@ -94,6 +94,13 @@ Route::group([
                 Route::resource('users', 'UserController');
                 //Route::get('/daily', 'NachrichtenController@emailDaily');
             });
+
+            Route::group(['middleware' => ['permission:edit permission']], function () {
+                Route::get('roles', 'RolesController@edit');
+                Route::put('roles', 'RolesController@update');
+                Route::post('roles', 'RolesController@store');
+                Route::post('roles/permission', 'RolesController@storePermission');
+            });
         });
 
 

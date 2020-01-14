@@ -14,7 +14,7 @@
         @foreach($empfaenger as $Empfaenger)
             <li>
 
-                    {{$Empfaenger->email}}
+                    {{$Empfaenger['email']}}
             </li>
         @endforeach
     </ul>

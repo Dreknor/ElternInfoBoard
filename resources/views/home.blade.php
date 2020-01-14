@@ -73,7 +73,7 @@
         @if($archiv)
             <div class="card">
                 <div class="card-body bg-warning">
-                    <b>{{$datum->locale('de')->getTranslatedMonthName('Do MMMM')}} {{$datum->format('Y')}}</b>
+                    <b>{{$nachrichten->first()->updated_at->locale('de')->getTranslatedMonthName('Do MMMM')}} {{$nachrichten->first()->updated_at->format('Y')}}</b>
                 </div>
             </div>
         @endif

@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -87,7 +88,8 @@ class UserController extends Controller
         return view('user.show',[
             "user" => $user->load('groups'),
             'gruppen'   => Groups::all(),
-            'permissions' => Permission::all()
+            'permissions' => Permission::all(),
+            'roles'     => Role::all()
         ]);
     }
 
@@ -104,12 +106,13 @@ class UserController extends Controller
         $user->fill($request->all());
         $gruppen= $request->input('gruppen');
 
-        if ($gruppen[0] == "all"){
-            $gruppen = Groups::all();
-        } else {
-            $gruppen = Groups::find($gruppen);
+        if (!is_null($gruppen) ){
+            if ($gruppen[0] == "all"){
+                $gruppen = Groups::all();
+            } else {
+                $gruppen = Groups::find($gruppen);
+            }
         }
-
 
         $user->groups()->detach();
         $user->groups()->attach($gruppen);
@@ -117,6 +120,9 @@ class UserController extends Controller
         if (auth()->user()->can('edit permission')){
             $permissions= $request->input('permissions');
             $user->syncPermissions($permissions);
+
+            $roles= $request->input('roles');
+            $user->syncRoles($roles);
         }
 
 

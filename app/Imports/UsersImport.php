@@ -52,7 +52,7 @@ class UsersImport implements ToCollection, WithHeadingRow
 
 
                 $user1->touch();
-
+                $user1->assignRole('Eltern');
                 $user1->groups()->attach([$Klassenstufe->id, $Lerngruppe->id]);
             }
 
@@ -70,6 +70,7 @@ class UsersImport implements ToCollection, WithHeadingRow
 
 
                 $user2->touch();
+                $user2->assignRole('Eltern');
                 $user2->groups()->attach([$Klassenstufe->id, $Lerngruppe->id]);
 
             }
