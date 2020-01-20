@@ -8,7 +8,7 @@
                         <div class="col-md-8 col-sm-11">
                             {!! $user->userRueckmeldung->where('posts_id', $nachricht->id)->first()->text !!}
                         </div>
-                        @if($nachricht->rueckmeldung->ende->lessThan(\Carbon\Carbon::now()->addWeek()))
+                        @if($nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
                             <div class="col-md-1 col-sm-1">
                                 @if(!is_null($user->userRueckmeldung->where('posts_id', $nachricht->id)->first()))
                                     <a href="{{url('/userrueckmeldung/edit/'.$user->userRueckmeldung->where('posts_id', $nachricht->id)->first()->id)}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Rückmeldung bearbeiten">
@@ -18,6 +18,7 @@
                                     <a href="{{url('/userrueckmeldung/edit/'.$user->sorgeberechtigter2->userRueckmeldung->where('posts_id', $nachricht->id)->first()->id)}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Rückmeldung bearbeiten">
                                         <i class="far fa-edit"></i>
                                     </a>
+
                                 @endif
                             </div>
                         @endif
@@ -28,7 +29,7 @@
                         <div class="col-md-8 col-sm-11">
                             {!! $user->sorgeberechtigter2->userRueckmeldung->where('posts_id', $nachricht->id)->first()->text !!}
                         </div>
-                        @if($nachricht->rueckmeldung->ende->lessThan(\Carbon\Carbon::now()->addWeek()))
+                        @if($nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
                             <div class="col-md-1 col-sm-1">
                                 @if(!is_null($user->userRueckmeldung->where('posts_id', $nachricht->id)->first()))
                                     <a href="{{url('/userrueckmeldung/edit/'.$user->userRueckmeldung->where('posts_id', $nachricht->id)->first()->id)}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Rückmeldung bearbeiten">

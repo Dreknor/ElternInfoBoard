@@ -254,7 +254,9 @@ class NachrichtenController extends Controller
             } else {
                 $post->addAllMediaFromRequest(['files'])
                     ->each(function ($fileAdder) {
-                        $fileAdder->toMediaCollection('images');
+                        $fileAdder
+                            ->withResponsiveImages()
+                            ->toMediaCollection('images');
                     });
             }
         }
@@ -385,11 +387,11 @@ class NachrichtenController extends Controller
                     "email"   => $mailUser->email
                 ];
 
-                @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
-                $Meldung = "Es wurden ".count($sendTo)." Benutzer per Mail benachrichtigt.";
+
             }
 
-
+            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
+            $Meldung = "Es wurden ".count($sendTo)." Benutzer per Mail benachrichtigt.";
 
         }
 
