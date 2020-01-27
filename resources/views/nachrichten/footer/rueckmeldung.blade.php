@@ -18,7 +18,6 @@
                                     <a href="{{url('/userrueckmeldung/edit/'.$user->sorgeberechtigter2->userRueckmeldung->where('posts_id', $nachricht->id)->first()->id)}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Rückmeldung bearbeiten">
                                         <i class="far fa-edit"></i>
                                     </a>
-
                                 @endif
                             </div>
                         @endif

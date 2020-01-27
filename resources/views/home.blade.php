@@ -33,11 +33,13 @@
                     <div class="card-title">
                         <h5>
                             Themen
+                            <!--
                             @if(!isset($archiv))
                                 <a href="{{url('pdf')}}" class="btn btn-sm btn-outline-primary pull-right">
                                     <i class="far fa-file-pdf"></i>
                                 </a>
                             @endif
+                            -->
                         </h5>
 
                     </div>

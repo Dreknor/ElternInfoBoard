@@ -62,6 +62,15 @@
                 </a>
             </li>
 
+            @can('view elternrat')
+            <li class="@if(request()->segment(1)=="elternrat") active @endif">
+                <a href="{{url('/elternrat')}}">
+                    <i class="fas fa-user-friends"></i>
+                       Elternrat
+                </a>
+            </li>
+            @endcan
+
             <li class="@if(request()->segment(1)=="feedback") active @endif">
                 <a href="{{url('/feedback')}}">
                     <i class="far fa-comment" aria-hidden="true"></i>
@@ -200,7 +209,7 @@
     </nav>
     <!-- End Navbar -->
 
-    
+
 
 
     <div class="content">

@@ -73,9 +73,9 @@ Route::group([
 
 
             /*
-              Route::get('email/weekly', 'NachrichtenController@email');
-              Route::get('email/daily', 'NachrichtenController@emailDaily');
-                        */
+                          Route::get('email/weekly', 'NachrichtenController@email');
+                          Route::get('email/daily', 'NachrichtenController@emailDaily');
+             */
 
             //Routen für Benutzerverwaltung
 
@@ -100,6 +100,22 @@ Route::group([
                 Route::put('roles', 'RolesController@update');
                 Route::post('roles', 'RolesController@store');
                 Route::post('roles/permission', 'RolesController@storePermission');
+            });
+
+            //Elternratsbereich
+            Route::group(['middleware' => ['permission:view elternrat']], function () {
+                Route::resource('elternrat', 'ElternratController');
+                Route::delete('elternrat/file/{file}', 'ElternratController@deleteFile');
+                Route::delete('elternrat/comment/{comment}', 'ElternratController@deleteComment');
+                Route::get('elternrat/add/file', 'ElternratController@addFile');
+                Route::post('elternrat/file', 'ElternratController@storeFile');
+                Route::post('beitrag/{discussion}/comment/create', 'ElternratController@storeComment');
+                Route::get('elternrat/discussion/create', 'ElternratController@create');
+                Route::post('elternrat/discussion', 'ElternratController@store');
+                Route::get('elternrat/discussion/edit/{discussion}', 'ElternratController@edit');
+                Route::put('elternrat/discussion/{discussion}', 'ElternratController@update');
+
+
             });
         });
 

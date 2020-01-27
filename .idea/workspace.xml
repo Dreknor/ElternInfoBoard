@@ -152,6 +152,9 @@
       <path value="$PROJECT_DIR$/vendor/spatie/calendar-links" />
       <path value="$PROJECT_DIR$/vendor/symfony/error-handler" />
       <path value="$PROJECT_DIR$/vendor/myclabs/php-enum" />
+      <path value="$PROJECT_DIR$/vendor/devdojo/chatter" />
+      <path value="$PROJECT_DIR$/vendor/artisanry/commentable" />
+      <path value="$PROJECT_DIR$/vendor/kalnoy/nestedset" />
     </include_path>
   </component>
   <component name="ProjectId" id="1WToaAlJsoAu0Ta63hwX5w3EIxr" />
@@ -174,11 +177,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\elternbrief\app\Model" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\elternrat" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\emails" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\listen" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\reinigung" />
-      <recent name="C:\xampp\htdocs\elternbrief\app\Mail" />
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\files" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\xampp\htdocs\elternbrief\app\Model" />
@@ -248,11 +251,32 @@
       <workItem from="1578316743734" duration="9596000" />
       <workItem from="1578493099845" duration="618000" />
       <workItem from="1578666766123" duration="21794000" />
-      <workItem from="1579183016362" duration="4276000" />
+      <workItem from="1579183016362" duration="6646000" />
+      <workItem from="1579508413934" duration="21815000" />
+      <workItem from="1579854876948" duration="17594000" />
+      <workItem from="1580110335468" duration="368000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="683" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1579604639811">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="683" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579604639811" />
+    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog" timestamp="1579617678777">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579617678777" />
+    <state x="740" y="279" key="FileChooserDialogImpl" timestamp="1580110708354">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="740" y="279" key="FileChooserDialogImpl/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1580110708354" />
+    <state x="771" y="440" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1579796854755">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="771" y="440" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579796854755" />
   </component>
 </project>

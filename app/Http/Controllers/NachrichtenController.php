@@ -8,16 +8,15 @@ use App\Mail\AktuelleInformationen;
 use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
 use App\Mail\newUnveroeffentlichterBeitrag;
+use App\Model\Discussion;
 use App\Model\Groups;
 use App\Model\Posts;
 use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\User;
-use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Permission;
 
@@ -409,28 +408,43 @@ class NachrichtenController extends Controller
     {
 
         $users = User::where('benachrichtigung', 'weekly')->get();
+        $users->load('roles');
+
+
+        $diskussionen = Discussion::all();
 
         foreach ($users as $user) {
 
             if (!$user->can('edit posts')) {
                 $Nachrichten = $user->posts;
-
             } else {
-
                 $Nachrichten = Posts::all();
-
             }
-            //$Nachrichten->unique('id')->sortByDesc('updated_at');
+
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now()) ) {
-                    return $post;
+                if (!is_null($post->archiv_ab) ){
+                    if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now()) ) {
+                        return $post;
+                    }
                 }
+
             })->unique()->sortByDesc('updated_at')->all();
 
 
+            if ($user->hasRole('Elternrat')){
+                $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
+                    if ( $Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
+                        return $Discussion;
+                    }
+                });
+            } else {
+                $diskussionen = [];
+            }
+
+
             if (count($Nachrichten) > 0) {
-                Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name));
+                Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
                 $user->lastEmail = Carbon::now();
                 $user->save();
             }

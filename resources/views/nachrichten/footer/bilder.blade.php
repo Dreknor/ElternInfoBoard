@@ -5,7 +5,7 @@
             <div class="carousel-inner">
                 @foreach($nachricht->getMedia('images') as $media)
                     <div class="carousel-item @if($loop->first) active @endif">
-                        <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" srcset="{{$media->responsive_images}}">
+                        <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" >
                     </div>
                 @endforeach
 

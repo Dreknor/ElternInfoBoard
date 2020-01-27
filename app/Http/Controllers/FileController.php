@@ -26,18 +26,17 @@ class FileController extends Controller
 
 
     public function index(){
-        $user = auth()->user();
-        $gruppen = $user->groups()->with('media')->get();
-
-
-
-
-
+        $user = auth()->user()->load('groups');
 
         if ($user->can('upload files')){
-            $gruppen = Groups::all();
+            if (!$user->can('view protected')){
+                $gruppen = Groups::where('protected', 0)->get();
+            } else {
+                $gruppen = Groups::all();
+            }
+
             return view('files.indexVerwaltung',[
-                'gruppen' => $gruppen
+                'gruppen' => $gruppen->load('media')
             ]);
 
 

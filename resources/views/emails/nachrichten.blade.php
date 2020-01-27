@@ -20,6 +20,20 @@
     </ul>
 </p>
 
+@if(count($discussionen)>0)
+    <p>
+        Im Elternratsbereich liegen folgende bearbeitete Themen vor:
+    </p>
+    <p>
+        <ul>
+            @foreach($discussionen as $Diskussion)
+                <li>
+                    {{$Diskussion->header}}
+                </li>
+            @endforeach
+        </ul>
+    </p>
+@endif
 <p>
     Für genauere Inhalte loggen Sie sich bitte ein.
 </p>
