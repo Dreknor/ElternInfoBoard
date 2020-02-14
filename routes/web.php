@@ -36,6 +36,9 @@ Route::group([
             Route::get('/', 'NachrichtenController@index');
             Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
 
+            //KioskAnsicht
+            Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
+
             //Terminlisten
             Route::get('listen', 'ListenController@index');
             Route::post('listen', 'ListenController@store');
@@ -72,20 +75,21 @@ Route::group([
             Route::delete('file/{file}', 'FileController@delete');
 
 
-            /*
+
                           Route::get('email/weekly', 'NachrichtenController@email');
-                          Route::get('email/daily', 'NachrichtenController@emailDaily');
+             /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
              */
 
             //Routen für Benutzerverwaltung
-
-
 
             Route::get('users/import', 'ImportController@importForm')->middleware(['permission:import user']);
             Route::post('users/import', 'ImportController@import')->middleware(['permission:import user']);
 
             Route::delete("users/{id}", "UserController@destroy");
 
+
+            //changelog
+            Route::resource('changelog', 'ChangelogController');
 
             //Suche
             Route::post('search','SearchController@search');
@@ -101,6 +105,15 @@ Route::group([
                 Route::post('roles', 'RolesController@store');
                 Route::post('roles/permission', 'RolesController@storePermission');
             });
+
+            /*
+            Route::group(['middleware' => ['permission:edit user']], function () {
+                Route::get('showUser', function (){
+                \Illuminate\Support\Facades\Auth::login(\App\Model\User::find(5), true);
+                return redirect(url('/'));
+                });
+            });
+            */
 
             //Elternratsbereich
             Route::group(['middleware' => ['permission:view elternrat']], function () {

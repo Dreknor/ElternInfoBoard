@@ -46,6 +46,7 @@ class User extends Authenticatable
         'changePassword'    => 'boolean',
         'last_online_at'    => "datetime",
         'track_login'    => 'boolean',
+        'changeSettings'    => "boolean"
     ];
 
 
@@ -86,6 +87,22 @@ class User extends Authenticatable
 
     public function userRueckmeldung(){
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
+    }
+
+    public function getRueckmeldung(){
+        $eigeneRueckmeldung = $this->userRueckmeldung;
+
+        if (!is_null($this->sorg2)){
+            $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
+            if (!is_null($sorgRueckmeldung) and !is_null($eigeneRueckmeldung)){
+                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
+            } elseif (is_null($eigeneRueckmeldung)){
+                return $sorgRueckmeldung;
+            }
+
+        }
+        // Merge collections and return single collection.
+        return $eigeneRueckmeldung;
     }
 
     public function Reinigung(){

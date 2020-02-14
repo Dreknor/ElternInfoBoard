@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Model\Changelog;
 use App\Support\Collection;
 use Closure;
 use Illuminate\Support\Facades\DB;
@@ -22,9 +23,24 @@ class CheckNewsForUser
             return $next($request);
         }
 
+        if (\auth()->user()->changeSettings){
+            $user = auth()->user();
+            $user->changeSettings = 0;
+            $user->save();
+            return redirect('/einstellungen')->with(['changelog'    => true]);
+        }
+
         if (auth()->user()->track_login == true or auth()->user()->track_login == 1)
         {
             $news = [];
+
+            $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
+            if (!is_null($changelog)){
+                $news[]=[
+                    'link' => url('/changelog'),
+                    'title' => "<i class=\"fa fa-cog\"></i> Changelog "
+                ];
+            }
 
             $termine = auth()->user()->termine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
             $termine = $termine->unique('id');

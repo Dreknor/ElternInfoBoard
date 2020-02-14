@@ -31,18 +31,13 @@
     </div>
     <div class="sidebar-wrapper">
         <ul class="nav">
-            <li class="@if(request()->segment(1)=="") active @endif">
+            <li class="@if(request()->segment(1)=="" or request()->segment(1)=="home") active @endif">
                 <a href="{{url('/')}}">
                     <i class="far fa-newspaper"></i>
                     <p>Nachrichten</p>
                 </a>
             </li>
-            <li class="@if(isset($archiv)) active @endif" >
-                <a class="@if(isset($archiv)) active @endif"  href="{{url('/home/archiv')}}">
-                    <i class="fas fa-archive"></i>
-                    <p>Archiv</p>
-                </a>
-            </li>
+
             <li class="@if(request()->segment(1)=="files" AND request()->segment(2)!='create' ) active @endif">
                 <a href="{{url('/files')}}">
                     <i class="fa fa-download"></i>
@@ -58,17 +53,17 @@
             <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)!='create' ) active @endif">
                 <a href="{{url('/listen')}}">
                     <i class="far fa-list-alt"></i>
-                       Listen
+                    Listen
                 </a>
             </li>
 
             @can('view elternrat')
-            <li class="@if(request()->segment(1)=="elternrat") active @endif">
-                <a href="{{url('/elternrat')}}">
-                    <i class="fas fa-user-friends"></i>
-                       Elternrat
-                </a>
-            </li>
+                <li class="@if(request()->segment(1)=="elternrat") active @endif">
+                    <a href="{{url('/elternrat')}}">
+                        <i class="fas fa-user-friends"></i>
+                        Elternrat
+                    </a>
+                </li>
             @endcan
 
             <li class="@if(request()->segment(1)=="feedback") active @endif">
@@ -128,7 +123,9 @@
                 </li>
             @endcan
         </ul>
+
     </div>
+
 </div>
 <div class="main-panel">
     <!-- Navbar -->
@@ -188,6 +185,11 @@
                                             </a>
                                         </li>
                                         <li>
+                                            <a class="dropdown-item" href="{{url('changelog')}}">
+                                                Changelog
+                                            </a>
+                                        </li>
+                                        <li>
                                             <a class="dropdown-item" href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                                                 Logout
                                             </a>
@@ -237,11 +239,12 @@
         @endif
         @yield('content')
 
+
     </div>
 
 
-
-    <!-- JavaScripts -->
+</div>
+<!-- JavaScripts -->
 
     <script src="{{asset('js/core/jquery.min.js')}}"></script>
     <script src="{{asset('js/core/popper.min.js')}}"></script>

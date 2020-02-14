@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\editUserRequest;
+use App\Model\Changelog;
 use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class BenutzerController extends Controller
 {
@@ -25,8 +27,16 @@ class BenutzerController extends Controller
 
     public function show(){
 
+      if (Session::get('changelog') == true){
+          $changelog = Changelog::where('changeSettings', 1)->orderByDesc('created_at')->first();
+      } else {
+          $changelog = null;
+      }
+
+
         return view('user.settings', [
-            "user"  => $this->user
+            "user"  => $this->user,
+            'changelog' => $changelog
         ]);
     }
 

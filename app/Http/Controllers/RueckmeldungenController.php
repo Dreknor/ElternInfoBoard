@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Model\Posts;
 use App\Model\Rueckmeldungen;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class RueckmeldungenController extends Controller
@@ -70,5 +71,10 @@ class RueckmeldungenController extends Controller
         ], 200);
     }
 
+    public function sendErinnerung(){
+        $rueckmeldungen = Rueckmeldungen::whereDate('ende', '<', Carbon::now()->addWeek())->where('pflicht', 1)->with(['post', 'userRueckmeldungen', 'post.users', 'post.users.sorgeberechtigter2'])->get();
+        $rueckmeldungen->load(['posts', 'posts.user', 'userRueckmeldungen']);
 
+
+    }
 }

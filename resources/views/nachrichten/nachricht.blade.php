@@ -1,5 +1,6 @@
 
 <div class="nachricht card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
+
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom" >
        <div class="row">
            <div class="col-md-10">
@@ -35,7 +36,7 @@
                @endif
            </div>
 
-           @if(auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author )
+           @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
                <div class="col-md-2 col-sm-4">
                    @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
                     <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
@@ -61,11 +62,12 @@
             <button class="btn btn-outline-info btn-block btnShow" data-toggle="collapse" data-target="#Collapse{{$nachricht->id}}">
                 <i class="fa fa-eye"></i>
                 Text anzeigen
-
             </button>
-
         @endif
     </div>
+    @if(!is_null($nachricht->rueckmeldung))
+
+    @endif
     <div class="card-body @if($archiv) collapse @endif" id="Collapse{{$nachricht->id}}">
         @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
             <div class="row">
@@ -91,7 +93,21 @@
         @endif
     </div>
     @if(!is_null($nachricht->rueckmeldung))
-            @include('nachrichten.footer.rueckmeldung')
+        @if(!$archiv and $nachricht->rueckmeldung->pflicht == 1)
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        @for($x=0; $x < $nachricht->userRueckmeldung->count(); $x++)
+                            <i class="fas fa-user-alt text-success" title="{{$x}}"></i>
+                        @endfor
+                        @for($x=0; $x < ((round($nachricht->users->where('sorg2', '!=', null)->unique('email')->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
+                            <i class="fas fa-user-alt text-danger"></i>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+        @endif
+        @include('nachrichten.footer.rueckmeldung')
     @endif
 
 </div>

@@ -16,6 +16,7 @@ use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Permission;
@@ -48,10 +49,10 @@ class NachrichtenController extends Controller
         $archivDate = Carbon::now()->endOfDay()->subWeeks(1);
 
         if (!$user->can('view all')) {
-            $Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+            //$Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
             if ($archiv) {
-                $Nachrichten = $user->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = $user->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
                 if ($user->can('create posts')){
                     $eigenePosts = Posts::query()->where('author', $user->id)->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
@@ -59,7 +60,7 @@ class NachrichtenController extends Controller
                 }
 
             } else {
-                $Nachrichten = $user->posts()->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = $user->posts()->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
                 if ($user->can('create posts')){
                     $eigenePosts = Posts::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
@@ -75,15 +76,16 @@ class NachrichtenController extends Controller
             $Reinigung = Reinigung::whereIn('users_id', [$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
 
             if ($archiv) {
-                $Nachrichten = Posts::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = Posts::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
             } else {
-                $Nachrichten = Posts::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = Posts::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
             }
 
         }
 
         $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+        $Nachrichten->load('groups.users', 'groups.users.userRueckmeldung','groups.users.sorgeberechtigter2' , 'groups.users.sorgeberechtigter2.userRueckmeldung');
 
 
 
@@ -129,6 +131,8 @@ class NachrichtenController extends Controller
 
         $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');
+
+
 
 
         return view('home', [
@@ -415,7 +419,7 @@ class NachrichtenController extends Controller
 
         foreach ($users as $user) {
 
-            if (!$user->can('edit posts')) {
+            if (!$user->can('view all')) {
                 $Nachrichten = $user->posts;
             } else {
                 $Nachrichten = Posts::all();
@@ -433,6 +437,7 @@ class NachrichtenController extends Controller
 
 
             if ($user->hasRole('Elternrat')){
+                $diskussionen = collect($diskussionen);
                 $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
                     if ( $Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
                         return $Discussion;
@@ -546,17 +551,6 @@ class NachrichtenController extends Controller
                     return $nachricht->updated_at->lessThan($archivDate);
                 });
 
-                /*
-                $Nachrichten = $Nachrichten->filter(function ($nachricht){
-                    $date = Carbon::createFromFormat('d.m.', '31.7.');
-                    if (Carbon::now()->month < 7){
-                        $date->subYear();
-                    }
-
-                    return $nachricht->updated_at->greaterThan($date);
-                });
-
-                */
 
             } else {
                 $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate) {
@@ -615,5 +609,42 @@ class NachrichtenController extends Controller
         return response()->json([
             "message" => "Berechtigung fehlt"
         ], 401);
+    }
+
+    /**
+     *
+     */
+    public function kioskView(){
+
+        if (auth()->user()->can('view all')){
+            $Nachrichten = new Collection();
+
+
+            $Gruppen = Groups::where('protected', 0)->with(['posts' => function ($query){
+                $query->whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay());
+            }])->get();
+
+            foreach ($Gruppen as $Gruppe){
+                $Nachrichten = $Nachrichten->concat($Gruppe->posts);
+            }
+
+
+
+
+            return view('kiosk.index', [
+                "Nachrichten"    => $Nachrichten->unique('id')->sortByDesc('updated_at'),
+                "counter"       =>          0,
+                'archiv'        => 0,
+                'user'          => auth()->user()
+            ]);
+        } else {
+            return redirect()->back()->with([
+                'type'  => "danger",
+                'Meldung'   => "Berechtigung fehlt"
+            ]);
+        }
+
+
+
     }
 }
