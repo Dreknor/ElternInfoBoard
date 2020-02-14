@@ -3,9 +3,7 @@
 namespace App\Mail;
 
 use App\Model\User;
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -39,8 +37,7 @@ class ErinnerungRuecklaufFehlt extends Mailable
             ->from(
                 env('MAIL_FROM_ADDRESS'),
                 env('MAIL_FROM_NAME'),
-            )
-            ->subject('Feedback')
+            )->subject('Rückmeldung fehlt: '.$this->thema)
             ->view('emails.rueckmeldungFehlt')->with([
                 "name"  => $this->user->name,
                 "thema"  => $this->thema,

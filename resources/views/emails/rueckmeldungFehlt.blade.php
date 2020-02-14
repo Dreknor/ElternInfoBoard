@@ -8,7 +8,7 @@
 
 <p>Liebe/r {{$name}}</p>
 <p>
-    Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema "{{$thema}}". Wir benötigen die Rückmeldung bis spätestens zum {{$ende}}.
+    Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema "{{$thema}}". Wir benötigen die Rückmeldung bis spätestens zum {{$ende->format('d.m.Y')}}.
 </p>
 
 <p>

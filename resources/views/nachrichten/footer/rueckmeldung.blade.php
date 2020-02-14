@@ -19,7 +19,7 @@
     </div>
 @else
     @if($nachricht->rueckmeldung->ende->endOfDay()->greaterThan(\Carbon\Carbon::now()->startOfDay()))
-        <div class="card-footer border-top @if(is_null($rueckmeldung) and $nachricht->rueckmeldung->ende->lessThan(\Carbon\Carbon::now()->addWeek())) border border-danger @endif">
+        <div class="card-footer border-top @if($nachricht->rueckmeldung->ende->lessThan(\Carbon\Carbon::now()->addWeek())) border border-danger @endif">
             <form method="post" action="{{url('rueckmeldung').'/'.$nachricht->id}}"  class="form form-horizontal">
                 @csrf
                 <div class="col-md-12">

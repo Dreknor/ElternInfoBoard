@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\createRueckmeldungRequest;
+use App\Mail\ErinnerungRuecklaufFehlt;
 use App\Model\Posts;
 use App\Model\Rueckmeldungen;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class RueckmeldungenController extends Controller
 {
@@ -25,7 +27,7 @@ class RueckmeldungenController extends Controller
 
         return redirect(url('/home'))->with([
            "type"   => "success",
-           "meldung"    => "Nachricht erstellt."
+           "Meldung"    => "Nachricht erstellt."
         ]);
     }
 
@@ -52,7 +54,7 @@ class RueckmeldungenController extends Controller
 
         return redirect(url('home'))->with([
            "type"   => "success",
-           "meldung"    => "Rückmeldung gespeichert"
+           "Meldung"    => "Rückmeldung gespeichert"
         ]);
     }
 
@@ -67,13 +69,26 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->delete();
 
         return response()->json([
-            "message" => "Gelöscht".$rueckmeldung
+            "message" => "Gelöscht"
         ], 200);
     }
 
+
     public function sendErinnerung(){
-        $rueckmeldungen = Rueckmeldungen::whereDate('ende', '<', Carbon::now()->addWeek())->where('pflicht', 1)->with(['post', 'userRueckmeldungen', 'post.users', 'post.users.sorgeberechtigter2'])->get();
-        $rueckmeldungen->load(['posts', 'posts.user', 'userRueckmeldungen']);
+        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now(),Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users','post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
+        foreach ($rueckmeldungen as $Rueckmeldung){
+            if ($Rueckmeldung->post->released == 1){
+                $user = $Rueckmeldung->post->users;
+                $user = $user->unique('id');
+
+                foreach ($user as $User){
+                    $RueckmeldungUser = $User->getRueckmeldung()->where('posts_id', $Rueckmeldung->post->id)->first();
+                    if (is_null($RueckmeldungUser)){
+                        Mail::to($User->email)->queue(new ErinnerungRuecklaufFehlt($User, $Rueckmeldung->post->header, $Rueckmeldung->ende));
+                    }
+                }
+            }
+        }
 
 
     }

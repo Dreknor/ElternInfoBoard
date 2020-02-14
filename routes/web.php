@@ -21,6 +21,8 @@ Route::group([
 
         Route::middleware(['password_expired'])->group(function () {
 
+            //Route::get('noRueckmeldung', 'RueckmeldungenController@sendErinnerung');
+
             //Termine
             Route::resource('termin', 'TerminController');
 

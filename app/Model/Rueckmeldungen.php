@@ -18,7 +18,7 @@ class Rueckmeldungen extends Model
     ];
 
     public function post(){
-        return $this->belongsTo(Posts::class);
+        return $this->belongsTo(Posts::class, 'posts_id');
     }
 
     public function userRueckmeldungen () {
