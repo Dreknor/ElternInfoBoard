@@ -34,13 +34,12 @@ class CheckNewsForUser
         {
             $news = [];
 
-            $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
+            $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at->startofDay())->first();
             if (!is_null($changelog)){
                 $news[]=[
                     'link' => url('/changelog'),
                     'title' => "<i class=\"fa fa-cog\"></i> Changelog "
-                ];
-            }
+                ];            }
 
             $termine = auth()->user()->termine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
             $termine = $termine->unique('id');

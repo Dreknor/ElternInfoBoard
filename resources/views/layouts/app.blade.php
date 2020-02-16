@@ -215,6 +215,20 @@
 
 
     <div class="content">
+        @if(session()->has('ownID'))
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <p>Eingeloggt als: {{auth()->user()->name}}</p>
+                            <p>
+                                <a href="{{url('logoutAsUser')}}" class="btn btn-info">zum eigenen Account wechseln</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>

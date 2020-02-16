@@ -108,14 +108,17 @@ Route::group([
                 Route::post('roles/permission', 'RolesController@storePermission');
             });
 
-            /*
-            Route::group(['middleware' => ['permission:edit user']], function () {
-                Route::get('showUser', function (){
-                \Illuminate\Support\Facades\Auth::login(\App\Model\User::find(5), true);
-                return redirect(url('/'));
-                });
+
+            Route::group(['middlewareGroups' => ['role:Admin']], function () {
+                Route::get('showUser/{id}', 'UserController@loginAsUser');
             });
-            */
+
+            Route::get('logoutAsUser', function (){
+                    if (session()->has('ownID')){
+                        \Illuminate\Support\Facades\Auth::loginUsingId(session()->pull('ownID'));
+                    }
+                    return redirect(url('/'));
+            });
 
             //Elternratsbereich
             Route::group(['middleware' => ['permission:view elternrat']], function () {

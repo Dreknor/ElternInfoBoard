@@ -90,7 +90,11 @@
                                     <div class="btn btn-sm btn-danger user-delete" data-id="{{$user->id}}">
                                         <i class="fas fa-user-slash"></i>
                                     </div>
-
+                                    @role('Admin')
+                                        <a href="{{url("showUser/$user->id")}}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    @endrole
                                 </td>
                             </tr>
                         @endforeach

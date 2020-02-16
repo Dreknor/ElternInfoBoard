@@ -8,6 +8,7 @@ use App\Model\Groups;
 use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -153,5 +154,27 @@ class UserController extends Controller
         return response()->json([
             "message"   => "Gelöscht"
         ], 200);
+    }
+
+    public function loginAsUser($id){
+        if (!auth()->user()->hasRole('Admin')){
+            return redirect()->back()->with([
+               'Meldung'    => "Berechtigung fehlt",
+               'type'       => "danger"
+            ]);
+        }
+        session(['ownID' => auth()->user()->id]);
+
+        Auth::loginUsingId($id);
+
+        return redirect(url('/'));
+
+    }
+
+    public function logoutAsUser(){
+        if (session()->has('ownID')){
+            Auth::loginUsingId(session()->pull('ownID'));
+        }
+        return redirect(url('/'));
     }
 }
