@@ -7,8 +7,12 @@ use App\Http\Requests\verwaltungEditUserRequest;
 use App\Model\Groups;
 use App\Model\User;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -22,7 +26,7 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function index()
     {
@@ -34,7 +38,7 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function create()
     {
@@ -47,7 +51,7 @@ class UserController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function store(createUserRequest $request)
     {
@@ -58,17 +62,19 @@ class UserController extends Controller
         $user->save();
 
         $gruppen= $request->input('gruppen');
+        if (isset($gruppen)){
+            if ($gruppen[0] == "all"){
+                $gruppen = Groups::where('protected', 0)->get();
+            } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
+                $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+                $gruppen = $gruppen->unique();
+            } else {
+                $gruppen = Groups::find($gruppen);
+            }
 
-        if ($gruppen[0] == "all"){
-            $gruppen = Groups::all();
-        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
-            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-            $gruppen = $gruppen->unique();
-        } else {
-            $gruppen = Groups::find($gruppen);
+            $user->groups()->attach($gruppen);
         }
 
-        $user->groups()->attach($gruppen);
 
         return redirect(url("users/$user->id"))->with([
             'type'  => "success",
@@ -81,7 +87,7 @@ class UserController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function show(User $user)
     {
@@ -99,7 +105,7 @@ class UserController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function update(verwaltungEditUserRequest $request, User $user)
     {
@@ -143,7 +149,7 @@ class UserController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function destroy($id)
     {
@@ -153,5 +159,27 @@ class UserController extends Controller
         return response()->json([
             "message"   => "Gelöscht"
         ], 200);
+    }
+
+    public function loginAsUser($id){
+        if (!auth()->user()->hasRole('Admin')){
+            return redirect()->back()->with([
+               'Meldung'    => "Berechtigung fehlt",
+               'type'       => "danger"
+            ]);
+        }
+        session(['ownID' => auth()->user()->id]);
+
+        Auth::loginUsingId($id);
+
+        return redirect(url('/'));
+
+    }
+
+    public function logoutAsUser(){
+        if (session()->has('ownID')){
+            Auth::loginUsingId(session()->pull('ownID'));
+        }
+        return redirect(url('/'));
     }
 }

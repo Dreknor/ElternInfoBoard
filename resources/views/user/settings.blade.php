@@ -10,6 +10,16 @@
                 </h5>
             </div>
             <div class="card-body">
+                @if(isset($changelog))
+                    <div class="card-body border border-info">
+                        <h6>
+                            {{$changelog->header}}
+                        </h6>
+                        <p>
+                            {!! $changelog->text !!}
+                        </p>
+                    </div>
+                @endif
                 <div class="row">
                     <div class="col-md-6 col-sm-12">
                         <div class="card">

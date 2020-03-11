@@ -21,6 +21,8 @@ Route::group([
 
         Route::middleware(['password_expired'])->group(function () {
 
+            //Route::get('noRueckmeldung', 'RueckmeldungenController@sendErinnerung');
+
             //Termine
             Route::resource('termin', 'TerminController');
 
@@ -36,11 +38,17 @@ Route::group([
             Route::get('/', 'NachrichtenController@index');
             Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
 
+            //KioskAnsicht
+            Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
+
             //Terminlisten
             Route::get('listen', 'ListenController@index');
             Route::post('listen', 'ListenController@store');
             Route::get('listen/create', 'ListenController@create');
             Route::get('listen/{terminListe}', 'ListenController@show');
+            Route::get('listen/{liste}/activate', 'ListenController@activate');
+            Route::get('listen/{liste}/deactivate', 'ListenController@deactivate');
+            Route::get('listen/{liste}/export', 'ListenController@pdf');
             Route::get('listen/{terminListe}/auswahl', 'ListenController@auswahl');
             Route::post('eintragungen/{liste}/store', 'ListenTerminController@store');
             Route::put('eintragungen/{listen_termine}', 'ListenTerminController@update');
@@ -72,14 +80,12 @@ Route::group([
             Route::delete('file/{file}', 'FileController@delete');
 
 
-            /*
-              Route::get('email/weekly', 'NachrichtenController@email');
-              Route::get('email/daily', 'NachrichtenController@emailDaily');
-                        */
+
+                          Route::get('email/weekly', 'NachrichtenController@email');
+             /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
+             */
 
             //Routen für Benutzerverwaltung
-
-
 
             Route::get('users/import', 'ImportController@importForm')->middleware(['permission:import user']);
             Route::post('users/import', 'ImportController@import')->middleware(['permission:import user']);
@@ -87,11 +93,15 @@ Route::group([
             Route::delete("users/{id}", "UserController@destroy");
 
 
+            //changelog
+            Route::resource('changelog', 'ChangelogController');
+
             //Suche
             Route::post('search','SearchController@search');
 
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
                 Route::resource('users', 'UserController');
+                //Route::get('sendErinnerung', 'RueckmeldungenController@sendErinnerung');
                 //Route::get('/daily', 'NachrichtenController@emailDaily');
             });
 
@@ -100,6 +110,34 @@ Route::group([
                 Route::put('roles', 'RolesController@update');
                 Route::post('roles', 'RolesController@store');
                 Route::post('roles/permission', 'RolesController@storePermission');
+            });
+
+
+            Route::group(['middlewareGroups' => ['role:Admin']], function () {
+                Route::get('showUser/{id}', 'UserController@loginAsUser');
+            });
+
+            Route::get('logoutAsUser', function (){
+                    if (session()->has('ownID')){
+                        \Illuminate\Support\Facades\Auth::loginUsingId(session()->pull('ownID'));
+                    }
+                    return redirect(url('/'));
+            });
+
+            //Elternratsbereich
+            Route::group(['middleware' => ['permission:view elternrat']], function () {
+                Route::resource('elternrat', 'ElternratController');
+                Route::delete('elternrat/file/{file}', 'ElternratController@deleteFile');
+                Route::delete('elternrat/comment/{comment}', 'ElternratController@deleteComment');
+                Route::get('elternrat/add/file', 'ElternratController@addFile');
+                Route::post('elternrat/file', 'ElternratController@storeFile');
+                Route::post('beitrag/{discussion}/comment/create', 'ElternratController@storeComment');
+                Route::get('elternrat/discussion/create', 'ElternratController@create');
+                Route::post('elternrat/discussion', 'ElternratController@store');
+                Route::get('elternrat/discussion/edit/{discussion}', 'ElternratController@edit');
+                Route::put('elternrat/discussion/{discussion}', 'ElternratController@update');
+
+
             });
         });
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\GroupsRepository;
 use App\Model\Groups;
 use App\Support\Collection;
 use Illuminate\Http\Request;
@@ -10,10 +11,11 @@ use Spatie\MediaLibrary\Models\Media;
 class FileController extends Controller
 {
 
-    public function __construct()
-    {
-        $this->middleware('password_expired');
-    }
+        public function __construct(GroupsRepository $groupsRepository)
+        {
+            $this->middleware('password_expired');
+            $this->grousRepository = $groupsRepository;
+        }
 
     public function delete(Media $file){
 
@@ -26,18 +28,17 @@ class FileController extends Controller
 
 
     public function index(){
-        $user = auth()->user();
-        $gruppen = $user->groups()->with('media')->get();
-
-
-
-
-
+        $user = auth()->user()->load('groups');
 
         if ($user->can('upload files')){
-            $gruppen = Groups::all();
+            if (!$user->can('view protected')){
+                $gruppen = Groups::where('protected', 0)->get();
+            } else {
+                $gruppen = Groups::all();
+            }
+
             return view('files.indexVerwaltung',[
-                'gruppen' => $gruppen
+                'gruppen' => $gruppen->load('media')
             ]);
 
 
@@ -80,15 +81,7 @@ class FileController extends Controller
         }
 
         $gruppen= $request->input('gruppen');
-
-        if ($gruppen[0] == "all"){
-            $gruppen = Groups::all();
-        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
-            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-            $gruppen = $gruppen->unique();
-        } else {
-            $gruppen = Groups::find($gruppen);
-        }
+        $gruppen = $this->grousRepository->getGroups($gruppen);
 
         if ($request->hasFile('files')) {
 

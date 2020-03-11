@@ -2,18 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\GroupsRepository;
 use App\Http\Requests\CreateListeRequest;
 use App\Model\Groups;
 use App\Model\Liste;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ListenController extends Controller
 {
+    public function __construct(GroupsRepository $groupsRepository)
+    {
+        $this->grousRepository = $groupsRepository;
+    }
+
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function index()
     {
@@ -23,26 +31,34 @@ class ListenController extends Controller
         if (auth()->user()->can('edit listen')){
             $listen = Liste::where('ende', '>=', Carbon::now()->subMonths(3));
         } else {
-            $listen = auth()->user()->listen;
+            $listen = auth()->user()->listen()->where('active', 1)->get();
             if (auth()->user()->can('create terminliste')){
                 $eigeneListen = Liste::where('besitzer', auth()->user()->id)->get();
 
                 $listen = $listen->merge($eigeneListen);
             }
+
+
+        }
+        $listen= $listen->unique('id');
+
+
+        $eintragungen = auth()->user()->listen_eintragungen;
+
+        if (auth()->user()->sorg2 != null){
+            $eintragungen= $eintragungen->merge(auth()->user()->sorgeberechtigter2->listen_eintragungen);
         }
 
-
-
         return view('listen.index', [
-            'listen' => $listen,
-            "eintragungen"  => auth()->user()->listen_eintragungen
+            'listen' => $listen->load('eintragungen'),
+            "eintragungen"  => $eintragungen
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function create()
     {
@@ -57,7 +73,7 @@ class ListenController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function store(CreateListeRequest $request)
     {
@@ -66,20 +82,14 @@ class ListenController extends Controller
 
 
         $Liste = new Liste($request->all());
+        //$Liste->active = 0;
         $Liste->besitzer = auth()->user()->id;
 
         $Liste->save();
 
         $gruppen= $request->input('gruppen');
+        $gruppen = $this->grousRepository->getGroups($gruppen);
 
-        if ($gruppen[0] == "all"){
-            $gruppen = Groups::all();
-        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
-            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-            $gruppen = $gruppen->unique();
-        } else {
-            $gruppen = Groups::find($gruppen);
-        }
 
         $Liste->groups()->attach($gruppen);
 
@@ -92,7 +102,7 @@ class ListenController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Liste  $Liste
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function show(Liste $terminListe)
     {
@@ -104,25 +114,6 @@ class ListenController extends Controller
                 'liste' => $terminListe
             ]);
         }
-/*
-        if((auth()->user()->groups()->whereIn('name',$terminListe->groups)->count() < 1 and !auth()->user()->can('edit terminliste') and auth()->user()->id != $terminListe->besitzer)){
-            return redirect()->back()->with([
-                "type"  => 'danger',
-                'Meldung'   => "Berechtigung fehlt".$terminListe->besitzer
-            ]);
-        };
-
-        if (!auth()->user()->can('edit terminliste') and auth()->user()->id != $terminListe->besitzer and (!$terminListe->active or $terminListe->ende->lessThan(Carbon::now()->startOfDay()))){
-            return redirect()->back()->with([
-                "type"  => 'warning',
-                'Meldung'   => "Liste ist deaktiviert oder abgelaufen"
-            ]);
-        }
-
-        return view('listen.show',[
-            'liste' => $terminListe->load('eintragungen')
-        ]);
-*/
 
     }
 
@@ -160,5 +151,45 @@ class ListenController extends Controller
         //
     }
 
+    public function activate ($liste){
+
+        $liste = Liste::find($liste);
+        $liste->update([
+            'active' => 1
+        ]);
+
+        return redirect()->back();
+    }
+
+    public function deactivate ($liste){
+
+        $liste = Liste::find($liste);
+        $liste->update([
+            'active' => 0
+        ]);
+
+        return redirect()->back();
+    }
+
+    public function pdf(Liste $liste){
+
+        if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminlisten')){
+            /*$pdf = \PDF::loadView('listen.listenExport', [
+                "Liste" => $liste,
+                'listentermine' => $liste->eintragungen->sortBy('termin')
+            ]);
+            return $pdf->download('test.pdf');
+            */
+            return view('listen.listenExport', [
+                "Liste" => $liste,
+                'listentermine' => $liste->eintragungen->sortBy('termin')
+            ]);
+        }
+
+        return redirect()->back()->with([
+           'type'   => 'error',
+           'Meldung'=>  'Berechtigung fehlt'
+        ]);
+    }
 }
 

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
-
+    @stack('header')
     <title>{{env('app_name')}}</title>
 
 
@@ -23,34 +23,19 @@
 </head>
 
 <body id="app-layout">
-<div class="sidebar" data-color="white" data-active-color="danger">
+<div class="main-panel" style="width: 100%">
 
-    <div class="logo" style="word-wrap: normal;">
-        <a href="https://www.esz-radebeul.de" class="simple-text">
-            <div class="logo-image-small">
-                <img src="{{asset('img/logo.png')}}">
-            </div>
-        </a>
-    </div>
-
-</div>
-<div class="main-panel">
-
-
-    <div class="content">
-        @if(session('Meldung'))
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-10" >
-                        <div class="alert alert-{{session('type')}} alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            {{session('Meldung')}}
-
-                        </div>
-                    </div>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent">
+            <div class="container-fluid">
+                <div class="navbar-wrapper">
+                    <a class="navbar-brand" href="{{url('/')}}">{{env('APP_NAME')}}</a>
                 </div>
             </div>
-        @endif
+        </nav>
+
+    <div class="content">
+
         @yield('content')
 
     </div>

@@ -12,17 +12,27 @@
             <form action="{{url("/rueckmeldung/$nachricht->id/create")}}" method="post" class="form form-horizontal">
                 @csrf
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label>Empfänger</label>
                             <input type="email" class="form-control border-input" name="empfaenger" value="{{old('empfaenger')? old('empfaenger') : "info@esz-radebeul.de"}}" required >
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group">
                             <label>Ende</label>
                             <input type="date" class="form-control border-input" name="ende" value="{{old('ende')}}" required >
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Rückmeldung verpflichtend?</label>
+                            <select class="custom-select" name="pflicht">
+                                <option value="0">Nein</option>
+                                <option value="1">Ja</option>
+                            </select>
                         </div>
                     </div>
                 </div>

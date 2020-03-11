@@ -15,6 +15,8 @@ class Posts extends Model  implements HasMedia
     use HasMediaTrait;
     use SoftDeletes;
     use Cloneable;
+    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
+
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab'];
 
@@ -43,5 +45,8 @@ class Posts extends Model  implements HasMedia
         return $this->hasMany(UserRueckmeldungen::class);
     }
 
+    public function users(){
+        return $this->hasManyDeep('App\Model\User', ['groups_posts', 'App\Model\Groups','groups_user']);
+    }
 
 }

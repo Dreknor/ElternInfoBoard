@@ -2,16 +2,16 @@
 
 @section('content')
     <div class="container-fluid">
+        <a class="btn btn-outline-info" href="{{url('listen')}}">zurück zur Übersicht</a>
         <div class="card">
-            <div class="card-header border-bottom">
+            <div class="card-header border-bottom @if($liste->active == 0) bg-info @endif">
                 <h5>
-                    {{$liste->listenname}}
+                    {{$liste->listenname}} @if($liste->active == 0) (inaktiv) @endif
                 </h5>
                 <div class="row">
                     <div class="col-md-8 col-sm-12">
                         <p class="info small">
                             {!! $liste->comment !!}
-
                         </p>
                     </div>
                     <div class="col-md-4 col-sm-12">
@@ -20,6 +20,11 @@
                                 <i class="fa fa-dd-user"></i>
                                     Termin anlegen
                             </button>
+
+                            <a href="{{url('listen/'.$liste->id.'/export')}}" class="btn btn-secondary pull-right" target="_blank">
+                                <i class="fa fas-export"></i>
+                                Druckansicht
+                            </a>
                         @endif
                     </div>
                 </div>
@@ -31,34 +36,39 @@
                         @foreach($liste->eintragungen->sortBy('termin') as $eintrag)
                             <div class="list-group-item">
                                 <div class="row">
-                                    <div class="col-md-3 col-sm-6 m-auto">
-                                        {{	$eintrag->termin->format('d.m.Y')}},  {{	$eintrag->termin->formatLocalized('%A')}}
+                                    <div class="col-sm-6 col-md-3 m-auto">
+
+                                            {{	$eintrag->termin->formatLocalized('%A')}}, <b>{{	$eintrag->termin->format('d.m.Y')}}</b>
+
                                     </div>
 
-                                    <div class="col-md-3 col-sm-6 m-auto">
-                                        {{	$eintrag->termin->format('H:i')}}
-                                    </div>
+                                    <div class="col-sm-6 col-md-3 m-auto">
+                                        <b>
+                                            {{	$eintrag->termin->format('H:i')}} - {{$eintrag->termin->copy()->addMinutes($liste->duration)->format('H:i')}} Uhr
+                                        </b>
 
-                                    <div class="col-md-3 col-sm-6 m-auto">
+                                    </div>
+                                    <div class="col-sm-6 col-md-2 m-auto">
+                                        {{$eintrag->comment}}
+                                    </div>
+                                    <div class="col-sm-6 col-md-4 m-auto">
                                         @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
-                                           <div class="row">
-                                               <div class="col-md-6 col-sm-12 m-auto">
-                                                   @if($eintrag->reserviert_fuer != null)
-                                                       {{$eintrag->eingetragenePerson->name }}
-                                                   @endif
+                                               <div class="row">
+                                                   <div class="col-sm-12 col-md-6 m-auto">
+                                                       @if($eintrag->reserviert_fuer != null)
+                                                           {{$eintrag->eingetragenePerson->name }}
+                                                       @endif
+                                                   </div>
+                                                   <div class="col-sm-12 col-md-6 m-auto">
+                                                       <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
+                                                           @csrf
+                                                           @method('delete')
+                                                           <button type="submit" class="btn @if($eintrag->reserviert_fuer != null) btn-outline-danger @else btn-outline-warning @endif btn-xs btn-round">
+                                                               @if($eintrag->reserviert_fuer != null) {{$eintrag->eingetragenePerson->name }} absagen @else  Termin löschen @endif
+                                                           </button>
+                                                       </form>
+                                                   </div>
                                                </div>
-                                               <div class="col-md-6 col-sm-12">
-                                                   <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
-                                                       @csrf
-                                                       @method('delete')
-                                                       <button type="submit" class="btn btn-danger btn-round">
-                                                           Termin löschen @if($eintrag->reserviert_fuer != null) und {{$eintrag->eingetragenePerson->name }} absagen @endif
-                                                       </button>
-                                                   </form>
-                                               </div>
-                                           </div>
-
-
                                         @else
                                             @if($eintrag->reserviert_fuer != null)
                                                 @if($liste->visible_for_all)
@@ -76,9 +86,7 @@
                                         @endif
                                     </div>
 
-                                    <div class="col-md-3 col-sm-6 m-auto">
-                                        {{$eintrag->comment}}
-                                    </div>
+
                                 </div>
 
                             </div>
@@ -119,9 +127,9 @@
                        </div>
                        <div class="form-row">
                            <label for="termin">
-                               Dauer in Minuten (kann nicht geändert werden):
+                               Dauer in Minuten:
                            </label>
-                           <input type="number" name="duration" class="form-control" readonly value="{{$liste->duration}}">
+                           <input type="number" name="duration" readonly class="form-control" value="{{$liste->duration}}">
                        </div>
                        <div class="form-row">
                            <label for="comment">
@@ -133,7 +141,7 @@
                            <label for="termin">
                                Anzahl aufeinderfolgender Termine
                            </label>
-                           <input type="number" name="repeat" class="form-control" min="1" step="1" max="5" value="1">
+                           <input type="number" name="repeat" class="form-control" min="1" step="1" max="8" value="1">
                        </div>
                    </form>
                 </div>

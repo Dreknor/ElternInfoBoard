@@ -10,25 +10,25 @@
 
             <div class="card-body">
                 <ul class="list-group">
-
                     @foreach($gruppen as $gruppe)
-                        <li class="list-group-item border-top">
-                            {{$gruppe->name}}
-                        </li>
-                        @foreach($gruppe->getMedia() as $medium)
-                            <li class="list-group-item">
-                                <a href="{{url('/image/'.$medium->id)}}" target="_blank" class="mx-auto ">
-                                    <i class="fas fa-file-download"></i>
-                                    {{$medium->name}}
-                                </a>
-                                @can('upload files')
-                                    <button class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$medium->id}}">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-
-                                @endcan
+                        @if(!$gruppe->protected or auth()->user()->can('view protected') or auth()->user()->groups->where('name', $gruppe->name)->first() != null)
+                            <li class="list-group-item border-top">
+                                {{$gruppe->name}}
                             </li>
-                        @endforeach
+                            @foreach($gruppe->getMedia() as $medium)
+                                <li class="list-group-item">
+                                    <a href="{{url('/image/'.$medium->id)}}" target="_blank" class="mx-auto ">
+                                        <i class="fas fa-file-download"></i>
+                                        {{$medium->name}}
+                                    </a>
+                                    @can('upload files')
+                                        <button class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$medium->id}}">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    @endcan
+                                </li>
+                            @endforeach
+                        @endif
                     @endforeach
                 </ul>
             </div>

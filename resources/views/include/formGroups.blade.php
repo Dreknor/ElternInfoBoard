@@ -2,7 +2,7 @@
     <label>Für welche Gruppen?</label>
     <br>
     <input type="checkbox" name="gruppen[]" value="all" id="checkboxAll"/>
-    <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen</b></label>
+    <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen (GS + OS)</b></label>
     <div>
         <input type="checkbox" name="gruppen[]" value="Grundschule" id="checkboxGrundschule"/>
         <label for="checkboxGrundschule" id="labelCheckGrundschule"><b>Grundschule</b></label>
