@@ -46,6 +46,9 @@ Route::group([
             Route::post('listen', 'ListenController@store');
             Route::get('listen/create', 'ListenController@create');
             Route::get('listen/{terminListe}', 'ListenController@show');
+            Route::get('listen/{liste}/activate', 'ListenController@activate');
+            Route::get('listen/{liste}/deactivate', 'ListenController@deactivate');
+            Route::get('listen/{liste}/export', 'ListenController@pdf');
             Route::get('listen/{terminListe}/auswahl', 'ListenController@auswahl');
             Route::post('eintragungen/{liste}/store', 'ListenTerminController@store');
             Route::put('eintragungen/{listen_termine}', 'ListenTerminController@update');
@@ -98,6 +101,7 @@ Route::group([
 
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
                 Route::resource('users', 'UserController');
+                //Route::get('sendErinnerung', 'RueckmeldungenController@sendErinnerung');
                 //Route::get('/daily', 'NachrichtenController@emailDaily');
             });
 

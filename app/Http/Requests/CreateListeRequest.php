@@ -27,8 +27,9 @@ class CreateListeRequest extends FormRequest
             'listenname'    => "required|string",
             'type'          => "required|in:termin,eintrag",
             'visible_for_all'   => 'required|boolean',
+            'multiple'   => 'required|boolean',
             'active'        => 'required|boolean',
-            'ende'          => 'required|date'
+            'ende'          => 'required|date',
             ];
     }
 }

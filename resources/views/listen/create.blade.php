@@ -47,20 +47,29 @@
                                     </label>
                                     <input type="date" name="ende" value="{{\Carbon\Carbon::now()->addWeeks(6)->format('Y-m-d')}}" class="form-control" required>
                                 </div>
-                                <div class=" col-md-4 col-sm-6">
+                                <div class=" col-md-3 col-sm-6">
                                     <label for="visible_for_all">
                                        Einträge für alle sichtbar?
                                     </label>
-                                    <select type="date" name="visible_for_all" class="custom-select" id="visible_for_all">
+                                    <select name="visible_for_all" class="custom-select" id="visible_for_all">
                                         <option value="0" selected>nur eigenen Eintrag anzeigen</option>
                                         <option value="1">alle dürfen alle Eintragungen sehen</option>
                                     </select>
                                 </div>
-                                <div class=" col-md-4 col-sm-6">
-                                    <label for="active">
-                                       Liste aktivieren?
+                                <div class=" col-md-3 col-sm-6">
+                                    <label for="multiple">
+                                        mehrere Einträge buchbar?
                                     </label>
-                                    <select type="date" name="active" class="custom-select" id="active">
+                                    <select name="multiple" class="custom-select" id="visible_for_all">
+                                        <option value="0" selected>nein</option>
+                                        <option value="1">ja</option>
+                                    </select>
+                                </div>
+                                <div class=" col-md-3 col-sm-6">
+                                    <label for="active">
+                                        Liste aktivieren?
+                                    </label>
+                                    <select name="active" class="custom-select" id="active">
                                         <option value="1">ja</option>
                                         <option value="0" selected>noch nicht anzeigen</option>
                                     </select>

@@ -8,6 +8,10 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * Class User
+ * @package App\Model
+ */
 class User extends Authenticatable
 {
     use Notifiable;
@@ -50,28 +54,50 @@ class User extends Authenticatable
     ];
 
 
+    /**
+     * Verknüpfte Gruppen
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function groups(){
         return $this->belongsToMany(Groups::class)->withTimestamps();
     }
 
+    /**
+     * Posts verknüpft über die Gruppen
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
     public function posts(){
         return $this->hasManyDeep('App\Model\Posts', ['groups_user', 'App\Model\Groups','groups_posts']);
 
     }
 
+    /**
+     * Termine Verknüpft über Gruppen
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
     public function termine(){
             return $this->hasManyDeep('App\Model\Termin', ['groups_user', 'App\Model\Groups','groups_termine']);
     }
+
+    /**
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
     public function listen(){
         return $this->hasManyDeep('App\Model\Liste', ['groups_user', 'App\Model\Groups','groups_listen']);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function listen_eintragungen(){
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
     }
 
     //Sorgeberechtigter 2
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
     public function sorgeberechtigter2(){
         return $this->hasOne(User::class, 'sorg2');
     }
@@ -85,10 +111,16 @@ class User extends Authenticatable
         return $this->changePassword;
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function userRueckmeldung(){
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
     }
 
+    /**
+     * @return mixed
+     */
     public function getRueckmeldung(){
         $eigeneRueckmeldung = $this->userRueckmeldung;
 
@@ -105,11 +137,18 @@ class User extends Authenticatable
         return $eigeneRueckmeldung;
     }
 
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function Reinigung(){
         return $this->hasMany(Reinigung::class, 'users_id', 'id');
     }
 
 
+    /**
+     * @return mixed|string
+     */
     public function getFamilieNameAttribute(){
         $Name = explode(' ', $this->name);
 

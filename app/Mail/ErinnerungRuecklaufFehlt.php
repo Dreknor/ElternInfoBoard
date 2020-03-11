@@ -11,7 +11,8 @@ class ErinnerungRuecklaufFehlt extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $user;
+    public $email;
+    public $name;
     public $thema;
     public $ende;
     /**
@@ -19,9 +20,10 @@ class ErinnerungRuecklaufFehlt extends Mailable
      *
      * @return void
      */
-    public function __construct(User $user, $thema, $ende)
+    public function __construct($Email, $Name, $thema, $ende)
     {
-        $this->user = $user;
+        $this->email = $Email;
+        $this->name = $Name;
         $this->thema = $thema;
         $this->ende = $ende;
     }
@@ -34,12 +36,9 @@ class ErinnerungRuecklaufFehlt extends Mailable
     public function build()
     {
         return $this
-            ->from(
-                env('MAIL_FROM_ADDRESS'),
-                env('MAIL_FROM_NAME'),
-            )->subject('Rückmeldung fehlt: '.$this->thema)
+            ->subject('Rückmeldung fehlt: '.$this->thema)
             ->view('emails.rueckmeldungFehlt')->with([
-                "name"  => $this->user->name,
+                "name"  => $this->name,
                 "thema"  => $this->thema,
                 "ende"  => $this->ende
             ]);

@@ -3,9 +3,9 @@
 @section('content')
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header @if($liste->active == 0) bg-info @endif">
                 <h5>
-                    {{$liste->listenname}}
+                    {{$liste->listenname}} @if($liste->active == 0) (inaktiv) @endif
                 </h5>
                 <div class="text-info">
                     <p class="text-muted">

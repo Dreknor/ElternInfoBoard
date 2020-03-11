@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
-use App\Model\Posts;
 use App\Model\Rueckmeldungen;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+
 
 class RueckmeldungenController extends Controller
 {
@@ -17,7 +19,7 @@ class RueckmeldungenController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
     {
@@ -41,7 +43,7 @@ class RueckmeldungenController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function update(Request $request, $posts_id)
     {
@@ -62,7 +64,7 @@ class RueckmeldungenController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function destroy(Rueckmeldungen $rueckmeldung)
     {
@@ -75,7 +77,7 @@ class RueckmeldungenController extends Controller
 
 
     public function sendErinnerung(){
-        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now(),Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users','post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
+        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now()->addDays(3),Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users','post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
         foreach ($rueckmeldungen as $Rueckmeldung){
             if ($Rueckmeldung->post->released == 1){
                 $user = $Rueckmeldung->post->users;
@@ -84,11 +86,14 @@ class RueckmeldungenController extends Controller
                 foreach ($user as $User){
                     $RueckmeldungUser = $User->getRueckmeldung()->where('posts_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)){
-                        Mail::to($User->email)->queue(new ErinnerungRuecklaufFehlt($User, $Rueckmeldung->post->header, $Rueckmeldung->ende));
+                        $email=$User->email;
+                        Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende));
                     }
                 }
             }
         }
+
+
 
 
     }

@@ -1,9 +1,39 @@
 @extends('layouts.app')
 
+@section('css')
+
+    <style type="text/css">
+        @media (min-width: 576px) {
+            .card-columns {
+                column-count: 1;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .card-columns {
+                column-count: 2;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .card-columns {
+                column-count: 3;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .card-columns {
+                column-count: 3;
+            }
+        }
+    </style>
+
+@endsection
+
 @section('content')
     <div class="container-fluid">
         <div class="row justify-content-center">
-                    <div class="col-md-10 col-sm-6">
+                    <div class="col-md-12 col-sm-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5>
@@ -19,50 +49,82 @@
                             @endif
                         </div>
                         @if(count($listen)>=1)
-                                    <div class="card-deck">
+                                    <div class="card-columns">
                                         @foreach($listen as $liste)
                                             <div class="card">
-                                                <div class="card-header">
+                                                <div class="card-header  @if($liste->active == 0) bg-info @endif ">
                                                     <h5>
-                                                        {{$liste->listenname}}
+                                                        {{$liste->listenname}} @if($liste->active == 0) (inaktiv) @endif
                                                     </h5>
                                                     <div class="row">
-                                                        <div class="col-sm-8 -col-md-6">
+                                                        <div class="col-sm-8 col-md-8 col-lg-8">
                                                             <p class="info small">
                                                                 {!! $liste->comment !!}
                                                             </p>
                                                         </div>
-                                                        @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
 
+                                                        @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
+                                                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                                                <div class="pull-right">
+                                                                    @if($liste->active == 0)
+                                                                        <a href="{{url("listen/$liste->id/activate")}}" class="btn btn-warning">
+                                                                            <i class="fas fa-eye" title="veröffentlichen"></i>
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="{{url("listen/$liste->id/deactivate")}}" class="btn btn-warning btn-xs">
+                                                                            <i class="fas fa-eye-slash" title="ausblenden"></i>
+                                                                        </a>
+                                                                    @endif
+                                                                </div>
+
+                                                            </div>
                                                         @endif
+
                                                     </div>
 
 
                                                 </div>
                                                 <div class="card-body border-top">
-                                                    @if($eintragungen->where('listen_id', $liste->id)->count() > 0)
+                                                    @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
                                                         <div class="row">
-                                                            <div class="col-8">
-                                                                <b>Ihr Termin:</b > <br>{{$eintragungen->where('listen_id', $liste->id)->first()->termin->format('d.m.Y H:i')}} Uhr
+                                                            <div class="col-12">
+                                                                <p>
+                                                                    Bisherige Eintragungen: {{$liste->eintragungen->where('reserviert_fuer', '!=', null)->count()}}
+                                                                </p>
                                                             </div>
-                                                            <div class="col-4">
 
-                                                                <form action="{{url('eintragungen/'.$eintragungen->where('listen_id', $liste->id)->first()->id)}}" method="post">
-                                                                    <a href="{{$eintragungen->where('listen_id', $liste->id)->first()->link($liste->listenname, $liste->duration)->google()}}" class="btn btn-primary btn-sm" target="_blank" title="Goole-Kalender-Link">
-                                                                        <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
-                                                                    </a>
-                                                                    <a href="{{$eintragungen->where('listen_id', $liste->id)->first()->link($liste->listenname,  $liste->duration)->ics()}}" class="btn btn-primary btn-sm" title="ICS-Download für Apple und Windows">
-                                                                        <img  src="{{asset('img/ics-icon.png')}}" height="25px">
-                                                                    </a>
-                                                                    @csrf
-                                                                    @method("delete")
-                                                                    <button type="submit" class="btn btn-xs btn-danger">absagen</button>
-                                                                </form>
+                                                        </div>
+                                                    @endif
+
+                                                    @if($eintragungen->where('listen_id', $liste->id)->count() > 0)
+                                                        @foreach($eintragungen->where('listen_id', $liste->id)->sortBy('termin')->all() as $eintragung)
+                                                            <div class="row">
+                                                                <div class="col-8">
+                                                                    <b>Ihr Termin:</b > <br>{{$eintragung->termin->format('d.m.Y H:i')}} Uhr
+                                                                </div>
+                                                                <div class="col-4">
+
+                                                                    <form action="{{url('eintragungen/'.$eintragung->id)}}" method="post">
+                                                                        <a href="{{$eintragung->link($liste->listenname, $liste->duration)->google()}}" class="btn btn-primary btn-sm" target="_blank" title="Goole-Kalender-Link">
+                                                                            <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
+                                                                        </a>
+                                                                        <a href="{{$eintragung->link($liste->listenname,  $liste->duration)->ics()}}" class="btn btn-primary btn-sm" title="ICS-Download für Apple und Windows">
+                                                                            <img  src="{{asset('img/ics-icon.png')}}" height="25px">
+                                                                        </a>
+                                                                        @csrf
+                                                                        @method("delete")
+                                                                        <button type="submit" class="btn btn-xs btn-danger">absagen</button>
+                                                                    </form>
+                                                                </div>
                                                             </div>
-                                                    @else
-                                                        <a href="{{url("listen/$liste->id")}}" class="btn btn-primary btn-block">
-                                                            Auswahl anzeigen
-                                                        </a>
+                                                        @endforeach
+                                                    @endif
+                                                    @if($eintragungen->where('listen_id', $liste->id)->count() < 1 or $liste->multiple == 1)
+                                                        <div class="row">
+                                                            <a href="{{url("listen/$liste->id")}}" class="btn btn-primary btn-block">
+                                                                Auswahl anzeigen
+                                                            </a>
+                                                        </div>
                                                     @endif
                                                 </div>
                                                 <div class="card-footer border-top">
@@ -75,6 +137,7 @@
                                                         </div>
                                                     @endif
                                                 </div>
+
                                             </div>
                                         @endforeach
                                     </div>

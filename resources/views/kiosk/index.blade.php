@@ -13,6 +13,7 @@
                         @foreach($Nachrichten AS $nachricht)
                                 <li class="list-group-item @if($nachricht->released != 1) list-group-item-info  @endif" data-target="#carousel" data-slide-to="{{$loop->index}}" >
                                     {{$nachricht->header}}
+
                                 </li>
                         @endforeach
                 </ul>
@@ -27,17 +28,20 @@
                                             <h5>
                                                 {{$nachricht->header}} @if($nachricht->released != 1) (unveröffentlicht)  @endif
                                             </h5>
+                                            <small>
+                                                (Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}})
+                                            </small>
                                             @if(!is_null($nachricht->rueckmeldung))
                                                 @if(!$archiv and $nachricht->rueckmeldung->pflicht == 1)
                                                     <div class="container-fluid">
                                                         <p>Rückmeldungen:</p>
                                                         <div class="row">
                                                             <div class="col-12">
-                                                                @for($x=0; $x < $nachricht->userRueckmeldung->count(); $x++)
+                                                                @for($x=1; $x <= $nachricht->userRueckmeldung->count(); $x++)
                                                                     <i class="fas fa-user-alt text-success" title="{{$x}}"></i>
                                                                 @endfor
-                                                                @for($x=0; $x < ((round($nachricht->users->where('sorg2', '!=', null)->unique('email')->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
-                                                                    <i class="fas fa-user-alt text-danger"></i>
+                                                                @for($x=1; $x <= ((round($nachricht->users->where('sorg2', '!=', null)->unique('email')->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
+                                                                    <i class="fas fa-user-alt text-danger" title="{{$x}}"></i>
                                                                 @endfor
                                                             </div>
                                                         </div>

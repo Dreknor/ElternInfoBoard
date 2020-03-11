@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\GroupsRepository;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
 use App\Mail\AktuelleInformationen;
@@ -28,8 +29,9 @@ class NachrichtenController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(GroupsRepository $groupsRepository)
     {
+        $this->grousRepository = $groupsRepository;
         $this->middleware('auth');
     }
 
@@ -222,15 +224,7 @@ class NachrichtenController extends Controller
         $post->save();
 
         $gruppen = $request->input('gruppen');
-
-        if ($gruppen[0] == "all") {
-            $gruppen = Groups::all();
-        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
-            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-            $gruppen = $gruppen->unique();
-        } else {
-            $gruppen = Groups::find($gruppen);
-        }
+        $gruppen = $this->grousRepository->getGroups($gruppen);
 
         $post->groups()->attach($gruppen);
 
@@ -334,16 +328,10 @@ class NachrichtenController extends Controller
         $posts->save();
 
 
-        $gruppen = $request->input('gruppen');
+        //Gruppen
 
-        if ($gruppen[0] == "all") {
-            $gruppen = Groups::all();
-        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
-            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-            $gruppen = $gruppen->unique();
-        } else {
-            $gruppen = Groups::find($gruppen);
-        }
+        $gruppen = $request->input('gruppen');
+        $gruppen = $this->grousRepository->getGroups($gruppen);
 
         $posts->groups()->detach();
         $posts->groups()->attach($gruppen);

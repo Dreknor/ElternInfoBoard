@@ -152,14 +152,10 @@ class ElternratController extends Controller
 
             $gruppe = Groups::where('name', "Elternrat")->first();
 
-
         if ($request->hasFile('files')) {
-
-
                 $gruppe->addMediaFromRequest('files')
                     ->preservingOriginal()
                     ->toMediaCollection();
-
         }
         return redirect(url('elternrat'))->with([
             "type"  => "success",

@@ -3,29 +3,29 @@
 @section('content')
 <div class="container-fluid">
 
-    @if($nachrichten != null and count($nachrichten)>0)
-        <div class="card">
-            <div class="card-header border-bottom">
-                <ul class="nav nav-tabs border-info w-100">
-                    <li class="nav-item">
-                        <a class="nav-link @if(request()->segment(1)=="" or (request()->segment(1)=="home" and request()->segment(2)!="archiv")) active @endif" href="{{url('/')}}">
-                            <h4>
-                                <i class="far fa-newspaper"></i>
-                                Aktuelle Themen
-                            </h4>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link @if(request()->segment(2)=="archiv") active  @endif" href="{{url('/home/archiv')}}">
-                            <h4>
-                                <i class="fas fa-archive"></i>
-                                Archiv
-                            </h4>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+    <div class="card">
+        <div class="card-header border-bottom">
+            <ul class="nav nav-tabs border-info w-100">
+                <li class="nav-item">
+                    <a class="nav-link @if(request()->segment(1)=="" or (request()->segment(1)=="home" and request()->segment(2)!="archiv")) active @endif" href="{{url('/')}}">
+                        <h4>
+                            <i class="far fa-newspaper"></i>
+                            Aktuelle Themen
+                        </h4>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @if(request()->segment(2)=="archiv") active  @endif" href="{{url('/home/archiv')}}">
+                        <h4>
+                            <i class="fas fa-archive"></i>
+                            Archiv
+                        </h4>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
+    @if($nachrichten != null and count($nachrichten)>0)
             <div class="card-body">
                 <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#cThemen" aria-expanded="false" aria-controls="collapseThemen">
                     Themen zeigen
@@ -44,15 +44,13 @@
                             @endif
                         @endforeach
                     </div>
-
                 </div>
-
             </div>
         </div>
     <div id="">
         @include('termine.nachricht')
         @include('reinigung.nachricht')
-        @if($archiv)
+        @if($archiv != null)
             <div class="card">
                 <div class="card-body bg-warning">
                     <b>{{$nachrichten->first()->updated_at->locale('de')->getTranslatedMonthName('Do MMMM')}} {{$nachrichten->first()->updated_at->format('Y')}}</b>
@@ -61,7 +59,7 @@
         @endif
         @foreach($nachrichten AS $nachricht)
             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                @if($nachricht->updated_at->month < $datum->month )
+                @if($nachricht->updated_at->month < $datum->month and $archiv != null )
                     @php($datum = $nachricht->updated_at->copy())
                     <div class="card">
                         <div class="card-body bg-warning">
@@ -80,9 +78,11 @@
         {{$nachrichten->links()}}
     </div>
     @else
+    </div>
         @include('termine.nachricht')
 
         @include('reinigung.nachricht')
+
         <div class="card">
             <div class="card-body bg-info">
                 <p>
@@ -90,7 +90,7 @@
                 </p>
             </div>
         </div>
-            @endif
+    @endif
 </div>
 @endsection
 

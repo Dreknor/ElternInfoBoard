@@ -8,13 +8,14 @@ class Liste extends Model
 {
     protected $table = "listen";
 
-    protected $fillable= ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration'];
+    protected $fillable= ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
 
     protected $dates = ['created_at', 'updated_at', 'ende'];
 
     protected $casts = [
         "visible_for_all"   => 'boolean',
-        'active'            => "boolean"
+        'active'            => "boolean",
+        'multiple'            => "boolean",
     ];
 
     public function ersteller (){

@@ -13,13 +13,6 @@
       <executable />
     </execution>
   </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>user</find>
-      <find>rueckmeldungNachricht</find>
-      <find>count(</find>
-    </findStrings>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -170,22 +163,25 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="add_unversioned_files" value="$PROJECT_DIR$/storage/logs/laravel-2019-11-13.log" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/resources/views/pdf" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
+    <property name="settings.editor.selected.configurable" value="xslt.associations" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\elternbrief\app" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\listen" />
+      <recent name="C:\xampp\htdocs\elternbrief\app\Model" />
+      <recent name="C:\xampp\htdocs\elternbrief\app\Support" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\pdf" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\emails" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\changelog" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\kiosk\footer" />
       <recent name="C:\xampp\htdocs\elternbrief\resources\views\kiosk" />
-      <recent name="C:\xampp\htdocs\elternbrief\app\Model" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\xampp\htdocs\elternbrief\app\Model" />
-      <recent name="C:\xampp\htdocs\elternbrief\app\Support" />
     </key>
   </component>
   <component name="RunManager">
@@ -267,6 +263,14 @@
       <workItem from="1581572493441" duration="238000" />
       <workItem from="1581575534938" duration="626000" />
       <workItem from="1581675224352" duration="8316000" />
+      <workItem from="1581836832197" duration="752000" />
+      <workItem from="1582527762886" duration="2309000" />
+      <workItem from="1582650573372" duration="5508000" />
+      <workItem from="1583155312304" duration="3728000" />
+      <workItem from="1583214925788" duration="2093000" />
+      <workItem from="1583240198816" duration="5948000" />
+      <workItem from="1583599693548" duration="1641000" />
+      <workItem from="1583601650828" duration="10165000" />
     </task>
     <servers />
   </component>
@@ -274,29 +278,72 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="729" y="331" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1580203208149">
+    <state x="729" y="331" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1583158924553">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="729" y="331" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1580203208149" />
+    <state x="729" y="331" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583158924553" />
+    <state x="765" y="239" key="#com.intellij.ide.util.MemberChooser" timestamp="1583914143615">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="765" y="239" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583914143615" />
+    <state x="640" y="260" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1582526963152">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="640" y="260" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1582526963151" />
     <state x="683" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1579604639811">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="683" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579604639811" />
-    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog" timestamp="1581836353394">
+    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog" timestamp="1583914500231">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1581836353394" />
-    <state x="740" y="279" key="FileChooserDialogImpl" timestamp="1581605315993">
+    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583914500231" />
+    <state x="740" y="279" key="FileChooserDialogImpl" timestamp="1583219736711">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="740" y="279" key="FileChooserDialogImpl/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1581605315993" />
-    <state x="760" y="355" key="NewPhpClassDialog" timestamp="1580851007098">
+    <state x="740" y="279" key="FileChooserDialogImpl/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583219736711" />
+    <state x="760" y="355" key="NewPhpClassDialog" timestamp="1583913889883">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="760" y="355" key="NewPhpClassDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1580851007098" />
+    <state x="760" y="355" key="NewPhpClassDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583913889883" />
+    <state x="463" y="165" key="SettingsEditor" timestamp="1583159242673">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="463" y="165" key="SettingsEditor/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583159242673" />
     <state x="771" y="440" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1579796854755">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="771" y="440" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579796854755" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1583763807287">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583763807287" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand>
+      <path>
+        <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
+        <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
+      </path>
+      <path>
+        <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
+        <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
+        <item name="app" type="462c0819:PsiDirectoryNode" />
+      </path>
+      <path>
+        <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
+        <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
+        <item name="app" type="462c0819:PsiDirectoryNode" />
+        <item name="Http" type="462c0819:PsiDirectoryNode" />
+      </path>
+      <path>
+        <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
+        <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
+        <item name="app" type="462c0819:PsiDirectoryNode" />
+        <item name="Http" type="462c0819:PsiDirectoryNode" />
+        <item name="Controllers" type="462c0819:PsiDirectoryNode" />
+      </path>
+    </expand>
+    <select />
   </component>
 </project>
