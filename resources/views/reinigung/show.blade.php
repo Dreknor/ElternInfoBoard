@@ -2,6 +2,19 @@
 
 @section('content')
     <div class="container-fluid">
+        @if(count($Bereiche)<1)
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="card btn-outline-info">
+                        <div class="card-body">
+                            <p>
+                                Die Reinigungsliste wird mit Beginn des Schuljahres angezeigt
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @foreach($Bereiche as $Bereich)
             <div class="row justify-content-center">
                 <div class="col-12">

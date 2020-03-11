@@ -21,7 +21,7 @@
                                     Termin anlegen
                             </button>
 
-                            <a href="{{url('listen/'.$liste->id.'/export')}}" class="btn btn-secondary pull-right" target="_blank">
+                            <a href="{{url('listen/'.$liste->id.'/export')}}" class="btn btn-secondary pull-right" >
                                 <i class="fa fas-export"></i>
                                 Druckansicht
                             </a>

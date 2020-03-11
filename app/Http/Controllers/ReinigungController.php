@@ -32,7 +32,7 @@ class ReinigungController extends Controller
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
         } else {
-            $Bereiche = Groups::query()->pluck('bereich')->unique();
+            $Bereiche = Groups::query()->whereNotNull('bereich')->pluck('bereich')->unique();
         }
 
         $Reinigung = [];

@@ -28,8 +28,8 @@ class ListenController extends Controller
         $this->authorize('viewAny', Liste::class);
 
 
-        if (auth()->user()->can('edit listen')){
-            $listen = Liste::where('ende', '>=', Carbon::now()->subMonths(3));
+        if (auth()->user()->can('edit terminliste')){
+            $listen = Liste::where('ende', '>=', Carbon::now()->subMonths(3))->get();
         } else {
             $listen = auth()->user()->listen()->where('active', 1)->get();
             if (auth()->user()->can('create terminliste')){
@@ -39,10 +39,10 @@ class ListenController extends Controller
             }
 
 
+
         }
+
         $listen= $listen->unique('id');
-
-
         $eintragungen = auth()->user()->listen_eintragungen;
 
         if (auth()->user()->sorg2 != null){
@@ -50,7 +50,7 @@ class ListenController extends Controller
         }
 
         return view('listen.index', [
-            'listen' => $listen->load('eintragungen'),
+            'listen' => $listen,
             "eintragungen"  => $eintragungen
         ]);
     }

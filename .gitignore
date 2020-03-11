@@ -3,7 +3,7 @@
 /public/storage
 /storage/*.key
 /vendor
-/.idea
+/.idea/
 .env
 .phpunit.result.cache
 Homestead.json
@@ -13,7 +13,5 @@ yarn-error.log
 
 *.iml
 *.iml
-.idea/php.xml
-.idea/workspace.xml
-*.xml
-.idea/workspace.xml
+     *.xml
+
