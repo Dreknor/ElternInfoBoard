@@ -7,15 +7,17 @@ use App\Model\Reinigung;
 use App\Model\User;
 use App\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
+use Illuminate\View\View;
 
 class ReinigungController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function index()
     {
@@ -59,7 +61,7 @@ class ReinigungController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function create($Bereich, $Datum)
     {
@@ -70,7 +72,6 @@ class ReinigungController extends Controller
                 'Meldung'   => "Berechtigung fehlt"
             ]);
         }
-
 
         $user = auth()->user();
         $datum = Carbon::createFromFormat('Ymd', $Datum)->startOfWeek()->startOfDay();

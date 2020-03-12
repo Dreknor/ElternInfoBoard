@@ -81,6 +81,17 @@
                                                         @endif
 
                                                     </div>
+                                                    @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
+                                                        <div class="row" id="collapse{{$liste->id}}">
+                                                            <small class="col">
+                                                                @foreach($liste->groups as $group)
+                                                                    <div class="badge  @if($liste->active == 0) badge-warning @else  badge-info @endif">
+                                                                        {{$group->name}}
+                                                                    </div>
+                                                                @endforeach
+                                                            </small>
+                                                        </div>
+                                                    @endif
 
 
                                                 </div>
@@ -119,10 +130,10 @@
                                                             </div>
                                                         @endforeach
                                                     @endif
-                                                    @if($eintragungen->where('listen_id', $liste->id)->count() < 1 or $liste->multiple == 1)
+                                                    @if($eintragungen->where('listen_id', $liste->id)->count() < 1 or $liste->multiple == 1 or $liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
                                                         <div class="row">
                                                             <a href="{{url("listen/$liste->id")}}" class="btn btn-primary btn-block">
-                                                                Auswahl anzeigen
+                                                                Termine anzeigen
                                                             </a>
                                                         </div>
                                                     @endif
