@@ -76,6 +76,11 @@
                            <i class="far fa-eye"></i>
                        </a>
                    @endif
+                   @if(!$archiv and $nachricht->released == 1)
+                           <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="btn btn-sm btn-warning"  data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                               <i class="fas fa-archive"></i>
+                           </a>
+                    @endif
                </div>
            @endif
        </div>

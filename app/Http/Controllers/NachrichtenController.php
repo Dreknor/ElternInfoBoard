@@ -532,6 +532,24 @@ class NachrichtenController extends Controller
         ]);
     }
 
+    public function archiv (Posts $posts){
+        if (!auth()->user()->can('edit posts')) {
+            return redirect('/home')->with([
+                'type' => "danger",
+                "Meldung" => "Berechtigung fehlt"
+            ]);
+        }
+
+        $posts->update([
+            'archiv_ab' => Carbon::now()->subDay()
+        ]);
+        return redirect()->back()->with([
+            'type' => "success",
+            "Meldung" => "Nachricht archiviert"
+        ]);
+
+    }
+
     /**
      * @param null $archiv
      * @return mixed

@@ -67,6 +67,7 @@ Route::group([
             Route::get('/posts/edit/{posts}/{kiosk?}', 'NachrichtenController@edit');
             Route::get('/posts/touch/{posts}', 'NachrichtenController@touch');
             Route::get('/posts/release/{posts}', 'NachrichtenController@release');
+            Route::get('/posts/archiv/{posts}', 'NachrichtenController@archiv');
             Route::put('/posts/{posts}/{kiosk?}', 'NachrichtenController@update');
             Route::post('/posts/', 'NachrichtenController@store');
 
