@@ -24,13 +24,23 @@
         <form action="{{url('/posts')}}" method="post" class="form form-horizontal" enctype="multipart/form-data" id="nachrichtenForm">
             @csrf
             <div class="row">
-                <div class="col-md-8 col-sm-12">
+                <div class="col-md-2 col-sm-12">
+                    <div class="form-group">
+                        <label>Typ</label>
+                        <select class="custom-select" name="type">
+                            <option value="info" selected>Info</option>
+                            <option value="pflicht" >Aufgabe - Pflicht</option>
+                            <option value="wahl" >Aufgabe - Wahl</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-7 col-sm-12">
                     <div class="form-group">
                         <label>Überschrift</label>
                         <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}" required>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-12">
+                <div class="col-md-3 col-sm-12">
                     <div class="form-group">
                         <label>Archiv ab</label>
                         <input type="date" class="form-control border-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
@@ -178,7 +188,16 @@
                 'insertdatetime table paste code wordcount',
                 'contextmenu',
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | ',
+            link_class_list: [
+                {title: 'None', value: ''},
+                {title: 'Button groß', value: 'btn btn-primary btn-block'},
+                {title: 'Button normal', value: 'btn btn-primary'}
+            ],
+            link_list: [
+                {title: 'Listen', value: '{{url('listen')}}'},
+                {title: 'Downloads', value: '{{url('files')}}'}
+            ],
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link',
             contextmenu: " link image inserttable | cell row column deletetable",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : "script[src|async|defer|type|charset]",

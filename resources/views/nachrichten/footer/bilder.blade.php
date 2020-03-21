@@ -3,7 +3,7 @@
         <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel" style="max-width:480px; max-height:240px;">
 
             <div class="carousel-inner">
-                @foreach($nachricht->getMedia('images') as $media)
+                @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
                     <div class="carousel-item @if($loop->first) active @endif">
                         <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" >
                     </div>

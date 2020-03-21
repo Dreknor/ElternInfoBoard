@@ -36,7 +36,7 @@ Route::group([
             //show posts
             Route::get('/home/{archiv?}', 'NachrichtenController@index');
             Route::get('/', 'NachrichtenController@index');
-            Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
+            //Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
 
             //KioskAnsicht
             Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
@@ -46,6 +46,8 @@ Route::group([
             Route::post('listen', 'ListenController@store');
             Route::get('listen/create', 'ListenController@create');
             Route::get('listen/{terminListe}', 'ListenController@show');
+            Route::get('listen/{terminListe}/edit', 'ListenController@edit');
+            Route::put('listen/{terminListe}', 'ListenController@update');
             Route::get('listen/{liste}/activate', 'ListenController@activate');
             Route::get('listen/{liste}/deactivate', 'ListenController@deactivate');
             Route::get('listen/{liste}/export', 'ListenController@pdf');
@@ -62,9 +64,10 @@ Route::group([
             //Edit and create posts
             Route::get('/posts/create', 'NachrichtenController@create');
             Route::get('/posts/edit/{posts}', 'NachrichtenController@edit');
+            Route::get('/posts/edit/{posts}/{kiosk?}', 'NachrichtenController@edit');
             Route::get('/posts/touch/{posts}', 'NachrichtenController@touch');
             Route::get('/posts/release/{posts}', 'NachrichtenController@release');
-            Route::put('/posts/{posts}', 'NachrichtenController@update');
+            Route::put('/posts/{posts}/{kiosk?}', 'NachrichtenController@update');
             Route::post('/posts/', 'NachrichtenController@store');
 
             Route::delete('posts/{posts}', 'NachrichtenController@destroy');

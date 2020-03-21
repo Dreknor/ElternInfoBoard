@@ -80,9 +80,7 @@
                                     <label for="comment">
                                         Beschreibung der Liste oder Hinweis
                                     </label>
-                                    <textarea name="comment" id="comment" class="form-control">
-
-                                    </textarea>
+                                    <textarea name="comment" id="comment" class="form-control"></textarea>
                                 </div>
                                 <div class="col-l-6 col-md-6 col-sm-12">
                                     <div class="card">

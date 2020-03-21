@@ -89,8 +89,6 @@ class ListenController extends Controller
 
         $gruppen= $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);
-
-
         $Liste->groups()->attach($gruppen);
 
 
@@ -121,11 +119,16 @@ class ListenController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\TerminListe  $terminListe
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function edit(Liste $terminListe)
     {
-        //
+        $this->authorize('editListe', $terminListe);
+
+        return view('listen.edit',[
+            'liste'    => $terminListe,
+            'gruppen'=> Groups::all()
+        ]);
     }
 
     /**
@@ -137,7 +140,17 @@ class ListenController extends Controller
      */
     public function update(Request $request, Liste $terminListe)
     {
+        $this->authorize('editListe', $terminListe);
 
+        $terminListe->update($request->all());
+
+        $gruppen= $request->input('gruppen');
+        $gruppen = $this->grousRepository->getGroups($gruppen);
+
+        $terminListe->groups()->detach();
+        $terminListe->groups()->attach($gruppen);
+
+        return redirect(url('listen'));
     }
 
     /**

@@ -1,5 +1,5 @@
 
-<div class="nachricht card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
+<div class="nachricht  {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
 
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom" >
        <div class="row">
@@ -27,13 +27,34 @@
                    <div class="row collapse d-md-block" id="collapse{{$nachricht->id}}">
                        <small class="col">
                            @foreach($nachricht->groups as $group)
-                               <div class="btn @if($nachricht->released == 0) btn-outline-warning @else  btn-outline-info @endif @endifbtn-sm">
+                               <div class="btn @if($nachricht->released == 0) btn-outline-warning @else  btn-outline-info @endif btn-sm">
                                    {{$group->name}}
                                </div>
                            @endforeach
                        </small>
                    </div>
                @endif
+
+               <div class="row">
+                   <div class="col">
+                       @if($nachricht->type == "info")
+                           <div class="btn btn-outline-info btn-sm">
+                               Information
+                           </div>
+                       @endif
+                       @if($nachricht->type == "wahl")
+                           <div class="btn btn-outline-warning btn-sm">
+                               Wahlaufgabe
+                           </div>
+                       @endif
+                       @if($nachricht->type == "pflicht")
+                           <div class="btn btn-outline-danger btn-sm">
+                               Pflichtaufgabe
+                           </div>
+                       @endif
+                   </div>
+
+               </div>
            </div>
 
            @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))

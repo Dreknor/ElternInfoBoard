@@ -154,6 +154,14 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::find($id);
+        $user->groups()->detach();
+
+        if ($user->sorg2 != null){
+            $user->sorgeberechtigter2->update([
+                'sorg2'=>null
+            ]);
+        }
+
         $user->delete();
 
         return response()->json([
@@ -181,5 +189,16 @@ class UserController extends Controller
             Auth::loginUsingId(session()->pull('ownID'));
         }
         return redirect(url('/'));
+    }
+
+    public function removeVerknuepfung(User $user){
+        $user->update([
+            'sorg2' => null
+        ]);
+
+        return back()->with([
+            'type'=>"success",
+            "Meldung"   => "Verknüpfung der Konten aufgehoben"
+        ]);
     }
 }

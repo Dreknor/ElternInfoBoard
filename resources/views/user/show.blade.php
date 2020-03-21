@@ -81,6 +81,16 @@
 
                                         </div>
                                     </div>
+                                    @if($user->sorg2 != null)
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <p>
+                                                    Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2->name}}</b>.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                    @endif
 
                                     <div class="row">
                                         <div class="col-12">

@@ -35,7 +35,9 @@ class editPostRequest extends FormRequest
         return [
             'header'    => "required",
             'news'      => "required",
-            'gruppen'   => "required"
+            'gruppen'   => "required",
+            'password'  => 'required_with:urgent',
+            'type'      => 'required'
         ];
     }
 }

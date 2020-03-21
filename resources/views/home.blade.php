@@ -25,28 +25,64 @@
             </ul>
         </div>
 
+
     @if($nachrichten != null and count($nachrichten)>0)
             <div class="card-body">
-                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#cThemen" aria-expanded="false" aria-controls="collapseThemen">
+                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
                     Themen zeigen
                 </button>
                 <div class="row collapse d-md-block" id="Themen">
                     <div class="col">
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                                <a href="#{{$nachricht->id}}" class="btn btn-sm @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
+                                <a href="#{{$nachricht->id}}" class="btn btn-sm {{$nachricht->type}} @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
                                     @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
                                         <i class="fas fa-reply @if(is_null($user->getRueckmeldung()->where('posts_id', $nachricht->id)->first()) and $nachricht->rueckmeldung->pflicht ==1) text-danger  @elseif(is_null($user->getRueckmeldung()->where('posts_id', $nachricht->id)->first()) and $nachricht->rueckmeldung->pflicht ==0) text-warning @else text-success @endif" data-toggle="tooltip" data-placement="top" title="Rückmeldung benötigt"></i>
                                     @endif
-                                    {{$nachricht->header}}
+                                    <div class="
+                                        @switch($nachricht->type)
+                                            @case('pflicht')
+                                           text-danger
+                                            @break
 
+                                            @case('wahl')
+                                            text-warning
+                                            @break
+                                        @endswitch
+                                    ">
+                                        {{$nachricht->header}}
+                                    </div>
                                 </a>
                             @endif
                         @endforeach
                     </div>
                 </div>
             </div>
-        </div>
+            @if($archiv == null)
+                <div class="card-body">
+                    <div class="btn btn-outline-primary btn-sm" type="button" id="infoButton">
+                        <i class="fas fa-eye"></i> Infos ausblenden
+                    </div>
+                    <div class="btn btn-outline-danger btn-sm" type="button" id="pflichtButton">
+                        <i class="fas fa-eye"></i> Pflichtaufgaben ausblenden
+                    </div>
+                    <div class="btn btn-outline-warning btn-sm" type="button" id="wahlButton">
+                        <i class="fas fa-eye"></i> Wahlaufgaben ausblenden
+                    </div>
+                </div>
+            @endif
+
+    @else
+
+            <div class="card-body bg-info">
+                <p>
+                    Es sind keine Nachrichten vorhanden
+                </p>
+            </div>
+
+    @endif
+</div>
+
     <div id="">
         @include('termine.nachricht')
         @include('reinigung.nachricht')
@@ -74,21 +110,9 @@
         @endforeach
     </div>
 
-    <div class="archiv">
-        {{$nachrichten->links()}}
-    </div>
-    @else
-    </div>
-        @include('termine.nachricht')
-
-        @include('reinigung.nachricht')
-
-        <div class="card">
-            <div class="card-body bg-info">
-                <p>
-                    Es sind keine Nachrichten vorhanden
-                </p>
-            </div>
+    @if($nachrichten != null and count($nachrichten)>0)
+        <div class="archiv">
+            {{$nachrichten->links()}}
         </div>
     @endif
 </div>
@@ -100,6 +124,30 @@
 @endsection
 @push('js')
     @if(is_null($archiv))
+        <script>
+            $.fn.extend({
+                toggleText: function(a, b){
+                    return this.text(this.text() == b ? a : b);
+                }
+            });
+
+            $(document).ready(function() {
+                $('#infoButton').on('click', function (event) {
+                    $('.info').toggle('show');
+                    $("#infoButton").toggleText('Infos ausblenden', 'Infos einblenden');
+                });
+
+                $('#wahlButton').on('click', function (event) {
+                    $('.wahl').toggle('show');
+                    $(this).toggleText('Wahlaufgaben ausblenden', 'Wahlaufgaben einblenden');
+                });
+
+                $('#pflichtButton').on('click', function (event) {
+                    $('.pflicht').toggle('show');
+                    $(this).toggleText('Pflichtaufgaben ausblenden', 'Pflichtaufgaben einblenden');
+                });
+            });
+        </script>
         <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
         <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
         <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>

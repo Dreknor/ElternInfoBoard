@@ -66,12 +66,15 @@
                                                         @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
                                                             <div class="col-sm-4 col-md-4 col-lg-4">
                                                                 <div class="pull-right">
+                                                                    <a href="{{url("listen/$liste->id/edit")}}" class="btn btn-secondary btn-xs">
+                                                                        <i class="fas fa-pencil-alt" title="bearbeiten"></i>
+                                                                    </a>
                                                                     @if($liste->active == 0)
-                                                                        <a href="{{url("listen/$liste->id/activate")}}" class="btn btn-warning">
+                                                                        <a href="{{url("listen/$liste->id/activate")}}" class="btn btn-xs btn-warning">
                                                                             <i class="fas fa-eye" title="veröffentlichen"></i>
                                                                         </a>
                                                                     @else
-                                                                        <a href="{{url("listen/$liste->id/deactivate")}}" class="btn btn-warning btn-xs">
+                                                                        <a href="{{url("listen/$liste->id/deactivate")}}" class="btn btn-xs btn-warning">
                                                                             <i class="fas fa-eye-slash" title="ausblenden"></i>
                                                                         </a>
                                                                     @endif

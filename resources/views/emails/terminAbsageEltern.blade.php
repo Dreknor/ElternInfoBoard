@@ -7,5 +7,9 @@
 <p>
     {{$user->name}} hat den Termin  am {{$termin->format('d.m.Y')}} um {{$termin->format('H:i')}} Uhr für {{$liste->listenname}} abgesagt.
 </p>
+
+<p>
+    Diese E-Mail wurde automatisch versandt.
+</p>
 </body>
 </html>

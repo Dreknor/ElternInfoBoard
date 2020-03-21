@@ -13,9 +13,13 @@
                         @foreach($Nachrichten AS $nachricht)
                                 <li class="list-group-item @if($nachricht->released != 1) list-group-item-info  @endif" data-target="#carousel" data-slide-to="{{$loop->index}}" >
                                     {{$nachricht->header}}
-
                                 </li>
                         @endforeach
+                    @foreach($listen AS $liste)
+                        <li class="list-group-item @if($liste->active != 1) list-group-item-info  @endif" data-target="#carousel" data-slide-to="{{($loop->index + count($Nachrichten))}}" >
+                            Liste: {{$liste->listenname}}
+                        </li>
+                    @endforeach
                 </ul>
             </div>
             <div class="col-8">
@@ -29,8 +33,11 @@
                                                 {{$nachricht->header}} @if($nachricht->released != 1) (unveröffentlicht)  @endif
                                             </h5>
                                             <small>
-                                                (Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}})
+                                                (Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}) - noch {{optional($nachricht->archiv_ab)->diffInDays(\Carbon\Carbon::now())}} Tage
                                             </small>
+                                            <a href="{{url('/posts/edit/'.$nachricht->id.'/true')}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                                <i class="far fa-edit"></i>
+                                            </a>
                                             @if(!is_null($nachricht->rueckmeldung))
                                                 @if(!$archiv and $nachricht->rueckmeldung->pflicht == 1)
                                                     <div class="container-fluid">
@@ -72,6 +79,60 @@
                                                 </div>
                                             @endif
                                         </div>
+                                    </div>
+                                </div>
+                        @endforeach
+                        @foreach($listen AS $liste)
+                                <div class="carousel-item">
+                                    <div class="card">
+                                        <div class="card-header @if($liste->active != 1) bg-info  @endif">
+                                            <h5>
+                                                {{$liste->listenname}} @if($liste->active != 1) (unveröffentlicht)  @endif
+                                            </h5>
+                                            <small>
+                                                (sichtbar bis: {{optional($liste->ende)->isoFormat('DD. MMMM YYYY')}} - noch  {{optional($liste->ende)->diffInDays(\Carbon\Carbon::now())}} Tage)
+                                            </small>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-striped table-bordered">
+                                                <thead>
+                                                <tr>
+                                                    <th>
+                                                        Datum
+                                                    </th>
+                                                    <th>
+                                                        Uhrzeit
+                                                    </th>
+                                                    <th>
+                                                        Familie
+                                                    </th>
+                                                    <th>
+                                                        Bemerkungen
+                                                    </th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                @foreach($liste->eintragungen->sortBy('termin') as $eintrag)
+                                                    <tr>
+                                                        <td>
+                                                            {{$eintrag->termin->format('d.m.Y')}}
+                                                        </td>
+                                                        <td>
+                                                            {{	$eintrag->termin->format('H:i')}} - {{$eintrag->termin->copy()->addMinutes($liste->duration)->format('H:i')}} Uhr
+                                                        </td>
+                                                        <td>
+                                                            {{optional($eintrag->eingetragenePerson)->name }}
+                                                        </td>
+                                                        <td>
+                                                            {{$eintrag->comment}}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                                </tbody>
+                                            </table>
+
+                                        </div>
+
                                     </div>
                                 </div>
                         @endforeach

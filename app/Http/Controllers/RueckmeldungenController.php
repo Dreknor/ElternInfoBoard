@@ -77,7 +77,7 @@ class RueckmeldungenController extends Controller
 
 
     public function sendErinnerung(){
-        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now()->addDays(3),Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users','post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
+        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now(),Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users','post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
         foreach ($rueckmeldungen as $Rueckmeldung){
             if ($Rueckmeldung->post->released == 1){
                 $user = $Rueckmeldung->post->users;

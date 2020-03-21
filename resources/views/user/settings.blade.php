@@ -125,7 +125,7 @@
                     </div>
                 </div>
             </div>
-            @if(!is_null($user->sorgeberechtigter2))
+            @if($user->sorg2 != null)
                 <div class="card-footer">
                     <p>
                         Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2->name}}</b>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.<br>

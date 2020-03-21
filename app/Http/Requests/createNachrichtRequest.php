@@ -33,7 +33,8 @@ class createNachrichtRequest extends FormRequest
             'header'    => "required",
             'news'      => "required",
             'gruppen'   => "required",
-            'password'  => 'required_with:urgent'
+            'password'  => 'required_with:urgent',
+            'type'      => 'required'
         ];
     }
 }

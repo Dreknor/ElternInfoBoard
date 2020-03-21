@@ -81,26 +81,7 @@ class ListenTerminController extends Controller
      */
     public function destroy(listen_termine $listen_termine){
 
-        if (auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminlisten')){
-
-            if ($listen_termine->reserviert_fuer != null){
-                //E-Mail versenden
-                Mail::to($listen_termine->eingetragenePerson->email,$listen_termine->eingetragenePerson->name)
-                    ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name,$listen_termine->liste, $listen_termine->termin, auth()->user() ));
-            } else {
-                $listen_termine->delete();
-            }
-
-
-
-            return redirect()->back()->with([
-                'type'  => "success",
-                'Meldung'=> "Termin gelöscht bzw. abgesagt"
-            ]);
-
-        }
-
-        if (auth()->user()->id == $listen_termine->reserviert_fuer){
+        if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2){
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
                 ->queue(new TerminAbsageEltern(auth()->user(),$listen_termine->liste, $listen_termine->termin));
 
@@ -112,12 +93,29 @@ class ListenTerminController extends Controller
             ]);
         }
 
+        if (auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')){
 
+            if ($listen_termine->reserviert_fuer != null){
+                //E-Mail versenden
+                Mail::to($listen_termine->eingetragenePerson->email,$listen_termine->eingetragenePerson->name)
+                    ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name,$listen_termine->liste, $listen_termine->termin, auth()->user() ));
+                $listen_termine->update([
+                    'reserviert_fuer'   => null
+                ]);
+            } else {
+                $listen_termine->delete();
+            }
 
+            return redirect()->back()->with([
+                'type'  => "success",
+                'Meldung'=> "Termin gelöscht bzw. abgesagt"
+            ]);
+
+        }
 
         return redirect()->back()->with([
             'type'  => "danger",
-            'Meldung'=> "Keine Recht den Termin abzusagen"
+            'Meldung'=> "Keine Recht den Termin abzusagen?"
         ]);
     }
 }

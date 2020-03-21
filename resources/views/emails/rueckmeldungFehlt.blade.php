@@ -10,7 +10,9 @@
 <p>
     Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema "{{$thema}}". Wir benötigen die Rückmeldung bis spätestens zum {{$ende->format('d.m.Y')}}.
 </p>
-
+<p>
+    Diese E-Mail wird automatisch erstellt, solange keine Rückmeldung über das ElternInfoBoard erfolgt. Rückmeldungen per E-Mail oder in anderer Form werden dabei nicht erfasst.
+</p>
 <p>
     Mit freundlichen Grüßen<br>
     Ihr Team des Evangelischen Schulzentrum Radebeul

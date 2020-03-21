@@ -62,7 +62,7 @@
                                                     Familie {{$familie1->user->familie_name}}
                                                 @endif
                                             </td>
-                                            <td scope="col">
+                                            <td >
                                                 @if(isset($familie1))
                                                     {{$familie1->aufgabe}}
                                                 @endif

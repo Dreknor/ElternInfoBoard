@@ -8,23 +8,33 @@
             </h6>
         </div>
         <div class="card-body">
-            <form action="{{url("/posts/")}}/{{$post->id}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
+            <form action="{{url("/posts/$post->id/$kiosk")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
                 @csrf
                 @method('put')
                 <div class="row">
+                    <div class="col-md-2 col-sm-12">
+                        <div class="form-group">
+                            <label>Typ</label>
+                            <select class="custom-select" name="type">
+                                <option value="info" @if($post->type == "info") selected @endif>Info</option>
+                                <option value="pflicht" @if($post->type == "pflicht") selected @endif>Aufgabe - Pflicht</option>
+                                <option value="wahl" @if($post->type == "wahl") selected @endif>Aufgabe - Wahl</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="col-md-6 col-sm-12">
                         <div class="form-group">
                             <label>Überschrift</label>
                             <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{$post->header}}" required>
                         </div>
                     </div>
-                    <div class="col-md-6 col-sm-12">
+                    <div class="col-md-5 col-sm-12">
                         <div class="form-group">
                             <label>zuletzt bearbeitet:</label>
                             <input type="datetime-local" class="form-control border-input date-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeLocalString()}}" >
                         </div>
                     </div>
-                    <div class="col-md-6 col-sm-6">
+                    <div class="col-md-5 col-sm-6">
                         <div class="form-group">
                             <div class="">
                                 <label>Autor</label>
@@ -38,7 +48,7 @@
                     <div class="col-md-6 col-sm-6">
                         <div class="form-group">
                             <label>Archiv ab</label>
-                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
+                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{$post->archiv_ab->format('Y-m-d')}}" >
                         </div>
                     </div>
 
@@ -268,7 +278,16 @@
                 'insertdatetime table paste code wordcount',
                 'contextmenu',
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | ',
+            link_class_list: [
+                {title: 'None', value: ''},
+                {title: 'Button groß', value: 'btn btn-primary btn-block'},
+                {title: 'Button normal', value: 'btn btn-primary'}
+            ],
+            link_list: [
+                {title: 'Listen', value: '{{url('listen')}}'},
+                {title: 'Downloads', value: '{{url('files')}}'}
+            ],
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link',
             contextmenu: " link image inserttable | cell row column deletetable | pageembed",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : ["script[src|async|defer|type|charset]",

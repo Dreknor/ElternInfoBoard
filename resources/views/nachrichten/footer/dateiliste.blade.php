@@ -2,7 +2,7 @@
     Downloads
 </h6>
 <ul class="list-group list-group-flush">
-    @foreach($nachricht->getMedia('files') as $media)
+    @foreach($nachricht->getMedia('files')->sortBy('name') as $media)
             <li class="list-group-item  list-group-item-action ">
                     <a href="{{url('/image/'.$media->id)}}" target="_blank" class="mx-auto ">
                         <i class="fas fa-file-download"></i>

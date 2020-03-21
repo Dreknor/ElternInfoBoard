@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Liste;
 use App\Repositories\GroupsRepository;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
@@ -172,7 +173,7 @@ class NachrichtenController extends Controller
      * @param Posts $posts
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
-    public function edit(Posts $posts)
+    public function edit(Posts $posts, $kiosk = '')
     {
         if (!auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect('/home')->with([
@@ -192,7 +193,8 @@ class NachrichtenController extends Controller
         return view('nachrichten.edit', [
             'gruppen' => $gruppen,
             "post" => $posts,
-            'rueckmeldung' => $rueckmeldung
+            'rueckmeldung' => $rueckmeldung,
+            'kiosk' => $kiosk
         ]);
     }
 
@@ -264,9 +266,16 @@ class NachrichtenController extends Controller
         //Versenden dringender Nachrichten
         if ($request->has('urgent') and $request->input('urgent') == 1 and $user->can('send urgent message') and Hash::check($request->input('password'), $user->password)) {
 
-            $users = User::whereHas('posts', function($q) use ($gruppen){
-                $q->whereIn('name', $gruppen);
+            $MailGruppen = [];
+
+            foreach ($gruppen as $gruppe){
+                $MailGruppen[] = $gruppe->name;
+            }
+
+            $users = User::whereHas('posts', function($q) use ($MailGruppen){
+                $q->whereIn('name', $MailGruppen);
             })->get();
+
 
             $sendTo = [];
             foreach ($users as $mailUser) {
@@ -309,7 +318,7 @@ class NachrichtenController extends Controller
      * @param editPostRequest $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function update(Posts $posts, editPostRequest $request)
+    public function update(Posts $posts, editPostRequest $request, $kiosk = null)
     {
 
         $user = auth()->user();
@@ -362,9 +371,17 @@ class NachrichtenController extends Controller
                     "Meldung" => "Passwort falsch"
                 ]);
             }
-            $users = User::whereHas('posts', function($q) use ($gruppen){
-                $q->whereIn('name', $gruppen);
+
+            $MailGruppen = [];
+
+            foreach ($gruppen as $gruppe){
+               $MailGruppen[] = $gruppe->name;
+            }
+
+            $users = User::whereHas('posts', function($q) use ($MailGruppen){
+                $q->whereIn('name', $MailGruppen);
             })->get();
+
 
             $sendTo = [];
 
@@ -386,6 +403,11 @@ class NachrichtenController extends Controller
 
         }
 
+        if ($kiosk == "true"){
+            return redirect(url('/kiosk'));
+        }
+
+
         return redirect(url('/home#' . $posts->id))->with([
             "type" => "success",
             "Meldung" => $Meldung
@@ -396,14 +418,17 @@ class NachrichtenController extends Controller
     /**
      *
      */
-    public function email()
+    public function email($daily = null)
     {
+        if ($daily == null){
+            $daily = "weekly";
+        }
 
-        $users = User::where('benachrichtigung', 'weekly')->get();
+        $users = User::where('benachrichtigung', $daily)->get();
         $users->load('roles');
 
 
-        $diskussionen = Discussion::all();
+
 
         foreach ($users as $user) {
 
@@ -424,7 +449,9 @@ class NachrichtenController extends Controller
             })->unique()->sortByDesc('updated_at')->all();
 
 
+            //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')){
+                $diskussionen = Discussion::all();
                 $diskussionen = collect($diskussionen);
                 $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
                     if ( $Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
@@ -434,6 +461,10 @@ class NachrichtenController extends Controller
             } else {
                 $diskussionen = [];
             }
+
+            //@ToDo Neue
+            // neue Listen
+            //neue Dateien
 
 
             if (count($Nachrichten) > 0) {
@@ -451,26 +482,7 @@ class NachrichtenController extends Controller
      */
     public function emailDaily()
     {
-/*
-        $users = User::where('benachrichtigung', 'daily')->with('posts')->get();
-
-        foreach ($users as $user) {
-
-            $Nachrichten = $user->posts;
-
-            $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                    return $post;
-                }
-            })->unique()->sortByDesc('updated_at')->all();
-
-            if (count($Nachrichten) > 0) {
-                Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name));
-                $user->lastEmail = Carbon::now();
-                $user->save();
-            }
-        }
-*/
+        $this->email('daily');
     }
 
 
@@ -487,6 +499,7 @@ class NachrichtenController extends Controller
             $newPost->save();
 
         } else {
+            $posts->updated_at = Carbon::now();
             $posts->archiv_ab = Carbon::now()->addWeek();
             $posts->save();
 
@@ -617,22 +630,29 @@ class NachrichtenController extends Controller
             }
 
 
+            //Listen für den Kiosk
+            $listen = [];
+            if (auth()->user()->can('edit terminliste')){
+                $listen = Liste::query()->whereDate('ende', '>', Carbon::now())->with('eintragungen')->get();
+            }
 
 
             return view('kiosk.index', [
                 "Nachrichten"    => $Nachrichten->unique('id')->sortByDesc('updated_at'),
                 "counter"       =>          0,
                 'archiv'        => 0,
-                'user'          => auth()->user()
-            ]);
-        } else {
-            return redirect()->back()->with([
-                'type'  => "danger",
-                'Meldung'   => "Berechtigung fehlt"
+                'user'          => auth()->user(),
+                'listen'    => $listen
             ]);
         }
 
 
-
+        return redirect()->back()->with([
+                'type'  => "danger",
+                'Meldung'   => "Berechtigung fehlt"
+            ]);
     }
+
+
+
 }

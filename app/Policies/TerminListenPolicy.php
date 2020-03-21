@@ -36,6 +36,11 @@ class TerminListenPolicy
         return $liste->besitzer == $user->id or $user->can('edit terminliste');
     }
 
+    public function editListe (User $user, Liste $liste){
+
+        return $liste->besitzer == $user->id or $user->can('edit terminliste');
+    }
+
 
 
 
