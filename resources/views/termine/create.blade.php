@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     <div class="container-fluid">
         <div class="card">
             <div class="card-header border-bottom">
@@ -41,7 +40,6 @@
                                                 <select name="fullDay" id="fullDay" class=custom-select>
                                                     <option value="" selected>nein</option>
                                                     <option value="1">ja</option>
-
                                                 </select>
                                             </div>
                                         </div>
@@ -81,18 +79,6 @@
 
 @push('js')
 
-    <!--   <script>
-        $(document).ready(function () {
-
-           $('#start').change(function (e) {
-               var date = new Date($('#start').val());
-               $('#ende').val(date.toISOString().substring(0, 19));
-           })
-        });
-
-
-    </script>
--->
     <script>
         $('#submitBtn').on('click', function (event) {
             $("#terminForm").submit();

@@ -121,9 +121,15 @@
                        @csrf
                        <div class="form-row">
                            <label for="termin">
-                               Terminstart:
+                               Datum:
                            </label>
-                           <input type="datetime-local" name="termin" class="form-control" required>
+                           <input type="date" name="termin" class="form-control" required>
+                       </div>
+                       <div class="form-row">
+                           <label>
+                               Uhrzeit:
+                           </label>
+                           <input type="time" name="zeit" class="form-control" required>
                        </div>
                        <div class="form-row">
                            <label for="termin">
@@ -146,10 +152,21 @@
                    </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary" form="terminForm">Speichern</button>
+                    <div class="btn btn-primary btn-block" id="submitBtn">Speichern</div>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Schließen</button>
                 </div>
             </div>
         </div>
     </div>
 @endsection
+@push('js')
+
+    <script>
+        $('#submitBtn').on('click', function (event) {
+            $("#terminForm").submit();
+        })
+    </script>
+
+
+
+@endpush

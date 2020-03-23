@@ -29,7 +29,7 @@ class ListenController extends Controller
 
 
         if (auth()->user()->can('edit terminliste')){
-            $listen = Liste::where('ende', '>=', Carbon::now()->subMonths(3))->get();
+            $listen = Liste::where('ende', '>=', Carbon::now()->subWeeks(2))->get();
         } else {
             $listen = auth()->user()->listen()->where('active', 1)->get();
             if (auth()->user()->can('create terminliste')){

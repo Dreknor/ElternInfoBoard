@@ -26,9 +26,10 @@ class ListenTerminController extends Controller
     public function store(Liste $liste, StoreListeTerminRequest $request){
 
         $this->authorize('storeTerminToListe', $liste);
+        $datum = Carbon::createFromFormat('Y-m-d H:i', $request->termin.' '.$request->zeit);
         $termin = new listen_termine([
             'listen_id' => $liste->id,
-            'termin'    => Carbon::createFromFormat('Y-m-d\TH:i',$request->termin),
+            'termin'    => $datum,
             "comment"   => $request->comment
         ]);
 
