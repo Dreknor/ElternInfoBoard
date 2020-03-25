@@ -230,10 +230,10 @@ class NachrichtenController extends Controller
 
         $post->groups()->attach($gruppen);
 
-        if (!auth()->user()->can('release posts')){
+        if (!auth()->user()->can('release posts')) {
             $permission = Permission::query()->where('name', 'release posts')->first();
 
-            foreach ($permission->users as $user){
+            foreach ($permission->users as $user) {
                 Mail::to($user->email)->queue(new newUnveroeffentlichterBeitrag(auth()->user()->name, $post->header));
             }
         }
@@ -268,11 +268,11 @@ class NachrichtenController extends Controller
 
             $MailGruppen = [];
 
-            foreach ($gruppen as $gruppe){
+            foreach ($gruppen as $gruppe) {
                 $MailGruppen[] = $gruppe->name;
             }
 
-            $users = User::whereHas('posts', function($q) use ($MailGruppen){
+            $users = User::whereHas('posts', function ($q) use ($MailGruppen) {
                 $q->whereIn('name', $MailGruppen);
             })->get();
 
@@ -283,33 +283,50 @@ class NachrichtenController extends Controller
                 $header = $post->header;
                 $news = $post->news;
                 @Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));
-                $sendTo[]= [
-                  "name"    => $mailUser->name,
-                  "email"   => $mailUser->email
+                $sendTo[] = [
+                    "name" => $mailUser->name,
+                    "email" => $mailUser->email
                 ];
             }
 
             @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
-            $Meldung = "Es wurden ".count($sendTo)." Benutzer per Mail benachrichtigt.";
+            $Meldung = "Es wurden " . count($sendTo) . " Benutzer per Mail benachrichtigt.";
 
         }
 
         //Umleitung bei Rückmeldungsbedarf
-        if ($request->input('rueckmeldung') == 0) {
-            return redirect(url('/home#' . $post->id))->with([
-                "type" => "success",
-                "Meldung" => "Nachricht angelegt."
-            ]);
+        switch ($request->input('rueckmeldung')){
+            case 'email':
+                return view('nachrichten.createRueckmeldung', [
+                    "nachricht" => $post
+                ])->with([
+                    "type" => "success",
+                    "Meldung" => $Meldung
+                ]);
+                break;
+            case 'bild':
+                $rueckmeldung = new Rueckmeldungen([
+                    'posts_id'  => $post->id,
+                    'type'  => 'bild',
+                    'empfaenger'  => auth()->user()->email,
+                    'ende'      => $post->archiv_ab,
+                    'text'      => " "
+                ]);
+                $rueckmeldung->save();
+
+                return redirect(url('/home#' . $post->id))->with([
+                    "type" => "success",
+                    "Meldung" => "Nachricht und Rückmeldung angelegt."
+                ]);
+                break;
+            default:
+                return redirect(url('/home#' . $post->id))->with([
+                    "type" => "success",
+                    "Meldung" => "Nachricht angelegt."
+                ]);
+                break;
+
         }
-
-
-        return view('nachrichten.createRueckmeldung', [
-            "nachricht" => $post
-        ])->with([
-            "type" => "success",
-            "Meldung" => $Meldung
-        ]);
-
 
     }
 

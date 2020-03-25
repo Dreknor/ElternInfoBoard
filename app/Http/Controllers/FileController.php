@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Posts;
 use App\Repositories\GroupsRepository;
 use App\Model\Groups;
 use App\Support\Collection;
@@ -99,5 +100,24 @@ class FileController extends Controller
 
 
 
+    }
+
+    public function saveFileRueckmeldung(Request $request, Posts $posts){
+        if ($request->hasFile('files')) {
+            $posts->addAllMediaFromRequest(['files'])
+                ->each(function ($fileAdder) {
+                    $fileAdder
+                        ->toMediaCollection('images');
+                });
+        } else {
+            return redirect(url('home/'))->with([
+                "type"  => "warning",
+                "Meldung"   => "upload fehlgeschlagen"
+            ]);
+        }
+            return redirect(url('home/#'.$posts->id))->with([
+                "type"  => "success",
+                "Meldung"   => "Bild erfolgreich hinzugefügt"
+            ]);
     }
 }

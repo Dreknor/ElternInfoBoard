@@ -118,7 +118,7 @@
             </p>
         @endif
     </div>
-    @if(!is_null($nachricht->rueckmeldung))
+    @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
         @if(!$archiv and $nachricht->rueckmeldung->pflicht == 1)
             <div class="container-fluid">
                 <div class="row">
@@ -135,5 +135,7 @@
         @endif
         @include('nachrichten.footer.rueckmeldung')
     @endif
-
+    @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+        @include('nachrichten.footer.imageRueckmeldung')
+    @endif
 </div>

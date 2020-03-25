@@ -81,7 +81,8 @@
                             <div class="form-group">
                                 <label>Rückmeldungen benötigt?</label>
                                 <select class="custom-select" name="rueckmeldung">
-                                    <option value="1">Ja</option>
+                                    <option value="email">Ja, E-Mail</option>
+                                    <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="0" selected>nein</option>
                                 </select>
                             </div>

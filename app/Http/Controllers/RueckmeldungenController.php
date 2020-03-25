@@ -74,6 +74,22 @@ class RueckmeldungenController extends Controller
             "message" => "Gelöscht"
         ], 200);
     }
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
+     * @return RedirectResponse
+     */
+    public function destroyRueckmeldung($rueckmeldungen)
+    {
+        dd('Hallo');
+        $rueckmeldungen->delete();
+
+        return redirect()->back()->with([
+            "type"   => "success",
+            "Meldung"    => "Rückmeldung gelöscht"
+        ]);
+    }
 
 
     public function sendErinnerung(){

@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Rueckmeldungen
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Rueckmeldungen extends Model
 {
+    use SoftDeletes;
     /**
      * @var string
      */
@@ -18,11 +20,11 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $fillable = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht'];
+    protected $fillable = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht','type'];
     /**
      * @var array
      */
-    protected $visible = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht'];
+    protected $visible = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type'];
 
     /**
      * @var array

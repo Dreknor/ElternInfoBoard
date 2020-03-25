@@ -73,6 +73,9 @@ Route::group([
 
             Route::delete('posts/{posts}', 'NachrichtenController@destroy');
             Route::delete("rueckmeldung/{rueckmeldung}", "RueckmeldungenController@destroy");
+
+
+            Route::post("rueckmeldung/{posts}/saveFile", "FileController@saveFileRueckmeldung");
             //user-Verwaltung
             Route::get('/einstellungen', 'BenutzerController@show');
             Route::put('/einstellungen', 'BenutzerController@update');

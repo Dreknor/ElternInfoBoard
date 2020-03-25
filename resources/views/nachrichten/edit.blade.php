@@ -187,7 +187,24 @@
 
         </div>
     </div>
-    <div class="card" id="rueckmeldungCard">
+
+    @if(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'bild')
+        <div class="card" id="rueckmeldungCard">
+            <div class="card-header">
+                <h6>
+                    Bilder-Upload entfernen?
+                </h6>
+            </div>
+            <div class="card-body">
+
+                    <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" >
+                        Bilder-Upload endgültig löschen
+                    </div>
+
+            </div>
+        </div>
+    @else
+        <div class="card" id="rueckmeldungCard">
         <div class="card-header">
             <h6 class="card-title">
                 Rückmeldung
@@ -252,6 +269,7 @@
             </div>
         </div>
     </div>
+    @endif
 
 @endsection
 
