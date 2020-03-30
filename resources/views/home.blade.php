@@ -247,5 +247,17 @@
             });
         </script>
 
+    <script>
+        $('.commentLinks').on('click', function () {
+            var btn = this;
+                $(btn).addClass('d-none');
+                $('.comment').removeClass('d-none');
+
+
+
+        });
+    </script>
+
+
 @endpush
 
