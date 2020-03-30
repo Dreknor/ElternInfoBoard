@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
+use App\Model\Posts;
 use App\Model\Rueckmeldungen;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -112,5 +113,36 @@ class RueckmeldungenController extends Controller
 
 
 
+    }
+
+    public function updateCommentable(Rueckmeldungen $rueckmeldungen){
+        if ($rueckmeldungen->commentable){
+            $rueckmeldungen->update([
+               'commentable'=>false
+            ]);
+        } else {
+            $rueckmeldungen->update([
+                'commentable'=>true
+            ]);
+        }
+
+        return redirect()->back();
+    }
+
+    public function createImageRueckmeldung(Posts $posts){
+        $rueckmeldung = new Rueckmeldungen([
+            'posts_id'  => $posts->id,
+            'type'  => 'bild',
+            'commentable'  => 1,
+            'empfaenger'  => auth()->user()->email,
+            'ende'      => $posts->archiv_ab,
+            'text'      => " "
+        ]);
+        $rueckmeldung->save();
+
+        return redirect()->back()->with([
+            'type'  => "success",
+            'Meldung'=>"Bild-Upload mit kommentaren erstellt."
+        ]);
     }
 }

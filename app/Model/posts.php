@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Artisanry\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,6 +16,8 @@ class Posts extends Model  implements HasMedia
     use HasMediaTrait;
     use SoftDeletes;
     use Cloneable;
+    use HasComments;
+
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 

@@ -3,15 +3,15 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
- * Class newUnveroeffentlichterBeitrag
+ * Class newFilesAddToPost
  * @package App\Mail
  */
-class newUnveroeffentlichterBeitrag extends Mailable
+class newFilesAddToPost extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -26,7 +26,7 @@ class newUnveroeffentlichterBeitrag extends Mailable
 
 
     /**
-     * newUnveroeffentlichterBeitrag constructor.
+     * newFilesAddToPost constructor.
      * @param $von
      * @param $Betreff
      */
@@ -36,17 +36,18 @@ class newUnveroeffentlichterBeitrag extends Mailable
         $this->Betreff = $Betreff;
     }
 
-
     /**
-     * @return newUnveroeffentlichterBeitrag
+     * Build the message.
+     *
+     * @return $this
      */
     public function build()
     {
         return $this
-            ->subject("neuer unveröffentlichter Beitrag im ElternInfoBoard")
-            ->view('emails.neuerUnveroeffentlichterBeitrag', [
-            "von"   => $this->von,
-            "betreff"   => $this->Betreff
-        ]);
+            ->subject("neuer Bild-Upload")
+            ->view('emails.newImageToPost', [
+                "von"   => $this->von,
+                "betreff"   => $this->Betreff
+            ]);
     }
 }

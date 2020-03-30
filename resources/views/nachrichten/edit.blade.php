@@ -188,7 +188,92 @@
         </div>
     </div>
 
-    @if(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'bild')
+    @if(is_null($post->rueckmeldung))
+        <div class="row" id="createButtons">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}" id="bilderButton" class="btn btn-block btn-outline-primary">
+                                    Bilder-Upload ermöglichen
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a id="rueckmeldungButton" class="btn btn-block btn-outline-primary">
+                                    Rückmeldung erstellen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row d-none" id="createForm">
+            <div class="col-12">
+                <div class="card" id="rueckmeldungCard">
+                    <div class="card-header">
+                        <h6 class="card-title">
+                            Rückmeldung
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-body">
+                            <form action="{{url("/rueckmeldung/$post->id/createImage")}}" method="post" class="form form-horizontal">
+                                @csrf
+                                @method('put')
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Empfänger</label>
+                                            <input type="email" class="form-control border-input" name="empfaenger" value="{{old('empfaenger')}}" required >
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Ende</label>
+                                            <input type="date" class="form-control border-input" name="ende" value="{{old('ende')}}" required >
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Rückmeldung verpflichtend?</label>
+                                            <select class="custom-select" name="pflicht">
+                                                <option value="0" selected>Nein</option>
+                                                <option value="1">Ja</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Rückmeldung</label>
+                                            <textarea class="form-control border-input" name="text">
+                                            {{old('text')}}
+                                        </textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-primary btn-block">
+                                            Rückmeldung erstellen
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    @elseif(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'bild')
         <div class="card" id="rueckmeldungCard">
             <div class="card-header">
                 <h6>
@@ -196,10 +281,24 @@
                 </h6>
             </div>
             <div class="card-body">
-
-                    <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" >
-                        Bilder-Upload endgültig löschen
+                <div class="row">
+                    <div class="col-6">
+                        @if( $post->rueckmeldung->commentable)
+                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-warning btn-block">
+                                Kommentare abschalten
+                            </a>
+                        @else
+                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-primary btn-block">
+                                Kommentare erlauben
+                            </a>
+                        @endif
                     </div>
+                    <div class="col-6">
+                        <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" >
+                            Bilder-Upload endgültig löschen
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -445,4 +544,10 @@
         })
     </script>
 
+    <script>
+        $('#rueckmeldungButton').on('click', function () {
+                $('#createButtons').addClass('d-none');
+                $('#createForm').removeClass('d-none');
+        })
+    </script>
 @endpush

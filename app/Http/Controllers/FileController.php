@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\newFilesAddToPost;
 use App\Model\Posts;
 use App\Repositories\GroupsRepository;
 use App\Model\Groups;
 use App\Support\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Spatie\MediaLibrary\Models\Media;
 
 class FileController extends Controller
@@ -14,6 +16,7 @@ class FileController extends Controller
 
         public function __construct(GroupsRepository $groupsRepository)
         {
+
             $this->middleware('password_expired');
             $this->grousRepository = $groupsRepository;
         }
@@ -103,16 +106,22 @@ class FileController extends Controller
     }
 
     public function saveFileRueckmeldung(Request $request, Posts $posts){
-        if ($request->hasFile('files')) {
+
+
+            if ($request->hasFile('files')) {
             $posts->addAllMediaFromRequest(['files'])
-                ->each(function ($fileAdder) {
+                ->each(function ($fileAdder) use ($request) {
                     $fileAdder
+                        ->usingName($request->name)
                         ->toMediaCollection('images');
                 });
+
+            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost(auth()->user()->name, $posts->header));
+
         } else {
             return redirect(url('home/'))->with([
                 "type"  => "warning",
-                "Meldung"   => "upload fehlgeschlagen"
+                "Meldung"   => "Upload fehlgeschlagen"
             ]);
         }
             return redirect(url('home/#'.$posts->id))->with([

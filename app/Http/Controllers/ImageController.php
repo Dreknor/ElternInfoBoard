@@ -8,6 +8,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ImageController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function getImage(Media $media_id){
 
         $response = new BinaryFileResponse($media_id->getPath());

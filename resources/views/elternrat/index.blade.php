@@ -45,26 +45,24 @@
                                 {!! $beitrag->text !!}
                             </div>
                             <div class="card-body collapse border-top" id="collapse{{$beitrag->id}}">
-                                <ul class="list-group">
-                                    @foreach($beitrag->comments->sortByDesc('created_at') as $comment)
-                                        <li class="list-group-item" id="comment{{$comment->id}}">
-                                            <div class="row">
-                                                <div class="col-sm-9 col-md-10 col-lg-11">
-                                                    <div class="small">
-                                                        {{$comment->creator->name}}, {{$comment->created_at->format('d.m.Y H:i')}}
-                                                    </div>
-                                                    {{$comment->body}}
-                                                </div>
-                                                <div class="col-sm-3 col-md-2 col-lg-1">
-                                                    @if($comment->creator->id == auth()->user()->id)
-                                                        <button class="btn btn-sm btn-outline-danger deleteComment" data-commentid = {{$comment->id}}>
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    @endif
-                                                </div>
+                                <ul class="comment-section">
+                                    @foreach(optional($beitrag->comments)->sortByDesc('created_at') as $comment)
+                                        <li class="comment @if ($loop->index % 2 == 0) user-comment @else author-comment @endif">
+                                            <div class="info">
+                                                <a href="">{{$comment->creator->name}}</a>
+                                                <span>{{$comment->created_at->diffForHumans()}}</span>
                                             </div>
+                                            <p>{{$comment->body}}</p>
                                         </li>
                                     @endforeach
+                                <!-- More comments -->
+                                    <li class="write-new">
+                                        <form action="{{url("beitrag/$beitrag->id/comment/create")}}" method="post">
+                                            @csrf
+                                            <textarea placeholder="Kommentar hier schreiben" name="body"></textarea>
+                                            <button type="submit" class="btn btn-success">kommentieren</button>
+                                        </form>
+                                    </li>
                                 </ul>
 
                             </div>
@@ -76,22 +74,6 @@
                                                 <i class="fas fa-comment"></i>
                                                 {{$beitrag->commentCount()}} Kommentare
                                             </button>
-                                        </div>
-                                        <div class="col-sm-12 col-md-12 col-lg-8 mt-1">
-                                            <form action="{{url("beitrag/$beitrag->id/comment/create")}}" method="post" class="form-inline">
-                                                @csrf
-                                                <div class="container-fluid">
-                                                    <div class="row mt-1">
-                                                        <div class="col-sm-12 col-md-8 mt-1">
-                                                            <input type="text" class="form-control w-100" placeholder="neuer Kommentar" name="body">
-                                                        </div>
-                                                        <div class="col-sm-12 col-md-4 mt-1">
-                                                            <button type="submit" class="btn btn-success w-100">kommentieren</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -241,3 +223,9 @@
 
         </script>
 @endpush
+
+@section('css')
+
+    <link href="{{asset('css/comments.css')}}" media="all" rel="stylesheet" type="text/css" />
+
+@endsection

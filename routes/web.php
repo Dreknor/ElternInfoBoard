@@ -30,8 +30,10 @@ Route::group([
             Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', 'UserRueckmeldungenController@edit');
             Route::put('/userrueckmeldung/{userRueckmeldungen}', 'UserRueckmeldungenController@update');
 
+            //Rückmeldungen
             Route::post('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@store');
             Route::put('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@update');
+            Route::get("rueckmeldungen/{posts}/createImageUpload", "RueckmeldungenController@createImageRueckmeldung");
 
             //show posts
             Route::get('/home/{archiv?}', 'NachrichtenController@index');
@@ -76,6 +78,11 @@ Route::group([
 
 
             Route::post("rueckmeldung/{posts}/saveFile", "FileController@saveFileRueckmeldung");
+
+            //Comment posts
+            Route::post('nachricht/{posts}/comment/create', 'NachrichtenController@storeComment');
+            Route::get("rueckmeldungen/{rueckmeldungen}/commentable", "RueckmeldungenController@updateCommentable");
+
             //user-Verwaltung
             Route::get('/einstellungen', 'BenutzerController@show');
             Route::put('/einstellungen', 'BenutzerController@update');

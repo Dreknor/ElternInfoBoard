@@ -20,7 +20,7 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $fillable = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht','type'];
+    protected $fillable = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht','type', 'commentable'];
     /**
      * @var array
      */
@@ -35,7 +35,8 @@ class Rueckmeldungen extends Model
      * @var array
      */
     protected $casts = [
-        'pflicht' => "boolean"
+        'pflicht' => "boolean",
+        'commentable' => "boolean",
     ];
 
     /**

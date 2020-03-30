@@ -1,33 +1,53 @@
 <div class="card-footer">
-    <form action="{{url("/rueckmeldung/$nachricht->id/saveFile")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
-        @csrf
-        <div class="form-group">
-            <div class="">
-                <label>Datei</label>
-                <input type="file"  name="files" id="customFile_{{$nachricht->id}}" class="fileinput">
+    <div class="row">
+        <div class="@if ($nachricht->rueckmeldung->commentable) col-sm-12 col-md-4 col-lg-4 @else col-12 @endif">
+            <div class="card">
+                <div class="card-body">
+                    <form action="{{url("/rueckmeldung/$nachricht->id/saveFile")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
+                        @csrf
+                        <div class="form-group">
+                            <div class="">
+                                <label>Bezeichnung</label>
+                                <input type="text"  name="name" id="nameOfFile_{{$nachricht->id}}" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="">
+                                <label>Datei</label>
+                                <input type="file"  name="files" id="customFile_{{$nachricht->id}}" class="fileinput">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary btn-block" id="btnSave_nachricht_{{$nachricht->id}}">
+                                    Bild hochladen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <button type="submit" class="btn btn-primary btn-block" id="btnSave_nachricht_{{$nachricht->id}}">
-                    Bild hochladen
-                </button>
+
+        @if ($nachricht->rueckmeldung->commentable)
+            <div class="col-sm-12 col-md-8 col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        @include('nachrichten.footer.comments')
+                    </div>
+                </div>
+
             </div>
-        </div>
-    </form>
+        @endif
 </div>
 
 
 
-@section('css')
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
-
-@endsection
 
 @section('css')
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="{{asset('css/comments.css')}}" media="all" rel="stylesheet" type="text/css" />
 
 @endsection
 

@@ -31,9 +31,9 @@ class ListenController extends Controller
         if (auth()->user()->can('edit terminliste')){
             $listen = Liste::where('ende', '>=', Carbon::now()->subWeeks(2))->get();
         } else {
-            $listen = auth()->user()->listen()->where('active', 1)->get();
+            $listen = auth()->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
             if (auth()->user()->can('create terminliste')){
-                $eigeneListen = Liste::where('besitzer', auth()->user()->id)->get();
+                $eigeneListen = Liste::where('besitzer', auth()->user()->id)->where('ende', '>=', Carbon::now()->subWeeks(2))->get();
 
                 $listen = $listen->merge($eigeneListen);
             }

@@ -60,15 +60,26 @@
             </div>
             @if($archiv == null)
                 <div class="card-body">
-                    <div class="btn btn-outline-primary btn-sm" type="button" id="infoButton">
-                        <i class="fas fa-eye"></i> Infos ausblenden
+                    <div class="row">
+                        <div class="col-sm-12 col-md-4">
+                            <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="infoButton">
+                                <i class="fas fa-eye"></i> Infos ausblenden
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <div class="btn btn-outline-danger btn-sm btn-block" type="button" id="pflichtButton">
+                                <i class="fas fa-eye"></i> Pflichtaufgaben ausblenden
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <div class="btn btn-outline-warning btn-sm btn-block" type="button" id="wahlButton">
+                                <i class="fas fa-eye"></i> Wahlaufgaben ausblenden
+                            </div>
+                        </div>
                     </div>
-                    <div class="btn btn-outline-danger btn-sm" type="button" id="pflichtButton">
-                        <i class="fas fa-eye"></i> Pflichtaufgaben ausblenden
-                    </div>
-                    <div class="btn btn-outline-warning btn-sm" type="button" id="wahlButton">
-                        <i class="fas fa-eye"></i> Wahlaufgaben ausblenden
-                    </div>
+
+
+
                 </div>
             @endif
 
@@ -152,7 +163,7 @@
         <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
         <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
         <script>tinymce.init({
-                selector: 'textarea',
+                selector: '.rueckmeldung',
                 lang:'de',
                 plugins: "autoresize",
                 menubar: false,

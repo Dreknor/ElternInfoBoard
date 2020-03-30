@@ -83,6 +83,7 @@
                                 <select class="custom-select" name="rueckmeldung">
                                     <option value="email">Ja, E-Mail</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
+                                    <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
                                     <option value="0" selected>nein</option>
                                 </select>
                             </div>

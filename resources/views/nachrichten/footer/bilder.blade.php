@@ -1,11 +1,14 @@
-<div class="row">
+<div class="row" style="height: 240px" >
     <div class="col">
         <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel" style="max-width:480px; max-height:240px;">
-
             <div class="carousel-inner">
                 @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
-                    <div class="carousel-item @if($loop->first) active @endif">
+                    <div class="carousel-item text-center @if($loop->first) active @endif">
                         <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" >
+                        @if(optional($nachricht->rueckmeldung)->type == 'bild')
+                            <h6 class="small">{{$media->name}}</h6>
+                        @endif
+
                     </div>
                 @endforeach
 

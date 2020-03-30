@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CommentPostRequest;
 use App\Model\Liste;
 use App\Repositories\GroupsRepository;
 use App\Http\Requests\createNachrichtRequest;
@@ -18,6 +19,7 @@ use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
+use http\Env\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -318,6 +320,22 @@ class NachrichtenController extends Controller
                     "type" => "success",
                     "Meldung" => "Nachricht und Rückmeldung angelegt."
                 ]);
+                break;
+            case 'bild_commentable':
+                    $rueckmeldung = new Rueckmeldungen([
+                        'posts_id'  => $post->id,
+                        'type'  => 'bild',
+                        'commentable'  => 1,
+                        'empfaenger'  => auth()->user()->email,
+                        'ende'      => $post->archiv_ab,
+                        'text'      => " "
+                    ]);
+                    $rueckmeldung->save();
+
+                    return redirect(url('/home#' . $post->id))->with([
+                        "type" => "success",
+                        "Meldung" => "Nachricht und Rückmeldung angelegt."
+                    ]);
                 break;
             default:
                 return redirect(url('/home#' . $post->id))->with([
@@ -688,6 +706,14 @@ class NachrichtenController extends Controller
             ]);
     }
 
+    public function storeComment(Posts $posts, CommentPostRequest $request){
 
+        $posts->comment([
+            'body'=> $request->comment],
+            auth()->user()
+        );
+
+        return redirect(url('/home#'.$posts->id));
+    }
 
 }

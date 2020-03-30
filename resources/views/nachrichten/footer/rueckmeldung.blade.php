@@ -25,7 +25,7 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         Rückmeldung (bis spätestens {{$nachricht->rueckmeldung->ende->format('d.m.Y')}})
-                        <textarea class="form-control border-input textInput" name="text" rows="15" id="nachricht_{{$nachricht->id}}">{{$nachricht->rueckmeldung->text}}</textarea>
+                        <textarea class="form-control border-input textInput rueckmeldung" name="text" rows="15" id="nachricht_{{$nachricht->id}}">{{$nachricht->rueckmeldung->text}}</textarea>
                     </div>
                 </div>
                 <div class="col-md-12">
