@@ -238,6 +238,7 @@
                 </ul>
             </div>
         @endif
+
         @if(session('Meldung'))
             <div class="container">
                 <div class="row">
