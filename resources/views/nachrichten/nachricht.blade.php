@@ -1,6 +1,8 @@
 
 <div class="nachricht  {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
-
+    @if(count($nachricht->getMedia('header'))>0)
+            <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}" style="max-height: 250px;object-fit: cover; object-position: 0 70%;">
+    @endif
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom" >
        <div class="row">
            <div class="col-md-10">
@@ -91,9 +93,6 @@
             </button>
         @endif
     </div>
-    @if(!is_null($nachricht->rueckmeldung))
-
-    @endif
     <div class="card-body @if($archiv) collapse @endif" id="Collapse{{$nachricht->id}}">
         @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
             <div class="row">
@@ -113,7 +112,7 @@
                 </div>
             </div>
         @else
-            <p>
+            <p class="pl-2">
                 {!! $nachricht->news !!}
             </p>
         @endif

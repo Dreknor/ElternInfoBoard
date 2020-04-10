@@ -138,6 +138,7 @@
                                         <div class="">
                                             <label>Datei-Typ</label>
                                             <select class="custom-select" name="collection" id="selectType">
+                                                <option value="header">Header-Bild</option>
                                                 <option value="images">Bilder</option>
                                                 <option value="files" selected>Dateien</option>
                                             </select>
@@ -188,7 +189,7 @@
                 'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime table paste code wordcount',
-                'contextmenu',
+                'contextmenu media',
             ],
             link_class_list: [
                 {title: 'None', value: ''},
@@ -199,7 +200,7 @@
                 {title: 'Listen', value: '{{url('listen')}}'},
                 {title: 'Downloads', value: '{{url('files')}}'}
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link',
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
             contextmenu: " link image inserttable | cell row column deletetable",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : "script[src|async|defer|type|charset]",

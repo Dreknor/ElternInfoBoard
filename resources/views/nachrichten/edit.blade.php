@@ -31,7 +31,7 @@
                     <div class="col-md-5 col-sm-12">
                         <div class="form-group">
                             <label>zuletzt bearbeitet:</label>
-                            <input type="datetime-local" class="form-control border-input date-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeLocalString()}}" >
+                            <input type="datetime" class="form-control border-input date-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeString()}}" >
                         </div>
                     </div>
                     <div class="col-md-5 col-sm-6">
@@ -115,6 +115,35 @@
 
                         @endcan
                         <div class="row">
+                            @if(count($post->getMedia('header'))>0)
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header border-bottom">
+                                            <p>
+                                                <b>
+                                                    vorhandene Titelbilder (nur das erste wird angezeigt)
+                                                </b>
+                                            </p>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group list-group-flush">
+                                                @foreach($post->getMedia('header') as $media)
+                                                    <li class="list-group-item  list-group-item-action ">
+                                                        <a href="{{url('/image/'.$media->id)}}" target="_blank" class="mx-auto ">
+                                                            <i class="fas fa-file-download"></i>
+                                                            {{$media->name}}
+                                                        </a>
+                                                        <div class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$media->id}}">
+                                                            <i class="fas fa-times"></i>
+                                                        </div>
+
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                             @if(count($post->getMedia('images'))>0)
                                 <div class="col-12">
                                     <div class="card">
@@ -149,6 +178,7 @@
                                     <div class="">
                                         <label>Datei-Typ</label>
                                         <select class="custom-select" name="collection" id="selectType">
+                                            <option value="header">Header-Bild</option>
                                             <option value="images">Bilder</option>
                                             <option value="files" selected>Dateien</option>
                                         </select>
@@ -393,7 +423,7 @@
                 'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime table paste code wordcount',
-                'contextmenu',
+                'contextmenu media',
             ],
             link_class_list: [
                 {title: 'None', value: ''},
@@ -404,7 +434,7 @@
                 {title: 'Listen', value: '{{url('listen')}}'},
                 {title: 'Downloads', value: '{{url('files')}}'}
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link',
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
             contextmenu: " link image inserttable | cell row column deletetable | pageembed",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : ["script[src|async|defer|type|charset]",

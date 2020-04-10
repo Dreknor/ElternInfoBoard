@@ -252,6 +252,11 @@ class NachrichtenController extends Controller
                     ->each(function ($fileAdder) {
                         $fileAdder->toMediaCollection('files');
                     });
+            }  elseif($request->input('collection') == 'header'){
+                $post->addAllMediaFromRequest(['files'])
+                    ->each(function ($fileAdder) {
+                        $fileAdder->toMediaCollection('header');
+                    });
             } else {
                 $post->addAllMediaFromRequest(['files'])
                     ->each(function ($fileAdder) {
@@ -368,7 +373,7 @@ class NachrichtenController extends Controller
         $posts->fill($request->all());
         //$posts->author = auth()->user()->id;
 
-        $posts->updated_at = Carbon::createFromFormat('Y-m-d\TH:i:s', $request->input('updated_at'));
+        $posts->updated_at = $request->input('updated_at');
         $posts->save();
 
 
@@ -387,6 +392,11 @@ class NachrichtenController extends Controller
                         $fileAdder->toMediaCollection('files');
                     });
 
+            } elseif($request->input('collection') == 'header'){
+                $posts->addAllMediaFromRequest(['files'])
+                    ->each(function ($fileAdder) {
+                        $fileAdder->toMediaCollection('header');
+                    });
             } else {
                 $posts->addAllMediaFromRequest(['files'])
                     ->each(function ($fileAdder) {
