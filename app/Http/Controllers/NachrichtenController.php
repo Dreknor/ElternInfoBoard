@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
 use App\Model\Liste;
+use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
@@ -19,10 +20,10 @@ use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
-use http\Env\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
 
 class NachrichtenController extends Controller
@@ -238,6 +239,10 @@ class NachrichtenController extends Controller
             foreach ($permission->users as $user) {
                 Mail::to($user->email)->queue(new newUnveroeffentlichterBeitrag(auth()->user()->name, $post->header));
             }
+        } else {
+            if ($post->released){
+                $this->push($post);
+            }
         }
 
         //Dateien verarbeiten
@@ -361,6 +366,10 @@ class NachrichtenController extends Controller
     public function update(Post $posts, editPostRequest $request, $kiosk = null)
     {
 
+        if (!$posts->released){
+            $push = true;
+        }
+
         $user = auth()->user();
 
         if (!auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
@@ -405,6 +414,10 @@ class NachrichtenController extends Controller
             }
 
 
+        }
+
+        if ($posts->released and $push){
+            $this->push($posts);
         }
 
         $Meldung ="Nachricht bearbeitet";
@@ -571,6 +584,9 @@ class NachrichtenController extends Controller
         $posts->released = 1;
         $posts->save();
 
+        if ($posts->released){
+            $this->push($posts);
+        }
         return redirect(url('/home#' . $posts->id))->with([
             "type" => "success",
             "Meldung" => "Nachricht veröffentlicht"
@@ -726,4 +742,13 @@ class NachrichtenController extends Controller
         return redirect(url('/home#'.$posts->id));
     }
 
+    //Sendet Push-Nachricht an User
+    public function push(Post $post){
+
+        $User = $post->users;
+        $User = $User->unique('id');
+
+        Notification::send($User,new PushNews($post));
+        return redirect()->back();
+    }
 }

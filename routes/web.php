@@ -21,6 +21,12 @@ Route::group([
 
         Route::middleware(['password_expired'])->group(function () {
 
+            Route::post('/push','PushController@store');
+            Route::get('/push2','PushController@store');
+
+            //make a push notification.
+            Route::get('/push','PushController@push')->name('push');
+
             //Route::get('noRueckmeldung', 'RueckmeldungenController@sendErinnerung');
 
             //Termine
