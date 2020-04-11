@@ -250,7 +250,7 @@
                     </div>
                     <div class="card-body">
                         <div class="card-body">
-                            <form action="{{url("/rueckmeldung/$post->id/createImage")}}" method="post" class="form form-horizontal">
+                            <form action="{{url("/rueckmeldung/$post->id/create")}}" method="post" class="form form-horizontal">
                                 @csrf
                                 @method('put')
                                 <div class="row">

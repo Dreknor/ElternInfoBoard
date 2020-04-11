@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Mail\newFilesAddToPost;
-use App\Model\Posts;
+use App\Model\Post;
 use App\Repositories\GroupsRepository;
-use App\Model\Groups;
+use App\Model\Group;
 use App\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -36,9 +36,9 @@ class FileController extends Controller
 
         if ($user->can('upload files')){
             if (!$user->can('view protected')){
-                $gruppen = Groups::where('protected', 0)->get();
+                $gruppen = Group::where('protected', 0)->get();
             } else {
-                $gruppen = Groups::all();
+                $gruppen = Group::all();
             }
 
             return view('files.indexVerwaltung',[
@@ -72,7 +72,7 @@ class FileController extends Controller
 
     public function create(){
         return view('files.create',[
-            'groups'    => Groups::all()
+            'groups'    => Group::all()
         ]);
     }
 
@@ -105,7 +105,7 @@ class FileController extends Controller
 
     }
 
-    public function saveFileRueckmeldung(Request $request, Posts $posts){
+    public function saveFileRueckmeldung(Request $request, Post $posts){
 
 
             if ($request->hasFile('files')) {

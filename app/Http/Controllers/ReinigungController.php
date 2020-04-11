@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Model\Groups;
+use App\Model\Group;
 use App\Model\Reinigung;
 use App\Model\User;
 use App\Support\Collection;
@@ -34,7 +34,7 @@ class ReinigungController extends Controller
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
         } else {
-            $Bereiche = Groups::query()->whereNotNull('bereich')->pluck('bereich')->unique();
+            $Bereiche = Group::query()->whereNotNull('bereich')->pluck('bereich')->unique();
         }
 
         $Reinigung = [];

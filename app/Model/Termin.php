@@ -31,7 +31,7 @@ class Termin extends Model
 
     public function groups()
     {
-        return $this->belongsToMany(Groups::class, 'groups_termine');
+        return $this->belongsToMany(Group::class, 'group_termine');
     }
 
     protected static function boot()

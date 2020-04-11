@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\createUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
-use App\Model\Groups;
+use App\Model\Group;
 use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -43,7 +43,7 @@ class UserController extends Controller
     public function create()
     {
         return view('user.create',[
-            'gruppen'   => Groups::all()
+            'gruppen'   => Group::all()
         ]);
     }
 
@@ -64,12 +64,12 @@ class UserController extends Controller
         $gruppen= $request->input('gruppen');
         if (isset($gruppen)){
             if ($gruppen[0] == "all"){
-                $gruppen = Groups::where('protected', 0)->get();
+                $gruppen = Group::where('protected', 0)->get();
             } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule' ){
-                $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+                $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
                 $gruppen = $gruppen->unique();
             } else {
-                $gruppen = Groups::find($gruppen);
+                $gruppen = Group::find($gruppen);
             }
 
             $user->groups()->attach($gruppen);
@@ -93,7 +93,7 @@ class UserController extends Controller
     {
         return view('user.show',[
             "user" => $user->load('groups'),
-            'gruppen'   => Groups::all(),
+            'gruppen'   => Group::all(),
             'permissions' => Permission::all(),
             'roles'     => Role::all()
         ]);
@@ -114,9 +114,9 @@ class UserController extends Controller
 
         if (!is_null($gruppen) ){
             if ($gruppen[0] == "all"){
-                $gruppen = Groups::all();
+                $gruppen = Group::all();
             } else {
-                $gruppen = Groups::find($gruppen);
+                $gruppen = Group::find($gruppen);
             }
         }
 

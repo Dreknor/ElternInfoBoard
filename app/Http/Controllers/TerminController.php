@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\GroupsRepository;
 use App\Http\Requests\CreateTerminRequest;
-use App\Model\Groups;
+use App\Model\Group;
 use App\Model\Termin;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -43,7 +43,7 @@ class TerminController extends Controller
         }
 
         return view('termine.create',[
-            'gruppen'   => Groups::all()
+            'gruppen'   => Group::all()
         ]);
     }
 

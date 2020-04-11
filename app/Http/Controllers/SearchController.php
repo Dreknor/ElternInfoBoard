@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\searchRequest;
-use App\Model\Groups;
-use App\Model\Posts;
+use App\Model\Group;
+use App\Model\Post;
 use App\Support\Collection;
 use Illuminate\Http\Request;
 
@@ -49,13 +49,13 @@ class SearchController extends Controller
 
         } else {
             if ($months->search($request->input('suche'))){
-                $Nachrichten = Posts::whereMonth('posts.updated_at', $months->search($request->input('suche')))
+                $Nachrichten = Post::whereMonth('posts.updated_at', $months->search($request->input('suche')))
                     ->orWhereLike(['header', 'news'], $request->input('suche'))
                     ->with('rueckmeldung', 'autor')
                     ->get();
 
             } else {
-                $Nachrichten = Posts::whereLike(['header', 'news'], $request->input('suche'))
+                $Nachrichten = Post::whereLike(['header', 'news'], $request->input('suche'))
                     ->with('rueckmeldung', 'autor')
                     ->get();
             }
@@ -70,7 +70,7 @@ class SearchController extends Controller
             "nachrichten"   => $Nachrichten,
             "archiv"    => null,
             "user"      => auth()->user(),
-            "gruppen"   => Groups::all(),
+            "gruppen"   => Group::all(),
             "Suche"     => $request->input('suche')
         ]);
 

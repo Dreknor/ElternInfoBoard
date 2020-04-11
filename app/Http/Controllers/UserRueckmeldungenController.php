@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendRueckmeldung;
 use App\Mail\UserRueckmeldung AS UserMail;
 use App\Mail\UserRueckmeldung;
-use App\Model\Posts;
+use App\Model\Post;
 use App\Model\UserRueckmeldungen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -17,7 +17,7 @@ class UserRueckmeldungenController extends Controller
         $this->middleware(['auth','password_expired']);
     }
 
-    public function sendRueckmeldung(Request $request, Posts $posts_id)
+    public function sendRueckmeldung(Request $request, Post $posts_id)
     {
         $user = auth()->user();
 

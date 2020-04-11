@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Model\Groups;
+use App\Model\Group;
 use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,7 +20,7 @@ class UsersImport implements ToCollection, WithHeadingRow
     public function __construct($header)
     {
         $this->header = $header;
-        $this->groups = Groups::all();
+        $this->groups = Group::all();
     }
 
 

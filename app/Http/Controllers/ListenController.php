@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\GroupsRepository;
 use App\Http\Requests\CreateListeRequest;
-use App\Model\Groups;
+use App\Model\Group;
 use App\Model\Liste;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -65,7 +65,7 @@ class ListenController extends Controller
         $this->authorize('create', Liste::class);
 
         return view('listen.create', [
-            "gruppen"   => Groups::all()
+            "gruppen"   => Group::all()
         ]);
     }
 
@@ -127,7 +127,7 @@ class ListenController extends Controller
 
         return view('listen.edit',[
             'liste'    => $terminListe,
-            'gruppen'=> Groups::all()
+            'gruppen'=> Group::all()
         ]);
     }
 

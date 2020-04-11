@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -16,7 +17,7 @@ class User extends Authenticatable
 {
     use Notifiable;
     use HasRoles;
-    //use SoftDeletes;
+    use HasPushSubscriptions;
 
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
@@ -59,7 +60,7 @@ class User extends Authenticatable
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function groups(){
-        return $this->belongsToMany(Groups::class)->withTimestamps();
+        return $this->belongsToMany(Group::class)->withTimestamps();
     }
 
     /**
@@ -67,7 +68,7 @@ class User extends Authenticatable
      * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function posts(){
-        return $this->hasManyDeep('App\Model\Posts', ['groups_user', 'App\Model\Groups','groups_posts']);
+        return $this->hasManyDeep('App\Model\Post', ['group_user', 'App\Model\Group','group_post']);
 
     }
 
@@ -76,14 +77,14 @@ class User extends Authenticatable
      * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function termine(){
-            return $this->hasManyDeep('App\Model\Termin', ['groups_user', 'App\Model\Groups','groups_termine']);
+            return $this->hasManyDeep('App\Model\Termin', ['group_user', 'App\Model\Group','group_termine']);
     }
 
     /**
      * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function listen(){
-        return $this->hasManyDeep('App\Model\Liste', ['groups_user', 'App\Model\Groups','groups_listen']);
+        return $this->hasManyDeep('App\Model\Liste', ['group_user', 'App\Model\Group','group_listen']);
     }
 
     /**

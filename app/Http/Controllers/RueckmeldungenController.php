@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
-use App\Model\Posts;
+use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -46,10 +46,10 @@ class RueckmeldungenController extends Controller
      * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
      * @return RedirectResponse
      */
-    public function update(Request $request, $posts_id)
+    public function update(Request $request, $post_id)
     {
         $rueckmeldung = Rueckmeldungen::firstOrNew([
-            'posts_id'  => $posts_id
+            'post_id'  => $post_id
         ]);
 
         $rueckmeldung->fill($request->all());
@@ -129,7 +129,7 @@ class RueckmeldungenController extends Controller
         return redirect()->back();
     }
 
-    public function createImageRueckmeldung(Posts $posts){
+    public function createImageRueckmeldung(Post $posts){
         $rueckmeldung = new Rueckmeldungen([
             'posts_id'  => $posts->id,
             'type'  => 'bild',

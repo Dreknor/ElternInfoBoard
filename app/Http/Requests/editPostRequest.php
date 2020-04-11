@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Model\Posts;
+use App\Model\Post;
 use Illuminate\Foundation\Http\FormRequest;
 
 class editPostRequest extends FormRequest

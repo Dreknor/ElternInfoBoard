@@ -23,7 +23,7 @@ class Liste extends Model
     }
 
     public function groups () {
-        return $this->belongsToMany(Groups::class, 'groups_listen', 'liste_id');
+        return $this->belongsToMany(Group::class, 'group_listen', 'liste_id');
     }
 
     public function eintragungen () {

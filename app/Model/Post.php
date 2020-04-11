@@ -8,10 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia\HasMedia;
 use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
-use Spatie\MediaLibrary\Models\Media;
 
 
-class Posts extends Model  implements HasMedia
+class Post extends Model  implements HasMedia
 {
     use HasMediaTrait;
     use SoftDeletes;
@@ -32,7 +31,7 @@ class Posts extends Model  implements HasMedia
 
     public function groups()
     {
-        return $this->belongsToMany(Groups::class);
+        return $this->belongsToMany(Group::class);
     }
 
     public function autor(){
@@ -49,7 +48,7 @@ class Posts extends Model  implements HasMedia
     }
 
     public function users(){
-        return $this->hasManyDeep('App\Model\User', ['groups_posts', 'App\Model\Groups','groups_user']);
+        return $this->hasManyDeep('App\Model\User', ['group_post', 'App\Model\Group','group_user']);
     }
 
 }

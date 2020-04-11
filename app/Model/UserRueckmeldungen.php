@@ -8,9 +8,9 @@ class UserRueckmeldungen extends Model
 {
 
     protected $table = "users_rueckmeldungen";
-    protected $fillable = ['posts_id', 'users_id', 'text'];
+    protected $fillable = ['post_id', 'users_id', 'text'];
 
     public function nachricht(){
-        return $this->belongsTo(Posts::class, 'posts_id', 'id');
+        return $this->belongsTo(Post::class, 'post_id', 'id');
     }
 }

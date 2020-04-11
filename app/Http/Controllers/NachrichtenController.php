@@ -12,8 +12,8 @@ use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
 use App\Mail\newUnveroeffentlichterBeitrag;
 use App\Model\Discussion;
-use App\Model\Groups;
-use App\Model\Posts;
+use App\Model\Group;
+use App\Model\Post;
 use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\Termin;
@@ -60,7 +60,7 @@ class NachrichtenController extends Controller
                 $Nachrichten = $user->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
                 if ($user->can('create posts')){
-                    $eigenePosts = Posts::query()->where('author', $user->id)->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
+                    $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
                     $Nachrichten = $Nachrichten->concat($eigenePosts);
                 }
 
@@ -68,7 +68,7 @@ class NachrichtenController extends Controller
                 $Nachrichten = $user->posts()->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
                 if ($user->can('create posts')){
-                    $eigenePosts = Posts::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
+                    $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
                     $Nachrichten = $Nachrichten->concat($eigenePosts);
                 }
             }
@@ -81,10 +81,10 @@ class NachrichtenController extends Controller
             $Reinigung = Reinigung::whereIn('users_id', [$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
 
             if ($archiv) {
-                $Nachrichten = Posts::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
             } else {
-                $Nachrichten = Posts::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
             }
 
         }
@@ -145,7 +145,7 @@ class NachrichtenController extends Controller
             'datum'     => Carbon::now(),
             "archiv" => $archiv,
             "user" => $user,
-            "gruppen" => Groups::all(),
+            "gruppen" => Group::all(),
             "Reinigung" => $Reinigung,
             'termine' => $Termine
         ]);
@@ -164,7 +164,7 @@ class NachrichtenController extends Controller
             ]);
         }
 
-        $gruppen = Groups::all();
+        $gruppen = Group::all();
 
         return view('nachrichten.create', [
             'gruppen' => $gruppen
@@ -172,10 +172,10 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Posts $posts
+     * @param Post $posts
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
-    public function edit(Posts $posts, $kiosk = '')
+    public function edit(Post $posts, $kiosk = '')
     {
         if (!auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect('/home')->with([
@@ -184,7 +184,7 @@ class NachrichtenController extends Controller
             ]);
         }
 
-        $gruppen = Groups::all();
+        $gruppen = Group::all();
 
         if (is_null($posts->rueckmeldung)) {
             $rueckmeldung = new Rueckmeldungen();
@@ -221,7 +221,7 @@ class NachrichtenController extends Controller
             ]);
         }
 
-        $post = new Posts($request->all());
+        $post = new Post($request->all());
 
 
         $post->author = auth()->user()->id;
@@ -354,11 +354,11 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Posts $posts
+     * @param Post $posts
      * @param editPostRequest $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function update(Posts $posts, editPostRequest $request, $kiosk = null)
+    public function update(Post $posts, editPostRequest $request, $kiosk = null)
     {
 
         $user = auth()->user();
@@ -480,7 +480,7 @@ class NachrichtenController extends Controller
             if (!$user->can('view all')) {
                 $Nachrichten = $user->posts;
             } else {
-                $Nachrichten = Posts::all();
+                $Nachrichten = Post::all();
             }
 
 
@@ -532,10 +532,10 @@ class NachrichtenController extends Controller
 
 
     /**
-     * @param Posts $posts
+     * @param Post $posts
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function touch(Posts $posts)
+    public function touch(Post $posts)
     {
 
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
@@ -555,10 +555,10 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Posts $posts
+     * @param Post $posts
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function release(Posts $posts)
+    public function release(Post $posts)
     {
         if (!auth()->user()->can('release posts')) {
             return redirect('/home')->with([
@@ -577,7 +577,7 @@ class NachrichtenController extends Controller
         ]);
     }
 
-    public function archiv (Posts $posts){
+    public function archiv (Post $posts){
         if (!auth()->user()->can('edit posts')) {
             return redirect('/home')->with([
                 'type' => "danger",
@@ -628,13 +628,13 @@ class NachrichtenController extends Controller
 
 
             if ($archiv) {
-                $Nachrichten = Posts::with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = Post::with('media', 'autor', 'groups', 'rueckmeldung')->get();
                 $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate) {
                     return $nachricht->updated_at->lessThan($archivDate);
                 })->sortByDesc('updated_at')->unique()->paginate(30);
 
             } else {
-                $Nachrichten = Posts::with('media', 'autor', 'groups', 'rueckmeldung')->get();
+                $Nachrichten = Post::with('media', 'autor', 'groups', 'rueckmeldung')->get();
                 $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate) {
                     return $nachricht->updated_at->greaterThanOrEqualTo($archivDate);
                 })->sortByDesc('updated_at')->unique()->paginate(30);
@@ -651,11 +651,11 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Posts $posts
+     * @param Post $posts
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
-    public function destroy(Posts $posts)
+    public function destroy(Post $posts)
     {
         if ($posts->author == auth()->user()->id) {
 
@@ -684,7 +684,7 @@ class NachrichtenController extends Controller
             $Nachrichten = new Collection();
 
 
-            $Gruppen = Groups::where('protected', 0)->with(['posts' => function ($query){
+            $Gruppen = Group::where('protected', 0)->with(['posts' => function ($query){
                 $query->whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay());
             }])->get();
 
@@ -716,7 +716,7 @@ class NachrichtenController extends Controller
             ]);
     }
 
-    public function storeComment(Posts $posts, CommentPostRequest $request){
+    public function storeComment(Post $posts, CommentPostRequest $request){
 
         $posts->comment([
             'body'=> $request->comment],

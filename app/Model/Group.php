@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia\HasMedia;
 use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
 
-class Groups extends Model implements HasMedia
+class Group extends Model implements HasMedia
 {
 
     use HasMediaTrait;
@@ -24,7 +24,7 @@ class Groups extends Model implements HasMedia
     }
 
     public function posts(){
-        return $this->belongsToMany(Posts::class)->withTimestamps();
+        return $this->belongsToMany(Post::class)->withTimestamps();
     }
 
     public function termine(){

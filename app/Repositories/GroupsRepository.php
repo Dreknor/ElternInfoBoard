@@ -4,7 +4,7 @@
 namespace App\Repositories;
 
 
-use App\Model\Groups;
+use App\Model\Group;
 
 /**
  * Class GroupsRepository
@@ -20,12 +20,12 @@ class GroupsRepository
     public function getGroups(Array $gruppen){
 
         if ($gruppen[0] == "all") {
-            $gruppen = Groups::where('protected', 0)->where('bereich', '!=', 'Aufnahme')->get();
+            $gruppen = Group::where('protected', 0)->where('bereich', '!=', 'Aufnahme')->get();
         } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
-            $gruppen = Groups::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+            $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
             $gruppen = $gruppen->unique();
         } else {
-            $gruppen = Groups::find($gruppen);
+            $gruppen = Group::find($gruppen);
         }
 
         return $gruppen;

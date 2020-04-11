@@ -20,11 +20,11 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $fillable = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht','type', 'commentable'];
+    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht','type', 'commentable'];
     /**
      * @var array
      */
-    protected $visible = ['posts_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type'];
+    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type'];
 
     /**
      * @var array
@@ -43,14 +43,14 @@ class Rueckmeldungen extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function post(){
-        return $this->belongsTo(Posts::class, 'posts_id');
+        return $this->belongsTo(Post::class, 'post_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function userRueckmeldungen () {
-        return $this->hasMany(UserRueckmeldungen::class, 'posts_id', 'posts_id');
+        return $this->hasMany(UserRueckmeldungen::class, 'post_id', 'post_id');
     }
 
 

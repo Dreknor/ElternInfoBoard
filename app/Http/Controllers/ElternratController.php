@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createDiscussionRequest;
 use App\Model\Comment;
 use App\Model\Discussion;
-use App\Model\Groups;
+use App\Model\Group;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\Models\Media;
 use Spatie\Permission\Models\Permission;
@@ -26,7 +26,7 @@ class ElternratController extends Controller
     public function index()
     {
         $themen = Discussion::query()->orderbyDesc('sticky')->orderbyDesc('updated_at')->paginate(15);
-        $Group = Groups::where('name', '=', 'Elternrat')->first();
+        $Group = Group::where('name', '=', 'Elternrat')->first();
         $files = $Group->getMedia();
 
         $user = Role::findByName('Elternrat');
@@ -144,13 +144,13 @@ class ElternratController extends Controller
 
     public function addFile(){
         return view('elternrat.createFile',[
-            'groups'    => Groups::all()
+            'groups'    => Group::all()
         ]);
     }
 
     public function storeFile(Request $request){
 
-            $gruppe = Groups::where('name', "Elternrat")->first();
+            $gruppe = Group::where('name', "Elternrat")->first();
 
         if ($request->hasFile('files')) {
                 $gruppe->addMediaFromRequest('files')
