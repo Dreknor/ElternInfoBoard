@@ -25,7 +25,7 @@ class RueckmeldungenController extends Controller
     public function store(createRueckmeldungRequest $request, $posts_id)
     {
         $rueckmeldung = new Rueckmeldungen($request->all());
-        $rueckmeldung->posts_id = $posts_id;
+        $rueckmeldung->post_id = $posts_id;
         $rueckmeldung->save();
 
         return redirect(url('/home'))->with([

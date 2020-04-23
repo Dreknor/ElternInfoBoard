@@ -318,7 +318,7 @@ class NachrichtenController extends Controller
                 break;
             case 'bild':
                 $rueckmeldung = new Rueckmeldungen([
-                    'posts_id'  => $post->id,
+                    'post_id'  => $post->id,
                     'type'  => 'bild',
                     'empfaenger'  => auth()->user()->email,
                     'ende'      => $post->archiv_ab,
@@ -333,7 +333,7 @@ class NachrichtenController extends Controller
                 break;
             case 'bild_commentable':
                     $rueckmeldung = new Rueckmeldungen([
-                        'posts_id'  => $post->id,
+                        'post_id'  => $post->id,
                         'type'  => 'bild',
                         'commentable'  => 1,
                         'empfaenger'  => auth()->user()->email,
@@ -367,7 +367,9 @@ class NachrichtenController extends Controller
     {
 
         if (!$posts->released){
-            $push = true;
+            $push = 1;
+        } else {
+            $push = 0;
         }
 
         $user = auth()->user();
@@ -416,7 +418,7 @@ class NachrichtenController extends Controller
 
         }
 
-        if ($posts->released and $push){
+        if ($posts->released and $push == 1){
             $this->push($posts);
         }
 

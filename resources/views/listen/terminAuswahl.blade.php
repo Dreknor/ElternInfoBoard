@@ -9,12 +9,12 @@
                     {{$liste->listenname}} @if($liste->active == 0) (inaktiv) @endif
                 </h5>
                 <div class="row">
-                    <div class="col-md-8 col-sm-12">
+                    <div class="col-md-6 col-sm-12">
                         <p class="info small">
                             {!! $liste->comment !!}
                         </p>
                     </div>
-                    <div class="col-md-4 col-sm-12">
+                    <div class="col-md-6 col-sm-12">
                         @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
                             <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#createEintragungModal">
                                 <i class="fa fa-dd-user"></i>
@@ -25,6 +25,10 @@
                                 <i class="fa fas-export"></i>
                                 Druckansicht
                             </a>
+
+                            <button class="btn btn-primary pull-right" type="button" id="showAll">
+                                <i class="fas fa-eye"></i> alle Termine
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -34,7 +38,7 @@
                 @if($liste->eintragungen->count()> 0)
                     <ul class="list-group">
                         @foreach($liste->eintragungen->sortBy('termin') as $eintrag)
-                            <div class="list-group-item">
+                            <div class="list-group-item @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hide d-none @endif">
                                 <div class="row">
                                     <div class="col-sm-6 col-md-3 m-auto">
 
@@ -167,6 +171,13 @@
         })
     </script>
 
+    <script>
+        $('#showAll').on('click', function () {
+            var btn = this;
+            $(btn).addClass('d-none');
+            $('.hide').removeClass('d-none');
+        });
+    </script>
 
 
 @endpush

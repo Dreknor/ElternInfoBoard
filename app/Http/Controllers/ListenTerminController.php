@@ -7,8 +7,10 @@ use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
 use App\Model\Liste;
 use App\Model\listen_termine;
+use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Class ListenTerminController
@@ -97,12 +99,29 @@ class ListenTerminController extends Controller
         if (auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')){
 
             if ($listen_termine->reserviert_fuer != null){
+                //WebPush
+                $user = $listen_termine->eingetragenePerson;
+                if ($user->sorg2 != "" and $user->sorg2 != null){
+                    $sorg2 = $user->sorgeberechtigter2;
+                }
+
+                $users = collect([$user, auth()->user()]);
+                if (!is_null($sorg2)){
+                    $users->push($sorg2);
+                }
+
+                $body = $listen_termine->liste->listenname.": Termin am ".$listen_termine->termin->format('d.m.Y H:i')." wurde abgesagt.";
+                Notification::send($users,new PushTerminAbsage($body));
+
+
                 //E-Mail versenden
                 Mail::to($listen_termine->eingetragenePerson->email,$listen_termine->eingetragenePerson->name)
                     ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name,$listen_termine->liste, $listen_termine->termin, auth()->user() ));
                 $listen_termine->update([
                     'reserviert_fuer'   => null
                 ]);
+
+
             } else {
                 $listen_termine->delete();
             }

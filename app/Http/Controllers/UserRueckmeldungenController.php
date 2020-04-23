@@ -17,23 +17,23 @@ class UserRueckmeldungenController extends Controller
         $this->middleware(['auth','password_expired']);
     }
 
-    public function sendRueckmeldung(Request $request, Post $posts_id)
+    public function sendRueckmeldung(Request $request, Post $post_id)
     {
         $user = auth()->user();
 
         $rueckmeldungUser = UserRueckmeldungen::firstOrNew([
-            "posts_id" => $posts_id->id,
+            "post_id" => $post_id->id,
             "users_id" => $user->id
         ]);
 
         $rueckmeldungUser->text = $request->input('text');
         $rueckmeldungUser->save();
 
-        $Empfaenger = $posts_id->rueckmeldung->empfaenger;
+        $Empfaenger = $post_id->rueckmeldung->empfaenger;
 
         $Rueckmeldung = [
             "text"  => $request->input('text').'<br>'.auth()->user()->name,
-            "subject"   => "Rückmeldung $posts_id->header",
+            "subject"   => "Rückmeldung $post_id->header",
             'name'  => $user->name,
             "email" => $user->email,
             'empfaenger'    =>  $Empfaenger
@@ -50,8 +50,8 @@ class UserRueckmeldungenController extends Controller
 
 
 
-        return redirect(url('/home#'.$posts_id->id))->with([
-                "id" => $posts_id->id,
+        return redirect(url('/home#'.$post_id->id))->with([
+                "id" => $post_id->id,
                 "type"  => "success",
                 "Meldung"   => "Die Rückmeldung wurde der Schule gesendet"
             ]);
@@ -106,10 +106,10 @@ class UserRueckmeldungenController extends Controller
                 ->send(new UserRueckmeldung($Rueckmeldung));
         }
 
-        return redirect(url('/home#'.$userRueckmeldungen->posts_id))->with([
+        return redirect(url('/home#'.$userRueckmeldungen->post_id))->with([
             'type'  => "success",
             "Meldung"   => "Rückmeldung versendet",
-            "RueckmeldungCheck" => $userRueckmeldungen->posts_id
+            "RueckmeldungCheck" => $userRueckmeldungen->post_id
         ]);
     }
 }
