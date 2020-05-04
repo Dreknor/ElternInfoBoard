@@ -63,6 +63,7 @@ Route::group([
             Route::post('eintragungen/{liste}/store', 'ListenTerminController@store');
             Route::put('eintragungen/{listen_termine}', 'ListenTerminController@update');
             Route::delete('eintragungen/{listen_termine}', 'ListenTerminController@destroy');
+            Route::delete('eintragungen/absagen/{listen_termine}', 'ListenTerminController@absagen');
 
             //Reinigungsplan
             Route::get('reinigung', 'ReinigungController@index');

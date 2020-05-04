@@ -17,9 +17,11 @@ class UserRueckmeldungenController extends Controller
         $this->middleware(['auth','password_expired']);
     }
 
-    public function sendRueckmeldung(Request $request, Post $post_id)
+    public function sendRueckmeldung(Request $request, $post_id)
     {
         $user = auth()->user();
+
+        $post_id = Post::find($post_id);
 
         $rueckmeldungUser = UserRueckmeldungen::firstOrNew([
             "post_id" => $post_id->id,

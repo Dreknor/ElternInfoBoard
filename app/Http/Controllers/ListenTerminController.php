@@ -7,6 +7,7 @@ use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
 use App\Model\Liste;
 use App\Model\listen_termine;
+use App\Notifications\Push;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -71,6 +72,9 @@ class ListenTerminController extends Controller
             "reserviert_fuer" => auth()->user()->id
         ]);
 
+        Notification::send($listen_termine->liste->ersteller,new Push($listen_termine->liste->listenname.": Termin vergeben", auth()->user()->name." hat den Termin ".$listen_termine->termin->format('d.m.Y H:i')." reserviert."));
+
+
         return redirect(url('listen'))->with([
             "type"  => 'success',
             'Meldung'   => "Termin wurde reserviert."
@@ -82,19 +86,31 @@ class ListenTerminController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Exception
      */
-    public function destroy(listen_termine $listen_termine){
-
+    public function absagen(listen_termine $listen_termine){
         if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2){
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
                 ->queue(new TerminAbsageEltern(auth()->user(),$listen_termine->liste, $listen_termine->termin));
 
             $listen_termine->update(["reserviert_fuer" => null]);
 
+            $body = $listen_termine->liste->listenname.": Termin am ".$listen_termine->termin->format('d.m.Y H:i')." wurde durch ".auth()->user()->name." abgesagt.";
+            //Notification::send($listen_termine->liste->ersteller,new PushTerminAbsage($body));
+
             return redirect()->back()->with([
                 'type'  => "success",
                 'Meldung'=> "Termin abgesagt"
             ]);
+
+
         }
+        return redirect()->back()->with([
+            'type'  => "danger",
+            'Meldung'=> "Keine Recht den Termin abzusagen?"
+        ]);
+    }
+
+    public function destroy(listen_termine $listen_termine){
+
 
         if (auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')){
 
@@ -111,7 +127,7 @@ class ListenTerminController extends Controller
                 }
 
                 $body = $listen_termine->liste->listenname.": Termin am ".$listen_termine->termin->format('d.m.Y H:i')." wurde abgesagt.";
-                Notification::send($users,new PushTerminAbsage($body));
+                //Notification::send($users,new PushTerminAbsage($body));
 
 
                 //E-Mail versenden

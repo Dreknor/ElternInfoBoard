@@ -71,7 +71,7 @@
             <li class="@if(request()->segment(1)=="feedback") active @endif">
                 <a href="{{url('/feedback')}}">
                     <i class="far fa-comment" aria-hidden="true"></i>
-                    <p>Feedback</p>
+                    <p>Kontakt</p>
                 </a>
             </li>
             <li class="border-bottom"></li>

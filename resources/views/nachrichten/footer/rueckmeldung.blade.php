@@ -1,5 +1,5 @@
-@if(!is_null($user->getRueckmeldung()->where('posts_id', $nachricht->id)->first()))
-    @php($rueckmeldung = $user->getRueckmeldung()->where('posts_id', $nachricht->id)->first())
+@if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first()))
+    @php($rueckmeldung = $user->getRueckmeldung()->where('post_id', $nachricht->id)->first())
     <div class="card-footer @if(\Illuminate\Support\Facades\Session::has("id") and \Illuminate\Support\Facades\Session::get("id") == $nachricht->id) border border-success bg-success @else border-top @endif">
         <div class="row">
                         <div class="col-md-3 col-sm-12">

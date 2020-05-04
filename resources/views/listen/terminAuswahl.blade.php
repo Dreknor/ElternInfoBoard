@@ -64,13 +64,26 @@
                                                        @endif
                                                    </div>
                                                    <div class="col-sm-12 col-md-6 m-auto">
-                                                       <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
-                                                           @csrf
-                                                           @method('delete')
-                                                           <button type="submit" class="btn @if($eintrag->reserviert_fuer != null) btn-outline-danger @else btn-outline-warning @endif btn-xs btn-round">
-                                                               @if($eintrag->reserviert_fuer != null) {{$eintrag->eingetragenePerson->name }} absagen @else  Termin löschen @endif
-                                                           </button>
-                                                       </form>
+                                                       @if ($eintrag->reserviert_fuer != null)
+                                                           <form method="post" action="{{url("eintragungen/absagen/".$eintrag->id)}}">
+                                                               @csrf
+                                                               @method('delete')
+                                                               <button type="submit" class="btn  btn-outline-danger btn-xs btn-round">
+                                                                   {{$eintrag->eingetragenePerson->name }} absagen
+                                                               </button>
+                                                           </form>
+
+                                                       @else
+                                                           <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
+                                                               @csrf
+                                                               @method('delete')
+                                                               <button type="submit" class="btn  btn-outline-warning btn-xs btn-round">
+                                                                   löschen
+                                                               </button>
+                                                           </form>
+
+                                                       @endif
+
                                                    </div>
                                                </div>
                                         @else

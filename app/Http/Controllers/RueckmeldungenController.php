@@ -101,7 +101,7 @@ class RueckmeldungenController extends Controller
                 $user = $user->unique('id');
 
                 foreach ($user as $User){
-                    $RueckmeldungUser = $User->getRueckmeldung()->where('posts_id', $Rueckmeldung->post->id)->first();
+                    $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)){
                         $email=$User->email;
                         Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende));
