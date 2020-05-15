@@ -125,6 +125,8 @@ class User extends Authenticatable
     public function getRueckmeldung(){
         $eigeneRueckmeldung = $this->userRueckmeldung;
 
+
+
         if (!is_null($this->sorg2)){
             $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
             if (!is_null($sorgRueckmeldung) and !is_null($eigeneRueckmeldung)){

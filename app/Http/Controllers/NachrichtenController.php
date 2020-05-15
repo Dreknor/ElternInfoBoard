@@ -288,6 +288,7 @@ class NachrichtenController extends Controller
                 $q->whereIn('name', $MailGruppen);
             })->get();
 
+            $users = $users->unique('id');
 
             $sendTo = [];
             foreach ($users as $mailUser) {
@@ -442,6 +443,7 @@ class NachrichtenController extends Controller
                 $q->whereIn('name', $MailGruppen);
             })->get();
 
+            $users = $users->unique('id');
 
             $sendTo = [];
 

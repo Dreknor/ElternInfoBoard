@@ -87,7 +87,7 @@ class ListenTerminController extends Controller
      * @throws \Exception
      */
     public function absagen(listen_termine $listen_termine){
-        if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2){
+        if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2 or  auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')){
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
                 ->queue(new TerminAbsageEltern(auth()->user(),$listen_termine->liste, $listen_termine->termin));
 

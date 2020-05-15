@@ -35,7 +35,7 @@ class SendFeedback extends Mailable
                 auth()->user()->email,
                 auth()->user()->name
             )
-            ->subject('Feedback')
+            ->subject('Kontaktformular vom ElternInfoBoard')
             ->view('emails.feedback')->with([
                 "text"  => $this->text
             ]);
