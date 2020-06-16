@@ -24,13 +24,24 @@ class RueckmeldungenController extends Controller
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
     {
+
+
         $rueckmeldung = new Rueckmeldungen($request->all());
         $rueckmeldung->post_id = $posts_id;
         $rueckmeldung->save();
 
+        $post = Post::find($posts_id);
+
+        if ($rueckmeldung->ende->greaterThan($post->archiv_ab)){
+
+            $post->update([
+               'archiv_ab' => $rueckmeldung->ende
+            ]);
+        }
+
         return redirect(url('/home'))->with([
            "type"   => "success",
-           "Meldung"    => "Nachricht erstellt."
+           "Meldung"    => "Rückmeldung erstellt."
         ]);
     }
 
@@ -54,6 +65,15 @@ class RueckmeldungenController extends Controller
 
         $rueckmeldung->fill($request->all());
         $rueckmeldung->save();
+
+        $post = Post::find($post_id);
+
+        if ($rueckmeldung->ende->greaterThan($post->archiv_ab)){
+
+            $post->update([
+                'archiv_ab' => $rueckmeldung->ende
+            ]);
+        }
 
         return redirect(url('home'))->with([
            "type"   => "success",

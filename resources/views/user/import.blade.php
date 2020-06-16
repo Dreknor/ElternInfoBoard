@@ -31,6 +31,12 @@
                             <input type="number" name="lerngruppe" step="1" value="3" class="form-control border-input">
                         </div>
                     </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Gruppenliste</label>
+                            <input type="number" name="gruppen" step="1" value="1" class="form-control border-input">
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col">
@@ -90,6 +96,7 @@
                                 <select class="custom-select" name="type">
                                     <option value="eltern" selected>Eltern-Import</option>
                                     <option value="mitarbeiter">Mitarbeiter-Import</option>
+                                    <option value="aufnahme">Aufnahme-Import</option>
                                 </select>
                             </div>
                     </div>

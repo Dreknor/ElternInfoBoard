@@ -14,3 +14,10 @@ self.addEventListener('push', function (e) {
         }));
     }
 });
+
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow("https://eltern.esz-radebeul.de")
+    );
+});

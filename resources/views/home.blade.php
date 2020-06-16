@@ -97,7 +97,7 @@
     <div id="">
         @include('termine.nachricht')
         @include('reinigung.nachricht')
-        @if($archiv != null)
+        @if($archiv != null and isset($nachrichten) and count($nachrichten)>0)
             <div class="card">
                 <div class="card-body bg-warning">
                     <b>{{$nachrichten->first()->updated_at->locale('de')->getTranslatedMonthName('Do MMMM')}} {{$nachrichten->first()->updated_at->format('Y')}}</b>
