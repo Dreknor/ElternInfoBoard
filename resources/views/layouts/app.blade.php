@@ -33,6 +33,14 @@
     </div>
     <div class="sidebar-wrapper">
         <ul class="nav">
+            @if(auth()->user()->hasRole('Mitarbeiter'))
+                <li class="">
+                    <a href="https://mitarbeiter.esz-radebeul.de">
+                        <i class="far fa-user-circle"></i>
+                        <p>MitarbeiterBoard</p>
+                    </a>
+                </li>
+            @endif
             <li class="@if(request()->segment(1)=="" or request()->segment(1)=="home") active @endif">
                 <a href="{{url('/')}}">
                     <i class="far fa-newspaper"></i>

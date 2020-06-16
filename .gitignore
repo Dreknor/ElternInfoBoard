@@ -15,3 +15,7 @@ yarn-error.log
 *.iml
      *.xml
 
+
+composer.lock
+*.iml
+.idea/php.xml

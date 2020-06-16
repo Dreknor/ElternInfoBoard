@@ -19,7 +19,9 @@ class RolesController extends Controller
     }
 
     public function update(Request $request){
+
        foreach (Role::all() as $role){
+
            $role->syncPermissions($request->input($role->name));
        }
         return  redirect()->back()->with([

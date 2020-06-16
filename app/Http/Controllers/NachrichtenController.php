@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
 use App\Model\Liste;
+use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
 use App\Http\Requests\createNachrichtRequest;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class NachrichtenController extends Controller
 {
@@ -488,7 +490,7 @@ class NachrichtenController extends Controller
         $users->load('roles');
 
 
-
+        $countUser = 0;
 
         foreach ($users as $user) {
 
@@ -526,8 +528,8 @@ class NachrichtenController extends Controller
             // neue Listen
             //neue Dateien
 
-
             if (count($Nachrichten) > 0) {
+                $countUser++;
                 Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
                 $user->lastEmail = Carbon::now();
                 $user->save();
@@ -535,6 +537,11 @@ class NachrichtenController extends Controller
 
 
         }
+
+        $admin = Role::findByName('Admin');
+        $admin = $admin->users()->first();
+
+        Notification::send($admin, new Push('Mail versandt', "Es wurden $countUser Mails versandt"));
     }
 
     /**
@@ -714,7 +721,13 @@ class NachrichtenController extends Controller
             //Listen für den Kiosk
             $listen = [];
             if (auth()->user()->can('edit terminliste')){
-                $listen = Liste::query()->whereDate('ende', '>', Carbon::now())->with('eintragungen')->get();
+                $listen = Liste::query()->whereDate('ende', '>', Carbon::now())->where('active', 1)->with('eintragungen')->get();
+                $listen = $listen->filter(function ($liste){
+                    $eintragungen = $liste->eintragungen()->where('termin', '>=', Carbon::now()->format('Y-m-d'))->count();
+                    if ($eintragungen > 0) {
+                        return $liste;
+                    }
+                });
             }
 
 

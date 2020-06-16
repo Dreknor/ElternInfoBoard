@@ -103,5 +103,12 @@ class AppServiceProvider extends ServiceProvider
 
             return $this;
         });
+
+        Collection::macro('sortByDate', function ($column = 'created_at', $order = SORT_DESC) {
+            /* @var $this Collection */
+            return $this->sortBy(function ($datum) use ($column) {
+                return strtotime($datum->$column);
+            }, SORT_REGULAR, $order == SORT_DESC);
+        });
     }
 }

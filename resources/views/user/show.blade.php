@@ -81,6 +81,17 @@
 
                                         </div>
                                     </div>
+                                    @can('set password')
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label>neues Passwort</label>
+                                                    <input class="form-control" name="new-password" type="password" minlength="8">
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    @endcan
                                     @if($user->sorg2 != null)
                                         <div class="row">
                                             <div class="col-12">

@@ -148,5 +148,5 @@
 @endsection
 
 @push('header')
-    <meta http-equiv="Refresh" content="3600">
+    <meta http-equiv="Refresh" content="600,url=https://mitarbeiter.esz-radebeul.de/kiosk">
 @endpush
