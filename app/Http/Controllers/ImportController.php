@@ -6,8 +6,11 @@ use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
 use App\Model\group_user;
+use App\Model\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Role;
 
 class ImportController extends Controller
 {
@@ -38,8 +41,10 @@ class ImportController extends Controller
                     "S2Nachname" => $request->input("S2Nachname")-1,
                 ];
 
-
                 Excel::import(new UsersImport($header), request()->file('file'));
+
+
+
                 $Meldung = "Eltern wurden importiert";
             } elseif ($request->input('type') == "aufnahme"){
                 $header = [
@@ -65,11 +70,13 @@ class ImportController extends Controller
                 'type'  => "success",
                 'Meldung'   => $Meldung
             ]);
-        }
+        } else {
             return redirect()->back()->with([
                 "type" => "danger",
                 "Meldung" => "Keine Datei ausgewählt"
             ]);
+        }
+
 
 
     }

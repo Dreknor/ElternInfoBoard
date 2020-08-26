@@ -168,6 +168,10 @@ class UserController extends Controller
             ]);
         }
 
+        //$user->groups()->sync([]);
+        $user->listen_eintragungen()->delete();
+        $user->userRueckmeldung()->delete();
+        $user->reinigung()->delete();
         $user->delete();
 
         return response()->json([

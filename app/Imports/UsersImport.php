@@ -53,7 +53,13 @@ class UsersImport implements ToCollection, WithHeadingRow
 
                 $user1->touch();
                 $user1->assignRole('Eltern');
-                $user1->groups()->attach([$Klassenstufe->id, $Lerngruppe->id]);
+                $user1->removeRole('Aufnahme');
+                if (is_object($Klassenstufe)){
+                    $user1->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
+                } else {
+                    dd($row);
+                }
+
             }
 
             if (!is_null($row[$this->header['S2Email']])) {
@@ -71,7 +77,12 @@ class UsersImport implements ToCollection, WithHeadingRow
 
                 $user2->touch();
                 $user2->assignRole('Eltern');
-                $user2->groups()->attach([$Klassenstufe->id, $Lerngruppe->id]);
+                $user2->removeRole('Aufnahme');
+                if (is_object($Klassenstufe)){
+                    $user2->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
+                }else {
+                    dd($row);
+                }
 
             }
 
