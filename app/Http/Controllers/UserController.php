@@ -162,8 +162,19 @@ class UserController extends Controller
         $user = User::find($id);
         $user->groups()->detach();
 
+
+
         if ($user->sorg2 != null){
-            $user->sorgeberechtigter2->update([
+            $sorg2 = User::where('id', '=', $user->sorg2)->first();
+            if (!is_null($sorg2)){
+                $sorg2->update([
+                        'sorg2'=>null
+                    ]
+                );
+            }
+
+
+            $user->update([
                 'sorg2'=>null
             ]);
         }
@@ -172,6 +183,11 @@ class UserController extends Controller
         $user->listen_eintragungen()->delete();
         $user->userRueckmeldung()->delete();
         $user->reinigung()->delete();
+
+        $user->posts()->update([
+            'author'=>null
+        ]);
+
         $user->delete();
 
         return response()->json([
@@ -202,6 +218,11 @@ class UserController extends Controller
     }
 
     public function removeVerknuepfung(User $user){
+
+        $user->sorgeberechtigter2()->update([
+            'sorg2' => null
+        ]);
+
         $user->update([
             'sorg2' => null
         ]);

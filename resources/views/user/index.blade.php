@@ -43,6 +43,7 @@
                             <th>Gruppen</th>
                             <th>Rechte</th>
                             <th>Verknüpft</th>
+                            <th>E-Mail</th>
                             <td></td>
                         </tr>
                     </thead>
@@ -85,6 +86,11 @@
                                     @if(!is_null($user->sorgeberechtigter2))
                                        {{$user->sorgeberechtigter2->name}}
                                     @endif
+                                </td>
+                                <td>
+                                            <a class="btn  @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-danger @else btn-success @endif  btn-sm" href="{{url('email/daily/'.$user->id)}}">
+                                                letzte Mail: {{optional($user->lastEmail)->format('d.m.Y')}} - Email senden?
+                                            </a>
                                 </td>
                                 <td>
                                     <div class="btn btn-sm btn-danger user-delete" data-id="{{$user->id}}">

@@ -102,17 +102,6 @@ Route::group([
 
 
 
-                          Route::get('email/weekly', 'NachrichtenController@email');
-             /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
-             */
-
-            //Routen für Benutzerverwaltung
-
-            Route::get('users/import', 'ImportController@importForm')->middleware(['permission:import user']);
-            Route::post('users/import', 'ImportController@import')->middleware(['permission:import user']);
-
-            Route::delete("users/{id}", "UserController@destroy");
-
 
             //changelog
             Route::resource('changelog', 'ChangelogController');
@@ -120,8 +109,21 @@ Route::group([
             //Suche
             Route::post('search','SearchController@search');
 
+//Routen für Benutzerverwaltung
+
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
+                Route::get('email/{daily}/{id}', 'NachrichtenController@email');
+                /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
+                */
+
+                Route::get('users/import', 'ImportController@importForm')->middleware(['permission:import user']);
+                Route::post('users/import', 'ImportController@import')->middleware(['permission:import user']);
+
+                Route::delete("users/{id}", "UserController@destroy");
+
+
                 Route::resource('users', 'UserController');
+                //Route::get('users/{user}/delete', 'UserController@destroy');
                 //Route::get('sendErinnerung', 'RueckmeldungenController@sendErinnerung');
                 //Route::get('/daily', 'NachrichtenController@emailDaily');
             });

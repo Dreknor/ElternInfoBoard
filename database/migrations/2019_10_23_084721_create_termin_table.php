@@ -21,12 +21,12 @@ class CreateTerminTable extends Migration
             $table->timestamps();
         });
 
-        Schema::create('groups_termine', function (Blueprint $table){
+        Schema::create('group_termine', function (Blueprint $table){
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('groups_id');
+            $table->unsignedBigInteger('group_id');
             $table->unsignedBigInteger('termin_id');
 
-            $table->foreign('groups_id')->references('id')->on('groups');
+            $table->foreign('group_id')->references('id')->on('groups');
             $table->foreign('termin_id')->references('id')->on('termine');
         });
 

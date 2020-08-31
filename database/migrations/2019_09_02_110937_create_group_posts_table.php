@@ -13,14 +13,14 @@ class CreateGroupPostsTable extends Migration
      */
     public function up()
     {
-        Schema::create('groups_posts', function (Blueprint $table) {
+        Schema::create('group_post', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('group_id');
-            $table->unsignedBigInteger('posts_id');
+            $table->unsignedBigInteger('post_id');
             $table->timestamps();
 
             $table->foreign('group_id')->references('id')->on('groups');
-            $table->foreign('posts_id')->references('id')->on('posts');
+            $table->foreign('post_id')->references('id')->on('posts');
 
         });
     }
@@ -32,6 +32,6 @@ class CreateGroupPostsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('groups_post');
+        Schema::dropIfExists('groups_posts');
     }
 }

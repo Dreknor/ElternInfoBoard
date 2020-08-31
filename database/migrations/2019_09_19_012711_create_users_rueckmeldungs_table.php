@@ -15,12 +15,12 @@ class CreateUsersRueckmeldungsTable extends Migration
     {
         Schema::create('users_rueckmeldungen', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('posts_id');
+            $table->unsignedBigInteger('post_id');
             $table->unsignedBigInteger('users_id');
             $table->longText('text');
             $table->timestamps();
 
-            $table->foreign('posts_id')->references('id')->on('posts');
+            $table->foreign('post_id')->references('id')->on('posts');
             $table->foreign('users_id')->references('id')->on('users');
         });
     }

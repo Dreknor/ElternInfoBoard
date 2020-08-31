@@ -14,7 +14,7 @@ class AddTypeToRueckmeldungen extends Migration
     public function up()
     {
         Schema::table('rueckmeldungen', function (Blueprint $table) {
-            $table->string('type')->after('posts_id')->default('email');
+            $table->string('type')->after('post_id')->default('email');
         });
     }
 

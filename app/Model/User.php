@@ -19,6 +19,7 @@ class User extends Authenticatable
     use HasRoles;
     use HasPushSubscriptions;
 
+
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 

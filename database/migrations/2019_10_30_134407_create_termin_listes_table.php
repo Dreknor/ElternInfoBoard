@@ -27,12 +27,12 @@ class CreateTerminListesTable extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('groups_listen', function (Blueprint $table){
+        Schema::create('group_listen', function (Blueprint $table){
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('groups_id');
+            $table->unsignedBigInteger('group_id');
             $table->unsignedBigInteger('liste_id');
 
-            $table->foreign('groups_id')->references('id')->on('groups');
+            $table->foreign('group_id')->references('id')->on('groups');
             $table->foreign('liste_id')->references('id')->on('listen');
         });
 

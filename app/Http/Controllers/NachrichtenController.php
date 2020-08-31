@@ -23,6 +23,7 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
@@ -482,13 +483,18 @@ class NachrichtenController extends Controller
     /**
      *
      */
-    public function email($daily = null)
+    public function email($daily = null, $userSend=null)
     {
         if ($daily == null){
             $daily = "weekly";
         }
 
-        $users = User::where('benachrichtigung', $daily)->get();
+        if (is_null($userSend)){
+            $users = User::where('benachrichtigung', $daily)->get();
+        } else {
+            $users = User::where('id', $userSend)->get();
+        }
+
         $users->load('roles');
 
 
@@ -509,7 +515,6 @@ class NachrichtenController extends Controller
                         return $post;
                     }
                 }
-
             })->unique()->sortByDesc('updated_at')->all();
 
 
@@ -532,9 +537,34 @@ class NachrichtenController extends Controller
 
             if (count($Nachrichten) > 0) {
                 $countUser++;
-                Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
-                $user->lastEmail = Carbon::now();
-                $user->save();
+                try {
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
+                    $user->lastEmail = Carbon::now();
+                    $user->save();
+                    Log::info($user->email);
+
+                    if (!is_null($userSend)){
+                        return redirect()->back()->with([
+                           'type' => "success",
+                           'Meldung'    => "Mail versandt"
+                        ]);
+                    }
+
+                } catch (\Exception $exception){
+                    $admin = Role::findByName('Admin');
+                    $admin = $admin->users()->first();
+
+                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email."konnte nicht gesendet werden"));
+
+                    if (!is_null($userSend)){
+                        return view('emails.nachrichten')->with([
+                            "nachrichten" => $Nachrichten,
+                            "name"      => $user->name,
+                            "discussionen"  => $diskussionen
+                        ]);
+                    }
+                }
+
             }
 
 
@@ -544,6 +574,8 @@ class NachrichtenController extends Controller
         $admin = $admin->users()->first();
 
         Notification::send($admin, new Push('Mail versandt', "Es wurden $countUser Mails versandt"));
+
+
     }
 
     /**

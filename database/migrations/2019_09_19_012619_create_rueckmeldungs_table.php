@@ -15,14 +15,14 @@ class CreateRueckmeldungsTable extends Migration
     {
         Schema::create('rueckmeldungen', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('posts_id');
+            $table->unsignedBigInteger('post_id');
             $table->string('empfaenger')->default('info@esz-radebeul.de');
             $table->date('ende');
             $table->longText('text');
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('posts_id')->references('id')->on('posts');
+            $table->foreign('post_id')->references('id')->on('posts');
 
         });
     }
