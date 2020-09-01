@@ -124,14 +124,23 @@
                     </a>
                 </li>
             @endif
-            @can('edit user')
-                <li class="@if(request()->segment(1)=="roles" ) active @endif">
-                    <a href="{{url('/roles')}}">
-                        <i class="fas fa-user-tag"></i>
-                        <p>Rollen</p>
+            @can('view groups')
+                <li class="@if(request()->segment(1)=="groups" ) active @endif">
+                    <a href="{{url('/groups')}}">
+                        <i class="fas fa-user-friends"></i>
+                        <p>Gruppen</p>
                     </a>
                 </li>
             @endcan
+
+                @can('edit permission')
+                    <li class="@if(request()->segment(1)=="roles" ) active @endif">
+                        <a href="{{url('/roles')}}">
+                            <i class="fas fa-user-tag"></i>
+                            <p>Rollen</p>
+                        </a>
+                    </li>
+                @endcan
         </ul>
 
     </div>

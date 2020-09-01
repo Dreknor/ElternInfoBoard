@@ -128,6 +128,9 @@ Route::group([
                 //Route::get('/daily', 'NachrichtenController@emailDaily');
             });
 
+            //Gruppenverwaltung
+                Route::get('/groups', 'GroupsController@index')->middleware(['permission:view groups']);
+            //Routen zur Rechteverwaltung
             Route::group(['middleware' => ['permission:edit permission']], function () {
                 Route::get('roles', 'RolesController@edit');
                 Route::put('roles', 'RolesController@update');
