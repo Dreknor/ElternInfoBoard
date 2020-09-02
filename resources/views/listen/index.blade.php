@@ -118,7 +118,7 @@
                                                                 </div>
                                                                 <div class="col-4">
 
-                                                                    <form action="{{url('eintragungen/'.$eintragung->id)}}" method="post">
+                                                                    <form action="{{url('eintragungen/absagen/'.$eintragung->id)}}" method="post">
                                                                         <a href="{{$eintragung->link($liste->listenname, $liste->duration)->google()}}" class="btn btn-primary btn-sm" target="_blank" title="Goole-Kalender-Link">
                                                                             <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
                                                                         </a>

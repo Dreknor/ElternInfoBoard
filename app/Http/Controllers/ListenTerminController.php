@@ -105,7 +105,7 @@ class ListenTerminController extends Controller
         }
         return redirect()->back()->with([
             'type'  => "danger",
-            'Meldung'=> "Keine Recht den Termin abzusagen?"
+            'Meldung'=> "Keine Recht den Termin abzusagen?". auth()->user()->id ." ==". $listen_termine->reserviert_fuer
         ]);
     }
 
