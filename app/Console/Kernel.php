@@ -32,6 +32,10 @@ class Kernel extends ConsoleKernel
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
         $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00');
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5,'17:00');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5,'17:15');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5,'17:30');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5,'17:45');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5,'18:00');
     }
 
     /**
