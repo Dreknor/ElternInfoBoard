@@ -99,7 +99,12 @@ class ReinigungController extends Controller
                 "Garderobe rechts kehren und wischen Spinnenweben entfernen",
                 "Schrankfächer in der Garderobe auswischen 2 Teppiche im Eingangsbereich saugen",
                 "Fußboden in der Garderobe und die Treppe im Keller kehren und wischen",
-                "alle Fensterbretter in allen Klassenzimmern abwischen 2 Teppiche im Eingangsbereich saugen"
+                "alle Fensterbretter in allen Klassenzimmern abwischen 2 Teppiche im Eingangsbereich saugen",
+                'Materialregale im Klassenraum "Feuer" abstauben, und  2 Teppiche im Eingangsbereich saugen',
+                'Materialregale im Klassenraum "Osten" abstauben, und  2 Teppiche im Eingangsbereich saugen',
+                'Materialregale im Musikraum abstauben, und  2 Teppiche im Eingangsbereich saugen',
+                'Materialregale im Kunstraum abstauben, und  2 Teppiche im Eingangsbereich saugen',
+                'Materialregale im Klassenraum "Norden" abstauben, und  2 Teppiche im Eingangsbereich saugen'
             ];
 
 

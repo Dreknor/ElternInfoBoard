@@ -76,6 +76,7 @@ Route::group([
             Route::get('/posts/edit/{posts}/{kiosk?}', 'NachrichtenController@edit');
             Route::get('/posts/touch/{posts}', 'NachrichtenController@touch');
             Route::get('/posts/release/{posts}', 'NachrichtenController@release');
+            Route::get('/posts/stick/{post}', 'NachrichtenController@stickPost')->middleware(['permission:make sticky']);
             Route::get('/posts/archiv/{posts}', 'NachrichtenController@archiv');
             Route::put('/posts/{posts}/{kiosk?}', 'NachrichtenController@update');
             Route::post('/posts/', 'NachrichtenController@store');
@@ -112,7 +113,7 @@ Route::group([
 //Routen für Benutzerverwaltung
 
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
-                Route::get('email/{daily}/{id}', 'NachrichtenController@email');
+                Route::get('email/{daily}/{id?}', 'NachrichtenController@email');
                 /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
                 */
 

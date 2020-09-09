@@ -40,8 +40,11 @@ class UsersImport implements ToCollection, WithHeadingRow
 
             if (!is_null($row[$this->header['S1Email']])){
 
+                $email1 = explode(';',$row[$this->header['S1Email']]);
+                $email1 = $email1[0];
+
                 $user1 = User::firstOrCreate([
-                    'email' => $row[$this->header['S1Email']]
+                    'email' => $email1
                 ],
                     [
                         "name"  => $row[$this->header['S1Vorname']]." ".$row[$this->header['S1Nachname']],
@@ -63,9 +66,11 @@ class UsersImport implements ToCollection, WithHeadingRow
             }
 
             if (!is_null($row[$this->header['S2Email']])) {
+                $email2 = explode(';',$row[$this->header['S2Email']]);
+                $email2 = $email2[0];
 
                 $user2 = User::firstOrCreate([
-                    'email' => $row[$this->header['S2Email']]
+                    'email' => $email2
                 ],
                     [
                         "name" => $row[$this->header['S2Vorname']] . " " . $row[$this->header['S2Nachname']],

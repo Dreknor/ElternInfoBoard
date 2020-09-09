@@ -13,6 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
                 ]
             );
         });
+
 
         Builder::macro('whereLike', function ($attributes, string $searchTerm) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
@@ -110,5 +112,35 @@ class AppServiceProvider extends ServiceProvider
                 return strtotime($datum->$column);
             }, SORT_REGULAR, $order == SORT_DESC);
         });
+
+        if (!Collection::hasMacro('sortByMulti')) {
+            /**
+             * An extension of the {@see Collection::sortBy()} method that allows for sorting against as many different
+             * keys. Uses a combination of {@see Collection::sortBy()} and {@see Collection::groupBy()} to achieve this.
+             *
+             * @param array $keys An associative array that uses the key to sort by (which accepts dot separated values,
+             *                    as {@see Collection::sortBy()} would) and the value is the order (either ASC or DESC)
+             */
+            Collection::macro('sortByMulti', function (array $keys) {
+                $currentIndex = 0;
+                $keys = array_map(function ($key, $sort) {
+                    return ['key' => $key, 'sort' => $sort];
+                }, array_keys($keys), $keys);
+
+                $sortBy = function (Collection $collection) use (&$currentIndex, $keys, &$sortBy) {
+                    if ($currentIndex >= count($keys)) {
+                        return $collection;
+                    }
+
+                    $key = $keys[$currentIndex]['key'];
+                    $sort = $keys[$currentIndex]['sort'];
+                    $sortFunc = $sort === 'DESC' ? 'sortByDesc' : 'sortBy';
+                    $currentIndex++;
+                    return $collection->$sortFunc($key)->groupBy($key)->map($sortBy)->ungroup();
+                };
+
+                return $sortBy($this);
+            });
+        }
     }
 }

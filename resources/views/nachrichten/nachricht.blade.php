@@ -7,9 +7,13 @@
        <div class="row">
            <div class="col-md-10">
                <h5 class="card-title">
+                   @if($nachricht->sticky)
+                           <i class="fas fa-thumbtack fa-xs " ></i>
+                   @endif
                    {{$nachricht->header}}  @if($nachricht->released == 0) (unveröffentlicht) @endif
                </h5>
                <div class="row">
+
                    <div class="col">
                        aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}
                    </div>
@@ -36,7 +40,6 @@
                        </small>
                    </div>
                @endif
-
                <div class="row">
                    <div class="col">
                        @if($nachricht->type == "info")
@@ -83,6 +86,11 @@
                                <i class="fas fa-archive"></i>
                            </a>
                     @endif
+                       @if(auth()->user()->can('make sticky'))
+                           <a href="{{url('/posts/stick/'.$nachricht->id)}}" class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"  data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                               <i class="fas fa-thumbtack" @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
+                           </a>
+                       @endif
                </div>
            @endif
        </div>

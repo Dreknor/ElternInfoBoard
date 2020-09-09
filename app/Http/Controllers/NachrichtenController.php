@@ -69,7 +69,7 @@ class NachrichtenController extends Controller
                 }
 
             } else {
-                $Nachrichten = $user->posts()->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                $Nachrichten = $user->posts()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
                 if ($user->can('create posts')){
                     $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
@@ -88,13 +88,14 @@ class NachrichtenController extends Controller
                 $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
             } else {
-                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->orderByDesc('sticky')->orderByDesc('updated_at')->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
             }
 
         }
 
-        $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
-        $Nachrichten->load('groups.users', 'groups.users.userRueckmeldung','groups.users.sorgeberechtigter2' , 'groups.users.sorgeberechtigter2.userRueckmeldung');
+        //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+        $Nachrichten = $Nachrichten->unique('id');
+
 
 
 
@@ -490,7 +491,8 @@ class NachrichtenController extends Controller
         }
 
         if (is_null($userSend)){
-            $users = User::where('benachrichtigung', $daily)->get();
+            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            Log::debug($users);
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -798,6 +800,18 @@ class NachrichtenController extends Controller
         $User = $User->unique('id');
 
         Notification::send($User,new PushNews($post));
+        return redirect()->back();
+    }
+
+    public function stickPost(Post $post){
+        $post->timestamps = false;
+        if ($post->sticky){
+            $post->sticky    = 0;
+        } else {
+            $post->sticky    = 1;
+        }
+        $post->save();
+
         return redirect()->back();
     }
 }

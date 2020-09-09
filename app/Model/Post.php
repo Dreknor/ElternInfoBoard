@@ -2,7 +2,7 @@
 
 namespace App\Model;
 
-use Artisanry\Commentable\Traits\HasComments;
+use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
