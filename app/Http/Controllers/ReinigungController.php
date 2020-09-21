@@ -30,7 +30,7 @@ class ReinigungController extends Controller
             $ende->addYear();
         }
 
-        if (!$user->can('edit reinigung')){
+        if (!$user->can('edit reinigung') and !$user->can('view reinigung')){
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
         } else {
@@ -53,8 +53,6 @@ class ReinigungController extends Controller
             "datum"     => $datum,
             "user"      => $user,
             "ende"      => $ende,
-            "users"     => User::all(),
-            "aufgaben"  => Reinigung::query()->pluck('aufgabe')->unique()
         ]);
     }
 
