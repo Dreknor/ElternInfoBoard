@@ -68,6 +68,7 @@ class NachrichtenController extends Controller
                     $Nachrichten = $Nachrichten->concat($eigenePosts);
                 }
 
+                $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
             } else {
                 $Nachrichten = $user->posts()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
 
@@ -86,14 +87,14 @@ class NachrichtenController extends Controller
 
             if ($archiv) {
                 $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
-
+                $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
             } else {
                 $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->orderByDesc('sticky')->orderByDesc('updated_at')->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
             }
 
         }
 
-        //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+
         $Nachrichten = $Nachrichten->unique('id');
 
 
