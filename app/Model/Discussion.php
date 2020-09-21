@@ -2,8 +2,9 @@
 
 namespace App\Model;
 
-use Artisanry\Commentable\Traits\HasComments;
+use Benjivm\Commentable\Traits\HasComments;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
 
@@ -21,4 +22,5 @@ class Discussion extends Model
     public function author(){
         return $this->hasOne(User::class, 'id', 'owner');
     }
+
 }

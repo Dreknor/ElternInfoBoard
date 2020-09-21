@@ -46,6 +46,7 @@
                             </div>
                             <div class="card-body collapse border-top" id="collapse{{$beitrag->id}}">
                                 <ul class="comment-section">
+
                                     @foreach(optional($beitrag->comments)->sortByDesc('created_at') as $comment)
                                         <li class="comment @if ($loop->index % 2 == 0) user-comment @else author-comment @endif">
                                             <div class="info">
@@ -98,10 +99,17 @@
                                     Dateien
                                 </h5>
                             </div>
-                            <div class="card-body">
-                                <ul class="list-group">
-                                    @foreach($files as $medium)
-                                        <li class="list-group-item">
+                            @foreach($directories as $directory)
+                                <div class="card-body">
+                                    <h6 id="{{$directory}}" data-toggle="collapse" href="#{{$directory}}_list" role="tab" >
+                                        {{$directory}}
+                                        <i class="more-less fas fa-xs fa-plus"></i>
+                                    </h6>
+
+                                    <ul class="list-group collapse" id="{{$directory}}_list">
+                                        @if($group->getMedia($directory)->count() > 0)
+                                            @foreach($group->getMedia($directory) as $medium)
+                                        <li class="list-group-item" id="file_{{$medium->id}}">
                                             <div class="row">
                                                 <div class="col-sm-9 col-md-9">
                                                     <div class="row">
@@ -119,17 +127,25 @@
 
                                                     </div>
                                                 </div>
-                                                <div class="col-sm-3 col-md-3">
-                                                    <button class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$medium->id}}">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
+                                                @if(auth()->user()->can('delete elternrat file'))
+                                                    <div class="col-sm-3 col-md-3">
+                                                        <button class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$medium->id}}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             </div>
 
                                         </li>
                                     @endforeach
+                                        @else
+                                            <li class="list-group-item">
+                                                Keine Dateien gefunden
+                                            </li>
+                                        @endif
                                 </ul>
-                            </div>
+                                </div>
+                            @endforeach
                             <div class="card-footer">
                                 <a href="{{url('elternrat/add/file')}}" class="btn btn-xs btn-block btn-success ">
                                     <i class="fa fa-plus-circle"></i>
@@ -187,7 +203,7 @@
                                 "_token": "{{csrf_token()}}",
                             },
                             success: function(result) {
-                                $(button).parent('li').fadeOut();
+                                $('#file_'+fileId).fadeOut();
                             }
                         });
                     }
@@ -228,4 +244,10 @@
 
     <link href="{{asset('css/comments.css')}}" media="all" rel="stylesheet" type="text/css" />
 
+    <style>
+        .more-less {
+            float: right;
+            color: darkblue;
+        }
+    </style>
 @endsection

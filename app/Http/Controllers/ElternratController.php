@@ -27,7 +27,10 @@ class ElternratController extends Controller
     {
         $themen = Discussion::query()->orderbyDesc('sticky')->orderbyDesc('updated_at')->paginate(15);
         $Group = Group::where('name', '=', 'Elternrat')->first();
-        $files = $Group->getMedia();
+        //$files = $Group->getMedia();
+
+
+        //dd(config('app.directories_elternrat'));
 
         $user = Role::findByName('Elternrat');
         $user = $user->users;
@@ -44,8 +47,9 @@ class ElternratController extends Controller
 
         return view('elternrat.index', [
             'themen'    => $themen,
-            'files'     => $files,
-            'users'     => $user->sortBy('name')
+            'directories'     => config('app.directories_elternrat'),
+            'users'     => $user->sortBy('name'),
+            'group'     => $Group
         ]);
     }
 
@@ -135,11 +139,20 @@ class ElternratController extends Controller
 
     public function deleteFile(Media $file){
 
-        $file->delete();
+        if (auth()->user()->can('delete elternrat file')){
+            $file->delete();
+
+            return response()->json([
+                "message"   => "Gelöscht"
+            ], 200);
+        }
 
         return response()->json([
-            "message"   => "Gelöscht"
-        ], 200);
+            [
+                "message"   => "Berechtigung fehlt"
+            ], 400
+        ]);
+
     }
 
     public function addFile(){
@@ -155,7 +168,7 @@ class ElternratController extends Controller
         if ($request->hasFile('files')) {
                 $gruppe->addMediaFromRequest('files')
                     ->preservingOriginal()
-                    ->toMediaCollection();
+                    ->toMediaCollection($request->directory);
         }
         return redirect(url('elternrat'))->with([
             "type"  => "success",

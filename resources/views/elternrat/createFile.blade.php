@@ -13,6 +13,17 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="form-group">
+                                <select class="custom-select" name="directory">
+                                    @foreach(config('app.directories_elternrat') as $directory)
+                                        <option value="{{$directory}}">{{$directory}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
                                     <input type="file"  name="files" id="customFile" >
                             </div>
                         </div>

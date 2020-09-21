@@ -231,4 +231,15 @@ return [
 
     ],
 
+    //Odner des Elternrate
+    'directories_elternrat' => [
+        'Elternratssitzung',
+        'Satzung',
+        'Grundschule',
+        'Oberschule',
+        'Organisation',
+        'Schulgemeinschaftsrat',
+        'Schulleitertreffen',
+        'Vorstandssitzungen'
+    ]
 ];
