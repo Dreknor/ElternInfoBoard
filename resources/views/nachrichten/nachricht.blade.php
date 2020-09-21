@@ -90,7 +90,7 @@
                            <a href="{{url('/posts/stick/'.$nachricht->id)}}" class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"  data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
                                <i class="fas fa-thumbtack" @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
                            </a>
-                       @endif
+                   @endif
                </div>
            @endif
        </div>
@@ -141,6 +141,16 @@
             </div>
         @endif
         @include('nachrichten.footer.rueckmeldung')
+        @can('view rueckmeldungen')
+                <button class="btn btn-outline-info btn-block btnShowRueckmeldungen" data-toggle="collapse" data-target="#{{$nachricht->id}}_rueckmeldungen">
+                    <i class="fa fa-eye"></i>
+                    {{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen
+                </button>
+                <div id="{{$nachricht->id."_rueckmeldungen"}}" class="collapse">
+                    @include('nachrichten.footer.eingegangeneRueckmeldung')
+                </div>
+
+        @endif
     @endif
     @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
         @include('nachrichten.footer.imageRueckmeldung')

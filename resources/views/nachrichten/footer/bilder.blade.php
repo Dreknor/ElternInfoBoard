@@ -4,11 +4,12 @@
             <div class="carousel-inner">
                 @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
                     <div class="carousel-item text-center @if($loop->first) active @endif">
-                        <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" >
-                        @if(optional($nachricht->rueckmeldung)->type == 'bild')
-                            <h6 class="small">{{$media->name}}</h6>
-                        @endif
-
+                        <a href="{{url('/image/'.$media->id)}}" target="_blank">
+                            <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" >
+                            @if(optional($nachricht->rueckmeldung)->type == 'bild')
+                                <h6 class="small">{{$media->name}}</h6>
+                            @endif
+                        </a>
                     </div>
                 @endforeach
 

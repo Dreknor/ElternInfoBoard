@@ -13,4 +13,8 @@ class UserRueckmeldungen extends Model
     public function nachricht(){
         return $this->belongsTo(Post::class, 'post_id', 'id');
     }
+
+    public function user(){
+        return $this->belongsTo(User::class, 'users_id');
+    }
 }

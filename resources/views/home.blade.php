@@ -245,6 +245,20 @@
 
 
             });
+
+            $('.btnShowRueckmeldungen').on('click', function () {
+                var btn = this;
+
+                if ($(btn).hasClass('aktiv')){
+                    $(btn).html( '<i class="fa fa-eye"></i> Rückmeldungen anzeigen') ;
+                    $(btn).removeClass('aktiv');
+                } else {
+                    $(btn).text("ausblenden");
+                    $(btn).addClass('aktiv');
+                }
+
+
+            });
         </script>
 
     <script>
