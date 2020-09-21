@@ -127,7 +127,7 @@ class ListenTerminController extends Controller
                 }
 
                 $body = $listen_termine->liste->listenname.": Termin am ".$listen_termine->termin->format('d.m.Y H:i')." wurde abgesagt.";
-                //Notification::send($users,new PushTerminAbsage($body));
+                Notification::send($users,new PushTerminAbsage($body));
 
 
                 //E-Mail versenden
