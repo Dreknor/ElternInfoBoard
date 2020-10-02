@@ -29,6 +29,19 @@ Route::group([
 
             //Route::get('noRueckmeldung', 'RueckmeldungenController@sendErinnerung');
 
+            //Schickzeiten
+            Route::get('schickzeiten', 'SchickzeitenController@index');
+            Route::get('verwaltung/schickzeiten', 'SchickzeitenController@indexVerwaltung')->middleware('can:edit schickzeiten');
+            Route::get('schickzeiten/download', 'SchickzeitenController@download')->middleware('can:download schickzeiten');
+            Route::post('schickzeiten/child/create', 'SchickzeitenController@createChild');
+            Route::post('verwaltung/schickzeiten/child/create', 'SchickzeitenController@createChildVerwaltung')->middleware('can:edit schickzeiten');
+            Route::get('schickzeiten/edit/{day}/{child}', 'SchickzeitenController@edit');
+            Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', 'SchickzeitenController@editVerwaltung')->middleware('can:edit schickzeiten');
+            Route::post('schickzeiten', 'SchickzeitenController@store');
+            Route::post('verwaltung/schickzeiten/{parent}', 'SchickzeitenController@storeVerwaltung')->middleware('can:edit schickzeiten');
+            Route::delete('schickzeiten/{day}/{child}', 'SchickzeitenController@destroy');
+            Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', 'SchickzeitenController@destroyVerwaltung')->middleware('can:edit schickzeiten');
+
             //Termine
             Route::resource('termin', 'TerminController');
 

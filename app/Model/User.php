@@ -167,4 +167,17 @@ class User extends Authenticatable
     }
 
 
+
+    public function schickzeiten (){
+
+        return $this->hasMany(Schickzeiten::class, 'users_id')->orWhere('users_id', $this->sorg2);
+
+    }
+
+    public function schickzeiten_own(){
+        return $this->hasMany(Schickzeiten::class, 'users_id');
+    }
+
+
+
 }

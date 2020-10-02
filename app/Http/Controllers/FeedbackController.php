@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Spatie\Permission\Models\Role;
 
 class FeedbackController extends Controller
 {
@@ -33,7 +31,7 @@ class FeedbackController extends Controller
 
 
 
-        Mail::to($email)->bcc('daniel.roehrich@esz-radebeul.de')->send(new SendFeedback($request->text));
+        Mail::to($email)->send(new SendFeedback($request->text));
 
         return redirect()->back()->with([
            "type"   => "success",

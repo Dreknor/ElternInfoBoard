@@ -38,10 +38,13 @@ class UserRueckmeldung extends Mailable
     public function build()
     {
 
-        return $this->from(
-            $this->email,
-            $this->name
-        )->subject($this->subject)
+        return $this
+            ->from(
+                'info@esz-radebeul.de',
+                'ElternInfoBoard'
+            )
+            ->replyTo($this->email,$this->name)
+           ->subject($this->subject)
             ->view('emails.userRueckmeldung')->with(["text"  => $this->text]);
     }
 }

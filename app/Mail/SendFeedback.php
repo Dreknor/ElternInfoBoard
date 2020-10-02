@@ -32,12 +32,14 @@ class SendFeedback extends Mailable
     {
         return $this
             ->from(
-                auth()->user()->email,
-                auth()->user()->name
+               'info@esz-radebeul.de',
+               'ElternInfoBoard'
             )
+            ->replyTo(auth()->user()->email, auth()->user()->name)
             ->subject('Kontaktformular vom ElternInfoBoard')
             ->view('emails.feedback')->with([
-                "text"  => $this->text
+                "text"  => $this->text,
+                'from'  =>  auth()->user()->name
             ]);
     }
 }

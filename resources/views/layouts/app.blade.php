@@ -66,7 +66,23 @@
                     Listen
                 </a>
             </li>
-
+            @can('view schickzeiten')
+                @if(auth()->user()->can('edit schickzeiten'))
+                        <li class="@if(request()->segment(1)=="schickzeiten") active @endif">
+                            <a href="{{url('verwaltung/schickzeiten')}}">
+                                <i class="fas fa-clock"></i>
+                                Schickzeiten
+                            </a>
+                        </li>
+                @elseif(auth()->user()->groups->where('bereich', '=', 'Grundschule')->count() > 0)
+                    <li class="@if(request()->segment(1)=="schickzeiten") active @endif">
+                        <a href="{{url('/schickzeiten')}}">
+                            <i class="fas fa-clock"></i>
+                            Schickzeiten
+                        </a>
+                    </li>
+                @endif
+            @endcan
             @can('view elternrat')
                 <li class="@if(request()->segment(1)=="elternrat") active @endif">
                     <a href="{{url('/elternrat')}}">
