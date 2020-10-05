@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Model\Schickzeiten;
+use App\Observers\SchickzeitObserver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -38,6 +40,18 @@ class AppServiceProvider extends ServiceProvider
 
         setlocale(LC_TIME, "de_DE");
         Carbon::setLocale('de_DE');
+
+
+        //ModelEventObserver
+        Schickzeiten::observe(SchickzeitObserver::class);
+
+
+
+
+
+
+
+
         /**
          * Paginate a standard Laravel Collection.
          *

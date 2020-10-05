@@ -8,8 +8,10 @@ use App\Http\Requests\CreateChildRequest;
 use App\Http\Requests\SchickzeitRequest;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 
 
@@ -100,6 +102,8 @@ class SchickzeitenController extends Controller
         $Kind = Schickzeiten::firstOrCreate ([
             'users_id' => $request->parent,
             'child_name' => $request->child
+        ],[
+            'changedBy' => Auth::id(),
         ]);
 
         return redirect()->back()->with([
@@ -130,7 +134,10 @@ class SchickzeitenController extends Controller
             'child_name' => $request->child,
             'weekday'   =>  $weekdays[$request->weekday],
             'users_id'  => $parent
-        ])->delete();
+        ])->update([
+            'changedBy' => Auth::id(),
+            'deleted_at'=> Carbon::now()
+        ]);;
 
 
 
@@ -139,7 +146,8 @@ class SchickzeitenController extends Controller
             'child_name' => $request->child,
             'weekday'   =>  $weekdays[$request->weekday],
             'type'      => $request->type,
-            'time'      => $request->time
+            'time'      => $request->time,
+            'changedBy' => Auth::id(),
         ]);
 
         $neueSchickzeit->save();
@@ -150,7 +158,8 @@ class SchickzeitenController extends Controller
                 'child_name' => $request->child,
                 'weekday'   =>  $weekdays[$request->weekday],
                 'type'      => 'spät.',
-                'time'      => $request->time_spaet
+                'time'      => $request->time_spaet,
+                'changedBy' => Auth::id(),
             ]);
 
             $neueSchickzeit2->save();
@@ -182,12 +191,18 @@ class SchickzeitenController extends Controller
         $schickzeiten = auth()->user()->schickzeiten_own()->where([
             'child_name' => $request->child,
             'weekday'   =>  $weekdays[$request->weekday]
-        ])->delete();
+        ])->update([
+            'changedBy' => Auth::id(),
+            'deleted_at'=> Carbon::now()
+        ]);
 
         $schickzeiten = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where([
             'child_name' => $request->child,
             'weekday'   =>  $weekdays[$request->weekday]
-        ])->delete();
+        ])->update([
+            'changedBy' => Auth::id(),
+            'deleted_at'=> Carbon::now()
+        ]);
 
 
 
@@ -197,7 +212,8 @@ class SchickzeitenController extends Controller
             'child_name' => $request->child,
             'weekday'   =>  $weekdays[$request->weekday],
             'type'      => $request->type,
-            'time'      => $request->time
+            'time'      => $request->time,
+            'changedBy' => auth()->user()->id
         ]);
 
         $neueSchickzeit->save();
@@ -208,7 +224,8 @@ class SchickzeitenController extends Controller
                 'child_name' => $request->child,
                 'weekday'   =>  $weekdays[$request->weekday],
                 'type'      => 'spät.',
-                'time'      => $request->time_spaet
+                'time'      => $request->time_spaet,
+                'changedBy' =>  auth()->user()->id
             ]);
 
             $neueSchickzeit2->save();
@@ -291,8 +308,14 @@ class SchickzeitenController extends Controller
 
     public function destroy($day, $child)
     {
-        $schickzeit = auth()->user()->schickzeiten_own()->where('weekday','=', $day)->where('child_name','=', $child)->delete();
-        $schickzeit = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where('weekday','=', $day)->where('child_name','=', $child)->delete();
+        $schickzeit = auth()->user()->schickzeiten_own()->where('weekday','=', $day)->where('child_name','=', $child)->update([
+            'changedBy' => Auth::id(),
+            'deleted_at'=> Carbon::now()
+        ]);
+        $schickzeit = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where('weekday','=', $day)->where('child_name','=', $child)->update([
+            'changedBy' => Auth::id(),
+            'deleted_at'=> Carbon::now()
+        ]);
 
         return redirect()->back()->with([
            'type'   => "warning",
@@ -302,7 +325,10 @@ class SchickzeitenController extends Controller
 
     public function destroyVerwaltung($day, $child, $parent)
     {
-        $schickzeit = Schickzeiten::query()->where('weekday','=', $day)->where('child_name','=', $child)->where('users_id', $parent)->delete();
+        $schickzeit = Schickzeiten::query()->where('weekday','=', $day)->where('child_name','=', $child)->where('users_id', $parent)->update([
+            'changedBy' => Auth::id(),
+            'deleted_at'=> Carbon::now()
+        ]);
 
         return redirect()->back()->with([
            'type'   => "warning",
@@ -312,6 +338,6 @@ class SchickzeitenController extends Controller
 
     public function download()
     {
-        return Excel::download(new SchickzeitenExport, 'schickzeiten.xlsx');
+        return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
     }
 }

@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 
@@ -103,7 +104,6 @@ class RueckmeldungenController extends Controller
      */
     public function destroyRueckmeldung($rueckmeldungen)
     {
-        dd('Hallo');
         $rueckmeldungen->delete();
 
         return redirect()->back()->with([
@@ -124,6 +124,7 @@ class RueckmeldungenController extends Controller
                     $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)){
                         $email=$User->email;
+                        Log::info($email);
                         Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende));
                     }
                 }
