@@ -60,7 +60,7 @@ class SchickzeitenStundenExport implements FromView, WithTitle,  WithEvents
         $event->sheet->getDelegate()->getStyle('A2:F2')->applyFromArray($styleArrayHeading);
         $event->sheet->getDelegate()->getStyle('A3:F3')->applyFromArray($styleArrayHeading);
         $event->sheet->getDelegate()->getStyle('A1:F35')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
-        $event->sheet->getDelegate()->getStyle('A1:F35')->getFont()->setSize(8);
+        $event->sheet->getDelegate()->getStyle('A1:F35')->getFont()->setSize(9);
         $event->sheet->getDelegate()->getStyle('A1:F35')->getFont()->setName('Arial');
         $event->sheet->getDelegate()->getColumnDimension('A')->setWidth(18);
         $event->sheet->getDelegate()->getColumnDimension('B')->setWidth(20);

@@ -74,6 +74,13 @@
                                                            </form>
 
                                                        @else
+                                                            @if(auth()->user()->groups()->whereIn('groups.id',$liste->groups->pluck('id'))->count() > 0)
+                                                               <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
+                                                                   @csrf
+                                                                   @method('put')
+                                                                   <button type="submit" class="btn btn-primary btn-round">reservieren</button>
+                                                               </form>
+                                                           @endif
                                                            <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
                                                                @csrf
                                                                @method('delete')

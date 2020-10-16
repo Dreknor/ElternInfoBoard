@@ -126,7 +126,7 @@
          $('#userTable').DataTable( {
              dom: 'Bfrtip',
              buttons: [
-                  'excel', 'pdf', 'print'
+                  'csv', 'pdf', 'print'
              ]
          } );
      } );

@@ -2,7 +2,11 @@
 
 @section('content')
 <div class="container-fluid">
-
+    <div class="card  bg-light">
+        <div class="card-body">
+            @include('include.losung')
+        </div>
+    </div>
     <div class="card">
         <div class="card-header border-bottom">
             <ul class="nav nav-tabs border-info w-100">

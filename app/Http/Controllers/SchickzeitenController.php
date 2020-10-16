@@ -196,13 +196,16 @@ class SchickzeitenController extends Controller
             'deleted_at'=> Carbon::now()
         ]);
 
-        $schickzeiten = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where([
-            'child_name' => $request->child,
-            'weekday'   =>  $weekdays[$request->weekday]
-        ])->update([
-            'changedBy' => Auth::id(),
-            'deleted_at'=> Carbon::now()
-        ]);
+        if (auth()->user()->sorgeberechtigter2 != null){
+            $schickzeiten = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where([
+                'child_name' => $request->child,
+                'weekday'   =>  $weekdays[$request->weekday]
+            ])->update([
+                'changedBy' => Auth::id(),
+                'deleted_at'=> Carbon::now()
+            ]);
+        }
+
 
 
 
@@ -312,11 +315,13 @@ class SchickzeitenController extends Controller
             'changedBy' => Auth::id(),
             'deleted_at'=> Carbon::now()
         ]);
-        $schickzeit = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where('weekday','=', $day)->where('child_name','=', $child)->update([
-            'changedBy' => Auth::id(),
-            'deleted_at'=> Carbon::now()
-        ]);
+        if (auth()->user()->sorgeberechtigter2 != null) {
 
+            $schickzeit = auth()->user()->sorgeberechtigter2->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
+                'changedBy' => Auth::id(),
+                'deleted_at' => Carbon::now()
+            ]);
+        }
         return redirect()->back()->with([
            'type'   => "warning",
            'Meldung' => "Schickzeit wurde gelöscht"

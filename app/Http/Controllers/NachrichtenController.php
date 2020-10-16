@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
 use App\Model\Liste;
+use App\Model\Losung;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
@@ -153,7 +154,8 @@ class NachrichtenController extends Controller
             "user" => $user,
             "gruppen" => Group::all(),
             "Reinigung" => $Reinigung,
-            'termine' => $Termine
+            'termine' => $Termine,
+            'losung'    => Losung::where('date', Carbon::today())->first()
         ]);
     }
 
