@@ -178,6 +178,11 @@ class User extends Authenticatable
         return $this->hasMany(Schickzeiten::class, 'users_id');
     }
 
+    //Krankmeldungen
+
+    public function krankmeldungen (){
+        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2);
+    }
 
 
 }
