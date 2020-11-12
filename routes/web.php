@@ -13,6 +13,10 @@
 
 Auth::routes();
 Route::get('image/{media_id}', 'ImageController@getImage');
+Route::get('losung', 'LosungController@getImage');
+Route::get('55uccbhkvu5xh7ru94krxux2yirfw2020qys0695s635mce4myhq3u3b0uwj1yyt', 'ApiController@kioskThemes');
+
+
 
 Route::group([
     'middleware' => ['auth'],
@@ -41,6 +45,10 @@ Route::group([
             Route::post('verwaltung/schickzeiten/{parent}', 'SchickzeitenController@storeVerwaltung')->middleware('can:edit schickzeiten');
             Route::delete('schickzeiten/{day}/{child}', 'SchickzeitenController@destroy');
             Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', 'SchickzeitenController@destroyVerwaltung')->middleware('can:edit schickzeiten');
+
+            //Krankmeldung
+            Route::get('krankmeldung', 'KrankmeldungenController@index');
+            Route::post('krankmeldung', 'KrankmeldungenController@store');
 
             //Termine
             Route::resource('termin', 'TerminController');
