@@ -18,6 +18,7 @@
 
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
+    <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet"><!--load all styles -->
     @yield('css')
 
 </head>
@@ -47,13 +48,19 @@
                     <p>Nachrichten</p>
                 </a>
             </li>
-
             <li class="@if(request()->segment(1)=="files" AND request()->segment(2)!='create' ) active @endif">
                 <a href="{{url('/files')}}">
                     <i class="fa fa-download"></i>
                     <p>Downloads</p>
                 </a>
             </li>
+            @can('view krankmeldung')
+            <li class="@if(request()->segment(1)=="krankmeldung" ) active @endif">
+                <a href="{{url('/krankmeldung')}}">
+                    <i class="fas fa-medkit"></i>
+                    <p>Krankmeldung</p>
+                </a>
+            @endcan
             <li class="@if(request()->segment(1)=="reinigung" AND request()->segment(2)!='create' ) active @endif">
                 <a href="{{url('/reinigung')}}">
                     <i class="fas fa-broom"></i>
