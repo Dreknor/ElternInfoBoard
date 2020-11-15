@@ -61,7 +61,8 @@
                 </div>
             </div>
 
-            <div class="card">
+            @if($krankmeldungen)
+                <div class="card">
                 <div class="card-header">
                     <h6 class="card-title">
                         bisherige Krankmeldungen:
@@ -105,7 +106,7 @@
                     </table>
                 </div>
             </div>
-
+            @endif
 
 
 @endsection

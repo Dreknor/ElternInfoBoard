@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KrankmeldungRequest;
+use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class KrankmeldungenController extends Controller
     public function index()
     {
 
-        $krankmeldungen = auth()->user()->krankmeldungen->sortByDesc('ende');
+        $krankmeldungen = auth()->user()->krankmeldungen;
 
             return view('krankmeldung.index', [
                 'krankmeldungen' => $krankmeldungen
@@ -52,6 +53,17 @@ class KrankmeldungenController extends Controller
 
     }
 
+    public function dailyReport(){
+
+        $krankmeldungen = krankmeldungen::where('start','>=',Carbon::now()->format('Y-m-d'))
+            ->where('ende','<=',Carbon::now()->format('Y-m-d'))
+            ->get();
+        dump($krankmeldungen);
+        return view('welcome');
+
+        Mail::to('info@esz-radebeul.de')
+            ->queue(new DailyReportKrankmeldungen($krankmeldungen));
+    }
 
     /**
      * Remove the specified resource from storage.

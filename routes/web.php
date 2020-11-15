@@ -49,6 +49,7 @@ Route::group([
             //Krankmeldung
             Route::get('krankmeldung', 'KrankmeldungenController@index');
             Route::post('krankmeldung', 'KrankmeldungenController@store');
+            Route::get('krankmeldung/test', 'KrankmeldungenController@dailyReport');
 
             //Termine
             Route::resource('termin', 'TerminController');
