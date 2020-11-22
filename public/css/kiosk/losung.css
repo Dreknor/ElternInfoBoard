@@ -1,0 +1,27 @@
+#losung_kreuz{
+    margin: auto;
+    width: 35%;
+}
+
+#losung_kreuz img {
+    margin: auto;
+    height: 50%;
+}
+
+#losung_text {
+    position: absolute;
+    right: 2%;
+    top: 5%;
+    width: 60%;
+    font-size: 30px;
+    height: 100%;
+}
+
+#losung_lehrtext{
+    height: 40%;
+    bottom: 2%;
+}
+#losung_losung{
+    height: 40%;
+    top: 2%;
+}

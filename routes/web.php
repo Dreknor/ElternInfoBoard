@@ -13,8 +13,6 @@
 
 Auth::routes();
 Route::get('image/{media_id}', 'ImageController@getImage');
-Route::get('losung', 'LosungController@getImage');
-Route::get('55uccbhkvu5xh7ru94krxux2yirfw2020qys0695s635mce4myhq3u3b0uwj1yyt', 'ApiController@kioskThemes');
 
 
 
@@ -69,7 +67,8 @@ Route::group([
             //Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
 
             //KioskAnsicht
-            Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
+            //Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
+            Route::get('kiosk/{bereich?}', 'KioskController@kioskView');
 
             //Terminlisten
             Route::get('listen', 'ListenController@index');
