@@ -39,7 +39,7 @@ class NachrichtenController extends Controller
      */
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->grousRepository = $groupsRepository;
+        $this->groupsRepository = $groupsRepository;
         $this->middleware('auth');
     }
 
@@ -56,7 +56,6 @@ class NachrichtenController extends Controller
 
         $sorg2 = $user->sorgeberechtigter2;
 
-        $archivDate = Carbon::now()->endOfDay()->subWeeks(1);
 
         if (!$user->can('view all')) {
             //$Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
@@ -399,7 +398,7 @@ class NachrichtenController extends Controller
         //Gruppen
 
         $gruppen = $request->input('gruppen');
-        $gruppen = $this->grousRepository->getGroups($gruppen);
+        $gruppen = $this->groupsRepository->getGroups($gruppen);
 
         $posts->groups()->detach();
         $posts->groups()->attach($gruppen);
@@ -628,9 +627,8 @@ class NachrichtenController extends Controller
             ]);
         }
 
-        $posts->updated_at = $posts->updated_at;
         $posts->released = 1;
-        $posts->save();
+        $posts->save(['timestamps'=>false]);
 
         if ($posts->released){
             $this->push($posts);
@@ -710,7 +708,7 @@ class NachrichtenController extends Controller
         $pdf = \PDF::loadView('pdf.pdf', [
             "nachrichten" => $Nachrichten
         ]);
-        return $pdf->download(\Carbon\Carbon::now()->format('Y-m-d') . '_Nachrichten.pdf');
+        return $pdf->download(Carbon::now()->format('Y-m-d') . '_Nachrichten.pdf');
 
     }
 

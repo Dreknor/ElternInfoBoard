@@ -25,7 +25,7 @@ class TerminController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Termin::class);
-        return "Hallo";
+
     }
 
     /**

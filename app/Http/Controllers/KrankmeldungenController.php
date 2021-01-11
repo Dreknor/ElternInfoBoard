@@ -55,11 +55,9 @@ class KrankmeldungenController extends Controller
 
     public function dailyReport(){
 
-        $krankmeldungen = krankmeldungen::where('start','>=',Carbon::now()->format('Y-m-d'))
-            ->where('ende','<=',Carbon::now()->format('Y-m-d'))
+        $krankmeldungen = krankmeldungen::where('start','<=',Carbon::now()->format('Y-m-d'))
+            ->where('ende','>=',Carbon::now()->format('Y-m-d'))
             ->get();
-        dump($krankmeldungen);
-        return view('welcome');
 
         Mail::to('info@esz-radebeul.de')
             ->queue(new DailyReportKrankmeldungen($krankmeldungen));

@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
-
+    @laravelPWA
     <title>ElternInfoBoard</title>
 
 
