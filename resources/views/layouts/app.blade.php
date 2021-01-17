@@ -1,3 +1,4 @@
+@include('layouts.elements.modules')
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -7,7 +8,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
-    @laravelPWA
     <title>ElternInfoBoard</title>
 
 
@@ -34,45 +34,9 @@
     </div>
     <div class="sidebar-wrapper">
         <ul class="nav">
-            @if(auth()->user()->hasRole('Mitarbeiter'))
-                <li class="">
-                    <a href="https://mitarbeiter.esz-radebeul.de">
-                        <i class="far fa-user-circle"></i>
-                        <p>MitarbeiterBoard</p>
-                    </a>
-                </li>
-            @endif
-            <li class="@if(request()->segment(1)=="" or request()->segment(1)=="home") active @endif">
-                <a href="{{url('/')}}">
-                    <i class="far fa-newspaper"></i>
-                    <p>Nachrichten</p>
-                </a>
-            </li>
-            <li class="@if(request()->segment(1)=="files" AND request()->segment(2)!='create' ) active @endif">
-                <a href="{{url('/files')}}">
-                    <i class="fa fa-download"></i>
-                    <p>Downloads</p>
-                </a>
-            </li>
-            @can('view krankmeldung')
-            <li class="@if(request()->segment(1)=="krankmeldung" ) active @endif">
-                <a href="{{url('/krankmeldung')}}">
-                    <i class="fas fa-medkit"></i>
-                    <p>Krankmeldung</p>
-                </a>
-            @endcan
-            <li class="@if(request()->segment(1)=="reinigung" AND request()->segment(2)!='create' ) active @endif">
-                <a href="{{url('/reinigung')}}">
-                    <i class="fas fa-broom"></i>
-                    <p>Reinigungsplan</p>
-                </a>
-            </li>
-            <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)!='create' ) active @endif">
-                <a href="{{url('/listen')}}">
-                    <i class="far fa-list-alt"></i>
-                    Listen
-                </a>
-            </li>
+
+            @stack('nav')
+
             @can('view schickzeiten')
                 @if(auth()->user()->can('edit schickzeiten'))
                         <li class="@if(request()->segment(1)=="schickzeiten") active @endif">
@@ -106,39 +70,8 @@
                 </a>
             </li>
             <li class="border-bottom"></li>
-            @if(auth()->user()->can('create posts'))
-                <li class="@if(request()->segment(1)=="posts" AND request()->segment(2)=='create' ) active @endif">
-                    <a href="{{url('/posts/create')}}">
-                        <i class="fas fa-pen"></i>
-                        <p>neue Nachricht</p>
-                    </a>
-                </li>
-            @endif
-            @if(auth()->user()->can('edit termin'))
-                <li class="@if(request()->segment(1)=="termin" AND request()->segment(2)=='create' ) active @endif">
-                    <a href="{{url('/termin/create')}}">
-                        <i class="far fa-calendar-alt"></i>
-                        <p>neuer Termin</p>
-                    </a>
-                </li>
-            @endif
-
-            @if(auth()->user()->can('create terminliste'))
-                <li class="@if(request()->segment(1)=="listen" AND request()->segment(2)=='create' ) active @endif">
-                    <a href="{{url('/listen/create')}}">
-                        <i class="far fa-list-alt"></i>
-                        <p>neue Liste</p>
-                    </a>
-                </li>
-            @endif
-            @if(auth()->user()->can('upload files'))
-                <li class="@if(request()->segment(1)=='files' AND request()->segment(2)=='create' ) active @endif">
-                    <a href="{{url('/files/create')}}">
-                        <i class="fas fa-upload"></i>
-                        <p>Datei hochladen</p>
-                    </a>
-                </li>
-            @endif
+            @stack('adm-nav')
+            
             @if(auth()->user()->can('edit user'))
                 <li class="@if(request()->segment(1)=="users" ) active @endif">
                     <a href="{{url('/users')}}">
@@ -221,16 +154,9 @@
                                         <p>{{auth()->user()->name}}</p>
                                     </a>
                                     <ul class="dropdown-menu">
-                                        <li>
-                                            <a class="dropdown-item" href="{{url('einstellungen')}}">
-                                                Einstellungen
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{url('changelog')}}">
-                                                Changelog
-                                            </a>
-                                        </li>
+
+                                        @stack('nav-user')
+
                                         <li>
                                             <a class="dropdown-item" href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                                                 Logout
@@ -294,7 +220,8 @@
                 </div>
             </div>
         @endif
-        @yield('content')
+            @stack('home-view')
+            @yield('content')
 
 
     </div>

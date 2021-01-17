@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Cache;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -100,7 +101,9 @@ class User extends Authenticatable
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function sorgeberechtigter2(){
+
+
+    public function sorgeberechtigter2() {
         return $this->hasOne(User::class, 'sorg2');
     }
 
@@ -140,6 +143,7 @@ class User extends Authenticatable
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
     }
+
 
 
     /**

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
 use App\Model\Liste;
-use App\Model\Losung;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
@@ -17,7 +16,6 @@ use App\Mail\newUnveroeffentlichterBeitrag;
 use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Post;
-use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\User;
@@ -78,12 +76,8 @@ class NachrichtenController extends Controller
                 }
             }
 
-            $Reinigung = Reinigung::whereIn('id', [$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
-
-
         } else {
 
-            $Reinigung = Reinigung::whereIn('users_id', [$user->id, $user->sorg2])->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
 
             if ($archiv) {
                 $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
@@ -100,61 +94,12 @@ class NachrichtenController extends Controller
 
 
 
-        //Termine holen
-        if (!$user->can('edit termin') and !$user->can('view all')) {
-            $Termine = $user->termine;
-        } else {
-            $Termine = Termin::all();
-            $Termine = $Termine->unique('id');
-        }
-
-        $Termine = $Termine->sortBy('start');
-
-
-        //Termine aus Listen holen
-        $listen_termine = $user->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
-
-        //Ergänze Listeneintragungen
-        if (!is_null($listen_termine) and count($listen_termine) > 0) {
-            foreach ($listen_termine as $termin) {
-                $newTermin = new Termin([
-                    "terminname" => $termin->liste->listenname,
-                    "start" => $termin->termin,
-                    "ende" => $termin->termin->copy()->addMinutes($termin->liste->duration),
-                    "fullDay" => null
-                ]);
-                $Termine->push($newTermin);
-            }
-        }
-
-        //Listentermine von Sorg2
-        if (!is_null($sorg2)){
-            foreach ($sorg2->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
-                $newTermin = new Termin([
-                    "terminname" => $termin->liste->listenname,
-                    "start" => $termin->termin,
-                    "ende" => $termin->termin->copy()->addMinutes($termin->liste->duration),
-                    "fullDay" => null
-                ]);
-                $Termine->push($newTermin);
-            }
-        }
-
-        $Termine = $Termine->unique('id');
-        $Termine = $Termine->sortBy('start');
-
-
-
-
         return view('home', [
             "nachrichten" => $Nachrichten->paginate(30),
             'datum'     => Carbon::now(),
             "archiv" => $archiv,
             "user" => $user,
             "gruppen" => Group::all(),
-            "Reinigung" => $Reinigung,
-            'termine' => $Termine,
-            'losung'    => Losung::where('date', Carbon::today())->first()
         ]);
     }
 

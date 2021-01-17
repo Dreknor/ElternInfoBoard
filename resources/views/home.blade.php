@@ -2,11 +2,6 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="card  bg-light">
-        <div class="card-body">
-            @include('include.losung')
-        </div>
-    </div>
     <div class="card">
         <div class="card-header border-bottom">
             <ul class="nav nav-tabs border-info w-100">
@@ -96,8 +91,7 @@
 </div>
 
     <div id="">
-        @include('termine.nachricht')
-        @include('reinigung.nachricht')
+
         @if($archiv != null and isset($nachrichten) and count($nachrichten)>0)
             <div class="card">
                 <div class="card-body bg-warning">

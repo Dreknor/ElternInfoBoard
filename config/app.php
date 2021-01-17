@@ -177,6 +177,9 @@ return [
 
         Barryvdh\DomPDF\ServiceProvider::class,
 
+        //eigene
+        App\Providers\ComposerServiceProvider::class,
+
     ],
 
     /*
