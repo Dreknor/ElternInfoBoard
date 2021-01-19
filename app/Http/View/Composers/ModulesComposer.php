@@ -15,10 +15,9 @@ class ModulesComposer
 
         $modules = Cache::remember('modules', 30 ,function (){
             return Settings::where('category','module')
-                ->where('options', 'like', '%"active": "1"%')
+                ->where('options', 'like', '%"active":"1"%')
                 ->get();
         });
-
 
         if (!$modules){
             $modules = [];

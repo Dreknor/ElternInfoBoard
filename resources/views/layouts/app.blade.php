@@ -37,66 +37,9 @@
 
             @stack('nav')
 
-            @can('view schickzeiten')
-                @if(auth()->user()->can('edit schickzeiten'))
-                        <li class="@if(request()->segment(1)=="schickzeiten") active @endif">
-                            <a href="{{url('verwaltung/schickzeiten')}}">
-                                <i class="fas fa-clock"></i>
-                                Schickzeiten
-                            </a>
-                        </li>
-                @elseif(auth()->user()->groups->where('bereich', '=', 'Grundschule')->count() > 0)
-                    <li class="@if(request()->segment(1)=="schickzeiten") active @endif">
-                        <a href="{{url('/schickzeiten')}}">
-                            <i class="fas fa-clock"></i>
-                            Schickzeiten
-                        </a>
-                    </li>
-                @endif
-            @endcan
-            @can('view elternrat')
-                <li class="@if(request()->segment(1)=="elternrat") active @endif">
-                    <a href="{{url('/elternrat')}}">
-                        <i class="fas fa-user-friends"></i>
-                        Elternrat
-                    </a>
-                </li>
-            @endcan
-
-            <li class="@if(request()->segment(1)=="feedback") active @endif">
-                <a href="{{url('/feedback')}}">
-                    <i class="far fa-comment" aria-hidden="true"></i>
-                    <p>Kontakt</p>
-                </a>
-            </li>
             <li class="border-bottom"></li>
             @stack('adm-nav')
-            
-            @if(auth()->user()->can('edit user'))
-                <li class="@if(request()->segment(1)=="users" ) active @endif">
-                    <a href="{{url('/users')}}">
-                        <i class="fas fa-user"></i>
-                        <p>Benutzerzugänge</p>
-                    </a>
-                </li>
-            @endif
-            @can('view groups')
-                <li class="@if(request()->segment(1)=="groups" ) active @endif">
-                    <a href="{{url('/groups')}}">
-                        <i class="fas fa-user-friends"></i>
-                        <p>Gruppen</p>
-                    </a>
-                </li>
-            @endcan
 
-                @can('edit permission')
-                    <li class="@if(request()->segment(1)=="roles" ) active @endif">
-                        <a href="{{url('/roles')}}">
-                            <i class="fas fa-user-tag"></i>
-                            <p>Rollen</p>
-                        </a>
-                    </li>
-                @endcan
         </ul>
 
     </div>
@@ -220,6 +163,8 @@
                 </div>
             </div>
         @endif
+
+            @stack('home-view-top')
             @stack('home-view')
             @yield('content')
 

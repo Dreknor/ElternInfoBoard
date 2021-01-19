@@ -30,7 +30,7 @@ class KioskController extends Controller
 
         return view('layouts.kiosk',[
             'refresh'   => 600,
-            'module'    => ['losung','uhr', 'bilder', 'elterninfo'],
+            'module.blade.php'    => ['losung','uhr', 'bilder', 'elterninfo'],
             'elterninfo' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
             'losung'    =>  Losung::where('date', Carbon::today())->first()
         ]);

@@ -62,13 +62,14 @@ Route::group([
             Route::get("rueckmeldungen/{posts}/createImageUpload", "RueckmeldungenController@createImageRueckmeldung");
 
             //show posts
-            Route::get('/home/{archiv?}', 'NachrichtenController@index');
+            Route::get('/home', 'NachrichtenController@index');
+            Route::get('/archiv', 'NachrichtenController@postsArchiv');
             Route::get('/', 'NachrichtenController@index');
             //Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
 
             //KioskAnsicht
             //Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
-            Route::get('kiosk/{bereich?}', 'KioskController@kioskView');
+            //Route::get('kiosk/{bereich?}', 'KioskController@kioskView');
 
             //Terminlisten
             Route::get('listen', 'ListenController@index');
@@ -160,6 +161,11 @@ Route::group([
                 Route::post('roles/permission', 'RolesController@storePermission');
             });
 
+            //Routen zur Rechteverwaltung
+            Route::group(['middleware' => ['permission:edit settings']], function () {
+                Route::get('settings', 'SettingsController@module');
+                Route::get('settings/modul/{modul}', 'SettingsController@change_status');
+            });
 
             Route::group(['middlewareGroups' => ['role:Admin']], function () {
                 Route::get('showUser/{id}', 'UserController@loginAsUser');

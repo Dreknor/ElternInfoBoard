@@ -38,6 +38,10 @@ class ComposerServiceProvider extends ServiceProvider
         View::composer(
             'reinigung.nachricht', 'App\Http\View\Composers\ReinigungComposer'
         );
+
+        View::composer(
+            'nachrichten.start', 'App\Http\View\Composers\NachrichtenComposer'
+        );
         View::composer(
             'termine.nachricht', 'App\Http\View\Composers\TermineComposer'
         );

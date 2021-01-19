@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia\HasMedia;
@@ -49,6 +50,10 @@ class Post extends Model  implements HasMedia
 
     public function users(){
         return $this->hasManyDeep('App\Model\User', ['group_post', 'App\Model\Group','group_user']);
+    }
+
+    public function getIsArchivedAttribute(){
+        return $this->archiv_ab > Carbon::now() ? false : true;
     }
 
 }

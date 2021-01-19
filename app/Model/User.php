@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Cache;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
+use function foo\func;
 
 /**
  * Class User
@@ -107,6 +108,7 @@ class User extends Authenticatable
         return $this->hasOne(User::class, 'sorg2');
     }
 
+
     /**
      * Check if user has an old password that needs to be reset
      * @return boolean
@@ -127,19 +129,18 @@ class User extends Authenticatable
      * @return mixed
      */
     public function getRueckmeldung(){
-        $eigeneRueckmeldung = $this->userRueckmeldung;
+            $eigeneRueckmeldung = Cache::remember('rueckmeldungen_'.auth()->id(), 60*5, function (){
+                $eigeneRueckmeldung =  $this->userRueckmeldung;
+                if (!is_null($this->sorg2)){
+                    $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
+                    if (!is_null($sorgRueckmeldung) and !is_null($eigeneRueckmeldung)){
+                        return $eigeneRueckmeldung->merge($sorgRueckmeldung);
+                    } elseif (is_null($eigeneRueckmeldung)){
+                        return $sorgRueckmeldung;
+                    }
+                }
+            });
 
-
-
-        if (!is_null($this->sorg2)){
-            $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
-            if (!is_null($sorgRueckmeldung) and !is_null($eigeneRueckmeldung)){
-                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-            } elseif (is_null($eigeneRueckmeldung)){
-                return $sorgRueckmeldung;
-            }
-
-        }
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
     }

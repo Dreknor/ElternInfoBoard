@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CommentPostRequest;
 use App\Model\Liste;
+use App\Model\Settings;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
@@ -21,6 +22,7 @@ use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +32,8 @@ use Spatie\Permission\Models\Role;
 
 class NachrichtenController extends Controller
 {
+
+
     /**
      * Create a new controller instance.
      *
@@ -39,6 +43,7 @@ class NachrichtenController extends Controller
     {
         $this->groupsRepository = $groupsRepository;
         $this->middleware('auth');
+
     }
 
     /**
@@ -49,57 +54,47 @@ class NachrichtenController extends Controller
     public function index($archiv = null)
     {
 
-        $user = auth()->user();
-        $user->with(['userRueckmeldung', 'sorgeberechtigter2', 'sorgeberechtigter2.userRueckmeldung', 'sorgeberechtigter2.listen_eintragungen','termine', 'listen_eintragungen']);
-
-        $sorg2 = $user->sorgeberechtigter2;
-
-
-        if (!$user->can('view all')) {
-            //$Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
-
-            if ($archiv) {
-                $Nachrichten = $user->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
-
-                if ($user->can('create posts')){
-                    $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
-                    $Nachrichten = $Nachrichten->concat($eigenePosts);
-                }
-
-                $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
-            } else {
-                $Nachrichten = $user->posts()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
-
-                if ($user->can('create posts')){
-                    $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
-                    $Nachrichten = $Nachrichten->concat($eigenePosts);
-                }
-            }
-
-        } else {
-
-
-            if ($archiv) {
-                $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
-                $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
-            } else {
-                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->orderByDesc('sticky')->orderByDesc('updated_at')->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
-            }
-
-        }
-
-
-        $Nachrichten = $Nachrichten->unique('id');
-
 
 
 
         return view('home', [
-            "nachrichten" => $Nachrichten->paginate(30),
             'datum'     => Carbon::now(),
             "archiv" => $archiv,
-            "user" => $user,
-            "gruppen" => Group::all(),
+            "gruppen" => Cache::remember('groups', 60*60, function (){
+                return Group::all();
+            }),
+        ]);
+    }
+    /**
+     * Show the old News.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function postsArchiv()
+    {
+
+            $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60*5, function (){
+                if (!auth()->user()->can('view all')) {
+                    $Nachrichten = auth()->user()->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', auth()->user()->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+
+                    if (auth()->user()->can('create posts')){
+                        $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
+                        $Nachrichten = $Nachrichten->concat($eigenePosts);
+                    }
+
+                    $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+
+                } else {
+                    $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                    $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+                }
+                return $Nachrichten;
+            });
+
+
+        return view('archiv.archiv', [
+            'nachrichten'   => $Nachrichten->paginate(30),
+            'user'  => auth()->user()
         ]);
     }
 
@@ -180,7 +175,7 @@ class NachrichtenController extends Controller
         $post->save();
 
         $gruppen = $request->input('gruppen');
-        $gruppen = $this->grousRepository->getGroups($gruppen);
+        $gruppen = $this->groupsRepository->getGroups($gruppen);
 
         $post->groups()->attach($gruppen);
 

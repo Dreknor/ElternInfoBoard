@@ -16,6 +16,7 @@ class CreateSettingsTable extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('setting');
+            $table->text('description')->nullable();
             $table->string('category');
             $table->json('options');
             $table->timestamps();
@@ -23,8 +24,10 @@ class CreateSettingsTable extends Migration
 
         \Illuminate\Support\Facades\DB::table('permissions')->insert(
             array(
+                [
                 'name' => 'edit settings',
                 'guard_name' => 'web'
+                ],
             )
         );
     }
