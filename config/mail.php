@@ -56,8 +56,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'info@esz-radebeul.de'),
-        'name' => env('MAIL_FROM_NAME', 'Evangelisches Schulzentrum Radebeul'),
+        'address' => env('MAIL_FROM_ADDRESS', 'test@example.com'),
+        'name' => env('MAIL_FROM_NAME', 'ElternInfoBoard'),
     ],
 
     /*
