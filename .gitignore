@@ -21,3 +21,4 @@ composer.lock
 .idea/php.xml
 *.iml
 *.xml
+*.iml
