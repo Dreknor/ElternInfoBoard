@@ -1,5 +1,5 @@
 @foreach($module as $modul)
-    @include("kiosk.module.$modul")
+    @include("kiosk.module.blade.php.$modul")
 @endforeach
 <!DOCTYPE html>
 <html lang="de">

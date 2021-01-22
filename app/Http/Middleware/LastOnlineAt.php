@@ -19,7 +19,7 @@ class LastOnlineAt
         if (auth()->guest() or session()->has('ownID')) {
             return $next($request);
         }
-        if (auth()->user()->last_online_at->diffInDays(now()) !==0 and auth()->user()->track_login == true)
+        if (auth()->user()->last_online_at->diffInMinutes(now()) <= 5 and auth()->user()->track_login == true)
         {
             DB::table("users")
                 ->where("id", auth()->user()->id)

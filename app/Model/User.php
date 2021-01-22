@@ -2,10 +2,9 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Cache;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -74,6 +73,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Eigene Posts
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
+    public function own_posts(){
+        return $this->hasMany(Post::class , 'author');
+    }
+
+
+    /**
      * Termine Verknüpft über Gruppen
      * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
@@ -100,9 +108,12 @@ class User extends Authenticatable
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function sorgeberechtigter2(){
+
+
+    public function sorgeberechtigter2() {
         return $this->hasOne(User::class, 'sorg2');
     }
+
 
     /**
      * Check if user has an old password that needs to be reset
@@ -124,22 +135,22 @@ class User extends Authenticatable
      * @return mixed
      */
     public function getRueckmeldung(){
-        $eigeneRueckmeldung = $this->userRueckmeldung;
+            $eigeneRueckmeldung = Cache::remember('rueckmeldungen_'.auth()->id(), 60*5, function (){
+                $eigeneRueckmeldung =  $this->userRueckmeldung;
+                if (!is_null($this->sorg2)){
+                    $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
+                    if (!is_null($sorgRueckmeldung) and !is_null($eigeneRueckmeldung)){
+                        return $eigeneRueckmeldung->merge($sorgRueckmeldung);
+                    } elseif (is_null($eigeneRueckmeldung)){
+                        return $sorgRueckmeldung;
+                    }
+                }
+            });
 
-
-
-        if (!is_null($this->sorg2)){
-            $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
-            if (!is_null($sorgRueckmeldung) and !is_null($eigeneRueckmeldung)){
-                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-            } elseif (is_null($eigeneRueckmeldung)){
-                return $sorgRueckmeldung;
-            }
-
-        }
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
     }
+
 
 
     /**
@@ -184,5 +195,13 @@ class User extends Authenticatable
         return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2);
     }
 
+
+    public function comments(){
+        return $this->morphMany(\Benjivm\Commentable\Models\Comment::class, 'creator');
+    }
+
+    public function discussions () {
+        return $this->hasMany(Discussion::class, 'owner');
+    }
 
 }

@@ -20,8 +20,8 @@ class GroupsRepository
     public function getGroups(Array $gruppen){
 
         if ($gruppen[0] == "all") {
-            $gruppen = Group::where('protected', 0)->where('bereich', '!=', 'Aufnahme')->get();
-        } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
+            $gruppen = Group::where('protected', 0)->get();
+        } elseif (Group::whereIn('bereich', $gruppen)->first() != null) {
             $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
             $gruppen = $gruppen->unique();
         } else {

@@ -7,7 +7,6 @@ use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -42,7 +41,7 @@ class KrankmeldungenController extends Controller
         $krankmeldung->users_id = auth()->id();
         $krankmeldung->save();
 
-        Mail::to('info@esz-radebeul.de')
+        Mail::to(config('mail.from.address'))
             ->cc(auth()->user()->email)
             ->queue(new krankmeldung(auth()->user()->email, auth()->user()->name, $request->name, Carbon::createFromFormat('Y-m-d',$request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d',$request->ende)->format('d.m.Y'), $request->kommentar));
 
@@ -55,11 +54,9 @@ class KrankmeldungenController extends Controller
 
     public function dailyReport(){
 
-        $krankmeldungen = krankmeldungen::where('start','>=',Carbon::now()->format('Y-m-d'))
-            ->where('ende','<=',Carbon::now()->format('Y-m-d'))
+        $krankmeldungen = krankmeldungen::where('start','<=',Carbon::now()->format('Y-m-d'))
+            ->where('ende','>=',Carbon::now()->format('Y-m-d'))
             ->get();
-        dump($krankmeldungen);
-        return view('welcome');
 
         Mail::to('info@esz-radebeul.de')
             ->queue(new DailyReportKrankmeldungen($krankmeldungen));
