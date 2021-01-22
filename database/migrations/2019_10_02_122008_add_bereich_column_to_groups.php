@@ -14,7 +14,7 @@ class AddBereichColumnToGroups extends Migration
     public function up()
     {
         Schema::table('groups', function (Blueprint $table) {
-            $table->string('bereich');
+            $table->string('bereich')->nullable();
         });
     }
 

@@ -2,14 +2,11 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Cache;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
-use function foo\func;
 
 /**
  * Class User
@@ -74,6 +71,15 @@ class User extends Authenticatable
         return $this->hasManyDeep('App\Model\Post', ['group_user', 'App\Model\Group','group_post']);
 
     }
+
+    /**
+     * Eigene Posts
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
+    public function own_posts(){
+        return $this->hasMany(Post::class , 'author');
+    }
+
 
     /**
      * Termine Verknüpft über Gruppen
@@ -189,5 +195,13 @@ class User extends Authenticatable
         return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2);
     }
 
+
+    public function comments(){
+        return $this->morphMany(\Benjivm\Commentable\Models\Comment::class, 'creator');
+    }
+
+    public function discussions () {
+        return $this->hasMany(Discussion::class, 'owner');
+    }
 
 }

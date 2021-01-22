@@ -2,15 +2,16 @@
     <label>Für welche Gruppen?</label>
     <br>
     <input type="checkbox" name="gruppen[]" value="all" id="checkboxAll"/>
-    <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen (GS + OS)</b></label>
-    <div>
-        <input type="checkbox" name="gruppen[]" value="Grundschule" id="checkboxGrundschule"/>
-        <label for="checkboxGrundschule" id="labelCheckGrundschule"><b>Grundschule</b></label>
-    </div>
-    <div>
-        <input type="checkbox" name="gruppen[]" value="Oberschule" id="checkboxOberschule"/>
-        <label for="checkboxOberschule" id="labelCheckOberschule"><b>Oberschule</b></label>
-    </div>
+    <label for="checkboxAll" id="labelCheckAll"><b>Alle Gruppen (außer geschützte)</b></label>
+
+    @foreach($gruppen->unique('bereich')->pluck('bereich') as $bereich )
+        @if($bereich != "")
+            <div>
+                <input type="checkbox" name="gruppen[]" value="{{$bereich}}" id="checkbox{{$bereich}}"/>
+                <label for="checkbox{{$bereich}}" id="labelCheck{{$bereich}}"><b>{{$bereich}}</b></label>
+            </div>
+        @endif
+    @endforeach
 
     @foreach($gruppen as $gruppe)
         <div>

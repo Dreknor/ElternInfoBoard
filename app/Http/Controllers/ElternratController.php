@@ -86,16 +86,7 @@ class ElternratController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\discussion  $discussion
-     * @return \Illuminate\Http\Response
-     */
-    public function show(discussion $discussion)
-    {
-        //
-    }
+
 
     /**
      * Show the form for editing the specified resource.

@@ -9,8 +9,8 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
@@ -31,7 +31,7 @@ class UserController extends Controller
     public function index()
     {
         return view('user.index', [
-            'users' => User::all()->load('groups', 'permissions', 'sorgeberechtigter2')
+            'users' => Cache::remember('users_all', 60*5, function (){ return User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles');})
         ]);
     }
 
@@ -43,7 +43,7 @@ class UserController extends Controller
     public function create()
     {
         return view('user.create',[
-            'gruppen'   => Group::all()
+            'gruppen'   => Cache::remember('groups', 60*5, function (){return Group::all();})
         ]);
     }
 
@@ -93,9 +93,9 @@ class UserController extends Controller
     {
         return view('user.show',[
             "user" => $user->load('groups'),
-            'gruppen'   => Group::all(),
-            'permissions' => Permission::all(),
-            'roles'     => Role::all()
+            'gruppen'   => Cache::remember('groups', 60*5, function (){return Group::all();}),
+            'permissions' => Cache::remember('permissions', 60*5, function (){return Permission::all();}),
+            'roles'     => Cache::remember('role', 60*5, function (){return Role::all();})
         ]);
     }
 

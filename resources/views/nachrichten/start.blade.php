@@ -16,9 +16,7 @@
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
                                 <a href="#{{$nachricht->id}}" class="btn btn-sm {{$nachricht->type}} @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
-                                    @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
-                                        <i class="fas fa-reply @if(is_null($user->getRueckmeldung()->where('posts_id', $nachricht->id)->first()) and $nachricht->rueckmeldung->pflicht ==1) text-danger  @elseif(is_null($user->getRueckmeldung()->where('posts_id', $nachricht->id)->first()) and $nachricht->rueckmeldung->pflicht ==0) text-warning @else text-success @endif" data-toggle="tooltip" data-placement="top" title="Rückmeldung benötigt"></i>
-                                    @endif
+
                                     <div class="
                                         @switch($nachricht->type)
                                     @case('pflicht')

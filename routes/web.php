@@ -23,6 +23,11 @@ Route::group([
 
         Route::middleware(['password_expired'])->group(function () {
 
+            //Datenschutz
+            Route::get('datenschutz','DatenschutzController@show');
+
+
+            //Push
             Route::post('/push','PushController@store');
             Route::get('/push2','PushController@store');
 
@@ -153,6 +158,8 @@ Route::group([
 
             //Gruppenverwaltung
                 Route::get('/groups', 'GroupsController@index')->middleware(['permission:view groups']);
+                Route::post('/groups', 'GroupsController@store')->middleware(['permission:view groups']);
+
             //Routen zur Rechteverwaltung
             Route::group(['middleware' => ['permission:edit permission']], function () {
                 Route::get('roles', 'RolesController@edit');

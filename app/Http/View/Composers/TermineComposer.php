@@ -15,7 +15,7 @@ class TermineComposer
     {
 
 
-        $expire = now()->diffInSeconds(now()->endOfDay());
+        $expire = 60*30;
 
 
         $termine = Cache::remember('termine'.auth()->id(), $expire ,function (){
