@@ -2,9 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="93a9c4cd-a987-45e4-908b-05874ca6e200" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ImportController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ImportController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/UserController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/UserController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Imports/UsersImport.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Imports/UsersImport.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/elternbrief.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/elternbrief.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2014_10_12_000000_create_users_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2014_10_12_000000_create_users_table.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2019_08_30_103958_create_permission_tables.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2019_08_30_103958_create_permission_tables.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,116 +15,17 @@
   </component>
   <component name="ComposerSettings" doNotAsk="true" synchronizationState="SYNCHRONIZE">
     <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
+    <execution />
   </component>
-  <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/Http/Controllers/ImportController.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="407">
-              <caret line="45" selection-start-line="45" selection-end-line="45" />
-              <folding>
-                <element signature="e#40#71#0#PHP" expanded="true" />
-                <element signature="e#661#1220#0#PHP" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/app/Http/Controllers/UserController.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="172" column="44" lean-forward="true" selection-start-line="172" selection-start-column="44" selection-end-line="172" selection-end-column="44" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/Model/User.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-114">
-              <caret line="117" column="30" lean-forward="true" selection-start-line="117" selection-start-column="20" selection-end-line="117" selection-end-column="36" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/Imports/UsersImport.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="799">
-              <caret line="84" column="17" selection-start-line="84" selection-start-column="17" selection-end-line="84" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/Imports/AufnahmeImport.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="99" column="56" lean-forward="true" selection-start-line="99" selection-start-column="56" selection-end-line="99" selection-end-column="56" />
-              <folding>
-                <element signature="e#31#51#0#PHP" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/public/css/all.css">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/public/css/paper-dashboard.css">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/resources/views/layouts/app.blade.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="20" column="17" selection-start-line="20" selection-start-column="17" selection-end-line="20" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/resources/views/feedback/show.blade.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="16" column="77" selection-start-line="16" selection-start-column="77" selection-end-line="16" selection-end-column="77" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/Http/Requests/KontaktRequest.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="459">
-              <caret line="27" column="37" selection-start-line="27" selection-start-column="37" selection-end-line="27" selection-end-column="37" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
-  </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>delete</find>
-    </findStrings>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="CSS File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="IdeDocumentHistory">
-    <option name="CHANGED_PATHS">
-      <list>
-        <option value="$PROJECT_DIR$/app/Imports/UsersImport.php" />
-        <option value="$PROJECT_DIR$/app/Http/Controllers/ImportController.php" />
-        <option value="$PROJECT_DIR$/app/Http/Controllers/UserController.php" />
-      </list>
-    </option>
   </component>
   <component name="PhpWorkspaceProjectConfiguration">
     <include_path>
@@ -254,13 +157,11 @@
       <path value="$PROJECT_DIR$/vendor/symfony/error-handler" />
       <path value="$PROJECT_DIR$/vendor/myclabs/php-enum" />
       <path value="$PROJECT_DIR$/vendor/devdojo/chatter" />
-      <path value="$PROJECT_DIR$/vendor/artisanry/commentable" />
       <path value="$PROJECT_DIR$/vendor/kalnoy/nestedset" />
       <path value="$PROJECT_DIR$/vendor/org_heigl/ghostscript" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-uuid" />
       <path value="$PROJECT_DIR$/vendor/league/commonmark" />
       <path value="$PROJECT_DIR$/vendor/guzzlehttp/guzzle" />
-      <path value="$PROJECT_DIR$/vendor/php-http/guzzle6-adapter" />
       <path value="$PROJECT_DIR$/vendor/benjivm/commentable" />
       <path value="$PROJECT_DIR$/vendor/laravel-notification-channels/webpush" />
       <path value="$PROJECT_DIR$/vendor/minishlink/web-push" />
@@ -268,218 +169,66 @@
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-util-ecc" />
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature" />
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-core" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature-algorithm-rsa" />
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature-algorithm-ecdsa" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature-algorithm-eddsa" />
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-key-mgmt" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature-algorithm-none" />
       <path value="$PROJECT_DIR$/vendor/fgrosse/phpasn1" />
-      <path value="$PROJECT_DIR$/vendor/web-token/jwt-signature-algorithm-hmac" />
-      <path value="$PROJECT_DIR$/vendor/paragonie/sodium_compat" />
       <path value="$PROJECT_DIR$/vendor/doctrine/dbal" />
       <path value="$PROJECT_DIR$/vendor/doctrine/cache" />
       <path value="$PROJECT_DIR$/vendor/doctrine/event-manager" />
+      <path value="$PROJECT_DIR$/vendor/league/mime-type-detection" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php80" />
+      <path value="$PROJECT_DIR$/vendor/symfony/deprecation-contracts" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-normalizer" />
+      <path value="$PROJECT_DIR$/vendor/samasend/laravel-make-scope" />
+      <path value="$PROJECT_DIR$/vendor/artisanry/commentable" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-client" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-client-contracts" />
+      <path value="$PROJECT_DIR$/vendor/brick/math" />
+      <path value="$PROJECT_DIR$/vendor/silviolleite/laravelpwa" />
+      <path value="$PROJECT_DIR$/vendor/ezyang/htmlpurifier" />
     </include_path>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-7" />
-    <option name="width" value="1924" />
-    <option name="height" value="1047" />
-  </component>
   <component name="ProjectId" id="1WToaAlJsoAu0Ta63hwX5w3EIxr" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
-  <component name="ProjectView">
-    <navigator proportions="" version="1">
-      <foldersAlwaysOnTop value="true" />
-    </navigator>
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="Http" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="Http" type="462c0819:PsiDirectoryNode" />
-              <item name="Controllers" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="Imports" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="Mail" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="Model" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-              <item name="Notifications" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-              <item name="css" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-              <item name="img" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="public" type="462c0819:PsiDirectoryNode" />
-              <item name="js" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-              <item name="views" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-              <item name="views" type="462c0819:PsiDirectoryNode" />
-              <item name="layouts" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
-              <item name="views" type="462c0819:PsiDirectoryNode" />
-              <item name="user" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="routes" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
-              <item name="spatie" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
-              <item name="spatie" type="462c0819:PsiDirectoryNode" />
-              <item name="laravel-permission" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
-              <item name="spatie" type="462c0819:PsiDirectoryNode" />
-              <item name="laravel-permission" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elternbrief" type="b2602c69:ProjectViewProjectNode" />
-              <item name="elternbrief" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
-              <item name="spatie" type="462c0819:PsiDirectoryNode" />
-              <item name="laravel-permission" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="Traits" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope" />
-    </panes>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
     <option name="autoscrollFromSource" value="true" />
     <option name="autoscrollToSource" value="true" />
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="add_unversioned_files" value="$PROJECT_DIR$/storage/logs/laravel-2019-11-13.log" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/resources/views/pdf" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="php.override.implement.member.chooser.php.doc" value="NONE" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="xslt.associations" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\xampp\htdocs\elternbrief\app" />
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\listen" />
-      <recent name="C:\xampp\htdocs\elternbrief\app\Model" />
-      <recent name="C:\xampp\htdocs\elternbrief\app\Support" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\pdf" />
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\emails" />
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\changelog" />
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\kiosk\footer" />
-      <recent name="C:\xampp\htdocs\elternbrief\resources\views\kiosk" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\archiv" />
+      <recent name="C:\xampp\htdocs\elternbrief\app\Http\View\Composers" />
+      <recent name="C:\xampp\htdocs\elternbrief\public\css\kiosk" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\kiosk\module" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\layouts" />
     </key>
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\archiv" />
+      <recent name="C:\xampp\htdocs\elternbrief\public\css\kiosk" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\kiosk\module" />
+      <recent name="C:\xampp\htdocs\elternbrief\resources\views\include" />
+      <recent name="C:\xampp\htdocs\elternbrief\app" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration name="phpunit.xml" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
@@ -487,18 +236,7 @@
       <method v="2" />
     </configuration>
   </component>
-  <component name="ServiceViewManager">
-    <option name="viewStates">
-      <list>
-        <serviceView>
-          <treeState>
-            <expand />
-            <select />
-          </treeState>
-        </serviceView>
-      </list>
-    </option>
-  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -568,104 +306,56 @@
       <workItem from="1583240198816" duration="5948000" />
       <workItem from="1583599693548" duration="1641000" />
       <workItem from="1583601650828" duration="10165000" />
+      <workItem from="1598597384629" duration="1344000" />
+      <workItem from="1598601323106" duration="498000" />
+      <workItem from="1598855178439" duration="8348000" />
+      <workItem from="1598987295865" duration="616000" />
+      <workItem from="1599037543791" duration="1168000" />
+      <workItem from="1599050239779" duration="1365000" />
+      <workItem from="1599236063669" duration="37546000" />
+      <workItem from="1599562124015" duration="12960000" />
+      <workItem from="1599653172748" duration="5852000" />
+      <workItem from="1600066568596" duration="8000" />
+      <workItem from="1600239241619" duration="7190000" />
+      <workItem from="1600427227303" duration="987000" />
+      <workItem from="1600688598596" duration="704000" />
+      <workItem from="1600692568022" duration="40000" />
+      <workItem from="1600841399404" duration="1114000" />
+      <workItem from="1600930910764" duration="2434000" />
+      <workItem from="1600949780732" duration="64734000" />
+      <workItem from="1601892040883" duration="7060000" />
+      <workItem from="1602793037990" duration="640000" />
+      <workItem from="1602850398137" duration="3180000" />
+      <workItem from="1604407599331" duration="25258000" />
+      <workItem from="1605204211919" duration="15571000" />
+      <workItem from="1605514005468" duration="1642000" />
+      <workItem from="1605525720859" duration="7985000" />
+      <workItem from="1605597373891" duration="14719000" />
+      <workItem from="1605771702277" duration="11465000" />
+      <workItem from="1606806063696" duration="2283000" />
+      <workItem from="1607347599105" duration="784000" />
+      <workItem from="1607420517477" duration="1959000" />
+      <workItem from="1608021121357" duration="43000" />
+      <workItem from="1609748956736" duration="791000" />
+      <workItem from="1609760272169" duration="1808000" />
+      <workItem from="1610369702418" duration="68000" />
+      <workItem from="1610539633866" duration="2762000" />
+      <workItem from="1610696071547" duration="19923000" />
+      <workItem from="1610866968787" duration="55226000" />
+      <workItem from="1611159198665" duration="206000" />
+      <workItem from="1611232033941" duration="12142000" />
+      <workItem from="1611303917587" duration="252000" />
+      <workItem from="1611320171280" duration="1790000" />
+      <workItem from="1611422301170" duration="240000" />
+      <workItem from="1611666931002" duration="2599000" />
     </task>
     <servers />
   </component>
-  <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3598000" />
-  </component>
-  <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
-    <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.33901918" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info id="npm" order="2" side_tool="true" />
-      <window_info id="Favorites" order="3" side_tool="true" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="8" />
-      <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" />
-      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="Database" order="3" />
-    </layout>
-    <layout-to-restore>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.33901918" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info id="npm" order="2" side_tool="true" />
-      <window_info id="Favorites" order="3" side_tool="true" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="8" />
-      <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" />
-      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="Database" order="3" />
-    </layout-to-restore>
-  </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
-  <component name="WindowStateProjectService">
-    <state x="729" y="331" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1583158924553">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="729" y="331" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583158924553" />
-    <state x="765" y="239" key="#com.intellij.ide.util.MemberChooser" timestamp="1583914143615">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="765" y="239" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583914143615" />
-    <state x="640" y="260" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1582526963152">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="640" y="260" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1582526963151" />
-    <state x="683" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog" timestamp="1579604639811">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="683" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579604639811" />
-    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog" timestamp="1583914500231">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="690" y="279" key="#com.jetbrains.php.actions.copyPaste.importReferences.PhpImportReferencesDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583914500231" />
-    <state x="740" y="279" key="FileChooserDialogImpl" timestamp="1583219736711">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="740" y="279" key="FileChooserDialogImpl/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583219736711" />
-    <state x="760" y="355" key="NewPhpClassDialog" timestamp="1583913889883">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="760" y="355" key="NewPhpClassDialog/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583913889883" />
-    <state x="463" y="165" key="SettingsEditor" timestamp="1583159242673">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="463" y="165" key="SettingsEditor/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583159242673" />
-    <state x="771" y="440" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1579796854755">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="771" y="440" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1579796854755" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1583763807287">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040/1920.6.1920.1040@0.0.1920.1040" timestamp="1583763807287" />
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand>
@@ -693,49 +383,5 @@
       </path>
     </expand>
     <select />
-  </component>
-  <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/app/Imports/AufnahmeImport.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="99" column="56" lean-forward="true" selection-start-line="99" selection-start-column="56" selection-end-line="99" selection-end-column="56" />
-          <folding>
-            <element signature="e#31#51#0#PHP" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/Imports/UsersImport.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="799">
-          <caret line="84" column="17" selection-start-line="84" selection-start-column="17" selection-end-line="84" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/Http/Controllers/ImportController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="407">
-          <caret line="45" selection-start-line="45" selection-end-line="45" />
-          <folding>
-            <element signature="e#40#71#0#PHP" expanded="true" />
-            <element signature="e#661#1220#0#PHP" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/Model/User.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-114">
-          <caret line="117" column="30" lean-forward="true" selection-start-line="117" selection-start-column="20" selection-end-line="117" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/Http/Controllers/UserController.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="172" column="44" lean-forward="true" selection-start-line="172" selection-start-column="44" selection-end-line="172" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
   </component>
 </project>

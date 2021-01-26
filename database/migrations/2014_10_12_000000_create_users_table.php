@@ -22,6 +22,13 @@ class CreateUsersTable extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
+
+        \Illuminate\Support\Facades\DB::table('users')->insert([
+            'name'=>env('MAIL_FROM_NAME') ,
+            'email'=>env('MAIL_FROM_ADDRESS') ,
+            'password'=> \Illuminate\Support\Facades\Hash::make(\Carbon\Carbon::now()->format('dmY')),
+            'changeSettings'    => 0
+        ]);
     }
 
     /**
