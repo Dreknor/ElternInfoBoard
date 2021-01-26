@@ -206,7 +206,7 @@ class CreatePermissionTables extends Migration
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table('model_has_permission')->insert([
+        \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
            'permission_id' => 1,
             'model_type'    => 'App\Model\User',
             'model_id'  => 1
