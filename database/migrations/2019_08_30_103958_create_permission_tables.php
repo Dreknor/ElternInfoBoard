@@ -86,123 +86,123 @@ class CreatePermissionTables extends Migration
         \Illuminate\Support\Facades\DB::table($tableNames['permissions'])->insert([
             [
                 'name'  => 'edit permission',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit user',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'create posts',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view all',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit posts',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit user',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'upload files',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'import user',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'release posts',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'use scriptTag',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view elternrat',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'send urgent message',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit reinigung',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'upload great files',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit termin',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit terminliste',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'create terminliste',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view protected',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'add changelog',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'set password',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'make sticky',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view reinigung',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'delete elternrat file',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view rueckmeldungen',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'download schickzeiten',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'edit schickzeiten',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view schickzeiten',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view krankmeldung',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view groups',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
             [
                 'name'  => 'view mitarbeiterboard',
-                'guard' => 'web'
+                'guard_name' => 'web'
             ],
         ]);
 
