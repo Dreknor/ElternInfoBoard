@@ -82,6 +82,135 @@ class CreatePermissionTables extends Migration
         app('cache')
             ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
             ->forget(config('permission.cache.key'));
+
+        \Illuminate\Support\Facades\DB::table($tableNames['permissions'])->insert([
+            [
+                'name'  => 'edit permission',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit user',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'create posts',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view all',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit posts',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit user',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'upload files',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'import user',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'release posts',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'use scriptTag',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view elternrat',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'send urgent message',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit reinigung',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'upload great files',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit termin',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit terminliste',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'create terminliste',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view protected',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'add changelog',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'set password',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'make sticky',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view reinigung',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'delete elternrat file',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view rueckmeldungen',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'download schickzeiten',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'edit schickzeiten',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view schickzeiten',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view krankmeldung',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view groups',
+                'guard' => 'web'
+            ],
+            [
+                'name'  => 'view mitarbeiterboard',
+                'guard' => 'web'
+            ],
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('model_has_permission')->insert([
+           'permission_id' => 1,
+            'model_type'    => 'App\Model\User',
+            'model_id'  => 1
+        ]);
     }
 
     /**
