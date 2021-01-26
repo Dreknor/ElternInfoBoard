@@ -27,7 +27,6 @@ class CreateUsersTable extends Migration
             'name'=>env('MAIL_FROM_NAME') ,
             'email'=>env('MAIL_FROM_ADDRESS') ,
             'password'=> \Illuminate\Support\Facades\Hash::make(\Carbon\Carbon::now()->format('dmY')),
-            'changeSettings'    => 0
         ]);
     }
 
