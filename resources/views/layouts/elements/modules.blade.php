@@ -1,6 +1,6 @@
 @foreach($modules as $module)
 
-    @if(count($module->options['rights']) == 0 or auth()->user()-> hasAnyPermission($module->options['rights']))
+    @if(count($module->options['rights']) == 0 or auth()->user()->hasAnyPermission($module->options['rights']))
 
 
         @if(array_key_exists('home-view',$module->options) and $module->options['home-view']!="" and (request()->segment(1) ==""  or request()->segment(1) =="home"))

@@ -5,13 +5,13 @@
                     <div class="col-sm-12 col-md-6">
                         <p>
                             <b>
-                                Tageslosung zum {{optional($losung->date)->format('d.m.Y')}}:
+                                Tageslosung zum {{optional($losung)->date}}:
                             </b>
                         </p>
                         <p>
-                            {{@$losung->Losungstext}} <BR>
+                            {{optional($losung)->Losungstext}} <BR>
                             <i>
-                                {{@$losung->Losungsvers}}
+                                {{optional($losung)->Losungsvers}}
                             </i>
                         </p>
                     </div>
@@ -22,9 +22,9 @@
                             </b>
                         </p>
                         <p>
-                            {{@$losung->Lehrtext}} <BR>
+                            {{optional($losung)->Lehrtext}} <BR>
                             <i>
-                                {{@$losung->Lehrtextvers}}
+                                {{optional($losung)->Lehrtextvers}}
                             </i>
                         </p>
                     </div>
@@ -32,3 +32,4 @@
             </div>
         </div>
     </div>
+

@@ -17,9 +17,10 @@ class LosungComposer
         $expire = now()->diffInSeconds(now()->endOfDay());
 
         $losung = Cache::remember('losung', $expire ,function (){
-            return Losung::where('date', Carbon::today())->first();
-        });
+            $losung= Losung::where('date', Carbon::today())->first();
 
+            return $losung;
+        });
 
         $view->with('losung', $losung);
     }

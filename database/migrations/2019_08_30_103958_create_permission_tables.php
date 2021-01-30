@@ -105,10 +105,6 @@ class CreatePermissionTables extends Migration
                 'guard_name' => 'web'
             ],
             [
-                'name'  => 'edit user',
-                'guard_name' => 'web'
-            ],
-            [
                 'name'  => 'upload files',
                 'guard_name' => 'web'
             ],
@@ -207,9 +203,14 @@ class CreatePermissionTables extends Migration
         ]);
 
         \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
+            [
            'permission_id' => 1,
             'model_type'    => 'App\Model\User',
-            'model_id'  => 1
+            'model_id'  => 1],
+            [
+           'permission_id' => 2,
+            'model_type'    => 'App\Model\User',
+            'model_id'  => 1],
         ]);
     }
 

@@ -75,7 +75,7 @@ class NachrichtenController extends Controller
 
             $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60*5, function (){
                 if (!auth()->user()->can('view all')) {
-                    $Nachrichten = auth()->user()->posts()->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', auth()->user()->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                    $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
                     if (auth()->user()->can('create posts')){
                         $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
@@ -85,11 +85,13 @@ class NachrichtenController extends Controller
                     $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
 
                 } else {
-                    $Nachrichten = Post::whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                    $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
                     $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
                 }
                 return $Nachrichten;
             });
+
+
 
 
         return view('archiv.archiv', [
@@ -659,12 +661,18 @@ class NachrichtenController extends Controller
      */
     public function destroy(Post $posts)
     {
-        if ($posts->author == auth()->user()->id) {
+        if ($posts->author == auth()->user()->id and $posts->released == 0) {
 
             $posts->groups()->detach();
             if (!is_null($posts->rueckmeldung())) {
                 $posts->rueckmeldung()->delete();
             }
+
+
+            foreach ($posts->media as $media){
+                $media->delete();
+            }
+
             $posts->delete();
 
             return response()->json([
@@ -677,6 +685,24 @@ class NachrichtenController extends Controller
         ], 401);
     }
 
+    public function deleteTrashed($post)
+    {
+        $post = Post::onlyTrashed()->find($post);
+
+        if (!is_null($post->rueckmeldung()->withTrashed()->first())) {
+            $post->rueckmeldung()->forceDelete();
+        }
+
+
+        foreach ($post->media as $media){
+            $media->delete();
+        }
+
+        $post->forceDelete();
+
+        return redirect()->back();
+
+    }
     /**
      *
      */

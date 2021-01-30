@@ -12,14 +12,13 @@ class ModulesComposer
     public function compose($view)
     {
 
-
         $modules = Cache::remember('modules', 30 ,function (){
             return Settings::where('category','module')
                 ->where('options', 'like', '%"active":"1"%')
                 ->get();
         });
 
-        if (!$modules){
+        if (!isset($modules)){
             $modules = [];
         }
 

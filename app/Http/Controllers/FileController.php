@@ -7,8 +7,12 @@ use App\Model\Post;
 use App\Repositories\GroupsRepository;
 use App\Model\Group;
 use App\Support\Collection;
+use Carbon\Carbon;
+use Dompdf\Image\Cache;
+use Illuminate\Support\Facades\Cache  as CacheAlias;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Spatie\MediaLibrary\File;
 use Spatie\MediaLibrary\Models\Media;
 
 class FileController extends Controller
@@ -28,6 +32,16 @@ class FileController extends Controller
         return response()->json([
             "message"   => "Gelöscht"
         ], 200);
+    }
+
+    public function destroy(Media $file){
+
+        $file->delete();
+
+        return redirect()->back()->with([
+            "type"  => "warning",
+            'Meldung'   => 'Datei gelöscht'
+        ]);
     }
 
 
@@ -128,5 +142,71 @@ class FileController extends Controller
                 "type"  => "success",
                 "Meldung"   => "Bild erfolgreich hinzugefügt"
             ]);
+    }
+
+    protected function scanDir(){
+            $dirs = scandir(storage_path().'/app');
+
+            $noMedia = [];
+            $Media = Media::all();
+
+            foreach ($dirs as $dir){
+
+                if ($dir == '.' or $dir == '..' or $dir == '.gitignore' or $dir == 'public'){
+                    continue;
+                }
+
+                $MediaModel = $Media->filter(function($item) use ($dir) {
+                    return $item->id == $dir;
+                })->first();
+
+                if ($MediaModel == null){
+                    $scan = scandir(storage_path().'/app/'.$dir);
+                    foreach ($scan as $key => $item){
+                        if ($item == '.' or $item == '..' or $item == '.gitignore' or $item == 'public'){
+                            unset($scan[$key]);
+                        }
+                    }
+                    $noMedia[$dir]= $scan;
+                }
+            }
+
+
+            return $noMedia;
+    }
+
+    public function showScan(){
+
+            $noMedia = CacheAlias::remember('old_files', 60, function (){
+                return$this->scanDir();
+            });
+
+
+            $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', 'App\Model\Post')->get();
+
+            $deletedPosts = Post::onlyTrashed()->get();
+
+        return view('settings.scanDir', [
+            'media' => $noMedia,
+            'oldMedia'  => $oldMedia,
+            'deletedPosts' => $deletedPosts
+        ]);
+    }
+
+    public function removeOldFiles(){
+
+        $noMedia = $this->scanDir();
+        $noMedia = CacheAlias::forget('old_files');
+        foreach ($noMedia as $id => $mediaDir){
+            foreach ($mediaDir as $media){
+                $link = storage_path().'/app/'.$id.'/'.$media;
+                unlink($link);
+
+            }
+            $link = storage_path().'/app/'.$id;
+            rmdir($link);
+        }
+        return redirect()->back();
+
     }
 }

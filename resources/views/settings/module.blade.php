@@ -63,6 +63,20 @@
             </div>
         </div>
     </div>
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    Scan nach alten oder verwaisten Dateien sowie gelöschten Nachrichten
+                </h5>
+            </div>
+            <div class="card-footer">
+                <a href="{{url('settings/scan')}}" class="btn btn-primary btn-block">
+                    Scan starten
+                </a>
+            </div>
+        </div>
+    </div>
 
 @endsection
 

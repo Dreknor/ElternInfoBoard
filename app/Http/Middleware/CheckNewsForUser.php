@@ -31,11 +31,13 @@ class CheckNewsForUser
             return redirect('/einstellungen')->with(['changelog'    => true]);
         }
 
+
         if (auth()->user()->track_login == true or auth()->user()->track_login == 1)
         {
 
-            $news = [];
+
             $news = Cache::remember('news_'.auth()->id(), 60 * 5, function (){
+                $news = [];
                 $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at)->first();
                 if (!is_null($changelog)){
                     $news[]=[
@@ -92,6 +94,7 @@ class CheckNewsForUser
                         'title' => "<i class=\"fa fa-download\"></i> $medium->name"
                     ];
                 }
+
                 return $news;
             });
 

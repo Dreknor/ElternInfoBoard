@@ -130,7 +130,7 @@
                             <i class="">versendete dringende Nachrichten oder automatisch erstellte Mails für Listen, Krankmeldungen etc. werden nicht gespeichert</i>
                         </td>
                         <td>
-                            {{$user->lastEmail->format('d.m.Y H:i:s')}}<br>
+                            {{optional($user->lastEmail)->format('d.m.Y H:i:s')}}<br>
                             Die Mails werden @if($user->benachrichtigung == "weekly") wöchentlich @else täglich @endif versand. <br>
                             @if($user->sendCopy == "1") Versendete Mails möchte der Benutzer als Kopie. @else Es sollen keine Kopien von versendeten E-mails an den Benutzer geschickt werden. @endif
                         </td>
@@ -336,7 +336,7 @@
                     @foreach($user->Reinigung as $reinigung)
                         <tr>
                             <td>
-                                {{$reinigung->datum->format('d.m.Y')}}
+                                {{optional($reinigung->datum)->format('d.m.Y')}}
                             </td>
                             <td>
                                 {{$reinigung->bereich}}: {{$reinigung->aufgabe}}
@@ -375,10 +375,10 @@
                                 {!! $rueckmeldung->text !!}
                             </td>
                             <td>
-                                {{$rueckmeldung->created_at->format('d.m.Y H:i')}}
+                                {{optional($rueckmeldung->created_at)->format('d.m.Y H:i')}}
                             </td>
                             <td>
-                                {{$rueckmeldung->updated_at->format('d.m.Y H:i')}}
+                                {{optional($rueckmeldung->updated_at)->format('d.m.Y H:i')}}
                             </td>
                         </tr>
                     @endforeach
@@ -441,7 +441,7 @@
                                 {{$schickzeit->time}}
                             </td>
                             <td>
-                                {{$schickzeit->created_at->format('d.m.Y h:i ')}} Uhr
+                                {{optional($schickzeit->created_at)->format('d.m.Y h:i ')}} Uhr
                             </td>
                             <td>
                                 {{optional($schickzeit->deleted_at)->format('d.m.Y h:i')}}
@@ -479,7 +479,7 @@
                                 {{$comment->body}}
                             </td>
                             <td>
-                                {{$comment->created_at->format('d.m.Y h:i ')}} Uhr
+                                {{optional($comment->created_at)->format('d.m.Y h:i ')}} Uhr
                             </td>
                         </tr>
                     @endforeach
