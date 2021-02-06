@@ -196,7 +196,7 @@ class UserController extends Controller
     }
 
     public function loginAsUser($id){
-        if (!auth()->user()->hasRole('Admin')){
+        if (!auth()->user()->can('loginAsUser')){
             return redirect()->back()->with([
                'Meldung'    => "Berechtigung fehlt",
                'type'       => "danger"
