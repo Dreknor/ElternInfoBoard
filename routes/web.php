@@ -178,7 +178,7 @@ Route::group([
                 Route::get('settings/modul/{modul}', 'SettingsController@change_status');
             });
 
-            Route::group(['middlewareGroups' => ['role:Admin']], function () {
+            Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
                 Route::get('showUser/{id}', 'UserController@loginAsUser');
             });
 
