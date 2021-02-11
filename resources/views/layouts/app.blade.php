@@ -29,7 +29,7 @@
     <div class="logo" style="word-wrap: normal;">
         <a href="{{config('app.url')}}" class="simple-text">
             <div class="logo-image-small">
-                <img src="{{asset('img/'.config('app.logo'))}}">
+                <img src="{{asset('img/'.config('app.logo'))}}" class="p-0">
             </div>
         </a>
     </div>
