@@ -245,5 +245,8 @@ return [
         'Schulgemeinschaftsrat',
         'Schulleitertreffen',
         'Vorstandssitzungen'
-    ]
+    ],
+
+    //Logo
+    'logo' => env('APP_LOGO', 'logo.png')
 ];
