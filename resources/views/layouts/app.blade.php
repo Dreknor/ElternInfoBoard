@@ -27,7 +27,7 @@
 <body id="app-layout">
 <div class="sidebar" data-color="white" data-active-color="danger">
     <div class="logo" style="word-wrap: normal;">
-        <a href="https://www.esz-radebeul.de" class="simple-text">
+        <a href="{{config('app.url')}}" class="simple-text">
             <div class="logo-image-small">
                 <img src="{{asset('img/'.config('app.logo'))}}">
             </div>
