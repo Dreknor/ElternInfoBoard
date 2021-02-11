@@ -58,7 +58,7 @@ class KrankmeldungenController extends Controller
             ->where('ende','>=',Carbon::now()->format('Y-m-d'))
             ->get();
 
-        Mail::to('info@esz-radebeul.de')
+        Mail::to(config('mail.from.address'))
             ->queue(new DailyReportKrankmeldungen($krankmeldungen));
     }
 

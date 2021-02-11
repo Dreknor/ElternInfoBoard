@@ -31,12 +31,11 @@ class SendFeedback extends Mailable
     public function build()
     {
         return $this
-            ->from(
-               'info@esz-radebeul.de',
-               'ElternInfoBoard'
+            ->from(config('mail.from.address'),
+               config('mail.from.name')
             )
             ->replyTo(auth()->user()->email, auth()->user()->name)
-            ->subject('Kontaktformular vom ElternInfoBoard')
+            ->subject('Kontaktformular vom '.config('app.name'))
             ->view('emails.feedback')->with([
                 "text"  => $this->text,
                 'from'  =>  auth()->user()->name

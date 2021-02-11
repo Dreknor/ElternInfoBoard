@@ -26,7 +26,7 @@ class FeedbackController extends Controller
         if ($request->mitarbeiter != ""){
             $email = User::query()->where('id', $request->mitarbeiter)->value('email');
         } else {
-            $email = "info@esz-radebeul.de";
+            $email = config('mail.from.address');
         }
 
 

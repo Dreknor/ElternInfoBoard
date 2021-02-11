@@ -88,41 +88,7 @@ class TerminController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Termin $termin)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Termin $termin)
-    {
-        $this->authorize('edit', $termin);
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
-     */
-    public function update(CreateTerminRequest $request, Termin $termin)
-    {
-        $this->authorize('edit', $termin);
-
-    }
 
     /**
      * Remove the specified resource from storage.

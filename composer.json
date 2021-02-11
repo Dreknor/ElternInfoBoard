@@ -13,6 +13,7 @@
         "benjivm/commentable": "^5.0",
         "bkwld/cloner": "^3.5",
         "devdojo/chatter": "0.2.*",
+        "enlightn/enlightn": "^1.11",
         "fideloper/proxy": "^4.0",
         "laravel-notification-channels/webpush": "^5.0",
         "laravel/framework": "^6.0",

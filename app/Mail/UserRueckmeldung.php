@@ -40,8 +40,8 @@ class UserRueckmeldung extends Mailable
 
         return $this
             ->from(
-                'info@esz-radebeul.de',
-                'ElternInfoBoard'
+                config('mail.from.address'),
+                config('mail.from.name')
             )
             ->replyTo($this->email,$this->name)
            ->subject($this->subject)

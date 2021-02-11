@@ -43,7 +43,7 @@ class newUnveroeffentlichterBeitrag extends Mailable
     public function build()
     {
         return $this
-            ->subject("neuer unveröffentlichter Beitrag im ElternInfoBoard")
+            ->subject("neuer unveröffentlichter Beitrag im ".config('app.name'))
             ->view('emails.neuerUnveroeffentlichterBeitrag', [
             "von"   => $this->von,
             "betreff"   => $this->Betreff

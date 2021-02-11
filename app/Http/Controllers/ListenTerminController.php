@@ -90,7 +90,7 @@ class ListenTerminController extends Controller
         if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2 or  auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')){
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
                 ->queue(new TerminAbsageEltern(auth()->user(),$listen_termine->liste, $listen_termine->termin));
-            Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)->bcc('daniel.roehrich@esz-radebeul.de', 'Daniel Röhrich')
+            Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
                             ->queue(new TerminAbsageEltern(auth()->user(),$listen_termine->liste, $listen_termine->termin));
 
             $listen_termine->update(["reserviert_fuer" => null]);
@@ -133,7 +133,7 @@ class ListenTerminController extends Controller
 
 
                 //E-Mail versenden
-                Mail::to($listen_termine->eingetragenePerson->email,$listen_termine->eingetragenePerson->name)->bcc('daniel.roehrich@esz-radebeul.de', 'Daniel Röhrich')
+                Mail::to($listen_termine->eingetragenePerson->email,$listen_termine->eingetragenePerson->name)
                     ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name,$listen_termine->liste, $listen_termine->termin, auth()->user() ));
                 $listen_termine->update([
                     'reserviert_fuer'   => null

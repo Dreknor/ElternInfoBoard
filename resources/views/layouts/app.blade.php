@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
-    <title>ElternInfoBoard</title>
+    <title>{{config('app.name')}}</title>
 
 
     <!-- CSS Files -->
@@ -19,6 +19,7 @@
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet"><!--load all styles -->
+    <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->
     @yield('css')
 
 </head>

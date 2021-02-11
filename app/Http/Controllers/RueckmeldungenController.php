@@ -46,10 +46,6 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
-    public function edit(Rueckmeldungen $rueckmeldungen)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -163,7 +159,7 @@ class RueckmeldungenController extends Controller
 
         return redirect()->back()->with([
             'type'  => "success",
-            'Meldung'=>"Bild-Upload mit kommentaren erstellt."
+            'Meldung'=>"Bild-Upload mit Kommentaren erstellt."
         ]);
     }
 }
