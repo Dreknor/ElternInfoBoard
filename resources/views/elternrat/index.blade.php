@@ -107,7 +107,7 @@
                                     </h6>
 
                                     <ul class="list-group collapse" id="{{$directory}}_list">
-                                        @if($group->getMedia($directory)->count() > 0)
+                                        @if($group->getMedia($directory))
                                             @foreach($group->getMedia($directory) as $medium)
                                         <li class="list-group-item" id="file_{{$medium->id}}">
                                             <div class="row">
