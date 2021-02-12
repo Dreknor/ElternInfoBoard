@@ -79,10 +79,6 @@ class CreatePermissionTables extends Migration
             $table->primary(['permission_id', 'role_id']);
         });
 
-        app('cache')
-            ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
-            ->forget(config('permission.cache.key'));
-
         \Illuminate\Support\Facades\DB::table($tableNames['permissions'])->insert([
             [
                 'name'  => 'edit permission',
@@ -200,7 +196,31 @@ class CreatePermissionTables extends Migration
                 'name'  => 'view mitarbeiterboard',
                 'guard_name' => 'web'
             ],
+            [
+                'name'  => 'loginAsUser',
+                'guard_name' => 'web'
+            ],
         ]);
+
+        \Illuminate\Support\Facades\DB::table($tableNames['roles'])->insert([
+            [
+                "name"=>"Administrator",
+                "guard_name"    => "web"
+            ],
+            [
+                "name"=>"Mitarbeiter",
+                "guard_name"    => "web"
+            ],
+            [
+                "name"=>"Elternrat",
+                "guard_name"    => "web"
+            ],
+            [
+                "name"=>"Sekretariat",
+                "guard_name"    => "web"
+            ]
+        ]);
+
 
         \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
             [
@@ -210,8 +230,43 @@ class CreatePermissionTables extends Migration
             [
            'permission_id' => 2,
             'model_type'    => 'App\Model\User',
-            'model_id'  => 1],
+            'model_id'  => 1
+            ],
         ]);
+
+
+        \Illuminate\Support\Facades\DB::table($tableNames['model_has_roles'])->insert([
+            [
+                'role_id' => 1,
+                'model_type'    => 'App\Model\User',
+                'model_id'  => 1
+            ],
+            [
+               'role_id' => 2,
+                'model_type'    => 'App\Model\User',
+                'model_id'  => 1
+            ],
+        ]);
+
+        \Illuminate\Support\Facades\DB::table($tableNames['role_has_permissions'])->insert([
+            [
+           'permission_id' => 1,
+            'role_id'  => 1
+            ],
+            [
+            'permission_id' => 2,
+            'role_id'  => 1
+            ],
+            [
+            'permission_id' => 10,
+            'role_id'  => 3
+            ],
+        ]);
+
+        app('cache')
+            ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
+            ->forget(config('permission.cache.key'));
+
     }
 
     /**
