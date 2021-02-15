@@ -18,6 +18,13 @@ class CreateGroupsTable extends Migration
             $table->string('name');
             $table->timestamps();
         });
+
+        \Illuminate\Support\Facades\DB::table('groups')->insert([
+           [
+               'name' => "Elternrat",
+               'protected'=>1
+           ]
+        ]);
     }
 
     /**
