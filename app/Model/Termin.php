@@ -5,6 +5,7 @@ namespace App\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Spatie\CalendarLinks\Link;
 
 
@@ -42,6 +43,10 @@ class Termin extends Model
             $builder->where('start', '>=', Carbon::now())
                 ->orWhere('ende', '>=', Carbon::now());
         });
+
+        static::created(function () {
+            return Cache::forget('termine'.auth()->id());
+        });
     }
 
     public function link(){
@@ -55,4 +60,5 @@ class Termin extends Model
 
         return Link::create($this->terminname, $this->start, $this->ende, $this->fullDay);
     }
+
 }
