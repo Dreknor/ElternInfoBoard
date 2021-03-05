@@ -141,7 +141,7 @@ class ListenController extends Controller
         $terminListe->groups()->detach();
         $terminListe->groups()->attach($gruppen);
 
-        return redirect(url('listen'));
+        return redirect()->to(url('listen'));
     }
 
     /**

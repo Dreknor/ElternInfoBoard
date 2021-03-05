@@ -35,7 +35,7 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
-        return redirect(url('/home'))->with([
+        return redirect()->to(url('/home'))->with([
            'type'   => 'success',
            'Meldung'    => 'Rückmeldung erstellt.',
         ]);
@@ -65,7 +65,7 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
-        return redirect(url('home'))->with([
+        return redirect()->to(url('home'))->with([
            'type'   => 'success',
            'Meldung'    => 'Rückmeldung gespeichert',
         ]);

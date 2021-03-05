@@ -35,7 +35,7 @@ class TerminController extends Controller
     public function create()
     {
         if (! $this->authorize('create', Termin::class)) {
-            return redirect(url('home'))->with([
+            return redirect()->to(url('home'))->with([
                'type'   => 'danger',
                'Meldung'    => 'Berechtigung fehlt',
             ]);

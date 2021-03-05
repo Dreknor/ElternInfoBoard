@@ -169,7 +169,7 @@ class ReinigungController extends Controller
             }
         }
 
-        return redirect(url('reinigung'))->with([
+        return redirect()->to(url('reinigung'))->with([
             'type'  => 'success',
             'Meldung'   => 'Plan aktualisiert',
         ]);

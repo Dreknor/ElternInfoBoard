@@ -58,7 +58,7 @@ class ChangelogController extends Controller
             ]);
         }
 
-        return redirect(url('changelog'))->with([
+        return redirect()->to(url('changelog'))->with([
            'type'   => 'success',
            'Meldung'=> 'Changelog angelegt',
         ]);

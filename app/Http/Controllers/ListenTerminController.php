@@ -73,7 +73,7 @@ class ListenTerminController extends Controller
 
         Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', $request->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
 
-        return redirect(url('listen'))->with([
+        return redirect()->to(url('listen'))->with([
             'type'  => 'success',
             'Meldung'   => 'Termin wurde reserviert.',
         ]);

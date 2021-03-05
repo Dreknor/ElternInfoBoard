@@ -156,7 +156,7 @@ class SchickzeitenController extends Controller
             $neueSchickzeit2->save();
         }
 
-        return redirect(url('verwaltung/schickzeiten'))->with([
+        return redirect()->to(url('verwaltung/schickzeiten'))->with([
             'type'  => 'success',
             'Meldung'   => 'Zeiten gespeichert',
         ]);
@@ -228,7 +228,7 @@ class SchickzeitenController extends Controller
             $type = 'success';
         }
 
-        return redirect(url('schickzeiten'))->with([
+        return redirect()->to(url('schickzeiten'))->with([
             'type'  => $type,
             'Meldung'   => 'Zeiten gespeichert.'.$text,
         ]);

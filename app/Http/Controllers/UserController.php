@@ -209,7 +209,7 @@ class UserController extends Controller
 
         Auth::loginUsingId($id);
 
-        return redirect(url('/'));
+        return redirect()->to(url('/'));
     }
 
     public function logoutAsUser(Request $request)
@@ -218,7 +218,7 @@ class UserController extends Controller
             Auth::loginUsingId($request->session()->pull('ownID'));
         }
 
-        return redirect(url('/'));
+        return redirect()->to(url('/'));
     }
 
     public function removeVerknuepfung(User $user)
@@ -231,7 +231,7 @@ class UserController extends Controller
             'sorg2' => null,
         ]);
 
-        return back()->with([
+        return redirect()->back()->with([
             'type'=>'success',
             'Meldung'   => 'Verknüpfung der Konten aufgehoben',
         ]);

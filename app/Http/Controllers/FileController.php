@@ -86,7 +86,7 @@ class FileController extends Controller
     public function store(Request $request)
     {
         if (! $request->user()->can('upload files')) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type'   => 'danger',
                 'Meldung'    => 'Berechtigung fehlt',
             ]);
@@ -103,7 +103,7 @@ class FileController extends Controller
             }
         }
 
-        return redirect('/files')->with([
+        return redirect()->to('/files')->with([
                 'type'  => 'success',
                 'Meldung'   => 'Download erzeugt',
             ]);
@@ -121,7 +121,7 @@ class FileController extends Controller
 
             @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
         } else {
-            return redirect(url('home/'))->with([
+            return redirect()->to(url('home/'))->with([
                 'type'  => 'warning',
                 'Meldung'   => 'Upload fehlgeschlagen',
             ]);

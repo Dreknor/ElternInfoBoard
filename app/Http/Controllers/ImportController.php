@@ -63,7 +63,7 @@ class ImportController extends Controller
                 $Meldung = 'Mitarbeiter-Import abgeschlossen';
             }
 
-            return redirect(url('users'))->with([
+            return redirect()->to(url('users'))->with([
                 'type'  => 'success',
                 'Meldung'   => $Meldung,
             ]);

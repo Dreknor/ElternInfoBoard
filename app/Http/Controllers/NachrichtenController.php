@@ -97,7 +97,7 @@ class NachrichtenController extends Controller
     public function create(Request $request)
     {
         if (! $request->user()->can('create posts')) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
@@ -117,7 +117,7 @@ class NachrichtenController extends Controller
     public function edit(Request $request, Post $posts, $kiosk = '')
     {
         if (! $request->user()->can('edit posts') and $request->user()->id != $posts->author) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
@@ -148,12 +148,12 @@ class NachrichtenController extends Controller
         $user = $request->user();
 
         if (! $request->user()->can('create posts')) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
         } elseif ($request->has('urgent') and $request->input('urgent') == 1 and (! $user->can('send urgent message') or ! Hash::check($request->input('password'), $user->password))) {
-            return redirect()->back()->withInput($request->all())->with([
+            return redirect()->back()->withInput()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt für dringende Nachrichten oder Passwort ist falsch',
             ]);
@@ -306,7 +306,7 @@ class NachrichtenController extends Controller
         $user = $request->user();
 
         if (! $request->user()->can('edit posts') and $request->user()->id != $posts->author) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
@@ -389,7 +389,7 @@ class NachrichtenController extends Controller
         }
 
         if ($kiosk == 'true') {
-            return redirect(url('/kiosk'));
+            return redirect()->to(url('/kiosk'));
         }
 
         return redirect(url('/home#'.$posts->id))->with([
@@ -505,7 +505,7 @@ class NachrichtenController extends Controller
             $posts->save();
         }
 
-        return redirect(url('/'));
+        return redirect()->to(url('/'));
     }
 
     /**
@@ -515,7 +515,7 @@ class NachrichtenController extends Controller
     public function release(Request $request, Post $posts)
     {
         if (! $request->user()->can('release posts')) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
@@ -537,7 +537,7 @@ class NachrichtenController extends Controller
     public function archiv(Request $request, Post $posts)
     {
         if (! $request->user()->can('edit posts')) {
-            return redirect('/home')->with([
+            return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);

@@ -29,7 +29,7 @@ class CheckNewsForUser
             $user->changeSettings = 0;
             $user->save();
 
-            return redirect('/einstellungen')->with(['changelog'    => true]);
+            return redirect()->to('/einstellungen')->with(['changelog'    => true]);
         }
 
         if ($request->user()->track_login == true or $request->user()->track_login == 1) {

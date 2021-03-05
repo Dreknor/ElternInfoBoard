@@ -79,7 +79,7 @@ class ElternratController extends Controller
 
         $Discussion->save();
 
-        return redirect(url('elternrat'))->with([
+        return redirect()->to(url('elternrat'))->with([
             'type'  => 'success',
             'meldung'   => 'Beitrag erstellt',
         ]);
@@ -109,7 +109,7 @@ class ElternratController extends Controller
     {
         $discussion->update($request->all());
 
-        return redirect(url('elternrat'))->with([
+        return redirect()->to(url('elternrat'))->with([
            'type'   => 'success',
            'Meldung'    =>  'Änderungen gespeichert',
         ]);
@@ -160,7 +160,7 @@ class ElternratController extends Controller
                     ->toMediaCollection($request->directory);
         }
 
-        return redirect(url('elternrat'))->with([
+        return redirect()->to(url('elternrat'))->with([
             'type'  => 'success',
             'Meldung'   => 'Datei gespeichert',
         ]);
@@ -181,6 +181,6 @@ class ElternratController extends Controller
     {
         $comment->delete();
 
-        return response('Gelöscht', 200);
+        return response('Gelöscht');
     }
 }
