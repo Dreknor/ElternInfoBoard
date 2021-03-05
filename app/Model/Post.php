@@ -48,7 +48,7 @@ class Post extends Model implements HasMedia
 
     public function users()
     {
-        return $this->hasManyDeep('App\Model\User', ['group_post', 'App\Model\Group', 'group_user']);
+        return $this->hasManyDeep(\App\Model\User::class, ['group_post', \App\Model\Group::class, 'group_user']);
     }
 
     public function getIsArchivedAttribute()

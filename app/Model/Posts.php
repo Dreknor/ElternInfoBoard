@@ -50,7 +50,7 @@ class Posts extends Model implements HasMedia
 
     public function users()
     {
-        return $this->hasManyDeep('App\Model\User', ['groups_posts', 'App\Model\Groups', 'groups_user']);
+        return $this->hasManyDeep(\App\Model\User::class, ['groups_posts', \App\Model\Groups::class, 'groups_user']);
     }
 
     public function is_archived()

@@ -224,11 +224,11 @@ class CreatePermissionTables extends Migration
         \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
             [
            'permission_id' => 1,
-            'model_type'    => 'App\Model\User',
+            'model_type'    => \App\Model\User::class,
             'model_id'  => 1, ],
             [
            'permission_id' => 2,
-            'model_type'    => 'App\Model\User',
+            'model_type'    => \App\Model\User::class,
             'model_id'  => 1,
             ],
         ]);
@@ -236,12 +236,12 @@ class CreatePermissionTables extends Migration
         \Illuminate\Support\Facades\DB::table($tableNames['model_has_roles'])->insert([
             [
                 'role_id' => 1,
-                'model_type'    => 'App\Model\User',
+                'model_type'    => \App\Model\User::class,
                 'model_id'  => 1,
             ],
             [
                'role_id' => 2,
-                'model_type'    => 'App\Model\User',
+                'model_type'    => \App\Model\User::class,
                 'model_id'  => 1,
             ],
         ]);

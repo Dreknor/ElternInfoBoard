@@ -20,10 +20,10 @@ class EventServiceProvider extends ServiceProvider
 
         ],
         'Illuminate\Mail\Events\MessageSending' => [
-            'App\Listeners\LogSendingMessage',
+            \App\Listeners\LogSendingMessage::class,
         ],
         'Illuminate\Mail\Events\MessageSent' => [
-            'App\Listeners\LogSentMessage',
+            \App\Listeners\LogSentMessage::class,
         ],
     ];
 

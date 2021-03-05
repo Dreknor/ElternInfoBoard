@@ -65,7 +65,7 @@ class User extends Authenticatable
      */
     public function posts()
     {
-        return $this->hasManyDeep('App\Model\Post', ['group_user', 'App\Model\Group', 'group_post']);
+        return $this->hasManyDeep(\App\Model\Post::class, ['group_user', \App\Model\Group::class, 'group_post']);
     }
 
     /**
@@ -83,7 +83,7 @@ class User extends Authenticatable
      */
     public function termine()
     {
-        return $this->hasManyDeep('App\Model\Termin', ['group_user', 'App\Model\Group', 'group_termine']);
+        return $this->hasManyDeep(\App\Model\Termin::class, ['group_user', \App\Model\Group::class, 'group_termine']);
     }
 
     /**
@@ -91,7 +91,7 @@ class User extends Authenticatable
      */
     public function listen()
     {
-        return $this->hasManyDeep('App\Model\Liste', ['group_user', 'App\Model\Group', 'group_listen']);
+        return $this->hasManyDeep(\App\Model\Liste::class, ['group_user', \App\Model\Group::class, 'group_listen']);
     }
 
     /**

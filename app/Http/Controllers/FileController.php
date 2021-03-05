@@ -169,7 +169,7 @@ class FileController extends Controller
             return$this->scanDir();
         });
 
-        $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', 'App\Model\Post')->get();
+        $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', \App\Model\Post::class)->get();
 
         $deletedPosts = Post::onlyTrashed()->get();
 
