@@ -19,9 +19,9 @@ class ReinigungController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $datum = Carbon::now()->startOfWeek()->startOfDay();
         $ende = Carbon::createFromFormat('d.m', '30.8');
 
@@ -60,16 +60,16 @@ class ReinigungController extends Controller
      *
      * @return RedirectResponse
      */
-    public function create($Bereich, $Datum)
+    public function create(Request $request, $Bereich, $Datum)
     {
-        if (! auth()->user()->can('edit reinigung')) {
+        if (! $request->user()->can('edit reinigung')) {
             return redirect()->back()->with([
                 'type'  => 'danger',
                 'Meldung'   => 'Berechtigung fehlt',
             ]);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $datum = Carbon::createFromFormat('Ymd', $Datum)->startOfWeek()->startOfDay();
         $ende = $datum->endOfWeek()->endOfDay();
 

@@ -17,7 +17,7 @@ class PasswordExpired
     {
         $user = $request->user();
 
-        if ($user->changePassword and ! session()->has('ownID')) {
+        if ($user->changePassword and ! $request->session()->has('ownID')) {
             return redirect()->route('password.expired');
         }
 

@@ -23,9 +23,9 @@ class BenutzerController extends Controller
         });
     }
 
-    public function show()
+    public function show(Request $request)
     {
-        if (Session::get('changelog') == true) {
+        if ($request->session()->get('changelog') == true) {
             $changelog = Changelog::where('changeSettings', 1)->orderByDesc('created_at')->first();
         } else {
             $changelog = null;

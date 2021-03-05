@@ -23,26 +23,26 @@ class ListenController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Liste::class);
 
-        if (auth()->user()->can('edit terminliste')) {
+        if ($request->user()->can('edit terminliste')) {
             $listen = Liste::where('ende', '>=', Carbon::now()->subWeeks(2))->get();
         } else {
-            $listen = auth()->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
-            if (auth()->user()->can('create terminliste')) {
-                $eigeneListen = Liste::where('besitzer', auth()->user()->id)->where('ende', '>=', Carbon::now()->subWeeks(2))->get();
+            $listen = $request->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
+            if ($request->user()->can('create terminliste')) {
+                $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now()->subWeeks(2))->get();
 
                 $listen = $listen->merge($eigeneListen);
             }
         }
 
         $listen = $listen->unique('id');
-        $eintragungen = auth()->user()->listen_eintragungen;
+        $eintragungen = $request->user()->listen_eintragungen;
 
-        if (auth()->user()->sorg2 != null) {
-            $eintragungen = $eintragungen->merge(auth()->user()->sorgeberechtigter2->listen_eintragungen);
+        if ($request->user()->sorg2 != null) {
+            $eintragungen = $eintragungen->merge($request->user()->sorgeberechtigter2->listen_eintragungen);
         }
 
         return view('listen.index', [
@@ -77,7 +77,7 @@ class ListenController extends Controller
 
         $Liste = new Liste($request->all());
         //$Liste->active = 0;
-        $Liste->besitzer = auth()->user()->id;
+        $Liste->besitzer = $request->user()->id;
 
         $Liste->save();
 
@@ -175,9 +175,9 @@ class ListenController extends Controller
         return redirect()->back();
     }
 
-    public function pdf(Liste $liste)
+    public function pdf(Request $request, Liste $liste)
     {
-        if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminlisten')) {
+        if ($request->user()->id == $liste->besitzer or $request->user()->can('edit terminlisten')) {
             /*$pdf = \PDF::loadView('listen.listenExport', [
                 "Liste" => $liste,
                 'listentermine' => $liste->eintragungen->sortBy('termin')

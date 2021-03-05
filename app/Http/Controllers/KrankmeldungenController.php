@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
@@ -17,9 +18,9 @@ class KrankmeldungenController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
-        $krankmeldungen = auth()->user()->krankmeldungen;
+        $krankmeldungen = $request->user()->krankmeldungen;
 
         return view('krankmeldung.index', [
                 'krankmeldungen' => $krankmeldungen,
@@ -39,8 +40,8 @@ class KrankmeldungenController extends Controller
         $krankmeldung->save();
 
         Mail::to(config('mail.from.address'))
-            ->cc(auth()->user()->email)
-            ->queue(new krankmeldung(auth()->user()->email, auth()->user()->name, $request->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar));
+            ->cc($request->user()->email)
+            ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar));
 
         return redirect()->back()->with([
             'type' => 'success',

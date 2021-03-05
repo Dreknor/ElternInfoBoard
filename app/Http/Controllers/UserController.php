@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Requests\createUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Model\Group;
@@ -130,7 +131,7 @@ class UserController extends Controller
         $user->groups()->detach();
         $user->groups()->attach($gruppen);
 
-        if (auth()->user()->can('edit permission')) {
+        if ($request->user()->can('edit permission')) {
             $permissions = $request->input('permissions');
             $user->syncPermissions($permissions);
 
@@ -138,7 +139,7 @@ class UserController extends Controller
             $user->syncRoles($roles);
         }
 
-        if (auth()->user()->can('set password') and $request->input('new-password') != '') {
+        if ($request->user()->can('set password') and $request->input('new-password') != '') {
             $user->password = Hash::make($request->input('new-password'));
         }
 
@@ -196,25 +197,25 @@ class UserController extends Controller
         ], 200);
     }
 
-    public function loginAsUser($id)
+    public function loginAsUser(Request $request, $id)
     {
-        if (! auth()->user()->can('loginAsUser')) {
+        if (! $request->user()->can('loginAsUser')) {
             return redirect()->back()->with([
                'Meldung'    => 'Berechtigung fehlt',
                'type'       => 'danger',
             ]);
         }
-        session(['ownID' => auth()->user()->id]);
+        session(['ownID' => $request->user()->id]);
 
         Auth::loginUsingId($id);
 
         return redirect(url('/'));
     }
 
-    public function logoutAsUser()
+    public function logoutAsUser(Request $request)
     {
-        if (session()->has('ownID')) {
-            Auth::loginUsingId(session()->pull('ownID'));
+        if ($request->session()->has('ownID')) {
+            Auth::loginUsingId($request->session()->pull('ownID'));
         }
 
         return redirect(url('/'));

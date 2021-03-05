@@ -137,13 +137,13 @@ class RueckmeldungenController extends Controller
         return redirect()->back();
     }
 
-    public function createImageRueckmeldung(Post $posts)
+    public function createImageRueckmeldung(Request $request, Post $posts)
     {
         $rueckmeldung = new Rueckmeldungen([
             'posts_id'  => $posts->id,
             'type'  => 'bild',
             'commentable'  => 1,
-            'empfaenger'  => auth()->user()->email,
+            'empfaenger'  => $request->user()->email,
             'ende'      => $posts->archiv_ab,
             'text'      => ' ',
         ]);

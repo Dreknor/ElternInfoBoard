@@ -32,15 +32,15 @@ class SearchController extends Controller
             '12' => 'Dezember',
         ]);
 
-        if (! auth()->user()->can('create posts')) {
+        if (! $request->user()->can('create posts')) {
             if ($months->search($request->input('suche'))) {
-                $Nachrichten = auth()->user()->posts()
+                $Nachrichten = $request->user()->posts()
                     ->whereMonth('posts.updated_at', $months->search($request->input('suche')))
                     ->orWhereLike(['header', 'news'], $request->input('suche'))
                     ->with('rueckmeldung', 'autor')
                     ->get();
             } else {
-                $Nachrichten = auth()->user()->posts()
+                $Nachrichten = $request->user()->posts()
                     ->whereLike(['header', 'news'], $request->input('suche'))
                     ->with('rueckmeldung', 'autor')
                     ->get();
@@ -63,7 +63,7 @@ class SearchController extends Controller
         return view('search.result', [
             'nachrichten'   => $Nachrichten,
             'archiv'    => null,
-            'user'      => auth()->user(),
+            'user'      => $request->user(),
             'gruppen'   => Group::all(),
             'Suche'     => $request->input('suche'),
         ]);

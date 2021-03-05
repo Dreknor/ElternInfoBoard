@@ -42,9 +42,9 @@ class FileController extends Controller
         ]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = auth()->user()->load('groups');
+        $user = $request->user()->load('groups');
 
         if ($user->can('upload files')) {
             if (! $user->can('view protected')) {
@@ -85,7 +85,7 @@ class FileController extends Controller
 
     public function store(Request $request)
     {
-        if (! auth()->user()->can('upload files')) {
+        if (! $request->user()->can('upload files')) {
             return redirect('/home')->with([
                 'type'   => 'danger',
                 'Meldung'    => 'Berechtigung fehlt',
@@ -119,7 +119,7 @@ class FileController extends Controller
                         ->toMediaCollection('images');
                 });
 
-            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost(auth()->user()->name, $posts->header));
+            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
         } else {
             return redirect(url('home/'))->with([
                 'type'  => 'warning',

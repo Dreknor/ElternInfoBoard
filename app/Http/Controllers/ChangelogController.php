@@ -29,9 +29,9 @@ class ChangelogController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\View\View
      */
-    public function create()
+    public function create(Request $request)
     {
-        if (auth()->user()->can('add changelog')) {
+        if ($request->user()->can('add changelog')) {
             return view('changelog.create');
         } else {
             return redirect()->back()->with([

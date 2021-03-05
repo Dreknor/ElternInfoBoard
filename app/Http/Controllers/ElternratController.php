@@ -73,7 +73,7 @@ class ElternratController extends Controller
         $Discussion = new Discussion([
             'header'    => $request->header,
             'text'      => $request->text,
-            'owner'     => auth()->user()->id,
+            'owner'     => $request->user()->id,
             'sticky'    => $request->sticky,
         ]);
 
@@ -126,9 +126,9 @@ class ElternratController extends Controller
         //
     }
 
-    public function deleteFile(Media $file)
+    public function deleteFile(Request $request, Media $file)
     {
-        if (auth()->user()->can('delete elternrat file')) {
+        if ($request->user()->can('delete elternrat file')) {
             $file->delete();
 
             return response()->json([
@@ -171,7 +171,7 @@ class ElternratController extends Controller
         if ($request->body != '') {
             $discussion->comment([
                 'body' => $request->input('body'),
-            ], auth()->user());
+            ], $request->user());
         }
 
         return redirect()->back();

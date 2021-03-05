@@ -11,9 +11,9 @@ class DatenschutzController extends Controller
         $this->middleware('auth');
     }
 
-    public function show()
+    public function show(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         return view('datenschutz.show', [
             'user' => $user,

@@ -19,7 +19,7 @@ class UserRueckmeldungenController extends Controller
 
     public function sendRueckmeldung(Request $request, $post_id)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $post_id = Post::find($post_id);
 
@@ -34,7 +34,7 @@ class UserRueckmeldungenController extends Controller
         $Empfaenger = $post_id->rueckmeldung->empfaenger;
 
         $Rueckmeldung = [
-            'text'  => $request->input('text').'<br>'.auth()->user()->name,
+            'text'  => $request->input('text').'<br>'.$request->user()->name,
             'subject'   => "Rückmeldung $post_id->header",
             'name'  => $user->name,
             'email' => $user->email,
@@ -66,7 +66,7 @@ class UserRueckmeldungenController extends Controller
 
     public function update(Request $request, UserRueckmeldungen $userRueckmeldungen)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         if ($userRueckmeldungen->users_id != $user->id and $userRueckmeldungen->users_id != $user->sorg2) {
             return redirect()->back()->with([
@@ -83,7 +83,7 @@ class UserRueckmeldungenController extends Controller
         $Empfaenger = $userRueckmeldungen->nachricht->rueckmeldung->empfaenger;
 
         $Rueckmeldung = [
-            'text'  => $request->input('text').'<br>'.auth()->user()->name,
+            'text'  => $request->input('text').'<br>'.$request->user()->name,
             'subject'   => 'geänderte Rückmeldung '.$userRueckmeldungen->nachricht->header,
             'name'  => $user->name,
             'email' => $user->email,

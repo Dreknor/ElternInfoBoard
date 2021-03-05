@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Requests\StoreListeTerminRequest;
 use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
@@ -55,9 +56,9 @@ class ListenTerminController extends Controller
      * @param listen_termine $listen_termine
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function update(listen_termine $listen_termine)
+    public function update(Request $request, listen_termine $listen_termine)
     {
-        $Eintragungen = auth()->user()->listen_eintragungen()->where('listen_id', $listen_termine->liste->id)->get();
+        $Eintragungen = $request->user()->listen_eintragungen()->where('listen_id', $listen_termine->liste->id)->get();
 
         if (count($Eintragungen) > 0 and $listen_termine->liste->multiple != 1) {
             return redirect()->back()->with([
@@ -67,10 +68,10 @@ class ListenTerminController extends Controller
         }
 
         $listen_termine->update([
-            'reserviert_fuer' => auth()->user()->id,
+            'reserviert_fuer' => $request->user()->id,
         ]);
 
-        Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', auth()->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
+        Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', $request->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
 
         return redirect(url('listen'))->with([
             'type'  => 'success',
@@ -83,17 +84,17 @@ class ListenTerminController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Exception
      */
-    public function absagen(listen_termine $listen_termine)
+    public function absagen(Request $request, listen_termine $listen_termine)
     {
-        if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2 or auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')) {
+        if ($request->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == $request->user()->sorg2 or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
-                ->queue(new TerminAbsageEltern(auth()->user(), $listen_termine->liste, $listen_termine->termin));
+                ->queue(new TerminAbsageEltern($request->user(), $listen_termine->liste, $listen_termine->termin));
             Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
-                            ->queue(new TerminAbsageEltern(auth()->user(), $listen_termine->liste, $listen_termine->termin));
+                            ->queue(new TerminAbsageEltern($request->user(), $listen_termine->liste, $listen_termine->termin));
 
             $listen_termine->update(['reserviert_fuer' => null]);
 
-            $body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde durch '.auth()->user()->name.' abgesagt.';
+            $body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde durch '.$request->user()->name.' abgesagt.';
             //Notification::send($listen_termine->liste->ersteller,new PushTerminAbsage($body));
 
             return redirect()->back()->with([
@@ -108,9 +109,9 @@ class ListenTerminController extends Controller
         ]);
     }
 
-    public function destroy(listen_termine $listen_termine)
+    public function destroy(Request $request, listen_termine $listen_termine)
     {
-        if (auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')) {
+        if ($request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
             if ($listen_termine->reserviert_fuer != null) {
                 //WebPush
                 $user = $listen_termine->eingetragenePerson;
@@ -118,7 +119,7 @@ class ListenTerminController extends Controller
                     $sorg2 = $user->sorgeberechtigter2;
                 }
 
-                $users = collect([$user, auth()->user()]);
+                $users = collect([$user, $request->user()]);
                 if (! is_null($sorg2)) {
                     $users->push($sorg2);
                 }
@@ -128,7 +129,7 @@ class ListenTerminController extends Controller
 
                 //E-Mail versenden
                 Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
-                    ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name, $listen_termine->liste, $listen_termine->termin, auth()->user()));
+                    ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name, $listen_termine->liste, $listen_termine->termin, $request->user()));
                 $listen_termine->update([
                     'reserviert_fuer'   => null,
                 ]);

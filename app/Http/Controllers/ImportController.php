@@ -41,7 +41,7 @@ class ImportController extends Controller
                     'S2Nachname' => $request->input('S2Nachname') - 1,
                 ];
 
-                Excel::import(new UsersImport($header), request()->file('file'));
+                Excel::import(new UsersImport($header), $request->file('file'));
 
                 $Meldung = 'Eltern wurden importiert';
             } elseif ($request->input('type') == 'aufnahme') {
@@ -56,10 +56,10 @@ class ImportController extends Controller
                     'gruppen' => $request->input('gruppen') - 1,
                 ];
 
-                Excel::import(new AufnahmeImport($header), request()->file('file'));
+                Excel::import(new AufnahmeImport($header), $request->file('file'));
                 $Meldung = 'Aufnahme-Import abgeschlossen';
             } else {
-                Excel::import(new MitarbeiterImport(), request()->file('file'));
+                Excel::import(new MitarbeiterImport(), $request->file('file'));
                 $Meldung = 'Mitarbeiter-Import abgeschlossen';
             }
 
