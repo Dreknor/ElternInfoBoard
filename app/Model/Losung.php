@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Losung extends Model
 {
     protected $table = 'losungen';
-
-    protected $dates = ['date'];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
 
     public function getDateAttribute($value)
     {

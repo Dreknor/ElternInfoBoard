@@ -10,9 +10,9 @@ class Liste extends Model
 
     protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
 
-    protected $dates = ['created_at', 'updated_at', 'ende'];
 
     protected $casts = [
+        'ende' => 'datetime',
         'visible_for_all'   => 'boolean',
         'active'            => 'boolean',
         'multiple'            => 'boolean',

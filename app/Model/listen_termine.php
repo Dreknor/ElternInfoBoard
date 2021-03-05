@@ -11,8 +11,9 @@ class listen_termine extends Model
 
     protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer'];
     protected $visible = ['listen_id', 'termin', 'comment', 'reserviert_fuer'];
-
-    protected $dates = ['created_at', 'updated_at', 'termin'];
+    protected $casts = [
+        'termin' => 'datetime',
+    ];
 
     public function eingetragenePerson()
     {

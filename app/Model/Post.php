@@ -19,8 +19,9 @@ class Post extends Model implements HasMedia
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type'];
-
-    protected $dates = ['created_at', 'updated_at', 'archiv_ab'];
+    protected $casts = [
+        'archiv_ab' => 'datetime',
+    ];
 
     protected $cloneable_relations = ['groups', 'rueckmeldung'];
 

@@ -15,9 +15,11 @@ class Termin extends Model
     protected $fillable = ['start', 'ende', 'terminname', 'fullDay'];
     protected $visible = ['start', 'ende', 'terminname', 'fullDay'];
 
-    protected $dates = ['creted_at', 'updated_at', 'start', 'ende'];
 
     protected $casts = [
+        'creted_at' => 'datetime',
+        'start' => 'datetime',
+        'ende' => 'datetime',
         'fullDay' => 'boolean',
     ];
 

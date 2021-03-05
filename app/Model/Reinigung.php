@@ -9,8 +9,9 @@ class Reinigung extends Model
     protected $table = 'reinigung';
     protected $visible = ['bereich', 'aufgabe', 'datum', 'bemerkung'];
     protected $fillable = ['bereich', 'aufgabe', 'datum', 'bemerkung', 'users_id'];
-
-    protected $dates = ['datum'];
+    protected $casts = [
+        'datum' => 'datetime',
+    ];
 
     public function user()
     {

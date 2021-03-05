@@ -28,12 +28,13 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $dates = ['created_at', 'updated_at', 'ende'];
+
 
     /**
      * @var array
      */
     protected $casts = [
+        'ende' => 'datetime',
         'pflicht' => 'boolean',
         'commentable' => 'boolean',
     ];
