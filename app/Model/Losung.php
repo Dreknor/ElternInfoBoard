@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Losung extends Model
 {
-    protected $table = "losungen";
+    protected $table = 'losungen';
 
     protected $dates = ['date'];
 
-
-    public function getDateAttribute($value){
-        return ($value != "")? $value : Carbon::now();
+    public function getDateAttribute($value)
+    {
+        return ($value != '') ? $value : Carbon::now();
     }
 }

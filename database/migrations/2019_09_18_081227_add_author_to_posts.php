@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class AddAuthorToPosts extends Migration
 {
@@ -17,7 +17,6 @@ class AddAuthorToPosts extends Migration
             $table->unsignedBigInteger('author')->nullable();
 
             $table->foreign('author')->references('id')->on('users');
-
         });
     }
 

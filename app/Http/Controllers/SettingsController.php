@@ -12,22 +12,22 @@ class SettingsController extends Controller
     {
         $this->middleware('auth');
         $this->middleware(['permission:edit settings']);
-
     }
 
-    public function module (){
-        $module = Settings::where('category', "module")->get();
+    public function module()
+    {
+        $module = Settings::where('category', 'module')->get();
 
         return view('settings.module', [
-            'module' => $module
+            'module' => $module,
         ]);
     }
 
-    public function change_status ($modulname){
+    public function change_status($modulname)
+    {
         $modul = Settings::where('setting', $modulname)->first();
 
-        if ($modul->options['active'] == 1){
-
+        if ($modul->options['active'] == 1) {
             $options = $modul->options;
             $options['active'] = '0';
             $modul->options = $options;
@@ -39,16 +39,13 @@ class SettingsController extends Controller
             $modul->options = $options;
 
             $modul->save();
-
         }
 
         Cache::forget('modules');
 
         return redirect()->back()->with([
-            "type" => "success",
-            "Meldung" => "Status geändert"
+            'type' => 'success',
+            'Meldung' => 'Status geändert',
         ]);
-
-
     }
 }

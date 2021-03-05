@@ -7,13 +7,11 @@ use Carbon\Carbon;
 
 class LosungController extends Controller
 {
-    public function getImage(){
-
-
+    public function getImage()
+    {
         return response()->view('losung.image', [
-            'losung' => Losung::where('date', Carbon::today())->first()
+            'losung' => Losung::where('date', Carbon::today())->first(),
         ])
             ->header('Content-type', 'image/jepg');
-
     }
 }

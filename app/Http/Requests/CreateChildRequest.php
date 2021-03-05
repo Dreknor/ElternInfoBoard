@@ -24,7 +24,7 @@ class CreateChildRequest extends FormRequest
     public function rules()
     {
         return [
-            'child' => 'required|string'
+            'child' => 'required|string',
         ];
     }
 }

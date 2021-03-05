@@ -24,9 +24,9 @@ class createDiscussionRequest extends FormRequest
     public function rules()
     {
         return [
-            'header'    => "required|string",
-            'text'      => "required",
-            'sticky'    => "required|boolean"
+            'header'    => 'required|string',
+            'text'      => 'required',
+            'sticky'    => 'required|boolean',
         ];
     }
 }

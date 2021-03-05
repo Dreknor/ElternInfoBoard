@@ -9,7 +9,6 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Class newFilesAddToPost
- * @package App\Mail
  */
 class newFilesAddToPost extends Mailable
 {
@@ -23,7 +22,6 @@ class newFilesAddToPost extends Mailable
      * @var
      */
     public $Betreff;
-
 
     /**
      * newFilesAddToPost constructor.
@@ -44,10 +42,10 @@ class newFilesAddToPost extends Mailable
     public function build()
     {
         return $this
-            ->subject("neuer Bild-Upload")
+            ->subject('neuer Bild-Upload')
             ->view('emails.newImageToPost', [
-                "von"   => $this->von,
-                "betreff"   => $this->Betreff
+                'von'   => $this->von,
+                'betreff'   => $this->Betreff,
             ]);
     }
 }

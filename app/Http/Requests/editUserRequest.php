@@ -27,7 +27,7 @@ class editUserRequest extends FormRequest
         return [
             'name'  => 'required|string|unique:users,id,'.\auth()->user()->id,
             'email'  => 'required|email|unique:users,id,'.\auth()->user()->id,
-            'benachrichtigung' => 'required|in:weekly,daily'
+            'benachrichtigung' => 'required|in:weekly,daily',
 
         ];
     }

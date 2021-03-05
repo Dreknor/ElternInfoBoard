@@ -27,7 +27,7 @@ class verwaltungEditUserRequest extends FormRequest
         return [
             'name'  => 'required|string|unique:users,id,'.$this->user->id,
             'email'  => 'required|email|unique:users,id,'.$this->user->id,
-            'benachrichtigung' => 'required|in:weekly,daily'
+            'benachrichtigung' => 'required|in:weekly,daily',
 
         ];
     }

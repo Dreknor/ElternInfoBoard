@@ -12,9 +12,8 @@ class Reinigung extends Model
 
     protected $dates = ['datum'];
 
-    public function user (){
+    public function user()
+    {
         return $this->belongsTo(User::class, 'users_id', 'id');
     }
-
-
 }

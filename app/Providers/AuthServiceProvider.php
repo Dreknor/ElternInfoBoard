@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use App\Model\Termin;
 use App\Model\Liste;
+use App\Model\Termin;
 use App\Policies\TerminListenPolicy;
 use App\Policies\TerminPolicy;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {

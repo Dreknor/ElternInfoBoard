@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class AddLoginToUser extends Migration
 {
@@ -14,8 +14,7 @@ class AddLoginToUser extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp("last_online_at")->useCurrent();
-
+            $table->timestamp('last_online_at')->useCurrent();
         });
     }
 
@@ -27,7 +26,7 @@ class AddLoginToUser extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn("last_online_at");
+            $table->dropColumn('last_online_at');
         });
     }
 }

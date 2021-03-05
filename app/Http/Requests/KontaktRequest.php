@@ -25,7 +25,7 @@ class KontaktRequest extends FormRequest
     {
         return [
             'text' => 'required|string',
-            'mitarbeiter' => 'present'
+            'mitarbeiter' => 'present',
         ];
     }
 }

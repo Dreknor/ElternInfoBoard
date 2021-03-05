@@ -11,12 +11,12 @@ class DatenschutzController extends Controller
         $this->middleware('auth');
     }
 
-    public function show(){
-
+    public function show()
+    {
         $user = auth()->user();
 
-        return view('datenschutz.show',[
-            'user' => $user
+        return view('datenschutz.show', [
+            'user' => $user,
         ]);
     }
 }

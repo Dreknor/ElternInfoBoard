@@ -12,23 +12,19 @@ use Spatie\MediaLibrary\HasMedia\HasMedia;
 use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
 use Spatie\MediaLibrary\Models\Media;
 
-
-class Posts extends Model  implements HasMedia
+class Posts extends Model implements HasMedia
 {
     use HasMediaTrait;
     use SoftDeletes;
     use Cloneable;
     use HasComments;
-
     use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
-
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type'];
 
     protected $dates = ['created_at', 'updated_at', 'archiv_ab'];
 
     protected $cloneable_relations = ['groups', 'rueckmeldung'];
-
 
     //protected $with= ['rueckmeldung'];
 
@@ -37,25 +33,28 @@ class Posts extends Model  implements HasMedia
         return $this->belongsToMany(Groups::class);
     }
 
-    public function autor(){
+    public function autor()
+    {
         return $this->hasOne(User::class, 'id', 'author');
     }
 
-    public function rueckmeldung(){
+    public function rueckmeldung()
+    {
         return $this->hasOne(Rueckmeldungen::class);
     }
 
-
-    public function userRueckmeldung(){
+    public function userRueckmeldung()
+    {
         return $this->hasMany(UserRueckmeldungen::class);
     }
 
-    public function users(){
-        return $this->hasManyDeep('App\Model\User', ['groups_posts', 'App\Model\Groups','groups_user']);
+    public function users()
+    {
+        return $this->hasManyDeep('App\Model\User', ['groups_posts', 'App\Model\Groups', 'groups_user']);
     }
 
-    public function is_archived(){
+    public function is_archived()
+    {
         return $this->archiv_ab > Carbon::now() ? false : true;
     }
-
 }

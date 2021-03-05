@@ -12,12 +12,13 @@ class DringendeInformationen extends Mailable
 
     public $header;
     public $text;
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($header, $text )
+    public function __construct($header, $text)
     {
         $this->header = $header;
         $this->text = $text;
@@ -31,9 +32,9 @@ class DringendeInformationen extends Mailable
     public function build()
     {
         return $this->subject($this->header)
-            ->view('emails.dringendeNachricht',[
-            "nachricht" => $this->text,
-            "header" => $this->header,
+            ->view('emails.dringendeNachricht', [
+            'nachricht' => $this->text,
+            'header' => $this->header,
         ]);
     }
 }

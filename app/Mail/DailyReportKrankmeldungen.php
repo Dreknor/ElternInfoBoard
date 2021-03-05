@@ -13,6 +13,7 @@ class DailyReportKrankmeldungen extends Mailable
     use Queueable, SerializesModels;
 
     public $krankmeldungen;
+
     /**
      * Create a new message instance.
      *
@@ -32,8 +33,8 @@ class DailyReportKrankmeldungen extends Mailable
     {
         return $this
             ->subject('Krankmeldungen am '.Carbon::now()->format('d.m.Y'))
-            ->view('emails.dailyReportKrankmeldungen',[
-                'krankmeldungen'    =>$this->krankmeldungen
+            ->view('emails.dailyReportKrankmeldungen', [
+                'krankmeldungen'    =>$this->krankmeldungen,
             ]);
     }
 }

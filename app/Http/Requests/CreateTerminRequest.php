@@ -27,7 +27,7 @@ class CreateTerminRequest extends FormRequest
             'terminname'    => 'required|string',
             'start'         => 'required|date|before:ende',
             'ende'         => 'required|date|after:start',
-            'gruppen'   => "required",
+            'gruppen'   => 'required',
 
         ];
     }

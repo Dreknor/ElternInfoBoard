@@ -13,7 +13,7 @@ class createRueckmeldungRequest extends FormRequest
      */
     public function authorize()
     {
-        return auth()->user()->can("create posts");
+        return auth()->user()->can('create posts');
     }
 
     /**
@@ -26,7 +26,7 @@ class createRueckmeldungRequest extends FormRequest
         return [
             'ende'  => 'required|date',
             'empfaenger'    => 'required|email',
-            'text'  => 'required'
+            'text'  => 'required',
         ];
     }
 }

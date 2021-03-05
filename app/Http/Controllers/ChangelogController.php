@@ -20,7 +20,7 @@ class ChangelogController extends Controller
         $changelogs = Changelog::orderByDesc('updated_at')->paginate(5);
 
         return view('changelog.index', [
-            'changelogs'    => $changelogs
+            'changelogs'    => $changelogs,
         ]);
     }
 
@@ -31,15 +31,14 @@ class ChangelogController extends Controller
      */
     public function create()
     {
-        if (auth()->user()->can('add changelog')){
+        if (auth()->user()->can('add changelog')) {
             return view('changelog.create');
         } else {
             return redirect()->back()->with([
                 'type'  => 'danger',
-                'Meldung'   => 'Berechtigung fehlt'
+                'Meldung'   => 'Berechtigung fehlt',
             ]);
         }
-
     }
 
     /**
@@ -53,15 +52,15 @@ class ChangelogController extends Controller
         $changelog = new Changelog($request->all());
         $changelog->save();
 
-        if ($changelog->changeSettings){
+        if ($changelog->changeSettings) {
             DB::table('users')->update([
-                'changeSettings'    => 1
+                'changeSettings'    => 1,
             ]);
         }
 
         return redirect(url('changelog'))->with([
            'type'   => 'success',
-           'Meldung'=> 'Changelog angelegt'
+           'Meldung'=> 'Changelog angelegt',
         ]);
     }
 

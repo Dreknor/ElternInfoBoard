@@ -24,7 +24,7 @@ class CommentPostRequest extends FormRequest
     public function rules()
     {
         return [
-            'comment'=>'required|string'
+            'comment'=>'required|string',
         ];
     }
 }

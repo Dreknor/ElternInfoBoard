@@ -14,13 +14,10 @@
 Auth::routes();
 Route::get('image/{media_id}', 'ImageController@getImage');
 
-
-
 Route::group([
     'middleware' => ['auth'],
 ],
     function () {
-
         Route::middleware(['password_expired'])->group(function () {
             Route::get('settings/scan', 'FileController@showScan')->middleware('can:scan files');
             Route::delete('settings/removeFiles', 'FileController@removeOldFiles')->middleware('can:scan files');
@@ -28,15 +25,14 @@ Route::group([
             Route::get('settings/post/{post}/destroy', 'NachrichtenController@deleteTrashed')->middleware('can:scan files');
 
             //Datenschutz
-            Route::get('datenschutz','DatenschutzController@show');
-
+            Route::get('datenschutz', 'DatenschutzController@show');
 
             //Push
-            Route::post('/push','PushController@store');
-            Route::get('/push2','PushController@store');
+            Route::post('/push', 'PushController@store');
+            Route::get('/push2', 'PushController@store');
 
             //make a push notification.
-            Route::get('/push','PushController@push')->name('push');
+            Route::get('/push', 'PushController@push')->name('push');
 
             //Route::get('noRueckmeldung', 'RueckmeldungenController@sendErinnerung');
 
@@ -68,7 +64,7 @@ Route::group([
             //Rückmeldungen
             Route::post('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@store');
             Route::put('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@update');
-            Route::get("rueckmeldungen/{posts}/createImageUpload", "RueckmeldungenController@createImageRueckmeldung");
+            Route::get('rueckmeldungen/{posts}/createImageUpload', 'RueckmeldungenController@createImageRueckmeldung');
 
             //show posts
             Route::get('/home', 'NachrichtenController@index');
@@ -113,14 +109,13 @@ Route::group([
             Route::post('/posts/', 'NachrichtenController@store');
 
             Route::delete('posts/{posts}', 'NachrichtenController@destroy');
-            Route::delete("rueckmeldung/{rueckmeldung}", "RueckmeldungenController@destroy");
+            Route::delete('rueckmeldung/{rueckmeldung}', 'RueckmeldungenController@destroy');
 
-
-            Route::post("rueckmeldung/{posts}/saveFile", "FileController@saveFileRueckmeldung");
+            Route::post('rueckmeldung/{posts}/saveFile', 'FileController@saveFileRueckmeldung');
 
             //Comment posts
             Route::post('nachricht/{posts}/comment/create', 'NachrichtenController@storeComment');
-            Route::get("rueckmeldungen/{rueckmeldungen}/commentable", "RueckmeldungenController@updateCommentable");
+            Route::get('rueckmeldungen/{rueckmeldungen}/commentable', 'RueckmeldungenController@updateCommentable');
 
             //user-Verwaltung
             Route::get('/einstellungen', 'BenutzerController@show');
@@ -132,16 +127,13 @@ Route::group([
             Route::get('/files/create', 'FileController@create')->middleware(['permission:upload files']);
             Route::delete('file/{file}', 'FileController@delete');
 
-
-
-
             //changelog
             Route::resource('changelog', 'ChangelogController');
 
             //Suche
-            Route::post('search','SearchController@search');
+            Route::post('search', 'SearchController@search');
 
-//Routen für Benutzerverwaltung
+            //Routen für Benutzerverwaltung
 
             Route::group(['middleware' => ['permission:edit user|import user']], function () {
                 Route::get('email/{daily}/{id?}', 'NachrichtenController@email');
@@ -151,8 +143,7 @@ Route::group([
                 Route::get('users/import', 'ImportController@importForm')->middleware(['permission:import user']);
                 Route::post('users/import', 'ImportController@import')->middleware(['permission:import user']);
 
-                Route::delete("users/{id}", "UserController@destroy");
-
+                Route::delete('users/{id}', 'UserController@destroy');
 
                 Route::resource('users', 'UserController');
                 //Route::get('users/{user}/delete', 'UserController@destroy');
@@ -161,8 +152,8 @@ Route::group([
             });
 
             //Gruppenverwaltung
-                Route::get('/groups', 'GroupsController@index')->middleware(['permission:view groups']);
-                Route::post('/groups', 'GroupsController@store')->middleware(['permission:view groups']);
+            Route::get('/groups', 'GroupsController@index')->middleware(['permission:view groups']);
+            Route::post('/groups', 'GroupsController@store')->middleware(['permission:view groups']);
 
             //Routen zur Rechteverwaltung
             Route::group(['middleware' => ['permission:edit permission']], function () {
@@ -182,11 +173,12 @@ Route::group([
                 Route::get('showUser/{id}', 'UserController@loginAsUser');
             });
 
-            Route::get('logoutAsUser', function (){
-                    if (session()->has('ownID')){
-                        \Illuminate\Support\Facades\Auth::loginUsingId(session()->pull('ownID'));
-                    }
-                    return redirect(url('/'));
+            Route::get('logoutAsUser', function () {
+                if (session()->has('ownID')) {
+                    \Illuminate\Support\Facades\Auth::loginUsingId(session()->pull('ownID'));
+                }
+
+                return redirect(url('/'));
             });
 
             //Elternratsbereich
@@ -201,24 +193,15 @@ Route::group([
                 Route::post('elternrat/discussion', 'ElternratController@store');
                 Route::get('elternrat/discussion/edit/{discussion}', 'ElternratController@edit');
                 Route::put('elternrat/discussion/{discussion}', 'ElternratController@update');
-
-
             });
         });
-
-
 
         //Feedback
         Route::get('feedback', 'FeedbackController@show');
         Route::post('feedback', 'FeedbackController@send');
 
-
         Route::get('password/expired', 'Auth\ExpiredPasswordController@expired')
             ->name('password.expired');
         Route::post('password/post_expired', 'Auth\ExpiredPasswordController@postExpired')
             ->name('password.post_expired');
-
-
-
-});
-
+    });

@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class group_post extends Model
 {
-    protected $table = "group_post";
+    protected $table = 'group_post';
 }

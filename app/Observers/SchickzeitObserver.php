@@ -15,7 +15,6 @@ class SchickzeitObserver
      */
     public function created(Schickzeiten $schickzeit)
     {
-
     }
 
     /**
@@ -26,7 +25,6 @@ class SchickzeitObserver
      */
     public function updated(Schickzeiten $schickzeit)
     {
-
     }
 
     /**
@@ -37,7 +35,6 @@ class SchickzeitObserver
      */
     public function deleted(Schickzeiten $schickzeit)
     {
-
     }
 
     /**

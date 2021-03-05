@@ -26,7 +26,7 @@ class CreateGroupRequest extends FormRequest
         return [
             'name' => 'required|string',
             'bereich' => 'nullable|alpha_dash',
-            'protected' => 'sometimes'
+            'protected' => 'sometimes',
         ];
     }
 }
