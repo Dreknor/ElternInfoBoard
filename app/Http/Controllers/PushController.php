@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePushRequest;
 use App\Model\User;
 use App\Notifications\PushNews;
 use Illuminate\Http\Request;
@@ -21,13 +22,8 @@ class PushController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function store(StorePushRequest $request)
     {
-        $this->validate($request, [
-            'endpoint'    => 'required',
-            'keys.auth'   => 'required',
-            'keys.p256dh' => 'required',
-        ]);
         $endpoint = $request->endpoint;
         $token = $request->keys['auth'];
         $key = $request->keys['p256dh'];
