@@ -1,5 +1,32 @@
 <?php
 
+use App\Http\Controllers\ChangelogController;
+use App\Http\Controllers\TerminController;
+use App\Http\Controllers\Auth;
+use App\Http\Controllers\BenutzerController;
+use App\Http\Controllers\DatenschutzController;
+use App\Http\Controllers\ElternratController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\GroupsController;
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\KioskController;
+use App\Http\Controllers\KrankmeldungenController;
+use App\Http\Controllers\ListenController;
+use App\Http\Controllers\ListenTerminController;
+use App\Http\Controllers\NachrichtenController;
+use App\Http\Controllers\PushController;
+use App\Http\Controllers\ReinigungController;
+use App\Http\Controllers\RolesController;
+use App\Http\Controllers\RueckmeldungenController;
+use App\Http\Controllers\SchickzeitenController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserRueckmeldungenController;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -12,162 +39,162 @@
 */
 
 Auth::routes();
-Route::get('image/{media_id}', 'ImageController@getImage');
+Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 
 Route::middleware('auth')->group(function () {
         Route::middleware(['password_expired'])->group(function () {
-            Route::get('settings/scan', 'FileController@showScan')->middleware('can:scan files');
-            Route::delete('settings/removeFiles', 'FileController@removeOldFiles')->middleware('can:scan files');
-            Route::get('settings/file/{file}/destroy', 'FileController@destroy')->middleware('can:scan files');
-            Route::get('settings/post/{post}/destroy', 'NachrichtenController@deleteTrashed')->middleware('can:scan files');
+            Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
+            Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
+            Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
+            Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
 
             //Datenschutz
-            Route::get('datenschutz', 'DatenschutzController@show');
+            Route::get('datenschutz', [DatenschutzController::class, 'show']);
 
             //Push
-            Route::post('/push', 'PushController@store');
-            Route::get('/push2', 'PushController@store');
+            Route::post('/push', [PushController::class, 'store']);
+            Route::get('/push2', [PushController::class, 'store']);
 
             //make a push notification.
-            Route::get('/push', 'PushController@push')->name('push');
+            Route::get('/push', [PushController::class, 'push'])->name('push');
 
-            //Route::get('noRueckmeldung', 'RueckmeldungenController@sendErinnerung');
+            //Route::get('noRueckmeldung', [RueckmeldungenController::class, 'sendErinnerung']);
 
             //Schickzeiten
-            Route::get('schickzeiten', 'SchickzeitenController@index');
-            Route::get('verwaltung/schickzeiten', 'SchickzeitenController@indexVerwaltung')->middleware('can:edit schickzeiten');
-            Route::get('schickzeiten/download', 'SchickzeitenController@download')->middleware('can:download schickzeiten');
-            Route::post('schickzeiten/child/create', 'SchickzeitenController@createChild');
-            Route::post('verwaltung/schickzeiten/child/create', 'SchickzeitenController@createChildVerwaltung')->middleware('can:edit schickzeiten');
-            Route::get('schickzeiten/edit/{day}/{child}', 'SchickzeitenController@edit');
-            Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', 'SchickzeitenController@editVerwaltung')->middleware('can:edit schickzeiten');
-            Route::post('schickzeiten', 'SchickzeitenController@store');
-            Route::post('verwaltung/schickzeiten/{parent}', 'SchickzeitenController@storeVerwaltung')->middleware('can:edit schickzeiten');
-            Route::delete('schickzeiten/{day}/{child}', 'SchickzeitenController@destroy');
-            Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', 'SchickzeitenController@destroyVerwaltung')->middleware('can:edit schickzeiten');
+            Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
+            Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
+            Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
+            Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
+            Route::post('verwaltung/schickzeiten/child/create', [SchickzeitenController::class, 'createChildVerwaltung'])->middleware('can:edit schickzeiten');
+            Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit']);
+            Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
+            Route::post('schickzeiten', [SchickzeitenController::class, 'store']);
+            Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
+            Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
+            Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
 
             //Krankmeldung
-            Route::get('krankmeldung', 'KrankmeldungenController@index');
-            Route::post('krankmeldung', 'KrankmeldungenController@store');
-            Route::get('krankmeldung/test', 'KrankmeldungenController@dailyReport');
+            Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
+            Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
+            Route::get('krankmeldung/test', [KrankmeldungenController::class, 'dailyReport']);
 
             //Termine
-            Route::resource('termin', 'TerminController');
+            Route::resource('termin', TerminController::class);
 
-            Route::post('/rueckmeldung/{posts_id}', 'UserRueckmeldungenController@sendRueckmeldung');
-            Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', 'UserRueckmeldungenController@edit');
-            Route::put('/userrueckmeldung/{userRueckmeldungen}', 'UserRueckmeldungenController@update');
+            Route::post('/rueckmeldung/{posts_id}', [UserRueckmeldungenController::class, 'sendRueckmeldung']);
+            Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'edit']);
+            Route::put('/userrueckmeldung/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'update']);
 
             //Rückmeldungen
-            Route::post('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@store');
-            Route::put('/rueckmeldung/{posts_id}/create', 'RueckmeldungenController@update');
-            Route::get('rueckmeldungen/{posts}/createImageUpload', 'RueckmeldungenController@createImageRueckmeldung');
+            Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
+            Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
+            Route::get('rueckmeldungen/{posts}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
 
             //show posts
-            Route::get('/home', 'NachrichtenController@index');
-            Route::get('/archiv', 'NachrichtenController@postsArchiv');
-            Route::get('/', 'NachrichtenController@index');
-            //Route::get('pdf/{archiv?}', 'NachrichtenController@pdf');
+            Route::get('/home', [NachrichtenController::class, 'index']);
+            Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
+            Route::get('/', [NachrichtenController::class, 'index']);
+            //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
             //KioskAnsicht
-            //Route::get('kiosk/{bereich?}', 'NachrichtenController@kioskView');
-            //Route::get('kiosk/{bereich?}', 'KioskController@kioskView');
+            //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
+            //Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
 
             //Terminlisten
-            Route::get('listen', 'ListenController@index');
-            Route::post('listen', 'ListenController@store');
-            Route::get('listen/create', 'ListenController@create');
-            Route::get('listen/{terminListe}', 'ListenController@show');
-            Route::get('listen/{terminListe}/edit', 'ListenController@edit');
-            Route::put('listen/{terminListe}', 'ListenController@update');
-            Route::get('listen/{liste}/activate', 'ListenController@activate');
-            Route::get('listen/{liste}/deactivate', 'ListenController@deactivate');
-            Route::get('listen/{liste}/export', 'ListenController@pdf');
-            Route::get('listen/{terminListe}/auswahl', 'ListenController@auswahl');
-            Route::post('eintragungen/{liste}/store', 'ListenTerminController@store');
-            Route::put('eintragungen/{listen_termine}', 'ListenTerminController@update');
-            Route::delete('eintragungen/{listen_termine}', 'ListenTerminController@destroy');
-            Route::delete('eintragungen/absagen/{listen_termine}', 'ListenTerminController@absagen');
+            Route::get('listen', [ListenController::class, 'index']);
+            Route::post('listen', [ListenController::class, 'store']);
+            Route::get('listen/create', [ListenController::class, 'create']);
+            Route::get('listen/{terminListe}', [ListenController::class, 'show']);
+            Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
+            Route::put('listen/{terminListe}', [ListenController::class, 'update']);
+            Route::get('listen/{liste}/activate', [ListenController::class, 'activate']);
+            Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
+            Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
+            Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
+            Route::post('eintragungen/{liste}/store', [ListenTerminController::class, 'store']);
+            Route::put('eintragungen/{listen_termine}', [ListenTerminController::class, 'update']);
+            Route::delete('eintragungen/{listen_termine}', [ListenTerminController::class, 'destroy']);
+            Route::delete('eintragungen/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
 
             //Reinigungsplan
-            Route::get('reinigung', 'ReinigungController@index');
-            Route::post('reinigung/{Bereich}', 'ReinigungController@store');
-            Route::get('reinigung/create/{Bereich}/{Datum}', 'ReinigungController@create');
+            Route::get('reinigung', [ReinigungController::class, 'index']);
+            Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
+            Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
 
             //Edit and create posts
-            Route::get('/posts/create', 'NachrichtenController@create');
-            Route::get('/posts/edit/{posts}', 'NachrichtenController@edit');
-            Route::get('/posts/edit/{posts}/{kiosk?}', 'NachrichtenController@edit');
-            Route::get('/posts/touch/{posts}', 'NachrichtenController@touch');
-            Route::get('/posts/release/{posts}', 'NachrichtenController@release');
-            Route::get('/posts/stick/{post}', 'NachrichtenController@stickPost')->middleware(['permission:make sticky']);
-            Route::get('/posts/archiv/{posts}', 'NachrichtenController@archiv');
-            Route::put('/posts/{posts}/{kiosk?}', 'NachrichtenController@update');
-            Route::post('/posts/', 'NachrichtenController@store');
+            Route::get('/posts/create', [NachrichtenController::class, 'create']);
+            Route::get('/posts/edit/{posts}', [NachrichtenController::class, 'edit']);
+            Route::get('/posts/edit/{posts}/{kiosk?}', [NachrichtenController::class, 'edit']);
+            Route::get('/posts/touch/{posts}', [NachrichtenController::class, 'touch']);
+            Route::get('/posts/release/{posts}', [NachrichtenController::class, 'release']);
+            Route::get('/posts/stick/{post}', [NachrichtenController::class, 'stickPost'])->middleware(['permission:make sticky']);
+            Route::get('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
+            Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
+            Route::post('/posts/', [NachrichtenController::class, 'store']);
 
-            Route::delete('posts/{posts}', 'NachrichtenController@destroy');
-            Route::delete('rueckmeldung/{rueckmeldung}', 'RueckmeldungenController@destroy');
+            Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
+            Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);
 
-            Route::post('rueckmeldung/{posts}/saveFile', 'FileController@saveFileRueckmeldung');
+            Route::post('rueckmeldung/{posts}/saveFile', [FileController::class, 'saveFileRueckmeldung']);
 
             //Comment posts
-            Route::post('nachricht/{posts}/comment/create', 'NachrichtenController@storeComment');
-            Route::get('rueckmeldungen/{rueckmeldungen}/commentable', 'RueckmeldungenController@updateCommentable');
+            Route::post('nachricht/{posts}/comment/create', [NachrichtenController::class, 'storeComment']);
+            Route::get('rueckmeldungen/{rueckmeldungen}/commentable', [RueckmeldungenController::class, 'updateCommentable']);
 
             //user-Verwaltung
-            Route::get('/einstellungen', 'BenutzerController@show');
-            Route::put('/einstellungen', 'BenutzerController@update');
+            Route::get('/einstellungen', [BenutzerController::class, 'show']);
+            Route::put('/einstellungen', [BenutzerController::class, 'update']);
 
             //Downloads
-            Route::get('/files', 'FileController@index');
-            Route::post('/files', 'FileController@store')->middleware(['permission:upload files']);
-            Route::get('/files/create', 'FileController@create')->middleware(['permission:upload files']);
-            Route::delete('file/{file}', 'FileController@delete');
+            Route::get('/files', [FileController::class, 'index']);
+            Route::post('/files', [FileController::class, 'store'])->middleware(['permission:upload files']);
+            Route::get('/files/create', [FileController::class, 'create'])->middleware(['permission:upload files']);
+            Route::delete('file/{file}', [FileController::class, 'delete']);
 
             //changelog
-            Route::resource('changelog', 'ChangelogController');
+            Route::resource('changelog', ChangelogController::class);
 
             //Suche
-            Route::post('search', 'SearchController@search');
+            Route::post('search', [SearchController::class, 'search']);
 
             //Routen für Benutzerverwaltung
 
             Route::middleware('permission:edit user|import user')->group(function () {
-                Route::get('email/{daily}/{id?}', 'NachrichtenController@email');
-                /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
+                Route::get('email/{daily}/{id?}', [NachrichtenController::class, 'email']);
+                /*             Route::get('email/daily', [NachrichtenController::class, 'emailDaily']);
                 */
 
-                Route::get('users/import', 'ImportController@importForm')->middleware(['permission:import user']);
-                Route::post('users/import', 'ImportController@import')->middleware(['permission:import user']);
+                Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
+                Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
 
-                Route::delete('users/{id}', 'UserController@destroy');
+                Route::delete('users/{id}', [UserController::class, 'destroy']);
 
-                Route::resource('users', 'UserController');
-                //Route::get('users/{user}/delete', 'UserController@destroy');
-                //Route::get('sendErinnerung', 'RueckmeldungenController@sendErinnerung');
-                //Route::get('/daily', 'NachrichtenController@emailDaily');
+                Route::resource('users', UserController::class);
+                //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
+                //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
+                //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
             });
 
             //Gruppenverwaltung
-            Route::get('/groups', 'GroupsController@index')->middleware(['permission:view groups']);
-            Route::post('/groups', 'GroupsController@store')->middleware(['permission:view groups']);
+            Route::get('/groups', [GroupsController::class, 'index'])->middleware(['permission:view groups']);
+            Route::post('/groups', [GroupsController::class, 'store'])->middleware(['permission:view groups']);
 
             //Routen zur Rechteverwaltung
             Route::middleware('permission:edit permission')->group(function () {
-                Route::get('roles', 'RolesController@edit');
-                Route::put('roles', 'RolesController@update');
-                Route::post('roles', 'RolesController@store');
-                Route::post('roles/permission', 'RolesController@storePermission');
+                Route::get('roles', [RolesController::class, 'edit']);
+                Route::put('roles', [RolesController::class, 'update']);
+                Route::post('roles', [RolesController::class, 'store']);
+                Route::post('roles/permission', [RolesController::class, 'storePermission']);
             });
 
             //Routen zur Rechteverwaltung
             Route::middleware('permission:edit settings')->group(function () {
-                Route::get('settings', 'SettingsController@module');
-                Route::get('settings/modul/{modul}', 'SettingsController@change_status');
+                Route::get('settings', [SettingsController::class, 'module']);
+                Route::get('settings/modul/{modul}', [SettingsController::class, 'change_status']);
             });
 
             Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
-                Route::get('showUser/{id}', 'UserController@loginAsUser');
+                Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
             });
 
             Route::get('logoutAsUser', function () {
@@ -180,25 +207,25 @@ Route::middleware('auth')->group(function () {
 
             //Elternratsbereich
             Route::middleware('permission:view elternrat')->group(function () {
-                Route::resource('elternrat', 'ElternratController');
-                Route::delete('elternrat/file/{file}', 'ElternratController@deleteFile');
-                Route::delete('elternrat/comment/{comment}', 'ElternratController@deleteComment');
-                Route::get('elternrat/add/file', 'ElternratController@addFile');
-                Route::post('elternrat/file', 'ElternratController@storeFile');
-                Route::post('beitrag/{discussion}/comment/create', 'ElternratController@storeComment');
-                Route::get('elternrat/discussion/create', 'ElternratController@create');
-                Route::post('elternrat/discussion', 'ElternratController@store');
-                Route::get('elternrat/discussion/edit/{discussion}', 'ElternratController@edit');
-                Route::put('elternrat/discussion/{discussion}', 'ElternratController@update');
+                Route::resource('elternrat', ElternratController::class);
+                Route::delete('elternrat/file/{file}', [ElternratController::class, 'deleteFile']);
+                Route::delete('elternrat/comment/{comment}', [ElternratController::class, 'deleteComment']);
+                Route::get('elternrat/add/file', [ElternratController::class, 'addFile']);
+                Route::post('elternrat/file', [ElternratController::class, 'storeFile']);
+                Route::post('beitrag/{discussion}/comment/create', [ElternratController::class, 'storeComment']);
+                Route::get('elternrat/discussion/create', [ElternratController::class, 'create']);
+                Route::post('elternrat/discussion', [ElternratController::class, 'store']);
+                Route::get('elternrat/discussion/edit/{discussion}', [ElternratController::class, 'edit']);
+                Route::put('elternrat/discussion/{discussion}', [ElternratController::class, 'update']);
             });
         });
 
         //Feedback
-        Route::get('feedback', 'FeedbackController@show');
-        Route::post('feedback', 'FeedbackController@send');
+        Route::get('feedback', [FeedbackController::class, 'show']);
+        Route::post('feedback', [FeedbackController::class, 'send']);
 
-        Route::get('password/expired', 'Auth\ExpiredPasswordController@expired')
+        Route::get('password/expired', [Auth\ExpiredPasswordController::class, 'expired'])
             ->name('password.expired');
-        Route::post('password/post_expired', 'Auth\ExpiredPasswordController@postExpired')
+        Route::post('password/post_expired', [Auth\ExpiredPasswordController::class, 'postExpired'])
             ->name('password.post_expired');
     });
