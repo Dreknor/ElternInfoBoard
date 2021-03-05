@@ -29,7 +29,6 @@ class Rueckmeldungen extends Model
      * @var array
      */
 
-
     /**
      * @var array
      */

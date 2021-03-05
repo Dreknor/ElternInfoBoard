@@ -18,6 +18,7 @@ class krankmeldungen extends Model
     {
         return $this->belongsTo(User::class, 'users_id');
     }
+
     protected $casts = [
         'start' => 'datetime',
         'ende' => 'datetime',

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Requests\StoreListeTerminRequest;
 use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
@@ -11,6 +10,7 @@ use App\Model\listen_termine;
 use App\Notifications\Push;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
