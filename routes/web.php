@@ -14,10 +14,7 @@
 Auth::routes();
 Route::get('image/{media_id}', 'ImageController@getImage');
 
-Route::group([
-    'middleware' => ['auth'],
-],
-    function () {
+Route::middleware('auth')->group(function () {
         Route::middleware(['password_expired'])->group(function () {
             Route::get('settings/scan', 'FileController@showScan')->middleware('can:scan files');
             Route::delete('settings/removeFiles', 'FileController@removeOldFiles')->middleware('can:scan files');
@@ -135,7 +132,7 @@ Route::group([
 
             //Routen für Benutzerverwaltung
 
-            Route::group(['middleware' => ['permission:edit user|import user']], function () {
+            Route::middleware('permission:edit user|import user')->group(function () {
                 Route::get('email/{daily}/{id?}', 'NachrichtenController@email');
                 /*             Route::get('email/daily', 'NachrichtenController@emailDaily');
                 */
@@ -156,7 +153,7 @@ Route::group([
             Route::post('/groups', 'GroupsController@store')->middleware(['permission:view groups']);
 
             //Routen zur Rechteverwaltung
-            Route::group(['middleware' => ['permission:edit permission']], function () {
+            Route::middleware('permission:edit permission')->group(function () {
                 Route::get('roles', 'RolesController@edit');
                 Route::put('roles', 'RolesController@update');
                 Route::post('roles', 'RolesController@store');
@@ -164,7 +161,7 @@ Route::group([
             });
 
             //Routen zur Rechteverwaltung
-            Route::group(['middleware' => ['permission:edit settings']], function () {
+            Route::middleware('permission:edit settings')->group(function () {
                 Route::get('settings', 'SettingsController@module');
                 Route::get('settings/modul/{modul}', 'SettingsController@change_status');
             });
@@ -182,7 +179,7 @@ Route::group([
             });
 
             //Elternratsbereich
-            Route::group(['middleware' => ['permission:view elternrat']], function () {
+            Route::middleware('permission:view elternrat')->group(function () {
                 Route::resource('elternrat', 'ElternratController');
                 Route::delete('elternrat/file/{file}', 'ElternratController@deleteFile');
                 Route::delete('elternrat/comment/{comment}', 'ElternratController@deleteComment');
