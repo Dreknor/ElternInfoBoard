@@ -25,9 +25,20 @@ class editUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'  => 'required|string|unique:users,id,'.\auth()->user()->id,
-            'email'  => 'required|email|unique:users,id,'.\auth()->user()->id,
-            'benachrichtigung' => 'required|in:weekly,daily',
+            'name'  => [
+                'required',
+                'string',
+                'unique:users,id,'.\auth()->user()->id,
+            ],
+            'email'  => [
+                'required',
+                'email',
+                'unique:users,id,'.\auth()->user()->id,
+            ],
+            'benachrichtigung' => [
+                'required',
+                'in:weekly,daily',
+            ],
 
         ];
     }

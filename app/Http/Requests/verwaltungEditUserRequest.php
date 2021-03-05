@@ -25,9 +25,20 @@ class verwaltungEditUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'  => 'required|string|unique:users,id,'.$this->user->id,
-            'email'  => 'required|email|unique:users,id,'.$this->user->id,
-            'benachrichtigung' => 'required|in:weekly,daily',
+            'name'  => [
+                'required',
+                'string',
+                'unique:users,id,'.$this->user->id,
+            ],
+            'email'  => [
+                'required',
+                'email',
+                'unique:users,id,'.$this->user->id,
+            ],
+            'benachrichtigung' => [
+                'required',
+                'in:weekly,daily',
+            ],
 
         ];
     }

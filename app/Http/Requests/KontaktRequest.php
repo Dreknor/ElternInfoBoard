@@ -24,8 +24,13 @@ class KontaktRequest extends FormRequest
     public function rules()
     {
         return [
-            'text' => 'required|string',
-            'mitarbeiter' => 'present',
+            'text' => [
+                'required',
+                'string',
+            ],
+            'mitarbeiter' => [
+                'present',
+            ],
         ];
     }
 }

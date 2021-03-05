@@ -24,9 +24,18 @@ class StoreListeTerminRequest extends FormRequest
     public function rules()
     {
         return [
-            'termin'    => 'required|date',
-            'zeit'    => 'required|date_format:H:i',
-            'comment'   => 'string|nullable',
+            'termin'    => [
+                'required',
+                'date',
+            ],
+            'zeit'    => [
+                'required',
+                'date_format:H:i',
+            ],
+            'comment'   => [
+                'string',
+                'nullable',
+            ],
         ];
     }
 }

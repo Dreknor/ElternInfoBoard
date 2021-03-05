@@ -24,9 +24,17 @@ class createRueckmeldungRequest extends FormRequest
     public function rules()
     {
         return [
-            'ende'  => 'required|date',
-            'empfaenger'    => 'required|email',
-            'text'  => 'required',
+            'ende'  => [
+                'required',
+                'date',
+            ],
+            'empfaenger'    => [
+                'required',
+                'email',
+            ],
+            'text'  => [
+                'required',
+            ],
         ];
     }
 }

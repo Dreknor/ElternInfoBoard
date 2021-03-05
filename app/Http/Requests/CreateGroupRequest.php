@@ -24,9 +24,17 @@ class CreateGroupRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string',
-            'bereich' => 'nullable|alpha_dash',
-            'protected' => 'sometimes',
+            'name' => [
+                'required',
+                'string',
+            ],
+            'bereich' => [
+                'nullable',
+                'alpha_dash',
+            ],
+            'protected' => [
+                'sometimes',
+            ],
         ];
     }
 }

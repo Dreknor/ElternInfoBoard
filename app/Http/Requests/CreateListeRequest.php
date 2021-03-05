@@ -24,12 +24,30 @@ class CreateListeRequest extends FormRequest
     public function rules()
     {
         return [
-            'listenname'    => 'required|string',
-            'type'          => 'required|in:termin,eintrag',
-            'visible_for_all'   => 'required|boolean',
-            'multiple'   => 'required|boolean',
-            'active'        => 'required|boolean',
-            'ende'          => 'required|date',
+            'listenname'    => [
+                'required',
+                'string',
+            ],
+            'type'          => [
+                'required',
+                'in:termin,eintrag',
+            ],
+            'visible_for_all'   => [
+                'required',
+                'boolean',
+            ],
+            'multiple'   => [
+                'required',
+                'boolean',
+            ],
+            'active'        => [
+                'required',
+                'boolean',
+            ],
+            'ende'          => [
+                'required',
+                'date',
+            ],
             ];
     }
 }
