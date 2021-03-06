@@ -27,7 +27,6 @@ class UserRueckmeldung extends Mailable
         $this->name = $Rueckmeldung['name'];
         $this->text = $Rueckmeldung['text'];
         $this->subject = $Rueckmeldung['subject'];
-
     }
 
     /**
@@ -37,14 +36,13 @@ class UserRueckmeldung extends Mailable
      */
     public function build()
     {
-
         return $this
             ->from(
                 config('mail.from.address'),
                 config('mail.from.name')
             )
-            ->replyTo($this->email,$this->name)
+            ->replyTo($this->email, $this->name)
            ->subject($this->subject)
-            ->view('emails.userRueckmeldung')->with(["text"  => $this->text]);
+            ->view('emails.userRueckmeldung')->with(['text'  => $this->text]);
     }
 }

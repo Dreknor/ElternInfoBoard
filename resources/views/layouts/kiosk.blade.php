@@ -13,7 +13,7 @@
 
     <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
     @stack('header')
-    <title>{{env('app_name')}}</title>
+    <title>{{config('app.name')}}</title>
 
 
     <!-- CSS Files -->

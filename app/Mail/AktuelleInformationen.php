@@ -3,9 +3,9 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class AktuelleInformationen extends Mailable
 {
@@ -35,10 +35,10 @@ class AktuelleInformationen extends Mailable
     public function build()
     {
         return $this->subject('Aktuelle Informationen')
-            ->view('emails.nachrichten',[
-            "nachrichten" => $this->news,
-            "name"      => $this->name,
-            "discussionen"  => $this->diskussionen
+            ->view('emails.nachrichten', [
+            'nachrichten' => $this->news,
+            'name'      => $this->name,
+            'discussionen'  => $this->diskussionen,
         ]);
     }
 }

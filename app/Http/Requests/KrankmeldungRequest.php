@@ -24,10 +24,22 @@ class KrankmeldungRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string',
-            'kommentar' => 'required|string',
-            'start' => 'required|date_format:Y-m-d',
-            'ende' => 'required|date_format:Y-m-d',
+            'name' => [
+                'required',
+                'string',
+            ],
+            'kommentar' => [
+                'required',
+                'string',
+            ],
+            'start' => [
+                'required',
+                'date_format:Y-m-d',
+            ],
+            'ende' => [
+                'required',
+                'date_format:Y-m-d',
+            ],
         ];
     }
 }

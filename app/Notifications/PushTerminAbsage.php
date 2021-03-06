@@ -1,22 +1,25 @@
 <?php
 
 namespace App\Notifications;
+
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
-class PushTerminAbsage extends Notification{
+class PushTerminAbsage extends Notification
+{
     use Queueable;
 
     public $body;
 
     public function __construct($body)
     {
-        $this->body =$body;
+        $this->body = $body;
     }
 
-    public function via($notifiable){
+    public function via($notifiable)
+    {
         return [WebPushChannel::class];
     }
 
@@ -29,7 +32,7 @@ class PushTerminAbsage extends Notification{
     public function toArray($notifiable)
     {
         return [
-            'created' => Carbon::now()->toIso8601String()
+            'created' => Carbon::now()->toIso8601String(),
         ];
     }
 
@@ -40,5 +43,4 @@ class PushTerminAbsage extends Notification{
             ->icon(asset('img/logo-small.png'))
             ->body($this->body);
     }
-
 }

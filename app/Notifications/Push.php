@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Notifications;
+
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
-class Push extends Notification{
+class Push extends Notification
+{
     use Queueable;
 
     public $body;
@@ -18,7 +20,8 @@ class Push extends Notification{
         $this->title = $title;
     }
 
-    public function via($notifiable){
+    public function via($notifiable)
+    {
         return [WebPushChannel::class];
     }
 
@@ -31,7 +34,7 @@ class Push extends Notification{
     public function toArray($notifiable)
     {
         return [
-            'created' => Carbon::now()->toIso8601String()
+            'created' => Carbon::now()->toIso8601String(),
         ];
     }
 
@@ -42,7 +45,6 @@ class Push extends Notification{
             ->icon(asset('img/logo-small.png'))
             ->body($this->body)
             //->action('Zeige Nachricht', url("#".$this->post->id))
-            ;
+;
     }
-
 }

@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Http\View\Composers;
-
 
 use App\Model\Losung;
 use Carbon\Carbon;
@@ -12,12 +10,10 @@ class LosungComposer
 {
     public function compose($view)
     {
-
-
         $expire = now()->diffInSeconds(now()->endOfDay());
 
-        $losung = Cache::remember('losung', $expire ,function (){
-            $losung= Losung::where('date', Carbon::today())->first();
+        $losung = Cache::remember('losung', $expire, function () {
+            $losung = Losung::where('date', Carbon::today())->first();
 
             return $losung;
         });

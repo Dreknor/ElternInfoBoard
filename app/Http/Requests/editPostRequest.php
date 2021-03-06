@@ -14,11 +14,9 @@ class editPostRequest extends FormRequest
      */
     public function authorize()
     {
-
         $posts = $this->route('posts');
 
-
-        if (auth()->user()->can('edit posts') or auth()->user()->id == $posts->author){
+        if (auth()->user()->can('edit posts') or auth()->user()->id == $posts->author) {
             return true;
         }
 
@@ -33,11 +31,21 @@ class editPostRequest extends FormRequest
     public function rules()
     {
         return [
-            'header'    => "required",
-            'news'      => "required",
-            'gruppen'   => "required",
-            'password'  => 'required_with:urgent',
-            'type'      => 'required'
+            'header'    => [
+                'required',
+            ],
+            'news'      => [
+                'required',
+            ],
+            'gruppen'   => [
+                'required',
+            ],
+            'password'  => [
+                'required_with:urgent',
+            ],
+            'type'      => [
+                'required',
+            ],
         ];
     }
 }

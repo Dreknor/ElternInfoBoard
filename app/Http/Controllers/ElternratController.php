@@ -6,11 +6,11 @@ use App\Http\Requests\createDiscussionRequest;
 use App\Model\Comment;
 use App\Model\Discussion;
 use App\Model\Group;
+use function GuzzleHttp\Promise\all;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\Models\Media;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use function GuzzleHttp\Promise\all;
 
 class ElternratController extends Controller
 {
@@ -18,6 +18,7 @@ class ElternratController extends Controller
     {
         $this->middleware(['permission:view elternrat']);
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -29,7 +30,6 @@ class ElternratController extends Controller
         $Group = Group::where('name', '=', 'Elternrat')->first();
         //$files = $Group->getMedia();
 
-
         //dd(config('app.directories_elternrat'));
 
         $user = Role::findByName('Elternrat');
@@ -38,10 +38,9 @@ class ElternratController extends Controller
         $permission = Permission::findByName('view elternrat');
         $userPermission = $permission->users;
 
-        foreach ($userPermission as $pushUser){
-           $user = $user->push($pushUser);
+        foreach ($userPermission as $pushUser) {
+            $user = $user->push($pushUser);
         }
-
 
         $themen->load('comments', 'comments.creator');
 
@@ -49,7 +48,7 @@ class ElternratController extends Controller
             'themen'    => $themen,
             'directories'     => config('app.directories_elternrat'),
             'users'     => $user->sortBy('name'),
-            'group'     => $Group
+            'group'     => $Group,
         ]);
     }
 
@@ -74,19 +73,17 @@ class ElternratController extends Controller
         $Discussion = new Discussion([
             'header'    => $request->header,
             'text'      => $request->text,
-            'owner'     => auth()->user()->id,
-            'sticky'    => $request->sticky
+            'owner'     => $request->user()->id,
+            'sticky'    => $request->sticky,
         ]);
 
         $Discussion->save();
 
-        return redirect(url('elternrat'))->with([
-            'type'  => "success",
-            'meldung'   => "Beitrag erstellt"
+        return redirect()->to(url('elternrat'))->with([
+            'type'  => 'success',
+            'meldung'   => 'Beitrag erstellt',
         ]);
     }
-
-
 
     /**
      * Show the form for editing the specified resource.
@@ -96,8 +93,8 @@ class ElternratController extends Controller
      */
     public function edit(Discussion $discussion)
     {
-        return  view("elternrat.editDiscussion", [
-            "beitrag"   => $discussion
+        return  view('elternrat.editDiscussion', [
+            'beitrag'   => $discussion,
         ]);
     }
 
@@ -111,9 +108,10 @@ class ElternratController extends Controller
     public function update(createDiscussionRequest $request, Discussion $discussion)
     {
         $discussion->update($request->all());
-        return redirect(url('elternrat'))->with([
-           'type'   => "success",
-           "Meldung"    =>  "Änderungen gespeichert"
+
+        return redirect()->to(url('elternrat'))->with([
+           'type'   => 'success',
+           'Meldung'    =>  'Änderungen gespeichert',
         ]);
     }
 
@@ -128,59 +126,61 @@ class ElternratController extends Controller
         //
     }
 
-    public function deleteFile(Media $file){
-
-        if (auth()->user()->can('delete elternrat file')){
+    public function deleteFile(Request $request, Media $file)
+    {
+        if ($request->user()->can('delete elternrat file')) {
             $file->delete();
 
             return response()->json([
-                "message"   => "Gelöscht"
+                'message'   => 'Gelöscht',
             ], 200);
         }
 
         return response()->json([
             [
-                "message"   => "Berechtigung fehlt"
-            ], 400
-        ]);
-
-    }
-
-    public function addFile(){
-        return view('elternrat.createFile',[
-            'groups'    => Group::all()
+                'message'   => 'Berechtigung fehlt',
+            ], 400,
         ]);
     }
 
-    public function storeFile(Request $request){
+    public function addFile()
+    {
+        return view('elternrat.createFile', [
+            'groups'    => Group::all(),
+        ]);
+    }
 
-            $gruppe = Group::where('name', "Elternrat")->first();
+    public function storeFile(Request $request)
+    {
+        $gruppe = Group::where('name', 'Elternrat')->first();
 
         if ($request->hasFile('files')) {
-                $gruppe->addMediaFromRequest('files')
+            $gruppe->addMediaFromRequest('files')
                     ->preservingOriginal()
                     ->toMediaCollection($request->directory);
         }
-        return redirect(url('elternrat'))->with([
-            "type"  => "success",
-            "Meldung"   => "Datei gespeichert"
+
+        return redirect()->to(url('elternrat'))->with([
+            'type'  => 'success',
+            'Meldung'   => 'Datei gespeichert',
         ]);
     }
 
-    public function storeComment(Discussion $discussion, Request $request){
-
-        if ($request->body != ""){
+    public function storeComment(Discussion $discussion, Request $request)
+    {
+        if ($request->body != '') {
             $discussion->comment([
-                'body' => $request->input('body')
-            ], auth()->user());
+                'body' => $request->input('body'),
+            ], $request->user());
         }
 
         return redirect()->back();
     }
 
-    public function deleteComment(Comment $comment){
+    public function deleteComment(Comment $comment)
+    {
         $comment->delete();
 
-        return response('Gelöscht', 200);
+        return response('Gelöscht');
     }
 }

@@ -24,6 +24,7 @@ class ValidCurrentUserPassword implements Rule
      * @param  mixed  $value
      * @return bool
      */
+
     /**
      * Determine if the validation rule passes.
      *

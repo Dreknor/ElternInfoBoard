@@ -13,7 +13,7 @@ class searchRequest extends FormRequest
      */
     public function authorize()
     {
-        return auth()->check();;
+        return auth()->check();
     }
 
     /**
@@ -24,7 +24,10 @@ class searchRequest extends FormRequest
     public function rules()
     {
         return [
-            'suche'    => "required|string"
+            'suche'    => [
+                'required',
+                'string',
+            ],
         ];
     }
 }

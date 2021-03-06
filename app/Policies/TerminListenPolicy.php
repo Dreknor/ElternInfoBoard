@@ -32,16 +32,13 @@ class TerminListenPolicy
         return auth()->user()->can('create terminliste');
     }
 
-    public function storeTerminToListe (User $user, Liste $liste){
+    public function storeTerminToListe(User $user, Liste $liste)
+    {
         return $liste->besitzer == $user->id or $user->can('edit terminliste');
     }
 
-    public function editListe (User $user, Liste $liste){
-
+    public function editListe(User $user, Liste $liste)
+    {
         return $liste->besitzer == $user->id or $user->can('edit terminliste');
     }
-
-
-
-
 }

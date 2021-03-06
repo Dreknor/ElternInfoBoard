@@ -22,7 +22,7 @@
                                 Ihr Passwort muss geändert werden
                             </div>
                             <form class="form-horizontal" method="POST" action="{{ route('password.post_expired') }}">
-                                {{ csrf_field() }}
+                                @csrf
 
                                 <div class="form-group{{ $errors->has('current_password') ? ' has-error' : '' }}">
                                     <label for="current_password" class="col-md-4 control-label">aktuelles Passwort</label>

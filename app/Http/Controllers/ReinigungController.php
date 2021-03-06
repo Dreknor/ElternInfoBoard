@@ -19,18 +19,17 @@ class ReinigungController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $datum = Carbon::now()->startOfWeek()->startOfDay();
         $ende = Carbon::createFromFormat('d.m', '30.8');
 
-
-        if ($datum->month > 6){
+        if ($datum->month > 6) {
             $ende->addYear();
         }
 
-        if (!$user->can('edit reinigung') and !$user->can('view reinigung')){
+        if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
         } else {
@@ -39,20 +38,20 @@ class ReinigungController extends Controller
 
         $Reinigung = [];
 
-        foreach ($Bereiche as $Bereich){
+        foreach ($Bereiche as $Bereich) {
             $Reinigung[$Bereich] = Reinigung::query()
                 ->where('bereich', $Bereich)
-                ->whereDate('datum', '>=',$datum)
+                ->whereDate('datum', '>=', $datum)
                 ->orderBy('datum')
                 ->get();
         }
 
-        return view('reinigung.show',[
-            "Bereiche"  => $Bereiche,
+        return view('reinigung.show', [
+            'Bereiche'  => $Bereiche,
             'Familien' => $Reinigung,
-            "datum"     => $datum,
-            "user"      => $user,
-            "ende"      => $ende,
+            'datum'     => $datum,
+            'user'      => $user,
+            'ende'      => $ende,
         ]);
     }
 
@@ -61,47 +60,42 @@ class ReinigungController extends Controller
      *
      * @return RedirectResponse
      */
-    public function create($Bereich, $Datum)
+    public function create(Request $request, $Bereich, $Datum)
     {
-
-        if (!auth()->user()->can('edit reinigung')) {
+        if (! $request->user()->can('edit reinigung')) {
             return redirect()->back()->with([
-                'type'  => "danger",
-                'Meldung'   => "Berechtigung fehlt"
+                'type'  => 'danger',
+                'Meldung'   => 'Berechtigung fehlt',
             ]);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $datum = Carbon::createFromFormat('Ymd', $Datum)->startOfWeek()->startOfDay();
         $ende = $datum->endOfWeek()->endOfDay();
 
-       $newusers = User::whereHas('groups', function ($query) use ($Bereich) {
-           $query->where('bereich', '=', $Bereich);
-       })->get();
+        $newusers = User::whereHas('groups', function ($query) use ($Bereich) {
+            $query->where('bereich', '=', $Bereich);
+        })->get();
 
-       $newusers = $newusers->sortBy('familie_name');
+        $newusers = $newusers->sortBy('familie_name');
 
         $Reinigung = [];
 
-            $Reinigung = Reinigung::query()
+        $Reinigung = Reinigung::query()
                 ->where('bereich', $Bereich)
-                ->whereDate('datum', '>=',$datum->copy()->subWeek())
+                ->whereDate('datum', '>=', $datum->copy()->subWeek())
                 ->orderBy('datum')
                 ->get();
 
+        $Aufgaben = config('reinigung.aufgaben');
 
-
-            $Aufgaben = config('reinigung.aufgaben');
-
-
-
-        return view('reinigung.edit',[
-            "Bereich"  => $Bereich,
+        return view('reinigung.edit', [
+            'Bereich'  => $Bereich,
             'Familien' => $Reinigung,
-            "datum"     => $datum,
-            "ende"      => $ende,
-            "users"     => $newusers,
-            "aufgaben"  => $Aufgaben
+            'datum'     => $datum,
+            'ende'      => $ende,
+            'users'     => $newusers,
+            'aufgaben'  => $Aufgaben,
         ]);
     }
 
@@ -113,96 +107,71 @@ class ReinigungController extends Controller
      */
     public function store($Bereich, Request $request)
     {
-        $Datum = Carbon::createFromFormat('d.m.Y',$request->input('datum'));
+        $Datum = Carbon::createFromFormat('d.m.Y', $request->input('datum'));
 
         $Reinigung = Reinigung::where('bereich', $Bereich)->whereDate('datum', $Datum)->get();
-        if (count($Reinigung)>1){
+        if (count($Reinigung) > 1) {
             $Reinigung_Fam1 = $Reinigung->first();
             $Reinigung_Fam2 = $Reinigung->last();
 
-            if (isset($request->usersID_first) and isset($request->aufgabe_first)){
-                $Reinigung_Fam1->users_id  = $request->input('usersID_first');
-                $Reinigung_Fam1->aufgabe  = $request->input('aufgabe_first');
+            if (isset($request->usersID_first) and isset($request->aufgabe_first)) {
+                $Reinigung_Fam1->users_id = $request->input('usersID_first');
+                $Reinigung_Fam1->aufgabe = $request->input('aufgabe_first');
                 $Reinigung_Fam1->save();
-
             } else {
                 $Reinigung_Fam1->delete();
             }
 
-            if (isset($request->usersID_last) and isset($request->aufgabe_last)){
-                $Reinigung_Fam2->users_id  = $request->input('usersID_last');
-                $Reinigung_Fam2->aufgabe  = $request->input('aufgabe_last');
+            if (isset($request->usersID_last) and isset($request->aufgabe_last)) {
+                $Reinigung_Fam2->users_id = $request->input('usersID_last');
+                $Reinigung_Fam2->aufgabe = $request->input('aufgabe_last');
 
                 $Reinigung_Fam2->save();
-
             } else {
                 $Reinigung_Fam2->delete();
             }
-
-
-
-        } elseif (count($Reinigung)==1){
-
+        } elseif (count($Reinigung) == 1) {
             $Reinigung_Fam1 = $Reinigung->first();
 
-            if (isset($request->usersID_first) and isset($request->aufgabe_first)){
-                $Reinigung_Fam1->users_id  = $request->input('usersID_first');
-                $Reinigung_Fam1->aufgabe  = $request->input('aufgabe_first');
+            if (isset($request->usersID_first) and isset($request->aufgabe_first)) {
+                $Reinigung_Fam1->users_id = $request->input('usersID_first');
+                $Reinigung_Fam1->aufgabe = $request->input('aufgabe_first');
                 $Reinigung_Fam1->save();
-
             } else {
                 $Reinigung_Fam1->delete();
             }
 
-            if (isset($request->usersID_last) and isset($request->aufgabe_last)){
-
+            if (isset($request->usersID_last) and isset($request->aufgabe_last)) {
                 $Reinigung_Fam2 = new Reinigung();
-                $Reinigung_Fam2->users_id  = $request->input('usersID_last');
-                $Reinigung_Fam2->aufgabe  = $request->input('aufgabe_last');
-                $Reinigung_Fam2->bereich  = $Bereich;
-                $Reinigung_Fam2->datum  = $Datum;
+                $Reinigung_Fam2->users_id = $request->input('usersID_last');
+                $Reinigung_Fam2->aufgabe = $request->input('aufgabe_last');
+                $Reinigung_Fam2->bereich = $Bereich;
+                $Reinigung_Fam2->datum = $Datum;
                 $Reinigung_Fam2->save();
             }
-
-
-
-
-
-
-
-
         } else {
-
-            if (isset($request->usersID_first) and isset($request->aufgabe_first)){
+            if (isset($request->usersID_first) and isset($request->aufgabe_first)) {
                 $Reinigung_Fam1 = new Reinigung();
-                $Reinigung_Fam1->users_id  = $request->input('usersID_first');
-                $Reinigung_Fam1->aufgabe  = $request->input('aufgabe_first');
-                $Reinigung_Fam1->bereich  = $Bereich;
-                $Reinigung_Fam1->datum  = $Datum;
+                $Reinigung_Fam1->users_id = $request->input('usersID_first');
+                $Reinigung_Fam1->aufgabe = $request->input('aufgabe_first');
+                $Reinigung_Fam1->bereich = $Bereich;
+                $Reinigung_Fam1->datum = $Datum;
                 $Reinigung_Fam1->save();
-
             }
 
-            if (isset($request->usersID_last) and isset($request->aufgabe_last)){
-
+            if (isset($request->usersID_last) and isset($request->aufgabe_last)) {
                 $Reinigung_Fam2 = new Reinigung();
-                $Reinigung_Fam2->users_id  = $request->input('usersID_last');
-                $Reinigung_Fam2->aufgabe  = $request->input('aufgabe_last');
-                $Reinigung_Fam2->bereich  = $Bereich;
-                $Reinigung_Fam2->datum  = $Datum;
+                $Reinigung_Fam2->users_id = $request->input('usersID_last');
+                $Reinigung_Fam2->aufgabe = $request->input('aufgabe_last');
+                $Reinigung_Fam2->bereich = $Bereich;
+                $Reinigung_Fam2->datum = $Datum;
                 $Reinigung_Fam2->save();
             }
-
-
-
         }
 
-        return redirect(url('reinigung'))->with([
-            'type'  => "success",
-            'Meldung'   => "Plan aktualisiert"
+        return redirect()->to(url('reinigung'))->with([
+            'type'  => 'success',
+            'Meldung'   => 'Plan aktualisiert',
         ]);
-
     }
-
-
 }

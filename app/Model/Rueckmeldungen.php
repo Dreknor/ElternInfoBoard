@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Rueckmeldungen
- * @package App\Model
  */
 class Rueckmeldungen extends Model
 {
@@ -15,12 +14,12 @@ class Rueckmeldungen extends Model
     /**
      * @var string
      */
-    protected $table = "rueckmeldungen";
+    protected $table = 'rueckmeldungen';
 
     /**
      * @var array
      */
-    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht','type', 'commentable'];
+    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable'];
     /**
      * @var array
      */
@@ -29,30 +28,29 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $dates = ['created_at', 'updated_at', 'ende'];
 
     /**
      * @var array
      */
     protected $casts = [
-        'pflicht' => "boolean",
-        'commentable' => "boolean",
+        'ende' => 'datetime',
+        'pflicht' => 'boolean',
+        'commentable' => 'boolean',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function post(){
+    public function post()
+    {
         return $this->belongsTo(Post::class, 'post_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function userRueckmeldungen () {
+    public function userRueckmeldungen()
+    {
         return $this->hasMany(UserRueckmeldungen::class, 'post_id', 'post_id');
     }
-
-
-
 }

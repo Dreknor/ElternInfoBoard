@@ -16,11 +16,11 @@ class Discussion extends Model
 
     protected $fillable = ['header', 'text', 'owner', 'sticky'];
     protected $casts = [
-        'sticky'    => 'boolean'
+        'sticky'    => 'boolean',
     ];
 
-    public function author(){
+    public function author()
+    {
         return $this->hasOne(User::class, 'id', 'owner');
     }
-
 }

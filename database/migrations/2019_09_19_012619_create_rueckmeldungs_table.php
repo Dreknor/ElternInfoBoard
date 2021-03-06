@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateRueckmeldungsTable extends Migration
 {
@@ -23,7 +23,6 @@ class CreateRueckmeldungsTable extends Migration
             $table->softDeletes();
 
             $table->foreign('post_id')->references('id')->on('posts');
-
         });
     }
 

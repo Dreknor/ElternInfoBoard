@@ -24,8 +24,14 @@ class PasswordExpiredRequest extends FormRequest
     public function rules()
     {
         return [
-            'current_password' => 'required',
-            'password' => 'required|confirmed|min:6',
+            'current_password' => [
+                'required',
+            ],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:6',
+            ],
         ];
     }
 }

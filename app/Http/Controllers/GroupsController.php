@@ -14,29 +14,30 @@ class GroupsController extends Controller
         $this->middleware(['permission:view groups']);
     }
 
-    public function index(){
-        $groups = Cache::remember('groups', 60*5, function (){
+    public function index()
+    {
+        $groups = Cache::remember('groups', 60 * 5, function () {
             return Group::with('users')->get();
         });
 
         return view('groups.index')->with([
-            'groups'=> $groups
+            'groups'=> $groups,
         ]);
     }
 
-
-    public function store(CreateGroupRequest $createGroupRequest){
+    public function store(CreateGroupRequest $createGroupRequest)
+    {
         $group = new Group($createGroupRequest->validated());
         $group->save();
 
         Cache::forget('groups');
-        Cache::remember('groups', 60*5, function (){
+        Cache::remember('groups', 60 * 5, function () {
             return Group::all();
         });
-        return redirect()->back()->with([
-            'type'  => "success",
-            'Meldung'   => "Gruppe wurde erstellt"
-        ]);
 
+        return redirect()->back()->with([
+            'type'  => 'success',
+            'Meldung'   => 'Gruppe wurde erstellt',
+        ]);
     }
 }

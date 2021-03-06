@@ -7,6 +7,7 @@ use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -17,13 +18,12 @@ class KrankmeldungenController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
+        $krankmeldungen = $request->user()->krankmeldungen;
 
-        $krankmeldungen = auth()->user()->krankmeldungen;
-
-            return view('krankmeldung.index', [
-                'krankmeldungen' => $krankmeldungen
+        return view('krankmeldung.index', [
+                'krankmeldungen' => $krankmeldungen,
             ]);
     }
 
@@ -31,31 +31,28 @@ class KrankmeldungenController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     *
      */
     public function store(KrankmeldungRequest $request)
     {
-
         $krankmeldung = new krankmeldungen();
         $krankmeldung->fill($request->validated());
         $krankmeldung->users_id = auth()->id();
         $krankmeldung->save();
 
         Mail::to(config('mail.from.address'))
-            ->cc(auth()->user()->email)
-            ->queue(new krankmeldung(auth()->user()->email, auth()->user()->name, $request->name, Carbon::createFromFormat('Y-m-d',$request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d',$request->ende)->format('d.m.Y'), $request->kommentar));
+            ->cc($request->user()->email)
+            ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar));
 
         return redirect()->back()->with([
-            'type' => "success",
-            'Meldung'   => "Krankmeldung wurde gespeichert"
+            'type' => 'success',
+            'Meldung'   => 'Krankmeldung wurde gespeichert',
         ]);
-
     }
 
-    public function dailyReport(){
-
-        $krankmeldungen = krankmeldungen::where('start','<=',Carbon::now()->format('Y-m-d'))
-            ->where('ende','>=',Carbon::now()->format('Y-m-d'))
+    public function dailyReport()
+    {
+        $krankmeldungen = krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
+            ->where('ende', '>=', Carbon::now()->format('Y-m-d'))
             ->get();
 
         Mail::to(config('mail.from.address'))

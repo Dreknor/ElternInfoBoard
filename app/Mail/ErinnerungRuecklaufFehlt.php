@@ -15,6 +15,7 @@ class ErinnerungRuecklaufFehlt extends Mailable
     public $name;
     public $thema;
     public $ende;
+
     /**
      * Create a new message instance.
      *
@@ -38,9 +39,9 @@ class ErinnerungRuecklaufFehlt extends Mailable
         return $this
             ->subject('Rückmeldung fehlt: '.$this->thema)
             ->view('emails.rueckmeldungFehlt')->with([
-                "name"  => $this->name,
-                "thema"  => $this->thema,
-                "ende"  => $this->ende
+                'name'  => $this->name,
+                'thema'  => $this->thema,
+                'ende'  => $this->ende,
             ]);
     }
 }

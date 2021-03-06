@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateUsersTable extends Migration
 {
@@ -24,8 +24,8 @@ class CreateUsersTable extends Migration
         });
 
         \Illuminate\Support\Facades\DB::table('users')->insert([
-            'name'=>env('MAIL_FROM_NAME') ,
-            'email'=>env('MAIL_FROM_ADDRESS') ,
+            'name'=>env('MAIL_FROM_NAME'),
+            'email'=>env('MAIL_FROM_ADDRESS'),
             'password'=> \Illuminate\Support\Facades\Hash::make(\Carbon\Carbon::now()->format('dmY')),
             'created_at' => \Carbon\Carbon::now(),
             'updated_at' => \Carbon\Carbon::now(),

@@ -15,7 +15,7 @@ class AddPermissionScan extends Migration
     {
         \Illuminate\Support\Facades\DB::table('permissions')->insert([
             'name'  => 'scan files',
-            'guard_name'    => 'web'
+            'guard_name'    => 'web',
         ]);
     }
 

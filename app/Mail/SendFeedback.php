@@ -3,9 +3,9 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class SendFeedback extends Mailable
 {
@@ -23,7 +23,6 @@ class SendFeedback extends Mailable
     {
         $this->text = $text;
         $this->data = $data;
-
     }
 
     /**
@@ -33,20 +32,19 @@ class SendFeedback extends Mailable
      */
     public function build()
     {
-
-        $Mail= $this
+        $Mail = $this
             ->from(config('mail.from.address'),
                config('mail.from.name')
             )
             ->replyTo(auth()->user()->email, auth()->user()->name)
             ->subject('Kontaktformular vom '.config('app.name'))
             ->view('emails.feedback')->with([
-                "text"  => $this->text,
-                'from'  =>  auth()->user()->name
+                'text'  => $this->text,
+                'from'  =>  auth()->user()->name,
             ]);
 
-        if (count($this->data)>0){
-            foreach ($this->data as $file){
+        if (count($this->data) > 0) {
+            foreach ($this->data as $file) {
                 $Mail->attach($file['document']->getRealPath(),
                     [
                         'as' => $file['document']->getClientOriginalName(),

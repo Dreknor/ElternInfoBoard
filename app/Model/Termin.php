@@ -8,22 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Spatie\CalendarLinks\Link;
 
-
 class Termin extends Model
 {
-    protected $table='termine';
+    protected $table = 'termine';
 
     protected $fillable = ['start', 'ende', 'terminname', 'fullDay'];
     protected $visible = ['start', 'ende', 'terminname', 'fullDay'];
 
-    protected $dates = ['creted_at', 'updated_at', 'start', 'ende'];
-
     protected $casts = [
-        'fullDay' => "boolean"
+        'creted_at' => 'datetime',
+        'start' => 'datetime',
+        'ende' => 'datetime',
+        'fullDay' => 'boolean',
     ];
 
-    public function getfullDayAttribute($value){
-        if (is_null($value) or $value = false){
+    public function getfullDayAttribute($value)
+    {
+        if (is_null($value) or $value = false) {
             return false;
         }
 
@@ -49,16 +50,14 @@ class Termin extends Model
         });
     }
 
-    public function link(){
-
-        if ($this->fullDay  == 1){
-                $ende = $this->ende->addDay();
+    public function link()
+    {
+        if ($this->fullDay == 1) {
+            $ende = $this->ende->addDay();
 
             return Link::create($this->terminname, $this->start, $ende, $this->fullDay);
-
         }
 
         return Link::create($this->terminname, $this->start, $this->ende, $this->fullDay);
     }
-
 }

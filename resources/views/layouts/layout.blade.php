@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
     @stack('header')
-    <title>{{env('app_name')}}</title>
+    <title>{{config('app.name')}}</title>
 
 
     <!-- CSS Files -->
@@ -29,7 +29,7 @@
         <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent">
             <div class="container-fluid">
                 <div class="navbar-wrapper">
-                    <a class="navbar-brand" href="{{url('/')}}">{{env('APP_NAME')}}</a>
+                    <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
                 </div>
             </div>
         </nav>

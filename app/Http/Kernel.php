@@ -67,7 +67,6 @@ class Kernel extends HttpKernel
         'password_expired' => \App\Http\Middleware\PasswordExpired::class,
         'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
 
-
     ];
 
     /**

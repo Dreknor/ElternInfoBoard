@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreatePermissionTables extends Migration
 {
@@ -35,7 +35,7 @@ class CreatePermissionTables extends Migration
 
             $table->string('model_type');
             $table->unsignedBigInteger($columnNames['model_morph_key']);
-            $table->index([$columnNames['model_morph_key'], 'model_type', ]);
+            $table->index([$columnNames['model_morph_key'], 'model_type']);
 
             $table->foreign('permission_id')
                 ->references('id')
@@ -51,7 +51,7 @@ class CreatePermissionTables extends Migration
 
             $table->string('model_type');
             $table->unsignedBigInteger($columnNames['model_morph_key']);
-            $table->index([$columnNames['model_morph_key'], 'model_type', ]);
+            $table->index([$columnNames['model_morph_key'], 'model_type']);
 
             $table->foreign('role_id')
                 ->references('id')
@@ -82,191 +82,188 @@ class CreatePermissionTables extends Migration
         \Illuminate\Support\Facades\DB::table($tableNames['permissions'])->insert([
             [
                 'name'  => 'edit permission',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'edit user',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'create posts',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view all',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'edit posts',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'upload files',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'import user',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'release posts',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'use scriptTag',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view elternrat',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'send urgent message',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'edit reinigung',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'upload great files',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'edit termin',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'edit terminliste',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'create terminliste',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view protected',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'add changelog',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'set password',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'make sticky',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view reinigung',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'delete elternrat file',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view rueckmeldungen',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'download schickzeiten',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'edit schickzeiten',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view schickzeiten',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view krankmeldung',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view groups',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'view mitarbeiterboard',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
             [
                 'name'  => 'loginAsUser',
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ],
         ]);
 
         \Illuminate\Support\Facades\DB::table($tableNames['roles'])->insert([
             [
-                "name"=>"Administrator",
-                "guard_name"    => "web"
+                'name'=>'Administrator',
+                'guard_name'    => 'web',
             ],
             [
-                "name"=>"Mitarbeiter",
-                "guard_name"    => "web"
+                'name'=>'Mitarbeiter',
+                'guard_name'    => 'web',
             ],
             [
-                "name"=>"Elternrat",
-                "guard_name"    => "web"
+                'name'=>'Elternrat',
+                'guard_name'    => 'web',
             ],
             [
-                "name"=>"Sekretariat",
-                "guard_name"    => "web"
-            ]
+                'name'=>'Sekretariat',
+                'guard_name'    => 'web',
+            ],
         ]);
-
 
         \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
             [
            'permission_id' => 1,
-            'model_type'    => 'App\Model\User',
-            'model_id'  => 1],
+            'model_type'    => \App\Model\User::class,
+            'model_id'  => 1, ],
             [
            'permission_id' => 2,
-            'model_type'    => 'App\Model\User',
-            'model_id'  => 1
+            'model_type'    => \App\Model\User::class,
+            'model_id'  => 1,
             ],
         ]);
-
 
         \Illuminate\Support\Facades\DB::table($tableNames['model_has_roles'])->insert([
             [
                 'role_id' => 1,
-                'model_type'    => 'App\Model\User',
-                'model_id'  => 1
+                'model_type'    => \App\Model\User::class,
+                'model_id'  => 1,
             ],
             [
                'role_id' => 2,
-                'model_type'    => 'App\Model\User',
-                'model_id'  => 1
+                'model_type'    => \App\Model\User::class,
+                'model_id'  => 1,
             ],
         ]);
 
         \Illuminate\Support\Facades\DB::table($tableNames['role_has_permissions'])->insert([
             [
            'permission_id' => 1,
-            'role_id'  => 1
+            'role_id'  => 1,
             ],
             [
             'permission_id' => 2,
-            'role_id'  => 1
+            'role_id'  => 1,
             ],
             [
             'permission_id' => 10,
-            'role_id'  => 3
+            'role_id'  => 3,
             ],
         ]);
 
         app('cache')
             ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
             ->forget(config('permission.cache.key'));
-
     }
 
     /**
