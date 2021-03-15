@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\LosungComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,7 +33,7 @@ class ComposerServiceProvider extends ServiceProvider
         );
 
         View::composer(
-            'include.losung', \App\Http\View\Composers\LosungComposer::class
+            'include.losung', LosungComposer::class
         );
 
         View::composer(

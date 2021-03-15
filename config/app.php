@@ -241,4 +241,7 @@ return [
 
     //Logo
     'logo' => env('APP_LOGO', 'logo.png'),
+
+    //Link Mitarbeiterboard - Benötigt für Vertretungsplan
+    'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
 ];
