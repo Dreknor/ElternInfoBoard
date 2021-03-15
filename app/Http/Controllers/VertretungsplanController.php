@@ -12,7 +12,7 @@ class VertretungsplanController extends Controller
     }
 
     public function index (){
-        $gruppen = "";
+        $gruppen = "keine";
         foreach (auth()->user()->groups as $group){
             $gruppen.="/".$group->name;
         }
