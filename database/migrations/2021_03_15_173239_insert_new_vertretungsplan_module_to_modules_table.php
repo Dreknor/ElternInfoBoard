@@ -13,7 +13,7 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
     public function up()
     {
         \Illuminate\Support\Facades\DB::table('permissions')->insert([
-            'name'  => 'view Vertretungsplan',
+            'name'  => 'view vertretungsplan',
             'guard_name'    => 'web',
         ]);
 
