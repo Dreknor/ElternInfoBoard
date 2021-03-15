@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
@@ -47,6 +48,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
         Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
         Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
+
+        //Vertretungsplan
+        Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
 
         //Datenschutz
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
