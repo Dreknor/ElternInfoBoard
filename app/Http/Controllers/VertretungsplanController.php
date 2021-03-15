@@ -14,8 +14,11 @@ class VertretungsplanController extends Controller
     public function index (){
         $gruppen = "";
 
-        foreach (auth()->user()->groups as $group){
-            $gruppen.="/".$group->name;
+        if (!auth()->user()->can('view vertretungsplan all')){
+            foreach (auth()->user()->groups as $group){
+                $gruppen.="/".$group->name;
+            }
+
         }
 
         return view('vertretungsplan.index', [
