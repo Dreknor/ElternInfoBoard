@@ -23,7 +23,8 @@
         "spatie/calendar-links": "^1.2",
         "spatie/laravel-medialibrary": "^7.5",
         "spatie/laravel-permission": "^3.4",
-        "staudenmeir/eloquent-has-many-deep": "^1.8"
+        "staudenmeir/eloquent-has-many-deep": "^1.8",
+        "laravel/ui": "^2.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.2",
