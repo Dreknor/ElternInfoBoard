@@ -237,16 +237,7 @@ return [
     ],
 
     //Odner des Elternrate
-    'directories_elternrat' => [
-        'Elternratssitzung',
-        'Satzung',
-        'Grundschule',
-        'Oberschule',
-        'Organisation',
-        'Schulgemeinschaftsrat',
-        'Schulleitertreffen',
-        'Vorstandssitzungen',
-    ],
+    'directories_elternrat' => explode(',',env('ELTERNRAT_DIRS', 'Allgemein,Protokolle')),
 
     //Logo
     'logo' => env('APP_LOGO', 'logo.png'),
