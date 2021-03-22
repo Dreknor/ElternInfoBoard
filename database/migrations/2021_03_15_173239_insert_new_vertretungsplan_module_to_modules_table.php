@@ -17,6 +17,11 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
             'guard_name'    => 'web',
         ]);
 
+        \Illuminate\Support\Facades\DB::table('permissions')->insert([
+            'name'  => 'view vertretungsplan all',
+            'guard_name'    => 'web',
+        ]);
+
         \Illuminate\Support\Facades\DB::table('settings')->insert([
             'setting'=> 'Vertretungsplan',
             'category'=> 'module',
@@ -30,9 +35,6 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
                         "link":"vertretungsplan",
                         "icon":"fas fa-columns"
                     },
-                "adm-nav":
-                    {
-                    }
             }',
             'created_at'=> \Carbon\Carbon::now()
     ]);
