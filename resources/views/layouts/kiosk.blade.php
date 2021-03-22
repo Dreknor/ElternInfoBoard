@@ -11,7 +11,7 @@
     <!--<meta http-equiv="refresh" content="7200">-->
     <meta http-equiv="refresh" content="{{$refresh}}">
 
-    <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{asset('img/'.config('app.favicon'))}}" type="image/x-icon">
     @stack('header')
     <title>{{config('app.name')}}</title>
 
