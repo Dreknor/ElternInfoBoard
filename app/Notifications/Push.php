@@ -42,9 +42,7 @@ class Push extends Notification
     {
         return (new WebPushMessage)
             ->title($this->title)
-            ->icon(asset('img/logo-small.png'))
-            ->body($this->body)
-            //->action('Zeige Nachricht', url("#".$this->post->id))
-;
+            ->icon(asset('img/'.config('app.favicon')))
+            ->body($this->body);
     }
 }

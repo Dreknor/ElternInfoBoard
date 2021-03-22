@@ -40,8 +40,8 @@ class PushNews extends Notification
     public function toWebPush($notifiable, $notification)
     {
         return (new WebPushMessage)
-            ->title('Neue Mitteilung im ElternInfoBoard')
-            ->icon(asset('img/logo-small.png'))
+            ->title('Neue Mitteilung im '.config('app.name'))
+            ->icon(asset('img/'.config('app.favicon')))
             ->body('Neue Mitteilung:'.$this->post->header)
             //->action('Zeige Nachricht', url("#".$this->post->id))
 ;

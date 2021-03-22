@@ -40,7 +40,7 @@ class PushTerminAbsage extends Notification
     {
         return (new WebPushMessage)
             ->title('Termin abgesagt')
-            ->icon(asset('img/logo-small.png'))
+            ->icon(asset('img/'.config('app.favicon')))
             ->body($this->body);
     }
 }
