@@ -22,10 +22,4 @@ class Collection extends BaseCollection
             ]
         );
     }
-
-
-
-
-
-
 }

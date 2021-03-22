@@ -6,15 +6,12 @@ use App\Model\Schickzeiten;
 use App\Observers\SchickzeitObserver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-
-use Illuminate\Support\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
-
-
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,22 +32,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        \Illuminate\Pagination\Paginator::useBootstrap();
+
+
         Schema::defaultStringLength(191);
 
-
-        setlocale(LC_TIME, "de_DE");
+        setlocale(LC_TIME, 'de_DE');
         Carbon::setLocale('de_DE');
-
 
         //ModelEventObserver
         Schickzeiten::observe(SchickzeitObserver::class);
-
-
-
-
-
-
-
 
         /**
          * Paginate a standard Laravel Collection.
@@ -61,8 +52,9 @@ class AppServiceProvider extends ServiceProvider
          * @param string $pageName
          * @return array
          */
-        Collection::macro('paginate', function($perPage, $total = null, $page = null, $pageName = 'page') {
+        Collection::macro('paginate', function ($perPage, $total = null, $page = null, $pageName = 'page') {
             $page = $page ?: LengthAwarePaginator::resolveCurrentPage($pageName);
+
             return new LengthAwarePaginator(
                 $this->forPage($page, $perPage),
                 $total ?: $this->count(),
@@ -74,7 +66,6 @@ class AppServiceProvider extends ServiceProvider
                 ]
             );
         });
-
 
         Builder::macro('whereLike', function ($attributes, string $searchTerm) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
@@ -127,7 +118,7 @@ class AppServiceProvider extends ServiceProvider
             }, SORT_REGULAR, $order == SORT_DESC);
         });
 
-        if (!Collection::hasMacro('sortByMulti')) {
+        if (! Collection::hasMacro('sortByMulti')) {
             /**
              * An extension of the {@see Collection::sortBy()} method that allows for sorting against as many different
              * keys. Uses a combination of {@see Collection::sortBy()} and {@see Collection::groupBy()} to achieve this.
@@ -150,6 +141,7 @@ class AppServiceProvider extends ServiceProvider
                     $sort = $keys[$currentIndex]['sort'];
                     $sortFunc = $sort === 'DESC' ? 'sortByDesc' : 'sortBy';
                     $currentIndex++;
+
                     return $collection->$sortFunc($key)->groupBy($key)->map($sortBy)->ungroup();
                 };
 

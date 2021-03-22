@@ -14,7 +14,7 @@ class AddProtectedToGroups extends Migration
     public function up()
     {
         Schema::table('groups', function (Blueprint $table) {
-            $table->addColumn('boolean','protected')->default(0)->after('name');
+            $table->addColumn('boolean', 'protected')->default(0)->after('name');
         });
     }
 

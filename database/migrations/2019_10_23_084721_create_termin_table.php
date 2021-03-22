@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateTerminTable extends Migration
 {
@@ -21,7 +21,7 @@ class CreateTerminTable extends Migration
             $table->timestamps();
         });
 
-        Schema::create('group_termine', function (Blueprint $table){
+        Schema::create('group_termine', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('group_id');
             $table->unsignedBigInteger('termin_id');
@@ -29,8 +29,6 @@ class CreateTerminTable extends Migration
             $table->foreign('group_id')->references('id')->on('groups');
             $table->foreign('termin_id')->references('id')->on('termine');
         });
-
-
     }
 
     /**
@@ -40,7 +38,6 @@ class CreateTerminTable extends Migration
      */
     public function down()
     {
-
         Schema::dropIfExists('groups_termine');
         Schema::dropIfExists('termine');
     }

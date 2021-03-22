@@ -6,7 +6,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5>
-                        Letzte Änderungen am ElternInfoBoard
+                        Letzte Änderungen am {{config('app.name')}}
                     </h5>
                 </div>
                 @can('add changelog')

@@ -3,13 +3,12 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
  * Class newUnveroeffentlichterBeitrag
- * @package App\Mail
  */
 class newUnveroeffentlichterBeitrag extends Mailable
 {
@@ -24,7 +23,6 @@ class newUnveroeffentlichterBeitrag extends Mailable
      */
     public $Betreff;
 
-
     /**
      * newUnveroeffentlichterBeitrag constructor.
      * @param $von
@@ -36,17 +34,16 @@ class newUnveroeffentlichterBeitrag extends Mailable
         $this->Betreff = $Betreff;
     }
 
-
     /**
      * @return newUnveroeffentlichterBeitrag
      */
     public function build()
     {
         return $this
-            ->subject("neuer unveröffentlichter Beitrag im ElternInfoBoard")
+            ->subject('neuer unveröffentlichter Beitrag im '.config('app.name'))
             ->view('emails.neuerUnveroeffentlichterBeitrag', [
-            "von"   => $this->von,
-            "betreff"   => $this->Betreff
+            'von'   => $this->von,
+            'betreff'   => $this->Betreff,
         ]);
     }
 }

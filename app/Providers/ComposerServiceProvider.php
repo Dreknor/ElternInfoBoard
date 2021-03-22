@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\LosungComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,22 +29,22 @@ class ComposerServiceProvider extends ServiceProvider
         // you will need ModulesComposer@compose method
         //
         View::composer(
-            'layouts.elements.modules', 'App\Http\View\Composers\ModulesComposer'
+            'layouts.elements.modules', \App\Http\View\Composers\ModulesComposer::class
         );
 
         View::composer(
-            'include.losung', 'App\Http\View\Composers\LosungComposer'
+            'include.losung', LosungComposer::class
         );
 
         View::composer(
-            'reinigung.nachricht', 'App\Http\View\Composers\ReinigungComposer'
+            'reinigung.nachricht', \App\Http\View\Composers\ReinigungComposer::class
         );
 
         View::composer(
-            'nachrichten.start', 'App\Http\View\Composers\NachrichtenComposer'
+            'nachrichten.start', \App\Http\View\Composers\NachrichtenComposer::class
         );
         View::composer(
-            'termine.nachricht', 'App\Http\View\Composers\TermineComposer'
+            'termine.nachricht', \App\Http\View\Composers\TermineComposer::class
         );
     }
 }

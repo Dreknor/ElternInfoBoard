@@ -10,6 +10,6 @@ class Changelog extends Model
     protected $visible = ['header', 'text', 'changeSettings'];
 
     protected $casts = [
-      'changeSettings'  => 'boolean'
+      'changeSettings'  => 'boolean',
     ];
 }

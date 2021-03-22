@@ -11,12 +11,16 @@ class krankmeldungen extends Model
 
     protected $table = 'krankmeldungen';
 
-    protected $fillable = ['name','kommentar', 'start', 'ende', 'users_id' ];
-    protected $visible = ['name','kommentar', 'start', 'ende'];
+    protected $fillable = ['name', 'kommentar', 'start', 'ende', 'users_id'];
+    protected $visible = ['name', 'kommentar', 'start', 'ende'];
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class, 'users_id');
     }
 
-    protected $dates = ['created_at', 'updated_at', 'start', 'ende'];
+    protected $casts = [
+        'start' => 'datetime',
+        'ende' => 'datetime',
+    ];
 }

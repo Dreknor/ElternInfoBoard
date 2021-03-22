@@ -10,29 +10,30 @@ use Illuminate\Support\Collection;
 
 class KioskController extends Controller
 {
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
-    public function kioskView($bereich = ""){
+    public function kioskView($bereich = '')
+    {
 
         //Elterninfos
         $Nachrichten = new Collection();
 
-
-        $Gruppen = Group::where('protected', 0)->with(['posts' => function ($query){
+        $Gruppen = Group::where('protected', 0)->with(['posts' => function ($query) {
             $query->whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay());
         }])->get();
 
-        foreach ($Gruppen as $Gruppe){
+        foreach ($Gruppen as $Gruppe) {
             $Nachrichten = $Nachrichten->concat($Gruppe->posts);
         }
 
-        return view('layouts.kiosk',[
+        return view('layouts.kiosk', [
             'refresh'   => 600,
-            'module.blade.php'    => ['losung','uhr', 'bilder', 'elterninfo'],
+            'module.blade.php'    => ['losung', 'uhr', 'bilder', 'elterninfo'],
             'elterninfo' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
-            'losung'    =>  Losung::where('date', Carbon::today())->first()
+            'losung'    =>  Losung::where('date', Carbon::today())->first(),
         ]);
     }
 }

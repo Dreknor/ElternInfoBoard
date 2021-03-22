@@ -15,10 +15,10 @@ class createNachrichtRequest extends FormRequest
      */
     public function authorize()
     {
-
-        if (auth()->user()->can('create posts')){
+        if (auth()->user()->can('create posts')) {
             return true;
         }
+
         return false;
     }
 
@@ -30,11 +30,21 @@ class createNachrichtRequest extends FormRequest
     public function rules()
     {
         return [
-            'header'    => "required",
-            'news'      => "required",
-            'gruppen'   => "required",
-            'password'  => 'required_with:urgent',
-            'type'      => 'required'
+            'header'    => [
+                'required',
+            ],
+            'news'      => [
+                'required',
+            ],
+            'gruppen'   => [
+                'required',
+            ],
+            'password'  => [
+                'required_with:urgent',
+            ],
+            'type'      => [
+                'required',
+            ],
         ];
     }
 }

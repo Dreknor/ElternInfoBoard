@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\GroupsRepository;
 use App\Http\Requests\CreateTerminRequest;
 use App\Model\Group;
 use App\Model\Termin;
+use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -25,7 +25,6 @@ class TerminController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Termin::class);
-
     }
 
     /**
@@ -35,15 +34,15 @@ class TerminController extends Controller
      */
     public function create()
     {
-        if (!$this->authorize('create', Termin::class)){
-            return redirect(url('home'))->with([
-               "type"   => "danger",
-               "Meldung"    => "Berechtigung fehlt"
+        if (! $this->authorize('create', Termin::class)) {
+            return redirect()->to(url('home'))->with([
+               'type'   => 'danger',
+               'Meldung'    => 'Berechtigung fehlt',
             ]);
         }
 
-        return view('termine.create',[
-            'gruppen'   => Group::all()
+        return view('termine.create', [
+            'gruppen'   => Group::all(),
         ]);
     }
 
@@ -55,73 +54,33 @@ class TerminController extends Controller
      */
     public function store(CreateTerminRequest $request)
     {
-
         $this->authorize('create', Termin::class);
 
         $start = Carbon::parse($request->start);
         $ende = Carbon::parse($request->ende);
 
-        if ($start->day != $ende->day){
-            $start=$start->startOfDay();
-            $ende=$ende->endOfDay();
+        if ($start->day != $ende->day) {
+            $start = $start->startOfDay();
+            $ende = $ende->endOfDay();
         }
 
         $termin = new Termin([
             'terminname'    => $request->terminname,
             'start'         => $start,
             'ende'         => $ende,
-            "fullDay"       => $request->fullDay
+            'fullDay'       => $request->fullDay,
         ]);
         $termin->save();
 
-        $gruppen= $request->input('gruppen');
+        $gruppen = $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);
-
-
 
         $termin->groups()->attach($gruppen);
 
-
         return redirect()->back()->with([
            'type'   => 'success',
-           "Meldung"    => "Termin erstellt."
+           'Meldung'    => 'Termin erstellt.',
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Termin $termin)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Termin $termin)
-    {
-        $this->authorize('edit', $termin);
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
-     */
-    public function update(CreateTerminRequest $request, Termin $termin)
-    {
-        $this->authorize('edit', $termin);
-
     }
 
     /**
@@ -138,8 +97,8 @@ class TerminController extends Controller
         $termin->delete();
 
         return redirect()->back()->with([
-           'type'   => "success",
-           "Meldung"    => "Termin gelöscht."
+           'type'   => 'success',
+           'Meldung'    => 'Termin gelöscht.',
         ]);
     }
 }

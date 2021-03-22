@@ -5,10 +5,10 @@ namespace App\Jobs;
 use App\Mail\AktuelleInformationen;
 use App\Mail\SendFeedback;
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
 class SendEmailJob implements ShouldQueue
@@ -29,7 +29,6 @@ class SendEmailJob implements ShouldQueue
         $this->email = $email;
         $this->news = $news;
         $this->name = $name;
-
     }
 
     /**

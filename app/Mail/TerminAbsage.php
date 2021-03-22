@@ -3,9 +3,9 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class TerminAbsage extends Mailable
 {
@@ -16,13 +16,12 @@ class TerminAbsage extends Mailable
     public $empfaenger;
     public $user;
 
-
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct( $empfaenger, $liste, $termin, $user)
+    public function __construct($empfaenger, $liste, $termin, $user)
     {
         $this->liste = $liste;
         $this->termin = $termin;
@@ -41,13 +40,12 @@ class TerminAbsage extends Mailable
             $this->user->email,
             $this->user->name
              )
-            ->subject('Absage Termin: '. $this->termin->format('d.m.Y H:i'))
+            ->subject('Absage Termin: '.$this->termin->format('d.m.Y H:i'))
             ->view('emails.terminAbsage')->with([
-                "empfaenger"  => $this->empfaenger,
+                'empfaenger'  => $this->empfaenger,
                 'termin'        => $this->termin,
                 'liste'         => $this->liste,
-                'user'          => $this->user->name
+                'user'          => $this->user->name,
             ]);
-
     }
 }

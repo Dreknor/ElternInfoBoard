@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="shortcut icon" href="{{asset('img/favicon.ico')}}" type="image/x-icon">
-    <title>ElternInfoBoard</title>
+    <link rel="shortcut icon" href="{{asset('img/'.config('app.favicon'))}}" type="image/x-icon">
+    <title>{{config('app.name')}}</title>
 
 
     <!-- CSS Files -->
@@ -19,6 +19,7 @@
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet"><!--load all styles -->
+    <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->
     @yield('css')
 
 </head>
@@ -26,9 +27,9 @@
 <body id="app-layout">
 <div class="sidebar" data-color="white" data-active-color="danger">
     <div class="logo" style="word-wrap: normal;">
-        <a href="https://www.esz-radebeul.de" class="simple-text">
+        <a href="{{config('app.url')}}" class="simple-text">
             <div class="logo-image-small">
-                <img src="{{asset('img/logo.png')}}">
+                <img src="{{asset('img/'.config('app.logo'))}}" class="p-0">
             </div>
         </a>
     </div>
@@ -57,7 +58,7 @@
                         <span class="navbar-toggler-bar bar3"></span>
                     </button>
                 </div>
-                <a class="navbar-brand" href="{{url('/')}}">{{env('APP_NAME')}}</a>
+                <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-bar navbar-kebab"></span>

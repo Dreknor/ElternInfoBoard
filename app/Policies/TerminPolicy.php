@@ -2,14 +2,14 @@
 
 namespace App\Policies;
 
-use App\Model\User;
 use App\Model\Termin;
+use App\Model\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TerminPolicy
 {
     use HandlesAuthorization;
-    
+
     /**
      * Determine whether the user can view any termins.
      *
@@ -54,7 +54,6 @@ class TerminPolicy
     public function update(User $user, Termin $termin)
     {
         return $user->can('edit termin');
-
     }
 
     /**
@@ -79,7 +78,6 @@ class TerminPolicy
     public function restore(User $user, Termin $termin)
     {
         return $user->can('edit termin');
-
     }
 
     /**
