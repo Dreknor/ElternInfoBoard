@@ -27,8 +27,6 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
-        //$schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('10:00');
-        //$schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('13:00');
         $AdminRole = Role::where('name', 'Administrator')->orWhere('name', 'Admin')->first();
         $admin = $AdminRole->users()->first();
         if (isset($admin) and $admin->email != ""){
