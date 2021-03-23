@@ -2,8 +2,10 @@
 
 namespace App\Console;
 
+use App\Model\User;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Spatie\Permission\Models\Role;
 
 class Kernel extends ConsoleKernel
 {
@@ -24,19 +26,26 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
 
         //$schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('10:00');
         //$schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('13:00');
-        $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
-        $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->dailyAt('08:30');
-        $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:00');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:15');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:30');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:45');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '18:00');
+        $AdminRole = Role::where('name', 'Administrator')->orWhere('name', 'Admin')->first();
+        $admin = $AdminRole->users()->first();
+        if (isset($admin) and $admin->email != ""){
+            $email = $admin->email;
+        } else {
+            $email = config('mail.from.address');
+        }
+
+
+        $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->dailyAt('08:30')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:00')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:15')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:30')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:45')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '18:00')->emailOutputOnFailure($email);
     }
 
     /**
