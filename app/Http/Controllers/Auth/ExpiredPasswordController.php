@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PasswordExpiredRequest;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class ExpiredPasswordController extends Controller
@@ -27,6 +25,6 @@ class ExpiredPasswordController extends Controller
             'changePassword' => 0,
         ]);
 
-        return redirect()->back()->with(['status' => 'Password changed successfully']);
+        return redirect(url('home'))->with(['status' => 'Password changed successfully']);
     }
 }
