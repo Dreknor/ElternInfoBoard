@@ -12,8 +12,7 @@ use Dompdf\Image\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache  as CacheAlias;
 use Illuminate\Support\Facades\Mail;
-use Spatie\MediaLibrary\File;
-use Spatie\MediaLibrary\Models\Media;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class FileController extends Controller
 {
