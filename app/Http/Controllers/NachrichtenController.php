@@ -478,10 +478,13 @@ class NachrichtenController extends Controller
             }
         }
 
-        $admin = Role::findByName('Admin');
-        $admin = $admin->users()->first();
 
-        Notification::send($admin, new Push('Mail versandt', "Es wurden $countUser Mails versandt"));
+        /*
+        $AdminRole = Role::where('name', 'Administrator')->orWhere('name', 'Admin')->first();
+        $admin = $AdminRole->users()->first();
+
+        Notification::send($admin, new Push('Mail versandt', "Es wurden Mails versandt"));
+        */
     }
 
     public function emailDaily()
