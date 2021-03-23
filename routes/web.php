@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BenutzerController;
@@ -43,6 +44,11 @@ Auth::routes();
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 
 Route::middleware('auth')->group(function () {
+    Route::get('password/expired', [ExpiredPasswordController::class,'expired'])
+        ->name('password.expired');
+    Route::post('password/post_expired', [ExpiredPasswordController::class,'postExpired'])
+        ->name('password.post_expired');
+
     Route::middleware(['password_expired'])->group(function () {
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
