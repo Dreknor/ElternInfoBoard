@@ -57,7 +57,7 @@
             </div>
         @endforeach
     </div>
-
+@can('view groups')
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">
@@ -75,7 +75,6 @@
                         </ul>
                     </div>
                 </div>
-
             @endif
             <div class="card-body">
                 <form action="{{url('groups')}}" method="post" class="form-horizontal">
@@ -116,7 +115,7 @@
                 </form>
             </div>
         </div>
-
+        @endcan
     </div>
 @endsection
 
