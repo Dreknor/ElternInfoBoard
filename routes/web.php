@@ -190,7 +190,7 @@ Route::group([
         });
 
         //Gruppenverwaltung
-        Route::get('/groups', [GroupsController::class, 'index'])->middleware(['permission:view groups']);
+        Route::get('/groups', [GroupsController::class, 'index']);
         Route::post('/groups', [GroupsController::class, 'store'])->middleware(['permission:view groups']);
 
         //Routen zur Rechteverwaltung
