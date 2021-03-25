@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\VertretungsplanController;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\DatenschutzController;
@@ -26,6 +26,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,10 +40,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Auth::routes();
+Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 
-Route::middleware('auth')->group(function () {
+Route::group([
+    'middleware' => ['auth'],
+],
+    function () {
+
+    Route::get('password/expired', [ExpiredPasswordController::class,'expired'])
+        ->name('password.expired');
+    Route::post('password/post_expired', [ExpiredPasswordController::class,'postExpired'])
+        ->name('password.post_expired');
+
     Route::middleware(['password_expired'])->group(function () {
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
@@ -227,9 +237,4 @@ Route::middleware('auth')->group(function () {
     //Feedback
     Route::get('feedback', [FeedbackController::class, 'show']);
     Route::post('feedback', [FeedbackController::class, 'send']);
-
-    Route::get('password/expired', [Auth\ExpiredPasswordController::class, 'expired'])
-            ->name('password.expired');
-    Route::post('password/post_expired', [Auth\ExpiredPasswordController::class, 'postExpired'])
-            ->name('password.post_expired');
 });
