@@ -35,6 +35,10 @@ class verwaltungEditUserRequest extends FormRequest
                 'email',
                 'unique:users,id,'.$this->user->id,
             ],
+            'publicMail'  => [
+                'nullable',
+                'email'
+            ],
             'benachrichtigung' => [
                 'required',
                 'in:weekly,daily',

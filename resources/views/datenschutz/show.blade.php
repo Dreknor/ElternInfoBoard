@@ -54,6 +54,14 @@
                     </tr>
                     <tr>
                         <th>
+                            öffentliche E-Mail
+                        </th>
+                        <td>
+                            {{$user->publicMail}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
                             Kennwort
                         </th>
                         <td>

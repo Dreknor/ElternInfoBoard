@@ -11,24 +11,42 @@
                                 @if(!$group->protected) <i class="fas fa-unlock-alt"></i> @else <i class="fas fa-lock"></i> @endif
                                 {{$group->name}}
                             </h5>
-                            <i>
-                                Es gibt {{$group->users->count()}} Benutzer
-                            </i>
+                            @can('view groups')
+                                <i>
+                                    Es gibt {{$group->users->count()}} Benutzer
+                                </i>
+                            @endcan
                         </div>
                         <div class="card-body">
                             <div class="container-fluid">
                                 <div class="row">
-                                    @foreach($group->users->chunk(15) as $users)
-                                        <div class="col-xl-3 col-md-4 col-sm-12">
-                                            <ul class="list-group">
-                                                @foreach($users as $user)
-                                                    <li class="list-group-item">
-                                                        {{$user->name}}
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-                                    @endforeach
+                                    @can('view groups')
+                                        @foreach($group->users->chunk(15) as $users)
+                                            <div class="col-xl-3 col-md-4 col-sm-12">
+                                                <ul class="list-group">
+                                                    @foreach($users as $user)
+                                                        <li class="list-group-item">
+                                                            {{$user->name}}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        @foreach($group->users->filter(function ($user){
+                                                if ($user->publicMail !=""){ return $user; }
+                                            })->chunk(15) as $users)
+                                            <div class="col-xl-3 col-md-4 col-sm-12">
+                                                <ul class="list-group">
+                                                    @foreach($users as $user)
+                                                        <li class="list-group-item">
+                                                            {{$user->name}}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endforeach
+                                    @endcan
                                 </div>
                             </div>
 
