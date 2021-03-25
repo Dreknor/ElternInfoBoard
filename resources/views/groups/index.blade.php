@@ -40,7 +40,7 @@
                                                 <ul class="list-group">
                                                     @foreach($users as $user)
                                                         <li class="list-group-item">
-                                                            {{$user->name}}
+                                                            <a href="mailto://{{$user->publicMail}}" class="card-link">{{$user->name}}</a>
                                                         </li>
                                                     @endforeach
                                                 </ul>
