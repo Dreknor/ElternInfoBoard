@@ -46,7 +46,7 @@ class SendNewsEMail implements ShouldQueue
 
         $user = User::find($this->user);
 
-
+/*
         //Nachrichten zusammenstellen
         if (!$user->can('view all')) {
             $Nachrichten = $user->posts()->where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
@@ -55,9 +55,9 @@ class SendNewsEMail implements ShouldQueue
 
             //$Nachrichten = Post::where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now());
         }
-
+*/
         Notification::send($user, new Push('Test', $user->name));
-        Notification::send($user, new Push('Test2', $Nachrichten->count()));
+       // Notification::send($user, new Push('Test2', $Nachrichten->count()));
   /*
         //Elternratsdiskussionen versenden
         if ($user->hasRole('Elternrat')) {
