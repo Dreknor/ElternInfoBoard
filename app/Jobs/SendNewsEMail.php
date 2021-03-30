@@ -32,11 +32,7 @@ class SendNewsEMail implements ShouldQueue
     public function __construct($userid)
     {
         $this->user = User::find($userid);
-        if (!$this->user->can('view all')) {
-            $this->nachrichten = $this->user->posts()->where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
-        } else {
-            $this->nachrichten = Post::where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now());
-        }
+
     }
 
     /**
@@ -54,8 +50,13 @@ class SendNewsEMail implements ShouldQueue
         //Nachrichten zusammenstellen
 
 */
-        Notification::send($this->user, new Push('Test', $this->nachrichten->count()));
-       // Notification::send($user, new Push('Test2', $Nachrichten->count()));
+        if (!$this->user->can('view all')) {
+        $this->nachrichten = $this->user->posts()->where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
+        } else {
+            $this->nachrichten = Post::where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now());
+        }
+            Notification::send($this->user, new Push('Test', $this->nachrichten));
+           // Notification::send($user, new Push('Test2', $Nachrichten->count()));
   /*
         //Elternratsdiskussionen versenden
         if ($user->hasRole('Elternrat')) {
