@@ -22,6 +22,7 @@ class SendNewsEMail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $user;
+    public $nachrichten;
 
     /**
      * Create a new job instance.
@@ -31,6 +32,11 @@ class SendNewsEMail implements ShouldQueue
     public function __construct($userid)
     {
         $this->user = User::find($userid);
+        if (!$this->user->can('view all')) {
+            $this->nachrichten = $this->user->posts()->where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
+        } else {
+            $this->nachrichten = Post::where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now());
+        }
     }
 
     /**
@@ -46,15 +52,9 @@ class SendNewsEMail implements ShouldQueue
 
 /*
         //Nachrichten zusammenstellen
-        if (!$user->can('view all')) {
-            $Nachrichten = $user->posts()->where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
-        } else {
-            $Nachrichten = $user->posts()->where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
 
-            //$Nachrichten = Post::where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now());
-        }
 */
-        Notification::send($this->user, new Push('Test', $this->user->name));
+        Notification::send($this->user, new Push('Test', $this->nachrichten->count()));
        // Notification::send($user, new Push('Test2', $Nachrichten->count()));
   /*
         //Elternratsdiskussionen versenden
