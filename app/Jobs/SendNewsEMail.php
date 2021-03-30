@@ -45,7 +45,7 @@ class SendNewsEMail implements ShouldQueue
         //neue Dateien
 
         $user = User::find($this->user);
-        Notification::send($user, new Push('Test', 'Test'));
+
 
         //Nachrichten zusammenstellen
         if (!$user->can('view all')) {
@@ -53,7 +53,7 @@ class SendNewsEMail implements ShouldQueue
         } else {
             $Nachrichten = Post::all();
         }
-        /*
+
         $Nachrichten = $Nachrichten->filter(function ($post) use ($user)
         {
             if (!is_null($post->archiv_ab)) {
@@ -63,6 +63,8 @@ class SendNewsEMail implements ShouldQueue
             }
         })->unique()->sortByDesc('updated_at')->all();
 
+        Notification::send($user, new Push('Test', $Nachrichten->count()));
+  /*
         //Elternratsdiskussionen versenden
         if ($user->hasRole('Elternrat')) {
             $diskussionen = Discussion::all();
