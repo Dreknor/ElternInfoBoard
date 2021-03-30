@@ -30,7 +30,7 @@ class SendNewsEMail implements ShouldQueue
      */
     public function __construct($userid)
     {
-        $this->user = $userid;
+        $this->user = User::find($userid);
     }
 
     /**
