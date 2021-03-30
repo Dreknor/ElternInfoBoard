@@ -63,7 +63,7 @@ class SendNewsEMail implements ShouldQueue
             }
         })->unique()->sortByDesc('updated_at')->all();
 
-        Notification::send($user, new Push('Test', $Nachrichten->count()));
+        Notification::send($user, new Push('Test2', $Nachrichten));
   /*
         //Elternratsdiskussionen versenden
         if ($user->hasRole('Elternrat')) {
