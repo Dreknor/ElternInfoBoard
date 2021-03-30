@@ -44,38 +44,6 @@ class SendNewsEMail implements ShouldQueue
 
         $user = User::find($this->user);
 
-        //Nachrichten zusammenstellen
-        if (!$user->can('view all')) {
-            $Nachrichten = $user->posts;
-        } else {
-            $Nachrichten = Post::all();
-        }
-
-        $Nachrichten = $Nachrichten->filter(function ($post) use ($user)
-        {
-            if (!is_null($post->archiv_ab)) {
-                if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
-                    return $post;
-                }
-            }
-        })->unique()->sortByDesc('updated_at')->all();
-
-        //Elternratsdiskussionen versenden
-        if ($user->hasRole('Elternrat')) {
-            $diskussionen = Discussion::all();
-            $diskussionen = collect($diskussionen);
-            $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
-                if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                    return $Discussion;
-                }
-            });
-        } else {
-            $diskussionen = [];
-        }
-
-
-        Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
-
 
         $user->lastEmail = Carbon::now();
         $user->save();
