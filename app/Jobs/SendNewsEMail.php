@@ -26,9 +26,9 @@ class SendNewsEMail implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(User $user)
+    public function __construct($userid)
     {
-        $this->user = $user;
+        $this->user = $userid;
     }
 
     /**
@@ -38,32 +38,34 @@ class SendNewsEMail implements ShouldQueue
      */
     public function handle()
     {
-
         //@ToDo Neue
         // neue Listen
         //neue Dateien
 
+        $user = User::find($this->user);
+
         //Nachrichten zusammenstellen
-        if (!$this->user->can('view all')) {
-            $Nachrichten = $this->user->posts;
+        if (!$user->can('view all')) {
+            $Nachrichten = $user->posts;
         } else {
             $Nachrichten = Post::all();
         }
 
-        $Nachrichten = $Nachrichten->filter(function ($post) {
+        $Nachrichten = $Nachrichten->filter(function ($post) use ($user)
+        {
             if (!is_null($post->archiv_ab)) {
-                if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($this->user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
+                if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
                     return $post;
                 }
             }
         })->unique()->sortByDesc('updated_at')->all();
 
         //Elternratsdiskussionen versenden
-        if ($this->user->hasRole('Elternrat')) {
+        if ($user->hasRole('Elternrat')) {
             $diskussionen = Discussion::all();
             $diskussionen = collect($diskussionen);
-            $diskussionen = $diskussionen->filter(function ($Discussion) {
-                if ($Discussion->updated_at->greaterThanOrEqualTo($this->user->lastEmail)) {
+            $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
+                if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
                     return $Discussion;
                 }
             });
@@ -71,12 +73,12 @@ class SendNewsEMail implements ShouldQueue
             $diskussionen = [];
         }
 
-        if (count($Nachrichten)>0 or count($diskussionen)>0){
-            Mail::to($this->user->email)->queue(new AktuelleInformationen($Nachrichten, $this->user->name, $diskussionen));
-        }
 
-        $this->user->lastEmail = Carbon::now();
-        $this->user->save();
+        Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
+
+
+        $user->lastEmail = Carbon::now();
+        $user->save();
 
 
     }

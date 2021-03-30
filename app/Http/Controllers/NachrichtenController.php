@@ -416,7 +416,7 @@ class NachrichtenController extends Controller
         $countUser = 0;
 
         foreach ($users as $user) {
-                SendNewsEMail::dispatch($user);
+                SendNewsEMail::dispatch($user->id);
                 $countUser++;
         }
 
