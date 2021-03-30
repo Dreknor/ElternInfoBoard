@@ -49,19 +49,10 @@ class SendNewsEMail implements ShouldQueue
 
         //Nachrichten zusammenstellen
         if (!$user->can('view all')) {
-            $Nachrichten = $user->posts;
+            $Nachrichten = $user->posts()->where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
         } else {
-            $Nachrichten = Post::all();
+            $Nachrichten = Post::where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now());
         }
-
-        $Nachrichten = $Nachrichten->filter(function ($post) use ($user)
-        {
-            if (!is_null($post->archiv_ab)) {
-                if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
-                    return $post;
-                }
-            }
-        })->unique()->sortByDesc('updated_at')->all();
 
         Notification::send($user, new Push('Test', $user->name));
         Notification::send($user, new Push('Test2', $Nachrichten->count()));
