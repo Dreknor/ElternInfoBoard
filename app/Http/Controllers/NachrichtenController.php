@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CommentPostRequest;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
+use App\Jobs\SendNewsEMail;
 use App\Mail\AktuelleInformationen;
 use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
@@ -406,7 +407,6 @@ class NachrichtenController extends Controller
 
         if (is_null($userSend)) {
             $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
-            Log::debug($users);
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -416,75 +416,15 @@ class NachrichtenController extends Controller
         $countUser = 0;
 
         foreach ($users as $user) {
-            if (! $user->can('view all')) {
-                $Nachrichten = $user->posts;
-            } else {
-                $Nachrichten = Post::all();
-            }
-
-            $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if (! is_null($post->archiv_ab)) {
-                    if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
-                        return $post;
-                    }
-                }
-            })->unique()->sortByDesc('updated_at')->all();
-
-            //Elternrats-Diskussionen
-            if ($user->hasRole('Elternrat')) {
-                $diskussionen = Discussion::all();
-                $diskussionen = collect($diskussionen);
-                $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
-                    if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                        return $Discussion;
-                    }
-                });
-            } else {
-                $diskussionen = [];
-            }
-
-            //@ToDo Neue
-            // neue Listen
-            //neue Dateien
-
-            if (count($Nachrichten) > 0) {
+                SendNewsEMail::dispatch($user);
                 $countUser++;
-                try {
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
-                    $user->lastEmail = Carbon::now();
-                    $user->save();
-                    Log::info($user->email);
-
-                    if (! is_null($userSend)) {
-                        return redirect()->back()->with([
-                           'type' => 'success',
-                           'Meldung'    => 'Mail versandt',
-                        ]);
-                    }
-                } catch (\Exception $exception) {
-                    $admin = Role::findByName('Admin');
-                    $admin = $admin->users()->first();
-
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
-
-                    if (! is_null($userSend)) {
-                        return view('emails.nachrichten')->with([
-                            'nachrichten' => $Nachrichten,
-                            'name'      => $user->name,
-                            'discussionen'  => $diskussionen,
-                        ]);
-                    }
-                }
-            }
         }
 
+        $admin = Role::findByName('Administrator');
+        $admin = $admin->users()->first();
 
-        /*
-        $AdminRole = Role::where('name', 'Administrator')->orWhere('name', 'Admin')->first();
-        $admin = $AdminRole->users()->first();
+        Notification::send($admin, new Push('E-Mail versandt', 'Es wurden '.$countUser.' Mails beauftragt.'));
 
-        Notification::send($admin, new Push('Mail versandt', "Es wurden Mails versandt"));
-        */
     }
 
     public function emailDaily()
