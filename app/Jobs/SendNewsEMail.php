@@ -35,7 +35,7 @@ class SendNewsEMail implements ShouldQueue
         if (!$this->user->can('view all')) {
             $this->nachrichten = $this->user->posts()->where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
         } else {
-            $this->nachrichten = Post::where('released', 1)->where('updated_at', '>=',$user->lastEmail)->where('archiv_ab', '>', Carbon::now());
+            $this->nachrichten = Post::where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now());
         }
     }
 
