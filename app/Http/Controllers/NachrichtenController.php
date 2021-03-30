@@ -431,11 +431,6 @@ class NachrichtenController extends Controller
     {
         $this->email('daily');
 
-        $admin = Role::findByName('Administrator');
-        $admin = $admin->users()->first();
-
-        Notification::send($admin, new Push('E-Mail versandt', 'Es wurden Mails beauftragt.'));
-
     }
 
     /**
