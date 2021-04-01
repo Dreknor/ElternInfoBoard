@@ -405,7 +405,7 @@ class NachrichtenController extends Controller
         }
 
         if (is_null($userSend)) {
-            $users = User::with(['roles', 'posts'])->where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            $users = User::with(['roles', 'posts', 'termine'])->where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -419,15 +419,19 @@ class NachrichtenController extends Controller
         $diskussionen = Discussion::all();
         $diskussionen = collect($diskussionen);
 
+        //Termine
+        $termine_all = Termin::all();
 
         foreach ($users as $user) {
             set_time_limit(15);
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts;
+                $Termine = $user->termine;
             } else {
                 $Nachrichten = $Nachrichten_all;
+                $Termine = $termine_all;
             }
-            
+
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
                 if (! is_null($post->archiv_ab)) {
                     if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
@@ -435,6 +439,12 @@ class NachrichtenController extends Controller
                     }
                 }
             })->unique()->sortByDesc('updated_at')->all();
+
+            $Termine = $Termine->filter(function ($termin) use ($user) {
+               if ($termin->created_at->greaterThanOrEqualTo($user->lastEmail)){
+                   return $termin;
+               }
+            });
 
             //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')) {
@@ -451,11 +461,14 @@ class NachrichtenController extends Controller
             // neue Listen
             //neue Dateien
 
+            //Termine
+
+
             if (count($Nachrichten) > 0) {
 
                 try {
                     $countUser++;
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $Termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 

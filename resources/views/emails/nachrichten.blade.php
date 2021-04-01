@@ -7,7 +7,7 @@
 
 <p>Liebe/r {{$name}}</p>
 <p>
-    Folgende neue Nachrichten liegen für Sie im Eltern-Bereich des Schulzentrums vor:
+    Folgende neue Nachrichten liegen für Sie im {{config('app.name')}} vor:
 </p>
 
 <p>
@@ -29,6 +29,22 @@
             @foreach($discussionen as $Diskussion)
                 <li>
                     {{$Diskussion->header}}
+                </li>
+            @endforeach
+        </ul>
+    </p>
+@endif
+
+
+@if(count($termine)>0)
+    <p>
+        Folgende Termine wurden hinzugefügt:
+    </p>
+    <p>
+        <ul>
+            @foreach($termine as $termin)
+                <li>
+                    {{$termin->terminname}}
                 </li>
             @endforeach
         </ul>

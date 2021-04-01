@@ -14,17 +14,19 @@ class AktuelleInformationen extends Mailable
     protected $news;
     protected $name;
     protected $diskussionen;
+    protected $termine;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($news, $name, $diskussionen)
+    public function __construct($news, $name, $diskussionen, $termine)
     {
         $this->news = $news;
         $this->name = $name;
         $this->diskussionen = $diskussionen;
+        $this->termine = $termine;
     }
 
     /**
@@ -39,6 +41,7 @@ class AktuelleInformationen extends Mailable
             'nachrichten' => $this->news,
             'name'      => $this->name,
             'discussionen'  => $this->diskussionen,
+            'termine'  => $this->termine,
         ]);
     }
 }
