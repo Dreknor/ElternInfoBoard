@@ -14,7 +14,6 @@ use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
-use App\Model\Settings;
 use App\Model\Termin;
 use App\Model\User;
 use App\Notifications\Push;
@@ -31,6 +30,10 @@ use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
+/**
+ * Class NachrichtenController
+ * @package App\Http\Controllers
+ */
 class NachrichtenController extends Controller
 {
     /**
@@ -467,13 +470,9 @@ class NachrichtenController extends Controller
             if (count($Nachrichten) > 0) {
 
                 try {
-                    $admin = Role::findByName('Administrator');
-                    $admin = $admin->users()->first();
-
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
 
                     $countUser++;
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
+                    Mail::to($user->email)->queue(mailable: new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 

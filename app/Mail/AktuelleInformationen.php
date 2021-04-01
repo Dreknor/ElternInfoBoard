@@ -36,7 +36,7 @@ class AktuelleInformationen extends Mailable
      */
     public function build()
     {
-        return $this->subject('Aktuellere Informationen')
+        return $this->subject('Aktuelle Informationen')
             ->view('emails.nachrichten', [
             'nachrichten' => $this->news,
             'name'      => $this->name,
