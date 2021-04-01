@@ -472,7 +472,7 @@ class NachrichtenController extends Controller
                 try {
 
                     $countUser++;
-                    Mail::to($user->email)->queue(mailable: new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
