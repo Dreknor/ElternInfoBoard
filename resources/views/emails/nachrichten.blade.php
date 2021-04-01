@@ -36,7 +36,7 @@
 @endif
 
 
-
+@if(count($termine)>0)
     <p>
         Folgende Termine wurden hinzugefügt:
     </p>
@@ -49,7 +49,7 @@
             @endforeach
         </ul>
     </p>
-
+@endif
 <p>
     Für genauere Inhalte loggen Sie sich bitte ein.
 </p>
