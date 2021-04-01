@@ -406,17 +406,23 @@ class NachrichtenController extends Controller
         }
 
         if (is_null($userSend)) {
-            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->with('posts')->get();
         } else {
-            $users = User::where('id', $userSend)->get();
+            $users = User::where('id', $userSend)->with('posts')->get();
         }
 
-        $users->load('roles');
+        $posts_all = Post::where('released', 1)->where('archiv_ab', '>', Carbon::now())->get();
+
 
         $countUser = 0;
 
         foreach ($users as $user) {
-                SendNewsEMail::dispatch($user->id);
+            if ($user->can('view all')){
+                SendNewsEMail::dispatch($user, $posts_all);
+            } else {
+                SendNewsEMail::dispatch($user, $user->posts);
+            }
+
                 $countUser++;
         }
 

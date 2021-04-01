@@ -29,9 +29,10 @@ class SendNewsEMail implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($userid)
+    public function __construct(User $user, $nachrichten)
     {
-        $this->user = User::find($userid);
+        $this->user = $user;
+        $this->nachrichten = $nachrichten;
 
     }
 
@@ -42,38 +43,14 @@ class SendNewsEMail implements ShouldQueue
      */
     public function handle()
     {
-        //@ToDo Neue
-        // neue Listen
-        //neue Dateien
-
-/*
-        //Nachrichten zusammenstellen
-
-*/
-        if (!$this->user->can('view all')) {
-        $this->nachrichten = $this->user->posts()->where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
-        } else {
-            $this->nachrichten = Post::where('released', 1)->where('updated_at', '>=',$this->user->lastEmail)->where('archiv_ab', '>', Carbon::now());
-        }
-            Notification::send($this->user, new Push('Test', $this->nachrichten));
-           // Notification::send($user, new Push('Test2', $Nachrichten->count()));
-  /*
-        //Elternratsdiskussionen versenden
-        if ($user->hasRole('Elternrat')) {
-            $diskussionen = Discussion::all();
-            $diskussionen = collect($diskussionen);
-            $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
-                if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                    return $Discussion;
-                }
-            });
-        } else {
-            $diskussionen = [];
-        }
+        $Nachrichten = $this->nachrichten->filter(function ($post){
+            if ($post->released ==1 and $post->archived_ab->greaterThan(Carbon::now()) and $post->updated_at->greaterThan($this->user->lastEmail)){
+                return $post;
+            }
+        });
 
 
-        Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
-      */
+        Mail::to($this->user->email)->queue(new AktuelleInformationen($Nachrichten, $this->user->name, []));
 
         $this->user->lastEmail = Carbon::now();
         $this->user->save();
