@@ -467,6 +467,11 @@ class NachrichtenController extends Controller
             if (count($Nachrichten) > 0) {
 
                 try {
+                    $admin = Role::findByName('Administrator');
+                    $admin = $admin->users()->first();
+
+                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
+
                     $countUser++;
                     Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
                     $user->lastEmail = Carbon::now();
