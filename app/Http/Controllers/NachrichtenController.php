@@ -440,7 +440,7 @@ class NachrichtenController extends Controller
                 }
             })->unique()->sortByDesc('updated_at')->all();
 
-            $Termine = $Termine->filter(function ($termin) use ($user) {
+            $termine = $Termine->filter(function ($termin) use ($user) {
                if ($termin->created_at->greaterThanOrEqualTo($user->lastEmail)){
                    return $termin;
                }
@@ -468,11 +468,18 @@ class NachrichtenController extends Controller
 
                 try {
                     $countUser++;
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $Termine));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
                     if (! is_null($userSend)) {
+
+                        return view('emails.nachrichten', [
+                            'nachrichten' => $Nachrichten,
+                            'name'      => $user->name,
+                            'discussionen'  => $diskussionen,
+                            'termine'  => $termine]);
+
                         return redirect()->back()->with([
                            'type' => 'success',
                            'Meldung'    => 'Mail versandt',
