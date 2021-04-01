@@ -44,7 +44,7 @@
         <ul>
             @foreach($termine as $termin)
                 <li>
-                    {{$termin->terminname}}
+                    {{$termin->terminname}} ({{$termin->start->format('d.m.Y')}})
                 </li>
             @endforeach
         </ul>
