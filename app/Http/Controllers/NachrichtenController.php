@@ -473,13 +473,7 @@ class NachrichtenController extends Controller
                     $user->save();
 
                     if (! is_null($userSend)) {
-
-                        return view('emails.nachrichten', [
-                            'nachrichten' => $Nachrichten,
-                            'name'      => $user->name,
-                            'discussionen'  => $diskussionen,
-                            'termine'  => $termine]);
-
+                        
                         return redirect()->back()->with([
                            'type' => 'success',
                            'Meldung'    => 'Mail versandt',
