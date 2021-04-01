@@ -405,23 +405,29 @@ class NachrichtenController extends Controller
         }
 
         if (is_null($userSend)) {
-            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
-            Log::debug($users);
+            $users = User::with(['roles', 'posts'])->where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
         } else {
             $users = User::where('id', $userSend)->get();
         }
 
-        $users->load('roles');
+        //Posts all
+        $Nachrichten_all = Post::where('released', 1)->whereDate('archiv_ab', '>' ,Carbon::now())->get();
 
         $countUser = 0;
 
+        //ER - Diskussionen
+        $diskussionen = Discussion::all();
+        $diskussionen = collect($diskussionen);
+
+
         foreach ($users as $user) {
+            set_time_limit(15);
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts;
             } else {
-                $Nachrichten = Post::all();
+                $Nachrichten = $Nachrichten_all;
             }
-
+            
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
                 if (! is_null($post->archiv_ab)) {
                     if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
@@ -432,8 +438,6 @@ class NachrichtenController extends Controller
 
             //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')) {
-                $diskussionen = Discussion::all();
-                $diskussionen = collect($diskussionen);
                 $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
                     if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
                         return $Discussion;
@@ -448,12 +452,12 @@ class NachrichtenController extends Controller
             //neue Dateien
 
             if (count($Nachrichten) > 0) {
-                $countUser++;
+
                 try {
+                    $countUser++;
                     Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
                     $user->lastEmail = Carbon::now();
                     $user->save();
-                    Log::info($user->email);
 
                     if (! is_null($userSend)) {
                         return redirect()->back()->with([
@@ -462,10 +466,10 @@ class NachrichtenController extends Controller
                         ]);
                     }
                 } catch (\Exception $exception) {
-                    $admin = Role::findByName('Admin');
+                    $admin = Role::findByName('Administrator');
                     $admin = $admin->users()->first();
 
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
+                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
 
                     if (! is_null($userSend)) {
                         return view('emails.nachrichten')->with([
