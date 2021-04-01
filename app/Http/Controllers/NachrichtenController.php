@@ -473,7 +473,7 @@ class NachrichtenController extends Controller
                     $user->save();
 
                     if (! is_null($userSend)) {
-                        
+
                         return redirect()->back()->with([
                            'type' => 'success',
                            'Meldung'    => 'Mail versandt',
@@ -485,24 +485,9 @@ class NachrichtenController extends Controller
 
                     Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
 
-                    if (! is_null($userSend)) {
-                        return view('emails.nachrichten')->with([
-                            'nachrichten' => $Nachrichten,
-                            'name'      => $user->name,
-                            'discussionen'  => $diskussionen,
-                        ]);
-                    }
                 }
             }
         }
-
-
-        /*
-        $AdminRole = Role::where('name', 'Administrator')->orWhere('name', 'Admin')->first();
-        $admin = $AdminRole->users()->first();
-
-        Notification::send($admin, new Push('Mail versandt', "Es wurden Mails versandt"));
-        */
     }
 
     public function emailDaily()
