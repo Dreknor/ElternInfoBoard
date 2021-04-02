@@ -463,8 +463,11 @@ class NachrichtenController extends Controller
             //Neue Dateien
             $media = new \App\Support\Collection();
 
-            if (!$user->can('upload files')){
+            if (!$user->can('upload files')) {
                 $gruppen = $user->groups;
+            } else {
+                $gruppen = Group::with('media')->get();
+            }
                 foreach ($gruppen as $gruppe) {
                     $gruppenMedien = $gruppe->getMedia();
                     foreach ($gruppenMedien as $medium) {
