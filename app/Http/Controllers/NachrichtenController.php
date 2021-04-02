@@ -476,7 +476,7 @@ class NachrichtenController extends Controller
                         }
                     }
                 }
-            }
+            
 
 
             //@ToDo Neue
