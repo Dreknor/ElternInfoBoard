@@ -50,6 +50,21 @@
         </ul>
     </p>
 @endif
+
+@if(count($media)>0)
+    <p>
+        Folgende Dateien wurden im Downloads-Bereich hinzugefügt:
+    </p>
+    <p>
+        <ul>
+            @foreach($media as $file)
+                <li>
+                    {{$file->name}}
+                </li>
+            @endforeach
+        </ul>
+    </p>
+@endif
 <p>
     Für genauere Inhalte loggen Sie sich bitte ein.
 </p>

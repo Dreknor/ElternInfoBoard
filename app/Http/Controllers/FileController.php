@@ -40,9 +40,10 @@ class FileController extends Controller
         ]);
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $user = $request->user()->load('groups');
+        $user = auth()->user();
+        $user->load('groups');
 
         if ($user->can('upload files')) {
             if (! $user->can('view protected')) {

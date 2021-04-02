@@ -408,7 +408,7 @@ class NachrichtenController extends Controller
         }
 
         if (is_null($userSend)) {
-            $users = User::with(['roles', 'posts', 'termine'])->where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            $users = User::with(['roles', 'posts', 'termine', 'groups', 'groups.media'])->where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -460,19 +460,29 @@ class NachrichtenController extends Controller
                 $diskussionen = [];
             }
 
+            //Neue Dateien
+            $media = new \App\Support\Collection();
+
+            if (!$user->can('upload files')){
+                $gruppen = $user->groups;
+                foreach ($gruppen as $gruppe) {
+                    $gruppenMedien = $gruppe->getMedia();
+                    foreach ($gruppenMedien as $medium) {
+                        if ($medium->created_at->greaterThan($user->lastEmail)){
+                            $media->push($medium);
+                        }
+                    }
+                }
+            }
+
+
             //@ToDo Neue
             // neue Listen
-            //neue Dateien
-
-            //Termine
-
 
             if (count($Nachrichten) > 0) {
 
                 try {
-
-                    $countUser++;
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine, $media));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
