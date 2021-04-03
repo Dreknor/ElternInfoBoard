@@ -430,6 +430,11 @@ class NachrichtenController extends Controller
         $termine_all = Termin::where('created_at', '>=', Carbon::now()->subWeek())->get();
 
         foreach ($users as $user) {
+
+            $Nachrichten = [];
+            $Termine = [];
+            Notification::send($admin, new Push('Mailversand', $user->name.'  ermittelt:' .count($Nachrichten)));
+
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts()->where('released',  1)->where('posts.updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
                 $Termine = $user->termine()->where('termine.created_at', '>=', $user->lastEmail)->get();
@@ -437,7 +442,6 @@ class NachrichtenController extends Controller
                 $Nachrichten = $Nachrichten_all;
                 $Termine = $termine_all;
             }
-            Notification::send($admin, new Push('Mailversand', $user->name.' user ermittelt'));
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
                 if (! is_null($post->archiv_ab)) {
@@ -489,6 +493,8 @@ class NachrichtenController extends Controller
             if (count($Nachrichten) > 0) {
 
                 try {
+                    Notification::send($admin, new Push('Mailversand', $user->name.' user ermittelt'));
+
                     Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine, $media));
                     $user->lastEmail = Carbon::now();
                     $user->save();
