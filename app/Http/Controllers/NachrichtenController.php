@@ -413,10 +413,6 @@ class NachrichtenController extends Controller
             $users = User::where('id', $userSend)->get();
         }
 
-        $admin = Role::findByName('Administrator');
-        $admin = $admin->users()->first();
-
-
         //Posts all
         $Nachrichten_all = Post::where('released', 1)->whereDate('archiv_ab', '>' ,Carbon::now())->get();
 
@@ -430,9 +426,6 @@ class NachrichtenController extends Controller
         $termine_all = Termin::where('created_at', '>=', Carbon::now()->subWeek())->get();
 
         foreach ($users as $user) {
-
-            $Nachrichten = [];
-            $Termine = [];
 
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts;
@@ -449,8 +442,6 @@ class NachrichtenController extends Controller
                     }
                 }
             })->unique()->sortByDesc('updated_at')->all();
-
-            Notification::send($admin, new Push('Mailversand', $user->name.'  ermittelt:' .count($Nachrichten)));
 
             $termine = $Termine->filter(function ($termin) use ($user) {
                if ($termin->created_at->greaterThanOrEqualTo($user->lastEmail)){
