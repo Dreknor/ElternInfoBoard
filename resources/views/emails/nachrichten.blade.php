@@ -35,36 +35,6 @@
     </p>
 @endif
 
-
-@if(count($termine)>0)
-    <p>
-        Folgende Termine wurden hinzugefügt:
-    </p>
-    <p>
-        <ul>
-            @foreach($termine as $termin)
-                <li>
-                    {{$termin->terminname}} ({{$termin->start->format('d.m.Y')}})
-                </li>
-            @endforeach
-        </ul>
-    </p>
-@endif
-
-@if(count($media)>0)
-    <p>
-        Folgende Dateien wurden im Downloads-Bereich hinzugefügt:
-    </p>
-    <p>
-        <ul>
-            @foreach($media as $file)
-                <li>
-                    {{$file->name}}
-                </li>
-            @endforeach
-        </ul>
-    </p>
-@endif
 <p>
     Für genauere Inhalte loggen Sie sich bitte ein.
 </p>
