@@ -481,7 +481,7 @@ class NachrichtenController extends Controller
             }
         }
 
-        $admin = Role::findByName('Admin');
+        $admin = Role::findByName('Administrator');
         $admin = $admin->users()->first();
 
         Notification::send($admin, new Push('Mail versandt', "Es wurden $countUser Mails versandt"));
