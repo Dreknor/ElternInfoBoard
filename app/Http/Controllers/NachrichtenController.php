@@ -407,11 +407,7 @@ class NachrichtenController extends Controller
             $daily = 'weekly';
         }
 
-        if (is_null($userSend)) {
-            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
-        } else {
-            $users = User::where('id', $userSend)->get();
-        }
+
 
         //Posts all
         $Nachrichten_all = Post::where('released', 1)->whereDate('archiv_ab', '>' ,Carbon::now())->get();
@@ -425,49 +421,57 @@ class NachrichtenController extends Controller
         //Termine
         $termine_all = Termin::where('created_at', '>=', Carbon::now()->subWeek())->get();
 
-        foreach ($users as $user) {
+        /*
+        if (is_null($userSend)) {
+            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+        } else {
+            $users = User::where('id', $userSend)->get();
+        }*/
 
-            if (! $user->can('view all')) {
-                $Nachrichten = $user->posts;
-                $Termine = $user->termine;
-            } else {
-                $Nachrichten = $Nachrichten_all;
-                $Termine = $termine_all;
-            }
+        User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->chunk(function ($users) use ($Nachrichten_all, $termine_all){
+            foreach ($users as $user) {
 
-            $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if (! is_null($post->archiv_ab)) {
-                    if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
-                        return $post;
-                    }
+                if (! $user->can('view all')) {
+                    $Nachrichten = $user->posts;
+                    $Termine = $user->termine;
+                } else {
+                    $Nachrichten = $Nachrichten_all;
+                    $Termine = $termine_all;
                 }
-            })->unique()->sortByDesc('updated_at')->all();
 
-            $termine = $Termine->filter(function ($termin) use ($user) {
-               if ($termin->created_at->greaterThanOrEqualTo($user->lastEmail)){
-                   return $termin;
-               }
-            });
+                $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
+                    if (! is_null($post->archiv_ab)) {
+                        if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
+                            return $post;
+                        }
+                    }
+                })->unique()->sortByDesc('updated_at')->all();
 
-            //Elternrats-Diskussionen
-            if ($user->hasRole('Elternrat')) {
-                $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
-                    if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                        return $Discussion;
+                $termine = $Termine->filter(function ($termin) use ($user) {
+                    if ($termin->created_at->greaterThanOrEqualTo($user->lastEmail)){
+                        return $termin;
                     }
                 });
-            } else {
-                $diskussionen = [];
-            }
 
-            //Neue Dateien
-            $media = new \App\Support\Collection();
+                //Elternrats-Diskussionen
+                if ($user->hasRole('Elternrat')) {
+                    $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
+                        if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
+                            return $Discussion;
+                        }
+                    });
+                } else {
+                    $diskussionen = [];
+                }
 
-            if (!$user->can('upload files')) {
-                $gruppen = $user->groups;
-            } else {
-                $gruppen = Group::with('media')->get();
-            }
+                //Neue Dateien
+                $media = new \App\Support\Collection();
+
+                if (!$user->can('upload files')) {
+                    $gruppen = $user->groups;
+                } else {
+                    $gruppen = Group::with('media')->get();
+                }
                 foreach ($gruppen as $gruppe) {
                     $gruppenMedien = $gruppe->getMedia();
                     foreach ($gruppenMedien as $medium) {
@@ -479,18 +483,18 @@ class NachrichtenController extends Controller
 
 
 
-            //@ToDo Neue
-            // neue Listen
+                //@ToDo Neue
+                // neue Listen
 
-            if (count($Nachrichten) > 0) {
+                if (count($Nachrichten) > 0) {
 
-                try {
+                    try {
 
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine, $media));
-                    $user->lastEmail = Carbon::now();
-                    $user->save();
+                        Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine, $media));
+                        $user->lastEmail = Carbon::now();
+                        $user->save();
 
-                    return view('emails.nachrichten', [
+                        return view('emails.nachrichten', [
                             'nachrichten' => $Nachrichten,
                             'name'      => $user->name,
                             'discussionen'  => $diskussionen,
@@ -498,26 +502,28 @@ class NachrichtenController extends Controller
                             'media'  => $media,
                         ]);
 
-                    unset($Nachrichten);
-                    unset($termine);
-                    unset($media);
+                        unset($Nachrichten);
+                        unset($termine);
+                        unset($media);
 
-                    if (! is_null($userSend)) {
+                        if (! is_null($userSend)) {
 
-                        return redirect()->back()->with([
-                           'type' => 'success',
-                           'Meldung'    => 'Mail versandt',
-                        ]);
+                            return redirect()->back()->with([
+                                'type' => 'success',
+                                'Meldung'    => 'Mail versandt',
+                            ]);
+                        }
+                    } catch (\Exception $exception) {
+                        $admin = Role::findByName('Administrator');
+                        $admin = $admin->users()->first();
+
+                        Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
+
                     }
-                } catch (\Exception $exception) {
-                    $admin = Role::findByName('Administrator');
-                    $admin = $admin->users()->first();
-
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
-
                 }
             }
-        }
+        });
+
     }
 
     public function emailDaily()
