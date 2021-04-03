@@ -22,7 +22,7 @@ class AktuelleInformationen extends Mailable
      *
      * @return void
      */
-    public function __construct($news, $name, $diskussionen, $termine, $media)
+    public function __construct($news, $name, $diskussionen, $termine=null, $media=null)
     {
         $this->news = $news;
         $this->name = $name;
