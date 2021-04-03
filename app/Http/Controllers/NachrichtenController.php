@@ -408,7 +408,7 @@ class NachrichtenController extends Controller
         }
 
         if (is_null($userSend)) {
-            $users = User::with(['roles', 'posts', 'termine', 'groups', 'groups.media'])->where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -423,13 +423,13 @@ class NachrichtenController extends Controller
         $diskussionen = collect($diskussionen);
 
         //Termine
-        $termine_all = Termin::all();
+        $termine_all = Termin::where('created_at', '>=', Carbon::now()->subWeek())->get();
 
         foreach ($users as $user) {
             set_time_limit(15);
             if (! $user->can('view all')) {
-                $Nachrichten = $user->posts;
-                $Termine = $user->termine;
+                $Nachrichten = $user->posts()->where('released',  1)->where('updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
+                $Termine = $user->termine()->where('created_at', '>=', $user->lastEmail)->get();
             } else {
                 $Nachrichten = $Nachrichten_all;
                 $Termine = $termine_all;
@@ -476,7 +476,7 @@ class NachrichtenController extends Controller
                         }
                     }
                 }
-            
+
 
 
             //@ToDo Neue
