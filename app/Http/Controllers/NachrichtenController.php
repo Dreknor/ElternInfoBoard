@@ -430,7 +430,7 @@ class NachrichtenController extends Controller
 
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts()->where('released',  1)->where('posts.updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
-                $Termine = $user->termine()->where('created_at', '>=', $user->lastEmail)->get();
+                $Termine = $user->termine()->where('termine.created_at', '>=', $user->lastEmail)->get();
             } else {
                 $Nachrichten = $Nachrichten_all;
                 $Termine = $termine_all;
