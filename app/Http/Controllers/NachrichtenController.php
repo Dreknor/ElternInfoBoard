@@ -433,7 +433,6 @@ class NachrichtenController extends Controller
 
             $Nachrichten = [];
             $Termine = [];
-            Notification::send($admin, new Push('Mailversand', $user->name.'  ermittelt:' .count($Nachrichten)));
 
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts()->where('released',  1)->where('posts.updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
@@ -450,6 +449,8 @@ class NachrichtenController extends Controller
                     }
                 }
             })->unique()->sortByDesc('updated_at')->all();
+
+            Notification::send($admin, new Push('Mailversand', $user->name.'  ermittelt:' .count($Nachrichten)));
 
             $termine = $Termine->filter(function ($termin) use ($user) {
                if ($termin->created_at->greaterThanOrEqualTo($user->lastEmail)){
