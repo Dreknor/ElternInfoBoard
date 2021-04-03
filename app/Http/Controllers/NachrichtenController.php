@@ -427,8 +427,9 @@ class NachrichtenController extends Controller
 
         foreach ($users as $user) {
             set_time_limit(15);
+
             if (! $user->can('view all')) {
-                $Nachrichten = $user->posts()->where('released',  1)->where('updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
+                $Nachrichten = $user->posts()->where('released',  1)->where('posts.updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
                 $Termine = $user->termine()->where('created_at', '>=', $user->lastEmail)->get();
             } else {
                 $Nachrichten = $Nachrichten_all;
