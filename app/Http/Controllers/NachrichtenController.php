@@ -490,6 +490,14 @@ class NachrichtenController extends Controller
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
+                    return view('emails.nachrichten', [
+                            'nachrichten' => $Nachrichten,
+                            'name'      => $user->name,
+                            'discussionen'  => $diskussionen,
+                            'termine'  => $termine,
+                            'media'  => $media,
+                        ]);
+
                     unset($Nachrichten);
                     unset($termine);
                     unset($media);
