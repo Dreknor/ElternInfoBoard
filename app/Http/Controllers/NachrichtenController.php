@@ -415,7 +415,9 @@ class NachrichtenController extends Controller
 
         $admin = Role::findByName('Administrator');
         $admin = $admin->users()->first();
-        
+        Notification::send($admin, new Push('Mailversand', $users->count().' user ermittelt'));
+
+
         //Posts all
         $Nachrichten_all = Post::where('released', 1)->whereDate('archiv_ab', '>' ,Carbon::now())->get();
 
@@ -429,9 +431,7 @@ class NachrichtenController extends Controller
         $termine_all = Termin::where('created_at', '>=', Carbon::now()->subWeek())->get();
 
         foreach ($users as $user) {
-            set_time_limit(15);
-            Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.' konnte nicht gesendet werden'));
-
+            set_time_limit(30);
 
             if (! $user->can('view all')) {
                 $Nachrichten = $user->posts()->where('released',  1)->where('posts.updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
