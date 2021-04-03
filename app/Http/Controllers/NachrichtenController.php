@@ -435,8 +435,8 @@ class NachrichtenController extends Controller
             $Termine = [];
 
             if (! $user->can('view all')) {
-                $Nachrichten = $user->posts()->where('released',  1)->where('posts.updated_at', '>=', $user->lastEmail)->where('archiv_ab', '>=', Carbon::now())->get();
-                $Termine = $user->termine()->where('termine.created_at', '>=', $user->lastEmail)->get();
+                $Nachrichten = $user->posts;
+                $Termine = $user->termine;
             } else {
                 $Nachrichten = $Nachrichten_all;
                 $Termine = $termine_all;
@@ -494,11 +494,14 @@ class NachrichtenController extends Controller
             if (count($Nachrichten) > 0) {
 
                 try {
-                    Notification::send($admin, new Push('Mailversand', $user->name.' user ermittelt'));
 
                     Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $termine, $media));
                     $user->lastEmail = Carbon::now();
                     $user->save();
+
+                    unset($Nachrichten);
+                    unset($termine);
+                    unset($media);
 
                     if (! is_null($userSend)) {
 
