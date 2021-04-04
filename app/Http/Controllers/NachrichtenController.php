@@ -57,9 +57,7 @@ class NachrichtenController extends Controller
         return view('home', [
             'datum'     => Carbon::now(),
             'archiv' => $archiv,
-            'gruppen' => Cache::remember('groups', 60 * 60, function () {
-                return Group::all();
-            }),
+
         ]);
     }
 
