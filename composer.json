@@ -38,7 +38,9 @@
         "phpunit/phpunit": "^9.3.3",
         "samasend/laravel-make-scope": "^1.0",
         "fakerphp/faker": "^1.9.1",
-        "facade/ignition": "^2.5"
+        "facade/ignition": "^2.5",
+        "jasonmccreary/laravel-test-assertions": "^1.0",
+        "laravel-shift/factory-generator": "dev-master"
     },
     "config": {
         "optimize-autoloader": true,
