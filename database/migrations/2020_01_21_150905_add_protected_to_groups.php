@@ -16,6 +16,13 @@ class AddProtectedToGroups extends Migration
         Schema::table('groups', function (Blueprint $table) {
             $table->addColumn('boolean', 'protected')->default(0)->after('name');
         });
+
+        \Illuminate\Support\Facades\DB::table('groups')->insert([
+            [
+                'name' => 'Elternrat',
+                'protected'=>1,
+            ],
+        ]);
     }
 
     /**

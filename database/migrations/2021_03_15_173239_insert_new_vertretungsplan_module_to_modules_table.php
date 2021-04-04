@@ -28,13 +28,13 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
             'options'=> '
             {
                 "active":"0",
-                "rights":["view vertretungsplan"],
+                "rights":{"0":"view vertretungsplan"},
                 "nav":
                     {
                         "name":"Vertretungsplan",
                         "link":"vertretungsplan",
                         "icon":"fas fa-columns"
-                    },
+                    }
             }',
             'created_at'=> \Carbon\Carbon::now()
     ]);
