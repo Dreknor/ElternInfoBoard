@@ -69,6 +69,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Posts verknüpft über die Gruppen
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
+    public function postsNotArchived()
+    {
+        return $this->hasManyDeep(\App\Model\Post::class, ['group_user', \App\Model\Group::class, 'group_post'])->NotArchived();
+    }
+
+    /**
      * Eigene Posts
      * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
