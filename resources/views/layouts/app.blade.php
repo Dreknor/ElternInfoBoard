@@ -18,6 +18,7 @@
 
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
+    <link href="{{asset('/css/app.css')}}" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet"><!--load all styles -->
     <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->
     @yield('css')
@@ -48,7 +49,7 @@
 </div>
 <div class="main-panel">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent">
+    <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent ">
         <div class="container-fluid">
             <div class="navbar-wrapper">
                 <div class="navbar-toggle">

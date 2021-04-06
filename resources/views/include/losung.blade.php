@@ -1,4 +1,4 @@
-    <div class="card  bg-light">
+    <div class="card blur">
         <div class="card-body">
             <div class="container-fluid">
                 <div class="row">
