@@ -2,13 +2,13 @@
 
 @section('content')
 
-    <div class="container-fluid">
+    <div class="container-fluid ">
         <div class="card">
             <div class="card-header border-bottom">
                 Datei-Downloads
             </div>
 
-            <div class="card-body">
+            <div class="card-body blur">
                 <ul class="list-group">
 
                     @foreach($medien as $medium)

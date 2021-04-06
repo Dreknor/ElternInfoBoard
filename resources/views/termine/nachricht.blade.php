@@ -1,5 +1,5 @@
 @if(isset($termine) and !is_null($termine) and !isset($archiv))
-    <div class="card border">
+    <div class="card border blur">
         <div class="card-header border-bottom" >
             <div class="row">
                 <div class="col-md-10">

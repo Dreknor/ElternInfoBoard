@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="container-fluid">
-    <div class="card">
+    <div class="card blur">
         <div class="card-header border-bottom">
             <h5>
                 archivierte Nachrichten

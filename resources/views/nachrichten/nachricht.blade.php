@@ -1,11 +1,12 @@
 
-<div class="nachricht  {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}" @if(count($nachricht->getMedia('header'))>0) style="background-image: url({{url('/image/'.$nachricht->getMedia('header')->first()->id)}}); background-size: cover;" @endif>
-
+<div class="nachricht blur {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}" >
+    @if(count($nachricht->getMedia('header'))>0)
+        <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}" style="max-height: 250px;object-fit: cover; object-position: 0 40%;">
+    @endif
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom blur" >
-
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-10">
+        <div class="container-fluid " @if(count($nachricht->getMedia('header'))>0) style="margin-top: -90px;" @endif>
+            <div class="row  blur">
+                    <div class="col-md-10">
                     <h5 class="card-title">
                         @if($nachricht->sticky)
                             <i class="fas fa-thumbtack fa-xs " ></i>
@@ -103,11 +104,11 @@
         </div>
 
     </div>
-    <div class="card-body  @if($nachricht->is_archived) collapse @endif" id="Collapse{{$nachricht->id}}">
+    <div class="card-body  @if($nachricht->is_archived) collapse @endif" id="Collapse{{$nachricht->id}}" >
         <div class="container-fluid">
             @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
                 <div class="row">
-                    <div class="col-md-8 col-sm-12">
+                    <div class="col-md-8 col-sm-12 blur">
                         <p>
                             {!! $nachricht->news !!}
                         </p>
@@ -123,9 +124,12 @@
                     </div>
                 </div>
             @else
-                <p class="pl-2">
-                    {!! $nachricht->news !!}
-                </p>
+                <div class="container-fluid">
+                    <p class="pl-2  blur">
+                        {!! $nachricht->news !!}
+                    </p>
+                </div>
+
             @endif
         </div>
     </div>

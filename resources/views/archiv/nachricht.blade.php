@@ -1,10 +1,10 @@
 
-<div class="nachricht  {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}">
+<div class="nachricht {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif blur" id="{{$nachricht->id}}">
     @if(count($nachricht->getMedia('header'))>0)
             <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}" style="max-height: 250px;object-fit: cover; object-position: 0 70%;">
     @endif
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom" >
-        <div class="container-fluid">
+        <div class="container-fluid ">
             <div class="row">
                 <div class="col-md-10">
                     <h5 class="card-title">
