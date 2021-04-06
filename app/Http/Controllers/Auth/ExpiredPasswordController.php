@@ -4,13 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PasswordExpiredRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class ExpiredPasswordController extends Controller
 {
     public function expired()
     {
-        return view('auth.passwords.expired');
+        if (Auth::check() and Auth::user()->changePassword == 1){
+            return view('auth.passwords.expired');
+        } else {
+            return redirect(url('/'));
+        }
+
     }
 
     public function postExpired(PasswordExpiredRequest $request)

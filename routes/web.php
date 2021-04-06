@@ -54,6 +54,8 @@ Route::group([
         ->name('password.post_expired');
 
     Route::middleware(['password_expired'])->group(function () {
+
+
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
         Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');

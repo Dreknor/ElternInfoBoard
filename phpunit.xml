@@ -7,7 +7,7 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="false">
+         stopOnFailure="true">
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>
@@ -23,6 +23,7 @@
         </whitelist>
     </filter>
     <php>
+        <server name="APP_URL" value="https://127.0.0.1:8000"/>
         <server name="APP_ENV" value="testing"/>
         <server name="BCRYPT_ROUNDS" value="4"/>
         <server name="CACHE_DRIVER" value="array"/>
@@ -32,5 +33,7 @@
         <server name="DB_CONNECTION" value="sqlite"/>
         <server name="DB_DATABASE" value=":memory:"/>
         <server name="TELESCOPE_ENABLED" value="false"/>
+        <server name="MAIL_FROM_ADDRESS" value="test@test.org"/>
+        <server name="MAIL_FROM_NAME" value="ElternInfoBoard"/>
     </php>
 </phpunit>

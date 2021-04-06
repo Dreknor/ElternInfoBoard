@@ -14,7 +14,7 @@ class AddLoginToUser extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('last_online_at')->useCurrent();
+            $table->timestamp('last_online_at')->default(now());
         });
     }
 
