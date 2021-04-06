@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\HomeController;
+use App\Http\Middleware\PasswordExpired;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Http\Controllers\NachrichtenControllerTest;
 use Tests\TestCase;
 
 class BasicTest extends TestCase
@@ -39,5 +42,5 @@ class BasicTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('home');
     }
-    
+
 }

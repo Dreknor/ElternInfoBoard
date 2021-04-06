@@ -22,11 +22,10 @@ class ExpiredPasswordController extends Controller
     public function postExpired(PasswordExpiredRequest $request)
     {
         // Checking current password
-        if (! Hash::check($request->current_password, $request->user()->password)) {
+        if (! Hash::check($request->current_password, auth()->user()->password)) {
             return redirect()->back()->withErrors(['current_password' => 'Current password is not correct']);
         }
-
-        $request->user()->update([
+        auth()->user()->update([
             'password' => bcrypt($request->password),
             'changePassword' => 0,
         ]);
