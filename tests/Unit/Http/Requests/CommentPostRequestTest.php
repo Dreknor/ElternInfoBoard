@@ -5,12 +5,13 @@ namespace Tests\Unit\Http\Requests;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Tests\FormRequestTestCase;
 use Tests\TestCase;
 
 /**
  * @see \App\Http\Requests\CommentPostRequest
  */
-class CommentPostRequestTest extends TestCase
+class CommentPostRequestTest extends FormRequestTestCase
 {
     use RefreshDatabase;
     /** @var \App\Http\Requests\CommentPostRequest */
@@ -21,9 +22,9 @@ class CommentPostRequestTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = $this->app['validator'];
         $this->subject = new \App\Http\Requests\CommentPostRequest();
         $this->rules = $this->subject->rules();
+
     }
 
     /**
@@ -53,7 +54,7 @@ class CommentPostRequestTest extends TestCase
      */
     public function rules()
     {
-        $actual = $this->subject->rules();
+        $actual = $this->rules;
 
         $this->assertValidationRules([
             'comment' => [
@@ -71,22 +72,8 @@ class CommentPostRequestTest extends TestCase
 
         $comment = "";
 
-        $this->assertFalse($this->validateField('comment', ''));
-        $this->assertFalse($this->validateField('comment', ['Hallo']));
-        $this->assertTrue($this->validateField('comment', 'Hallo Welt'));
-    }
-
-
-    protected function getFieldValidator($field, $value)
-    {
-        return $this->validator->make(
-            [$field => $value],
-            [$field => $this->rules[$field]]
-        );
-    }
-
-    protected function validateField($field, $value)
-    {
-        return $this->getFieldValidator($field, $value)->passes();
+        $this->assertFalse($this->validateField('comment', '', $this->rules));
+        $this->assertFalse($this->validateField('comment', ['Hallo'], $this->rules));
+        $this->assertTrue($this->validateField('comment', 'Hallo Welt', $this->rules));
     }
 }
