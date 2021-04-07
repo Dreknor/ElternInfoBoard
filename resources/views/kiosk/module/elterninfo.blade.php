@@ -12,7 +12,7 @@
             </div>
             <div class="" id="news_{{$x}}">
                 <div class="card-columns">
-                    @foreach($elterninfo->slice($x-1,5) as $info)
+                    @foreach($elterninfo->slice($x-1,3) as $info)
                         <div class="card">
                             <div class="card-body info-body">
                                 <h4 class="card-title">

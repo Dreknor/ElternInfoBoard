@@ -48,6 +48,8 @@ Route::group([
 ],
     function () {
 
+
+
     Route::get('password/expired', [ExpiredPasswordController::class,'expired'])
         ->name('password.expired');
     Route::post('password/post_expired', [ExpiredPasswordController::class,'postExpired'])
@@ -112,7 +114,7 @@ Route::group([
 
         //KioskAnsicht
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
-        //Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
+        Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
 
         //Terminlisten
         Route::get('listen', [ListenController::class, 'index']);

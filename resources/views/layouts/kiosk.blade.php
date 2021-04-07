@@ -1,5 +1,5 @@
 @foreach($module as $modul)
-    @include("kiosk.module.blade.php.$modul")
+    @include("kiosk.module.$modul")
 @endforeach
 <!DOCTYPE html>
 <html lang="de">
@@ -34,14 +34,12 @@
 
 </head>
 
-<body id="">
-    <div class="container-fluid">
-        <div id="carousel" class="carousel slide " data-ride="carousel" data-interval="12000">
-            <div class="carousel-inner">
+<body class="w-100 h-100 border-info">
+        <div id="carousel" class="carousel slide w-100 h-100" data-ride="carousel" data-interval="6000">
+            <div class="carousel-inner w-100 h-100">
                 @stack('slider')
             </div>
         </div>
-    </div>
 
     <!-- JavaScripts -->
 

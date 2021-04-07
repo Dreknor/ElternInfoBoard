@@ -28,10 +28,10 @@ class KioskController extends Controller
         foreach ($Gruppen as $Gruppe) {
             $Nachrichten = $Nachrichten->concat($Gruppe->posts);
         }
-
+//'losung', 'uhr', 'bilder', 'elterninfo'
         return view('layouts.kiosk', [
             'refresh'   => 600,
-            'module.blade.php'    => ['losung', 'uhr', 'bilder', 'elterninfo'],
+            'module'    => ['elterninfo'],
             'elterninfo' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
             'losung'    =>  Losung::where('date', Carbon::today())->first(),
         ]);
