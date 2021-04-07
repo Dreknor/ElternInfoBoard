@@ -4,21 +4,26 @@ namespace Tests\Unit\Http\Requests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Tests\FormRequestTestCase;
 use Tests\TestCase;
 
 /**
  * @see \App\Http\Requests\CreateChildRequest
  */
-class CreateChildRequestTest extends TestCase
+class CreateChildRequestTest extends FormRequestTestCase
 {
-    /** @var \App\Http\Requests\CreateChildRequest */
+    use RefreshDatabase;
+
     private $subject;
+    private $rules;
+    private $validator;
 
     protected function setUp(): void
     {
         parent::setUp();
-
         $this->subject = new \App\Http\Requests\CreateChildRequest();
+        $this->rules = $this->subject->rules();
+
     }
 
     /**
