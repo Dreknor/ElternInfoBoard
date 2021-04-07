@@ -2,23 +2,29 @@
 
 namespace Tests\Unit\Http\Requests;
 
+use App\Http\Requests\createDiscussionRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Tests\FormRequestTestCase;
 use Tests\TestCase;
 
 /**
  * @see \App\Http\Requests\createDiscussionRequest
  */
-class createDiscussionRequestTest extends TestCase
+class createDiscussionRequestTest extends FormRequestTestCase
 {
-    /** @var \App\Http\Requests\createDiscussionRequest */
+    use RefreshDatabase;
+
     private $subject;
+    private $rules;
+    private $validator;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->subject = new createDiscussionRequest();
+        $this->rules = $this->subject->rules();
 
-        $this->subject = new \App\Http\Requests\createDiscussionRequest();
     }
 
     /**
