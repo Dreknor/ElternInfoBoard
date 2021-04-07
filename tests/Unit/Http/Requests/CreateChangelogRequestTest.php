@@ -79,8 +79,7 @@ class CreateChangelogRequestTest extends FormRequestTestCase
             ],
             'changeSettings' => [
                 'required',
-                'min:0',
-                'max:1',
+                'boolean',
             ],
         ], $actual);
     }
@@ -115,12 +114,14 @@ class CreateChangelogRequestTest extends FormRequestTestCase
         $this->assertFalse($this->validateField('changeSettings', '', $this->rules));
         $this->assertFalse($this->validateField('changeSettings', [1,0], $this->rules));
         $this->assertFalse($this->validateField('changeSettings', rand(-5,-1), $this->rules));
-        $this->assertFalse($this->validateField('changeSettings', rand(2,100), $this->rules));
+        $this->assertFalse($this->validateField('changeSettings', rand(2,1000), $this->rules));
         $this->assertFalse($this->validateField('changeSettings', 0.1, $this->rules));
         $this->assertFalse($this->validateField('changeSettings', 0.8, $this->rules));
 
 
         $this->assertTrue($this->validateField('changeSettings', 1, $this->rules));
         $this->assertTrue($this->validateField('changeSettings', 0, $this->rules));
+        $this->assertTrue($this->validateField('changeSettings', true, $this->rules));
+        $this->assertTrue($this->validateField('changeSettings', false, $this->rules));
     }
 }

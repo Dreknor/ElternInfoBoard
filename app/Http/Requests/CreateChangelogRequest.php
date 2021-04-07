@@ -34,8 +34,7 @@ class CreateChangelogRequest extends FormRequest
             ],
             'changeSettings' => [
                 'required',
-                'min:0',
-                'max:1',
+                'boolean',
             ],
         ];
     }

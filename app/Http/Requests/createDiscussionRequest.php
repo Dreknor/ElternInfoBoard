@@ -13,7 +13,7 @@ class createDiscussionRequest extends FormRequest
      */
     public function authorize()
     {
-        return auth()->user()->can('view elternrat');
+        return auth()->check() and auth()->user()->can('view elternrat');
     }
 
     /**
@@ -30,6 +30,7 @@ class createDiscussionRequest extends FormRequest
             ],
             'text'      => [
                 'required',
+                'string'
             ],
             'sticky'    => [
                 'required',
