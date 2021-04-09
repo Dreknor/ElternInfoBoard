@@ -429,7 +429,7 @@ class NachrichtenController extends Controller
 
         foreach ($users as $user) {
             if (! $user->can('view all')) {
-                $Nachrichten = $user->posts;
+                $Nachrichten = $user->postsNotArchived;
             } else {
                 $Nachrichten = Post::all();
             }
@@ -489,7 +489,7 @@ class NachrichtenController extends Controller
                 'discussionen'  => $diskussionen,
             ]);
         }
-        
+
         $admin = Role::findByName('Administrator');
         $admin = $admin->users()->first();
 
