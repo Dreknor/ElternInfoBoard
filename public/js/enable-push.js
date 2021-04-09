@@ -17,7 +17,9 @@ function initSW() {
     }
 
     //register the service worker
-    navigator.serviceWorker.register('sw.js')
+    var url = window.location.href.split('?')[0];
+
+    navigator.serviceWorker.register(url+'/sw.js')
         .then(() => {
             //console.log('serviceWorker installed!');
             initPush();
