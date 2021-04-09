@@ -337,8 +337,9 @@ class NachrichtenController extends Controller
         if ($request->hasFile('files')) {
             if (auth()->user()->can('upload great files')) {
                 try {
-                    @ini_set('post_max_size', '300M');
-                    dd('upload_max_size = ' . ini_get('upload_max_size') . "\n");
+                    @ini_set('upload_max_filesize', '300M');
+                    @ini_set('post_max_size ', '300M');
+                    dd('upload_max_size = ' . ini_get('upload_max_filesize') . "\n".'post_max_size = ' . ini_get('post_max_size') . "\n");
                 } catch (\Exception $exception){
                     redirect()->back()->with([
                         'type'=>'danger',
