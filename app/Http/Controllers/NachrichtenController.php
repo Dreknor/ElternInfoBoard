@@ -431,7 +431,7 @@ class NachrichtenController extends Controller
             if (! $user->can('view all')) {
                 $Nachrichten = $user->postsNotArchived;
             } else {
-                $Nachrichten = Post::all();
+                $Nachrichten = Post::where('updated_at', '>',$user->lastEmail)->where('archiv_ab', '>',Carbon::now())->get();
             }
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
