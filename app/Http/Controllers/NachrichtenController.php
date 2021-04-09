@@ -339,7 +339,7 @@ class NachrichtenController extends Controller
                 try {
                     @ini_set('upload_max_size', '300M');
                     @ini_set('post_max_size', '300M');
-                    dd('post_max_size = ' . ini_get('post_max_size') . "\n");
+                    dd('upload_max_size = ' . ini_get('upload_max_size') . "\n");
                 } catch (\Exception $exception){
                     redirect()->back()->with([
                         'type'=>'danger',
