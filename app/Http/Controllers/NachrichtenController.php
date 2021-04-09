@@ -69,10 +69,10 @@ class NachrichtenController extends Controller
     public function postsArchiv(Request $request)
     {
         $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
-            if (! request()->user()->can('view all')) {
-                $Nachrichten = request()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>',request()->user()->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+            if (! auth()->user()->can('view all')) {
+                $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>',auth()->user()->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
-                if (request()->user()->can('create posts')) {
+                if (auth()->user()->can('create posts')) {
                     $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
                     $Nachrichten = $Nachrichten->concat($eigenePosts);
                 }
@@ -88,7 +88,7 @@ class NachrichtenController extends Controller
 
         return view('archiv.archiv', [
             'nachrichten'   => $Nachrichten->paginate(30),
-            'user'  => request()->user(),
+            'user'  => auth()->user(),
         ]);
     }
 
@@ -97,7 +97,7 @@ class NachrichtenController extends Controller
      */
     public function create(Request $request)
     {
-        if (! request()->user()->can('create posts')) {
+        if (! auth()->user()->can('create posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -117,7 +117,7 @@ class NachrichtenController extends Controller
      */
     public function edit(Request $request, Post $posts, $kiosk = '')
     {
-        if (! request()->user()->can('edit posts') and request()->user()->id != $posts->author) {
+        if (! auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -148,7 +148,7 @@ class NachrichtenController extends Controller
     {
         $user = $request->user();
 
-        if (! request()->user()->can('create posts')) {
+        if (! auth()->user()->can('create posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -170,11 +170,11 @@ class NachrichtenController extends Controller
 
         $post->groups()->attach($gruppen);
 
-        if (! request()->user()->can('release posts')) {
+        if (! auth()->user()->can('release posts')) {
             $permission = Permission::query()->where('name', 'release posts')->first();
 
             foreach ($permission->users as $user) {
-                Mail::to($user->email)->queue(new newUnveroeffentlichterBeitrag(request()->user()->name, $post->header));
+                Mail::to($user->email)->queue(new newUnveroeffentlichterBeitrag(auth()->user()->name, $post->header));
             }
         } else {
             if ($post->released) {
@@ -236,7 +236,7 @@ class NachrichtenController extends Controller
                 ];
             }
 
-            @Mail::to(request()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
+            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
             $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
         }
 
@@ -254,7 +254,7 @@ class NachrichtenController extends Controller
                 $rueckmeldung = new Rueckmeldungen([
                     'post_id'  => $post->id,
                     'type'  => 'bild',
-                    'empfaenger'  => request()->user()->email,
+                    'empfaenger'  => auth()->user()->email,
                     'ende'      => $post->archiv_ab,
                     'text'      => ' ',
                 ]);
@@ -270,7 +270,7 @@ class NachrichtenController extends Controller
                         'post_id'  => $post->id,
                         'type'  => 'bild',
                         'commentable'  => 1,
-                        'empfaenger'  => request()->user()->email,
+                        'empfaenger'  => auth()->user()->email,
                         'ende'      => $post->archiv_ab,
                         'text'      => ' ',
                     ]);
@@ -306,7 +306,7 @@ class NachrichtenController extends Controller
 
         $user = $request->user();
 
-        if (! request()->user()->can('edit posts') and request()->user()->id != $posts->author) {
+        if (! auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -314,7 +314,7 @@ class NachrichtenController extends Controller
         }
 
         $posts->fill($request->all());
-        //$posts->author = request()->user()->id;
+        //$posts->author = auth()->user()->id;
 
         $posts->updated_at = $request->input('updated_at');
         $posts->save();
@@ -385,7 +385,7 @@ class NachrichtenController extends Controller
                 ];
             }
 
-            @Mail::to(request()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
+            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
             $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
         }
 
@@ -516,7 +516,7 @@ class NachrichtenController extends Controller
      */
     public function release(Request $request, Post $posts)
     {
-        if (! request()->user()->can('release posts')) {
+        if (! auth()->user()->can('release posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -538,7 +538,7 @@ class NachrichtenController extends Controller
 
     public function archiv(Request $request, Post $posts)
     {
-        if (! request()->user()->can('edit posts')) {
+        if (! auth()->user()->can('edit posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -561,7 +561,7 @@ class NachrichtenController extends Controller
      */
     public function pdf(Request $request, $archiv = null)
     {
-        $user = request()->user();
+        $user = auth()->user();
         $user->with(['userRueckmeldung', 'sorgeberechtigter2', 'sorgeberechtigter2.userRueckmeldung']);
         $archivDate = Carbon::now()->endOfDay()->subWeeks(1);
 
@@ -607,7 +607,7 @@ class NachrichtenController extends Controller
      */
     public function destroy(Request $request, Post $posts)
     {
-        if ($posts->author == request()->user()->id and $posts->released == 0) {
+        if ($posts->author == auth()->user()->id and $posts->released == 0) {
             $posts->groups()->detach();
             if (! is_null($posts->rueckmeldung())) {
                 $posts->rueckmeldung()->delete();
@@ -648,7 +648,7 @@ class NachrichtenController extends Controller
 
     public function kioskView(Request $request)
     {
-        if (request()->user()->can('view all')) {
+        if (auth()->user()->can('view all')) {
             $Nachrichten = new Collection();
 
             $Gruppen = Group::where('protected', 0)->with(['posts' => function ($query) {
@@ -661,7 +661,7 @@ class NachrichtenController extends Controller
 
             //Listen für den Kiosk
             $listen = [];
-            if (request()->user()->can('edit terminliste')) {
+            if (auth()->user()->can('edit terminliste')) {
                 $listen = Liste::query()->whereDate('ende', '>', Carbon::now())->where('active', 1)->with('eintragungen')->get();
                 $listen = $listen->filter(function ($liste) {
                     $eintragungen = $liste->eintragungen()->where('termin', '>=', Carbon::now()->format('Y-m-d'))->count();
@@ -675,7 +675,7 @@ class NachrichtenController extends Controller
                 'Nachrichten'    => $Nachrichten->unique('id')->sortByDesc('updated_at'),
                 'counter'       =>          0,
                 'archiv'        => 0,
-                'user'          => request()->user(),
+                'user'          => auth()->user(),
                 'listen'    => $listen,
             ]);
         }
@@ -690,7 +690,7 @@ class NachrichtenController extends Controller
     {
         $posts->comment([
             'body'=> $request->comment, ],
-            request()->user()
+            auth()->user()
         );
 
         return redirect(url('/home#'.$posts->id));
