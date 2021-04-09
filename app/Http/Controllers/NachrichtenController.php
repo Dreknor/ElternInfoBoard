@@ -184,7 +184,7 @@ class NachrichtenController extends Controller
 
         //Dateien verarbeiten
         if ($request->hasFile('files')) {
-            if (request()->user()->can('upload great files')) {
+            if (auth()->user()->can('upload great files')) {
                 @ini_set('upload_max_size', '300M');
                 @ini_set('post_max_size', '300M');
             }
