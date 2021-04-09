@@ -419,7 +419,6 @@ class NachrichtenController extends Controller
 
         if (is_null($userSend)) {
             $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
-            Log::debug($users);
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -466,7 +465,6 @@ class NachrichtenController extends Controller
                     Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
                     $user->lastEmail = Carbon::now();
                     $user->save();
-                    Log::info($user->email);
 
                     if (! is_null($userSend)) {
                         return redirect()->back()->with([
@@ -480,17 +478,18 @@ class NachrichtenController extends Controller
 
                     Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
 
-                    if (! is_null($userSend)) {
-                        return view('emails.nachrichten')->with([
-                            'nachrichten' => $Nachrichten,
-                            'name'      => $user->name,
-                            'discussionen'  => $diskussionen,
-                        ]);
-                    }
+
                 }
             }
         }
-
+        if (! is_null($userSend)) {
+            return view('emails.nachrichten')->with([
+                'nachrichten' => $Nachrichten,
+                'name'      => $user->name,
+                'discussionen'  => $diskussionen,
+            ]);
+        }
+        
         $admin = Role::findByName('Administrator');
         $admin = $admin->users()->first();
 
