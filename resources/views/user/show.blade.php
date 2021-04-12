@@ -51,7 +51,7 @@
                                         <div class="col-md-12">
                                             <div class="form-group">
                                                 <label>öffentliche E-Mail</label>
-                                                <input type="text" class="form-control border-input" placeholder="öffentliche E-Mail" name="email" value="{{$user->publicMail}}">
+                                                <input type="text" class="form-control border-input" placeholder="öffentliche E-Mail" name="publicMail" value="{{$user->publicMail}}">
                                             </div>
                                         </div>
                                     </div>
