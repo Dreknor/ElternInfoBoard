@@ -14,7 +14,6 @@ use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
-use App\Model\Termin;
 use App\Model\User;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
@@ -36,6 +35,8 @@ use Spatie\Permission\Models\Role;
  */
 class NachrichtenController extends Controller
 {
+    private $groupsRepository;
+
     /**
      * Create a new controller instance.
      *
@@ -66,7 +67,7 @@ class NachrichtenController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function postsArchiv(Request $request)
+    public function postsArchiv()
     {
         $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
             if (! request()->user()->can('view all')) {
@@ -95,7 +96,7 @@ class NachrichtenController extends Controller
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
-    public function create(Request $request)
+    public function create()
     {
         if (! request()->user()->can('create posts')) {
             return redirect()->to('/home')->with([
@@ -115,7 +116,7 @@ class NachrichtenController extends Controller
      * @param Post $posts
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
-    public function edit(Request $request, Post $posts, $kiosk = '')
+    public function edit(Post $posts, $kiosk = '')
     {
         if (! request()->user()->can('edit posts') and request()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
@@ -249,7 +250,6 @@ class NachrichtenController extends Controller
                     'type' => 'success',
                     'Meldung' => $Meldung,
                 ]);
-                break;
             case 'bild':
                 $rueckmeldung = new Rueckmeldungen([
                     'post_id'  => $post->id,
@@ -264,7 +264,7 @@ class NachrichtenController extends Controller
                     'type' => 'success',
                     'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                 ]);
-                break;
+
             case 'bild_commentable':
                     $rueckmeldung = new Rueckmeldungen([
                         'post_id'  => $post->id,
@@ -280,13 +280,11 @@ class NachrichtenController extends Controller
                         'type' => 'success',
                         'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                     ]);
-                break;
             default:
                 return redirect(url('/home#'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht angelegt.',
                 ]);
-                break;
 
         }
     }
