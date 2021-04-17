@@ -13,7 +13,7 @@ class CreateGroupRequest extends FormRequest
      */
     public function authorize()
     {
-        return auth()->user()->can('view groups');
+        return auth()->check() and auth()->user()->can('view groups');
     }
 
     /**
@@ -34,6 +34,7 @@ class CreateGroupRequest extends FormRequest
             ],
             'protected' => [
                 'sometimes',
+                'boolean'
             ],
         ];
     }

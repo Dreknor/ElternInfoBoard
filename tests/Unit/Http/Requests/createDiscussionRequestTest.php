@@ -40,6 +40,7 @@ class createDiscussionRequestTest extends FormRequestTestCase
         $this->assertFalse($actual);
 
     }
+
     /**
      * @test
      */
