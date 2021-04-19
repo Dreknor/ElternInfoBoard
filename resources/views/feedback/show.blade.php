@@ -26,6 +26,13 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
+                            <input class="form-control border-input" name="betreff" value="{{old('betreff', 'Nachricht von '.auth()->user()->name)}}">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
                             <textarea class="form-control border-input" name="text">
                                 {{old('text')}}
                             </textarea>

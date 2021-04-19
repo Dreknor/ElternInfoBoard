@@ -28,6 +28,10 @@ class KontaktRequest extends FormRequest
                 'required',
                 'string',
             ],
+            'betreff' => [
+                'required',
+                'string',
+            ],
             'mitarbeiter' => [
                 'present',
             ],
