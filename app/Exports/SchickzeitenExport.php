@@ -16,10 +16,10 @@ class SchickzeitenExport implements WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        $von = Carbon::createFromFormat('h:i:s', config('schicken.ab'))->hour;
-        $bis = Carbon::createFromFormat('h:i:s', config('schicken.max'))->hour;
+        $von = Carbon::createFromFormat('h:i:s', config('schicken.ab'));
+        $bis = Carbon::createFromFormat('h:i:s', config('schicken.max'));
 
-        for ($x = $von; $x < $bis+1; $x++) {
+        for ($x = $von->format('H'); $x < $bis->addHour()->format('H'); $x++) {
             $spreadsheet = new SchickzeitenStundenExport($x);
             $sheets[] = $spreadsheet;
         }
