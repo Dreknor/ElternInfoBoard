@@ -319,6 +319,8 @@ class SchickzeitenController extends Controller
 
     public function download()
     {
+        $bis = Carbon::createFromFormat('H:i:s', config('schicken.max'));
+        dd($bis->format('H'));
         return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
     }
 }
