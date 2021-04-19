@@ -24,19 +24,20 @@ class CheckNewsForUser
             return $next($request);
         }
 
-        $user = auth()->user();
 
-        if ($user->changeSettings) {
+
+        if (auth()->user()->changeSettings) {
+            $user = auth()->user();
             $user->changeSettings = 0;
             $user->save();
 
             return redirect()->to('/einstellungen')->with(['changelog'    => true]);
         }
 
-        if ($user->track_login == true or $user->track_login == 1)   {
+        if (auth()->user()->track_login == true or auth()->user()->track_login == 1)   {
             $news = Cache::remember('news_'.auth()->id(), 60 * 5, function () {
                 $news = [];
-                $changelog = Changelog::whereDate('created_at', '>=', $user->last_online_at)->first();
+                $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at)->first();
                 if (! is_null($changelog)) {
                     $news[] = [
                         'link' => url('/changelog'),
@@ -44,7 +45,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $termine = request()->user()->termine()->whereDate('termine.created_at', '>=', $user->last_online_at)->get();
+                $termine = auth()->user()->termine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at)->get();
                 $termine = $termine->unique('id');
                 foreach ($termine as $termin) {
                     $news[] = [
@@ -53,7 +54,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $posts = $user->posts()->whereDate('posts.created_at', '>=', request()->user()->last_online_at)->get();
+                $posts = auth()->user()->posts()->whereDate('posts.created_at', '>=', auth()->user()->last_online_at)->get();
                 $posts = $posts->unique('id');
 
                 foreach ($posts as $post) {
@@ -63,7 +64,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $listen = $user->listen()->whereDate('listen.created_at', '>=', request()->user()->last_online_at->startofDay())->get();
+                $listen = auth()->user()->listen()->whereDate('listen.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
                 $listen = $listen->unique('id');
 
                 foreach ($listen as $liste) {
@@ -73,13 +74,13 @@ class CheckNewsForUser
                     ];
                 }
 
-                $gruppen = $user->groups->load('media');
+                $gruppen = auth()->user()->groups->load('media');
                 $media = new Collection();
 
                 foreach ($gruppen as $gruppe) {
                     $gruppenMedien = $gruppe->getMedia();
                     foreach ($gruppenMedien as $medium) {
-                        if ($medium->created_at->greaterThan($user->last_online_at)) {
+                        if ($medium->created_at->greaterThan(auth()->user()->last_online_at)) {
                             $media->push($medium);
                         }
                     }
