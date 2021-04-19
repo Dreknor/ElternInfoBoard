@@ -19,7 +19,7 @@ class SchickzeitenExport implements WithMultipleSheets
         $von = Carbon::createFromFormat('H:i:s', config('schicken.ab'));
         $bis = Carbon::createFromFormat('H:i:s', config('schicken.max'));
 
-        for ($x = $von->format('H'); $x < $bis->addHour()->format('H'); $x++) {
+        for ($x = $von->format('H'); $x <= $bis->format('H'); $x++) {
             $spreadsheet = new SchickzeitenStundenExport($x);
             $sheets[] = $spreadsheet;
         }
