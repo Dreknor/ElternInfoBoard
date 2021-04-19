@@ -26,9 +26,9 @@ class SchickzeitenController extends Controller
      *
      * @return View
      */
-    public function index(Request $request)
+    public function index()
     {
-        $zeiten = $request->user()->schickzeiten;
+        $zeiten = auth()->user()->schickzeiten;
         $childs = $zeiten->pluck('child_name')->unique();
 
         $weekdays = [
@@ -82,7 +82,7 @@ class SchickzeitenController extends Controller
     public function createChild(CreateChildRequest $request)
     {
         $Kind = Schickzeiten::firstOrCreate([
-            'users_id' => $request->user()->id,
+            'users_id' => auth()->id(),
             'child_name' => $request->child,
         ]);
 
