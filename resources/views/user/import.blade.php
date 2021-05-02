@@ -13,6 +13,8 @@
                 Ausgehend von den Schülern werden Namen und E-Mail-Adresse sowie Klassenstufe und Lerngruppe der Schüler exportiert.
                 Bitte prüfen, ob die Spaltenangabe zur Überschrift passt und ggf. korrigieren.
             </p>
+            <p class="text-info">Hinweis Mitarbeiterimport: Es werden die Spalten 'e_mail', 'vorname', 'nachname' benötigt. Auch muss die Rolle 'Mitarbeiter' angelegt sein.
+            </p>
 
         </div>
         <div class="card-body">
