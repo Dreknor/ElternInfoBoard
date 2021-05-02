@@ -44,6 +44,7 @@ class ImportController extends Controller
                 Excel::import(new UsersImport($header), $request->file('file'));
 
                 $Meldung = 'Eltern wurden importiert';
+
             } elseif ($request->input('type') == 'aufnahme') {
                 $header = [
                     'S1Vorname' => $request->input('S1Vorname') - 1,
@@ -51,7 +52,6 @@ class ImportController extends Controller
                     'S1Email' => $request->input('S1Email') - 1,
                     'S2Email' => $request->input('S2Email') - 1,
                     'S2Vorname' => $request->input('S2Vorname') - 1,
-                    'S2Nachname' => $request->input('S2Nachname') - 1,
                     'S2Nachname' => $request->input('S2Nachname') - 1,
                     'gruppen' => $request->input('gruppen') - 1,
                 ];

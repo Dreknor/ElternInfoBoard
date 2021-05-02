@@ -23,7 +23,7 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 ], [
                     'name'  => $row['vorname'].' '.$row['nachname'],
                     'changePassword'  => 1,
-                    'password'      => Hash::make('Schule'.Carbon::now()->year.'!'),
+                    'password'      => Hash::make(config('app.import_mitarbeiter')),
                     'lastEmail' => Carbon::now(),
                 ]);
 
