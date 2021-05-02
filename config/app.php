@@ -245,4 +245,9 @@ return [
 
     //Link Mitarbeiterboard - Benötigt für Vertretungsplan
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
+
+    //Passwort für Import
+    'import_eltern' => env('PW_IMPORT_ELTERN',  \Carbon\Carbon::now()->format('dmY')),
+    'import_aufnahme' => env('PW_IMPORT_AUFNAHME',  \Carbon\Carbon::now()->format('dmY')),
+    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', \Carbon\Carbon::now()->format('dmY')),
 ];

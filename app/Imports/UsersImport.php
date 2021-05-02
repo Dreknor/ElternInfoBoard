@@ -44,7 +44,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     [
                         'name'  => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
                         'changePassword'  => 1,
-                        'password'      => Hash::make('ESZ'.Carbon::now()->year.'!'),
+                        'password'      => Hash::make(config('import_eltern')),
                         'lastEmail' => Carbon::now(),
                     ]);
 
