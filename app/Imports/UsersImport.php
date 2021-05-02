@@ -54,7 +54,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 if (is_object($Klassenstufe)) {
                     $user1->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
                 } else {
-                    dd($row);
+
                 }
             }
 
@@ -68,7 +68,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     [
                         'name' => $row[$this->header['S2Vorname']].' '.$row[$this->header['S2Nachname']],
                         'changePassword' => 1,
-                        'password' => Hash::make('ESZ'.Carbon::now()->year.'!'),
+                        'password' => Hash::make(config('import_eltern')),
                         'lastEmail' => Carbon::now(),
                     ]);
 
@@ -78,7 +78,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 if (is_object($Klassenstufe)) {
                     $user2->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
                 } else {
-                    dd($row);
+
                 }
             }
 
