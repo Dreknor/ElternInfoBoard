@@ -27,20 +27,19 @@
                             </div>
                         </div>
                     </div>
-                    @if(auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author )
-                        <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#collapse{{$nachricht->id}}" aria-expanded="false" aria-controls="collapseExample">
-                            Gruppen zeigen
-                        </button>
-                        <div class="row collapse d-md-block" id="collapse{{$nachricht->id}}">
-                            <small class="col">
-                                @foreach($nachricht->groups as $group)
-                                    <div class="btn @if($nachricht->released == 0) btn-outline-warning @else  btn-outline-info @endif btn-sm">
-                                        {{$group->name}}
-                                    </div>
-                                @endforeach
-                            </small>
-                        </div>
-                    @endif
+
+                            <div class="row">
+                                <div class="col-12">
+                                    Gruppen:
+                                    @foreach($nachricht->groups as $group)
+                                        <span class="badge">
+                                            {{$group->name}}@if(!$loop->last), @endif
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                 
+
                     <div class="row">
                         <div class="col">
                             @if($nachricht->type == "info")
