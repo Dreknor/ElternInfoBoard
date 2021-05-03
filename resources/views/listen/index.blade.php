@@ -53,8 +53,30 @@
                                         @foreach($listen as $liste)
                                             <div class="card">
                                                 <div class="card-header  @if($liste->active == 0) bg-info @endif ">
+                                                    @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
+                                                        <div class="d-inline pull-right">
+                                                            <div class="pull-right">
+                                                                <a href="{{url("listen/$liste->id/edit")}}" class="card-link">
+
+                                                                    <i class="fas fa-pencil-alt @if($liste->active == 0) text-gray @endif" title="bearbeiten"></i>
+                                                                </a>
+                                                                @if($liste->active == 0)
+                                                                    <a href="{{url("listen/$liste->id/activate")}}" class="card-link">
+                                                                        <i class="fas fa-eye  @if($liste->active == 0) text-gray @endif" title="veröffentlichen"></i>
+                                                                    </a>
+                                                                @else
+                                                                    <a href="{{url("listen/$liste->id/deactivate")}}" class="card-link">
+                                                                        <i class="fas fa-eye-slash" title="ausblenden"></i>
+                                                                    </a>
+                                                                @endif
+                                                            </div>
+
+                                                        </div>
+                                                    @endif
                                                     <h5>
                                                         {{$liste->listenname}} @if($liste->active == 0) (inaktiv) @endif
+
+
                                                     </h5>
                                                     <div class="row">
                                                         <div class="col-sm-8 col-md-8 col-lg-8">
@@ -63,25 +85,7 @@
                                                             </p>
                                                         </div>
 
-                                                        @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
-                                                            <div class="col-sm-4 col-md-4 col-lg-4">
-                                                                <div class="pull-right">
-                                                                    <a href="{{url("listen/$liste->id/edit")}}" class="btn btn-secondary btn-xs">
-                                                                        <i class="fas fa-pencil-alt" title="bearbeiten"></i>
-                                                                    </a>
-                                                                    @if($liste->active == 0)
-                                                                        <a href="{{url("listen/$liste->id/activate")}}" class="btn btn-xs btn-warning">
-                                                                            <i class="fas fa-eye" title="veröffentlichen"></i>
-                                                                        </a>
-                                                                    @else
-                                                                        <a href="{{url("listen/$liste->id/deactivate")}}" class="btn btn-xs btn-warning">
-                                                                            <i class="fas fa-eye-slash" title="ausblenden"></i>
-                                                                        </a>
-                                                                    @endif
-                                                                </div>
 
-                                                            </div>
-                                                        @endif
 
                                                     </div>
                                                     @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
