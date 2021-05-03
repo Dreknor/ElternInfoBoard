@@ -86,15 +86,11 @@
                                                         </div>
                                                     </div>
                                                     <div class="row" id="collapse{{$liste->id}}">
-                                                        <p>
-                                                            Gruppen:
                                                             @foreach($liste->groups as $group)
                                                                 <div class="badge">
                                                                     {{$group->name}}@if(!$loop->last), @endif
                                                                 </div>
                                                             @endforeach
-                                                        </p>
-
                                                     </div>
 
 
