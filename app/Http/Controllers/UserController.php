@@ -32,9 +32,8 @@ class UserController extends Controller
     public function index()
     {
         return view('user.index', [
-            'users' => Cache::remember('users_all', 60 * 5, function () {
-                return User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles');
-            }),
+            'users' =>  User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles')
+
         ]);
     }
 

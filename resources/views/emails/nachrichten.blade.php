@@ -7,7 +7,7 @@
 
 <p>Liebe/r {{$name}}</p>
 <p>
-    Folgende neue Nachrichten liegen für Sie im Eltern-Bereich des Schulzentrums vor:
+    Folgende neue Nachrichten liegen für Sie im {{config('app.name')}} vor:
 </p>
 
 <p>
@@ -34,6 +34,7 @@
         </ul>
     </p>
 @endif
+
 <p>
     Für genauere Inhalte loggen Sie sich bitte ein.
 </p>

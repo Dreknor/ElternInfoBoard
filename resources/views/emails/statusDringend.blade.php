@@ -6,20 +6,8 @@
 <body>
 
 <p>
-    Folgende {{count($empfaenger)}} Empfänger wurden informiert:
+    Es wurden {{count($empfaenger)}} Empfänger informiert
 </p>
-
-<p>
-    <ul>
-        @foreach($empfaenger as $Empfaenger)
-            <li>
-
-                    {{$Empfaenger['email']}}
-            </li>
-        @endforeach
-    </ul>
-</p>
-
 
 <p>
     <a href="https://eltern.esz-radebeul.de">eltern.esz-radebeul.de</a>

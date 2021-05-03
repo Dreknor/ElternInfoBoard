@@ -7,6 +7,7 @@ use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -55,5 +56,15 @@ class Post extends Model implements HasMedia
     public function getIsArchivedAttribute()
     {
         return $this->archiv_ab > Carbon::now() ? false : true;
+    }
+
+    public function scopeNotArchived($query)
+    {
+        return $query->where('archiv_ab', '>', now());
+    }
+
+    public function scopeReleased($query)
+    {
+        return $query->where('released', 1);
     }
 }

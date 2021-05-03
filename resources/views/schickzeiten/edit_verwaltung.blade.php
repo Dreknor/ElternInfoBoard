@@ -39,7 +39,7 @@
                         </div>
                         <div class="form-row mt-2">
                             <label for="time">Zeit</label>
-                            <input name="time" id="time" type="time" class="form-control" min="14:00:00" max="16:30:00" required value="{{optional(optional($schickzeit)->time)->format('H:i')}}">
+                            <input name="time" id="time" type="time" class="form-control" min="{{config('schicken.ab')}}" max="{{config('schicken.max')}}" required value="{{optional(optional($schickzeit)->time)->format('H:i')}}">
                         </div>
                         <div class="form-row mt-2 collapse @if(($schickzeit_spaet and $schickzeit_spaet !="") or ($schickzeit and $schickzeit->type == "ab")) show @endif>" id="spaet_row">
                             <label for="spaet">spätestens (optional)</label>

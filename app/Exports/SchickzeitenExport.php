@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Model\Schickzeiten;
+use Carbon\Carbon;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -15,7 +16,10 @@ class SchickzeitenExport implements WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        for ($x = 14; $x < 17; $x++) {
+        $von = Carbon::createFromFormat('H:i:s', config('schicken.ab'));
+        $bis = Carbon::createFromFormat('H:i:s', config('schicken.max'));
+
+        for ($x = $von->format('H'); $x <= $bis->format('H'); $x++) {
             $spreadsheet = new SchickzeitenStundenExport($x);
             $sheets[] = $spreadsheet;
         }

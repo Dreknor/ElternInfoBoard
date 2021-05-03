@@ -8,6 +8,7 @@
             <div class="row  blur">
                     <div class="col-md-10">
                     <h5 class="card-title">
+
                         @if($nachricht->sticky)
                             <i class="fas fa-thumbtack fa-xs " ></i>
                         @endif
@@ -27,37 +28,35 @@
                             </div>
                         </div>
                     </div>
-                    @if(auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author )
-                        <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#collapse{{$nachricht->id}}" aria-expanded="false" aria-controls="collapseExample">
-                            Gruppen zeigen
-                        </button>
-                        <div class="row collapse d-md-block" id="collapse{{$nachricht->id}}">
-                            <small class="col">
-                                @foreach($nachricht->groups as $group)
-                                    <div class="btn @if($nachricht->released == 0) btn-outline-warning @else  btn-outline-info @endif btn-sm">
-                                        {{$group->name}}
+                    <div class="row mt-1">
+                                <div class="col-12">
+                                    Gruppen:
+                                    @foreach($nachricht->groups as $group)
+                                        <span class="badge">
+                                            {{$group->name}}@if(!$loop->last), @endif
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                    <div class="row mt-1 mb-1">
+                        <div class="col-12">
+
+                                @if($nachricht->type == "info")
+                                    <div class="badge badge-info p-2">
+                                        Information
                                     </div>
-                                @endforeach
-                            </small>
-                        </div>
-                    @endif
-                    <div class="row">
-                        <div class="col">
-                            @if($nachricht->type == "info")
-                                <div class="btn btn-outline-info btn-sm">
-                                    Information
-                                </div>
-                            @endif
-                            @if($nachricht->type == "wahl")
-                                <div class="btn btn-outline-warning btn-sm">
-                                    Wahlaufgabe
-                                </div>
-                            @endif
-                            @if($nachricht->type == "pflicht")
-                                <div class="btn btn-outline-danger btn-sm">
-                                    Pflichtaufgabe
-                                </div>
-                            @endif
+                                @endif
+                                @if($nachricht->type == "wahl")
+                                    <div class="badge badge-warning p-2">
+                                        Wahlaufgabe
+                                    </div>
+                                @endif
+                                @if($nachricht->type == "pflicht")
+                                    <div class="badge badge-danger p-2">
+                                        Pflichtaufgabe
+                                    </div>
+                                @endif
+
                         </div>
 
                     </div>
@@ -141,7 +140,7 @@
                         @for($x=1; $x <= $nachricht->userRueckmeldung->count(); $x++)
                             <i class="fas fa-user-alt text-success" title="{{$x}}"></i>
                         @endfor
-                        @for($x=1; $x <= ((round($nachricht->users->where('sorg2', '!=', null)->unique('email')->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
+                        @for($x=1; $x <= ((round($nachricht->users->where('sorg2', '!=', null)->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
                             <i class="fas fa-user-alt text-danger" title="{{$x}}"></i>
                         @endfor
                     </div>

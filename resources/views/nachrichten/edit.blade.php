@@ -469,7 +469,7 @@
         $("#customFile").fileinput({
             'showUpload':false,
             'previewFileType':'any',
-            maxFileSize: @if(auth()->user()->can('upload great files')) {{config('medialibrary.max_file_size')}} @else 3000 @endif ,
+            maxFileSize: @if(auth()->user()->can('upload great files')) {{config('media-library.max_file_size')}} @else 3000 @endif ,
             'theme': "fas",
         });
     </script>

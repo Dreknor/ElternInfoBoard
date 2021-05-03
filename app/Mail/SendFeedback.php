@@ -12,6 +12,7 @@ class SendFeedback extends Mailable
     use Queueable, SerializesModels;
 
     protected $text;
+    protected $betreff;
     public $data;
 
     /**
@@ -19,9 +20,10 @@ class SendFeedback extends Mailable
      *
      * @return void
      */
-    public function __construct($text, $data)
+    public function __construct($text, $betreff, $data)
     {
         $this->text = $text;
+        $this->betreff = $betreff;
         $this->data = $data;
     }
 
@@ -37,7 +39,7 @@ class SendFeedback extends Mailable
                config('mail.from.name')
             )
             ->replyTo(auth()->user()->email, auth()->user()->name)
-            ->subject('Kontaktformular vom '.config('app.name'))
+            ->subject($this->betreff)
             ->view('emails.feedback')->with([
                 'text'  => $this->text,
                 'from'  =>  auth()->user()->name,

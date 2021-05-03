@@ -55,7 +55,7 @@ class FeedbackController extends Controller
             }
         }
 
-        Mail::to($email)->send(new SendFeedback($request->text, $data));
+        Mail::to($email)->send(new SendFeedback($request->text, $request->betreff ,$data));
 
         return redirect()->back()->with([
            'type'   => 'success',

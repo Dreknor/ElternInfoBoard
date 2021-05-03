@@ -24,7 +24,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login',
+        'name', 'email','publicMail', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login',
     ];
 
     /**
@@ -66,6 +66,15 @@ class User extends Authenticatable
     public function posts()
     {
         return $this->hasManyDeep(\App\Model\Post::class, ['group_user', \App\Model\Group::class, 'group_post']);
+    }
+
+    /**
+     * Posts verknüpft über die Gruppen
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
+     */
+    public function postsNotArchived()
+    {
+        return $this->hasManyDeep(\App\Model\Post::class, ['group_user', \App\Model\Group::class, 'group_post'])->NotArchived();
     }
 
     /**

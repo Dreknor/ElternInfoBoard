@@ -23,3 +23,5 @@ composer.lock
 *.xml
 *.iml
 public/img/favicon-esz.ico
+.htaccess
+public/.htaccess

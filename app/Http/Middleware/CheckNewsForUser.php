@@ -24,18 +24,20 @@ class CheckNewsForUser
             return $next($request);
         }
 
-        if ($request->user()->changeSettings) {
-            $user = $request->user();
+
+
+        if (auth()->user()->changeSettings) {
+            $user = auth()->user();
             $user->changeSettings = 0;
             $user->save();
 
             return redirect()->to('/einstellungen')->with(['changelog'    => true]);
         }
 
-        if ($request->user()->track_login == true or $request->user()->track_login == 1)   {
+        if (auth()->user()->track_login == true or auth()->user()->track_login == 1)   {
             $news = Cache::remember('news_'.auth()->id(), 60 * 5, function () {
                 $news = [];
-                $changelog = Changelog::whereDate('created_at', '>=', request()->user()->last_online_at)->first();
+                $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at)->first();
                 if (! is_null($changelog)) {
                     $news[] = [
                         'link' => url('/changelog'),
@@ -43,7 +45,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $termine = request()->user()->termine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at)->get();
+                $termine = auth()->user()->termine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at)->get();
                 $termine = $termine->unique('id');
                 foreach ($termine as $termin) {
                     $news[] = [
@@ -52,7 +54,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $posts = request()->user()->posts()->whereDate('posts.created_at', '>=', request()->user()->last_online_at)->get();
+                $posts = auth()->user()->posts()->whereDate('posts.created_at', '>=', auth()->user()->last_online_at)->get();
                 $posts = $posts->unique('id');
 
                 foreach ($posts as $post) {
@@ -62,7 +64,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $listen = request()->user()->listen()->whereDate('listen.created_at', '>=', request()->user()->last_online_at->startofDay())->get();
+                $listen = auth()->user()->listen()->whereDate('listen.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
                 $listen = $listen->unique('id');
 
                 foreach ($listen as $liste) {

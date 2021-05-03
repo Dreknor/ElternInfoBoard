@@ -14,6 +14,8 @@ class AktuelleInformationen extends Mailable
     protected $news;
     protected $name;
     protected $diskussionen;
+    protected $termine;
+    protected $files;
 
     /**
      * Create a new message instance.
@@ -25,6 +27,7 @@ class AktuelleInformationen extends Mailable
         $this->news = $news;
         $this->name = $name;
         $this->diskussionen = $diskussionen;
+
     }
 
     /**

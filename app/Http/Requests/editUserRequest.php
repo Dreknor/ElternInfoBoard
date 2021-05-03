@@ -39,6 +39,10 @@ class editUserRequest extends FormRequest
                 'required',
                 'in:weekly,daily',
             ],
+            'publicMail' => [
+                'nullable',
+                'string',
+            ],
 
         ];
     }

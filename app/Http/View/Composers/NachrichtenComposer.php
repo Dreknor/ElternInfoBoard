@@ -16,7 +16,8 @@ class NachrichtenComposer
             $user = auth()->user();
 
             if (! $user->can('view all')) {
-                $Nachrichten = $user->posts()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+
+                $Nachrichten = $user->postsNotArchived()->distinct()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups')->withCount('users')->get();
 
                 if ($user->can('create posts')) {
                     $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
@@ -27,6 +28,7 @@ class NachrichtenComposer
             }
 
             $Nachrichten = $Nachrichten->unique('id');
+            $Nachrichten = $Nachrichten->load('userRueckmeldung');
 
             return $Nachrichten->paginate(30);
         });

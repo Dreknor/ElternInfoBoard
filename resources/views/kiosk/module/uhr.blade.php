@@ -3,8 +3,8 @@
 @endpush
 
 @push('slider')
-    <div class="carousel-item  centered">
-        <canvas id="clock" width="1600" height="1600">
+    <div class="carousel-item w-100 h-100">
+        <canvas id="clock"  class="h-100">
             Dieser Browser wird leider nicht unterstützt.
         </canvas>
     </div>

@@ -11,14 +11,17 @@ class GroupsController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['permission:view groups']);
     }
 
     public function index()
     {
-        $groups = Cache::remember('groups', 60 * 5, function () {
-            return Group::with('users')->get();
-        });
+        if (auth()->user()->can('view groups')){
+            $groups = Group::with('users')->get();
+
+        } else {
+            $groups =  auth()->user()->groups;
+        }
+
 
         return view('groups.index')->with([
             'groups'=> $groups,
@@ -27,6 +30,14 @@ class GroupsController extends Controller
 
     public function store(CreateGroupRequest $createGroupRequest)
     {
+
+        if (!auth()->user()->can('view groups')){
+            return redirect()->back()->with([
+                'type'=>'danger',
+                'Meldung'=>'Berechtigung fehlt.'
+            ]);
+        }
+
         $group = new Group($createGroupRequest->validated());
         $group->save();
 
