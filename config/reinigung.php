@@ -20,4 +20,5 @@ return [
         'Materialregale im "Kunstraum" abstauben, Schrankfächer in der Garderobe auswischen, 2 Teppiche im Eingangsbereich saugen',
 
     ],
+    //TODO -> aus env
 ];

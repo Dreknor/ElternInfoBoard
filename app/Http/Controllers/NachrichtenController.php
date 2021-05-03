@@ -455,9 +455,9 @@ class NachrichtenController extends Controller
                 $diskussionen = [];
             }
 
-            //@ToDo Neue
-            // neue Listen
-            //neue Dateien
+            //@ToDo Neue Listen
+            //@ToDo neue Dateien
+            //@ToDo Speicheroptimierung
 
             if (count($Nachrichten) > 0) {
                 $countUser++;
