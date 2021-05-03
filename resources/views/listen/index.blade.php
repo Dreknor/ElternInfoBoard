@@ -87,7 +87,7 @@
                                                     </div>
                                                     <div class="row" id="collapse{{$liste->id}}">
                                                         @foreach($liste->groups as $group)
-                                                            <div class="badge p-2 m-1">
+                                                            <div class="badge">
                                                                 {{$group->name}}@if(!$loop->last), @endif
                                                             </div>
                                                         @endforeach
