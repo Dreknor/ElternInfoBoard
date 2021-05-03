@@ -92,7 +92,7 @@
                                                         <div class="row" id="collapse{{$liste->id}}">
                                                             <small class="col">
                                                                 @foreach($liste->groups as $group)
-                                                                    <div class="badge  @if($liste->active == 0) badge-warning @else  badge-info @endif">
+                                                                    <div class="badge  @if($liste->active == 0) badge-warning @else  badge-info @endif p-2">
                                                                         {{$group->name}}
                                                                     </div>
                                                                 @endforeach
