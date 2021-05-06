@@ -39,21 +39,29 @@
 
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-sm-12 col-md-4">
-                            <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="infoButton">
-                                <i class="fas fa-eye"></i> Infos ausblenden
+
+                    @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "info") { return $item;}})) > 0)
+                            <div class="col">
+                                <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="infoButton">
+                                    <i class="fas fa-eye"></i> Infos ausblenden
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12 col-md-4">
-                            <div class="btn btn-outline-danger btn-sm btn-block" type="button" id="pflichtButton">
-                                <i class="fas fa-eye"></i> Pflichtaufgaben ausblenden
+                        @endif
+                        @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "pflicht") { return $item;}})) > 0)
+                            <div class="col">
+                                <div class="btn btn-outline-danger btn-sm btn-block" type="button" id="pflichtButton">
+                                    <i class="fas fa-eye"></i> Pflichtaufgaben ausblenden
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-12 col-md-4">
-                            <div class="btn btn-outline-warning btn-sm btn-block" type="button" id="wahlButton">
-                                <i class="fas fa-eye"></i> Wahlaufgaben ausblenden
+                        @endif
+                        @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "wahl") { return $item;}})) > 0)
+                            <div class="col">
+                                <div class="btn btn-outline-warning btn-sm btn-block" type="button" id="wahlButton">
+                                    <i class="fas fa-eye"></i> Wahlaufgaben ausblenden
+                                </div>
                             </div>
-                        </div>
+                        @endif
+
                     </div>
                 </div>
 
