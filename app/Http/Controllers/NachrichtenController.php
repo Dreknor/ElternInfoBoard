@@ -411,6 +411,12 @@ class NachrichtenController extends Controller
         ]);
     }
 
+
+    /**
+     * @param null $daily
+     * @param null $userSend
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function email($daily = null, $userSend = null)
     {
         if ($daily == null) {
@@ -427,7 +433,7 @@ class NachrichtenController extends Controller
 
         $countUser = 0;
 
-        foreach ($users as $user) {
+        foreach ($users as $key => $user) {
             if (! $user->can('view all')) {
                 $Nachrichten = $user->postsNotArchived;
             } else {
@@ -482,19 +488,6 @@ class NachrichtenController extends Controller
                 }
             }
         }
-        if (! is_null($userSend)) {
-            return view('emails.nachrichten')->with([
-                'nachrichten' => $Nachrichten,
-                'name'      => $user->name,
-                'discussionen'  => $diskussionen,
-            ]);
-        }
-
-        $admin = Role::findByName('Administrator');
-        $admin = $admin->users()->first();
-
-        Notification::send($admin, new Push('Mail versandt', "Es wurden $countUser Mails versandt"));
-
     }
 
     public function emailDaily()
