@@ -40,7 +40,7 @@
             @endpush
         @endif
 
-        @if(array_key_exists('adm-nav', $module->options) and  is_array($module->options['adm-nav']) and auth()->user()->hasAnyPermission($module->options['adm-nav']['adm-rights']))
+        @if(array_key_exists('adm-nav', $module->options) and  is_array($module->options['adm-nav']) and isset($module->options['adm-nav']['adm-rights']) and auth()->user()->hasAnyPermission($module->options['adm-nav']['adm-rights']))
             @push('adm-nav')
                 <li class="@if(request()->path() == $module->options['adm-nav']['link']) active @endif">
                     <a href="{{url($module->options['adm-nav']['link'])}}">
