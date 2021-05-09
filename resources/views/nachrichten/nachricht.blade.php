@@ -8,6 +8,7 @@
             <div class="row  blur">
                     <div class="col-md-10">
                     <h5 class="card-title">
+
                         @if($nachricht->sticky)
                             <i class="fas fa-thumbtack fa-xs " ></i>
                         @endif
@@ -27,8 +28,7 @@
                             </div>
                         </div>
                     </div>
-
-                            <div class="row">
+                    <div class="row mt-1">
                                 <div class="col-12">
                                     Gruppen:
                                     @foreach($nachricht->groups as $group)
@@ -38,25 +38,25 @@
                                     @endforeach
                                 </div>
                             </div>
-                 
+                    <div class="row mt-1 mb-1">
+                        <div class="col-12">
 
-                    <div class="row">
-                        <div class="col">
-                            @if($nachricht->type == "info")
-                                <div class="btn btn-outline-info btn-sm">
-                                    Information
-                                </div>
-                            @endif
-                            @if($nachricht->type == "wahl")
-                                <div class="btn btn-outline-warning btn-sm">
-                                    Wahlaufgabe
-                                </div>
-                            @endif
-                            @if($nachricht->type == "pflicht")
-                                <div class="btn btn-outline-danger btn-sm">
-                                    Pflichtaufgabe
-                                </div>
-                            @endif
+                                @if($nachricht->type == "info")
+                                    <div class="badge badge-info p-2">
+                                        Information
+                                    </div>
+                                @endif
+                                @if($nachricht->type == "wahl")
+                                    <div class="badge badge-warning p-2">
+                                        Wahlaufgabe
+                                    </div>
+                                @endif
+                                @if($nachricht->type == "pflicht")
+                                    <div class="badge badge-danger p-2">
+                                        Pflichtaufgabe
+                                    </div>
+                                @endif
+
                         </div>
 
                     </div>
