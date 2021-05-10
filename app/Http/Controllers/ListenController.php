@@ -178,7 +178,7 @@ class ListenController extends Controller
     public function pdf(Request $request, Liste $liste)
     {
 
-        if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminlisten')) {
+        if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste')) {
             /*$pdf = \PDF::loadView('listen.listenExport', [
                 "Liste" => $liste,
                 'listentermine' => $liste->eintragungen->sortBy('termin')
