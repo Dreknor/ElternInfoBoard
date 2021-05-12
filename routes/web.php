@@ -74,7 +74,6 @@ Route::group([
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');
 
-        //Route::get('noRueckmeldung', [RueckmeldungenController::class, 'sendErinnerung']);
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
