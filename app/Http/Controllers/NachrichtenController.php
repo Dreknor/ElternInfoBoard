@@ -461,14 +461,18 @@ class NachrichtenController extends Controller
                 $diskussionen = [];
             }
 
-            //@ToDo Neue Listen
+            //Neue Listen
+            $listen = $user->listen()->where('listen.updated_at', '>=', $user->lastEmail)->where('active', 1)->get();
+
+            //neue Termine
+            $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
+
             //@ToDo neue Dateien
             //@ToDo Speicheroptimierung
 
             if (count($Nachrichten) > 0) {
-                $countUser++;
                 try {
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
