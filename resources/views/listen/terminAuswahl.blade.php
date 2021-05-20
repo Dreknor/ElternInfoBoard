@@ -65,13 +65,11 @@
                                                    </div>
                                                    <div class="col-sm-12 col-md-6 m-auto">
                                                        @if ($eintrag->reserviert_fuer != null)
-                                                           <form method="post" action="{{url("eintragungen/absagen/".$eintrag->id)}}">
-                                                               @csrf
-                                                               @method('delete')
-                                                               <button type="submit" class="btn  btn-outline-danger btn-xs btn-round">
+
+                                                               <button class="btn btn-outline-danger btn-xs btn-round btnAbsage" data-toggle="modal" data-target="#deleteEintragungModal" data-terminID="{{$eintrag->id}}">
                                                                    {{$eintrag->eingetragenePerson->name }} absagen
                                                                </button>
-                                                           </form>
+
 
                                                        @else
                                                             @if(auth()->user()->groups()->whereIn('groups.id',$liste->groups->pluck('id'))->count() > 0)
@@ -182,6 +180,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal zur Absage -->
+    <div class="modal" tabindex="-1" role="dialog" id="deleteEintragungModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Termin absagen</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="" id="absagenForm">
+                        @csrf
+                        @method('delete')
+                        <label for="text">Nachricht</label>
+                        <textarea class="form-control" id="text" name="text"></textarea>
+                        <button type="submit" class="btn  btn-outline-danger btn-xs btn-round">
+                            absagen
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('js')
 
@@ -196,6 +219,18 @@
             var btn = this;
             $(btn).addClass('d-none');
             $('.hide').removeClass('d-none');
+        });
+    </script>
+
+    <script>
+        $('.btnAbsage').on('click', function () {
+            var btn = this;
+            console.log(btn);
+            var id = $(this).data('terminid');
+            var url = "{{url("eintragungen/absagen/")}}/"+id;
+console.log(url);
+            $('#absagenForm').attr('action', url);
+
         });
     </script>
 

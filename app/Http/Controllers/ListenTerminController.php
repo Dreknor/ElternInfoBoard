@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreListeTerminRequest;
+use App\Http\Requests\TerminabsageRequest;
 use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
 use App\Model\Liste;
@@ -84,17 +85,24 @@ class ListenTerminController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Exception
      */
-    public function absagen(Request $request, listen_termine $listen_termine)
+    public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {
+
         if ($request->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == $request->user()->sorg2 or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
-                ->queue(new TerminAbsageEltern($request->user(), $listen_termine->liste, $listen_termine->termin));
+                ->queue(new TerminAbsageEltern($request->user(),
+                    $listen_termine->liste,
+                    $listen_termine->termin,
+                    $request->text));
             Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
-                            ->queue(new TerminAbsageEltern($request->user(), $listen_termine->liste, $listen_termine->termin));
+                            ->queue(new TerminAbsageEltern($request->user(),
+                                $listen_termine->liste,
+                                $listen_termine->termin,
+                                $request->text));
 
             $listen_termine->update(['reserviert_fuer' => null]);
 
-            $body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde durch '.$request->user()->name.' abgesagt.';
+            //$body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde durch '.$request->user()->name.' abgesagt.';
             //Notification::send($listen_termine->liste->ersteller,new PushTerminAbsage($body));
 
             return redirect()->back()->with([
