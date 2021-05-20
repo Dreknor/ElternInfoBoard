@@ -434,14 +434,14 @@ class NachrichtenController extends Controller
         $countUser = 0;
 
         foreach ($users as $key => $user) {
-            if (! $user->can('view all')) {
+            if (!$user->can('view all')) {
                 $Nachrichten = $user->postsNotArchived;
             } else {
-                $Nachrichten = Post::where('updated_at', '>',$user->lastEmail)->where('archiv_ab', '>',Carbon::now())->get();
+                $Nachrichten = Post::where('updated_at', '>', $user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
             }
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if (! is_null($post->archiv_ab)) {
+                if (!is_null($post->archiv_ab)) {
                     if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
                         return $post;
                     }
@@ -450,13 +450,7 @@ class NachrichtenController extends Controller
 
             //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')) {
-                $diskussionen = Discussion::all();
-                $diskussionen = collect($diskussionen);
-                $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
-                    if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                        return $Discussion;
-                    }
-                });
+                $diskussionen = Discussion::whereDate('updated_at', '>=', $user->lastEmail)->get();
             } else {
                 $diskussionen = [];
             }
@@ -468,7 +462,7 @@ class NachrichtenController extends Controller
             $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
 
             //@ToDo neue Dateien
-            //@ToDo Speicheroptimierung
+
 
             if (count($Nachrichten) > 0) {
                 try {
@@ -476,17 +470,17 @@ class NachrichtenController extends Controller
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
-                    if (! is_null($userSend)) {
+                    if (!is_null($userSend)) {
                         return redirect()->back()->with([
                             'type' => 'success',
-                            'Meldung'    => 'Mail versandt',
+                            'Meldung' => 'Mail versandt',
                         ]);
                     }
                 } catch (\Exception $exception) {
                     $admin = Role::findByName('Admin');
                     $admin = $admin->users()->first();
 
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
+                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email . 'konnte nicht gesendet werden'));
 
 
                 }
