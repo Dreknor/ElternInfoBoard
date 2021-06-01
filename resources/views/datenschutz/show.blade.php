@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Datenschutz @endsection
 
 @section('content')
     <div class="container-fluid">
