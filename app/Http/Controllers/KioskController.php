@@ -20,20 +20,28 @@ class KioskController extends Controller
 
         //Elterninfos
         $Nachrichten = new Collection();
+        $Listen = new Collection();
 
-        $Gruppen = Group::where('protected', 0)->with(['posts' => function ($query) {
+        $Gruppen = Group::where('protected', 0)->with(
+            ['posts' => function ($query) {
             $query->whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay());
-        }])->get();
+        }, 'listen' => function ($query) {
+                $query->whereDate('listen.ende', '>', Carbon::now()->startOfDay());
+            }, ]
+        )->get();
 
         foreach ($Gruppen as $Gruppe) {
             $Nachrichten = $Nachrichten->concat($Gruppe->posts);
+            $Listen = $Listen->concat($Gruppe->listen);
         }
-//'losung', 'uhr', 'bilder', 'elterninfo'
-        return view('layouts.kiosk', [
+
+        $Listen = $Listen->unique('id')->sortByDesc('updated_at');
+
+        return view('kiosk.index', [
             'refresh'   => 600,
-            'module'    => ['elterninfo'],
-            'elterninfo' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
-            'losung'    =>  Losung::where('date', Carbon::today())->first(),
+            'listen'    => $Listen,
+            'Nachrichten' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
+            'refreshUrl' => ''
         ]);
     }
 }
