@@ -39,7 +39,7 @@
                                             <i class="far fa-edit"></i>
                                         </a>
                                         @if(!is_null($nachricht->rueckmeldung))
-                                            @if(!$archiv and $nachricht->rueckmeldung->pflicht == 1)
+                                            @if($nachricht->rueckmeldung->pflicht == 1)
                                                 <div class="container-fluid">
                                                     <p>Rückmeldungen:</p>
                                                     <div class="row">
@@ -112,7 +112,7 @@
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            @foreach($liste->eintragungen->sortBy('termin') as $eintrag)
+                                            @foreach($liste->eintragungen()->where('termin', '>=', \Carbon\Carbon::now())->get()->sortBy('termin') as $eintrag)
                                                 <tr>
                                                     <td>
                                                         {{$eintrag->termin->format('d.m.Y')}}

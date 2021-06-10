@@ -41,7 +41,8 @@ class KioskController extends Controller
             'refresh'   => 600,
             'listen'    => $Listen,
             'Nachrichten' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
-            'refreshUrl' => ''
+            'refreshUrl' => '',
+            'archiv'    => ''
         ]);
     }
 }
