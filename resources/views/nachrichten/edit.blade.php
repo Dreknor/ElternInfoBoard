@@ -332,6 +332,30 @@
 
             </div>
         </div>
+    @elseif(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'commentable')
+        <div class="card" id="rueckmeldungCard">
+            <div class="card-header">
+                <h6>
+                    Diskussion entfernen?
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        @if( $post->rueckmeldung->commentable)
+                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-warning btn-block">
+                                Kommentare abschalten
+                            </a>
+                        @else
+                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-primary btn-block">
+                                Kommentare erlauben
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+        </div>
     @else
         <div class="card" id="rueckmeldungCard">
         <div class="card-header">

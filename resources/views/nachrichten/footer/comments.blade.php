@@ -1,4 +1,4 @@
-<ul class="comment-section">
+<ul class="comment-section w-100">
     @foreach(optional($nachricht->comments)->sortByDesc('created_at') as $comment)
         <li class="comment @if ($loop->index % 2 == 0) user-comment @else author-comment @endif @if ($loop->index >= 10) d-none @endif">
             <div class="info">
@@ -16,14 +16,16 @@
         </a>
     @endif
     <!-- More comments -->
+        @if ($nachricht->rueckmeldung->commentable)
+            <li class="write-new">
+                <form action="{{url("nachricht/$nachricht->id/comment/create")}}" method="post">
+                    @csrf
+                    <textarea placeholder="Kommentar hier schreiben" name="comment"></textarea>
+                    <button type="submit" class="btn btn-success">kommentieren</button>
+                </form>
 
-    <li class="write-new">
-        <form action="{{url("nachricht/$nachricht->id/comment/create")}}" method="post">
-            @csrf
-            <textarea placeholder="Kommentar hier schreiben" name="comment"></textarea>
-            <button type="submit" class="btn btn-success">kommentieren</button>
-        </form>
+            </li>
 
-    </li>
+        @endif
 
 </ul>

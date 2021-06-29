@@ -161,5 +161,10 @@
     @endif
     @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
         @include('nachrichten.footer.imageRueckmeldung')
+    @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'commentable' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+        <div class="container-fluid">
+            @include('nachrichten.footer.comments')
+        </div>
+
     @endif
 </div>
