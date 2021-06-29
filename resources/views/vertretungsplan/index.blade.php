@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Vertretungsplan @endsection
 
 @section('content')
     <div class="container-fluid">

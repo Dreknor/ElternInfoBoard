@@ -473,10 +473,10 @@ class NachrichtenController extends Controller
 
             //Neue Listen
             $listen = $user->listen()->where('listen.updated_at', '>=', $user->lastEmail)->where('active', 1)->get();
-
+            $listen = $listen->unique();
             //neue Termine
             $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
-
+            $termine = $termine->unique();
             //@ToDo neue Dateien
 
 

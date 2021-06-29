@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Benutzer @endsection
 
 @section('content')
     <form action="{{url('/users/').'/'.$user->id}}" method="post" class="form form-horizontal">

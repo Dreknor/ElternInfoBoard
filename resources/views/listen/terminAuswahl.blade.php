@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Listen @endsection
 
 @section('content')
     <div class="container-fluid">

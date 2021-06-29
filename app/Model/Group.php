@@ -31,4 +31,8 @@ class Group extends Model implements HasMedia
     {
         return $this->belongsToMany(Termin::class);
     }
+    public function listen()
+    {
+        return $this->belongsToMany(Liste::class, 'group_listen');
+    }
 }
