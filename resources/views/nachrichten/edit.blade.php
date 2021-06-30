@@ -224,12 +224,17 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-4">
+                                <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}" id="CommentsButton" class="btn btn-block btn-outline-primary">
+                                    Diskussion
+                                </a>
+                            </div>
+                            <div class="col-4">
                                 <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}" id="bilderButton" class="btn btn-block btn-outline-primary">
                                     Bilder-Upload ermöglichen
                                 </a>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <a id="rueckmeldungButton" class="btn btn-block btn-outline-primary">
                                     Rückmeldung erstellen
                                 </a>

@@ -137,10 +137,11 @@ class RueckmeldungenController extends Controller
         return redirect()->back();
     }
 
-    public function createImageRueckmeldung(Request $request, Post $posts)
+    public function createImageRueckmeldung(Request $request,  $posts_id)
     {
+        $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
-            'posts_id'  => $posts->id,
+            'posts_id'  => $posts_id,
             'type'  => 'bild',
             'commentable'  => 1,
             'empfaenger'  => $request->user()->email,
@@ -152,6 +153,24 @@ class RueckmeldungenController extends Controller
         return redirect()->back()->with([
             'type'  => 'success',
             'Meldung'=>'Bild-Upload mit Kommentaren erstellt.',
+        ]);
+    }
+    public function createDiskussionRueckmeldung(Request $request,  $posts_id)
+    {
+        $posts = Post::find($posts_id);
+        $rueckmeldung = new Rueckmeldungen([
+            'posts_id'  => $posts_id,
+            'type'  => 'commentable',
+            'commentable'  => 1,
+            'empfaenger'  => $request->user()->email,
+            'ende'      => $posts->archiv_ab,
+            'text'      => ' ',
+        ]);
+        $rueckmeldung->save();
+
+        return redirect()->back()->with([
+            'type'  => 'success',
+            'Meldung'=>'Diskussion erstellt.',
         ]);
     }
 }
