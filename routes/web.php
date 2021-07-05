@@ -103,7 +103,8 @@ Route::group([
         //Rückmeldungen
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
-        Route::get('rueckmeldungen/{posts}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
+        Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
+        Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
 
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);

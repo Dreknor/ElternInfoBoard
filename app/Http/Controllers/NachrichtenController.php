@@ -288,6 +288,22 @@ class NachrichtenController extends Controller
                         'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                     ]);
                 break;
+            case 'commentable':
+                    $rueckmeldung = new Rueckmeldungen([
+                        'post_id'  => $post->id,
+                        'type'  => 'commentable',
+                        'commentable'  => 1,
+                        'empfaenger'  => auth()->user()->email,
+                        'ende'      => $post->archiv_ab,
+                        'text'      => ' ',
+                    ]);
+                    $rueckmeldung->save();
+
+                    return redirect(url('/home#'.$post->id))->with([
+                        'type' => 'success',
+                        'Meldung' => 'Nachricht und Rückmeldung angelegt.',
+                    ]);
+                break;
             default:
                 return redirect(url('/home#'.$post->id))->with([
                     'type' => 'success',
