@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Kontakt @endsection
 
 @section('content')
 

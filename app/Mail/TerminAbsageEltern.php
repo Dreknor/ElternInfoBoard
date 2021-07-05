@@ -14,17 +14,19 @@ class TerminAbsageEltern extends Mailable
     public $liste;
     public $termin;
     public $user;
+    protected $text;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($user, $liste, $termin)
+    public function __construct($user, $liste, $termin, $text = "")
     {
         $this->liste = $liste;
         $this->termin = $termin;
         $this->user = $user;
+        $this->text = $text;
     }
 
     /**
@@ -44,6 +46,7 @@ class TerminAbsageEltern extends Mailable
                 'termin' => $this->termin,
                 'liste' => $this->liste,
                 'user' => $this->user,
+                'text' => $this->text
             ]);
     }
 }

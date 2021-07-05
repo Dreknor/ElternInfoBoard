@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Einstellungen @endsection
 
 @section('content')
 
@@ -71,7 +72,7 @@
                                             <div class="form-group">
                                                 <label>Benachrichtigung per E-Mail (zuletzt: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
-                                                    <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif disabled>Täglich (bei neuen Nachrichten)</option>
+                                                    <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif>Täglich (bei neuen Nachrichten)</option>
                                                     <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif >Wöchentlich (Freitags)</option>
                                                 </select>
                                             </div>

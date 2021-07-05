@@ -288,6 +288,22 @@ class NachrichtenController extends Controller
                         'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                     ]);
                 break;
+            case 'commentable':
+                    $rueckmeldung = new Rueckmeldungen([
+                        'post_id'  => $post->id,
+                        'type'  => 'commentable',
+                        'commentable'  => 1,
+                        'empfaenger'  => auth()->user()->email,
+                        'ende'      => $post->archiv_ab,
+                        'text'      => ' ',
+                    ]);
+                    $rueckmeldung->save();
+
+                    return redirect(url('/home#'.$post->id))->with([
+                        'type' => 'success',
+                        'Meldung' => 'Nachricht und Rückmeldung angelegt.',
+                    ]);
+                break;
             default:
                 return redirect(url('/home#'.$post->id))->with([
                     'type' => 'success',
@@ -411,6 +427,12 @@ class NachrichtenController extends Controller
         ]);
     }
 
+
+    /**
+     * @param null $daily
+     * @param null $userSend
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function email($daily = null, $userSend = null)
     {
         if ($daily == null) {
@@ -427,15 +449,15 @@ class NachrichtenController extends Controller
 
         $countUser = 0;
 
-        foreach ($users as $user) {
-            if (! $user->can('view all')) {
+        foreach ($users as $key => $user) {
+            if (!$user->can('view all')) {
                 $Nachrichten = $user->postsNotArchived;
             } else {
-                $Nachrichten = Post::where('updated_at', '>',$user->lastEmail)->where('archiv_ab', '>',Carbon::now())->get();
+                $Nachrichten = Post::where('updated_at', '>', $user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
             }
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if (! is_null($post->archiv_ab)) {
+                if (!is_null($post->archiv_ab)) {
                     if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
                         return $post;
                     }
@@ -444,57 +466,42 @@ class NachrichtenController extends Controller
 
             //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')) {
-                $diskussionen = Discussion::all();
-                $diskussionen = collect($diskussionen);
-                $diskussionen = $diskussionen->filter(function ($Discussion) use ($user) {
-                    if ($Discussion->updated_at->greaterThanOrEqualTo($user->lastEmail)) {
-                        return $Discussion;
-                    }
-                });
+                $diskussionen = Discussion::whereDate('updated_at', '>=', $user->lastEmail)->get();
             } else {
                 $diskussionen = [];
             }
 
-            //@ToDo Neue Listen
+            //Neue Listen
+            $listen = $user->listen()->where('listen.updated_at', '>=', $user->lastEmail)->where('active', 1)->get();
+            $listen = $listen->unique();
+            //neue Termine
+            $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
+            $termine = $termine->unique();
             //@ToDo neue Dateien
-            //@ToDo Speicheroptimierung
+
 
             if (count($Nachrichten) > 0) {
-                $countUser++;
                 try {
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
-                    if (! is_null($userSend)) {
+                    if (!is_null($userSend)) {
                         return redirect()->back()->with([
                             'type' => 'success',
-                            'Meldung'    => 'Mail versandt',
+                            'Meldung' => 'Mail versandt',
                         ]);
                     }
                 } catch (\Exception $exception) {
                     $admin = Role::findByName('Admin');
                     $admin = $admin->users()->first();
 
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
+                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email . 'konnte nicht gesendet werden'));
 
 
                 }
             }
         }
-        if (! is_null($userSend)) {
-            return view('emails.nachrichten')->with([
-                'nachrichten' => $Nachrichten,
-                'name'      => $user->name,
-                'discussionen'  => $diskussionen,
-            ]);
-        }
-
-        $admin = Role::findByName('Administrator');
-        $admin = $admin->users()->first();
-
-        Notification::send($admin, new Push('Mail versandt', "Es wurden $countUser Mails versandt"));
-
     }
 
     public function emailDaily()

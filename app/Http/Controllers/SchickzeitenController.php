@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\SchickzeitenExport;
 use App\Http\Requests\CreateChildRequest;
 use App\Http\Requests\SchickzeitRequest;
+use App\Mail\SchickzeitenReminder;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use Carbon\Carbon;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SchickzeitenController extends Controller
@@ -320,5 +322,13 @@ class SchickzeitenController extends Controller
     public function download()
     {
        return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
+    }
+
+    public function sendReminder(){
+        $users = User::has('schickzeiten')->get();
+
+        foreach ($users as $user){
+           Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten));
+        }
     }
 }

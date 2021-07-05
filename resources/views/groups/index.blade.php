@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title') - Gruppen @endsection
 
 @section('content')
     <div class="container-fluid">
@@ -26,7 +27,7 @@
                                                 <ul class="list-group">
                                                     @foreach($users as $user)
                                                         <li class="list-group-item">
-                                                            {{$user->name}}
+                                                            <a href="mailto://{{$user->email}}" class="card-link">{{$user->name}}</a>
                                                         </li>
                                                     @endforeach
                                                 </ul>

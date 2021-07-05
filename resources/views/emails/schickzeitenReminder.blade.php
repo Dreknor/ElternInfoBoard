@@ -1,25 +1,29 @@
-@extends('layouts.app')
-@section('title') - Schickzeiten @endsection
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Schickzeiten-Übersicht</title>
+    <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet" />
+</head>
+<body>
 
-@section('content')
-    <div class="container-fluid">
+<div class="container-fluid">
         <div class="card">
             <div class="card-header">
                 <h6 class="card-title">
-                    Schickzeiten
+                    Schickzeitenübersicht
                 </h6>
-
             </div>
             <div class="card-body">
-                @include('schickzeiten.infos')
+                <p>
+                    Liebe Eltern,
+                </p>
+                <p>
+                    folgende Schickzeiten sind für @if (count($kinder) > 1) Ihr Kind  @else Ihre Kinder  @endif im {{config('app.name')}} für die kommende Woche vermerkt. Bitte ändern Sie die Zeiten sollten diese nicht mehr korrekt sein.
+                </p>
             </div>
         </div>
 
-    </div>
-    <div class="container-fluid">
-        <div class="row">
-            @foreach($childs as $child)
-                <div class="col-lg-6 col-md-6 "col-sm-12>
+            @foreach($kinder as $child)
                     <div class="card">
                         <div class="card-header">
                             <h6 class="card-title">
@@ -30,19 +34,19 @@
                             <div class="container-fluid">
                                 <table class="table table-striped">
                                     <tr>
-                                        <th>
+                                        <th width="30%">
 
                                         </th>
-                                        <th>
+                                        <th width="23%">
                                             ab
                                         </th>
-                                        <th>
+                                        <th width="23%">
                                             genau
                                         </th>
-                                        <th>
+                                        <th width="23%">
                                             spätestens
                                         </th>
-                                        <td></td>
+
                                     </tr>
                                     @for($x=1;$x<6;$x++)
                                         <tr>
@@ -64,24 +68,6 @@
                                                     {{substr($schickzeiten->where('weekday', $x)->where('type','=','spät.')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
                                                 @endif
                                             </td>
-                                            <td>
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <a href="{{url("schickzeiten/edit/$x/".$child)}}" class="card-link">
-                                                            <i class="fa fa-edit"></i>
-                                                        </a>
-                                                    </div>
-                                                    <div class="col">
-                                                        @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->first())
-                                                            <form action="{{url("schickzeiten/$x/".$child)}}" method="post">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="submit" class="btn btn-link btn-danger text-danger"><i class="fa fa-trash"></i></button>
-                                                            </form>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </td>
                                         </tr>
                                     @endfor
 
@@ -90,30 +76,9 @@
 
                         </div>
                     </div>
-                </div>
             @endforeach
-        </div>
+</div>
+</body>
+</html>
 
-    </div>
 
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title">
-                    Neues Kind anlegen
-                </h6>
-            </div>
-            <div class="card-body">
-                <form method="post" class="form form-horizontal" action="{{url('schickzeiten/child/create')}}">
-                    @csrf
-                    @error('child')
-                        <span>{{ $message }}</span>
-                    @enderror
-                    <input name="child" class="form-control @error('child') has-error @enderror" placeholder="Name des neuen Kindes" required>
-                    <button class="btn btn-success btn-block">Neues Kind speichern</button>
-                </form>
-            </div>
-        </div>
-
-    </div>
-@endsection

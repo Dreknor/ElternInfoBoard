@@ -53,8 +53,6 @@
 
    <script>
        document.querySelector('.carousel-item:first-child').classList.add("active");
-console.log(document.querySelector('.carousel-item:first-child'));
-       console.log($('#carousel').closest('.carousel-item'))
    </script>
     @stack('js')
 </body>

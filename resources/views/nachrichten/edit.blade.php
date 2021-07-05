@@ -224,12 +224,17 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-4">
+                                <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}" id="CommentsButton" class="btn btn-block btn-outline-primary">
+                                    Diskussion
+                                </a>
+                            </div>
+                            <div class="col-4">
                                 <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}" id="bilderButton" class="btn btn-block btn-outline-primary">
                                     Bilder-Upload ermöglichen
                                 </a>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <a id="rueckmeldungButton" class="btn btn-block btn-outline-primary">
                                     Rückmeldung erstellen
                                 </a>
@@ -327,6 +332,30 @@
                         <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" >
                             Bilder-Upload endgültig löschen
                         </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    @elseif(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'commentable')
+        <div class="card" id="rueckmeldungCard">
+            <div class="card-header">
+                <h6>
+                    Diskussion entfernen?
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        @if( $post->rueckmeldung->commentable)
+                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-warning btn-block">
+                                Kommentare abschalten
+                            </a>
+                        @else
+                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-primary btn-block">
+                                Kommentare erlauben
+                            </a>
+                        @endif
                     </div>
                 </div>
 

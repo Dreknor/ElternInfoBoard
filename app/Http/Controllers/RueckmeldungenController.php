@@ -114,7 +114,6 @@ class RueckmeldungenController extends Controller
                     $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)) {
                         $email = $User->email;
-                        Log::info($email);
                         Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende));
                     }
                 }
@@ -137,10 +136,11 @@ class RueckmeldungenController extends Controller
         return redirect()->back();
     }
 
-    public function createImageRueckmeldung(Request $request, Post $posts)
+    public function createImageRueckmeldung(Request $request,  $posts_id)
     {
+        $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
-            'posts_id'  => $posts->id,
+            'posts_id'  => $posts_id,
             'type'  => 'bild',
             'commentable'  => 1,
             'empfaenger'  => $request->user()->email,
@@ -152,6 +152,24 @@ class RueckmeldungenController extends Controller
         return redirect()->back()->with([
             'type'  => 'success',
             'Meldung'=>'Bild-Upload mit Kommentaren erstellt.',
+        ]);
+    }
+    public function createDiskussionRueckmeldung(Request $request,  $posts_id)
+    {
+        $posts = Post::find($posts_id);
+        $rueckmeldung = new Rueckmeldungen([
+            'posts_id'  => $posts_id,
+            'type'  => 'commentable',
+            'commentable'  => 1,
+            'empfaenger'  => $request->user()->email,
+            'ende'      => $posts->archiv_ab,
+            'text'      => ' ',
+        ]);
+        $rueckmeldung->save();
+
+        return redirect()->back()->with([
+            'type'  => 'success',
+            'Meldung'=>'Diskussion erstellt.',
         ]);
     }
 }

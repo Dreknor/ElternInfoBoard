@@ -143,8 +143,8 @@ class User extends Authenticatable
      */
     public function getRueckmeldung()
     {
-        $eigeneRueckmeldung = Cache::remember('rueckmeldungen_'.auth()->id(), 60 * 5, function () {
             $eigeneRueckmeldung = $this->userRueckmeldung;
+
             if (! is_null($this->sorg2)) {
                 $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
                 if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
@@ -153,7 +153,6 @@ class User extends Authenticatable
                     return $sorgRueckmeldung;
                 }
             }
-        });
 
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
