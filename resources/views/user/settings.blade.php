@@ -137,7 +137,7 @@
             @if($user->sorg2 != null)
                 <div class="card-footer">
                     <p>
-                        Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2->name}}</b>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.<br>
+                        Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.<br>
                         Sollte dies nicht korrekt sein, so wenden Sie sich bitte an <a href="mailto://daniel.roehrich@esz-radebeul.de">daniel.roehrich@esz-radebeul.de</a>.
                     </p>
                 </div>
