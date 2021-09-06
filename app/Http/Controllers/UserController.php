@@ -185,6 +185,11 @@ class UserController extends Controller
         $user->userRueckmeldung()->delete();
         $user->reinigung()->delete();
 
+        $user->schickzeiten_own()->delete();
+        $user->krankmeldungen()->delete();
+        $user->comments()->delete();
+
+
         $user->posts()->update([
             'author'=>null,
         ]);
