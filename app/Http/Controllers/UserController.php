@@ -186,7 +186,7 @@ class UserController extends Controller
         $user->reinigung()->delete();
 
         $user->schickzeiten_own()->delete();
-        $user->krankmeldungen()->delete();
+        $user->krankmeldungen()->withTrashed()->forceDelete();
         $user->comments()->delete();
 
 
