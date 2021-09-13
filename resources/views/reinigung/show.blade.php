@@ -79,7 +79,11 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                Bitte 1x Wäsche mitnehmen
+                                                @if(isset($familie1) and $familie1->bemerkung != "")
+                                                    {{$familie1->bemerkung}}
+                                                @elseif(isset($familie2) and $familie2->bemerkung != "")
+                                                    {{$familie2->bemerkung}}
+                                                @endif
                                             </td>
                                             <td>
                                                 @if($user->can('edit reinigung'))

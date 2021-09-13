@@ -20,7 +20,6 @@
                                         <th>Reinigungsarbeit</th>
                                         <th>Familie</th>
                                         <th>Reinigungsarbeit</th>
-
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -82,6 +81,16 @@
                                                         <option value="{{$aufgabe->task}}" @if(isset($familie2) and $familie2->aufgabe == $aufgabe->task) selected @endif>{{$aufgabe->task}}</option>
                                                     @endforeach
                                                 </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <div class="form-row">
+                                                    <label for="bemerkung">
+                                                        Bemerkung
+                                                    </label>
+                                                    <input name="bemerkung" id="bemerkung" class="form-control">
+                                                </div>
                                             </td>
                                         </tr>
                                     @endfor

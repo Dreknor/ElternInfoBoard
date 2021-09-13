@@ -122,6 +122,8 @@ class ReinigungController extends Controller
             if (isset($request->usersID_first) and isset($request->aufgabe_first)) {
                 $Reinigung_Fam1->users_id = $request->input('usersID_first');
                 $Reinigung_Fam1->aufgabe = $request->input('aufgabe_first');
+                $Reinigung_Fam1->bemerkung = $request->input('bemerkung');
+
                 $Reinigung_Fam1->save();
             } else {
                 $Reinigung_Fam1->delete();
@@ -130,6 +132,7 @@ class ReinigungController extends Controller
             if (isset($request->usersID_last) and isset($request->aufgabe_last)) {
                 $Reinigung_Fam2->users_id = $request->input('usersID_last');
                 $Reinigung_Fam2->aufgabe = $request->input('aufgabe_last');
+                $Reinigung_Fam2->bemerkung = $request->input('bemerkung');
 
                 $Reinigung_Fam2->save();
             } else {
@@ -141,6 +144,8 @@ class ReinigungController extends Controller
             if (isset($request->usersID_first) and isset($request->aufgabe_first)) {
                 $Reinigung_Fam1->users_id = $request->input('usersID_first');
                 $Reinigung_Fam1->aufgabe = $request->input('aufgabe_first');
+                $Reinigung_Fam1->bemerkung = $request->input('bemerkung');
+
                 $Reinigung_Fam1->save();
             } else {
                 $Reinigung_Fam1->delete();
@@ -150,6 +155,8 @@ class ReinigungController extends Controller
                 $Reinigung_Fam2 = new Reinigung();
                 $Reinigung_Fam2->users_id = $request->input('usersID_last');
                 $Reinigung_Fam2->aufgabe = $request->input('aufgabe_last');
+                $Reinigung_Fam2->bemerkung = $request->input('bemerkung');
+
                 $Reinigung_Fam2->bereich = $Bereich;
                 $Reinigung_Fam2->datum = $Datum;
                 $Reinigung_Fam2->save();
@@ -159,6 +166,8 @@ class ReinigungController extends Controller
                 $Reinigung_Fam1 = new Reinigung();
                 $Reinigung_Fam1->users_id = $request->input('usersID_first');
                 $Reinigung_Fam1->aufgabe = $request->input('aufgabe_first');
+                $Reinigung_Fam1->bemerkung = $request->input('bemerkung');
+
                 $Reinigung_Fam1->bereich = $Bereich;
                 $Reinigung_Fam1->datum = $Datum;
                 $Reinigung_Fam1->save();
@@ -168,6 +177,8 @@ class ReinigungController extends Controller
                 $Reinigung_Fam2 = new Reinigung();
                 $Reinigung_Fam2->users_id = $request->input('usersID_last');
                 $Reinigung_Fam2->aufgabe = $request->input('aufgabe_last');
+                $Reinigung_Fam2->bemerkung = $request->input('bemerkung');
+
                 $Reinigung_Fam2->bereich = $Bereich;
                 $Reinigung_Fam2->datum = $Datum;
                 $Reinigung_Fam2->save();
