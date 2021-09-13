@@ -101,7 +101,6 @@
     </div>
     @if($user->can('edit reinigung'))
         <div class="container-fluid">
-            <div class="row">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">
@@ -125,7 +124,6 @@
                         </form>
                     </div>
                 </div>
-            </div>
         </div>
     @endif
 

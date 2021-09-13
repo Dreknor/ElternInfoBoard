@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
+        <a href="{{url('reinigung')}}" class="btn btn-primary">zurück</a>
             <div class="row justify-content-center">
                 <div class="col-12">
                     <div class="card">
