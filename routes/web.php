@@ -134,8 +134,11 @@ Route::group([
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
+        Route::delete('reinigung/task/', [\App\Http\Controllers\ReinigungsTaskController::class, 'destroy']);
+        Route::post('reinigung/task/', [\App\Http\Controllers\ReinigungsTaskController::class, 'store']);
         Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
         Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+
 
         //Edit and create posts
         Route::get('/posts/create', [NachrichtenController::class, 'create']);

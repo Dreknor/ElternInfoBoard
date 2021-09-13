@@ -99,6 +99,35 @@
             </div>
         @endforeach
     </div>
+    @if($user->can('edit reinigung'))
+        <div class="container-fluid">
+            <div class="row">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            Neue Aufgabe erstellen
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{url('reinigung/task/')}}" method="post" class="form-horizontal">
+                            @csrf
+                            <div class="form-row">
+                                <label for="task">
+                                    Aufgabe
+                                </label>
+                                <input class="form-control" name="task" id="task" required>
+                            </div>
+                            <div class="form-row">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    neue Aufgabe speichern
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
 @endsection
 

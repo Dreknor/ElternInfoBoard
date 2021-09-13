@@ -61,7 +61,7 @@
                                                     <option></option>
 
                                                 @foreach($aufgaben as $aufgabe)
-                                                        <option value="{{$aufgabe}}" @if(isset($familie1) and $familie1->aufgabe == $aufgabe) selected @endif>{{$aufgabe}}</option>
+                                                        <option value="{{$aufgabe->task}}" @if(isset($familie1) and $familie1->aufgabe == $aufgabe->task) selected @endif>{{$aufgabe->task}}</option>
                                                     @endforeach
                                                 </select>
                                             </td>
@@ -78,7 +78,7 @@
                                                 <select name="aufgabe_last"  class="w-100" autocomplete="new-password">
                                                     <option></option>
                                                     @foreach($aufgaben as $aufgabe)
-                                                        <option value="{{$aufgabe}}" @if(isset($familie2) and $familie2->aufgabe == $aufgabe) selected @endif>{{$aufgabe}}</option>
+                                                        <option value="{{$aufgabe->task}}" @if(isset($familie2) and $familie2->aufgabe == $aufgabe->task) selected @endif>{{$aufgabe->task}}</option>
                                                     @endforeach
                                                 </select>
                                             </td>

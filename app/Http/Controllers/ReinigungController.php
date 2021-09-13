@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Model\Group;
 use App\Model\Reinigung;
+use App\Model\ReinigungsTask;
 use App\Model\User;
 use App\Support\Collection;
 use Carbon\Carbon;
@@ -32,7 +33,10 @@ class ReinigungController extends Controller
         if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
+
+            $tasks = ReinigungsTask::all();
         } else {
+            $tasks = [];
             $Bereiche = Group::query()->whereNotNull('bereich')->pluck('bereich')->unique();
         }
 
@@ -52,6 +56,7 @@ class ReinigungController extends Controller
             'datum'     => $datum,
             'user'      => $user,
             'ende'      => $ende,
+            'tasks'     => $tasks
         ]);
     }
 
@@ -87,7 +92,7 @@ class ReinigungController extends Controller
                 ->orderBy('datum')
                 ->get();
 
-        $Aufgaben = config('reinigung.aufgaben');
+        $Aufgaben = ReinigungsTask::all();
 
         return view('reinigung.edit', [
             'Bereich'  => $Bereich,
