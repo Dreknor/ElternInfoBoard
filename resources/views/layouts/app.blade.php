@@ -36,7 +36,14 @@
     </div>
     <div class="sidebar-wrapper">
         <ul class="nav">
-
+            @if(config('app.mitarbeiterboard') != "" and auth()->user()->hasRole('Mitarbeiter'))
+                <li class="">
+                    <a href="{{config('app.mitarbeiterboard')}}">
+                        <i class="fa fa-external-link-alt"></i>
+                        <p>MitarbeiterBoard</p>
+                    </a>
+                </li>
+            @endif
             @stack('nav')
 
             <li class="border-bottom"></li>
