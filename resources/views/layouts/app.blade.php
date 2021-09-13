@@ -36,7 +36,7 @@
     </div>
     <div class="sidebar-wrapper">
         <ul class="nav">
-            @if(config('app.mitarbeiterboard') != "" and auth()->user()->hasRole('Mitarbeiter'))
+            @if(config('app.mitarbeiterboard') != "" and auth()->user()->can('view Mitarbeiterboard'))
                 <li class="">
                     <a href="{{config('app.mitarbeiterboard')}}">
                         <i class="fa fa-external-link-alt"></i>
