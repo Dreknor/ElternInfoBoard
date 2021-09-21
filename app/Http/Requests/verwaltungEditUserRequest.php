@@ -43,7 +43,10 @@ class verwaltungEditUserRequest extends FormRequest
                 'required',
                 'in:weekly,daily',
             ],
-
+            'sorg2' => [
+                'nullable',
+                'exists:users,id',
+            ],
         ];
     }
 }

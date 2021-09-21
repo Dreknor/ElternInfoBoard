@@ -104,6 +104,10 @@ class UserController extends Controller
             'roles'     => Cache::remember('role', 60 * 5, function () {
                 return Role::all();
             }),
+            'users' => User::where([
+                ['sorg2', null],
+                ['id', '!=', $user->id],
+            ])->orWhere('sorg2', $user->id)->get()
         ]);
     }
 
@@ -116,7 +120,7 @@ class UserController extends Controller
      */
     public function update(verwaltungEditUserRequest $request, User $user)
     {
-        $user->fill($request->all());
+        $user->fill($request->validated());
         $gruppen = $request->input('gruppen');
 
         if (! is_null($gruppen)) {
@@ -140,6 +144,12 @@ class UserController extends Controller
 
         if ($request->user()->can('set password') and $request->input('new-password') != '') {
             $user->password = Hash::make($request->input('new-password'));
+        }
+
+        if ($request->sorg2 != ""){
+            $sorg2 = User::where('id', $request->sorg2)->update([
+                'sorg2' => $user->id
+            ]);
         }
 
         if ($user->save()) {
