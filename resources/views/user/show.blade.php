@@ -101,16 +101,30 @@
                                             </div>
                                         </div>
                                     @endcan
-                                    @if($user->sorg2 != null)
+
                                         <div class="row">
                                             <div class="col-12">
-                                                <p>
-                                                    Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>.
-                                                </p>
+                                                @if($user->sorg2 != "")
+                                                    <p>
+                                                        Das Konto ist verknüpft mit
+                                                        <b>
+                                                            <a href="{{url('users/'.$user->sorg2)}}">
+                                                                {{optional($user->sorgeberechtigter2)->name}}
+                                                            </a>
+                                                        </b>.
+                                                    </p>
+                                                @else
+                                                    <label for="sorg2">Verknüpfen mit:</label>
+                                                    <select class="custom-select" name="sorg2" id="sorg2">
+                                                        <option value=""></option>
+                                                        @foreach($users as $otherUser)
+                                                            <option value="{{$otherUser->id}}">{{$otherUser->name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                @endif
                                             </div>
                                         </div>
 
-                                    @endif
 
                                     <div class="row">
                                         <div class="col-12">

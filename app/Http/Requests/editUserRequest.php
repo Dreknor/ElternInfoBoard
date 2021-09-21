@@ -44,6 +44,7 @@ class editUserRequest extends FormRequest
                 'string',
             ],
 
+
         ];
     }
 }
