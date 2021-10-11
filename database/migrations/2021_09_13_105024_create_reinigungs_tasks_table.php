@@ -15,7 +15,7 @@ class CreateReinigungsTasksTable extends Migration
     {
         Schema::create('reinigungs_tasks', function (Blueprint $table) {
             $table->id();
-            $table->string('task', 60);
+            $table->tinyText('task', 60);
             $table->timestamps();
         });
     }
