@@ -21,7 +21,6 @@
                         <div class="card-body">
                             <div class="container-fluid">
                                     @can('view groups')
-                                        @foreach($group->users as $users)
                                         <div class="">
                                             <table class="table table-bordered table-striped table-sm">
                                                 <thead>
@@ -38,9 +37,8 @@
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                @foreach($group->users->filter(function ($user){
-                                                if ($user->publicMail !="" or $user->publicPhone !=""){ return $user; }
-                                            }) as $user)
+                                                @foreach($group->users as $users)
+
                                                     <tr>
                                                         <td>
                                                             {{$user->name}}:
@@ -60,7 +58,6 @@
                                                 </tbody>
                                             </table>
                                         </div>
-                                        @endforeach
                                     @else
                                         <div class="">
                                             <table class="table table-bordered table-striped table-sm">
