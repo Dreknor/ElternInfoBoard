@@ -39,6 +39,10 @@ class verwaltungEditUserRequest extends FormRequest
                 'nullable',
                 'email'
             ],
+            'publicPhone'  => [
+                'nullable',
+                'string'
+            ],
             'benachrichtigung' => [
                 'required',
                 'in:weekly,daily',

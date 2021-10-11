@@ -66,6 +66,13 @@
                                                 <input type="text" class="form-control border-input" placeholder="öffentliche E-Mail" name="publicMail" value="{{$user->publicMail}}" >
                                             </div>
                                         </div>
+
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label>öffentliche Telefonnummer (für andere Eltern in den gleichen Gruppen sichtbar)</label>
+                                                <input type="text" class="form-control border-input" placeholder="öffentliche Telefonnummer" name="publicPhone" value="{{$user->publicPhone}}"  autocomplete="off" >
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 col-sm-12">
