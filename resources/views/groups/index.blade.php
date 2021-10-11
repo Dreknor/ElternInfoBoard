@@ -37,7 +37,7 @@
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                @foreach($group->users as $users)
+                                                @foreach($group->users as $user)
 
                                                     <tr>
                                                         <td>
