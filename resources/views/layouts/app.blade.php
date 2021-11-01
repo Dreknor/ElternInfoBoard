@@ -212,6 +212,12 @@
     });
 
 
+    $('input[type=submit]').click(function (){
+        this.form.submit();
+        this.disabled=true;
+        this.value='wird bearbeitet…';
+
+    });
 </script>
     @yield('js')
     @stack('js')
