@@ -20,33 +20,84 @@
                         </div>
                         <div class="card-body">
                             <div class="container-fluid">
-                                <div class="row">
                                     @can('view groups')
-                                        @foreach($group->users->chunk(15) as $users)
-                                            <div class="col-xl-3 col-md-4 col-sm-12">
-                                                <ul class="list-group">
-                                                    @foreach($users as $user)
-                                                        <li class="list-group-item">
-                                                            <a href="mailto://{{$user->email}}" class="card-link">{{$user->name}}</a>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        @endforeach
+                                        <div class="">
+                                            <table class="table table-bordered table-striped table-sm">
+                                                <thead>
+                                                <tr>
+                                                    <th>
+                                                        Name
+                                                    </th>
+                                                    <th>
+                                                        E-Mail
+                                                    </th>
+                                                    <th>
+                                                        Telefon
+                                                    </th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                @foreach($group->users as $user)
+
+                                                    <tr>
+                                                        <td>
+                                                            {{$user->name}}:
+                                                        </td>
+                                                        <td>
+                                                            @if($user->publicMail !="")
+                                                                <a href="mailto://{{$user->publicMail}}" class="card-link">{{$user->publicMail}}</a>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($user->publicPhone !="")
+                                                                <a href="tel://{{$user->publicPhone}}" class="card-link">{{$user->publicPhone}}</a>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     @else
-                                        @foreach($group->users->filter(function ($user){
-                                                if ($user->publicMail !=""){ return $user; }
-                                            })->chunk(15) as $users)
-                                            <div class="col-xl-3 col-md-4 col-sm-12">
-                                                <ul class="list-group">
-                                                    @foreach($users as $user)
-                                                        <li class="list-group-item">
-                                                            <a href="mailto://{{$user->publicMail}}" class="card-link">{{$user->name}}</a>
-                                                        </li>
+                                        <div class="">
+                                            <table class="table table-bordered table-striped table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>
+                                                            Name
+                                                        </th>
+                                                        <th>
+                                                            E-Mail
+                                                        </th>
+                                                        <th>
+                                                            Telefon
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($group->users->filter(function ($user){
+                                                    if ($user->publicMail !="" or $user->publicPhone !=""){ return $user; }
+                                                }) as $user)
+                                                        <tr>
+                                                            <td>
+                                                                {{$user->name}}:
+                                                            </td>
+                                                            <td>
+                                                                @if($user->publicMail !="")
+                                                                    <a href="mailto://{{$user->publicMail}}" class="card-link">{{$user->publicMail}}</a>
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if($user->publicPhone !="")
+                                                                    <a href="tel://{{$user->publicPhone}}" class="card-link">{{$user->publicPhone}}</a>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
                                                     @endforeach
-                                                </ul>
-                                            </div>
-                                        @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+
                                     @endcan
                                 </div>
                             </div>
@@ -55,7 +106,6 @@
                     </div>
                 </div>
 
-            </div>
         @endforeach
     </div>
 @can('view groups')

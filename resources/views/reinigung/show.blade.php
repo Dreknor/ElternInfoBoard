@@ -79,7 +79,11 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                Bitte 1x Wäsche mitnehmen
+                                                @if(isset($familie1) and $familie1->bemerkung != "")
+                                                    {{$familie1->bemerkung}}
+                                                @elseif(isset($familie2) and $familie2->bemerkung != "")
+                                                    {{$familie2->bemerkung}}
+                                                @endif
                                             </td>
                                             <td>
                                                 @if($user->can('edit reinigung'))
@@ -99,6 +103,33 @@
             </div>
         @endforeach
     </div>
+    @if($user->can('edit reinigung'))
+        <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            Neue Aufgabe erstellen
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{url('reinigung/task/')}}" method="post" class="form-horizontal">
+                            @csrf
+                            <div class="form-row">
+                                <label for="task">
+                                    Aufgabe
+                                </label>
+                                <input class="form-control" name="task" id="task" required>
+                            </div>
+                            <div class="form-row">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    neue Aufgabe speichern
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+        </div>
+    @endif
 
 @endsection
 

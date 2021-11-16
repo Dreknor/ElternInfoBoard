@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
+        <a href="{{url('reinigung')}}" class="btn btn-primary">zurück</a>
             <div class="row justify-content-center">
                 <div class="col-12">
                     <div class="card">
@@ -19,7 +20,6 @@
                                         <th>Reinigungsarbeit</th>
                                         <th>Familie</th>
                                         <th>Reinigungsarbeit</th>
-
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -61,7 +61,7 @@
                                                     <option></option>
 
                                                 @foreach($aufgaben as $aufgabe)
-                                                        <option value="{{$aufgabe}}" @if(isset($familie1) and $familie1->aufgabe == $aufgabe) selected @endif>{{$aufgabe}}</option>
+                                                        <option value="{{$aufgabe->task}}" @if(isset($familie1) and $familie1->aufgabe == $aufgabe->task) selected @endif>{{$aufgabe->task}}</option>
                                                     @endforeach
                                                 </select>
                                             </td>
@@ -78,9 +78,19 @@
                                                 <select name="aufgabe_last"  class="w-100" autocomplete="new-password">
                                                     <option></option>
                                                     @foreach($aufgaben as $aufgabe)
-                                                        <option value="{{$aufgabe}}" @if(isset($familie2) and $familie2->aufgabe == $aufgabe) selected @endif>{{$aufgabe}}</option>
+                                                        <option value="{{$aufgabe->task}}" @if(isset($familie2) and $familie2->aufgabe == $aufgabe->task) selected @endif>{{$aufgabe->task}}</option>
                                                     @endforeach
                                                 </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <div class="form-row">
+                                                    <label for="bemerkung">
+                                                        Bemerkung
+                                                    </label>
+                                                    <input name="bemerkung" id="bemerkung" class="form-control">
+                                                </div>
                                             </td>
                                         </tr>
                                     @endfor

@@ -41,8 +41,13 @@ class editUserRequest extends FormRequest
             ],
             'publicMail' => [
                 'nullable',
-                'string',
+                'email',
             ],
+            'publicPhone'  => [
+                'nullable',
+                'string'
+            ],
+
 
         ];
     }
