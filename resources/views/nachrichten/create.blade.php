@@ -92,9 +92,9 @@
                         <div class="col-12">
                             <div class="form-group">
                                 <label>Reaktionen erlauben</label>
-                                <select class="custom-select" name="reactions">
-                                    <option value="1">Ja</option>
-                                    <option value="0" selected>nein</option>
+                                <select class="custom-select" name="reactable">
+                                    <option value="1" selected>Ja</option>
+                                    <option value="0">nein</option>
                                 </select>
                             </div>
                         </div>
