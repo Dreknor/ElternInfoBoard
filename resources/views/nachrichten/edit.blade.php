@@ -64,24 +64,45 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>Mitteilung veröffentlichen?</label>
-                            <select class="custom-select" name="released">
-                                <option value="1" @cannot('release posts') disabled @else @if($post->released ==1) selected @endif @endcannot>Ja</option>
-                                @cannot('release posts')
-                                    <option value="0" selected>durch Leitung veröffentlichen</option>
-                                @else
-                                    <option value="0"  @if($post->released ==0) selected @endif>später veröffentlichen</option>
-                                @endcannot
-                            </select>
+                    <div class=" col-12 col-sm-6">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label>Mitteilung veröffentlichen?</label>
+                                    <select class="custom-select" name="released">
+                                        <option value="1" @cannot('release posts') disabled
+                                                @else @if($post->released ==1) selected @endif @endcannot>Ja
+                                        </option>
+                                        @cannot('release posts')
+                                            <option value="0" selected>durch Leitung veröffentlichen</option>
+                                        @else
+                                            <option value="0" @if($post->released ==0) selected @endif>später
+                                                veröffentlichen
+                                            </option>
+                                        @endcannot
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-
-                        @include('include.formGroups')
-
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label>Reaktionen erlauben</label>
+                                    <select class="custom-select" name="reactions">
+                                        <option value="1">Ja</option>
+                                        <option value="0" selected>nein</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                @include('include.formGroups')
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="col-md-8 col-sm-12">
+                    <div class=" col-12  col-sm-6">
                         @can('send urgent message')
                             <div class="row">
                                 <div class="col-12">

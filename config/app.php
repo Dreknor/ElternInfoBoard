@@ -1,5 +1,7 @@
 <?php
 
+use Carbon\Carbon;
+
 return [
 
     /*
@@ -176,6 +178,7 @@ return [
         App\Providers\RouteServiceProvider::class,
 
         Barryvdh\DomPDF\ServiceProvider::class,
+        DevDojo\LaravelReactions\Providers\ReactionsServiceProvider::class,
 
         //eigene
         App\Providers\ComposerServiceProvider::class,
@@ -237,7 +240,7 @@ return [
     ],
 
     //Odner des Elternrate
-    'directories_elternrat' => explode(',',env('ELTERNRAT_DIRS', 'Allgemein,Protokolle')),
+    'directories_elternrat' => explode(',', env('ELTERNRAT_DIRS', 'Allgemein,Protokolle')),
 
     //Logo
     'logo' => env('APP_LOGO', 'logo.png'),
@@ -247,7 +250,10 @@ return [
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
 
     //Passwort für Import
-    'import_eltern' => env('PW_IMPORT_ELTERN',  \Carbon\Carbon::now()->format('dmY')),
-    'import_aufnahme' => env('PW_IMPORT_AUFNAHME',  \Carbon\Carbon::now()->format('dmY')),
-    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', \Carbon\Carbon::now()->format('dmY')),
+    'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
+    'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),
+    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', Carbon::now()->format('dmY')),
+
+    //Reactions
+    'enable_reactions' => env('ENABLE_REACTIONS', true),
 ];

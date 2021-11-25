@@ -1,4 +1,3 @@
-
 <div class="nachricht blur {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}" >
     @if(count($nachricht->getMedia('header'))>0)
         <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}" style="max-height: 250px;object-fit: cover; object-position: 0 40%;">
@@ -132,7 +131,8 @@
             @endif
         </div>
     </div>
-    @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
+    @include('nachrichten.footer.reactions')
+        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
         @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
             <div class="container-fluid">
                 <div class="row">

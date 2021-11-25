@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
+use App\Http\Controllers\ReactionController;
+use App\Http\Controllers\ReinigungsTaskController;
 use App\Http\Controllers\VertretungsplanController;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
@@ -112,6 +114,8 @@ Route::group([
         Route::get('/', [NachrichtenController::class, 'index']);
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
+        Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
+
         //KioskAnsicht
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
         Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
@@ -134,8 +138,8 @@ Route::group([
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
-        Route::delete('reinigung/task/', [\App\Http\Controllers\ReinigungsTaskController::class, 'destroy']);
-        Route::post('reinigung/task/', [\App\Http\Controllers\ReinigungsTaskController::class, 'store']);
+        Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
+        Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
         Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
         Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
 
@@ -218,7 +222,7 @@ Route::group([
 
         Route::get('logoutAsUser', function () {
             if (session()->has('ownID')) {
-                \Illuminate\Support\Facades\Auth::loginUsingId(session()->pull('ownID'));
+                Auth::loginUsingId(session()->pull('ownID'));
             }
 
             return redirect(url('/'));

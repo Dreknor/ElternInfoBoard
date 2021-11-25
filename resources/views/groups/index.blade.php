@@ -38,7 +38,6 @@
                                                 </thead>
                                                 <tbody>
                                                 @foreach($group->users as $user)
-
                                                     <tr>
                                                         <td>
                                                             {{$user->name}}:
@@ -108,6 +107,7 @@
 
         @endforeach
     </div>
+
 @can('view groups')
     <div class="container-fluid">
         <div class="card">
