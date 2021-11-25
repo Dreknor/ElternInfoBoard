@@ -1,4 +1,4 @@
-@if(!is_null($nachricht->reactable))
+@if($nachricht->reactable != 0)
     <div class="card-footer">
 
         <div class="row">
