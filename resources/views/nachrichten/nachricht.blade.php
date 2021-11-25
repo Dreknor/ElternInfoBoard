@@ -131,7 +131,8 @@
             @endif
         </div>
     </div>
-    @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
+    @include('nachrichten.footer.reactions')
+        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
         @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
             <div class="container-fluid">
                 <div class="row">

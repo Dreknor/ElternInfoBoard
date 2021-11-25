@@ -29,3 +29,15 @@
     height: 100%;
 }
 
+.reaction > i {
+    font-size: 1.6rem;
+}
+
+.reaction:hover {
+    color: #0f0;
+}
+
+.reacted > i {
+    color: rgba(64, 108, 254, 0.44);
+
+}
