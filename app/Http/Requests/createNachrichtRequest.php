@@ -36,14 +36,17 @@ class createNachrichtRequest extends FormRequest
             'news'      => [
                 'required',
             ],
-            'gruppen'   => [
+            'gruppen' => [
                 'required',
             ],
-            'password'  => [
+            'password' => [
                 'required_with:urgent',
             ],
-            'type'      => [
+            'type' => [
                 'required',
+            ],
+            'reactable' => [
+                'required', 'boolean'
             ],
         ];
     }
