@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
+use App\Http\Controllers\PollController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReinigungsTaskController;
 use App\Http\Controllers\VertretungsplanController;
@@ -115,6 +116,13 @@ Route::group([
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
+
+        //Umfragen
+        Route::middleware('permission:create polls')->group(function () {
+            Route::post('poll/{post}/create', [PollController::class, 'store']);
+            Route::put('poll/{poll}/update', [PollController::class, 'update']);
+        });
+        Route::post('poll/{post}/vote', [PollController::class, 'vote']);
 
         //KioskAnsicht
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);

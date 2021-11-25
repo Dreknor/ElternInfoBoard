@@ -239,6 +239,24 @@
         </div>
     </div>
 
+    @if(!is_null($post->poll) )
+        @if($post->poll->author_id == auth()->id() and $post->poll->answers->count() == 0)
+            @include('nachrichten.editPoll')
+        @else
+            <div class="card">
+                <div class="card-header">
+                    <h6>
+                        {{$post->poll->poll_name}}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Berechtigung fehlt oder es wurden bereits Stimmen abgegeben.
+                    </p>
+                </div>
+            </div>
+        @endif
+    @endif
     @if(is_null($post->rueckmeldung))
         <div class="row" id="createButtons">
             <div class="col-12">
@@ -246,7 +264,8 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-4">
-                                <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}" id="CommentsButton" class="btn btn-block btn-outline-primary">
+                                <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}" id="CommentsButton"
+                                   class="btn btn-block btn-outline-primary">
                                     Diskussion
                                 </a>
                             </div>

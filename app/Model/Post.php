@@ -59,6 +59,11 @@ class Post extends Model implements HasMedia, ReactableInterface
         return $this->hasManyDeep(User::class, ['group_post', Group::class, 'group_user']);
     }
 
+    public function poll()
+    {
+        return $this->hasOne(Poll::class, 'post_id');
+    }
+
     public function getIsArchivedAttribute()
     {
         return $this->archiv_ab > Carbon::now() ? false : true;

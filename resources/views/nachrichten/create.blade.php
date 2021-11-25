@@ -85,6 +85,9 @@
                                     <option value="commentable">Ja, Diskussion</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
+                                    @if(auth()->user()->can('create polls'))
+                                        <option value="poll">Ja, Umfrage</option>
+                                    @endif
                                     <option value="0" selected>nein</option>
                                 </select>
                             </div>

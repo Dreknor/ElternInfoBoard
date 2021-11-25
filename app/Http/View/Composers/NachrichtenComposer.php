@@ -30,6 +30,7 @@ class NachrichtenComposer
             $Nachrichten = $Nachrichten->unique('id');
             $Nachrichten = $Nachrichten->load('userRueckmeldung');
             $Nachrichten = $Nachrichten->load('reactions');
+            $Nachrichten = $Nachrichten->load('poll', 'poll.options', 'poll.votes', 'poll.answers');
 
             return $Nachrichten->paginate(30);
         });

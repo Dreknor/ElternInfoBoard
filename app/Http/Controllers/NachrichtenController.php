@@ -265,11 +265,19 @@ class NachrichtenController extends Controller
                     'Meldung' => $Meldung,
                 ]);
                 break;
+            case 'poll':
+                return view('nachrichten.createPoll', [
+                    'nachricht' => $post,
+                ])->with([
+                    'type' => 'success',
+                    'Meldung' => $Meldung,
+                ]);
+                break;
             case 'bild':
                 $rueckmeldung = new Rueckmeldungen([
-                    'post_id'  => $post->id,
-                    'type'  => 'bild',
-                    'empfaenger'  => auth()->user()->email,
+                    'post_id' => $post->id,
+                    'type' => 'bild',
+                    'empfaenger' => auth()->user()->email,
                     'ende'      => $post->archiv_ab,
                     'text'      => ' ',
                 ]);
