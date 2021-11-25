@@ -89,6 +89,18 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Reaktionen erlauben</label>
+                                <select class="custom-select" name="reactable">
+                                    <option value="1" @if(config('app.enable_reactions') == true) selected @endif>Ja
+                                    </option>
+                                    <option value="0" @if(config('app.enable_reactions') == false) selected @endif>
+                                        nein
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

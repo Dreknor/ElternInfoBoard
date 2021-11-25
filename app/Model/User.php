@@ -2,12 +2,12 @@
 
 namespace App\Model;
 
+use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Cache;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
@@ -22,6 +22,7 @@ class User extends Authenticatable
     use HasRoles;
     use HasPushSubscriptions;
     use HasRelationships;
+    use Reacts;
 
     /**
      * The attributes that are mass assignable.
@@ -29,7 +30,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email','publicMail','publicPhone','sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login',
+        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login',
     ];
 
     /**
@@ -57,7 +58,7 @@ class User extends Authenticatable
 
     /**
      * Verknüpfte Gruppen
-     * @return BelongsToMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function groups()
     {
@@ -66,25 +67,25 @@ class User extends Authenticatable
 
     /**
      * Posts verknüpft über die Gruppen
-     * @return HasManyDeep
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function posts()
     {
-        return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post']);
+        return $this->hasManyDeep(\App\Model\Post::class, ['group_user', \App\Model\Group::class, 'group_post']);
     }
 
     /**
      * Posts verknüpft über die Gruppen
-     * @return HasManyDeep
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function postsNotArchived()
     {
-        return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])->NotArchived();
+        return $this->hasManyDeep(\App\Model\Post::class, ['group_user', \App\Model\Group::class, 'group_post'])->NotArchived();
     }
 
     /**
      * Eigene Posts
-     * @return HasManyDeep
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function own_posts()
     {
@@ -93,23 +94,23 @@ class User extends Authenticatable
 
     /**
      * Termine Verknüpft über Gruppen
-     * @return HasManyDeep
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function termine()
     {
-        return $this->hasManyDeep(Termin::class, ['group_user', Group::class, 'group_termine']);
+        return $this->hasManyDeep(\App\Model\Termin::class, ['group_user', \App\Model\Group::class, 'group_termine']);
     }
 
     /**
-     * @return HasManyDeep
+     * @return \Staudenmeir\EloquentHasManyDeep\HasManyDeep
      */
     public function listen()
     {
-        return $this->hasManyDeep(Liste::class, ['group_user', Group::class, 'group_listen']);
+        return $this->hasManyDeep(\App\Model\Liste::class, ['group_user', \App\Model\Group::class, 'group_listen']);
     }
 
     /**
-     * @return HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function listen_eintragungen()
     {
@@ -119,7 +120,7 @@ class User extends Authenticatable
     //Sorgeberechtigter 2
 
     /**
-     * @return HasOne
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function sorgeberechtigter2()
     {
@@ -136,7 +137,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function userRueckmeldung()
     {
@@ -148,23 +149,23 @@ class User extends Authenticatable
      */
     public function getRueckmeldung()
     {
-        $eigeneRueckmeldung = $this->userRueckmeldung;
+            $eigeneRueckmeldung = $this->userRueckmeldung;
 
-        if (! is_null($this->sorg2)) {
-            $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
-            if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
-                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-            } elseif (is_null($eigeneRueckmeldung)) {
-                return $sorgRueckmeldung;
+            if (! is_null($this->sorg2)) {
+                $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
+                if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
+                    return $eigeneRueckmeldung->merge($sorgRueckmeldung);
+                } elseif (is_null($eigeneRueckmeldung)) {
+                    return $sorgRueckmeldung;
+                }
             }
-        }
 
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
     }
 
     /**
-     * @return HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function Reinigung()
     {
@@ -204,7 +205,7 @@ class User extends Authenticatable
 
     public function krankmeldungen()
     {
-        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('start');
+        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2);
     }
 
     public function comments()
