@@ -48,6 +48,9 @@ class createNachrichtRequest extends FormRequest
             'reactable' => [
                 'boolean'
             ],
+            'released' => [
+                'nullable', 'boolean'
+            ],
         ];
     }
 }

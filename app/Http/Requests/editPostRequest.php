@@ -49,6 +49,9 @@ class editPostRequest extends FormRequest
             'reactable' => [
                 'nullable', 'boolean'
             ],
+            'released' => [
+                'nullable', 'boolean'
+            ],
         ];
     }
 }
