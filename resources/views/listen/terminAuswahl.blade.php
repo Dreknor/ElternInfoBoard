@@ -158,7 +158,7 @@
                            <label for="termin">
                                Dauer in Minuten:
                            </label>
-                           <input type="number" name="duration" readonly class="form-control" value="{{$liste->duration}}">
+                           <input type="number" name="duration" class="form-control" value="{{$liste->duration}}">
                        </div>
                        <div class="form-row">
                            <label for="comment">
