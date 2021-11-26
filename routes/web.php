@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
+use App\Http\Controllers\PollController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReinigungsTaskController;
 use App\Http\Controllers\VertretungsplanController;
@@ -116,6 +117,13 @@ Route::group([
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
 
+        //Umfragen
+        Route::middleware('permission:create polls')->group(function () {
+            Route::post('poll/{post}/create', [PollController::class, 'store']);
+            Route::put('poll/{poll}/update', [PollController::class, 'update']);
+        });
+        Route::post('poll/{post}/vote', [PollController::class, 'vote']);
+
         //KioskAnsicht
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
         Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
@@ -128,6 +136,8 @@ Route::group([
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
         Route::get('listen/{liste}/activate', [ListenController::class, 'activate']);
+        Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
+        Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
         Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);

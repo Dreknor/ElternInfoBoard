@@ -27,6 +27,7 @@ class Post extends Model implements HasMedia, ReactableInterface
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable'];
     protected $casts = [
         'archiv_ab' => 'datetime',
+        'reactable' => 'boolean'
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
@@ -56,6 +57,11 @@ class Post extends Model implements HasMedia, ReactableInterface
     public function users()
     {
         return $this->hasManyDeep(User::class, ['group_post', Group::class, 'group_user']);
+    }
+
+    public function poll()
+    {
+        return $this->hasOne(Poll::class, 'post_id');
     }
 
     public function getIsArchivedAttribute()

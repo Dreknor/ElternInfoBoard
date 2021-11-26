@@ -20,13 +20,21 @@ use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\View\View;
+use PDF;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -50,7 +58,7 @@ class NachrichtenController extends Controller
     /**
      * Show the application dashboard.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return Renderable
      */
     public function index($archiv = null)
     {
@@ -64,7 +72,7 @@ class NachrichtenController extends Controller
     /**
      * Show the old News.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return Renderable
      */
     public function postsArchiv(Request $request)
     {
@@ -93,7 +101,7 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
+     * @return Factory|RedirectResponse|Redirector|View
      */
     public function create(Request $request)
     {
@@ -113,7 +121,7 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
+     * @return Factory|RedirectResponse|Redirector|View
      */
     public function edit(Request $request, Post $posts, $kiosk = '')
     {
@@ -142,7 +150,7 @@ class NachrichtenController extends Controller
 
     /**
      * @param createNachrichtRequest $request
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
+     * @return Factory|RedirectResponse|Redirector|View
      */
     public function store(createNachrichtRequest $request)
     {
@@ -186,11 +194,11 @@ class NachrichtenController extends Controller
         if ($request->hasFile('files')) {
             if (auth()->user()->can('upload great files')) {
                 try {
-                @ini_set('upload_max_filesize', '300M');
-                @ini_set('post_max_size', '300M');
-                } catch (\Exception $exception){
+                    @ini_set('upload_max_filesize', '300M');
+                    @ini_set('post_max_size', '300M');
+                } catch (Exception $exception) {
                     redirect()->back()->with([
-                        'type'=>'danger',
+                        'type' => 'danger',
                         'Meldung' => $exception
                     ]);
                 }
@@ -257,11 +265,19 @@ class NachrichtenController extends Controller
                     'Meldung' => $Meldung,
                 ]);
                 break;
+            case 'poll':
+                return view('nachrichten.createPoll', [
+                    'nachricht' => $post,
+                ])->with([
+                    'type' => 'success',
+                    'Meldung' => $Meldung,
+                ]);
+                break;
             case 'bild':
                 $rueckmeldung = new Rueckmeldungen([
-                    'post_id'  => $post->id,
-                    'type'  => 'bild',
-                    'empfaenger'  => auth()->user()->email,
+                    'post_id' => $post->id,
+                    'type' => 'bild',
+                    'empfaenger' => auth()->user()->email,
                     'ende'      => $post->archiv_ab,
                     'text'      => ' ',
                 ]);
@@ -317,7 +333,7 @@ class NachrichtenController extends Controller
     /**
      * @param Post $posts
      * @param editPostRequest $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse|Redirector
      */
     public function update(Post $posts, editPostRequest $request, $kiosk = null)
     {
@@ -336,10 +352,14 @@ class NachrichtenController extends Controller
             ]);
         }
 
-        $posts->fill($request->all());
+        $posts->fill($request->validated());
         //$posts->author = auth()->user()->id;
 
         $posts->updated_at = $request->input('updated_at');
+
+        if (!is_null($posts->rueckmeldung) and $posts->rueckmeldung->ende->gt($posts->archiv_ab)) {
+            $posts->archiv_ab = $posts->rueckmeldung->ende;
+        }
         $posts->save();
 
         //Gruppen
@@ -431,7 +451,7 @@ class NachrichtenController extends Controller
     /**
      * @param null $daily
      * @param null $userSend
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function email($daily = null, $userSend = null)
     {
@@ -492,7 +512,7 @@ class NachrichtenController extends Controller
                             'Meldung' => 'Mail versandt',
                         ]);
                     }
-                } catch (\Exception $exception) {
+                } catch (Exception $exception) {
                     $admin = Role::findByName('Admin');
                     $admin = $admin->users()->first();
 
@@ -511,7 +531,7 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse|Redirector
      */
     public function touch(Post $posts)
     {
@@ -530,7 +550,7 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse|Redirector
      */
     public function release(Request $request, Post $posts)
     {
@@ -611,7 +631,7 @@ class NachrichtenController extends Controller
             }
         }
 
-        $pdf = \PDF::loadView('pdf.pdf', [
+        $pdf = PDF::loadView('pdf.pdf', [
             'nachrichten' => $Nachrichten,
         ]);
 
@@ -620,8 +640,8 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Exception
+     * @return JsonResponse
+     * @throws Exception
      */
     public function destroy(Request $request, Post $posts)
     {

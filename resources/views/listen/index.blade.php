@@ -59,18 +59,25 @@
                                                         <div class="d-inline pull-right">
                                                             <div class="pull-right">
                                                                 <a href="{{url("listen/$liste->id/edit")}}" class="card-link">
-
                                                                     <i class="fas fa-pencil-alt @if($liste->active == 0) text-gray @endif" title="bearbeiten"></i>
                                                                 </a>
                                                                 @if($liste->active == 0)
-                                                                    <a href="{{url("listen/$liste->id/activate")}}" class="card-link">
-                                                                        <i class="fas fa-eye  @if($liste->active == 0) text-gray @endif" title="veröffentlichen"></i>
+                                                                    <a href="{{url("listen/$liste->id/activate")}}"
+                                                                       class="card-link">
+                                                                        <i class="fas fa-eye  @if($liste->active == 0) text-gray @endif"
+                                                                           title="veröffentlichen"></i>
                                                                     </a>
                                                                 @else
-                                                                    <a href="{{url("listen/$liste->id/deactivate")}}" class="card-link">
-                                                                        <i class="fas fa-eye-slash" title="ausblenden"></i>
+                                                                    <a href="{{url("listen/$liste->id/deactivate")}}"
+                                                                       class="card-link">
+                                                                        <i class="fas fa-eye-slash"
+                                                                           title="ausblenden"></i>
                                                                     </a>
                                                                 @endif
+                                                                <a href="{{url("listen/$liste->id/archiv")}}"
+                                                                   class="card-link">
+                                                                    <i class="fa fa-archive"></i>
+                                                                </a>
                                                             </div>
 
                                                         </div>
@@ -155,11 +162,66 @@
                                             </div>
                                         @endforeach
                                     </div>
-                            @endif
-                        </div>
+                        @endif
                     </div>
         </div>
     </div>
+    </div>
+    @if(auth()->user()->can('edit terminliste'))
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        abgelaufene Listen
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>
+                                Titel
+                            </th>
+                            <th>
+                                abgelaufen am
+                            </th>
+                            <th>
+                                Aktionen
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($archiv as $liste)
+                            <tr>
+                                <td>
+                                    {{$liste->listenname}}
+                                </td>
+                                <td>
+                                    {{$liste->ende->format('d.m.Y')}}
+                                </td>
+                                <td>
+                                    <a href="{{url("listen/$liste->id")}}" class="card-link">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
 
+                                    <a href="{{url("listen/$liste->id/refresh")}}" class="card-link">
+                                        <i class="fas fa-redo"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="3">
+                                {{$archiv->links()}}
+                            </td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
 
+    @endif
 @endsection

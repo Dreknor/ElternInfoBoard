@@ -18,12 +18,12 @@ class RueckmeldungenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return RedirectResponse
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
     {
-        $rueckmeldung = new Rueckmeldungen($request->all());
+        $rueckmeldung = new Rueckmeldungen($request->validated());
         $rueckmeldung->post_id = $posts_id;
         $rueckmeldung->save();
 
@@ -44,8 +44,8 @@ class RueckmeldungenController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
+     * @param Request $request
+     * @param Rueckmeldungen $rueckmeldungen
      * @return RedirectResponse
      */
     public function update(Request $request, $post_id)
@@ -74,7 +74,7 @@ class RueckmeldungenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
+     * @param Rueckmeldungen $rueckmeldungen
      * @return JsonResponse
      */
     public function destroy(Rueckmeldungen $rueckmeldung)
@@ -89,7 +89,7 @@ class RueckmeldungenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Model\Rueckmeldungen  $rueckmeldungen
+     * @param Rueckmeldungen $rueckmeldungen
      * @return RedirectResponse
      */
     public function destroyRueckmeldung($rueckmeldungen)

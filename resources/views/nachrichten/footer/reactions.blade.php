@@ -1,4 +1,4 @@
-@if(!is_null($nachricht->reactable))
+@if($nachricht->reactable != 0)
     <div class="card-footer">
 
         <div class="row">
@@ -15,7 +15,7 @@
             <div class="col-auto">
                 <a href="{{url('posts/'.$nachricht->id.'/react/happy')}}"
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
-                    <i class="far fa-sad-tear @if($nachricht->reacted()) reacted @endif"></i>
+                    <i class="far fa-smile @if($nachricht->reacted()) reacted @endif"></i>
                     @if($nachricht->reactions->count() > 0)
                         {{($nachricht->reactions->where('name', 'happy')->count()/$nachricht->reactions->count())*100}}
                         %

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Cache;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
@@ -86,7 +85,7 @@ class User extends Authenticatable
 
     /**
      * Eigene Posts
-     * @return HasMany
+     * @return HasManyDeep
      */
     public function own_posts()
     {
@@ -150,16 +149,16 @@ class User extends Authenticatable
      */
     public function getRueckmeldung()
     {
-        $eigeneRueckmeldung = $this->userRueckmeldung;
+            $eigeneRueckmeldung = $this->userRueckmeldung;
 
-        if (! is_null($this->sorg2)) {
-            $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
-            if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
-                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-            } elseif (is_null($eigeneRueckmeldung)) {
-                return $sorgRueckmeldung;
+            if (! is_null($this->sorg2)) {
+                $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
+                if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
+                    return $eigeneRueckmeldung->merge($sorgRueckmeldung);
+                } elseif (is_null($eigeneRueckmeldung)) {
+                    return $sorgRueckmeldung;
+                }
             }
-        }
 
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
@@ -206,7 +205,7 @@ class User extends Authenticatable
 
     public function krankmeldungen()
     {
-        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2);
+        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
     }
 
     public function comments()

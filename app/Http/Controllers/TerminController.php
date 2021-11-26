@@ -8,6 +8,8 @@ use App\Model\Termin;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 
 class TerminController extends Controller
 {
@@ -17,20 +19,11 @@ class TerminController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        $this->authorize('viewAny', Termin::class);
-    }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function create()
     {
@@ -49,8 +42,8 @@ class TerminController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return Response
      */
     public function store(CreateTerminRequest $request)
     {
@@ -67,8 +60,8 @@ class TerminController extends Controller
         $termin = new Termin([
             'terminname'    => $request->terminname,
             'start'         => $start,
-            'ende'         => $ende,
-            'fullDay'       => $request->fullDay,
+            'ende' => $ende,
+            'fullDay' => $request->fullDay,
         ]);
         $termin->save();
 
@@ -77,17 +70,19 @@ class TerminController extends Controller
 
         $termin->groups()->attach($gruppen);
 
+        Cache::forget('termine' . auth()->id());
+
         return redirect()->back()->with([
-           'type'   => 'success',
-           'Meldung'    => 'Termin erstellt.',
+            'type' => 'success',
+            'Meldung' => 'Termin erstellt.',
         ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Model\Termin  $termin
-     * @return \Illuminate\Http\Response
+     * @param Termin $termin
+     * @return Response
      */
     public function destroy(Termin $termin)
     {
@@ -96,9 +91,11 @@ class TerminController extends Controller
         $termin->groups()->detach();
         $termin->delete();
 
+        Cache::forget('termine' . auth()->id());
+
         return redirect()->back()->with([
-           'type'   => 'success',
-           'Meldung'    => 'Termin gelöscht.',
+            'type' => 'success',
+            'Meldung' => 'Termin gelöscht.',
         ]);
     }
 }

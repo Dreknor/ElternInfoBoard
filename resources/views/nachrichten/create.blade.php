@@ -85,6 +85,9 @@
                                     <option value="commentable">Ja, Diskussion</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
+                                    @if(auth()->user()->can('create polls'))
+                                        <option value="poll">Ja, Umfrage</option>
+                                    @endif
                                     <option value="0" selected>nein</option>
                                 </select>
                             </div>
@@ -92,9 +95,12 @@
                         <div class="col-12">
                             <div class="form-group">
                                 <label>Reaktionen erlauben</label>
-                                <select class="custom-select" name="reactions">
-                                    <option value="1">Ja</option>
-                                    <option value="0" selected>nein</option>
+                                <select class="custom-select" name="reactable">
+                                    <option value="1" @if(config('app.enable_reactions') == true) selected @endif>Ja
+                                    </option>
+                                    <option value="0" @if(config('app.enable_reactions') == false) selected @endif>
+                                        nein
+                                    </option>
                                 </select>
                             </div>
                         </div>

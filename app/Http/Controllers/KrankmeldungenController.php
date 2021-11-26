@@ -8,6 +8,7 @@ use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -20,7 +21,7 @@ class KrankmeldungenController extends Controller
      */
     public function index(Request $request)
     {
-        $krankmeldungen = $request->user()->krankmeldungen;
+        $krankmeldungen = $request->user()->krankmeldungen->paginate(15);
 
         return view('krankmeldung.index', [
                 'krankmeldungen' => $krankmeldungen,
@@ -30,7 +31,7 @@ class KrankmeldungenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      */
     public function store(KrankmeldungRequest $request)
     {
@@ -62,8 +63,8 @@ class KrankmeldungenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Model\krankmeldungen  $krankmeldungen
-     * @return \Illuminate\Http\Response
+     * @param krankmeldungen $krankmeldungen
+     * @return Response
      */
     public function destroy(krankmeldungen $krankmeldungen)
     {

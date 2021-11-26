@@ -132,6 +132,7 @@
         </div>
     </div>
     @include('nachrichten.footer.reactions')
+        @include('nachrichten.footer.poll')
         @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
         @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
             <div class="container-fluid">

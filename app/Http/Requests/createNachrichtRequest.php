@@ -46,7 +46,7 @@ class createNachrichtRequest extends FormRequest
                 'required',
             ],
             'reactable' => [
-                'required', 'boolean'
+                'boolean'
             ],
         ];
     }
