@@ -7,7 +7,8 @@
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
                     <i class="far fa-thumbs-up "></i>
                     @if($nachricht->reactions->count() > 0)
-                        {{($nachricht->reactions->where('name', 'like')->count()/$nachricht->reactions->count())*100}} %
+                        {{round(($nachricht->reactions->where('name', 'like')->count()/$nachricht->reactions->count())*100,2)}}
+                        %
                     @endif
                 </a>
 
@@ -17,7 +18,7 @@
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
                     <i class="far fa-smile @if($nachricht->reacted()) reacted @endif"></i>
                     @if($nachricht->reactions->count() > 0)
-                        {{($nachricht->reactions->where('name', 'happy')->count()/$nachricht->reactions->count())*100}}
+                        {{round(($nachricht->reactions->where('name', 'happy')->count()/$nachricht->reactions->count())*100,2)}}
                         %
                     @endif
                 </a>
@@ -27,7 +28,8 @@
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
                     <i class="far fa-heart @if($nachricht->reacted()) reacted @endif"></i>
                     @if($nachricht->reactions->count() > 0)
-                        {{($nachricht->reactions->where('name', 'love')->count()/$nachricht->reactions->count())*100}} %
+                        {{round(($nachricht->reactions->where('name', 'love')->count()/$nachricht->reactions->count())*100,2)}}
+                        %
                     @endif
                 </a>
             </div>
@@ -36,7 +38,8 @@
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
                     <i class="far fa-surprise @if($nachricht->reacted()) reacted @endif"></i>
                     @if($nachricht->reactions->count() > 0)
-                        {{($nachricht->reactions->where('name', 'wow')->count()/$nachricht->reactions->count())*100}} %
+                        {{round(($nachricht->reactions->where('name', 'wow')->count()/$nachricht->reactions->count())*100,2)}}
+                        %
                     @endif
                 </a>
             </div>
@@ -45,7 +48,8 @@
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
                     <i class="far fa-laugh-squint @if($nachricht->reacted()) reacted @endif"></i>
                     @if($nachricht->reactions->count() > 0)
-                        {{($nachricht->reactions->where('name', 'haha')->count()/$nachricht->reactions->count())*100}} %
+                        {{round(($nachricht->reactions->where('name', 'haha')->count()/$nachricht->reactions->count())*100,2)}}
+                        %
                     @endif
                 </a>
             </div>
@@ -54,7 +58,8 @@
                    class="card-link reaction @if($nachricht->reacted()) reacted @endif">
                     <i class="far fa-sad-tear @if($nachricht->reacted()) reacted @endif"></i>
                     @if($nachricht->reactions->count() > 0)
-                        {{($nachricht->reactions->where('name', 'sad')->count()/$nachricht->reactions->count())*100}} %
+                        {{round(($nachricht->reactions->where('name', 'sad')->count()/$nachricht->reactions->count())*100,2)}}
+                        %
                     @endif
                 </a>
             </div>
