@@ -2,10 +2,18 @@
     <div class="card-footer">
         <div class="card">
             <div class="card-header">
+                <div class="pull-right d-inline">
+                    @if($nachricht->poll->ends->gt(\Carbon\Carbon::now()))
+                        Endet in {{$nachricht->poll->ends->diffInDays(\Carbon\Carbon::now())}} Tagen
+                    @else
+                        Endete am {{$nachricht->poll->ends->format('d.m.Y')}}
+                    @endif
+                </div>
                 <h5 class="card-title">
                     {{$nachricht->poll->poll_name}}
                 </h5>
-                <p class="card-description">
+
+                <p class="">
                     {{$nachricht->poll->description}}
                 </p>
             </div>
