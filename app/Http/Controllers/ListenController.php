@@ -6,9 +6,11 @@ use App\Http\Requests\CreateListeRequest;
 use App\Model\Group;
 use App\Model\Liste;
 use App\Repositories\GroupsRepository;
+use App\TerminListe;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ListenController extends Controller
@@ -28,11 +30,12 @@ class ListenController extends Controller
         $this->authorize('viewAny', Liste::class);
 
         if ($request->user()->can('edit terminliste')) {
-            $listen = Liste::where('ende', '>=', Carbon::now()->subWeeks(2))->get();
+            $listen = Liste::where('ende', '>=', Carbon::today())->get();
+            $oldListen = Liste::where('ende', '<', Carbon::today())->orderByDesc('ende')->paginate(15);
         } else {
             $listen = $request->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
             if ($request->user()->can('create terminliste')) {
-                $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now()->subWeeks(2))->get();
+                $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now())->get();
 
                 $listen = $listen->merge($eigeneListen);
             }
@@ -48,6 +51,7 @@ class ListenController extends Controller
         return view('listen.index', [
             'listen' => $listen,
             'eintragungen'  => $eintragungen,
+            'archiv' => $oldListen
         ]);
     }
 
@@ -68,7 +72,7 @@ class ListenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return RedirectResponse
      */
     public function store(CreateListeRequest $request)
@@ -109,7 +113,7 @@ class ListenController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\TerminListe  $terminListe
+     * @param TerminListe $terminListe
      * @return View
      */
     public function edit(Liste $terminListe)
@@ -125,9 +129,9 @@ class ListenController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\TerminListe  $terminListe
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param TerminListe $terminListe
+     * @return Response
      */
     public function update(Request $request, Liste $terminListe)
     {
@@ -147,8 +151,8 @@ class ListenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\TerminListe  $terminListe
-     * @return \Illuminate\Http\Response
+     * @param TerminListe $terminListe
+     * @return Response
      */
     public function destroy(Liste $terminListe)
     {
@@ -192,8 +196,36 @@ class ListenController extends Controller
         }
 
         return redirect()->back()->with([
-           'type'   => 'error',
-           'Meldung'=>  'Berechtigung fehlt',
+            'type' => 'error',
+            'Meldung' => 'Berechtigung fehlt',
+        ]);
+    }
+
+    public function refresh(Liste $liste)
+    {
+        $this->authorize('editListe', $liste);
+
+        $liste->update([
+            'ende' => Carbon::now()->addWeeks(2)
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Liste verlängert'
+        ]);
+    }
+
+    public function archiv(Liste $liste)
+    {
+        $this->authorize('editListe', $liste);
+
+        $liste->update([
+            'ende' => Carbon::now()->subDay()
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Liste beendet'
         ]);
     }
 }

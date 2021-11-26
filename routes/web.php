@@ -136,6 +136,8 @@ Route::group([
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
         Route::get('listen/{liste}/activate', [ListenController::class, 'activate']);
+        Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
+        Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
         Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
