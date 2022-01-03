@@ -11,7 +11,11 @@ use App\Model\listen_termine;
 use App\Notifications\Push;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
@@ -24,20 +28,26 @@ class ListenTerminController extends Controller
      * Speichert verfügbare Termine
      * @param Liste $liste
      * @param StoreListeTerminRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function store(Liste $liste, StoreListeTerminRequest $request)
     {
         $this->authorize('storeTerminToListe', $liste);
-        $datum = Carbon::createFromFormat('Y-m-d H:i', $request->termin.' '.$request->zeit);
+        $datum = Carbon::createFromFormat('Y-m-d H:i', $request->termin . ' ' . $request->zeit);
         $termin = new listen_termine([
             'listen_id' => $liste->id,
-            'termin'    => $datum,
-            'comment'   => $request->comment,
+            'termin' => $datum,
+            'comment' => $request->comment,
         ]);
 
-        if ($request->repeat > 1) {
+        if ($request->weekly == 1) {
+            for ($x = 1; $x < $request->repeat; $x++) {
+                $newTermin = $termin->replicate();
+                $newTermin->termin = $newTermin->termin->addWeeks($x);
+                $newTermin->save();
+            }
+        } elseif ($request->weekly == 0 and $request->repeat > 1) {
             for ($x = 1; $x < $request->repeat; $x++) {
                 $newTermin = $termin->replicate();
                 $newTermin->termin = $newTermin->termin->addMinutes($x * $liste->duration);
@@ -55,7 +65,7 @@ class ListenTerminController extends Controller
 
     /**
      * @param listen_termine $listen_termine
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse|Redirector
      */
     public function update(Request $request, listen_termine $listen_termine)
     {
@@ -82,8 +92,8 @@ class ListenTerminController extends Controller
 
     /**
      * @param listen_termine $listen_termine
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Exception
+     * @return RedirectResponse
+     * @throws Exception
      */
     public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {

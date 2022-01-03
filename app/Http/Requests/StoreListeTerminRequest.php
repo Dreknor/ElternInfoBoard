@@ -28,12 +28,22 @@ class StoreListeTerminRequest extends FormRequest
                 'required',
                 'date',
             ],
-            'zeit'    => [
+            'zeit' => [
                 'required',
                 'date_format:H:i',
             ],
-            'comment'   => [
+            'comment' => [
                 'string',
+                'nullable',
+            ],
+            'weekly' => [
+                'integer',
+                'max:1',
+                'nullable',
+            ],
+            'repeat' => [
+                'integer',
+                'min:1',
                 'nullable',
             ],
         ];

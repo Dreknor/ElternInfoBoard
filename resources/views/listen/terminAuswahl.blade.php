@@ -167,8 +167,17 @@
                            <input type="text" name="comment" class="form-control">
                        </div>
                        <div class="form-row">
-                           <label for="termin">
-                               Anzahl aufeinderfolgender Termine
+                           <label for="weekly">
+                               Wöchentlich?
+                           </label>
+                           <select type="number" name="weekly" class="form-control">
+                               <option value="0">nein</option>
+                               <option value="1">ja</option>
+                           </select>
+                       </div>
+                       <div class="form-row">
+                           <label for="repeat">
+                               Anzahl aufeinderfolgender Termine (bei wöchentlich Anzahl der Wochen)
                            </label>
                            <input type="number" name="repeat" class="form-control" min="1" step="1" max="8" value="1">
                        </div>
@@ -229,7 +238,6 @@
             console.log(btn);
             var id = $(this).data('terminid');
             var url = "{{url("eintragungen/absagen/")}}/"+id;
-console.log(url);
             $('#absagenForm').attr('action', url);
 
         });
