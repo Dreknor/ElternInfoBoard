@@ -65,7 +65,7 @@ class ICalController extends Controller
                DTEND:" . $event->ende->format('Ymd\THis') . "
                DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
                UID:$event->id,
-               SUMMARY: $event->terminname
+               SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
                END:VEVENT\n";
         }
 
@@ -76,7 +76,8 @@ class ICalController extends Controller
         header('Content-type: text/calendar; charset=utf-8');
         header('Content-Disposition: attachment; filename="cal.ics"');
 
-        //$icalObject = str_replace(' ', '', $icalObject);
+        $icalObject = str_replace(' ', '', $icalObject);
+        $icalObject = str_replace('__', ' ', $icalObject);
 
         return $icalObject;
     }
