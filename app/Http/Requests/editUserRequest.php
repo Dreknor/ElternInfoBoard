@@ -43,9 +43,15 @@ class editUserRequest extends FormRequest
                 'nullable',
                 'email',
             ],
-            'publicPhone'  => [
+            'publicPhone' => [
                 'nullable',
                 'string'
+            ],
+            'releaseCalendar' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:1'
             ],
 
 
