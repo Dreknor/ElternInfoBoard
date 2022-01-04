@@ -21,6 +21,7 @@
                         </p>
                     </div>
                 @endif
+
                 <div class="row">
                     <div class="col-md-6 col-sm-12">
                         <div class="card">
@@ -134,18 +135,42 @@
                             </div>
                             <div class="card-footer">
                                 <p class="footer-default small">
-                                    Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den Gruppen abgebildet sein, wenden Sie sich bitte an <a href="mailto:info@esz-radebeul.de" class="card-link">info@esz-radebeul.de</a>
+                                    Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den
+                                    Gruppen abgebildet sein, wenden Sie sich bitte an <a
+                                        href="mailto:info@esz-radebeul.de" class="card-link">info@esz-radebeul.de</a>
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
+                    <div class="row">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>
+                                        ICAL-Kalender
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="info">
+                                        Die angegebene URL kann in den meisten Kalender-Anwendungen hinzugefügt werden
+                                        um die Termine direkt einzubinden
+                                    </p>
+                                    <p>
+                                        {{config('app.url')."/".$user->uuid.'/ical'}}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
             </div>
             @if($user->sorg2 != null)
                 <div class="card-footer">
                     <p>
-                        Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.<br>
-                        Sollte dies nicht korrekt sein, so wenden Sie sich bitte an <a href="mailto://daniel.roehrich@esz-radebeul.de">daniel.roehrich@esz-radebeul.de</a>.
+                        Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>. Dadurch sind
+                        die Rückmeldungen in beiden Konten sichtbar.<br>
+                        Sollte dies nicht korrekt sein, so wenden Sie sich bitte an <a
+                            href="mailto://daniel.roehrich@esz-radebeul.de">daniel.roehrich@esz-radebeul.de</a>.
                     </p>
                 </div>
             @endif

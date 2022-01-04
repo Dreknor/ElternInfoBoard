@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
+use App\Http\Controllers\ICalController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReinigungsTaskController;
@@ -45,6 +46,7 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
+Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 
 Route::group([
     'middleware' => ['auth'],
