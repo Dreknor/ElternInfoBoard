@@ -33,20 +33,24 @@
                                 </td>
                                 <td class="pull-right">
                                     @if(auth()->user()->can('edit termin'))
-                                        <form action="{{url("termin/$termin->id")}}" method="post">
+                                        <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
                                             @csrf
                                             @method('delete')
-                                            <button type="submit" class="btn btn-danger btn-sm">
+                                            <button type="submit" class="btn btn-danger btn-link">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </form>
                                     @endif
-                                        <a href="{{$termin->link()->ics()}}" class="btn btn-primary btn-sm" title="ICS-Download für Apple und Windows">
-                                            <img  src="{{asset('img/ics-icon.png')}}" height="25px">
-                                        </a>
-                                        <a href="{{$termin->link()->google()}}" class="btn btn-primary btn-sm" target="_blank" title="Goole-Kalender-Link">
-                                            <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
-                                        </a>
+                                </td>
+                                <td class="pull-right">
+                                    <a href="{{$termin->link()->ics()}}" class="card-link"
+                                       title="ICS-Download für Apple und Windows">
+                                        <img src="{{asset('img/ics-icon.png')}}" height="25px">
+                                    </a>
+                                    <a href="{{$termin->link()->google()}}" class="card-link" target="_blank"
+                                       title="Goole-Kalender-Link">
+                                        <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
+                                    </a>
 
                                 </td>
                             </tr>
