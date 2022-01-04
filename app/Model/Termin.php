@@ -12,14 +12,15 @@ class Termin extends Model
 {
     protected $table = 'termine';
 
-    protected $fillable = ['start', 'ende', 'terminname', 'fullDay'];
-    protected $visible = ['start', 'ende', 'terminname', 'fullDay'];
+    protected $fillable = ['start', 'ende', 'terminname', 'fullDay', 'public'];
+    protected $visible = ['start', 'ende', 'terminname', 'fullDay', 'public'];
 
     protected $casts = [
         'creted_at' => 'datetime',
         'start' => 'datetime',
         'ende' => 'datetime',
         'fullDay' => 'boolean',
+        'public' => 'boolean',
     ];
 
     public function getfullDayAttribute($value)

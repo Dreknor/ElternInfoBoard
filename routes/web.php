@@ -47,6 +47,7 @@ use Illuminate\Support\Facades\Route;
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
+Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
 
 Route::group([
     'middleware' => ['auth'],

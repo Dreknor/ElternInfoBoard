@@ -33,13 +33,19 @@ class CreateTerminRequest extends FormRequest
                 'date',
                 'before:ende',
             ],
-            'ende'         => [
+            'ende' => [
                 'required',
                 'date',
                 'after:start',
             ],
-            'gruppen'   => [
+            'gruppen' => [
                 'required',
+            ],
+            'public' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:1',
             ],
 
         ];

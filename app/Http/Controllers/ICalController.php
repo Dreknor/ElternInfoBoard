@@ -62,14 +62,26 @@ class ICalController extends Controller
 
             // loop over events
             foreach ($Termine as $event) {
-                $icalObject .=
-                    "BEGIN:VEVENT
-                   DTSTART:" . $event->start->format('Ymd\THis') . "
-                   DTEND:" . $event->ende->format('Ymd\THis') . "
-                   DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
-                   UID:$event->id,
-                   SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
+                if ($event->fullDay == false) {
+                    $icalObject .=
+                        "BEGIN:VEVENT
+                           DTSTART:" . $event->start->format('Ymd\THis') . "
+                           DTEND:" . $event->ende->format('Ymd\THis') . "
+                           DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
+                           UID:$event->id,
+                           SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
+                        END:VEVENT\n";
+                } else {
+                    $icalObject .=
+                        "BEGIN:VEVENT
+                           DTSTART;VALUE=DATE:" . $event->start->format('Ymd') . "
+                           DTEND;VALUE=DATE:" . $event->start->addDay()->format('Ymd') . "
+                           DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
+                           UID:$event->id,
+                           SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
                    END:VEVENT\n";
+                }
+
             }
 
             // close calendar
@@ -86,5 +98,59 @@ class ICalController extends Controller
         } else {
             abort(404);
         }
+    }
+
+    public function publicICal()
+    {
+
+        $Termine = Termin::where('public', true)->get();
+        $Termine = $Termine->unique('id');
+        $Termine = $Termine->sortBy('start');
+
+        //ICAL erstellen
+
+        define('ICAL_FORMAT', 'Ymd\THis');
+
+        $icalObject = "BEGIN:VCALENDAR
+               VERSION:2.0
+               METHOD:PUBLISH
+               PRODID:-//" . config('app.name') . "//Termine//DE\n
+               ";
+
+        // loop over events
+        foreach ($Termine as $event) {
+            if ($event->fullDay == false) {
+                $icalObject .=
+                    "BEGIN:VEVENT
+                           DTSTART:" . $event->start->format('Ymd\THis') . "
+                           DTEND:" . $event->ende->format('Ymd\THis') . "
+                           DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
+                           UID:$event->id,
+                           SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
+                        END:VEVENT\n";
+            } else {
+                $icalObject .=
+                    "BEGIN:VEVENT
+                           DTSTART;VALUE=DATE:" . $event->start->format('Ymd') . "
+                           DTEND;VALUE=DATE:" . $event->start->addDay()->format('Ymd') . "
+                           DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
+                           UID:$event->id,
+                           SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
+                   END:VEVENT\n";
+            }
+        }
+
+        // close calendar
+        $icalObject .= "END:VCALENDAR";
+
+        // Set the headers
+        header('Content-type: text/calendar; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . config('app.name') . '.ics"');
+
+        $icalObject = str_replace(' ', '', $icalObject);
+        $icalObject = str_replace('__', ' ', $icalObject);
+
+        return $icalObject;
+
     }
 }
