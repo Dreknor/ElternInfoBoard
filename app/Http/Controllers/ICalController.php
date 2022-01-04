@@ -76,7 +76,7 @@ class ICalController extends Controller
         header('Content-type: text/calendar; charset=utf-8');
         header('Content-Disposition: attachment; filename="cal.ics"');
 
-        $icalObject = str_replace(' ', '', $icalObject);
+        //$icalObject = str_replace(' ', '', $icalObject);
 
         return $icalObject;
     }
