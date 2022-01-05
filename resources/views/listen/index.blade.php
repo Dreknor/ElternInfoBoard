@@ -166,7 +166,6 @@
                     </div>
         </div>
     </div>
-    </div>
     @if(auth()->user()->can('edit terminliste'))
         <div class="container-fluid">
             <div class="card">

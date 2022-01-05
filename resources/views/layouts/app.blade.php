@@ -12,20 +12,36 @@
 
 
     <!-- CSS Files -->
-    <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet" />
-    <link href="{{asset('css/paper-dashboard.css?v=2.0.0')}}" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
+    <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet"/>
+    <link href="{{asset('css/paper-dashboard.css?v=2.0.0')}}" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet"/>
 
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/app.css')}}" rel="stylesheet"> <!--load all styles -->
-    <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet"><!--load all styles -->
+<!-- <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet"> -->
+    <link href="{{asset('/css/mobile.css')}}" rel="stylesheet">
     <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->
     @yield('css')
 
 </head>
 
 <body id="app-layout">
+
+<div class="d-lg-none">
+    <nav class="mobile-bottom-nav">
+
+        @stack('bottom-nav')
+        <div class="mobile-bottom-nav_item" id="toogleSidebarButton">
+            <div class="mobile-bottom-nav_item-content">
+                <a href="#">
+                    <i class="fas fa-ellipsis-h"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+</div>
+
 <div class="sidebar" data-color="white" data-active-color="danger">
     <div class="logo" style="word-wrap: normal;">
         <a href="{{config('app.url')}}" class="simple-text">
@@ -34,7 +50,8 @@
             </div>
         </a>
     </div>
-    <div class="sidebar-wrapper">
+
+    <div class="sidebar-wrapper " id="sidebar">
         <ul class="nav">
             @if(config('app.mitarbeiterboard') != "" and auth()->user()->can('view Mitarbeiterboard'))
                 <li class="">
@@ -54,6 +71,7 @@
     </div>
 
 </div>
+
 <div class="main-panel">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent ">
@@ -201,14 +219,18 @@
     <script src="{{asset('js/paper-dashboard.min.js?v=2.0.0')}}"></script>
 
 <script>
-    $('#suchInput').on('focus',function () {
-       $('#searchForm').addClass('w-75');
-       $('#searchForm').removeClass('w-auto');
+    $('#toogleSidebarButton').on('click', function () {
+        $('html').toggleClass('nav-open')
+    })
+
+    $('#suchInput').on('focus', function () {
+        $('#searchForm').addClass('w-75');
+        $('#searchForm').removeClass('w-auto');
     });
 
     $('#suchInput').blur(function () {
-       $('#searchForm').addClass('w-auto');
-       $('#searchForm').removeClass('w-75');
+        $('#searchForm').addClass('w-auto');
+        $('#searchForm').removeClass('w-75');
     });
 
 

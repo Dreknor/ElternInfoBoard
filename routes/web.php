@@ -226,6 +226,7 @@ Route::group([
         //Routen zur Rechteverwaltung
         Route::middleware('permission:edit settings')->group(function () {
             Route::get('settings', [SettingsController::class, 'module']);
+            Route::get('settings/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
             Route::get('settings/modul/{modul}', [SettingsController::class, 'change_status']);
         });
 

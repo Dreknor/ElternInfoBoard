@@ -15,6 +15,7 @@
                 @endpush
             @endif
 
+
             @if(array_key_exists('nav-user', $module->options) and  is_array($module->options['nav-user']) )
                 @push('nav-user')
                     <li>
@@ -34,6 +35,22 @@
                         </a>
                     </li>
                 @endpush
+
+                @if(isset($module->options['nav']['bottom-nav']) and $module->options['nav']['bottom-nav'] == "true")
+                    @push('bottom-nav')
+                        <div
+                            class="mobile-bottom-nav_item @if(request()->path() == $module->options['nav']['link']) mobile-bottom-nav_item--active @endif">
+                            <div class="mobile-bottom-nav_item-content">
+                                <a href="{{url($module->options['nav']['link'])}}">
+                                    <i class=" mobile-bottom-nav_item-icon {{$module->options['nav']['icon']}}"></i>
+                                    <span class="mobile-bottom-nav_item-text">
+                                        {{$module->options['nav']['name'] }}
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    @endpush
+                @endif
             @endif
 
             @if(array_key_exists('adm-nav', $module->options) and  is_array($module->options['adm-nav']) and isset($module->options['adm-nav']['adm-rights']) and auth()->user()->hasAnyPermission($module->options['adm-nav']['adm-rights']))
