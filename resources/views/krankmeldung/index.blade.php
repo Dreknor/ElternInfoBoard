@@ -75,7 +75,7 @@
                             <tr>
                                 <th>Kind</th>
                                 <th>Datum</th>
-                                <th></th>
+                                <th class="d-none d-md-block"></th>
                                 <th class="d-none d-md-block">Erstellt</th>
                             </tr>
                             </thead>
@@ -89,27 +89,22 @@
                                         {{$krankmeldung->start->format('d.m.Y')}}
                                         - {{$krankmeldung->ende->format('d.m.Y')}}
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-block">
                                         {!! $krankmeldung->kommentar !!}
                                     </td>
-                                    <td class="d-sm-none d-md-block">
+                                    <td class="d-none d-md-block">
                                         <small>
                                             {{$krankmeldung->created_at->format('d.m.Y h:i ')}} Uhr <br>
                                             von {{$krankmeldung->user->name}}
                                         </small>
-
                                     </td>
                                 </tr>
                             @endforeach
                             </tbody>
-                            <tfoot>
-                            <tr>
-                                <td colspan="4">
-                                    {{ $krankmeldungen->links() }}
-                                </td>
-                            </tr>
-                            </tfoot>
                         </table>
+                    </div>
+                    <div class="card-footer">
+                        {{ $krankmeldungen->links() }}
                     </div>
                 </div>
             @endif
