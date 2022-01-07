@@ -76,7 +76,7 @@
                                 <th>Kind</th>
                                 <th>Datum</th>
                                 <th></th>
-                                <th class="d-sm-none">Erstellt</th>
+                                <th class="d-none d-md-block">Erstellt</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -92,7 +92,7 @@
                                     <td>
                                         {!! $krankmeldung->kommentar !!}
                                     </td>
-                                    <td class="d-sm-none">
+                                    <td class="d-sm-none d-md-block">
                                         <small>
                                             {{$krankmeldung->created_at->format('d.m.Y h:i ')}} Uhr <br>
                                             von {{$krankmeldung->user->name}}
