@@ -156,8 +156,7 @@
                             <div class="card-footer">
                                 <p class="footer-default small">
                                     Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den
-                                    Gruppen abgebildet sein, wenden Sie sich bitte an <a
-                                        href="mailto:info@esz-radebeul.de" class="card-link">info@esz-radebeul.de</a>
+                                    Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
                                 </p>
                             </div>
                         </div>
@@ -191,10 +190,7 @@
                 <div class="card-footer">
                     <p>
                         Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>. Dadurch sind
-                        die Rückmeldungen in beiden Konten sichtbar.<br>
-                        Sollte dies nicht korrekt sein, so wenden Sie sich bitte an <a
-                            href="mailto://daniel.roehrich@esz-radebeul.de">daniel.roehrich@esz-radebeul.de</a>.
-                    </p>
+                        die Rückmeldungen in beiden Konten sichtbar.
                 </div>
             @endif
         </div>
