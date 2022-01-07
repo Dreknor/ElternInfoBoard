@@ -73,7 +73,7 @@
 
 
                                                        @else
-                                                            @if(auth()->user()->groups()->whereIn('groups.id',$liste->groups->pluck('id'))->count() > 0)
+                                                           @if(auth()->user()->groups()->whereIn('groups.id',$liste->groups->pluck('id'))->count() > 0 or auth()->user()->hasRole('Mitarbeiter'))
                                                                <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
                                                                    @csrf
                                                                    @method('put')
