@@ -64,22 +64,22 @@
 
             @if($krankmeldungen)
                 <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title">
-                        bisherige Krankmeldungen:
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-bordered table-hover">
-                        <thead>
+                    <div class="card-header">
+                        <h6 class="card-title">
+                            bisherige Krankmeldungen:
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
                             <tr>
                                 <th>Kind</th>
-                                <th>von</th>
-                                <th>bis</th>
-                                <th>Erstellt</th>
+                                <th>Datum</th>
+                                <th></th>
+                                <th class="d-sm-none">Erstellt</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             @foreach($krankmeldungen as $krankmeldung)
                                 <tr>
                                     <td>
@@ -87,14 +87,12 @@
                                     </td>
                                     <td>
                                         {{$krankmeldung->start->format('d.m.Y')}}
-                                    </td>
-                                    <td>
-                                        {{$krankmeldung->ende->format('d.m.Y')}}
+                                        - {{$krankmeldung->ende->format('d.m.Y')}}
                                     </td>
                                     <td>
                                         {!! $krankmeldung->kommentar !!}
                                     </td>
-                                    <td>
+                                    <td class="d-sm-none">
                                         <small>
                                             {{$krankmeldung->created_at->format('d.m.Y h:i ')}} Uhr <br>
                                             von {{$krankmeldung->user->name}}
