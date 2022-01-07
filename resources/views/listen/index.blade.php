@@ -103,14 +103,15 @@
                                                     </div>
 
 
-
                                                 </div>
                                                 <div class="card-body border-top">
                                                     @if($liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
                                                         <div class="row">
                                                             <div class="col-12">
                                                                 <p>
-                                                                    Bisherige Eintragungen: {{$liste->eintragungen->where('reserviert_fuer', '!=', null)->count()}}
+                                                                    Bisherige
+                                                                    Eintragungen: {{$liste->eintragungen->where('reserviert_fuer', '!=', null)->count()}}
+                                                                    / {{ $liste->eintragungen->count() }}
                                                                 </p>
                                                             </div>
 
