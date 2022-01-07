@@ -70,12 +70,12 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <table class="table table-striped table-bordered table-hover">
+                        <table class="table table-striped table-bordered">
                             <thead>
                             <tr>
                                 <th>Kind</th>
                                 <th>Datum</th>
-                                <th class="d-none d-md-block">Erstellt</th>
+                                <th>Erstellt</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -88,8 +88,8 @@
                                         {{$krankmeldung->start->format('d.m.Y')}}
                                         - {{$krankmeldung->ende->format('d.m.Y')}}
                                     </td>
-                                    <td class="d-none d-md-block">
-                                        <p>
+                                    <td>
+                                        <p class="d-none d-md-block">
                                             {!! $krankmeldung->kommentar !!}
                                         </p>
                                         <p>
