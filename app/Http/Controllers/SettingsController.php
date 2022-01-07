@@ -48,4 +48,35 @@ class SettingsController extends Controller
             'Meldung' => 'Status geändert',
         ]);
     }
+
+    public function change_nav($modulname)
+    {
+        $modul = Settings::where('setting', $modulname)->first();
+        $options = $modul->options;
+        if (array_key_exists('nav', $modul->options)) {
+
+
+            if (array_key_exists('bottom-nav', $options['nav']) and $options['nav']['bottom-nav'] == "true") {
+                $options['nav']['bottom-nav'] = "false";
+            } else {
+
+                $options['nav']['bottom-nav'] = 'true';
+            }
+            $modul->options = $options;
+            $modul->save();
+            Cache::forget('modules');
+
+            return redirect()->back()->with([
+                'type' => 'success',
+                'Meldung' => 'Status geändert',
+            ]);
+
+        }
+
+
+        return redirect()->back()->with([
+            'type' => 'danger',
+            'Meldung' => 'Fehlgeschlagen',
+        ]);
+    }
 }

@@ -24,7 +24,7 @@
                             <li class="list-group-item">
                                 <div class="row">
                                     <div class="col-3 col-md-1 ">
-                                        {{round(($nachricht->poll->answers->where('option_id', $option->id)->count() / $nachricht->poll->answers->count())*100, 2)}}
+                                        {{round(($nachricht->poll->answers->where('option_id', $option->id)->count() / $nachricht->poll->answers->count())*100, 0)}}
                                         %
                                     </div>
                                     <div class="col">
@@ -33,7 +33,6 @@
                                         </div>
                                         <div class="h-50 bg-info"
                                              style="width: {{($nachricht->poll->answers->where('option_id', $option->id)->count() / $nachricht->poll->answers->count())*100}}%"></div>
-
                                     </div>
                                 </div>
                             </li>
