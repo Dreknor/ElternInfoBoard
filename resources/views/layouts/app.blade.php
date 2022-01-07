@@ -19,22 +19,17 @@
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/app.css')}}" rel="stylesheet"> <!--load all styles -->
-    @can('testing')
-        <link href="{{asset('/css/mobile.css')}}" rel="stylesheet">
-    @else
-        <link href="{{asset('/css/floatingButton.css')}}" rel="stylesheet">
-    @endcan
+    <link href="{{asset('/css/mobile.css')}}" rel="stylesheet">
+
     <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->
     @yield('css')
 
 </head>
 
 <body id="app-layout">
-@can('testing')
-    <div class="d-lg-none">
-        <nav class="mobile-bottom-nav">
-
-            @stack('bottom-nav')
+<div class="d-lg-none">
+    <nav class="mobile-bottom-nav">
+        @stack('bottom-nav')
         <div class="mobile-bottom-nav_item" id="toogleSidebarButton">
             <div class="mobile-bottom-nav_item-content">
                 <a href="#">
@@ -44,7 +39,7 @@
         </div>
     </nav>
 </div>
-@endcan
+
 <div class="sidebar" data-color="white" data-active-color="danger">
     <div class="logo" style="word-wrap: normal;">
         <a href="{{config('app.url')}}" class="simple-text">
