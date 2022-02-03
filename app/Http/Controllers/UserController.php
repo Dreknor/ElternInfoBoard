@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Model\Group;
+use App\Model\Post;
 use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -54,7 +55,7 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return RedirectResponse
      */
     public function store(createUserRequest $request)
@@ -114,8 +115,8 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param Request $request
+     * @param int $id
      * @return RedirectResponse
      */
     public function update(verwaltungEditUserRequest $request, User $user)
@@ -200,15 +201,22 @@ class UserController extends Controller
         $user->comments()->delete();
 
 
-        $user->posts()->update([
+        Post::where('author', $user->id)->update(['author' => null]);
+        /*$user->posts()->update([
             'author'=>null,
-        ]);
+        ]);*/
 
         $user->delete();
 
+        return redirect()->back()->with([
+            'type' => "success",
+            'Meldung' => 'Benutzer gelöscht'
+        ]);
+        /*
+         *
         return response()->json([
             'message'   => 'Gelöscht',
-        ], 200);
+        ], 200);*/
     }
 
     public function loginAsUser(Request $request, $id)
