@@ -76,27 +76,27 @@ class NachrichtenController extends Controller
      */
     public function postsArchiv(Request $request)
     {
-        $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
+ //       $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
             if (! auth()->user()->can('view all')) {
-                $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>',auth()->user()->created_at)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
-
-                if (auth()->user()->can('create posts')) {
-                    $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
-                    $Nachrichten = $Nachrichten->concat($eigenePosts);
-                }
-
-                $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+                $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->orderByDesc('updated_at')->paginate(15);
+                /*
+                                if (auth()->user()->can('create posts')) {
+                                    $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
+                                    $Nachrichten = $Nachrichten->concat($eigenePosts);
+                                }
+                */
+                //$Nachrichten = $Nachrichten->unique('id');
             } else {
-                $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
-                $Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+                $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->paginate(15);
+                //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
             }
-
-            return $Nachrichten;
-        });
-
+        /*
+                    return $Nachrichten;
+                });
+          */
         return view('archiv.archiv', [
-            'nachrichten'   => $Nachrichten->paginate(30),
-            'user'  => auth()->user(),
+            'nachrichten' => $Nachrichten,
+            'user' => auth()->user(),
         ]);
     }
 
