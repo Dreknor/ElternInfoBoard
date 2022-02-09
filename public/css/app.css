@@ -11,7 +11,7 @@
     backdrop-filter: blur(5px);
 }
 
-.video-container {
+.nachricht {
     position: relative;
     padding-bottom: 56.25%;
     padding-top: 0;
@@ -19,9 +19,9 @@
     overflow: hidden;
 }
 
-.video-container iframe,
-.video-container object,
-.video-container embed {
+.nachricht iframe,
+.nachricht object,
+.nachricht embed {
     position: absolute;
     top: 0;
     left: 0;
