@@ -87,7 +87,7 @@ class NachrichtenController extends Controller
                 */
                 //$Nachrichten = $Nachrichten->unique('id');
             } else {
-                $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->paginate(15);
+                $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->orderByDesc('updated_at')->paginate(15);
                 //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
             }
         /*
