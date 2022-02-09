@@ -132,7 +132,7 @@ class ICalController extends Controller
                 $icalObject .=
                     "BEGIN:VEVENT
                            DTSTART;VALUE=DATE:" . $event->start->format('Ymd') . "
-                           DURATION:P" . (max(1, $event->start->diff($event->ende)->days)) . "D
+                           DURATION:P" . (max(1, $event->start->diff($event->ende->endOfDay())->days)) . "D
                            DTSTAMP:" . date(ICAL_FORMAT, strtotime($event->created_at ? $event->created_at : Carbon::now())) . "
                            UID:$event->id,
                            SUMMARY:" . str_replace(' ', '__', $event->terminname) . "
