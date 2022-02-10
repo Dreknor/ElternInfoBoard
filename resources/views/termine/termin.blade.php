@@ -1,13 +1,13 @@
 <div class="row  p-2 align-items-center h-100"
      @if($loop->iteration%2) style="background-color: rgba(217,217,217,0.61);" @endif>
-    <div class="col-auto">
+    <div class="col-sm-6 col-md-2 col-lg-2">
         @if($termin->start->day != $termin->ende->day)
             {{$termin->start->format('d.m. ')}} - {{$termin->ende->format('d.m.Y')}}
         @else
             {{$termin->start->format('d.m.Y')}}
         @endif
     </div>
-    <div class="col-auto">
+    <div class="col-sm-6 col-md-2 col-lg-2">
         @if($termin->start->day == $termin->ende->day and !$termin->fullDay )
             {{$termin->start->format('H:i')}} -  {{$termin->ende->format('H:i')}} Uhr
         @endif
