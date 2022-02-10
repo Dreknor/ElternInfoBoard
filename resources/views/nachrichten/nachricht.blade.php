@@ -5,33 +5,33 @@
     <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom blur" >
         <div class="container-fluid " @if(count($nachricht->getMedia('header'))>0) style="margin-top: -90px;" @endif>
             <div class="row  blur">
-                    <div class="col-md-10">
+                <div class="col-md-10">
                     <h5 class="card-title">
 
                         @if($nachricht->sticky)
-                            <i class="fas fa-thumbtack fa-xs " ></i>
+                            <i class="fas fa-thumbtack fa-xs "></i>
                         @endif
                         {{$nachricht->header}}  @if($nachricht->released == 0) (unveröffentlicht) @endif
                     </h5>
                     <div class="row">
 
-                        <div class="col">
+                        <div class="col-auto">
                             aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}
                         </div>
-                        <div class="col">
+                        <div class="col-auto">
                             Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}
                         </div>
-                        <div class="col">
+                        <div class="col-auto">
                             <div class="pull-right">
                                 Autor: {{optional($nachricht->autor)->name}}
                             </div>
                         </div>
                     </div>
                     <div class="row mt-1">
-                                <div class="col-12">
-                                    Gruppen:
-                                    @foreach($nachricht->groups as $group)
-                                        <span class="badge">
+                        <div class="col-12">
+                            Gruppen:
+                            @foreach($nachricht->groups as $group)
+                                <span class="badge">
                                             {{$group->name}}@if(!$loop->last), @endif
                                         </span>
                                     @endforeach

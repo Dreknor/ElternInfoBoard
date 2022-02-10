@@ -12,7 +12,7 @@
             {{$termin->start->format('H:i')}} -  {{$termin->ende->format('H:i')}} Uhr
         @endif
     </div>
-    <div class="col-sm-12 col-md-8 col-lg-6 ">
+    <div class="col-sm-12 col-md-8 col-lg-6 font-weight-bold">
         {{$termin->terminname}}
         <div class="d-inline">
             <div class="pull-right">
