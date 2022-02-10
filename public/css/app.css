@@ -11,6 +11,10 @@
     backdrop-filter: blur(5px);
 }
 
+.wrap {
+    white-space: normal;
+    word-wrap: break-word;
+}
 
 .reaction > i {
     font-size: 1.6rem;

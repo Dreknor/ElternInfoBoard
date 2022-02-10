@@ -8,14 +8,16 @@
 
         @if($nachrichten != null and count($nachrichten)>0)
             <div class="card-body">
-                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
+                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse"
+                        data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
                     Themen zeigen
                 </button>
                 <div class="row collapse d-md-block" id="Themen">
                     <div class="col">
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                                <a href="#{{$nachricht->id}}" class="btn btn-sm {{$nachricht->type}} @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
+                                <a href="#{{$nachricht->id}}"
+                                   class="btn btn-sm wrap {{$nachricht->type}} @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
 
                                     <div class="
                                         @switch($nachricht->type)
@@ -76,7 +78,6 @@
         @endif
     </div>
 
-    <div id="">
 
         @foreach($nachrichten AS $nachricht)
             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
@@ -85,11 +86,6 @@
                 </div>
             @endif
         @endforeach
-    </div>
 
-    @if($nachrichten != null and count($nachrichten)>0)
-        <div class="archiv">
-            {{$nachrichten->links()}}
-        </div>
-    @endif
+
 </div>
