@@ -1,4 +1,3 @@
-<div class="container-fluid">
     <div class="card blur">
         <div class="card-header border-bottom">
             <h5>
@@ -77,8 +76,6 @@
 
         @endif
     </div>
-
-
         @foreach($nachrichten AS $nachricht)
             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
                 <div class="@foreach($nachricht->groups as $group) {{$group->name}} @endforeach">
@@ -86,6 +83,3 @@
                 </div>
             @endif
         @endforeach
-
-
-</div>
