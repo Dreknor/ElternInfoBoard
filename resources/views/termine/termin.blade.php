@@ -15,7 +15,7 @@
     <div class="col-sm-12 col-md-8 col-lg-6 ">
         {{$termin->terminname}}
     </div>
-    <div class="col-auto ">
+    <div class="col-auto pull-right">
         <a href="{{$termin->link()->ics()}}" class="card-link"
            title="ICS-Download für Apple und Windows">
             <img src="{{asset('img/ics-icon.png')}}" height="25px">
@@ -25,7 +25,7 @@
             <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
         </a>
     </div>
-    <div class="col-auto ">
+    <div class="col-auto pull-right">
         @if(auth()->user()->can('edit termin'))
             <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
                 @csrf
