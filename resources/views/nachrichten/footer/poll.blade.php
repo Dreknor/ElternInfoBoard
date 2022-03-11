@@ -18,7 +18,7 @@
                 </p>
             </div>
             <div class="card-body">
-                @if($nachricht->poll->votes->where('author_id', auth()->id())->first() != null or \Carbon\Carbon::now()->greaterThan($nachricht->poll->ends))
+                @if($nachricht->poll->votes->where('author_id', auth()->id())->first() != null or \Carbon\Carbon::now()->greaterThan($nachricht->poll->ends) or $nachricht->poll->author_id == auth()->id())
                     <ul class="list-group">
                         @foreach($nachricht->poll->options as $option)
                             <li class="list-group-item">
