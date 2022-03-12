@@ -25,7 +25,8 @@
                                 <div class="row">
                                     <div class="col-3 col-md-1 ">
                                         {{round(($nachricht->poll->answers->where('option_id', $option->id)->count() / $nachricht->poll->answers->count())*100, 0)}}
-                                        %
+                                        % ({{$nachricht->poll->answers->where('option_id', $option->id)->count()}}
+                                        / {{$nachricht->poll->answers->count()}})
                                     </div>
                                     <div class="col">
                                         <div class="">
