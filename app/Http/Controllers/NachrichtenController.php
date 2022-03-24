@@ -168,9 +168,9 @@ class NachrichtenController extends Controller
             ]);
         }
 
-        $post = new Post($request->all());
+        $post = new Post($request->validated());
 
-        $post->author = $request->user()->id;
+        $post->author = $user->id;
         $post->save();
 
         $gruppen = $request->input('gruppen');
@@ -353,7 +353,6 @@ class NachrichtenController extends Controller
         }
 
         $posts->fill($request->validated());
-        //$posts->author = auth()->user()->id;
 
         $posts->updated_at = $request->input('updated_at');
 

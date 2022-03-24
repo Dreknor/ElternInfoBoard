@@ -31,14 +31,17 @@ class editPostRequest extends FormRequest
     public function rules()
     {
         return [
-            'header'    => [
+            'header' => [
                 'required',
             ],
-            'news'      => [
+            'news' => [
                 'required',
             ],
             'gruppen' => [
                 'required',
+            ],
+            'archiv_ab' => [
+                'required', 'date'
             ],
             'password' => [
                 'required_with:urgent',
