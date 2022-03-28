@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
+        @if(count($media) > 0)
             <div class="card">
                 <div class="card-header">
                     <h5>
@@ -20,20 +21,16 @@
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <form action="{{url('settings/removeFiles')}}" method="post" class="form-horizontal">
+                    <form action="{{url('settings/removeUnusedFiles')}}" method="post" class="form-horizontal">
                         @csrf
                         @method('delete')
-                        <label>
-                            ältere Dateien vor diesem Datum löschen
-                            <input type="date" name="deleteBeforeDate" class="form-control"
-                                   value="{{\Carbon\Carbon::now()->subYear()->format('Y-m-d')}}">
-                        </label>
                         <button type="submit" class="btn btn-danger btn-block">
-                            löschen
+                            ungenutze Dateien löschen
                         </button>
                     </form>
                 </div>
             </div>
+        @endif
     </div>
     <div class="container-fluid">
         <div class="card">
@@ -84,25 +81,39 @@
                         @endforeach
                     </table>
                 </div>
-            </div>
+        </div>
     </div>
     <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h5>
-                        alte Dateien ({{@count($oldMedia)}})
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                          <tr>
-                              <th>
-                                  erstellt
-                              </th>
-                              <th>
-                                  Name
-                              </th>
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    alte Dateien ({{@count($oldMedia)}})
+                </h5>
+            </div>
+            <div class="card-footer">
+                <form action="{{url('settings/removeFiles')}}" method="post" class="form-horizontal">
+                    @csrf
+                    @method('delete')
+                    <label>
+                        ältere Dateien vor diesem Datum löschen
+                        <input type="date" name="deleteBeforeDate" class="form-control"
+                               value="{{\Carbon\Carbon::now()->subYear()->format('Y-m-d')}}">
+                    </label>
+                    <button type="submit" class="btn btn-danger btn-block">
+                        löschen
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>
+                            erstellt
+                        </th>
+                        <th>
+                            Name
+                        </th>
                               <th>
                                   gehört zu
                               </th>

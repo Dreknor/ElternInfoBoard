@@ -175,28 +175,34 @@ class FileController extends Controller
 
         return view('settings.scanDir', [
             'media' => $noMedia,
-            'oldMedia'  => $oldMedia,
+            'oldMedia' => $oldMedia,
             'deletedPosts' => $deletedPosts,
         ]);
     }
 
-    public function removeOldFiles(DeleteFilesRequest $request)
+    public function deleteUnusedFiles()
     {
-        /*
         $noMedia = $this->scanDir();
         foreach ($noMedia as $id => $mediaDir) {
             foreach ($mediaDir as $media) {
-                $link = storage_path().'/app/'.$id.'/'.$media;
+                $link = storage_path() . '/app/' . $id . '/' . $media;
                 unlink($link);
             }
-            $link = storage_path().'/app/'.$id;
+            $link = storage_path() . '/app/' . $id;
             rmdir($link);
         }
+    }
 
-        */
-        $media = Media::where('model_type', 'App\Model\Post')->whereDate('created_at', '<', $request->deleteBeforeDate)->delete();
+    public function removeOldFiles(DeleteFilesRequest $request)
+    {
 
-        CacheAlias::forget('old_files');
+
+        $media = Media::where('model_type', 'App\Model\Post')->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
+
+        foreach ($media as $Media) {
+            $Media->delete();
+        }
+
         return redirect()->back();
     }
 }
