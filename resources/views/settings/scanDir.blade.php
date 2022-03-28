@@ -12,29 +12,34 @@
                     <ul class="list-group">
                         @foreach($media as $items)
                             @foreach($items as $item)
-                            <li class="list-group-item">
-                                {{$item}}
-                            </li>
+                                <li class="list-group-item">
+                                    {{$item}}
+                                </li>
                             @endforeach
                         @endforeach
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <form action="{{url('settings/removeFiles')}}" method="post">
+                    <form action="{{url('settings/removeFiles')}}" method="post" class="form-horizontal">
                         @csrf
                         @method('delete')
+                        <label>
+                            ältere Dateien vor diesem Datum löschen
+                            <input type="date" name="deleteBeforeDate" class="form-control"
+                                   value="{{\Carbon\Carbon::now()->subYear()->format('Y-m-d')}}">
+                        </label>
                         <button type="submit" class="btn btn-danger btn-block">
-                            Alle Datein endgültig löschen
+                            löschen
                         </button>
                     </form>
                 </div>
             </div>
     </div>
     <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h5>
-                        gelöschte Nachrichten ({{@count($deletedPosts)}})
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    gelöschte Nachrichten ({{@count($deletedPosts)}})
                     </h5>
                 </div>
                 <div class="card-body">

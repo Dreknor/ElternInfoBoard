@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteFilesRequest;
 use App\Mail\newFilesAddToPost;
 use App\Model\Group;
 use App\Model\Post;
@@ -97,15 +98,15 @@ class FileController extends Controller
         if ($request->hasFile('files')) {
             foreach ($gruppen as $gruppe) {
                 $gruppe->addMediaFromRequest('files')
-                        ->preservingOriginal()
-                        ->toMediaCollection();
+                    ->preservingOriginal()
+                    ->toMediaCollection();
             }
         }
 
         return redirect()->to('/files')->with([
-                'type'  => 'success',
-                'Meldung'   => 'Download erzeugt',
-            ]);
+            'type'  => 'success',
+            'Meldung'   => 'Download erzeugt',
+        ]);
     }
 
     public function saveFileRueckmeldung(Request $request, Post $posts)
@@ -127,9 +128,9 @@ class FileController extends Controller
         }
 
         return redirect(url('home/#'.$posts->id))->with([
-                'type'  => 'success',
-                'Meldung'   => 'Bild erfolgreich hinzugefügt',
-            ]);
+            'type'  => 'success',
+            'Meldung'   => 'Bild erfolgreich hinzugefügt',
+        ]);
     }
 
     protected function scanDir()
@@ -179,8 +180,9 @@ class FileController extends Controller
         ]);
     }
 
-    public function removeOldFiles()
+    public function removeOldFiles(DeleteFilesRequest $request)
     {
+        /*
         $noMedia = $this->scanDir();
         foreach ($noMedia as $id => $mediaDir) {
             foreach ($mediaDir as $media) {
@@ -190,8 +192,11 @@ class FileController extends Controller
             $link = storage_path().'/app/'.$id;
             rmdir($link);
         }
-        CacheAlias::forget('old_files');
 
+        */
+        $media = Media::where('model_type', 'App\Model\Post')->whereDate('created_at', '<', $request->deleteBeforeDate)->delete();
+
+        CacheAlias::forget('old_files');
         return redirect()->back();
     }
 }
