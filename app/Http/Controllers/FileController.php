@@ -164,7 +164,7 @@ class FileController extends Controller
 
     public function showScan()
     {
-        $noMedia = CacheAlias::remember('old_files', 60, function () {
+        $noMedia = CacheAlias::remember('old_files', 1, function () {
             return $this->scanDir();
         });
 
@@ -181,7 +181,6 @@ class FileController extends Controller
 
     public function removeOldFiles()
     {
-        CacheAlias::forget('old_files');
         $noMedia = $this->scanDir();
         foreach ($noMedia as $id => $mediaDir) {
             foreach ($mediaDir as $media) {
@@ -191,6 +190,7 @@ class FileController extends Controller
             $link = storage_path().'/app/'.$id;
             rmdir($link);
         }
+        CacheAlias::forget('old_files');
 
         return redirect()->back();
     }
