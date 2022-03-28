@@ -165,10 +165,10 @@ class FileController extends Controller
     public function showScan()
     {
         $noMedia = CacheAlias::remember('old_files', 60, function () {
-            return$this->scanDir();
+            return $this->scanDir();
         });
 
-        $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', \App\Model\Post::class)->get();
+        $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', Post::class)->get();
 
         $deletedPosts = Post::onlyTrashed()->get();
 
@@ -181,8 +181,8 @@ class FileController extends Controller
 
     public function removeOldFiles()
     {
+        CacheAlias::forget('old_files');
         $noMedia = $this->scanDir();
-        $noMedia = CacheAlias::forget('old_files');
         foreach ($noMedia as $id => $mediaDir) {
             foreach ($mediaDir as $media) {
                 $link = storage_path().'/app/'.$id.'/'.$media;
