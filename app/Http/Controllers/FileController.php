@@ -191,6 +191,8 @@ class FileController extends Controller
             $link = storage_path() . '/app/' . $id;
             rmdir($link);
         }
+
+        return redirect()->back();
     }
 
     public function removeOldFiles(DeleteFilesRequest $request)
