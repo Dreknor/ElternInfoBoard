@@ -131,41 +131,42 @@
             @endif
         </div>
     </div>
-    @include('nachrichten.footer.reactions')
+        @include('nachrichten.footer.reactions')
         @include('nachrichten.footer.poll')
         @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
-        @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12">
-                        @for($x=1; $x <= $nachricht->userRueckmeldung->count(); $x++)
-                            <i class="fas fa-user-alt text-success" title="{{$x}}"></i>
-                        @endfor
-                        @for($x=1; $x <= ((round($nachricht->users->where('sorg2', '!=', null)->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
-                            <i class="fas fa-user-alt text-danger" title="{{$x}}"></i>
-                        @endfor
+            @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            @for($x=1; $x <= $nachricht->userRueckmeldung->count(); $x++)
+                                <i class="fas fa-user-alt text-success" title="{{$x}}"></i>
+                            @endfor
+                            @for($x=1; $x <= ((round($nachricht->users->where('sorg2', '!=', null)->count()/2)) + $nachricht->users->where('sorg2', null)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
+                                <i class="fas fa-user-alt text-danger" title="{{$x}}"></i>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
-        @include('nachrichten.footer.rueckmeldung')
-        @can('view rueckmeldungen')
-                <button class="btn btn-outline-info btn-block btnShowRueckmeldungen" data-toggle="collapse" data-target="#{{$nachricht->id}}_rueckmeldungen">
+            @endif
+            @include('nachrichten.footer.rueckmeldung')
+            @can('view rueckmeldungen')
+                <button class="btn btn-outline-info btn-block btnShowRueckmeldungen" data-toggle="collapse"
+                        data-target="#{{$nachricht->id}}_rueckmeldungen">
                     <i class="fa fa-eye"></i>
                     {{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen
                 </button>
                 <div id="{{$nachricht->id."_rueckmeldungen"}}" class="collapse">
                     @include('nachrichten.footer.eingegangeneRueckmeldung')
                 </div>
+            @endcan
+        @endif
+
+        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+            @include('nachrichten.footer.imageRueckmeldung')
+        @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'commentable' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+            <div class="container-fluid">
+                @include('nachrichten.footer.comments')
+            </div>
 
         @endif
-    @endif
-    @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
-        @include('nachrichten.footer.imageRueckmeldung')
-    @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'commentable' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
-        <div class="container-fluid">
-            @include('nachrichten.footer.comments')
-        </div>
-
-    @endif
 </div>
