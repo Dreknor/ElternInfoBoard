@@ -144,10 +144,6 @@
                             @for($x=1; $x <= (($nachricht->users->unique('email')->count() - $nachricht->users()->doesnthave('sorgeberechtigter2')->count()))-$nachricht->userRueckmeldung->count(); $x++)
                                 <i class="fas fa-user-alt text-danger" title="{{$x}}"></i>
                             @endfor
-                            @can('view rueckmeldungen')
-                                {{$nachricht->users->unique('email')->count()}}
-                                - {{$nachricht->users()->doesnthave('sorgeberechtigter2')->count()}}
-                            @endcan
                         </div>
                     </div>
                 </div>
