@@ -31,7 +31,7 @@ class createNachrichtRequest extends FormRequest
     {
         return [
             'header'    => [
-                'required',
+                'required','max:120'
             ],
             'news'      => [
                 'required',

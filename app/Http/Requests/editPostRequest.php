@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Model\Post;
 use Illuminate\Foundation\Http\FormRequest;
 
 class editPostRequest extends FormRequest
@@ -32,7 +31,7 @@ class editPostRequest extends FormRequest
     {
         return [
             'header'    => [
-                'required',
+                'required', 'max:120'
             ],
             'news'      => [
                 'required',
