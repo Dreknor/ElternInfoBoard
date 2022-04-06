@@ -13,16 +13,39 @@ class VertretungsplanController extends Controller
 
     public function index (){
         $gruppen = "/keine";
-        foreach (auth()->user()->groups as $group){
-            $gruppen.="/".$group->name;
+        foreach (auth()->user()->groups as $group) {
+            $gruppen .= "/" . $group->name;
         }
 
-        if (auth()->user()->can('view vertretungsplan all')){
+        if (auth()->user()->can('view vertretungsplan all')) {
             $gruppen = "";
         }
 
-        return view('vertretungsplan.index', [
-            'gruppen'=>$gruppen
-        ]);
+
+        //$url = config('app.mitarbeiterboard').'/api/vertretungsplan'.$gruppen;
+        $url = config('app.mitarbeiterboard') . '/api/vertretungsplan' . $gruppen;
+
+        $json = json_decode(file_get_contents($url), true);
+
+        $plan = [];
+
+        foreach ($json as $key => $value) {
+            if ($key != 'targetDate') {
+                if ($key == 'news') {
+                    $key = "mitteilungen";
+                }
+                $values = collect();
+
+                foreach ($value as $value_item) {
+                    $values->push((object)$value_item);
+                }
+                $plan[$key] = $values;
+            } else {
+                $plan[$key] = $value;
+            }
+
+        }
+
+        return view('vertretungsplan.index', $plan);
     }
 }
