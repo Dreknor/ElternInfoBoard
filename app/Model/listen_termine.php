@@ -29,4 +29,12 @@ class listen_termine extends Model
     {
         return $this->belongsTo(Liste::class, 'listen_id');
     }
+
+    public function scopeUser($query, $user)
+    {
+        if ($user != null) {
+            return $query->where('reserviert_fuer', $user);
+        }
+
+    }
 }

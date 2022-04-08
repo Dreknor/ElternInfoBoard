@@ -37,7 +37,7 @@
                                         geändert: {{optional($beitrag->updated_at)->format('d.m.Y H:i')}}
                                     </div>
                                     <div class="col">
-                                        Autor: {{$beitrag->author->name}}
+                                        Autor: {{optional($beitrag->author)->name}}
                                     </div>
                                 </div>
                             </div>

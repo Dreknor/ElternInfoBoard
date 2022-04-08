@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateListeRequest;
 use App\Model\Group;
 use App\Model\Liste;
+use App\Model\Listen_Eintragungen;
+use App\Model\listen_termine;
 use App\Repositories\GroupsRepository;
 use App\TerminListe;
 use Carbon\Carbon;
@@ -43,15 +45,14 @@ class ListenController extends Controller
         }
 
         $listen = $listen->unique('id');
-        $eintragungen = $request->user()->listen_eintragungen;
+        $eintragungen = Listen_Eintragungen::query()->user(auth()->id())->orWhere->user(auth()->user()->sorg2)->get();
+        $termine = listen_termine::query()->user(auth()->id())->orWhere->user(auth()->user()->sorg2)->get();
 
-        if ($request->user()->sorg2 != null) {
-            $eintragungen = $eintragungen->merge($request->user()->sorgeberechtigter2->listen_eintragungen);
-        }
 
         return view('listen.index', [
             'listen' => $listen,
-            'eintragungen'  => $eintragungen,
+            'eintragungen' => $eintragungen,
+            'termine' => $termine,
             'archiv' => $oldListen
         ]);
     }
@@ -80,9 +81,9 @@ class ListenController extends Controller
     {
         $this->authorize('create', Liste::class);
 
-        $Liste = new Liste($request->all());
+        $Liste = new Liste($request->validated());
         //$Liste->active = 0;
-        $Liste->besitzer = $request->user()->id;
+        $Liste->besitzer = auth()->id();
 
         $Liste->save();
 
@@ -101,14 +102,21 @@ class ListenController extends Controller
      */
     public function show(Liste $terminListe)
     {
-        $terminListe->load('eintragungen');
-        $terminListe->eintragungen->sortBy('termin');
+
 
         if ($terminListe->type == 'termin') {
+            $terminListe->load('termine');
+            $terminListe->termine->sortBy('termin');
             return view('listen.terminAuswahl', [
                 'liste' => $terminListe,
             ]);
         }
+
+        $terminListe->load('eintragungen');
+        return view('listen.listenEintrag', [
+            'liste' => $terminListe,
+        ]);
+
     }
 
     /**

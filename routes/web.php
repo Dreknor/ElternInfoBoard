@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\ICalController;
+use App\Http\Controllers\ListenEintragungenController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReinigungsTaskController;
@@ -132,7 +133,7 @@ Route::group([
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
         Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
 
-        //Terminlisten
+        //Listen
         Route::get('listen', [ListenController::class, 'index']);
         Route::post('listen', [ListenController::class, 'store']);
         Route::get('listen/create', [ListenController::class, 'create']);
@@ -145,10 +146,17 @@ Route::group([
         Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
-        Route::post('eintragungen/{liste}/store', [ListenTerminController::class, 'store']);
-        Route::put('eintragungen/{listen_termine}', [ListenTerminController::class, 'update']);
-        Route::delete('eintragungen/{listen_termine}', [ListenTerminController::class, 'destroy']);
-        Route::delete('eintragungen/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
+
+        //TerminListe
+        Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
+        Route::put('listen/termine/{listen_termine}', [ListenTerminController::class, 'update']);
+        Route::delete('listen/termine/{listen_termine}', [ListenTerminController::class, 'destroy']);
+        Route::delete('listen/termine/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
+        //EintragListe
+        Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
+        Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
+        Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
+
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);

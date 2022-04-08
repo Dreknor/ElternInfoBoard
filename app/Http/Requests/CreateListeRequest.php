@@ -40,14 +40,18 @@ class CreateListeRequest extends FormRequest
                 'required',
                 'boolean',
             ],
-            'active'        => [
+            'active' => [
                 'required',
                 'boolean',
             ],
-            'ende'          => [
+            'ende' => [
                 'required',
                 'date',
             ],
-            ];
+            'duration' => [
+                'sometimes',
+                'nullable'
+            ]
+        ];
     }
 }

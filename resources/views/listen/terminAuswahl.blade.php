@@ -36,9 +36,9 @@
 
             </div>
             <div class="card-body">
-                @if($liste->eintragungen->count()> 0)
+                @if($liste->termine->count()> 0)
                     <ul class="list-group">
-                        @foreach($liste->eintragungen->sortBy('termin') as $eintrag)
+                        @foreach($liste->termine->sortBy('termin') as $eintrag)
                             <div class="list-group-item @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hide d-none @endif">
                                 <div class="row">
                                     <div class="col-sm-6 col-md-3 m-auto">
@@ -67,23 +67,31 @@
                                                    <div class="col-sm-12 col-md-6 m-auto">
                                                        @if ($eintrag->reserviert_fuer != null)
 
-                                                               <button class="btn btn-outline-danger btn-xs btn-round btnAbsage" data-toggle="modal" data-target="#deleteEintragungModal" data-terminID="{{$eintrag->id}}">
-                                                                   {{$eintrag->eingetragenePerson->name }} absagen
-                                                               </button>
+                                                           <button
+                                                               class="btn btn-outline-danger btn-xs btn-round btnAbsage"
+                                                               data-toggle="modal" data-target="#deleteEintragungModal"
+                                                               data-terminID="{{$eintrag->id}}">
+                                                               {{$eintrag->eingetragenePerson->name }} absagen
+                                                           </button>
 
 
                                                        @else
                                                            @if(auth()->user()->groups()->whereIn('groups.id',$liste->groups->pluck('id'))->count() > 0 or auth()->user()->hasRole('Mitarbeiter'))
-                                                               <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
+                                                               <form method="post"
+                                                                     action="{{url("listen/termine/".$eintrag->id)}}">
                                                                    @csrf
                                                                    @method('put')
-                                                                   <button type="submit" class="btn btn-primary btn-round">reservieren</button>
+                                                                   <button type="submit"
+                                                                           class="btn btn-primary btn-round">reservieren
+                                                                   </button>
                                                                </form>
                                                            @endif
-                                                           <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
+                                                           <form method="post"
+                                                                 action="{{url("listen/termine/".$eintrag->id)}}">
                                                                @csrf
                                                                @method('delete')
-                                                               <button type="submit" class="btn  btn-outline-warning btn-xs btn-round">
+                                                               <button type="submit"
+                                                                       class="btn  btn-outline-warning btn-xs btn-round">
                                                                    löschen
                                                                </button>
                                                            </form>
@@ -95,15 +103,17 @@
                                         @else
                                             @if($eintrag->reserviert_fuer != null)
                                                 @if($liste->visible_for_all)
-                                                            {{$eintrag->eingetragenePerson->name }}
+                                                    {{$eintrag->eingetragenePerson->name }}
                                                 @else
                                                     vergeben
                                                 @endif
                                             @else
-                                                <form method="post" action="{{url("eintragungen/".$eintrag->id)}}">
+                                                <form method="post" action="{{url("listen/termine/".$eintrag->id)}}">
                                                     @csrf
                                                     @method('put')
-                                                    <button type="submit" class="btn btn-primary btn-round">reservieren</button>
+                                                    <button type="submit" class="btn btn-primary btn-round">
+                                                        reservieren
+                                                    </button>
                                                 </form>
                                             @endif
                                         @endif
@@ -114,6 +124,7 @@
 
                             </div>
                         @endforeach
+                    </ul>
                 @else
                     <div class="alert alert-info">
                         <p>
@@ -121,7 +132,7 @@
                         </p>
                     </div>
                 @endif
-                </ul>
+
 
             </div>
         </div>
@@ -140,17 +151,18 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                   <form method="post" action="{{url("eintragungen/$liste->id/store")}}" class="form-horizontal" id="terminForm">
-                       @csrf
-                       <div class="form-row">
-                           <label for="termin">
-                               Datum:
-                           </label>
-                           <input type="date" name="termin" class="form-control" required>
-                       </div>
-                       <div class="form-row">
-                           <label>
-                               Uhrzeit:
+                    <form method="post" action="{{url("listen/termine/$liste->id/store")}}" class="form-horizontal"
+                          id="terminForm">
+                        @csrf
+                        <div class="form-row">
+                            <label for="termin">
+                                Datum:
+                            </label>
+                            <input type="date" name="termin" class="form-control" required>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Uhrzeit:
                            </label>
                            <input type="time" name="zeit" class="form-control" required>
                        </div>
@@ -237,7 +249,7 @@
             var btn = this;
             console.log(btn);
             var id = $(this).data('terminid');
-            var url = "{{url("eintragungen/absagen/")}}/"+id;
+            var url = "{{url("listen/termine/absagen/")}}/" + id;
             $('#absagenForm').attr('action', url);
 
         });
