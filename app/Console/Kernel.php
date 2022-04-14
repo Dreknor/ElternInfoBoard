@@ -2,7 +2,7 @@
 
 namespace App\Console;
 
-use App\Model\User;
+
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Spatie\Permission\Models\Role;
@@ -21,7 +21,7 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @param Schedule $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
@@ -37,7 +37,7 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00')->emailOutputOnFailure($email);
-        $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->dailyAt('08:30')->emailOutputOnFailure($email);
+        $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at('08:30')->emailOutputOnFailure($email);
         $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00')->emailOutputOnFailure($email);
 
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:00')->emailOutputOnFailure($email);
