@@ -25,6 +25,7 @@
         "maatwebsite/excel": "^3.1",
         "sentry/sentry-laravel": "^2.4",
         "spatie/calendar-links": "^1.4",
+        "spatie/icalendar-generator": "^2.3",
         "spatie/laravel-medialibrary": "^9.4",
         "spatie/laravel-permission": "^4.0",
         "staudenmeir/eloquent-has-many-deep": "^1.8"
