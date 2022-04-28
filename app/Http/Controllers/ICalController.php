@@ -61,7 +61,7 @@ class ICalController extends Controller
                 if ($event->fullDay == true) {
                     $icalObject->event(Event::create()
                         ->name($event->terminname)
-                        ->uniqueIdentifier($event->id)
+                        ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                         ->startsAt($event->start)
                         ->fullDay());
                 } else {
@@ -69,7 +69,7 @@ class ICalController extends Controller
                         ->name($event->terminname)
                         ->startsAt($event->start)
                         ->endsAt($event->ende)
-                        ->uniqueIdentifier($event->id)
+                        ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                     );
                 }
 
@@ -102,7 +102,7 @@ class ICalController extends Controller
             if ($event->fullDay == true) {
                 $icalObject->event(Event::create()
                     ->name($event->terminname)
-                    ->uniqueIdentifier($event->id)
+                    ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                     ->startsAt($event->start)
                     ->fullDay());
             } else {
@@ -110,8 +110,7 @@ class ICalController extends Controller
                     ->name($event->terminname)
                     ->startsAt($event->start)
                     ->endsAt($event->ende)
-                    ->uniqueIdentifier($event->id)
-
+                    ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                 );
             }
 
