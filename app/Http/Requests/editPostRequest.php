@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Model\Post;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class editPostRequest extends FormRequest
 {
@@ -35,7 +36,9 @@ class editPostRequest extends FormRequest
                 'required',
             ],
             'news' => [
-                'required',
+                'news' => [
+                    Rule::requiredIf(request()->type != "image")
+                ],
             ],
             'gruppen' => [
                 'required',
@@ -55,6 +58,7 @@ class editPostRequest extends FormRequest
             'released' => [
                 'nullable', 'boolean'
             ],
+
         ];
     }
 }

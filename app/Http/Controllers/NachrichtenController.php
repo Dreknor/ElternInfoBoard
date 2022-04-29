@@ -161,7 +161,7 @@ class NachrichtenController extends Controller
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
-        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and (! $user->can('send urgent message') or ! Hash::check($request->input('password'), $user->password))) {
+        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and (!$user->can('send urgent message') or !Hash::check($request->input('password'), $user->password))) {
             return redirect()->back()->withInput()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt für dringende Nachrichten oder Passwort ist falsch',
@@ -171,6 +171,8 @@ class NachrichtenController extends Controller
         $post = new Post($request->validated());
 
         $post->author = $user->id;
+        ($post->news == "") ? $post->news = $post->header : null;
+
         $post->save();
 
         $gruppen = $request->input('gruppen');
@@ -178,7 +180,7 @@ class NachrichtenController extends Controller
 
         $post->groups()->attach($gruppen);
 
-        if (! auth()->user()->can('release posts')) {
+        if (!auth()->user()->can('release posts')) {
             $permission = Permission::query()->where('name', 'release posts')->first();
 
             foreach ($permission->users as $user) {
@@ -359,6 +361,9 @@ class NachrichtenController extends Controller
         if (!is_null($posts->rueckmeldung) and $posts->rueckmeldung->ende->gt($posts->archiv_ab)) {
             $posts->archiv_ab = $posts->rueckmeldung->ende;
         }
+
+        ($posts->news == "") ? $posts->news = $posts->header : null;
+
         $posts->save();
 
         //Gruppen

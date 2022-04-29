@@ -19,6 +19,7 @@
                                 <option value="info" @if($post->type == "info") selected @endif>Info</option>
                                 <option value="pflicht" @if($post->type == "pflicht") selected @endif>Aufgabe - Pflicht</option>
                                 <option value="wahl" @if($post->type == "wahl") selected @endif>Aufgabe - Wahl</option>
+                                <option value="image" @if($post->type == "image") selected @endif>Bilder</option>
                             </select>
                         </div>
                     </div>

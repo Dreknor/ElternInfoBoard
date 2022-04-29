@@ -31,6 +31,7 @@
                             <option value="info" selected>Info</option>
                             <option value="pflicht" >Aufgabe - Pflicht</option>
                             <option value="wahl" >Aufgabe - Wahl</option>
+                            <option value="image" >Bild</option>
                         </select>
                     </div>
                 </div>
