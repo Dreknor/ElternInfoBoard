@@ -34,7 +34,7 @@ class createNachrichtRequest extends FormRequest
                 'required',
             ],
             'news' => [
-                'required',
+                 Rule::requiredIf(request()->type != "image")
             ],
             'gruppen' => [
                 'required',
@@ -54,6 +54,7 @@ class createNachrichtRequest extends FormRequest
             'released' => [
                 'nullable', 'boolean'
             ],
+
         ];
     }
 }

@@ -13,52 +13,54 @@
                         @endif
                         {{$nachricht->header}}  @if($nachricht->released == 0) (unveröffentlicht) @endif
                     </h5>
-                    <div class="row">
+                    @if($nachricht->type != 'image')
+                        <div class="row">
 
-                        <div class="col-auto">
-                            aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}
-                        </div>
-                        <div class="col-auto">
-                            Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}
-                        </div>
-                        <div class="col-auto">
-                            <div class="pull-right">
-                                Autor: {{optional($nachricht->autor)->name}}
+                            <div class="col-auto">
+                                aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}
                             </div>
-                        </div>
-                    </div>
-                    <div class="row mt-1">
-                        <div class="col-12">
-                            Gruppen:
-                            @foreach($nachricht->groups as $group)
-                                <span class="badge">
-                                            {{$group->name}}@if(!$loop->last), @endif
-                                        </span>
-                                    @endforeach
+                            <div class="col-auto">
+                                Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}
+                            </div>
+                            <div class="col-auto">
+                                <div class="pull-right">
+                                    Autor: {{optional($nachricht->autor)->name}}
                                 </div>
                             </div>
-                    <div class="row mt-1 mb-1">
-                        <div class="col-12">
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col-12">
+                                Gruppen:
+                                @foreach($nachricht->groups as $group)
+                                    <span class="badge">
+                                                {{$group->name}}@if(!$loop->last), @endif
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                        <div class="row mt-1 mb-1">
+                            <div class="col-12">
 
-                                @if($nachricht->type == "info")
-                                    <div class="badge badge-info p-2">
-                                        Information
-                                    </div>
-                                @endif
-                                @if($nachricht->type == "wahl")
-                                    <div class="badge badge-warning p-2">
-                                        Wahlaufgabe
-                                    </div>
-                                @endif
-                                @if($nachricht->type == "pflicht")
-                                    <div class="badge badge-danger p-2">
-                                        Pflichtaufgabe
-                                    </div>
-                                @endif
+                                    @if($nachricht->type == "info")
+                                        <div class="badge badge-info p-2">
+                                            Information
+                                        </div>
+                                    @endif
+                                    @if($nachricht->type == "wahl")
+                                        <div class="badge badge-warning p-2">
+                                            Wahlaufgabe
+                                        </div>
+                                    @endif
+                                    @if($nachricht->type == "pflicht")
+                                        <div class="badge badge-danger p-2">
+                                            Pflichtaufgabe
+                                        </div>
+                                    @endif
+
+                            </div>
 
                         </div>
-
-                    </div>
+                    @endif
                 </div>
 
                 @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
@@ -104,7 +106,8 @@
     </div>
     <div class="card-body  @if($nachricht->is_archived) collapse @endif" id="Collapse{{$nachricht->id}}" >
         <div class="container-fluid">
-            @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
+            @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type != 'image')
+
                 <div class="row">
                     <div class="col-md-8 col-sm-12 blur">
                         <p>
@@ -120,6 +123,33 @@
                             @include('nachrichten.footer.dateiliste')
                         @endif
                     </div>
+                </div>
+            @elseif((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
+                <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel" >
+                    <div class="carousel-inner">
+                        @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
+                            <div class="carousel-item text-center @if($loop->first) active @endif">
+                                <a href="{{url('/image/'.$media->id)}}" target="_blank">
+                                    <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" >
+                                    @if(optional($nachricht->rueckmeldung)->type == 'bild')
+                                        <h6 class="small">{{$media->name}}</h6>
+                                    @endif
+                                </a>
+                            </div>
+                        @endforeach
+
+                    </div>
+
+                    @if(count($nachricht->getMedia('images'))>1)
+                        <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon bg-primary " aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon bg-primary" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    @endif
                 </div>
             @else
                 <div class="container-fluid">
