@@ -1,14 +1,97 @@
-<div class="nachricht blur {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif" id="{{$nachricht->id}}" >
-    @if(count($nachricht->getMedia('header'))>0)
-        <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}" style="max-height: 250px;object-fit: cover; object-position: 0 40%;">
-    @endif
-    <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom blur" >
-        <div class="container-fluid " @if(count($nachricht->getMedia('header'))>0) style="margin-top: -90px;" @endif>
-            <div class="row  blur">
-                <div class="col-md-10">
-                    <h5 class="card-title">
+@if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
+    <div class="container-fluid">
+        <div class="row ">
+            <div class="col mx-auto">
+                @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
+                    <div class="pull-right">
+                        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                            <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
+                               id="editTextBtn" data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                <i class="far fa-edit"></i>
+                            </a>
+                            <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        @else
+                            <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
+                                <i class="far fa-clone"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 0)
+                            <a href="{{url('/posts/release/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
+                                <i class="far fa-eye"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 1 and !$nachricht->is_archived)
+                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                <i class="fas fa-archive"></i>
+                            </a>
+                        @endif
+                        @if(auth()->user()->can('make sticky'))
+                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                               class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                <i class="fas fa-thumbtack"
+                                   @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
+                            </a>
+                        @endif
+                    </div>
+                @endif
 
-                        @if($nachricht->sticky)
+            </div>
+
+        </div>
+
+        <div class="row mb-2">
+            <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel">
+                <div class="carousel-inner">
+                    @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
+                        <div class="carousel-item text-center @if($loop->first) active @endif">
+                            <a href="{{url('/image/'.$media->id)}}" target="_blank">
+                                <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}">
+                                @if(optional($nachricht->rueckmeldung)->type == 'bild')
+                                    <h6 class="small">{{$media->name}}</h6>
+                                @endif
+                            </a>
+                        </div>
+                    @endforeach
+
+                </div>
+
+                @if(count($nachricht->getMedia('images'))>1)
+                    <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button"
+                       data-slide="prev">
+                        <span class="carousel-control-prev-icon bg-primary " aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button"
+                       data-slide="next">
+                        <span class="carousel-control-next-icon bg-primary" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+    </div>
+@else
+    <div class="nachricht blur {{$nachricht->type}} card @if($nachricht->released == 0) border border-info @endif"
+         id="{{$nachricht->id}}">
+        @if(count($nachricht->getMedia('header'))>0)
+            <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
+                 style="max-height: 250px;object-fit: cover; object-position: 0 40%;">
+        @endif
+        <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom blur">
+            <div class="container-fluid "
+                 @if(count($nachricht->getMedia('header'))>0) style="margin-top: -90px;" @endif>
+                <div class="row  blur">
+                    <div class="col-md-10">
+                        <h5 class="card-title">
+
+                            @if($nachricht->sticky)
                             <i class="fas fa-thumbtack fa-xs "></i>
                         @endif
                         {{$nachricht->header}}  @if($nachricht->released == 0) (unveröffentlicht) @endif
@@ -124,33 +207,6 @@
                         @endif
                     </div>
                 </div>
-            @elseif((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
-                <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel" >
-                    <div class="carousel-inner">
-                        @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
-                            <div class="carousel-item text-center @if($loop->first) active @endif">
-                                <a href="{{url('/image/'.$media->id)}}" target="_blank">
-                                    <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" >
-                                    @if(optional($nachricht->rueckmeldung)->type == 'bild')
-                                        <h6 class="small">{{$media->name}}</h6>
-                                    @endif
-                                </a>
-                            </div>
-                        @endforeach
-
-                    </div>
-
-                    @if(count($nachricht->getMedia('images'))>1)
-                        <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon bg-primary " aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon bg-primary" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-                        </a>
-                    @endif
-                </div>
             @else
                 <div class="container-fluid">
                     <p class="pl-2  blur">
@@ -200,3 +256,4 @@
 
         @endif
 </div>
+@endif
