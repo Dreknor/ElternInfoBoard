@@ -9,8 +9,8 @@ class listen_termine extends Model
 {
     protected $table = 'listen_termine';
 
-    protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer'];
-    protected $visible = ['listen_id', 'termin', 'comment', 'reserviert_fuer'];
+    protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
+    protected $visible = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
     protected $casts = [
         'termin' => 'datetime',
     ];

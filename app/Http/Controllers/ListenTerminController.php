@@ -38,7 +38,7 @@ class ListenTerminController extends Controller
         $termin = new listen_termine([
             'listen_id' => $liste->id,
             'termin' => $datum,
-            'duration' => ($request->duration > 0) ? $request->duration : $liste->duration,
+            'duration' => ($request->duration != "") ? $request->duration : $liste->duration,
             'comment' => $request->comment,
 
         ]);
