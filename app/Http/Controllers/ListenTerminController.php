@@ -24,6 +24,20 @@ use Illuminate\Support\Facades\Notification;
  */
 class ListenTerminController extends Controller
 {
+
+    public function copy(listen_termine $listen_termine)
+    {
+        $this->authorize('storeTerminToListe', $listen_termine->liste);
+
+        $new = $listen_termine->replicate()->save();
+
+        return redirect()->back()->with([
+            'type' => "success",
+            'Meldung' => "Termin kopiert"
+        ]);
+    }
+
+
     /**
      * Speichert verfügbare Termine
      * @param Liste $liste

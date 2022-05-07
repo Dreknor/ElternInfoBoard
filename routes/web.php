@@ -150,6 +150,7 @@ Route::group([
         //TerminListe
         Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
         Route::put('listen/termine/{listen_termine}', [ListenTerminController::class, 'update']);
+        Route::get('listen/termine/{listen_termine}/copy', [ListenTerminController::class, 'copy']);
         Route::delete('listen/termine/{listen_termine}', [ListenTerminController::class, 'destroy']);
         Route::delete('listen/termine/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
         //EintragListe

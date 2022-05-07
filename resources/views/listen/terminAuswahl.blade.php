@@ -103,7 +103,12 @@
                                                        @endif
 
                                                    </div>
-                                               </div>
+
+                                            </div>
+                                            <div class="col-sm-12 col-md-6 pull-right">
+                                                <a href="{{url("listen/termine/".$eintrag->id."/copy")}}"
+                                                   class="btn btn-outline-info btn-round">kopieren</a>
+                                            </div>
                                         @else
                                             @if($eintrag->reserviert_fuer != null)
                                                 @if($liste->visible_for_all)
