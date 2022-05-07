@@ -53,7 +53,7 @@
                                     </div>
                                     <div class="col-auto pull-right">
                                         @if($eintrag->user_id != null)
-                                            @if($liste->visible_for_all or auth()->user()->can('edit terminliste'))
+                                            @if($liste->visible_for_all or auth()->user()->can('edit terminliste') or $eintrag->user_id == auth()->id())
                                                 {{$eintrag->user->name }}
                                             @else
                                                 vergeben
