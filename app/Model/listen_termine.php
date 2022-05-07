@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\CalendarLinks\Link;
 
@@ -20,9 +21,14 @@ class listen_termine extends Model
         return $this->belongsTo(User::class, 'reserviert_fuer');
     }
 
-    public function link($Listenname, $duration = 30)
+    public function link($Listenname)
     {
-        return Link::create($Listenname, $this->termin, $this->termin->copy()->addMinutes($duration));
+        return Link::create($Listenname, $this->termin, $this->termin->copy()->addMinutes($this->duration));
+    }
+
+    protected function getDurationAttribute($value)
+    {
+        return ($value != "") ? $value : $this->liste->duration;
     }
 
     public function liste()

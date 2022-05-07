@@ -39,17 +39,21 @@
                 @if($liste->termine->count()> 0)
                     <ul class="list-group">
                         @foreach($liste->termine->sortBy('termin') as $eintrag)
-                            <div class="list-group-item @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hide d-none @endif">
+                            <div
+                                class="list-group-item @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hide d-none @endif">
                                 <div class="row">
                                     <div class="col-sm-6 col-md-3 m-auto">
 
-                                            {{	$eintrag->termin->formatLocalized('%A')}}, <b>{{	$eintrag->termin->format('d.m.Y')}}</b>
+                                        {{	$eintrag->termin->formatLocalized('%A')}},
+                                        <b>{{	$eintrag->termin->format('d.m.Y')}}</b>
 
                                     </div>
 
                                     <div class="col-sm-6 col-md-3 m-auto">
                                         <b>
-                                            {{	$eintrag->termin->format('H:i')}} - {{$eintrag->termin->copy()->addMinutes($liste->duration)->format('H:i')}} Uhr
+                                            {{	$eintrag->termin->format('H:i')}}
+                                            - {{$eintrag->termin->copy()->addMinutes($eintrag->duration)->format('H:i')}}
+                                            Uhr
                                         </b>
 
                                     </div>
@@ -58,8 +62,8 @@
                                     </div>
                                     <div class="col-sm-6 col-md-4 m-auto">
                                         @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
-                                               <div class="row">
-                                                   <div class="col-sm-12 col-md-6 m-auto">
+                                            <div class="row">
+                                                <div class="col-sm-12 col-md-6 m-auto">
                                                        @if($eintrag->reserviert_fuer != null)
                                                            {{$eintrag->eingetragenePerson->name }}
                                                        @endif
