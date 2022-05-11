@@ -7,12 +7,21 @@
         <div class="card">
             <div class="card-header border-bottom @if($liste->active == 0) bg-info @endif">
                 <h5>
-                    {{$liste->listenname}} @if($liste->active == 0) (inaktiv) @endif
+                    {{$liste->listenname}} @if($liste->active == 0)
+                        (inaktiv)
+                    @endif
                 </h5>
 
                 {!! $liste->comment !!}
 
+                @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
 
+                    <a href="{{url('listen/'.$liste->id.'/export')}}" class="btn btn-secondary pull-right">
+                        <i class="fa fas-export"></i>
+                        Druckansicht
+                    </a>
+
+                @endif
             </div>
             <div class="card-body">
                 @if($liste->eintragungen->filter(function ($eintragung){
