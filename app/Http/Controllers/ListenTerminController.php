@@ -29,7 +29,9 @@ class ListenTerminController extends Controller
     {
         $this->authorize('storeTerminToListe', $listen_termine->liste);
 
-        $new = $listen_termine->replicate()->save();
+        $new = $listen_termine->replicate();
+        $new->reserviert_fuer = null;
+        $new->save();
 
         return redirect()->back()->with([
             'type' => "success",

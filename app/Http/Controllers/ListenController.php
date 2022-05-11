@@ -198,10 +198,20 @@ class ListenController extends Controller
             ]);
             return $pdf->download('test.pdf');
             */
-            return view('listen.listenExport', [
-                'Liste' => $liste,
-                'listentermine' => $liste->eintragungen->sortBy('termin'),
-            ]);
+
+            if ($liste->type == 'termin') {
+                return view('listen.listenTerminExport', [
+                    'Liste' => $liste,
+                    'listentermine' => $liste->termine->sortBy('termin'),
+                ]);
+            } else {
+                return view('listen.listenEintraGExport', [
+                    'Liste' => $liste,
+                    'listentermine' => $liste->termine->sortBy('termin'),
+                ]);
+            }
+
+
         }
 
         return redirect()->back()->with([
