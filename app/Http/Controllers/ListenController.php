@@ -205,7 +205,7 @@ class ListenController extends Controller
                     'listentermine' => $liste->termine->sortBy('termin'),
                 ]);
             } else {
-                return view('listen.listenEintraGExport', [
+                return view('listen.listenEintragExport', [
                     'Liste' => $liste,
                     'listentermine' => $liste->termine->sortBy('termin'),
                 ]);
