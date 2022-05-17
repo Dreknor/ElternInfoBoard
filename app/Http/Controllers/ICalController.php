@@ -20,6 +20,7 @@ class ICalController extends Controller
         if ($user->releaseCalendar == true) {
             $Termine = $user->termine;
 
+
             //Termine aus Listen holen
             $listen_termine = $user->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
 
