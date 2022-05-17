@@ -28,7 +28,7 @@ class ICalController extends Controller
                 foreach ($listen_termine as $termin) {
                     $newTermin = new Termin([
                         'terminname' => $termin->liste->listenname,
-                        'start' => $termin->termin,
+                        'start' => $termin->termin->timezone('Europe/Berlin'),
                         'ende' => $termin->termin->copy()->addMinutes($termin->liste->duration),
                         'fullDay' => null,
                     ]);
@@ -41,7 +41,7 @@ class ICalController extends Controller
                 foreach ($user->sorgeberechtigter2->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
                     $newTermin = new Termin([
                         'terminname' => $termin->liste->listenname,
-                        'start' => $termin->termin,
+                        'start' => $termin->termin->timezone('Europe/Berlin'),
                         'ende' => $termin->termin->copy()->addMinutes($termin->liste->duration),
                         'fullDay' => null,
                     ]);
@@ -62,15 +62,14 @@ class ICalController extends Controller
                     $icalObject->event(Event::create()
                         ->name($event->terminname)
                         ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
-                        ->startsAt($event->start)
+                        ->startsAt($event->start->timezone('Europe/Berlin'))
                         ->withoutTimezone()
                         ->fullDay());
                 } else {
                     $icalObject->event(Event::create()
                         ->name($event->terminname)
-                        ->startsAt($event->start)
-                        ->endsAt($event->ende)
-                        ->withoutTimezone()
+                        ->startsAt($event->start->timezone('Europe/Berlin'))
+                        ->endsAt($event->ende->timezone('Europe/Berlin'))
                         ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                     );
                 }
@@ -105,15 +104,13 @@ class ICalController extends Controller
                 $icalObject->event(Event::create()
                     ->name($event->terminname)
                     ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
-                    ->startsAt($event->start)
-                    ->withoutTimezone()
+                    ->startsAt($event->start->timezone('Europe/Berlin'))
                     ->fullDay());
             } else {
                 $icalObject->event(Event::create()
                     ->name($event->terminname)
-                    ->startsAt($event->start)
-                    ->endsAt($event->ende)
-                    ->withoutTimezone()
+                    ->startsAt($event->start->timezone('Europe/Berlin'))
+                    ->endsAt($event->ende->timezone('Europe/Berlin'))
                     ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                 );
             }

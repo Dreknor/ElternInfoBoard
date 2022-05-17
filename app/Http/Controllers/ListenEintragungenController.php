@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createListenEintragungsRequest;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -13,10 +14,9 @@ class ListenEintragungenController extends Controller
 
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return
+     * @param createListenEintragungsRequest $request
+     * @param Liste $liste
+     * @return RedirectResponse
      */
     public function store(createListenEintragungsRequest $request, Liste $liste)
     {
@@ -50,8 +50,8 @@ class ListenEintragungenController extends Controller
      * Update the specified resource in storage.
      *
      * @param Request $request
-     * @param int $id
-     * @return Response
+     * @param Listen_Eintragungen $listen_eintragung
+     * @return RedirectResponse
      */
     public function update(Listen_Eintragungen $listen_eintragung)
     {
@@ -72,11 +72,11 @@ class ListenEintragungenController extends Controller
         ]);
     }
 
+
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return Response
+     * @param Listen_Eintragungen $listen_eintragung
+     * @return RedirectResponse
+     * @throws \Throwable
      */
     public function destroy(Listen_Eintragungen $listen_eintragung)
     {
