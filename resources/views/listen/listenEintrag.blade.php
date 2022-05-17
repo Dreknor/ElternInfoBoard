@@ -15,12 +15,7 @@
                 {!! $liste->comment !!}
 
                 @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
-
-                    <a href="{{url('listen/'.$liste->id.'/export')}}" class="btn btn-secondary pull-right">
-                        <i class="fa fas-export"></i>
-                        Druckansicht
-                    </a>
-
+                    <button onclick="generatePDF()"class="btn btn-info pull-right">Download as PDF</button>
                 @endif
             </div>
             <div class="card-body">
@@ -50,7 +45,7 @@
 
                 @endif
             </div>
-            <div class="card-body">
+            <div class="card-body" id="export">
                 @if($liste->eintragungen->count()> 0)
                     <ul class="list-group">
 
@@ -103,5 +98,13 @@
 
 @endsection
 @push('js')
-
+    <script src="{{asset('js/html2pdf.bundle.min.js')}}"></script>
+    <script>
+        function generatePDF() {
+            // Choose the element that our invoice is rendered in.
+            const element = document.getElementById('export');
+            // Choose the element and save the PDF for our user.
+            html2pdf().from(element).save();
+        }
+    </script>
 @endpush
