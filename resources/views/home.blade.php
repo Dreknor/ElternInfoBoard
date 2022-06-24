@@ -40,14 +40,14 @@
                         let target = event.target
                         if(target.dataset.show == 'true'){
                             $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
-                            $('a').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
+                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
 
                             target.dataset.show = 'false'
                             target.classList.add("btn-success")
                             target.classList.remove("btn-outline-primary")
                         } else {
                             $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
-                            $('a').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
+                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
                             target.dataset.show = 'true'
 
                             target.classList.remove("btn-success")
