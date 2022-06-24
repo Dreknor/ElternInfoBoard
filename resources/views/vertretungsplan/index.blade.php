@@ -10,7 +10,10 @@
                         <h6>
                             Vertretungen für
                             <div class="text-danger d-inline">{{$x->locale('de')->dayName}} </div>
-                            , den {{$x->format('d.m.Y')}}
+                            ,
+                            den {{$x->format('d.m.Y')}} @if(count($weeks) > 0 and array_key_exists($x->copy()->startOfWeek()->format('Y-m-d'), $weeks))
+                                ({{$weeks[$x->copy()->startOfWeek()->format('Y-m-d')]}} - Woche)
+                            @endif
                         </h6>
                     </div>
                     <div id="collapse{{$x->format('Ymd')}}" aria-labelledby="heading{{$x->format('Ymd')}}">

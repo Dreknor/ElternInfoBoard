@@ -24,8 +24,9 @@ class VertretungsplanController extends Controller
 
         //$url = config('app.mitarbeiterboard').'/api/vertretungsplan'.$gruppen;
         $url = config('app.mitarbeiterboard') . '/api/vertretungsplan' . $gruppen;
+        $inhalt = file_get_contents($url);
 
-        $json = json_decode(file_get_contents($url), true);
+        $json = json_decode($inhalt, true);
 
         $plan = [];
 
@@ -34,11 +35,18 @@ class VertretungsplanController extends Controller
                 if ($key == 'news') {
                     $key = "mitteilungen";
                 }
-                $values = collect();
 
-                foreach ($value as $value_item) {
-                    $values->push((object)$value_item);
+                if ($key == 'weeks') {
+                    $values = $value;
+                } else {
+                    $values = collect();
+
+                    foreach ($value as $value_item) {
+                        $values->push((object)$value_item);
+                    }
                 }
+
+
                 $plan[$key] = $values;
             } else {
                 $plan[$key] = $value;
