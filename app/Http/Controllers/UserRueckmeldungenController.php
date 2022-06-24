@@ -44,10 +44,10 @@ class UserRueckmeldungenController extends Controller
         if ($user->sendCopy == 1) {
             Mail::to($Empfaenger)
                 ->cc($user->email)
-                ->send(new UserRueckmeldung($Rueckmeldung));
+                ->queue(new UserRueckmeldung($Rueckmeldung));
         } else {
             Mail::to($Empfaenger)
-                ->send(new UserRueckmeldung($Rueckmeldung));
+                ->queue(new UserRueckmeldung($Rueckmeldung));
         }
 
         return redirect(url('/home#'.$post_id->id))->with([
@@ -93,10 +93,10 @@ class UserRueckmeldungenController extends Controller
         if ($user->sendCopy == 1) {
             Mail::to($Empfaenger)
                 ->cc($user->email)
-                ->send(new UserRueckmeldung($Rueckmeldung));
+                ->queue(new UserRueckmeldung($Rueckmeldung));
         } else {
             Mail::to($Empfaenger)
-                ->send(new UserRueckmeldung($Rueckmeldung));
+                ->queue(new UserRueckmeldung($Rueckmeldung));
         }
 
         return redirect(url('/home#'.$userRueckmeldungen->post_id))->with([
