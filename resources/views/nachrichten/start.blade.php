@@ -16,18 +16,18 @@
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
                                 <a href="#{{$nachricht->id}}"
-                                   class="btn btn-sm wrap  @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
+                                   class="btn btn-sm wrap  @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
 
                                     <div class="
                                         @switch($nachricht->type)
-                                    @case('pflicht')
-                                        text-danger
-                                        @break
+                                            @case('pflicht')
+                                                text-danger
+                                                @break
 
-                                    @case('wahl')
-                                        text-warning
-                                        @break
-                                    @endswitch
+                                            @case('wahl')
+                                                text-warning
+                                                @break
+                                        @endswitch
                                         ">
                                         {{$nachricht->header}}
                                     </div>
