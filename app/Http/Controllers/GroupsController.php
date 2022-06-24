@@ -6,6 +6,7 @@ use App\Http\Requests\CreateGroupRequest;
 use App\Model\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 
 class GroupsController extends Controller
 {
@@ -50,5 +51,33 @@ class GroupsController extends Controller
             'type'  => 'success',
             'Meldung'   => 'Gruppe wurde erstellt',
         ]);
+    }
+
+    public function delete(Request $request, Group $group){
+        if (!auth()->user()->can('delete groups')){
+            return redirect()->back()->with([
+                'type'=>'danger',
+                'Meldung'=>'Berechtigung fehlt.'
+            ]);
+        }
+
+        if ( Hash::check($request->passwort, auth()->user()->password)) {
+
+            $request->validate([
+                'passwort' => ['required', 'string']
+            ]);
+
+            $group->users()->sync([]);
+            $group->posts()->sync([]);
+            $group->termine()->sync([]);
+            $group->listen()->sync([]);
+            $group->media()->delete();
+            $group->delete();
+
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Gruppe wurde gelöscht.'
+            ]);
+        }
     }
 }

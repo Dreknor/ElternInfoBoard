@@ -29,7 +29,7 @@ class Group extends Model implements HasMedia
 
     public function termine()
     {
-        return $this->belongsToMany(Termin::class);
+        return $this->belongsToMany(Termin::class, 'group_termine');
     }
     public function listen()
     {

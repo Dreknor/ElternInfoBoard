@@ -100,7 +100,17 @@
                                     @endcan
                                 </div>
                             </div>
-
+                        @can('delete groups')
+                            <div class="card-footer border border-danger">
+                                Soll diese Grupper gelöscht werden? Dies muss per Passwort bestätigt werden.
+                                <form method="post" action="{{url('groups/'.$group->id.'/delete')}}" class="form-horizontal">
+                                    @csrf
+                                    @method('delete')
+                                    <input name="passwort" type="password" placeholder="Passwort eingeben" class="form-control">
+                                    <button type="submit" class="btn btn-danger mt-2">Grupper endgültig löschen</button>
+                                </form>
+                            </div>
+                        @endcan
                         </div>
                     </div>
                 </div>
