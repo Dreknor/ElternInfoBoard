@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Scopes\SortGroupsScope;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -16,6 +17,11 @@ class Group extends Model implements HasMedia
     protected $casts = [
       'protected' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new SortGroupsScope());
+    }
 
     public function users()
     {
