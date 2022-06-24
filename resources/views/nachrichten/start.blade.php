@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-                <div class="card-body">
+                <div class="card-footer border-top">
                     <div class="row">
 
                     @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "info") { return $item;}})) > 0)
@@ -63,6 +63,16 @@
                             </div>
                         @endif
 
+                    </div>
+                    <div class="row mt-1">
+
+                        @foreach(auth()->user()->groups as $group)
+                            <div class="col">
+                                    <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="{{\Illuminate\Support\Str::camel($group->name)}}" data-show="true">
+                                        {{$group->name}}
+                                    </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 
