@@ -165,6 +165,7 @@ Route::group([
         Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
         Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
         Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+        Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
 
 
         //Edit and create posts
