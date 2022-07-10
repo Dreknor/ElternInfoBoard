@@ -21,8 +21,14 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
+                            <div class="pull-right small">
+                                <a href="{{url('reinigung/'.$Bereich.'/export')}}" class="btn btn-sm">
+                                    Export
+                                </a>
+                            </div>
                             <h5 class="card-title">
                                 Reinigungsplan {{$Bereich}}
+
                             </h5>
                         </div>
                         <div class="card-body">

@@ -161,12 +161,16 @@ Route::group([
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
-        Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
-        Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
-        Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
-        Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
-        Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
 
+
+        Route::middleware('permission:edit reinigung')->group(function (){
+            Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
+            Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
+            Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
+            Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
+            Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+            Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+        });
 
         //Edit and create posts
         Route::get('/posts/create', [NachrichtenController::class, 'create']);

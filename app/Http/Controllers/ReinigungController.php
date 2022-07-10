@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ReinigungExport;
 use App\Http\Requests\ReinigungsRequest;
 use App\Model\Group;
 use App\Model\Reinigung;
@@ -13,9 +14,23 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReinigungController extends Controller
 {
+
+    public function export($bereich){
+        if (auth()->user()->can('edit reinigung')){
+            return Excel::download(new ReinigungExport($bereich), Carbon::now()->format('Y-m-d').'_'.$bereich.'_Reinigung.xlsx');
+        }
+
+        return redirect()->back()->with([
+            'type' => 'danger',
+            'Meldung' => 'Berechtigung fehlt'
+        ]);
+    }
+
+
 
     public function destroy($Bereich, Reinigung $reinigung){
         if (auth()->user()->can('edit reinigung') and $reinigung->bereich == $Bereich){
