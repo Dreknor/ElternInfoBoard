@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Scopes\SortGroupsScope;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -17,6 +18,11 @@ class Group extends Model implements HasMedia
       'protected' => 'boolean',
     ];
 
+    protected static function booted()
+    {
+        static::addGlobalScope(new SortGroupsScope());
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class)->withTimestamps();
@@ -29,7 +35,7 @@ class Group extends Model implements HasMedia
 
     public function termine()
     {
-        return $this->belongsToMany(Termin::class);
+        return $this->belongsToMany(Termin::class, 'group_termine');
     }
     public function listen()
     {

@@ -34,6 +34,29 @@
                     $('.pflicht').toggle('show');
                     $(this).toggleText('Pflichtaufgaben ausblenden', 'Pflichtaufgaben einblenden');
                 });
+
+                @foreach(auth()->user()->groups as $group)
+                    $('#{{\Illuminate\Support\Str::camel($group->name)}}').on('click', function (event) {
+                        let target = event.target
+                        if(target.dataset.show == 'true'){
+                            $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
+                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
+
+                            target.dataset.show = 'false'
+                            target.classList.add("btn-success")
+                            target.classList.remove("btn-outline-primary")
+                        } else {
+                            $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
+                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
+                            target.dataset.show = 'true'
+
+                            target.classList.remove("btn-success")
+                            target.classList.add("btn-outline-primary")
+
+                        }
+
+                    });
+                @endforeach
             });
         </script>
         <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>

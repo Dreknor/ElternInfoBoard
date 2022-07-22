@@ -16,18 +16,18 @@
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
                                 <a href="#{{$nachricht->id}}"
-                                   class="btn btn-sm wrap  @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
+                                   class="anker_link btn btn-sm wrap  @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
 
                                     <div class="
                                         @switch($nachricht->type)
-                                    @case('pflicht')
-                                        text-danger
-                                        @break
+                                            @case('pflicht')
+                                                text-danger
+                                                @break
 
-                                    @case('wahl')
-                                        text-warning
-                                        @break
-                                    @endswitch
+                                            @case('wahl')
+                                                text-warning
+                                                @break
+                                        @endswitch
                                         ">
                                         {{$nachricht->header}}
                                     </div>
@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-                <div class="card-body">
+                <div class="card-footer border-top">
                     <div class="row">
 
                     @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "info") { return $item;}})) > 0)
@@ -63,6 +63,16 @@
                             </div>
                         @endif
 
+                    </div>
+                    <div class="row mt-1">
+
+                        @foreach(auth()->user()->groups as $group)
+                            <div class="col">
+                                    <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="{{\Illuminate\Support\Str::camel($group->name)}}" data-show="true">
+                                        {{$group->name}}
+                                    </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 

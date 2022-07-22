@@ -161,11 +161,16 @@ Route::group([
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
-        Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
-        Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
-        Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
-        Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
 
+
+        Route::middleware('permission:edit reinigung')->group(function (){
+            Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
+            Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
+            Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
+            Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
+            Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+            Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+        });
 
         //Edit and create posts
         Route::get('/posts/create', [NachrichtenController::class, 'create']);
@@ -224,6 +229,7 @@ Route::group([
         //Gruppenverwaltung
         Route::get('/groups', [GroupsController::class, 'index']);
         Route::post('/groups', [GroupsController::class, 'store'])->middleware(['permission:view groups']);
+        Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
 
         //Routen zur Rechteverwaltung
         Route::middleware('permission:edit permission')->group(function () {
