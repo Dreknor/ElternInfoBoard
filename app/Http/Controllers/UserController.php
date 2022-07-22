@@ -197,6 +197,8 @@ class UserController extends Controller
             ]);
         }
 
+        $user->schickzeiten()->delete();
+
         Listen_Eintragungen::where('created_by', $user->id)->delete();
         Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
         Discussion::where('owner', $user->id)->update(['owner' => null]);
