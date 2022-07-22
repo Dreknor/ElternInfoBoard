@@ -197,7 +197,7 @@ class UserController extends Controller
             ]);
         }
 
-        $user->schickzeiten()->delete();
+        $user->schickzeiten()->withThrased()->forceDelete();
 
         Listen_Eintragungen::where('created_by', $user->id)->delete();
         Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
