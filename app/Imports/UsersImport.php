@@ -76,7 +76,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user2->touch();
                 $user2->assignRole('Eltern');
                 $user2->removeRole('Aufnahme');
-                if (is_object($Klassenstufe)) {
+                if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
                     $user2->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
                 } else {
 
