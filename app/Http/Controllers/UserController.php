@@ -13,6 +13,7 @@ use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
 use Carbon\Carbon;
+use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -203,7 +204,10 @@ class UserController extends Controller
         Poll::where('author_id', $user->id)->update(['author_id' => null]);
         Poll_Votes::where('author_id', $user->id)->delete();
 
-        $user->reactions()->delete();
+        foreach ($user->reactions as $reaction) {
+            $reaction->delete();
+        }
+
 
         $user->listen_eintragungen()->delete();
         $user->userRueckmeldung()->delete();
