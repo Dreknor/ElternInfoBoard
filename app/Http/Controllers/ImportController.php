@@ -41,7 +41,6 @@ class ImportController extends Controller
                     'S2Nachname' => $request->S2Nachname - 1,
                 ];
 
-                dd($header);
 
                 Excel::import(new UsersImport($header), $request->file('file'));
 
