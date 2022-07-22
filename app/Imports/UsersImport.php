@@ -33,7 +33,7 @@ class UsersImport implements ToCollection, WithHeadingRow
             $row = array_values($row->toArray());
             $Klassenstufe = $this->groups->where('name', 'Klassenstufe '.$row[$this->header['klassenstufe']])->first();
             $Lerngruppe = $this->groups->where('name', $row[$this->header['lerngruppe']])->first();
-
+            dd($this->groups);
             if (! is_null($row[$this->header['S1Email']])) {
                 $email1 = explode(';', $row[$this->header['S1Email']]);
                 $email1 = $email1[0];
