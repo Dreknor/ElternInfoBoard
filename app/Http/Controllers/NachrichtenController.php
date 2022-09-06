@@ -253,8 +253,8 @@ class NachrichtenController extends Controller
                 ];
             }
 
-            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
-            $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
+            @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo));
+            $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
         }
 
         //Umleitung bei Rückmeldungsbedarf

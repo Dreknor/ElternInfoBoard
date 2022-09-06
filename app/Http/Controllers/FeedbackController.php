@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
+use Exception;
 use Illuminate\Support\Facades\Mail;
 
 class FeedbackController extends Controller
@@ -45,7 +46,7 @@ class FeedbackController extends Controller
 
                     return redirect()->back()->with([
                         'type' => 'danger',
-                        'Meldung'=>$error,
+                        'Meldung' => $error,
                     ]);
                 }
 
@@ -55,11 +56,20 @@ class FeedbackController extends Controller
             }
         }
 
-        Mail::to($email)->send(new SendFeedback($request->text, $request->betreff ,$data));
+        try {
+            Mail::to($email)->send(new SendFeedback($request->text, $request->betreff, $data));
+            $feedback = [
+                'type' => 'success',
+                'Meldung' => 'Nachricht wurde versandt',
+            ];
+        } catch (Exception $e) {
+            $feedback = [
+                'type' => 'danger',
+                'Meldung' => 'Fehler beim Versand der Nachricht. ' . $e,
+            ];
 
-        return redirect()->back()->with([
-           'type'   => 'success',
-           'Meldung'    => 'Feedback wurde versandt',
-        ]);
+        }
+
+        return redirect()->back()->with($feedback);
     }
 }
