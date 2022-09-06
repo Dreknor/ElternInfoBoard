@@ -6,6 +6,7 @@ use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class FeedbackController extends Controller
@@ -57,7 +58,7 @@ class FeedbackController extends Controller
         }
 
         try {
-            Mail::to($email)->send(new SendFeedback($request->text, $request->betreff, $data));
+            Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
             $feedback = [
                 'type' => 'success',
                 'Meldung' => 'Nachricht wurde versandt',
