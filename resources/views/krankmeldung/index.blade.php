@@ -19,7 +19,9 @@
                                     <label for="name">
                                         Name des Schülers / der Schülerin*:
                                     </label>
-                                    <input type="text" class="form-control" name="name" id="name" autofocus required>
+                                    <input type="text" class="form-control" name="name" id="name" required
+                                           @if($krankmeldungen->count() > 0) value="{{$krankmeldungen->first()->name}}"
+                                           @else autofocus @endif>
                                 </div>
                             </div>
                         </div>
@@ -29,7 +31,10 @@
                                     <label for="start">
                                         Krank ab*:
                                     </label>
-                                    <input type="date" class="form-control" name="start" id="start" min="{{\Carbon\Carbon::now()->subDays(3)->format('Y-m-d')}}" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
+                                    <input type="date" class="form-control" name="start" id="start"
+                                           min="{{\Carbon\Carbon::now()->subDays(3)->format('Y-m-d')}}"
+                                           value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required
+                                           @if($krankmeldungen->count() > 0) autofocus @endif>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -37,7 +42,8 @@
                                     <label for="ende">
                                         Krank bis*:
                                     </label>
-                                    <input type="date" class="form-control" name="ende" id="ende" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
+                                    <input type="date" class="form-control" name="ende" id="ende"
+                                           value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
                                 </div>
                             </div>
                         </div>
