@@ -10,11 +10,47 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use PDF;
 
 class RueckmeldungenController extends Controller
 {
+
+    /**
+     * Show all Rueckmeldungen
+     */
+
+    public function index()
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt'
+            ]);
+        }
+
+        return view('rueckmeldungen.index', [
+            'rueckmeldungen' => Rueckmeldungen::whereHas('post')->with('post')->withCount('userRueckmeldungen as rueckmeldungen')->orderByDesc('ende')->get()
+        ]);
+    }
+
+    public function downloadAll(Rueckmeldungen $rueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt'
+            ]);
+        }
+
+        $pdf = PDF::loadView('pdf.userRueckmeldungen', [
+            'nachricht' => $rueckmeldung->post,
+            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen
+        ]);
+
+        return $pdf->download(Carbon::now()->format('Y-m-d') . '_Nachrichten.pdf');
+    }
+
     /**
      * Store a newly created resource in storage.
      *

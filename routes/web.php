@@ -69,6 +69,13 @@ Route::group([
         Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
         Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
 
+
+        //Routen für die Verwaltung der Rückmeldungen
+        Route::middleware('permission:manage rueckmeldungen')->group(function () {
+            Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
+            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
+        });
+
         //Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
 
@@ -257,6 +264,7 @@ Route::group([
 
             return redirect(url('/'));
         });
+
 
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
