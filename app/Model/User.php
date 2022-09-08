@@ -225,4 +225,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Discussion::class, 'owner');
     }
+
+    public function mails()
+    {
+        return $this->hasMany(Mail::class, 'senders_id')->orderByDesc('created_at');
+
+    }
 }

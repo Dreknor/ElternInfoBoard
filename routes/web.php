@@ -131,7 +131,7 @@ Route::group([
 
         //KioskAnsicht
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
-        Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
+        //Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
 
         //Listen
         Route::get('listen', [ListenController::class, 'index']);
@@ -275,5 +275,6 @@ Route::group([
 
     //Feedback
     Route::get('feedback', [FeedbackController::class, 'show']);
-    Route::post('feedback', [FeedbackController::class, 'send']);
+        Route::post('feedback', [FeedbackController::class, 'send']);
+        Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 });
