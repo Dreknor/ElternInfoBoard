@@ -277,5 +277,4 @@ Route::group([
     Route::get('feedback', [FeedbackController::class, 'show']);
         Route::post('feedback', [FeedbackController::class, 'send']);
         Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
-        Route::get('feedback/report/now', [FeedbackController::class, 'dailyReport']);
 });
