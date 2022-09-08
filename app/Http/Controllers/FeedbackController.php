@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KontaktRequest;
+use App\Mail\dailyMailReport;
 use App\Mail\SendFeedback;
 use App\Model\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Mail;
 use App\Model\Mail as MailModel;
@@ -99,5 +101,14 @@ class FeedbackController extends Controller
         return view('feedback.showMail', [
             'mail' => $mail
         ]);
+    }
+
+    public function dailyReport()
+    {
+        $mails = MailModel::where('created_at', '<', Carbon::now())
+            ->where('created_at', '>=', Carbon::yesterday()->startOfDay())
+            ->get();
+        Mail::to(config('mail.from.address'))
+            ->queue(new dailyMailReport($mails));
     }
 }

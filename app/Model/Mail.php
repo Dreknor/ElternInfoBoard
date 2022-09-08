@@ -16,6 +16,6 @@ class Mail extends Model implements HasMedia
 
     public function sender()
     {
-        $this->belongsTo(User::class, 'senders_id', 'id');
+        return $this->belongsTo(User::class, 'senders_id', 'id');
     }
 }
