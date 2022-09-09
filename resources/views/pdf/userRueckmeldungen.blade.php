@@ -6,15 +6,21 @@
 <body>
 
 <h2>
-    Rückmeldungen zu {{$nachricht->header}}
+    @if($rueckmeldungen->count() > 1)
+        Rückmeldungen
+    @else
+        Rückmeldung
+    @endif zu {{$nachricht->header}}
 </h2>
-
-<p>
-    Stand: {{\Carbon\Carbon::now()->format('d.m.Y H:i')}}
-</p>
-
+@if($rueckmeldungen->count() > 1)
+    <p>
+        Stand: {{\Carbon\Carbon::now()->format('d.m.Y H:i')}}
+    </p>
+@endif
 @foreach($rueckmeldungen as $rueckmeldung)
-    <div style="page-break-before : always;"></div>
+    @if($rueckmeldungen->count() > 1)
+        <div style="page-break-before : always;"></div>
+    @endif
     <p>
         von: <b>{{$rueckmeldung->user->name}}</b>
     </p>

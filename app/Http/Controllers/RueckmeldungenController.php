@@ -34,6 +34,39 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    //zeigt alle Rückmeldungen zu einem Post
+    public function show(Rueckmeldungen $rueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt'
+            ]);
+        }
+
+        return view('rueckmeldungen.show', [
+            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->orderByDesc('created_at')->get(),
+            'rueckmeldung' => $rueckmeldung
+        ]);
+    }
+
+    public function download(Rueckmeldungen $rueckmeldung, $user_id)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt'
+            ]);
+        }
+
+        $pdf = PDF::loadView('pdf.userRueckmeldungen', [
+            'nachricht' => $rueckmeldung->post,
+            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->where('users_id', $user_id)->get()
+        ]);
+
+        return $pdf->download(Carbon::now()->format('Y-m-d') . '_Rückmeldung.pdf');
+    }
+
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
         if (!auth()->user()->can('manage rueckmeldungen')) {

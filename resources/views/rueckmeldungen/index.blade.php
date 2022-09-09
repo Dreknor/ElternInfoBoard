@@ -32,7 +32,9 @@
                     @foreach($rueckmeldungen as $rueckmeldung)
                         <tr>
                             <td>
-
+                                <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
+                                    <i class="fa fa-eye"></i>
+                                </a>
                             </td>
                             <td>
                                 {{$rueckmeldung->post->header}}
@@ -78,9 +80,13 @@
 
 @push('js')
     <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
+    <script src="{{asset('js/moment-with-locales.js')}}"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.12.1/sorting/datetime-moment.js"></script>
+
     <script>
+        $.fn.dataTable.moment('D.M.YYYY');
         $('#rueckmeldungenTable').dataTable();
+
     </script>
 @endpush
 
