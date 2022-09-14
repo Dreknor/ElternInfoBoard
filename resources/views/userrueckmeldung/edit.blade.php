@@ -1,17 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title">
-            Rückmeldung bearbeiten
-        </h5>
-    </div>
-    <form method="post" action="{{url('userrueckmeldung').'/'.$Rueckmeldung->id}}"  class="form form-horizontal">
-        @csrf
-        @method('put')
-        <div class="col-md-12">
-            <div class="form-group">
+    <a href="{{url('/home')}}" class="btn btn-round btn-primary">zurück</a>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">
+                Rückmeldung bearbeiten
+            </h5>
+        </div>
+        <form method="post" action="{{url('userrueckmeldung').'/'.$Rueckmeldung->id}}" class="form form-horizontal">
+            @csrf
+            @method('put')
+            <div class="col-md-12">
+                <div class="form-group">
                 <textarea class="form-control border-input" name="text" rows="15">{{$Rueckmeldung->text}}</textarea>
             </div>
         </div>

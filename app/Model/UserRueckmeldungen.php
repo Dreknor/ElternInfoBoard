@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserRueckmeldungen extends Model
 {
     protected $table = 'users_rueckmeldungen';
-    protected $fillable = ['post_id', 'users_id', 'text'];
+    protected $fillable = ['post_id', 'users_id', 'text', 'rueckmeldung_number'];
 
     public function nachricht()
     {
@@ -17,5 +17,10 @@ class UserRueckmeldungen extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'users_id');
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(AbfrageAntworten::class, 'rueckmeldung_id');
     }
 }

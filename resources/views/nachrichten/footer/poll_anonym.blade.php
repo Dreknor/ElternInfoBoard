@@ -18,15 +18,17 @@
                 </p>
             </div>
             <div class="card-body">
-                @if($nachricht->poll->votes->where('author_id', auth()->id())->first() != null or \Carbon\Carbon::now()->greaterThan($nachricht->poll->ends) or $nachricht->poll->author_id == auth()->id())
+                @if(($nachricht->poll->votes->where('author_id', auth()->id())->first() != null or \Carbon\Carbon::now()->greaterThan($nachricht->poll->ends) or $nachricht->poll->author_id == auth()->id()) and $nachricht->poll->answers->count() >0)
                     <ul class="list-group">
                         @foreach($nachricht->poll->options as $option)
                             <li class="list-group-item">
                                 <div class="row">
                                     <div class="col-3 col-md-1 ">
-                                        {{round(($nachricht->poll->answers->where('option_id', $option->id)->count() / $nachricht->poll->answers->count())*100, 0)}}
-                                        % ({{$nachricht->poll->answers->where('option_id', $option->id)->count()}}
-                                        / {{$nachricht->poll->answers->count()}})
+                                        @if($nachricht->poll->answers->count() >0)
+                                            {{round(($nachricht->poll->answers->where('option_id', $option->id)->count() / $nachricht->poll->answers->count())*100, 0)}}
+                                            % ({{$nachricht->poll->answers->where('option_id', $option->id)->count()}}
+                                            / {{$nachricht->poll->answers->count()}})
+                                        @endif
                                     </div>
                                     <div class="col">
                                         <div class="">

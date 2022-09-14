@@ -259,6 +259,16 @@ class NachrichtenController extends Controller
 
         //Umleitung bei Rückmeldungsbedarf
         switch ($request->input('rueckmeldung')) {
+            case 'abfrage':
+                return redirect(url('rueckmeldung/create/' . $post->id . '/abfrage'));
+                /*
+                return view('nachrichten.createAbfrage', [
+                    'nachricht' => $post,
+                ])->with([
+                    'type' => 'success',
+                    'Meldung' => $Meldung,
+                ]);*/
+                break;
             case 'email':
                 return view('nachrichten.createRueckmeldung', [
                     'nachricht' => $post,

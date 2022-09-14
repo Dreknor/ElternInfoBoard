@@ -113,12 +113,22 @@ Route::group([
         //Termine
         Route::resource('termin', TerminController::class);
 
+
+        //Rückmeldungen
+
+        Route::get('rueckmeldung/create/{post}/{type}', [RueckmeldungenController::class, 'create']);
+
+        //Text userRueckmeldungen
         Route::post('/rueckmeldung/{posts_id}', [UserRueckmeldungenController::class, 'sendRueckmeldung']);
         Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'edit']);
         Route::put('/userrueckmeldung/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'update']);
 
-        //Rückmeldungen
+        //AbfrageRueckmeldung
+        Route::post('/userrueckmeldung/{rueckmeldung}', [UserRueckmeldungenController::class, 'store']);
+
+
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
+        Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
         Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);

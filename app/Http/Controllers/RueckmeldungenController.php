@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AbfrageExport;
+use App\Http\Requests\createAbfrageRequest;
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
+use App\Model\AbfrageOptions;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use Carbon\Carbon;
@@ -11,10 +14,22 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 
 class RueckmeldungenController extends Controller
 {
+
+    public function create(Post $post, $type)
+    {
+        return view('nachrichten.createAbfrage', [
+            'nachricht' => $post,
+        ])->with([
+            'type' => 'success',
+            'Meldung' => 'Nachricht wurde erstellt',
+        ]);
+    }
 
     /**
      * Show all Rueckmeldungen
@@ -76,10 +91,20 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
-        $pdf = PDF::loadView('pdf.userRueckmeldungen', [
-            'nachricht' => $rueckmeldung->post,
-            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen
-        ]);
+        switch ($rueckmeldung->type) {
+            case 'email':
+                //PDF für Text-Rückmeldungen
+                $pdf = PDF::loadView('pdf.userRueckmeldungen', [
+                    'nachricht' => $rueckmeldung->post,
+                    'rueckmeldungen' => $rueckmeldung->userRueckmeldungen
+                ]);
+                break;
+            case 'abfrage':
+                return Excel::download(new AbfrageExport($rueckmeldung), Str::camel($rueckmeldung->text) . Carbon::now()->format('Ymd_Hi') . '.xlsx');
+
+                break;
+        }
+
 
         return $pdf->download(Carbon::now()->format('Y-m-d') . '_Nachrichten.pdf');
     }
@@ -96,17 +121,45 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->post_id = $posts_id;
         $rueckmeldung->save();
 
+        return redirect()->to(url('/home'))->with([
+            'type' => 'success',
+            'Meldung' => 'Rückmeldung erstellt.',
+        ]);
+    }
+
+    /**
+     * Store a newly created Abfrage in storage.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function storeAbfrage(createAbfrageRequest $request, $posts_id)
+    {
+
+        $rueckmeldung = new Rueckmeldungen($request->validated());
+        $rueckmeldung->type = 'abfrage';
+        $rueckmeldung->text = $request->description;
+        $rueckmeldung->post_id = $posts_id;
+        $rueckmeldung->max_answers = ($request->max_answers > 0) ? $request->max_answers : '0';
+        $rueckmeldung->save();
+
         $post = Post::find($posts_id);
 
-        if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
-            $post->update([
-               'archiv_ab' => $rueckmeldung->ende,
-            ]);
+
+        $options = [];
+        foreach ($request->options as $key => $value) {
+            $options[] = [
+                'rueckmeldung_id' => $rueckmeldung->id,
+                'type' => $request->types[$key],
+                'option' => $value,
+            ];
         }
 
+        AbfrageOptions::insert($options);
+
         return redirect()->to(url('/home'))->with([
-           'type'   => 'success',
-           'Meldung'    => 'Rückmeldung erstellt.',
+            'type' => 'success',
+            'Meldung' => 'Rückmeldung erstellt.',
         ]);
     }
 
@@ -135,8 +188,8 @@ class RueckmeldungenController extends Controller
         }
 
         return redirect()->to(url('home'))->with([
-           'type'   => 'success',
-           'Meldung'    => 'Rückmeldung gespeichert',
+            'type'   => 'success',
+            'Meldung'    => 'Rückmeldung gespeichert',
         ]);
     }
 
@@ -194,7 +247,7 @@ class RueckmeldungenController extends Controller
     {
         if ($rueckmeldungen->commentable) {
             $rueckmeldungen->update([
-               'commentable'=>false,
+                'commentable'=>false,
             ]);
         } else {
             $rueckmeldungen->update([
@@ -223,6 +276,7 @@ class RueckmeldungenController extends Controller
             'Meldung'=>'Bild-Upload mit Kommentaren erstellt.',
         ]);
     }
+
     public function createDiskussionRueckmeldung(Request $request,  $posts_id)
     {
         $posts = Post::find($posts_id);

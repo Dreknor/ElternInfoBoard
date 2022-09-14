@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Events\RueckmeldungSaved;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Rueckmeldungen extends Model
 {
     use SoftDeletes;
+
     /**
      * @var string
      */
@@ -19,15 +21,12 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable'];
+    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable', 'max_answers', 'multiple'];
     /**
      * @var array
      */
-    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type'];
+    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple'];
 
-    /**
-     * @var array
-     */
 
     /**
      * @var array
@@ -36,6 +35,7 @@ class Rueckmeldungen extends Model
         'ende' => 'datetime',
         'pflicht' => 'boolean',
         'commentable' => 'boolean',
+        'multiple' => 'boolean'
     ];
 
     /**
@@ -51,6 +51,36 @@ class Rueckmeldungen extends Model
      */
     public function userRueckmeldungen()
     {
+        if ($this->type == 'abfrage') {
+            return $this->hasMany(AbfrageAntworten::class, 'rueckmeldung_id');
+        }
         return $this->hasMany(UserRueckmeldungen::class, 'post_id', 'post_id');
+    }
+
+    public function options()
+    {
+        if ($this->type == 'abfrage') {
+            return $this->hasMany(AbfrageOptions::class, 'rueckmeldung_id');
+        }
+
+        return null;
+    }
+
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::saved(function ($rueckmeldung) {
+            $post = $rueckmeldung->post;
+            if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+                $post->update([
+                    'archiv_ab' => $rueckmeldung->ende,
+                ]);
+            }
+
+        });
     }
 }

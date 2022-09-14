@@ -32,9 +32,11 @@
                     @foreach($rueckmeldungen as $rueckmeldung)
                         <tr>
                             <td>
-                                <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
-                                    <i class="fa fa-eye"></i>
-                                </a>
+                                @if($rueckmeldung->type == "email")
+                                    <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                @endif
                             </td>
                             <td>
                                 {{$rueckmeldung->post->header}}
@@ -53,8 +55,11 @@
                                     @case('poll')
                                         <i class="fas fa-poll" title="Umfrage"></i>
                                         @break
-                                    @case('bild' or 'bild_commentable')
+                                    @case('bild')
                                         <i class="fas fa-image" title="Bild"></i>
+                                        @break
+                                    @case('abfrage')
+                                        <i class="fas fa-table" title="Abfrage"></i>
                                         @break
                                 @endswitch
                             </td>
@@ -62,7 +67,7 @@
                                 {{$rueckmeldung->rueckmeldungen}}
                             </td>
                             <td>
-                                @if($rueckmeldung->type == "email")
+                                @if($rueckmeldung->type == "email" or $rueckmeldung->type == 'abfrage')
                                     <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/download")}}">
                                         <i class="fa fa-download"></i>
                                     </a>

@@ -13,13 +13,20 @@
 @push('js')
     @if(is_null($archiv))
         <script>
+            function showRueckmeldung(event, nachricht_id) {
+                event.preventDefault();
+                $("#rueckmeldeForm_" + nachricht_id).removeClass('d-none')
+                $("#rueckmeldeButton_" + nachricht_id).addClass('d-none')
+
+            }
+
             $.fn.extend({
-                toggleText: function(a, b){
+                toggleText: function (a, b) {
                     return this.text(this.text() == b ? a : b);
                 }
             });
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 $('#infoButton').on('click', function (event) {
                     $('.info').toggle('show');
                     $("#infoButton").toggleText('Infos ausblenden', 'Infos einblenden');
