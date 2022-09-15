@@ -240,6 +240,57 @@
         </div>
     </div>
 
+    <div class="card">
+        <div class="card-header">
+            <h6>
+                Rückmeldungen
+            </h6>
+        </div>
+        <div class="card-body">
+            @if(is_null($post->poll) and is_null($post->$rueckmeldung))
+                <div class="row" id="createButtons">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldung/create/$post->id/abfrage")}}" id="AbfrageButton"
+                                           class="btn btn-block btn-outline-primary text-secondary">
+                                            Abfrage erstellen
+                                        </a>
+                                    </div>
+                                    <div class="col">
+                                        <a id="rueckmeldungButton"
+                                           class="btn btn-block btn-outline-primary text-secondary">
+                                            E-Mail - Rückmeldung erstellen
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}"
+                                           id="CommentsButton"
+                                           class="btn btn-block btn-outline-primary">
+                                            Diskussion
+                                        </a>
+                                    </div>
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}"
+                                           id="bilderButton" class="btn btn-block btn-outline-primary">
+                                            Bilder-Upload ermöglichen
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            @endif
+        </div>
+    </div>
+
     @if(!is_null($post->poll) )
         @if($post->poll->author_id == auth()->id() and $post->poll->answers->count() == 0)
             @include('nachrichten.editPoll')
@@ -259,33 +310,7 @@
         @endif
     @endif
     @if(is_null($post->rueckmeldung))
-        <div class="row" id="createButtons">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-4">
-                                <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}" id="CommentsButton"
-                                   class="btn btn-block btn-outline-primary">
-                                    Diskussion
-                                </a>
-                            </div>
-                            <div class="col-4">
-                                <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}" id="bilderButton" class="btn btn-block btn-outline-primary">
-                                    Bilder-Upload ermöglichen
-                                </a>
-                            </div>
-                            <div class="col-4">
-                                <a id="rueckmeldungButton" class="btn btn-block btn-outline-primary">
-                                    Rückmeldung erstellen
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-        </div>
         <div class="row d-none" id="createForm">
             <div class="col-12">
                 <div class="card" id="rueckmeldungCard">

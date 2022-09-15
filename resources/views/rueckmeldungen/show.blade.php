@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    - Benutzer
+    - Rückmeldungen
 @endsection
 
 @section('content')
