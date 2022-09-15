@@ -262,12 +262,12 @@ class RueckmeldungenController extends Controller
     {
         $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
-            'posts_id'  => $posts_id,
-            'type'  => 'bild',
-            'commentable'  => 1,
-            'empfaenger'  => $request->user()->email,
-            'ende'      => $posts->archiv_ab,
-            'text'      => ' ',
+            'post_id' => $posts_id,
+            'type' => 'bild',
+            'commentable' => 1,
+            'empfaenger' => $request->user()->email,
+            'ende' => $posts->archiv_ab,
+            'text' => ' ',
         ]);
         $rueckmeldung->save();
 
@@ -281,12 +281,12 @@ class RueckmeldungenController extends Controller
     {
         $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
-            'posts_id'  => $posts_id,
-            'type'  => 'commentable',
-            'commentable'  => 1,
-            'empfaenger'  => $request->user()->email,
-            'ende'      => $posts->archiv_ab,
-            'text'      => ' ',
+            'post_id' => $posts_id,
+            'type' => 'commentable',
+            'commentable' => 1,
+            'empfaenger' => $request->user()->email,
+            'ende' => $posts->archiv_ab,
+            'text' => ' ',
         ]);
         $rueckmeldung->save();
 
