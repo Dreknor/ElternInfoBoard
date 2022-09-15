@@ -49,7 +49,7 @@
 @endif
 @if($nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()) and ($nachricht->rueckmeldung->multiple == true or is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->count())))
     <div id="rueckmeldeForm_{{$nachricht->id}}"
-         class="card-footer @if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->count()))) d-none @endif">
+         class="card-footer @if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first())) d-none @endif">
         <div class="card">
             <div class="card-header">
                 <h6>{{$nachricht->rueckmeldung->text}}</h6>
