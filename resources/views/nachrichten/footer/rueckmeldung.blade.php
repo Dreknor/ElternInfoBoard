@@ -21,7 +21,7 @@
         </div>
     @endforeach
 @endif
-@if(is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first()) and $nachricht->rueckmeldung->ende->endOfDay()->greaterThan(\Carbon\Carbon::now()->startOfDay()))
+@if(is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first()) and $nachricht->rueckmeldung->ende->endOfDay()->lessThan(\Carbon\Carbon::now()->startOfDay()))
     <div class="card-footer border-top">
         <p>Rückmeldung abgelaufen</p>
     </div>
