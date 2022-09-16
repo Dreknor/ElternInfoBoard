@@ -39,7 +39,7 @@
                                        @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
                                 </a>
                             @endif
-                            @if(optional($nachricht->rueckmeldung)->type == 'abfrage')
+                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
                                 <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
                                    title="Download" class="btn btn-sm btn-info">
                                     <i class="fa fa-download"></i>
