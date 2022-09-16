@@ -30,15 +30,21 @@
                                data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
                                 <i class="fas fa-archive"></i>
                             </a>
-                        @endif
-                        @if(auth()->user()->can('make sticky'))
-                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
-                               class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
-                                <i class="fas fa-thumbtack"
-                                   @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
-                            </a>
-                        @endif
+                            @endif
+                            @if(auth()->user()->can('make sticky'))
+                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                                   class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                    <i class="fas fa-thumbtack"
+                                       @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
+                                </a>
+                            @endif
+                            @if(optional($nachricht->rueckmeldung)->type == 'abfrage')
+                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                                   title="Download" class="btn btn-sm btn-info">
+                                    <i class="fa fa-download"></i>
+                                </a>
+                            @endif
                     </div>
                 @endif
             </div>

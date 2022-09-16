@@ -83,12 +83,12 @@
                                 <label>Rückmeldungen benötigt?</label>
                                 <select class="custom-select" name="rueckmeldung">
                                     <option value="abfrage">Ja, Abfrage</option>
-                                    <option value="email">Ja, Text</option>
+                                    <option value="email">Ja, Text (E-Mail)</option>
                                     <option value="commentable">Ja, Diskussion</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
                                     @if(auth()->user()->can('create polls'))
-                                        <option value="poll">Ja, Umfrage</option>
+                                        <option value="poll">Ja, Umfrage (anonym)</option>
                                     @endif
                                     <option value="0" selected>nein</option>
                                 </select>
