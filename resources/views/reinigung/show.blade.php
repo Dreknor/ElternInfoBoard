@@ -38,7 +38,7 @@
                                 <thead>
                                 <tr class="d-none d-sm-block">
                                     <th>Woche</th>
-                                    <th class="d-none d-sm-block"></th>
+                                    <th></th>
                                 </tr>
                                 <tr class="d-block d-sm-none">
                                     <th class="w-100">Woche</th>
