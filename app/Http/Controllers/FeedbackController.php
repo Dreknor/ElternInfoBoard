@@ -55,9 +55,7 @@ class FeedbackController extends Controller
                     ]);
                 }
 
-                $data[] = [
-                    'document' => $document,
-                ];
+
             }
         }
         $mail = new MailModel([
@@ -71,7 +69,9 @@ class FeedbackController extends Controller
             ->each(function ($fileAdder) {
                 $fileAdder->toMediaCollection('files');
             });
-
+        foreach ($mail->getMedia() as $media) {
+            $data['document'][] = $media->getPath();
+        }
         try {
             Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
             $feedback = [
@@ -79,10 +79,9 @@ class FeedbackController extends Controller
                 'Meldung' => 'Nachricht wurde versandt',
             ];
         } catch (Exception $e) {
-            dd($e);
             $feedback = [
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Versand der Nachricht. ',
+                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: ' . $e->getMessage(),
             ];
 
         }
