@@ -47,11 +47,7 @@ class SendFeedback extends Mailable
 
         if (count($this->data) > 0) {
             foreach ($this->data as $file) {
-                $Mail->attach($file['document']->getRealPath(),
-                    [
-                        'as' => $file['document']->getClientOriginalName(),
-                        'mime' => $file['document']->getClientMimeType(),
-                    ]);
+                $Mail->attach($file[0]);
             }
         }
 
