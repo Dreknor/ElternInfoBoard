@@ -69,9 +69,10 @@ class FeedbackController extends Controller
             ->each(function ($fileAdder) {
                 $fileAdder->toMediaCollection('files');
             });
-        foreach ($mail->getMedia() as $media) {
+        foreach ($mail->getMedia('files') as $media) {
             $data['document'][] = $media->getPath();
         }
+
         try {
             Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
             $feedback = [
