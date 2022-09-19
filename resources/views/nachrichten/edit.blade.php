@@ -449,18 +449,27 @@
 
                                 </div>
                             </div>
-                            @break
-                        @case('abfrage')
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6>
-                                        Bearbeiten von Abfragen noch nicht möglich
-                                    </h6>
+                                @break
+                            @case('abfrage')
+                                <div class="card">
+                                    @if($post->userRueckmeldung->count()>0)
+                                        <div class="card-body text-warning">
+                                            Abfragen können nicht mehr bearbeitet werden, wenn erste Rückmeldungen
+                                            abgegen wurden
+                                        </div>
+                                    @else
+                                        <div class="card-body text-warning">
+                                            <a href="{{url('rueckmeldung/'.$post->rueckmeldung->id.'/editAbfrage')}}"
+                                               class="btn btn-info btn-block">
+                                                Abfrage bearbeiten
+                                            </a>
+                                        </div>
+                                    @endif
+
                                 </div>
-                            </div>
-                            @break
-                    @endswitch
-                @endif
+                                @break
+                        @endswitch
+                    @endif
             @endif
 
         </div>

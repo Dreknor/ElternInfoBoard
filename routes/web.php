@@ -125,6 +125,8 @@ Route::group([
 
         //AbfrageRueckmeldung
         Route::post('/userrueckmeldung/{rueckmeldung}', [UserRueckmeldungenController::class, 'store']);
+        Route::get('/rueckmeldung/{rueckmeldung}/editAbfrage', [RueckmeldungenController::class, 'editAbfrage']);
+        Route::put('/rueckmeldung/{rueckmeldung}/updateAbfrage', [RueckmeldungenController::class, 'updateAbfrage']);
 
 
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);

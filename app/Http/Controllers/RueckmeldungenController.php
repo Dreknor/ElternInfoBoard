@@ -31,6 +31,52 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    public function editAbfrage(Rueckmeldungen $rueckmeldung)
+    {
+        if ($rueckmeldung->userRueckmeldungen()->count() > 0) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Es wurden bereits Rückmeldungen gegeben'
+            ]);
+        }
+        return view('nachrichten.editAbfrage', [
+            'rueckmeldung' => $rueckmeldung
+        ]);
+    }
+
+    public function updateAbfrage(createAbfrageRequest $request, Rueckmeldungen $rueckmeldung)
+    {
+        if ($rueckmeldung->userRueckmeldungen->count() > 0) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Es wurden bereits Rückmeldungen gegeben'
+            ]);
+        }
+
+        $rueckmeldung->update($request->validated());
+        $rueckmeldung->update([
+            'max_answers' => $request->max_number
+        ]);
+
+        AbfrageOptions::where('rueckmeldung_id', $rueckmeldung->id)->delete();
+
+        $options = [];
+        foreach ($request->options as $key => $value) {
+            $options[] = [
+                'rueckmeldung_id' => $rueckmeldung->id,
+                'type' => $request->types[$key],
+                'option' => $value,
+            ];
+        }
+
+        AbfrageOptions::insert($options);
+
+        return redirect(url('/home#' . $rueckmeldung->post->id))->with([
+            'type' => 'success',
+            'Meldung' => 'Abfrage wurde geändert.'
+        ]);
+    }
+
     /**
      * Show all Rueckmeldungen
      */
