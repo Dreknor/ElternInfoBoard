@@ -79,6 +79,7 @@ class FeedbackController extends Controller
                 'Meldung' => 'Nachricht wurde versandt',
             ];
         } catch (Exception $e) {
+            dd($e);
             $feedback = [
                 'type' => 'danger',
                 'Meldung' => 'Fehler beim Versand der Nachricht. ',
