@@ -106,7 +106,32 @@
         </div>
     @endif
 @endif
+@can('edit posts')
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-footer">
+                        <h6>Auswertung:</h6>
+                        @foreach($nachricht->rueckmeldung->options()->where('type', 'check')->get() as $option)
+                            <div class="row border-bottom">
+                                <div class="col-2">
+                                    {{$option->answers->count()}}
+                                </div>
+                                <div class="col-10">
+                                    {{$option->option}}
+                                </div>
 
+                            </div>
+                        @endforeach
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+@endcan
 @push('js')
     <script type="text/javascript">
         // Limit the number of checkboxes that can be selected at one time

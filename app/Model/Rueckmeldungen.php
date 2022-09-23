@@ -51,9 +51,11 @@ class Rueckmeldungen extends Model
      */
     public function userRueckmeldungen()
     {
+
         if ($this->type == 'abfrage') {
             return $this->hasMany(AbfrageAntworten::class, 'rueckmeldung_id');
         }
+
         return $this->hasMany(UserRueckmeldungen::class, 'post_id', 'post_id');
     }
 
@@ -65,6 +67,7 @@ class Rueckmeldungen extends Model
 
         return null;
     }
+
 
     /**
      * The "booted" method of the model.

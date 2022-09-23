@@ -1,9 +1,17 @@
 @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
-    <div class="container-fluid info  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
+    <div
+        class="container-fluid info  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
         <div class="row ">
             <div class="col mx-auto">
                 @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
                     <div class="pull-right">
+
+                        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                            <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                               title="Download" class="btn btn-sm btn-info">
+                                <i class="fa fa-download"></i>
+                            </a>
+                        @endif
                         @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
                             <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
                                id="editTextBtn" data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
@@ -30,21 +38,15 @@
                                data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
                                 <i class="fas fa-archive"></i>
                             </a>
-                            @endif
-                            @if(auth()->user()->can('make sticky'))
-                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
-                                   class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
-                                    <i class="fas fa-thumbtack"
-                                       @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
-                                </a>
-                            @endif
-                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
-                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
-                                   title="Download" class="btn btn-sm btn-info">
-                                    <i class="fa fa-download"></i>
-                                </a>
-                            @endif
+                        @endif
+                        @if(auth()->user()->can('make sticky'))
+                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                               class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                <i class="fas fa-thumbtack"
+                                   @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>
