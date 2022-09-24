@@ -190,13 +190,17 @@ class User extends Authenticatable
         if (count($Name) > 2) {
             $Familienname = '';
             for ($key = 1; $key < count($Name); $key++) {
-                $Familienname .= ' '.$Name[$key];
+                $Familienname .= ' ' . $Name[$key];
             }
 
             return $Familienname;
         }
 
-        return $Name[1];
+        if (array_key_exists(1, $Name)) {
+            return $Name[1];
+        }
+
+        return $this->name;
     }
 
     public function schickzeiten()
