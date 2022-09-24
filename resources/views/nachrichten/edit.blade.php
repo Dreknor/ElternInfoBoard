@@ -452,21 +452,79 @@
                                 @break
                             @case('abfrage')
                                 <div class="card">
+                                    <div class="card-body">
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                Empfänger:
+                                            </div>
+                                            <div class="col-6">
+                                                {{$post->rueckmeldung->empfaenger}}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                Bis:
+                                            </div>
+                                            <div class="col-6">
+                                                {{$post->rueckmeldung->ende->format('d.m.Y')}}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                Verpflichtend:
+                                            </div>
+                                            <div class="col-6">
+                                                {{($post->rueckmeldung->pflicht == 1)? 'ja' : 'nein'}}
+                                            </div>
+                                        </div>
+                                    </div>
                                     @if($post->userRueckmeldung->count()>0)
-                                        <div class="card-body text-warning">
-                                            Abfragen können nicht mehr bearbeitet werden, wenn erste Rückmeldungen
-                                            abgegen wurden
-                                        </div>
-                                    @else
-                                        <div class="card-body text-warning">
-                                            <a href="{{url('rueckmeldung/'.$post->rueckmeldung->id.'/editAbfrage')}}"
-                                               class="btn btn-info btn-block">
-                                                Abfrage bearbeiten
-                                            </a>
-                                        </div>
-                                    @endif
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="alert alert-info">
+                                                        Abfragen können nicht mehr bearbeitet werden, wenn erste
+                                                        Rückmeldungen
+                                                        abgegen wurden
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <form
+                                                                action="{{url('rueckmeldung/'.$rueckmeldung->id.'/update/date')}}"
+                                                                class="form-horizontal" id="updateDateForm"
+                                                                method="post">
+                                                                @csrf
+                                                                @method('put')
+                                                                <label class="label w-100">
+                                                                    Zeitraum verlängern
+                                                                    <input type="date" class="form-control" name="date"
+                                                                           min="{{\Carbon\Carbon::tomorrow()->format('Y-m-d')}}"
+                                                                           value="{{\Carbon\Carbon::today()->addWeek()->format('Y-m-d')}}">
+                                                                </label>
+                                                            </form>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <button form="updateDateForm" type="submit"
+                                                                    class="btn btn-success">
+                                                                verlängern
+                                                            </button>
+                                                        </div>
+                                                    </div>
 
-                                </div>
+                                                </div>
+                                            </div>
+                                            @else
+                                                <div class="card-body text-warning">
+                                                    <a href="{{url('rueckmeldung/'.$post->rueckmeldung->id.'/editAbfrage')}}"
+                                                       class="btn btn-info btn-block">
+                                                        Abfrage bearbeiten
+                                                    </a>
+                                                </div>
+                                            @endif
+
+                                        </div>
                                 @break
                         @endswitch
                     @endif

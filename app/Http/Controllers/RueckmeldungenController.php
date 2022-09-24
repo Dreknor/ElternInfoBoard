@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\AbfrageExport;
 use App\Http\Requests\createAbfrageRequest;
 use App\Http\Requests\createRueckmeldungRequest;
+use App\Http\Requests\updateRueckmeldeDateRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
 use App\Model\AbfrageOptions;
 use App\Model\Post;
@@ -20,6 +21,19 @@ use PDF;
 
 class RueckmeldungenController extends Controller
 {
+
+    public function updateDate(updateRueckmeldeDateRequest $request, Rueckmeldungen $rueckmeldung)
+    {
+        $rueckmeldung->update([
+            'ende' => $request->date
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Rückmeldefrist wurde verlängert'
+        ]);
+    }
+
 
     public function create(Post $post, $type)
     {

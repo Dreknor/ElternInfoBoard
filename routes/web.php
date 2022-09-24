@@ -117,6 +117,7 @@ Route::group([
         //Rückmeldungen
 
         Route::get('rueckmeldung/create/{post}/{type}', [RueckmeldungenController::class, 'create']);
+        Route::put('rueckmeldung/{rueckmeldung}/update/date', [RueckmeldungenController::class, 'updateDate']);
 
         //Text userRueckmeldungen
         Route::post('/rueckmeldung/{posts_id}', [UserRueckmeldungenController::class, 'sendRueckmeldung']);
