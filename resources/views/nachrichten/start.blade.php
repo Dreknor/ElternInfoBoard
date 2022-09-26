@@ -16,8 +16,10 @@
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
                                 <a href="#{{$nachricht->id}}"
-                                   class="anker_link btn btn-sm wrap  @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
-
+                                   class="anker_link btn btn-sm wrap
+                                   @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif
+                                   @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach
+                                   ">
                                     <div class="
                                         @switch($nachricht->type)
                                             @case('pflicht')
@@ -29,6 +31,24 @@
                                                 @break
                                         @endswitch
                                         ">
+                                        @if(! is_null($nachricht->rueckmeldung))
+                                            <div
+                                                class="d-inline @if($nachricht->rueckmeldung->pflicht == 1) text-danger @endif">
+                                                @switch($nachricht->rueckmeldung->type)
+                                                    @case('email')
+                                                        <i class="fas fa-comment-dots"></i>
+                                                        @break
+
+                                                    @case('abfrage')
+                                                        <i class="fa fa-poll-h"></i>
+                                                        @break
+                                                    @default
+
+                                                        @break
+                                                @endswitch
+                                            </div>
+
+                                        @endif
                                         {{$nachricht->header}}
                                     </div>
                                 </a>
@@ -38,7 +58,7 @@
                 </div>
             </div>
 
-                <div class="card-footer border-top">
+            <div class="card-footer border-top">
                     <div class="row">
 
                     @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "info") { return $item;}})) > 0)
