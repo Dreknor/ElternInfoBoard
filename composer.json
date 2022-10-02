@@ -16,7 +16,6 @@
         "devdojo/laravel-reactions": "^1.0",
         "enlightn/enlightn": "^1.11",
         "fideloper/proxy": "^4.4",
-        "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel-notification-channels/webpush": "^5.0",
         "laravel/framework": "^8.32",
