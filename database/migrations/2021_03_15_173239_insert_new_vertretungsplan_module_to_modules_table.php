@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-class InsertNewVertretungsplanModuleToModulesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -49,4 +49,4 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
     public function down()
     {
     }
-}
+};
