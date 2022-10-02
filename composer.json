@@ -27,7 +27,8 @@
         "spatie/icalendar-generator": "^2.3",
         "spatie/laravel-medialibrary": "^9.4",
         "spatie/laravel-permission": "^4.0",
-        "staudenmeir/eloquent-has-many-deep": "^1.8"
+        "staudenmeir/eloquent-has-many-deep": "^1.8",
+        "league/flysystem-aws-s3-v3": "^3.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.5",
