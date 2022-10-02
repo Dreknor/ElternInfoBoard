@@ -197,7 +197,7 @@ class FileController extends Controller
 
     public function removeOldFiles(DeleteFilesRequest $request)
     {
-        $media = Media::where('model_type', 'App\Model\Post')->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
+        $media = Media::where('model_type', \App\Model\Post::class)->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
 
         foreach ($media as $Media) {
             $Media->delete();
