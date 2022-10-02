@@ -336,7 +336,7 @@
                                                     <div class="form-group">
                                                         <label>Ende</label>
                                                         <input type="date" class="form-control border-input" name="ende"
-                                                               value="{{optional($rueckmeldung->ende)->format('Y-m-d')}}"
+                                                               value="{{$rueckmeldung->ende?->format('Y-m-d')}}"
                                                                required>
                                                     </div>
                                                 </div>
@@ -359,7 +359,7 @@
                                                     <div class="form-group">
                                                         <label>Rückmeldung</label>
                                                         <textarea class="form-control border-input" name="text">
-                                {{optional($rueckmeldung)->text}}
+                                {{$rueckmeldung?->text}}
                             </textarea>
                                                     </div>
                                                 </div>

@@ -54,7 +54,7 @@
                     {{	$eintrag->termin->format('H:i')}} - {{$eintrag->termin->copy()->addMinutes($Liste->duration)->format('H:i')}} Uhr
                 </td>
                 <td>
-                    {{optional($eintrag->eingetragenePerson)->name }}
+                    {{$eintrag->eingetragenePerson?->name }}
                 </td>
                 <td>
                     {{$eintrag->comment}}

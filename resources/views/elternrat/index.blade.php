@@ -34,10 +34,10 @@
                                 </div>
                                 <div class="row small">
                                     <div class="col">
-                                        geändert: {{optional($beitrag->updated_at)->format('d.m.Y H:i')}}
+                                        geändert: {{$beitrag->updated_at?->format('d.m.Y H:i')}}
                                     </div>
                                     <div class="col">
-                                        Autor: {{optional($beitrag->author)->name}}
+                                        Autor: {{$beitrag->author?->name}}
                                     </div>
                                 </div>
                             </div>
@@ -47,7 +47,7 @@
                             <div class="card-body collapse border-top" id="collapse{{$beitrag->id}}">
                                 <ul class="comment-section">
 
-                                    @foreach(optional($beitrag->comments)->sortByDesc('created_at') as $comment)
+                                    @foreach($beitrag->comments?->sortByDesc('created_at') as $comment)
                                         <li class="comment @if ($loop->index % 2 == 0) user-comment @else author-comment @endif">
                                             <div class="info">
                                                 <a href="">{{$comment->creator->name}}</a>

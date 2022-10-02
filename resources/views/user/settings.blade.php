@@ -78,7 +78,7 @@
                                     <div class="row">
                                         <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
-                                                <label>Benachrichtigung per E-Mail (zuletzt: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
+                                                <label>Benachrichtigung per E-Mail (zuletzt: {{$user->lastEmail?->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
                                                     <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif>Täglich (bei neuen Nachrichten)</option>
                                                     <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif >Wöchentlich (Freitags)</option>
@@ -189,7 +189,7 @@
             @if($user->sorg2 != null)
                 <div class="card-footer">
                     <p>
-                        Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>. Dadurch sind
+                        Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2?->name}}</b>. Dadurch sind
                         die Rückmeldungen in beiden Konten sichtbar.
                 </div>
             @endif

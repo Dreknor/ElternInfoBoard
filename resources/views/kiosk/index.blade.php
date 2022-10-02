@@ -33,7 +33,7 @@
                                             {{$nachricht->header}} @if($nachricht->released != 1) (unveröffentlicht)  @endif
                                         </h5>
                                         <small>
-                                            (Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}) - noch {{optional($nachricht->archiv_ab)->diffInDays(\Carbon\Carbon::now())}} Tage
+                                            (Archiv ab: {{$nachricht->archiv_ab?->isoFormat('DD. MMMM YYYY')}}) - noch {{$nachricht->archiv_ab?->diffInDays(\Carbon\Carbon::now())}} Tage
                                         </small>
                                         <a href="{{url('/posts/edit/'.$nachricht->id.'/true')}}" class="btn btn-sm btn-warning" id="editTextBtn"   data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
                                             <i class="far fa-edit"></i>
@@ -90,7 +90,7 @@
                                             {{$liste->listenname}} @if($liste->active != 1) (unveröffentlicht)  @endif
                                         </h5>
                                         <small>
-                                            (sichtbar bis: {{optional($liste->ende)->isoFormat('DD. MMMM YYYY')}} - noch  {{optional($liste->ende)->diffInDays(\Carbon\Carbon::now())}} Tage)
+                                            (sichtbar bis: {{$liste->ende?->isoFormat('DD. MMMM YYYY')}} - noch  {{$liste->ende?->diffInDays(\Carbon\Carbon::now())}} Tage)
                                         </small>
                                     </div>
                                     <div class="card-body">
@@ -121,7 +121,7 @@
                                                         {{	$eintrag->termin->format('H:i')}} - {{$eintrag->termin->copy()->addMinutes($liste->duration)->format('H:i')}} Uhr
                                                     </td>
                                                     <td>
-                                                        {{optional($eintrag->eingetragenePerson)->name }}
+                                                        {{$eintrag->eingetragenePerson?->name }}
                                                     </td>
                                                     <td>
                                                         {{$eintrag->comment}}

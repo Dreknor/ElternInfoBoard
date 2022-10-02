@@ -39,11 +39,11 @@
                         </div>
                         <div class="form-row mt-2">
                             <label for="time">Zeit</label>
-                            <input name="time" id="time" type="time" class="form-control" min="{{config('schicken.ab')}}" max="{{config('schicken.max')}}" required value="{{optional(optional($schickzeit)->time)->format('H:i')}}">
+                            <input name="time" id="time" type="time" class="form-control" min="{{config('schicken.ab')}}" max="{{config('schicken.max')}}" required value="{{$schickzeit?->time?->format('H:i')}}">
                         </div>
                         <div class="form-row mt-2 collapse @if(($schickzeit_spaet and $schickzeit_spaet !="") or ($schickzeit and $schickzeit->type == "ab")) show @endif>" id="spaet_row">
                             <label for="spaet">spätestens (optional)</label>
-                            <input name="time_spaet" type="time" class="form-control" min="14:00:00" max="16:30:00"  id="spaet"  value="{{optional(optional($schickzeit_spaet)->time)->format('H:i')}}">
+                            <input name="time_spaet" type="time" class="form-control" min="14:00:00" max="16:30:00"  id="spaet"  value="{{$schickzeit_spaet?->time?->format('H:i')}}">
                         </div>
                         <div class="form-row mt-3">
                             <button type="submit" class="btn btn-success btn-block">Speichern</button>

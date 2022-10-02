@@ -91,7 +91,7 @@
                                 <td>
                                     <a class="btn  @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-danger @else btn-success @endif  btn-sm"
                                        href="{{url('email/daily/'.$user->id)}}">
-                                        letzte Mail: {{optional($user->lastEmail)->format('d.m.Y')}} - Email senden?
+                                        letzte Mail: {{$user->lastEmail?->format('d.m.Y')}} - Email senden?
                                     </a>
                                 </td>
                                 <td>

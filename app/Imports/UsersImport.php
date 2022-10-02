@@ -53,7 +53,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user1->removeRole('Aufnahme');
 
                 if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user1->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
+                    $user1->groups()->attach([$Klassenstufe?->id, $Lerngruppe?->id]);
                 } else {
                 }
             }
@@ -76,7 +76,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user2->assignRole('Eltern');
                 $user2->removeRole('Aufnahme');
                 if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user2->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
+                    $user2->groups()->attach([$Klassenstufe?->id, $Lerngruppe?->id]);
                 } else {
                 }
             }

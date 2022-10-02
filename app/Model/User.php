@@ -166,7 +166,7 @@ class User extends Authenticatable
         $eigeneRueckmeldung = $this->userRueckmeldung;
 
         if (! is_null($this->sorg2)) {
-            $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
+            $sorgRueckmeldung = $this->sorgeberechtigter2?->userRueckmeldung;
             if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
                 return $eigeneRueckmeldung->merge($sorgRueckmeldung);
             } elseif (is_null($eigeneRueckmeldung)) {

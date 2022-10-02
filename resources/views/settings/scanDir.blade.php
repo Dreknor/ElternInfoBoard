@@ -133,7 +133,7 @@
                                        <b>Dateidownload</b> für {{$item->model->name}}
                                    @elseif($item->model_type == "App\Model\Post")
                                        <b>Post:</b>
-                                       {{optional($item->model)->header}}
+                                       {{$item->model?->header}}
                                    @endif
                                </td>
                                <td>
