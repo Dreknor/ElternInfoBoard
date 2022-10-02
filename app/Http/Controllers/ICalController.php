@@ -5,27 +5,22 @@ namespace App\Http\Controllers;
 use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Request;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
-use function PHPUnit\Framework\throwException;
 
 class ICalController extends Controller
 {
-
     public function createICal($uuid)
     {
         $user = User::where('uuid', $uuid)->firstOrFail();
         if ($user->releaseCalendar == true) {
             $Termine = $user->termine;
 
-
             //Termine aus Listen holen
             $listen_termine = $user->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
 
             //Ergänze Listeneintragungen
-            if (!is_null($listen_termine) and count($listen_termine) > 0) {
+            if (! is_null($listen_termine) and count($listen_termine) > 0) {
                 foreach ($listen_termine as $termin) {
                     $newTermin = new Termin([
                         'terminname' => $termin->liste->listenname,
@@ -38,7 +33,7 @@ class ICalController extends Controller
             }
 
             //Listentermine von Sorg2
-            if (!is_null($user->sorgeberechtigter2)) {
+            if (! is_null($user->sorgeberechtigter2)) {
                 foreach ($user->sorgeberechtigter2->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
                     $newTermin = new Termin([
                         'terminname' => $termin->liste->listenname,
@@ -53,12 +48,10 @@ class ICalController extends Controller
             $Termine = $Termine->unique('id');
             $Termine = $Termine->sortBy('start');
 
-
             $icalObject = Calendar::create(config('app.name'));
 
             // loop over events
             foreach ($Termine as $event) {
-
                 if ($event->fullDay == true) {
                     $icalObject->event(Event::create()
                         ->name($event->terminname)
@@ -74,13 +67,11 @@ class ICalController extends Controller
                         ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                     );
                 }
-
             }
-
 
             return response($icalObject->get(), 200, [
                 'Content-Type' => 'text/calendar; charset=utf-8',
-                'Content-Disposition' => 'attachment; filename="' . config('app.name') . '.ics"',
+                'Content-Disposition' => 'attachment; filename="'.config('app.name').'.ics"',
             ]);
         } else {
             abort(404);
@@ -89,7 +80,6 @@ class ICalController extends Controller
 
     public function publicICal()
     {
-
         $Termine = Termin::where('public', true)->get();
         $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');
@@ -100,7 +90,6 @@ class ICalController extends Controller
 
         // loop over events
         foreach ($Termine as $event) {
-
             if ($event->fullDay == true) {
                 $icalObject->event(Event::create()
                     ->name($event->terminname)
@@ -115,13 +104,11 @@ class ICalController extends Controller
                     ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
                 );
             }
-
         }
 
         return response($icalObject->get(), 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="' . config('app.name') . '.ics"',
+            'Content-Disposition' => 'attachment; filename="'.config('app.name').'.ics"',
         ]);
-
     }
 }

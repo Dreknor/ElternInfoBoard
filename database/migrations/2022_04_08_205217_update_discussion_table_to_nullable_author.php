@@ -25,6 +25,5 @@ class UpdateDiscussionTableToNullableAuthor extends Migration
      */
     public function down()
     {
-
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class verwaltungEditUserRequest extends FormRequest
 {
@@ -25,23 +24,23 @@ class verwaltungEditUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'  => [
+            'name' => [
                 'required',
                 'string',
                 'unique:users,id,'.$this->user->id,
             ],
-            'email'  => [
+            'email' => [
                 'required',
                 'email',
                 'unique:users,id,'.$this->user->id,
             ],
-            'publicMail'  => [
+            'publicMail' => [
                 'nullable',
-                'email'
+                'email',
             ],
-            'publicPhone'  => [
+            'publicPhone' => [
                 'nullable',
-                'string'
+                'string',
             ],
             'benachrichtigung' => [
                 'required',

@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ReinigsungsTaskRequest;
 use App\Model\ReinigungsTask;
-use Illuminate\Http\Request;
 
 class ReinigungsTaskController extends Controller
 {
-
     /**
      * Store a newly created resource in storage.
      *
@@ -21,11 +19,10 @@ class ReinigungsTaskController extends Controller
         $task->save();
 
         return redirect()->back()->with([
-           'Meldung' => 'Aufgabe gespeichert.',
-           'type'   => 'success'
+            'Meldung' => 'Aufgabe gespeichert.',
+            'type' => 'success',
         ]);
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -39,7 +36,7 @@ class ReinigungsTaskController extends Controller
 
         return redirect()->back()->with([
             'Meldung' => 'Aufgabe gelöscht.',
-            'type'   => 'success'
+            'type' => 'success',
         ]);
     }
 }

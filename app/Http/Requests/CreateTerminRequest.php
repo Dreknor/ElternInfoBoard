@@ -24,11 +24,11 @@ class CreateTerminRequest extends FormRequest
     public function rules()
     {
         return [
-            'terminname'    => [
+            'terminname' => [
                 'required',
                 'string',
             ],
-            'start'         => [
+            'start' => [
                 'required',
                 'date',
                 'before:ende',

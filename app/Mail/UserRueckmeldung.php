@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,8 +11,11 @@ class UserRueckmeldung extends Mailable
     use Queueable, SerializesModels;
 
     public $email;
+
     public $name;
+
     public $subject;
+
     public $text;
 
     /**
@@ -43,6 +45,6 @@ class UserRueckmeldung extends Mailable
             )
             ->replyTo($this->email, $this->name)
            ->subject($this->subject)
-            ->view('emails.userRueckmeldung')->with(['text'  => $this->text]);
+            ->view('emails.userRueckmeldung')->with(['text' => $this->text]);
     }
 }

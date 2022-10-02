@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Model\Group;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -14,6 +13,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class AufnahmeImport implements ToCollection, WithHeadingRow
 {
     protected $header;
+
     protected $groups;
 
     public function __construct($header)
@@ -48,15 +48,15 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                     'email' => $row[$this->header['S1Email']],
                 ],
                     [
-                        'name'  => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
-                        'changePassword'  => 1,
-                        'password'      => Hash::make(config('app.import_aufnahme')),
+                        'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
+                        'changePassword' => 1,
+                        'password' => Hash::make(config('app.import_aufnahme')),
                         'lastEmail' => Carbon::now(),
                     ]);
 
                 if (! $user1->wasRecentlyCreated) {
                     $user1->update([
-                        'changeSettings'    => 1,
+                        'changeSettings' => 1,
                     ]);
                 }
 
@@ -80,7 +80,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
 
                 if (! $user2->wasRecentlyCreated) {
                     $user2->update([
-                        'changeSettings'    => 1,
+                        'changeSettings' => 1,
                     ]);
                 }
 

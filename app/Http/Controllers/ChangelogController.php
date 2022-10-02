@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateChangelogRequest;
 use App\Model\Changelog;
-use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +19,7 @@ class ChangelogController extends Controller
         $changelogs = Changelog::orderByDesc('updated_at')->paginate(5);
 
         return view('changelog.index', [
-            'changelogs'    => $changelogs,
+            'changelogs' => $changelogs,
         ]);
     }
 
@@ -35,8 +34,8 @@ class ChangelogController extends Controller
             return view('changelog.create');
         } else {
             return redirect()->back()->with([
-                'type'  => 'danger',
-                'Meldung'   => 'Berechtigung fehlt',
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
     }
@@ -54,13 +53,13 @@ class ChangelogController extends Controller
 
         if ($changelog->changeSettings) {
             DB::table('users')->update([
-                'changeSettings'    => 1,
+                'changeSettings' => 1,
             ]);
         }
 
         return redirect()->to(url('changelog'))->with([
-           'type'   => 'success',
-           'Meldung'=> 'Changelog angelegt',
+            'type' => 'success',
+            'Meldung' => 'Changelog angelegt',
         ]);
     }
 

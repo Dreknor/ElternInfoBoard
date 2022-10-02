@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Model\Post;
 use DevDojo\LaravelReactions\Models\Reaction;
-use Illuminate\Http\Request;
 
 class ReactionController extends Controller
 {
@@ -19,6 +18,6 @@ class ReactionController extends Controller
 
         auth()->user()->reactTo($post, $reaction);
 
-        return redirect()->to(url()->previous() . '#' . $post->id);
+        return redirect()->to(url()->previous().'#'.$post->id);
     }
 }

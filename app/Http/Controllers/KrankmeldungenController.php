@@ -24,14 +24,14 @@ class KrankmeldungenController extends Controller
         $krankmeldungen = $request->user()->krankmeldungen->paginate(15);
 
         return view('krankmeldung.index', [
-                'krankmeldungen' => $krankmeldungen,
-            ]);
+            'krankmeldungen' => $krankmeldungen,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param  Request  $request
      */
     public function store(KrankmeldungRequest $request)
     {
@@ -46,7 +46,7 @@ class KrankmeldungenController extends Controller
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung'   => 'Krankmeldung wurde gespeichert',
+            'Meldung' => 'Krankmeldung wurde gespeichert',
         ]);
     }
 
@@ -63,7 +63,7 @@ class KrankmeldungenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param krankmeldungen $krankmeldungen
+     * @param  krankmeldungen  $krankmeldungen
      * @return Response
      */
     public function destroy(krankmeldungen $krankmeldungen)

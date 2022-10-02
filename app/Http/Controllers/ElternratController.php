@@ -6,7 +6,6 @@ use App\Http\Requests\createDiscussionRequest;
 use App\Model\Comment;
 use App\Model\Discussion;
 use App\Model\Group;
-use function GuzzleHttp\Promise\all;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\Models\Media;
 use Spatie\Permission\Models\Permission;
@@ -45,10 +44,10 @@ class ElternratController extends Controller
         $themen->load('comments', 'comments.creator');
 
         return view('elternrat.index', [
-            'themen'    => $themen,
-            'directories'     => config('app.directories_elternrat'),
-            'users'     => $user->sortBy('name'),
-            'group'     => $Group,
+            'themen' => $themen,
+            'directories' => config('app.directories_elternrat'),
+            'users' => $user->sortBy('name'),
+            'group' => $Group,
         ]);
     }
 
@@ -71,17 +70,17 @@ class ElternratController extends Controller
     public function store(createDiscussionRequest $request)
     {
         $Discussion = new Discussion([
-            'header'    => $request->header,
-            'text'      => $request->text,
-            'owner'     => $request->user()->id,
-            'sticky'    => $request->sticky,
+            'header' => $request->header,
+            'text' => $request->text,
+            'owner' => $request->user()->id,
+            'sticky' => $request->sticky,
         ]);
 
         $Discussion->save();
 
         return redirect()->to(url('elternrat'))->with([
-            'type'  => 'success',
-            'meldung'   => 'Beitrag erstellt',
+            'type' => 'success',
+            'meldung' => 'Beitrag erstellt',
         ]);
     }
 
@@ -94,7 +93,7 @@ class ElternratController extends Controller
     public function edit(Discussion $discussion)
     {
         return  view('elternrat.editDiscussion', [
-            'beitrag'   => $discussion,
+            'beitrag' => $discussion,
         ]);
     }
 
@@ -110,8 +109,8 @@ class ElternratController extends Controller
         $discussion->update($request->all());
 
         return redirect()->to(url('elternrat'))->with([
-           'type'   => 'success',
-           'Meldung'    =>  'Änderungen gespeichert',
+            'type' => 'success',
+            'Meldung' => 'Änderungen gespeichert',
         ]);
     }
 
@@ -132,13 +131,13 @@ class ElternratController extends Controller
             $file->delete();
 
             return response()->json([
-                'message'   => 'Gelöscht',
+                'message' => 'Gelöscht',
             ], 200);
         }
 
         return response()->json([
             [
-                'message'   => 'Berechtigung fehlt',
+                'message' => 'Berechtigung fehlt',
             ], 400,
         ]);
     }
@@ -146,7 +145,7 @@ class ElternratController extends Controller
     public function addFile()
     {
         return view('elternrat.createFile', [
-            'groups'    => Group::all(),
+            'groups' => Group::all(),
         ]);
     }
 
@@ -161,8 +160,8 @@ class ElternratController extends Controller
         }
 
         return redirect()->to(url('elternrat'))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Datei gespeichert',
+            'type' => 'success',
+            'Meldung' => 'Datei gespeichert',
         ]);
     }
 

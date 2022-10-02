@@ -4,10 +4,8 @@ namespace App\Model;
 
 use Benjivm\Commentable\Traits\HasComments;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Discussion extends Model implements HasMedia
@@ -17,8 +15,9 @@ class Discussion extends Model implements HasMedia
     use HasComments;
 
     protected $fillable = ['header', 'text', 'owner', 'sticky'];
+
     protected $casts = [
-        'sticky'    => 'boolean',
+        'sticky' => 'boolean',
     ];
 
     public function author()

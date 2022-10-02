@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\ValidCurrentUserPassword;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -34,13 +33,13 @@ class createNachrichtRequest extends FormRequest
                 'required',
             ],
             'news' => [
-                 Rule::requiredIf(request()->type != "image")
+                Rule::requiredIf(request()->type != 'image'),
             ],
             'gruppen' => [
                 'required',
             ],
             'archiv_ab' => [
-                'required', 'date'
+                'required', 'date',
             ],
             'password' => [
                 'required_with:urgent',
@@ -49,10 +48,10 @@ class createNachrichtRequest extends FormRequest
                 'required',
             ],
             'reactable' => [
-                'boolean'
+                'boolean',
             ],
             'released' => [
-                'nullable', 'boolean'
+                'nullable', 'boolean',
             ],
 
         ];

@@ -30,7 +30,7 @@ class AbfrageController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -41,7 +41,7 @@ class AbfrageController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param \App\Model\Abfrage $abfrage
+     * @param  \App\Model\Abfrage  $abfrage
      * @return \Illuminate\Http\Response
      */
     public function show(Abfrage $abfrage)
@@ -52,7 +52,7 @@ class AbfrageController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param \App\Model\Abfrage $abfrage
+     * @param  \App\Model\Abfrage  $abfrage
      * @return \Illuminate\Http\Response
      */
     public function edit(Abfrage $abfrage)
@@ -63,8 +63,8 @@ class AbfrageController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Model\Abfrage $abfrage
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Model\Abfrage  $abfrage
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Abfrage $abfrage)
@@ -75,7 +75,7 @@ class AbfrageController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param \App\Model\Abfrage $abfrage
+     * @param  \App\Model\Abfrage  $abfrage
      * @return \Illuminate\Http\Response
      */
     public function destroy(Abfrage $abfrage)

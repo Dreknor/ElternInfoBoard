@@ -10,7 +10,7 @@ use App\Model\Group;
 class GroupsRepository
 {
     /**
-     * @param array $gruppen
+     * @param  array  $gruppen
      * @return array
      */
     public function getGroups(array $gruppen)

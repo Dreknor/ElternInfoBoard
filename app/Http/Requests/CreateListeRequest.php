@@ -24,19 +24,19 @@ class CreateListeRequest extends FormRequest
     public function rules()
     {
         return [
-            'listenname'    => [
+            'listenname' => [
                 'required',
                 'string',
             ],
-            'type'          => [
+            'type' => [
                 'required',
                 'in:termin,eintrag',
             ],
-            'visible_for_all'   => [
+            'visible_for_all' => [
                 'required',
                 'boolean',
             ],
-            'multiple'   => [
+            'multiple' => [
                 'required',
                 'boolean',
             ],
@@ -50,8 +50,8 @@ class CreateListeRequest extends FormRequest
             ],
             'duration' => [
                 'sometimes',
-                'nullable'
-            ]
+                'nullable',
+            ],
         ];
     }
 }

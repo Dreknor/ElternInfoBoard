@@ -35,7 +35,7 @@ class ListenController extends Controller
             $listen = Liste::where('ende', '>=', Carbon::today())->get();
             $oldListen = Liste::where('ende', '<', Carbon::today())->orderByDesc('ende')->paginate(15);
         } else {
-            $oldListen = "";
+            $oldListen = '';
             $listen = $request->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
             if ($request->user()->can('create terminliste')) {
                 $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now())->get();
@@ -48,12 +48,11 @@ class ListenController extends Controller
         $eintragungen = Listen_Eintragungen::query()->user(auth()->id())->orWhere->user(auth()->user()->sorg2)->get();
         $termine = listen_termine::query()->user(auth()->id())->orWhere->user(auth()->user()->sorg2)->get();
 
-
         return view('listen.index', [
             'listen' => $listen,
             'eintragungen' => $eintragungen,
             'termine' => $termine,
-            'archiv' => $oldListen
+            'archiv' => $oldListen,
         ]);
     }
 
@@ -67,14 +66,14 @@ class ListenController extends Controller
         $this->authorize('create', Liste::class);
 
         return view('listen.create', [
-            'gruppen'   => Group::all(),
+            'gruppen' => Group::all(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param  Request  $request
      * @return RedirectResponse
      */
     public function store(CreateListeRequest $request)
@@ -102,27 +101,26 @@ class ListenController extends Controller
      */
     public function show(Liste $terminListe)
     {
-
-
         if ($terminListe->type == 'termin') {
             $terminListe->load('termine');
             $terminListe->termine->sortBy('termin');
+
             return view('listen.terminAuswahl', [
                 'liste' => $terminListe,
             ]);
         }
 
         $terminListe->load('eintragungen');
+
         return view('listen.listenEintrag', [
             'liste' => $terminListe,
         ]);
-
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param TerminListe $terminListe
+     * @param  TerminListe  $terminListe
      * @return View
      */
     public function edit(Liste $terminListe)
@@ -130,16 +128,16 @@ class ListenController extends Controller
         $this->authorize('editListe', $terminListe);
 
         return view('listen.edit', [
-            'liste'    => $terminListe,
-            'gruppen'=> Group::all(),
+            'liste' => $terminListe,
+            'gruppen' => Group::all(),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
-     * @param TerminListe $terminListe
+     * @param  Request  $request
+     * @param  TerminListe  $terminListe
      * @return Response
      */
     public function update(Request $request, Liste $terminListe)
@@ -160,7 +158,7 @@ class ListenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param TerminListe $terminListe
+     * @param  TerminListe  $terminListe
      * @return Response
      */
     public function destroy(Liste $terminListe)
@@ -190,7 +188,6 @@ class ListenController extends Controller
 
     public function pdf(Request $request, Liste $liste)
     {
-
         if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste')) {
             /*$pdf = \PDF::loadView('listen.listenExport', [
                 "Liste" => $liste,
@@ -210,8 +207,6 @@ class ListenController extends Controller
                     'listentermine' => $liste->termine->sortBy('termin'),
                 ]);
             }
-
-
         }
 
         return redirect()->back()->with([
@@ -225,12 +220,12 @@ class ListenController extends Controller
         $this->authorize('editListe', $liste);
 
         $liste->update([
-            'ende' => Carbon::now()->addWeeks(2)
+            'ende' => Carbon::now()->addWeeks(2),
         ]);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Liste verlängert'
+            'Meldung' => 'Liste verlängert',
         ]);
     }
 
@@ -239,12 +234,12 @@ class ListenController extends Controller
         $this->authorize('editListe', $liste);
 
         $liste->update([
-            'ende' => Carbon::now()->subDay()
+            'ende' => Carbon::now()->subDay(),
         ]);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Liste beendet'
+            'Meldung' => 'Liste beendet',
         ]);
     }
 }

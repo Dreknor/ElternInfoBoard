@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class MitarbeiterImport implements ToCollection, WithHeadingRow
 {
     /**
-     * @param Collection $collection
+     * @param  Collection  $collection
      */
     public function collection(Collection $rows)
     {
@@ -21,9 +21,9 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 $user = User::firstOrCreate([
                     'email' => $row['e_mail'],
                 ], [
-                    'name'  => $row['vorname'].' '.$row['nachname'],
-                    'changePassword'  => 1,
-                    'password'      => Hash::make(config('app.import_mitarbeiter')),
+                    'name' => $row['vorname'].' '.$row['nachname'],
+                    'changePassword' => 1,
+                    'password' => Hash::make(config('app.import_mitarbeiter')),
                     'lastEmail' => Carbon::now(),
                 ]);
 

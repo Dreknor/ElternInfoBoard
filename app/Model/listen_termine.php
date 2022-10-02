@@ -2,7 +2,6 @@
 
 namespace App\Model;
 
-use Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\CalendarLinks\Link;
 
@@ -11,7 +10,9 @@ class listen_termine extends Model
     protected $table = 'listen_termine';
 
     protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
+
     protected $visible = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
+
     protected $casts = [
         'termin' => 'datetime',
     ];
@@ -28,7 +29,7 @@ class listen_termine extends Model
 
     protected function getDurationAttribute($value)
     {
-        return ($value != "") ? $value : $this->liste->duration;
+        return ($value != '') ? $value : $this->liste->duration;
     }
 
     public function liste()
@@ -41,6 +42,5 @@ class listen_termine extends Model
         if ($user != null) {
             return $query->where('reserviert_fuer', $user);
         }
-
     }
 }

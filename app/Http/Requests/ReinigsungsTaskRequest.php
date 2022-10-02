@@ -24,7 +24,7 @@ class ReinigsungsTaskRequest extends FormRequest
     public function rules()
     {
         return [
-            'task' => ['required']
+            'task' => ['required'],
         ];
     }
 }

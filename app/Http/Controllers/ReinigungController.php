@@ -8,36 +8,34 @@ use App\Model\Group;
 use App\Model\Reinigung;
 use App\Model\ReinigungsTask;
 use App\Model\User;
-use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Input;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReinigungController extends Controller
 {
-
-    public function export($bereich){
-        if (auth()->user()->can('edit reinigung')){
+    public function export($bereich)
+    {
+        if (auth()->user()->can('edit reinigung')) {
             return Excel::download(new ReinigungExport($bereich), Carbon::now()->format('Y-m-d').'_'.$bereich.'_Reinigung.xlsx');
         }
 
         return redirect()->back()->with([
             'type' => 'danger',
-            'Meldung' => 'Berechtigung fehlt'
+            'Meldung' => 'Berechtigung fehlt',
         ]);
     }
 
-
-
-    public function destroy($Bereich, Reinigung $reinigung){
-        if (auth()->user()->can('edit reinigung') and $reinigung->bereich == $Bereich){
+    public function destroy($Bereich, Reinigung $reinigung)
+    {
+        if (auth()->user()->can('edit reinigung') and $reinigung->bereich == $Bereich) {
             $reinigung->delete();
+
             return redirect()->back()->with([
-               'type' => 'warning',
-               'Meldung' => 'Reinigungsaufgabe wurde gelöscht.'
+                'type' => 'warning',
+                'Meldung' => 'Reinigungsaufgabe wurde gelöscht.',
             ]);
         }
     }
@@ -60,12 +58,11 @@ class ReinigungController extends Controller
         if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
-            $Bereiche = $Bereiche->filter(function ($value, $key){
-                if ($value != "Aufnahme"){
+            $Bereiche = $Bereiche->filter(function ($value, $key) {
+                if ($value != 'Aufnahme') {
                     return $value;
                 }
             });
-
         } else {
             $Bereiche = Group::query()->whereNotNull('bereich')->where('bereich', '!=', 'Aufnahme')->pluck('bereich')->unique();
         }
@@ -81,11 +78,11 @@ class ReinigungController extends Controller
         }
 
         return view('reinigung.show', [
-            'Bereiche'  => $Bereiche,
+            'Bereiche' => $Bereiche,
             'Familien' => $Reinigung,
-            'datum'     => $datum,
-            'user'      => $user,
-            'ende'      => $ende,
+            'datum' => $datum,
+            'user' => $user,
+            'ende' => $ende,
         ]);
     }
 
@@ -98,8 +95,8 @@ class ReinigungController extends Controller
     {
         if (! $request->user()->can('edit reinigung')) {
             return redirect()->back()->with([
-                'type'  => 'danger',
-                'Meldung'   => 'Berechtigung fehlt',
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -124,12 +121,12 @@ class ReinigungController extends Controller
         $Aufgaben = ReinigungsTask::all();
 
         return view('reinigung.edit', [
-            'Bereich'  => $Bereich,
+            'Bereich' => $Bereich,
             'Familien' => $Reinigung,
-            'datum'     => $datum,
-            'ende'      => $ende,
-            'users'     => $newusers,
-            'aufgaben'  => $Aufgaben,
+            'datum' => $datum,
+            'ende' => $ende,
+            'users' => $newusers,
+            'aufgaben' => $Aufgaben,
         ]);
     }
 
@@ -137,7 +134,7 @@ class ReinigungController extends Controller
      * Store a newly created resource in storage.
      *
      * @param $Bereich
-     * @param ReinigungsRequest $request
+     * @param  ReinigungsRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store($Bereich, ReinigungsRequest $request)
@@ -150,8 +147,8 @@ class ReinigungController extends Controller
         $reinigung->save();
 
         return redirect()->to(url('reinigung'))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Plan aktualisiert',
+            'type' => 'success',
+            'Meldung' => 'Plan aktualisiert',
         ]);
     }
 }

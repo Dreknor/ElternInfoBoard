@@ -24,11 +24,11 @@ class CreateChangelogRequest extends FormRequest
     public function rules()
     {
         return [
-            'header'    => [
+            'header' => [
                 'required',
                 'string',
             ],
-            'text'      => [
+            'text' => [
                 'required',
                 'string',
             ],

@@ -25,12 +25,12 @@ class editUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'  => [
+            'name' => [
                 'required',
                 'string',
                 'unique:users,id,'.\auth()->user()->id,
             ],
-            'email'  => [
+            'email' => [
                 'required',
                 'email',
                 'unique:users,id,'.\auth()->user()->id,
@@ -45,15 +45,14 @@ class editUserRequest extends FormRequest
             ],
             'publicPhone' => [
                 'nullable',
-                'string'
+                'string',
             ],
             'releaseCalendar' => [
                 'nullable',
                 'integer',
                 'min:0',
-                'max:1'
+                'max:1',
             ],
-
 
         ];
     }

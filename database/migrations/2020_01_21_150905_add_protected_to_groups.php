@@ -20,7 +20,7 @@ class AddProtectedToGroups extends Migration
         \Illuminate\Support\Facades\DB::table('groups')->insert([
             [
                 'name' => 'Elternrat',
-                'protected'=>1,
+                'protected' => 1,
             ],
         ]);
     }

@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,7 +11,9 @@ class SendFeedback extends Mailable
     use Queueable, SerializesModels;
 
     protected $text;
+
     protected $betreff;
+
     public $data;
 
     /**
@@ -41,8 +42,8 @@ class SendFeedback extends Mailable
             ->replyTo(auth()->user()->email, auth()->user()->name)
             ->subject($this->betreff)
             ->view('emails.feedback')->with([
-                'text'  => $this->text,
-                'from'  =>  auth()->user()->name,
+                'text' => $this->text,
+                'from' => auth()->user()->name,
             ]);
 
         if (count($this->data) > 0) {

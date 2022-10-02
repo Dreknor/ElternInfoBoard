@@ -25,6 +25,5 @@ class UpdatePollTableToNullableAuthor extends Migration
      */
     public function down()
     {
-
     }
 }

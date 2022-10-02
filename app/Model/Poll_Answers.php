@@ -2,12 +2,10 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Poll_Answers extends Model
 {
-
     protected $table = 'poll_answers';
 
     protected $fillable = ['poll_id', 'option_id'];

@@ -18,7 +18,7 @@ class AddPublicMailToUsersTable extends Migration
         });
 
         \Illuminate\Support\Facades\DB::table('settings')->where('setting', 'Gruppen')->update([
-           'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}'
+            'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}',
         ]);
     }
 
@@ -29,6 +29,5 @@ class AddPublicMailToUsersTable extends Migration
      */
     public function down()
     {
-
     }
 }

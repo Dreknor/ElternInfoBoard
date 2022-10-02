@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -34,7 +33,7 @@ class DailyReportKrankmeldungen extends Mailable
         return $this
             ->subject('Krankmeldungen am '.Carbon::now()->format('d.m.Y'))
             ->view('emails.dailyReportKrankmeldungen', [
-                'krankmeldungen'    =>$this->krankmeldungen,
+                'krankmeldungen' => $this->krankmeldungen,
             ]);
     }
 }

@@ -2,9 +2,7 @@
 
 namespace App\Mail;
 
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -13,10 +11,15 @@ class krankmeldung extends Mailable
     use Queueable, SerializesModels;
 
     public $email;
+
     public $name;
+
     public $NameDesKindes;
+
     public $krankVon;
+
     public $krankBis;
+
     public $bemerkung;
 
     /**

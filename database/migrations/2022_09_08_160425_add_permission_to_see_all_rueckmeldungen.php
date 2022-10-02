@@ -33,7 +33,7 @@ class AddPermissionToSeeAllRueckmeldungen extends Migration
                         "icon":"fas fa-comment-dots"
                     }
             }',
-            'created_at' => \Carbon\Carbon::now()
+            'created_at' => \Carbon\Carbon::now(),
         ]);
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
     }

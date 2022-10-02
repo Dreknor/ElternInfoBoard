@@ -6,7 +6,6 @@ use App\Http\Requests\searchRequest;
 use App\Model\Group;
 use App\Model\Post;
 use App\Support\Collection;
-use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
@@ -61,11 +60,11 @@ class SearchController extends Controller
         $Nachrichten = $Nachrichten->unique()->sortByDesc('updated_at')->all();
 
         return view('search.result', [
-            'nachrichten'   => $Nachrichten,
-            'archiv'    => null,
-            'user'      => $request->user(),
-            'gruppen'   => Group::all(),
-            'Suche'     => $request->input('suche'),
+            'nachrichten' => $Nachrichten,
+            'archiv' => null,
+            'user' => $request->user(),
+            'gruppen' => Group::all(),
+            'Suche' => $request->input('suche'),
         ]);
     }
 }

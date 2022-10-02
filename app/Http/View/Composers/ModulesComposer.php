@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Cache;
 
 class ModulesComposer
 {
-
     public function compose($view)
     {
         $modules = Cache::remember('modules', 30, function () {

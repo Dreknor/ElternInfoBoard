@@ -17,7 +17,6 @@ class UpdateMediaTable extends Migration
             $table->uuid('uuid')->nullable()->unique();
             $table->string('conversions_disk')->nullable();
             $table->json('generated_conversions')->nullable();
-
         });
     }
 

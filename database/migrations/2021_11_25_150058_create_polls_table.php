@@ -27,7 +27,6 @@ class CreatePollsTable extends Migration
 
             $table->foreign('author_id')->references('id')->on('users');
             $table->foreign('post_id')->references('id')->on('posts');
-
         });
 
         Schema::create('poll_options', function (Blueprint $table) {
@@ -47,7 +46,6 @@ class CreatePollsTable extends Migration
 
             $table->foreign('poll_id')->references('id')->on('polls');
             $table->foreign('author_id')->references('id')->on('users');
-
         });
 
         DB::table('permissions')->insert([

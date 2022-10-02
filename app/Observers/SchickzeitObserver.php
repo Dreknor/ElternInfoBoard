@@ -3,7 +3,6 @@
 namespace App\Observers;
 
 use App\Model\Schickzeiten;
-use Illuminate\Support\Facades\Auth;
 
 class SchickzeitObserver
 {

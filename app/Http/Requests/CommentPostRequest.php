@@ -24,7 +24,7 @@ class CommentPostRequest extends FormRequest
     public function rules()
     {
         return [
-            'comment'=>[
+            'comment' => [
                 'required',
                 'string',
             ],

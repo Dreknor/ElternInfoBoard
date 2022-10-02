@@ -13,6 +13,7 @@ class Push extends Notification
     use Queueable;
 
     public $body;
+
     public $title;
 
     public function __construct($title, $body)

@@ -11,10 +11,11 @@ class Groups extends Model implements HasMedia
     use InteractsWithMedia;
 
     protected $fillable = ['name', 'bereich', 'protected'];
+
     protected $visible = ['name', 'bereich', 'protected'];
 
     protected $casts = [
-      'protected' => 'boolean',
+        'protected' => 'boolean',
     ];
 
     public function users()

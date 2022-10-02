@@ -10,8 +10,9 @@ class AbfrageAntworten extends Model
     use HasFactory;
 
     protected $table = 'abfrage_answers';
+
     protected $fillable = [
-        'rueckmeldung_id', 'user_id', 'option_id', 'answer'
+        'rueckmeldung_id', 'user_id', 'option_id', 'answer',
     ];
 
     protected $visible = ['answer'];
@@ -20,5 +21,4 @@ class AbfrageAntworten extends Model
     {
         return $this->belongsTo(AbfrageOptions::class, 'option_id');
     }
-
 }

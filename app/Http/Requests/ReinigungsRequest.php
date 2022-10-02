@@ -26,8 +26,8 @@ class ReinigungsRequest extends FormRequest
         return [
             'users_id' => [
                 'required',
-                'exists:users,id'
-                ],
+                'exists:users,id',
+            ],
             'aufgabe' => ['required', 'exists:reinigungs_tasks,id'],
             'bemerkung' => ['nullable', 'string'],
             'datum' => ['required', 'date'],

@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -18,6 +17,7 @@ class newFilesAddToPost extends Mailable
      * @var
      */
     public $von;
+
     /**
      * @var
      */
@@ -25,6 +25,7 @@ class newFilesAddToPost extends Mailable
 
     /**
      * newFilesAddToPost constructor.
+     *
      * @param $von
      * @param $Betreff
      */
@@ -44,8 +45,8 @@ class newFilesAddToPost extends Mailable
         return $this
             ->subject('neuer Bild-Upload')
             ->view('emails.newImageToPost', [
-                'von'   => $this->von,
-                'betreff'   => $this->Betreff,
+                'von' => $this->von,
+                'betreff' => $this->Betreff,
             ]);
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class VertretungsplanController extends Controller
 {
     public function __construct()
@@ -11,19 +9,19 @@ class VertretungsplanController extends Controller
         $this->middleware(['permission:view vertretungsplan']);
     }
 
-    public function index (){
-        $gruppen = "/keine";
+    public function index()
+    {
+        $gruppen = '/keine';
         foreach (auth()->user()->groups as $group) {
-            $gruppen .= "/" . $group->name;
+            $gruppen .= '/'.$group->name;
         }
 
         if (auth()->user()->can('view vertretungsplan all')) {
-            $gruppen = "";
+            $gruppen = '';
         }
 
-
         //$url = config('app.mitarbeiterboard').'/api/vertretungsplan'.$gruppen;
-        $url = config('app.mitarbeiterboard') . '/api/vertretungsplan' . $gruppen;
+        $url = config('app.mitarbeiterboard').'/api/vertretungsplan'.$gruppen;
         $inhalt = file_get_contents($url);
 
         $json = json_decode($inhalt, true);
@@ -33,7 +31,7 @@ class VertretungsplanController extends Controller
         foreach ($json as $key => $value) {
             if ($key != 'targetDate') {
                 if ($key == 'news') {
-                    $key = "mitteilungen";
+                    $key = 'mitteilungen';
                 }
 
                 if ($key == 'weeks') {
@@ -42,16 +40,14 @@ class VertretungsplanController extends Controller
                     $values = collect();
 
                     foreach ($value as $value_item) {
-                        $values->push((object)$value_item);
+                        $values->push((object) $value_item);
                     }
                 }
-
 
                 $plan[$key] = $values;
             } else {
                 $plan[$key] = $value;
             }
-
         }
 
         return view('vertretungsplan.index', $plan);

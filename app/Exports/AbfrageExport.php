@@ -22,7 +22,7 @@ class AbfrageExport implements FromView
         $this->rueckmeldung->load('userRueckmeldungen');
 
         return view('export.abfrageExport', [
-            'rueckmeldung' => $this->rueckmeldung
+            'rueckmeldung' => $this->rueckmeldung,
         ]);
     }
 }

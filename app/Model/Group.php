@@ -12,10 +12,11 @@ class Group extends Model implements HasMedia
     use InteractsWithMedia;
 
     protected $fillable = ['name', 'bereich', 'protected'];
+
     protected $visible = ['name', 'bereich', 'protected'];
 
     protected $casts = [
-      'protected' => 'boolean',
+        'protected' => 'boolean',
     ];
 
     protected static function booted()
@@ -37,6 +38,7 @@ class Group extends Model implements HasMedia
     {
         return $this->belongsToMany(Termin::class, 'group_termine');
     }
+
     public function listen()
     {
         return $this->belongsToMany(Liste::class, 'group_listen');

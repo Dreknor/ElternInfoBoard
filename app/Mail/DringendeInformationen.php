@@ -11,6 +11,7 @@ class DringendeInformationen extends Mailable
     use Queueable, SerializesModels;
 
     public $header;
+
     public $text;
 
     /**
@@ -33,8 +34,8 @@ class DringendeInformationen extends Mailable
     {
         return $this->subject($this->header)
             ->view('emails.dringendeNachricht', [
-            'nachricht' => $this->text,
-            'header' => $this->header,
-        ]);
+                'nachricht' => $this->text,
+                'header' => $this->header,
+            ]);
     }
 }

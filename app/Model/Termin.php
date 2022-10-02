@@ -13,6 +13,7 @@ class Termin extends Model
     protected $table = 'termine';
 
     protected $fillable = ['start', 'ende', 'terminname', 'fullDay', 'public'];
+
     protected $visible = ['start', 'ende', 'terminname', 'fullDay', 'public'];
 
     protected $casts = [
