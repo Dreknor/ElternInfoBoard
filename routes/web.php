@@ -50,10 +50,7 @@ Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
 
-Route::group([
-    'middleware' => ['auth'],
-],
-    function () {
+Route::middleware('auth')->group(function () {
         Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
         ->name('password.expired');
         Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])
