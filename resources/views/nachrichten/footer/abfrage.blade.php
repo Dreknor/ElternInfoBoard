@@ -112,11 +112,13 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-footer">
-                        <div class="pull-right">
-                            <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
-                                <i class="fa fa-download"></i>
-                            </a>
-                        </div>
+                        @can('manage rueckmeldung')
+                            <div class="pull-right">
+                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
+                                    <i class="fa fa-download"></i>
+                                </a>
+                            </div>
+                        @endcan
                         <h6>Auswertung:</h6>
                         @foreach($nachricht->rueckmeldung->options()->where('type', 'check')->get() as $option)
                             <div class="row border-bottom">
