@@ -16,6 +16,29 @@
                 </div>
             </div>
         @endif
+        @if($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0)
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>
+                                Eigene Reinigungstermine
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                @foreach($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                    <li class="list-group-item">
+                                        Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
+                                        - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @foreach($Bereiche as $Bereich)
             <div class="row justify-content-center">
                 <div class="col-12">
