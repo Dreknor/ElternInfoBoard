@@ -27,7 +27,7 @@ class updateRueckmeldeDateRequest extends FormRequest
         return [
             'date' => ['required',
                 'date',
-                'after_or_equal:' . Carbon::today()->addWeek()]
+                'after_or_equal:' . Carbon::today()->addDay()]
         ];
     }
 }
