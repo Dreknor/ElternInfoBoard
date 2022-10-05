@@ -112,7 +112,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-footer">
-                        @can('manage rueckmeldung')
+                        @can('manage rueckmeldungen')
                             <div class="pull-right">
                                 <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
                                     <i class="fa fa-download"></i>
