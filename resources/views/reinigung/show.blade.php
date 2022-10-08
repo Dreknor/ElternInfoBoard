@@ -16,7 +16,7 @@
                 </div>
             </div>
         @endif
-        @if($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0)
+        @if($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0 or (!is_null($user->sorg2) and $user->sorg2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0))
             <div class="row justify-content-center">
                 <div class="col-12">
                     <div class="card">
@@ -33,6 +33,14 @@
                                         - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
                                     </li>
                                 @endforeach
+                                @if(!is_null($user->sorg2))
+                                    @foreach($user->sorg2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                        <li class="list-group-item">
+                                            Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
+                                            - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
+                                        </li>
+                                    @endforeach
+                                @endif
                             </ul>
                         </div>
                     </div>
