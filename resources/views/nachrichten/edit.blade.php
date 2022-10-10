@@ -455,7 +455,7 @@
                                     <div class="card-body">
                                         <div class="row border-bottom">
                                             <div class="col-6">
-                                                Empfänger:
+                                                Ersteller:
                                             </div>
                                             <div class="col-6">
                                                 {{$post->rueckmeldung->empfaenger}}
@@ -475,6 +475,14 @@
                                             </div>
                                             <div class="col-6">
                                                 {{($post->rueckmeldung->pflicht == 1)? 'ja' : 'nein'}}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                mehrere:
+                                            </div>
+                                            <div class="col-6">
+                                                {{($post->rueckmeldung->multiple == 1)? 'ja' : 'nein'}}
                                             </div>
                                         </div>
                                     </div>

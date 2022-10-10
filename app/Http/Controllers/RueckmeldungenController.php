@@ -75,11 +75,14 @@ class RueckmeldungenController extends Controller
 
         $options = [];
         foreach ($request->options as $key => $value) {
-            $options[] = [
-                'rueckmeldung_id' => $rueckmeldung->id,
-                'type' => $request->types[$key],
-                'option' => $value,
-            ];
+            if ($value != "") {
+                $options[] = [
+                    'rueckmeldung_id' => $rueckmeldung->id,
+                    'type' => $request->types[$key],
+                    'option' => $value,
+                ];
+            }
+
         }
 
         AbfrageOptions::insert($options);
@@ -203,11 +206,14 @@ class RueckmeldungenController extends Controller
 
         $options = [];
         foreach ($request->options as $key => $value) {
-            $options[] = [
-                'rueckmeldung_id' => $rueckmeldung->id,
-                'type' => $request->types[$key],
-                'option' => $value,
-            ];
+            if ($value != "") {
+                $options[] = [
+                    'rueckmeldung_id' => $rueckmeldung->id,
+                    'type' => $request->types[$key],
+                    'option' => $value,
+                ];
+            }
+
         }
 
         AbfrageOptions::insert($options);
