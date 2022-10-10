@@ -9,7 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0",
-        "barryvdh/laravel-dompdf": "^1.0",
+        "barryvdh/laravel-dompdf": "^2.0",
         "benjivm/commentable": "^6.0",
         "bkwld/cloner": "^3.10",
         "devdojo/chatter": "0.2.*",
