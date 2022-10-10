@@ -14,5 +14,5 @@ RewriteRule ^(.*)$ public/$1
 
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ server.php
+RewriteRule ^ index.php
 </IfModule>
