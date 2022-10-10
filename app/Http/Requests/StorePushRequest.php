@@ -14,15 +14,15 @@ class StorePushRequest extends FormRequest
     public function rules()
     {
         return [
-'endpoint'    => [
+            'endpoint' => [
                 'required',
             ],
-'keys.auth'   => [
+            'keys.auth' => [
                 'required',
             ],
-'keys.p256dh' => [
+            'keys.p256dh' => [
                 'required',
             ],
-];
+        ];
     }
 }

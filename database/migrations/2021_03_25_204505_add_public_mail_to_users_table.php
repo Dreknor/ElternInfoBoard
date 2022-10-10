@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPublicMailToUsersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -18,7 +18,7 @@ class AddPublicMailToUsersTable extends Migration
         });
 
         \Illuminate\Support\Facades\DB::table('settings')->where('setting', 'Gruppen')->update([
-           'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}'
+            'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}',
         ]);
     }
 
@@ -29,6 +29,5 @@ class AddPublicMailToUsersTable extends Migration
      */
     public function down()
     {
-
     }
-}
+};

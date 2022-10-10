@@ -1,12 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
-use App\Http\Controllers\ICalController;
-use App\Http\Controllers\ListenEintragungenController;
-use App\Http\Controllers\PollController;
-use App\Http\Controllers\ReactionController;
-use App\Http\Controllers\ReinigungsTaskController;
-use App\Http\Controllers\VertretungsplanController;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\DatenschutzController;
@@ -14,15 +8,20 @@ use App\Http\Controllers\ElternratController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GroupsController;
+use App\Http\Controllers\ICalController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\KioskController;
 use App\Http\Controllers\KrankmeldungenController;
 use App\Http\Controllers\ListenController;
+use App\Http\Controllers\ListenEintragungenController;
 use App\Http\Controllers\ListenTerminController;
 use App\Http\Controllers\NachrichtenController;
+use App\Http\Controllers\PollController;
 use App\Http\Controllers\PushController;
+use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReinigungController;
+use App\Http\Controllers\ReinigungsTaskController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RueckmeldungenController;
 use App\Http\Controllers\SchickzeitenController;
@@ -31,6 +30,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
+use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -50,16 +50,10 @@ Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
 
-Route::group([
-    'middleware' => ['auth'],
-],
-    function () {
-
-
-
-    Route::get('password/expired', [ExpiredPasswordController::class,'expired'])
+Route::middleware('auth')->group(function () {
+    Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
         ->name('password.expired');
-    Route::post('password/post_expired', [ExpiredPasswordController::class,'postExpired'])
+    Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])
         ->name('password.post_expired');
 
     Route::middleware(['password_expired'])->group(function () {
@@ -68,7 +62,6 @@ Route::group([
         Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');
         Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
         Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
-
 
         //Routen für die Verwaltung der Rückmeldungen
         Route::middleware('permission:manage rueckmeldungen')->group(function () {
@@ -91,7 +84,6 @@ Route::group([
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');
 
-
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
@@ -113,7 +105,6 @@ Route::group([
         //Termine
         Route::resource('termin', TerminController::class);
 
-
         //Rückmeldungen
 
         Route::get('rueckmeldung/create/{post}/{type}', [RueckmeldungenController::class, 'create']);
@@ -128,7 +119,6 @@ Route::group([
         Route::post('/userrueckmeldung/{rueckmeldung}', [UserRueckmeldungenController::class, 'store']);
         Route::get('/rueckmeldung/{rueckmeldung}/editAbfrage', [RueckmeldungenController::class, 'editAbfrage']);
         Route::put('/rueckmeldung/{rueckmeldung}/updateAbfrage', [RueckmeldungenController::class, 'updateAbfrage']);
-
 
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
         Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
@@ -180,12 +170,10 @@ Route::group([
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
-
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
 
-
-        Route::middleware('permission:edit reinigung')->group(function (){
+        Route::middleware('permission:edit reinigung')->group(function () {
             Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
             Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
             Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
@@ -280,7 +268,6 @@ Route::group([
             return redirect(url('/'));
         });
 
-
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
             Route::resource('elternrat', ElternratController::class);
@@ -298,6 +285,6 @@ Route::group([
 
     //Feedback
     Route::get('feedback', [FeedbackController::class, 'show']);
-        Route::post('feedback', [FeedbackController::class, 'send']);
-        Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
+    Route::post('feedback', [FeedbackController::class, 'send']);
+    Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 });

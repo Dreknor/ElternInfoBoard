@@ -65,7 +65,7 @@
                                     <div class="row">
                                         <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
-                                                <label>Benachrichtigung per E-Mail (letzte E-Mail: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
+                                                <label>Benachrichtigung per E-Mail (letzte E-Mail: {{$user->lastEmail?->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
                                                     <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif>Täglich (bei neuen Nachrichten)</option>
                                                     <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif>Wöchentlich (Freitags)</option>
@@ -115,7 +115,7 @@
                                                         Das Konto ist verknüpft mit
                                                         <b>
                                                             <a href="{{url('users/'.$user->sorg2)}}">
-                                                                {{optional($user->sorgeberechtigter2)->name}}
+                                                                {{$user->sorgeberechtigter2?->name}}
                                                             </a>
                                                         </b>.
                                                     </p>

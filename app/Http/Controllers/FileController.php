@@ -27,7 +27,7 @@ class FileController extends Controller
         $file->delete();
 
         return response()->json([
-            'message'   => 'Gelöscht',
+            'message' => 'Gelöscht',
         ], 200);
     }
 
@@ -36,8 +36,8 @@ class FileController extends Controller
         $file->delete();
 
         return redirect()->back()->with([
-            'type'  => 'warning',
-            'Meldung'   => 'Datei gelöscht',
+            'type' => 'warning',
+            'Meldung' => 'Datei gelöscht',
         ]);
     }
 
@@ -71,7 +71,7 @@ class FileController extends Controller
 
             return view('files.index', [
                 'gruppen' => $gruppen,
-                'medien'  =>  $media,
+                'medien' => $media,
             ]);
         }
     }
@@ -79,7 +79,7 @@ class FileController extends Controller
     public function create()
     {
         return view('files.create', [
-            'groups'    => Group::all(),
+            'groups' => Group::all(),
         ]);
     }
 
@@ -87,8 +87,8 @@ class FileController extends Controller
     {
         if (! $request->user()->can('upload files')) {
             return redirect()->to('/home')->with([
-                'type'   => 'danger',
-                'Meldung'    => 'Berechtigung fehlt',
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -104,8 +104,8 @@ class FileController extends Controller
         }
 
         return redirect()->to('/files')->with([
-            'type'  => 'success',
-            'Meldung'   => 'Download erzeugt',
+            'type' => 'success',
+            'Meldung' => 'Download erzeugt',
         ]);
     }
 
@@ -122,14 +122,14 @@ class FileController extends Controller
             @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
         } else {
             return redirect()->to(url('home/'))->with([
-                'type'  => 'warning',
-                'Meldung'   => 'Upload fehlgeschlagen',
+                'type' => 'warning',
+                'Meldung' => 'Upload fehlgeschlagen',
             ]);
         }
 
         return redirect(url('home/#'.$posts->id))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Bild erfolgreich hinzugefügt',
+            'type' => 'success',
+            'Meldung' => 'Bild erfolgreich hinzugefügt',
         ]);
     }
 
@@ -185,10 +185,10 @@ class FileController extends Controller
         $noMedia = $this->scanDir();
         foreach ($noMedia as $id => $mediaDir) {
             foreach ($mediaDir as $media) {
-                $link = storage_path() . '/app/' . $id . '/' . $media;
+                $link = storage_path().'/app/'.$id.'/'.$media;
                 unlink($link);
             }
-            $link = storage_path() . '/app/' . $id;
+            $link = storage_path().'/app/'.$id;
             rmdir($link);
         }
 
@@ -197,9 +197,7 @@ class FileController extends Controller
 
     public function removeOldFiles(DeleteFilesRequest $request)
     {
-
-
-        $media = Media::where('model_type', 'App\Model\Post')->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
+        $media = Media::where('model_type', \App\Model\Post::class)->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
 
         foreach ($media as $Media) {
             $Media->delete();

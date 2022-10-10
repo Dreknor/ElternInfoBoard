@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -18,6 +17,7 @@ class newUnveroeffentlichterBeitrag extends Mailable
      * @var
      */
     public $von;
+
     /**
      * @var
      */
@@ -25,6 +25,7 @@ class newUnveroeffentlichterBeitrag extends Mailable
 
     /**
      * newUnveroeffentlichterBeitrag constructor.
+     *
      * @param $von
      * @param $Betreff
      */
@@ -42,8 +43,8 @@ class newUnveroeffentlichterBeitrag extends Mailable
         return $this
             ->subject('neuer unveröffentlichter Beitrag im '.config('app.name'))
             ->view('emails.neuerUnveroeffentlichterBeitrag', [
-            'von'   => $this->von,
-            'betreff'   => $this->Betreff,
-        ]);
+                'von' => $this->von,
+                'betreff' => $this->Betreff,
+            ]);
     }
 }

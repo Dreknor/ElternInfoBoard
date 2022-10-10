@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPermissionToSeeAllRueckmeldungen extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -33,7 +33,7 @@ class AddPermissionToSeeAllRueckmeldungen extends Migration
                         "icon":"fas fa-comment-dots"
                     }
             }',
-            'created_at' => \Carbon\Carbon::now()
+            'created_at' => \Carbon\Carbon::now(),
         ]);
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
     }
@@ -49,4 +49,4 @@ class AddPermissionToSeeAllRueckmeldungen extends Migration
             //
         });
     }
-}
+};

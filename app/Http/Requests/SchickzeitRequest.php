@@ -28,20 +28,20 @@ class SchickzeitRequest extends FormRequest
                 'required',
                 'string',
             ],
-            'weekday'   => [
+            'weekday' => [
                 'required',
                 'in:Montag,Dienstag,Mittwoch,Donnerstag,Freitag',
             ],
-            'time'      => [
+            'time' => [
                 'required',
                 'date_format:H:i',
             ],
-            'time_spaet'=> [
+            'time_spaet' => [
                 'sometimes',
                 'nullable',
                 'date_format:H:i',
             ],
-            'type'      => [
+            'type' => [
                 'sometimes',
                 'string',
             ],

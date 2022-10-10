@@ -2,7 +2,6 @@
 
 namespace App\Http\View\Composers;
 
-use App\Model\Losung;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 

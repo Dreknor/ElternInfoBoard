@@ -42,9 +42,9 @@ class SchickzeitenController extends Controller
         ];
 
         return view('schickzeiten.index', [
-            'schickzeiten'  => $zeiten,
-            'childs'        => $childs,
-            'weekdays'      => $weekdays,
+            'schickzeiten' => $zeiten,
+            'childs' => $childs,
+            'weekdays' => $weekdays,
         ]);
     }
 
@@ -69,10 +69,10 @@ class SchickzeitenController extends Controller
         ];
 
         return view('schickzeiten.index_verwaltung', [
-            'schickzeiten'  => $zeiten,
-            'childs'        => $childs,
-            'weekdays'      => $weekdays,
-            'parents'       => $parents,
+            'schickzeiten' => $zeiten,
+            'childs' => $childs,
+            'weekdays' => $weekdays,
+            'parents' => $parents,
         ]);
     }
 
@@ -89,8 +89,8 @@ class SchickzeitenController extends Controller
         ]);
 
         return redirect()->back()->with([
-           'type'   => 'success',
-           'Meldung' =>  'Kind angelegt',
+            'type' => 'success',
+            'Meldung' => 'Kind angelegt',
         ]);
     }
 
@@ -104,8 +104,8 @@ class SchickzeitenController extends Controller
         ]);
 
         return redirect()->back()->with([
-           'type'   => 'success',
-           'Meldung' =>  'Kind angelegt',
+            'type' => 'success',
+            'Meldung' => 'Kind angelegt',
         ]);
     }
 
@@ -118,28 +118,28 @@ class SchickzeitenController extends Controller
     public function storeVerwaltung($parent, SchickzeitRequest $request)
     {
         $weekdays = [
-            'Montag'   => '1',
+            'Montag' => '1',
             'Dienstag' => '2',
             'Mittwoch' => '3',
             'Donnerstag' => '4',
-            'Freitag'  => '5',
+            'Freitag' => '5',
         ];
 
         $schickzeiten = Schickzeiten::query()->where([
             'child_name' => $request->child,
-            'weekday'   =>  $weekdays[$request->weekday],
-            'users_id'  => $parent,
+            'weekday' => $weekdays[$request->weekday],
+            'users_id' => $parent,
         ])->update([
             'changedBy' => Auth::id(),
-            'deleted_at'=> Carbon::now(),
+            'deleted_at' => Carbon::now(),
         ]);
 
         $neueSchickzeit = new Schickzeiten([
-            'users_id'  => $parent,
+            'users_id' => $parent,
             'child_name' => $request->child,
-            'weekday'   =>  $weekdays[$request->weekday],
-            'type'      => $request->type,
-            'time'      => $request->time,
+            'weekday' => $weekdays[$request->weekday],
+            'type' => $request->type,
+            'time' => $request->time,
             'changedBy' => Auth::id(),
         ]);
 
@@ -147,11 +147,11 @@ class SchickzeitenController extends Controller
 
         if ($request->type == 'ab' and $request->time_spaet != '') {
             $neueSchickzeit2 = new Schickzeiten([
-                'users_id'  => $parent,
+                'users_id' => $parent,
                 'child_name' => $request->child,
-                'weekday'   =>  $weekdays[$request->weekday],
-                'type'      => 'spät.',
-                'time'      => $request->time_spaet,
+                'weekday' => $weekdays[$request->weekday],
+                'type' => 'spät.',
+                'time' => $request->time_spaet,
                 'changedBy' => Auth::id(),
             ]);
 
@@ -159,8 +159,8 @@ class SchickzeitenController extends Controller
         }
 
         return redirect()->to(url('verwaltung/schickzeiten'))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Zeiten gespeichert',
+            'type' => 'success',
+            'Meldung' => 'Zeiten gespeichert',
         ]);
     }
 
@@ -173,37 +173,37 @@ class SchickzeitenController extends Controller
     public function store(SchickzeitRequest $request)
     {
         $weekdays = [
-            'Montag'   => '1',
+            'Montag' => '1',
             'Dienstag' => '2',
             'Mittwoch' => '3',
             'Donnerstag' => '4',
-            'Freitag'  => '5',
+            'Freitag' => '5',
         ];
 
         $schickzeiten = $request->user()->schickzeiten_own()->where([
             'child_name' => $request->child,
-            'weekday'   =>  $weekdays[$request->weekday],
+            'weekday' => $weekdays[$request->weekday],
         ])->update([
             'changedBy' => Auth::id(),
-            'deleted_at'=> Carbon::now(),
+            'deleted_at' => Carbon::now(),
         ]);
 
         if ($request->user()->sorgeberechtigter2 != null) {
             $schickzeiten = $request->user()->sorgeberechtigter2->schickzeiten_own()->where([
                 'child_name' => $request->child,
-                'weekday'   =>  $weekdays[$request->weekday],
+                'weekday' => $weekdays[$request->weekday],
             ])->update([
                 'changedBy' => Auth::id(),
-                'deleted_at'=> Carbon::now(),
+                'deleted_at' => Carbon::now(),
             ]);
         }
 
         $neueSchickzeit = new Schickzeiten([
-            'users_id'  => $request->user()->id,
+            'users_id' => $request->user()->id,
             'child_name' => $request->child,
-            'weekday'   =>  $weekdays[$request->weekday],
-            'type'      => $request->type,
-            'time'      => $request->time,
+            'weekday' => $weekdays[$request->weekday],
+            'type' => $request->type,
+            'time' => $request->time,
             'changedBy' => $request->user()->id,
         ]);
 
@@ -211,12 +211,12 @@ class SchickzeitenController extends Controller
 
         if ($request->type == 'ab' and $request->time_spaet != '') {
             $neueSchickzeit2 = new Schickzeiten([
-                'users_id'  => $request->user()->id,
+                'users_id' => $request->user()->id,
                 'child_name' => $request->child,
-                'weekday'   =>  $weekdays[$request->weekday],
-                'type'      => 'spät.',
-                'time'      => $request->time_spaet,
-                'changedBy' =>  $request->user()->id,
+                'weekday' => $weekdays[$request->weekday],
+                'type' => 'spät.',
+                'time' => $request->time_spaet,
+                'changedBy' => $request->user()->id,
             ]);
 
             $neueSchickzeit2->save();
@@ -231,8 +231,8 @@ class SchickzeitenController extends Controller
         }
 
         return redirect()->to(url('schickzeiten'))->with([
-            'type'  => $type,
-            'Meldung'   => 'Zeiten gespeichert.'.$text,
+            'type' => $type,
+            'Meldung' => 'Zeiten gespeichert.'.$text,
         ]);
     }
 
@@ -253,10 +253,10 @@ class SchickzeitenController extends Controller
 
         return view('schickzeiten.edit', [
             'child' => $child,
-            'day'   => $weekdays[$day],
-            'day_number'   => $day,
-            'schickzeit'    => $schickzeit->first(),
-            'schickzeit_spaet'    => $schickzeit->where('type', '=', 'spät.')->first(),
+            'day' => $weekdays[$day],
+            'day_number' => $day,
+            'schickzeit' => $schickzeit->first(),
+            'schickzeit_spaet' => $schickzeit->where('type', '=', 'spät.')->first(),
 
         ]);
     }
@@ -278,11 +278,11 @@ class SchickzeitenController extends Controller
 
         return view('schickzeiten.edit_verwaltung', [
             'child' => $child,
-            'parent'    => $parent,
-            'day'   => $weekdays[$day],
-            'day_number'   => $day,
-            'schickzeit'    => $schickzeit->first(),
-            'schickzeit_spaet'    => $schickzeit->where('type', '=', 'spät.')->first(),
+            'parent' => $parent,
+            'day' => $weekdays[$day],
+            'day_number' => $day,
+            'schickzeit' => $schickzeit->first(),
+            'schickzeit_spaet' => $schickzeit->where('type', '=', 'spät.')->first(),
 
         ]);
     }
@@ -291,7 +291,7 @@ class SchickzeitenController extends Controller
     {
         $schickzeit = $request->user()->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
             'changedBy' => Auth::id(),
-            'deleted_at'=> Carbon::now(),
+            'deleted_at' => Carbon::now(),
         ]);
         if ($request->user()->sorgeberechtigter2 != null) {
             $schickzeit = $request->user()->sorgeberechtigter2->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
@@ -301,8 +301,8 @@ class SchickzeitenController extends Controller
         }
 
         return redirect()->back()->with([
-           'type'   => 'warning',
-           'Meldung' => 'Schickzeit wurde gelöscht',
+            'type' => 'warning',
+            'Meldung' => 'Schickzeit wurde gelöscht',
         ]);
     }
 
@@ -310,25 +310,26 @@ class SchickzeitenController extends Controller
     {
         $schickzeit = Schickzeiten::query()->where('weekday', '=', $day)->where('child_name', '=', $child)->where('users_id', $parent)->update([
             'changedBy' => Auth::id(),
-            'deleted_at'=> Carbon::now(),
+            'deleted_at' => Carbon::now(),
         ]);
 
         return redirect()->back()->with([
-           'type'   => 'warning',
-           'Meldung' => 'Schickzeit wurde gelöscht',
+            'type' => 'warning',
+            'Meldung' => 'Schickzeit wurde gelöscht',
         ]);
     }
 
     public function download()
     {
-       return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
+        return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
     }
 
-    public function sendReminder(){
+    public function sendReminder()
+    {
         $users = User::has('schickzeiten')->get();
 
-        foreach ($users as $user){
-           Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten));
+        foreach ($users as $user) {
+            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten));
         }
     }
 }

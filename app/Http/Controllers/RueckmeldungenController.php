@@ -21,19 +21,17 @@ use PDF;
 
 class RueckmeldungenController extends Controller
 {
-
     public function updateDate(updateRueckmeldeDateRequest $request, Rueckmeldungen $rueckmeldung)
     {
         $rueckmeldung->update([
-            'ende' => $request->date
+            'ende' => $request->date,
         ]);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Rückmeldefrist wurde verlängert'
+            'Meldung' => 'Rückmeldefrist wurde verlängert',
         ]);
     }
-
 
     public function create(Post $post, $type)
     {
@@ -50,11 +48,12 @@ class RueckmeldungenController extends Controller
         if ($rueckmeldung->userRueckmeldungen()->count() > 0) {
             return redirect()->back()->with([
                 'type' => 'danger',
-                'Meldung' => 'Es wurden bereits Rückmeldungen gegeben'
+                'Meldung' => 'Es wurden bereits Rückmeldungen gegeben',
             ]);
         }
+
         return view('nachrichten.editAbfrage', [
-            'rueckmeldung' => $rueckmeldung
+            'rueckmeldung' => $rueckmeldung,
         ]);
     }
 
@@ -63,13 +62,13 @@ class RueckmeldungenController extends Controller
         if ($rueckmeldung->userRueckmeldungen->count() > 0) {
             return redirect()->back()->with([
                 'type' => 'danger',
-                'Meldung' => 'Es wurden bereits Rückmeldungen gegeben'
+                'Meldung' => 'Es wurden bereits Rückmeldungen gegeben',
             ]);
         }
 
         $rueckmeldung->update($request->validated());
         $rueckmeldung->update([
-            'max_answers' => $request->max_number
+            'max_answers' => $request->max_number,
         ]);
 
         AbfrageOptions::where('rueckmeldung_id', $rueckmeldung->id)->delete();
@@ -88,69 +87,68 @@ class RueckmeldungenController extends Controller
 
         AbfrageOptions::insert($options);
 
-        return redirect(url('/home#' . $rueckmeldung->post->id))->with([
+        return redirect(url('/home#'.$rueckmeldung->post->id))->with([
             'type' => 'success',
-            'Meldung' => 'Abfrage wurde geändert.'
+            'Meldung' => 'Abfrage wurde geändert.',
         ]);
     }
 
     /**
      * Show all Rueckmeldungen
      */
-
     public function index()
     {
-        if (!auth()->user()->can('manage rueckmeldungen')) {
+        if (! auth()->user()->can('manage rueckmeldungen')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
         return view('rueckmeldungen.index', [
-            'rueckmeldungen' => Rueckmeldungen::whereHas('post')->with('post')->withCount('userRueckmeldungen as rueckmeldungen')->orderByDesc('ende')->get()
+            'rueckmeldungen' => Rueckmeldungen::whereHas('post')->with('post')->withCount('userRueckmeldungen as rueckmeldungen')->orderByDesc('ende')->get(),
         ]);
     }
 
     //zeigt alle Rückmeldungen zu einem Post
     public function show(Rueckmeldungen $rueckmeldung)
     {
-        if (!auth()->user()->can('manage rueckmeldungen')) {
+        if (! auth()->user()->can('manage rueckmeldungen')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
         return view('rueckmeldungen.show', [
             'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->orderByDesc('created_at')->get(),
-            'rueckmeldung' => $rueckmeldung
+            'rueckmeldung' => $rueckmeldung,
         ]);
     }
 
     public function download(Rueckmeldungen $rueckmeldung, $user_id)
     {
-        if (!auth()->user()->can('manage rueckmeldungen')) {
+        if (! auth()->user()->can('manage rueckmeldungen')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
         $pdf = PDF::loadView('pdf.userRueckmeldungen', [
             'nachricht' => $rueckmeldung->post,
-            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->where('users_id', $user_id)->get()
+            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->where('users_id', $user_id)->get(),
         ]);
 
-        return $pdf->download(Carbon::now()->format('Y-m-d') . '_Rückmeldung.pdf');
+        return $pdf->download(Carbon::now()->format('Y-m-d').'_Rückmeldung.pdf');
     }
 
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
-        if (!auth()->user()->can('manage rueckmeldungen')) {
+        if (! auth()->user()->can('manage rueckmeldungen')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -159,23 +157,22 @@ class RueckmeldungenController extends Controller
                 //PDF für Text-Rückmeldungen
                 $pdf = PDF::loadView('pdf.userRueckmeldungen', [
                     'nachricht' => $rueckmeldung->post,
-                    'rueckmeldungen' => $rueckmeldung->userRueckmeldungen
+                    'rueckmeldungen' => $rueckmeldung->userRueckmeldungen,
                 ]);
                 break;
             case 'abfrage':
-                return Excel::download(new AbfrageExport($rueckmeldung), Str::camel($rueckmeldung->text) . Carbon::now()->format('Ymd_Hi') . '.xlsx');
+                return Excel::download(new AbfrageExport($rueckmeldung), Str::camel($rueckmeldung->text).Carbon::now()->format('Ymd_Hi').'.xlsx');
 
                 break;
         }
 
-
-        return $pdf->download(Carbon::now()->format('Y-m-d') . '_Nachrichten.pdf');
+        return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param  Request  $request
      * @return RedirectResponse
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
@@ -193,12 +190,11 @@ class RueckmeldungenController extends Controller
     /**
      * Store a newly created Abfrage in storage.
      *
-     * @param Request $request
+     * @param  Request  $request
      * @return RedirectResponse
      */
     public function storeAbfrage(createAbfrageRequest $request, $posts_id)
     {
-
         $rueckmeldung = new Rueckmeldungen($request->validated());
         $rueckmeldung->type = 'abfrage';
         $rueckmeldung->text = $request->description;
@@ -207,7 +203,6 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->save();
 
         $post = Post::find($posts_id);
-
 
         $options = [];
         foreach ($request->options as $key => $value) {
@@ -232,14 +227,14 @@ class RueckmeldungenController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
-     * @param Rueckmeldungen $rueckmeldungen
+     * @param  Request  $request
+     * @param  Rueckmeldungen  $rueckmeldungen
      * @return RedirectResponse
      */
     public function update(Request $request, $post_id)
     {
         $rueckmeldung = Rueckmeldungen::firstOrNew([
-            'post_id'  => $post_id,
+            'post_id' => $post_id,
         ]);
 
         $rueckmeldung->fill($request->all());
@@ -254,15 +249,15 @@ class RueckmeldungenController extends Controller
         }
 
         return redirect()->to(url('home'))->with([
-            'type'   => 'success',
-            'Meldung'    => 'Rückmeldung gespeichert',
+            'type' => 'success',
+            'Meldung' => 'Rückmeldung gespeichert',
         ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param Rueckmeldungen $rueckmeldungen
+     * @param  Rueckmeldungen  $rueckmeldungen
      * @return JsonResponse
      */
     public function destroy(Rueckmeldungen $rueckmeldung)
@@ -277,7 +272,7 @@ class RueckmeldungenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Rueckmeldungen $rueckmeldungen
+     * @param  Rueckmeldungen  $rueckmeldungen
      * @return RedirectResponse
      */
     public function destroyRueckmeldung($rueckmeldungen)
@@ -285,8 +280,8 @@ class RueckmeldungenController extends Controller
         $rueckmeldungen->delete();
 
         return redirect()->back()->with([
-            'type'   => 'success',
-            'Meldung'    => 'Rückmeldung gelöscht',
+            'type' => 'success',
+            'Meldung' => 'Rückmeldung gelöscht',
         ]);
     }
 
@@ -313,18 +308,18 @@ class RueckmeldungenController extends Controller
     {
         if ($rueckmeldungen->commentable) {
             $rueckmeldungen->update([
-                'commentable'=>false,
+                'commentable' => false,
             ]);
         } else {
             $rueckmeldungen->update([
-                'commentable'=>true,
+                'commentable' => true,
             ]);
         }
 
         return redirect()->back();
     }
 
-    public function createImageRueckmeldung(Request $request,  $posts_id)
+    public function createImageRueckmeldung(Request $request, $posts_id)
     {
         $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
@@ -338,12 +333,12 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->save();
 
         return redirect()->back()->with([
-            'type'  => 'success',
-            'Meldung'=>'Bild-Upload mit Kommentaren erstellt.',
+            'type' => 'success',
+            'Meldung' => 'Bild-Upload mit Kommentaren erstellt.',
         ]);
     }
 
-    public function createDiskussionRueckmeldung(Request $request,  $posts_id)
+    public function createDiskussionRueckmeldung(Request $request, $posts_id)
     {
         $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
@@ -357,8 +352,8 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->save();
 
         return redirect()->back()->with([
-            'type'  => 'success',
-            'Meldung'=>'Diskussion erstellt.',
+            'type' => 'success',
+            'Meldung' => 'Diskussion erstellt.',
         ]);
     }
 }

@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePushRequest;
 use App\Model\User;
 use App\Notifications\PushNews;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 
 class PushController extends Controller
@@ -19,7 +17,7 @@ class PushController extends Controller
     /**
      * Store the PushSubscription.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(StorePushRequest $request)

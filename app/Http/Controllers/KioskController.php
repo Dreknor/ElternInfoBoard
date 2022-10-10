@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\Group;
-use App\Model\Losung;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class KioskController extends Controller
@@ -24,10 +22,10 @@ class KioskController extends Controller
 
         $Gruppen = Group::where('protected', 0)->with(
             ['posts' => function ($query) {
-            $query->whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay());
-        }, 'listen' => function ($query) {
+                $query->whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay());
+            }, 'listen' => function ($query) {
                 $query->whereDate('listen.ende', '>', Carbon::now()->startOfDay());
-            }, ]
+            }]
         )->get();
 
         foreach ($Gruppen as $Gruppe) {
@@ -38,11 +36,11 @@ class KioskController extends Controller
         $Listen = $Listen->unique('id')->sortByDesc('updated_at');
 
         return view('kiosk.index', [
-            'refresh'   => 600,
-            'listen'    => $Listen,
+            'refresh' => 600,
+            'listen' => $Listen,
             'Nachrichten' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
             'refreshUrl' => '',
-            'archiv'    => ''
+            'archiv' => '',
         ]);
     }
 }

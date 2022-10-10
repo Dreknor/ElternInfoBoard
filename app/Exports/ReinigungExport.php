@@ -7,17 +7,10 @@ use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-/**
- *
- */
 class ReinigungExport implements FromCollection, WithMapping, WithHeadings
 {
-
     private $bereich;
-
-
 
     public function __construct($bereich)
     {
@@ -25,8 +18,8 @@ class ReinigungExport implements FromCollection, WithMapping, WithHeadings
     }
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         $datum = Carbon::now()->startOfWeek()->startOfDay();
@@ -39,7 +32,7 @@ class ReinigungExport implements FromCollection, WithMapping, WithHeadings
     public function map($reinigung): array
     {
         return [
-            $reinigung->datum->format('d.m.').' - '. $reinigung->datum->endOfWeek()->format('d.m.Y') ,
+            $reinigung->datum->format('d.m.').' - '.$reinigung->datum->endOfWeek()->format('d.m.Y'),
             'Familie '.$reinigung->user->familie_name,
             $reinigung->aufgabe,
             $reinigung->kommentar,
@@ -49,10 +42,10 @@ class ReinigungExport implements FromCollection, WithMapping, WithHeadings
     public function headings(): array
     {
         return [
-          'Datum',
-          'Familie',
-          'Aufgabe',
-          'Anmerkung'
+            'Datum',
+            'Familie',
+            'Aufgabe',
+            'Anmerkung',
         ];
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddProtectedToGroups extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -20,7 +20,7 @@ class AddProtectedToGroups extends Migration
         \Illuminate\Support\Facades\DB::table('groups')->insert([
             [
                 'name' => 'Elternrat',
-                'protected'=>1,
+                'protected' => 1,
             ],
         ]);
     }
@@ -36,4 +36,4 @@ class AddProtectedToGroups extends Migration
             $table->removeColumn('protected');
         });
     }
-}
+};

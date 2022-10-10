@@ -6,7 +6,7 @@
                     <div class="carousel-item text-center @if($loop->first) active @endif">
                         <a href="{{url('/image/'.$media->id)}}" target="_blank">
                             <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 240px" >
-                            @if(optional($nachricht->rueckmeldung)->type == 'bild')
+                            @if($nachricht->rueckmeldung?->type == 'bild')
                                 <h6 class="small">{{$media->name}}</h6>
                             @endif
                         </a>

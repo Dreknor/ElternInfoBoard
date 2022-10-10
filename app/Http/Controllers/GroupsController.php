@@ -16,26 +16,23 @@ class GroupsController extends Controller
 
     public function index()
     {
-        if (auth()->user()->can('view groups')){
+        if (auth()->user()->can('view groups')) {
             $groups = Group::with('users')->get();
-
         } else {
-            $groups =  auth()->user()->groups;
+            $groups = auth()->user()->groups;
         }
 
-
         return view('groups.index')->with([
-            'groups'=> $groups,
+            'groups' => $groups,
         ]);
     }
 
     public function store(CreateGroupRequest $createGroupRequest)
     {
-
-        if (!auth()->user()->can('view groups')){
+        if (! auth()->user()->can('view groups')) {
             return redirect()->back()->with([
-                'type'=>'danger',
-                'Meldung'=>'Berechtigung fehlt.'
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
             ]);
         }
 
@@ -48,23 +45,23 @@ class GroupsController extends Controller
         });
 
         return redirect()->back()->with([
-            'type'  => 'success',
-            'Meldung'   => 'Gruppe wurde erstellt',
+            'type' => 'success',
+            'Meldung' => 'Gruppe wurde erstellt',
         ]);
     }
 
-    public function delete(Request $request, Group $group){
-        if (!auth()->user()->can('delete groups')){
+    public function delete(Request $request, Group $group)
+    {
+        if (! auth()->user()->can('delete groups')) {
             return redirect()->back()->with([
-                'type'=>'danger',
-                'Meldung'=>'Berechtigung fehlt.'
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
             ]);
         }
 
-        if ( Hash::check($request->passwort, auth()->user()->password)) {
-
+        if (Hash::check($request->passwort, auth()->user()->password)) {
             $request->validate([
-                'passwort' => ['required', 'string']
+                'passwort' => ['required', 'string'],
             ]);
 
             $group->users()->sync([]);
@@ -76,7 +73,7 @@ class GroupsController extends Controller
 
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Gruppe wurde gelöscht.'
+                'Meldung' => 'Gruppe wurde gelöscht.',
             ]);
         }
     }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Model\Group;
 use App\Model\Post;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class ApiController extends Controller
@@ -24,7 +23,7 @@ class ApiController extends Controller
                 }['id','posts.header','posts.id','posts.updated_at']
         */
 
-        $Nachrichten = Post::whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay())->with(['groups' =>  function ($query) {
+        $Nachrichten = Post::whereDate('posts.archiv_ab', '>', Carbon::now()->startOfDay())->with(['groups' => function ($query) {
             $query->where('groups.protected', 0);
         }])->get(['id', 'header', 'updated_at']);
 

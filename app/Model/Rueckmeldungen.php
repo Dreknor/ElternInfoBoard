@@ -2,7 +2,6 @@
 
 namespace App\Model;
 
-use App\Events\RueckmeldungSaved;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -22,11 +21,11 @@ class Rueckmeldungen extends Model
      * @var array
      */
     protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable', 'max_answers', 'multiple'];
+
     /**
      * @var array
      */
     protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple'];
-
 
     /**
      * @var array
@@ -35,7 +34,7 @@ class Rueckmeldungen extends Model
         'ende' => 'datetime',
         'pflicht' => 'boolean',
         'commentable' => 'boolean',
-        'multiple' => 'boolean'
+        'multiple' => 'boolean',
     ];
 
     /**
@@ -51,7 +50,6 @@ class Rueckmeldungen extends Model
      */
     public function userRueckmeldungen()
     {
-
         if ($this->type == 'abfrage') {
             return $this->hasMany(AbfrageAntworten::class, 'rueckmeldung_id');
         }
@@ -68,7 +66,6 @@ class Rueckmeldungen extends Model
         return null;
     }
 
-
     /**
      * The "booted" method of the model.
      *
@@ -83,7 +80,6 @@ class Rueckmeldungen extends Model
                     'archiv_ab' => $rueckmeldung->ende,
                 ]);
             }
-
         });
     }
 }

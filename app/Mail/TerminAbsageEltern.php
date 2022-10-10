@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,8 +11,11 @@ class TerminAbsageEltern extends Mailable
     use Queueable, SerializesModels;
 
     public $liste;
+
     public $termin;
+
     public $user;
+
     protected $text;
 
     /**
@@ -21,7 +23,7 @@ class TerminAbsageEltern extends Mailable
      *
      * @return void
      */
-    public function __construct($user, $liste, $termin, $text = "")
+    public function __construct($user, $liste, $termin, $text = '')
     {
         $this->liste = $liste;
         $this->termin = $termin;
@@ -46,7 +48,7 @@ class TerminAbsageEltern extends Mailable
                 'termin' => $this->termin,
                 'liste' => $this->liste,
                 'user' => $this->user,
-                'text' => $this->text
+                'text' => $this->text,
             ]);
     }
 }

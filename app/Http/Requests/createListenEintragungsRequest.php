@@ -24,7 +24,7 @@ class createListenEintragungsRequest extends FormRequest
     public function rules()
     {
         return [
-            'eintragung' => ['required', 'string']
+            'eintragung' => ['required', 'string'],
         ];
     }
 }

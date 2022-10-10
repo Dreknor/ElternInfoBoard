@@ -11,9 +11,8 @@ class Poll extends Model
 
     protected $fillable = ['poll_name', 'description', 'ends', 'post_id', 'author_id', 'max_number'];
 
-
     protected $casts = [
-        'ends' => 'date'
+        'ends' => 'date',
     ];
 
     public function post()
@@ -40,5 +39,4 @@ class Poll extends Model
     {
         return $this->hasMany(Poll_Answers::class, 'poll_id');
     }
-
 }

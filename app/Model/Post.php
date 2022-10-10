@@ -6,11 +6,9 @@ use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Contracts\ReactableInterface;
-use DevDojo\LaravelReactions\Models\Reaction;
 use DevDojo\LaravelReactions\Traits\Reactable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Query\Builder;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
@@ -25,9 +23,10 @@ class Post extends Model implements HasMedia, ReactableInterface
     use Reactable;
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable'];
+
     protected $casts = [
         'archiv_ab' => 'datetime',
-        'reactable' => 'boolean'
+        'reactable' => 'boolean',
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
@@ -78,5 +77,4 @@ class Post extends Model implements HasMedia, ReactableInterface
     {
         return $query->where('released', 1);
     }
-
 }

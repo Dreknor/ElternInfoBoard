@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,8 +11,11 @@ class SchickzeitenReminder extends Mailable
     use Queueable, SerializesModels;
 
     private $name;
+
     private $schickzeiten;
+
     private $kinder;
+
     private $weekdays = [
         '1' => 'Montag',
         '2' => 'Dienstag',
@@ -31,8 +33,7 @@ class SchickzeitenReminder extends Mailable
     {
         $this->schickzeiten = $schickzeiten;
         $this->name = $name;
-        $this->kinder =  $schickzeiten->pluck('child_name')->unique();
-
+        $this->kinder = $schickzeiten->pluck('child_name')->unique();
     }
 
     /**
@@ -44,11 +45,11 @@ class SchickzeitenReminder extends Mailable
     {
         return $this
             ->subject('Übersicht Schickzeiten')
-            ->view('emails.schickzeitenReminder',[
+            ->view('emails.schickzeitenReminder', [
                 'name' => $this->name,
                 'schickzeiten' => $this->schickzeiten,
                 'kinder' => $this->kinder,
-                'weekdays' => $this->weekdays
+                'weekdays' => $this->weekdays,
             ]);
     }
 }

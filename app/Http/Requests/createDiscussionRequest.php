@@ -24,14 +24,14 @@ class createDiscussionRequest extends FormRequest
     public function rules()
     {
         return [
-            'header'    => [
+            'header' => [
                 'required',
                 'string',
             ],
-            'text'      => [
+            'text' => [
                 'required',
             ],
-            'sticky'    => [
+            'sticky' => [
                 'required',
                 'boolean',
             ],

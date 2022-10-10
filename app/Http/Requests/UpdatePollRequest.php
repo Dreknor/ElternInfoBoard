@@ -28,7 +28,7 @@ class UpdatePollRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'ends' => ['required', 'date', 'after:today'],
             'max_number' => ['required', 'integer', 'min:1'],
-            'options' => ['required']
+            'options' => ['required'],
         ];
     }
 }

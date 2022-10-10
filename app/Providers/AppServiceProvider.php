@@ -34,7 +34,6 @@ class AppServiceProvider extends ServiceProvider
     {
         \Illuminate\Pagination\Paginator::useBootstrap();
 
-
         Schema::defaultStringLength(191);
 
         setlocale(LC_TIME, 'de_DE');
@@ -46,10 +45,10 @@ class AppServiceProvider extends ServiceProvider
         /**
          * Paginate a standard Laravel Collection.
          *
-         * @param int $perPage
-         * @param int $total
-         * @param int $page
-         * @param string $pageName
+         * @param  int  $perPage
+         * @param  int  $total
+         * @param  int  $page
+         * @param  string  $pageName
          * @return array
          */
         Collection::macro('paginate', function ($perPage, $total = null, $page = null, $pageName = 'page') {
@@ -123,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
              * An extension of the {@see Collection::sortBy()} method that allows for sorting against as many different
              * keys. Uses a combination of {@see Collection::sortBy()} and {@see Collection::groupBy()} to achieve this.
              *
-             * @param array $keys An associative array that uses the key to sort by (which accepts dot separated values,
+             * @param  array  $keys An associative array that uses the key to sort by (which accepts dot separated values,
              *                    as {@see Collection::sortBy()} would) and the value is the order (either ASC or DESC)
              */
             Collection::macro('sortByMulti', function (array $keys) {

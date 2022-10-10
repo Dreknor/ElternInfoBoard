@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\dailyMailReport;
 use App\Mail\SendFeedback;
+use App\Model\Mail as MailModel;
 use App\Model\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Mail;
-use App\Model\Mail as MailModel;
 
 class FeedbackController extends Controller
 {
@@ -20,13 +20,11 @@ class FeedbackController extends Controller
 
     public function show()
     {
-
-
         return view('feedback.show', [
-            'mitarbeiter'   => User::whereHas('roles', function ($q) {
+            'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
             })->orderBy('name')->get(),
-            'emails' => (!auth()->user()->can('see mails')) ? auth()->user()->mails : MailModel::orderByDesc('created_at')->paginate(30)
+            'emails' => (! auth()->user()->can('see mails')) ? auth()->user()->mails : MailModel::orderByDesc('created_at')->paginate(30),
         ]);
     }
 
@@ -54,15 +52,13 @@ class FeedbackController extends Controller
                         'Meldung' => $error,
                     ]);
                 }
-
-
             }
         }
         $mail = new MailModel([
             'senders_id' => auth()->id(),
             'to' => $email,
             'subject' => $request->betreff,
-            'text' => $request->text
+            'text' => $request->text,
         ]);
         $mail->save();
         $mail->addAllMediaFromRequest(['files'])
@@ -82,9 +78,8 @@ class FeedbackController extends Controller
         } catch (Exception $e) {
             $feedback = [
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: ' . $e->getMessage(),
+                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: '.$e->getMessage(),
             ];
-
         }
 
         return redirect()->back()->with($feedback);
@@ -92,15 +87,15 @@ class FeedbackController extends Controller
 
     public function showMail(MailModel $mail)
     {
-        if (!auth()->user()->can('see mails') and auth()->id() != $mail->senders_id) {
+        if (! auth()->user()->can('see mails') and auth()->id() != $mail->senders_id) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Zugriff verweigert' . auth()->id() . ' != ' . $mail->senders_id
+                'Meldung' => 'Zugriff verweigert'.auth()->id().' != '.$mail->senders_id,
             ]);
         }
 
         return view('feedback.showMail', [
-            'mail' => $mail
+            'mail' => $mail,
         ]);
     }
 

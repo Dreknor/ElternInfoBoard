@@ -29,7 +29,7 @@ class User extends Authenticatable
     protected static function booted()
     {
         parent::boot();
-        static::creating(fn($foo) => $foo->uuid = Str::uuid());
+        static::creating(fn ($foo) => $foo->uuid = Str::uuid());
     }
 
     /**
@@ -38,7 +38,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar'
+        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar',
     ];
 
     /**
@@ -58,14 +58,15 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'lastEmail' => 'datetime',
-        'changePassword'    => 'boolean',
-        'last_online_at'    => 'datetime',
-        'track_login'    => 'boolean',
-        'changeSettings'    => 'boolean',
+        'changePassword' => 'boolean',
+        'last_online_at' => 'datetime',
+        'track_login' => 'boolean',
+        'changeSettings' => 'boolean',
     ];
 
     /**
      * Verknüpfte Gruppen
+     *
      * @return BelongsToMany
      */
     public function groups()
@@ -75,6 +76,7 @@ class User extends Authenticatable
 
     /**
      * Posts verknüpft über die Gruppen
+     *
      * @return HasManyDeep
      */
     public function posts()
@@ -84,6 +86,7 @@ class User extends Authenticatable
 
     /**
      * Posts verknüpft über die Gruppen
+     *
      * @return HasManyDeep
      */
     public function postsNotArchived()
@@ -93,6 +96,7 @@ class User extends Authenticatable
 
     /**
      * Eigene Posts
+     *
      * @return HasManyDeep
      */
     public function own_posts()
@@ -102,6 +106,7 @@ class User extends Authenticatable
 
     /**
      * Termine Verknüpft über Gruppen
+     *
      * @return HasManyDeep
      */
     public function termine()
@@ -137,6 +142,7 @@ class User extends Authenticatable
 
     /**
      * Check if user has an old password that needs to be reset
+     *
      * @return bool
      */
     public function hasOldPassword()
@@ -157,16 +163,16 @@ class User extends Authenticatable
      */
     public function getRueckmeldung()
     {
-            $eigeneRueckmeldung = $this->userRueckmeldung;
+        $eigeneRueckmeldung = $this->userRueckmeldung;
 
-            if (! is_null($this->sorg2)) {
-                $sorgRueckmeldung = optional($this->sorgeberechtigter2)->userRueckmeldung;
-                if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
-                    return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-                } elseif (is_null($eigeneRueckmeldung)) {
-                    return $sorgRueckmeldung;
-                }
+        if (! is_null($this->sorg2)) {
+            $sorgRueckmeldung = $this->sorgeberechtigter2?->userRueckmeldung;
+            if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
+                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
+            } elseif (is_null($eigeneRueckmeldung)) {
+                return $sorgRueckmeldung;
             }
+        }
 
         // Merge collections and return single collection.
         return $eigeneRueckmeldung;
@@ -190,7 +196,7 @@ class User extends Authenticatable
         if (count($Name) > 2) {
             $Familienname = '';
             for ($key = 1; $key < count($Name); $key++) {
-                $Familienname .= ' ' . $Name[$key];
+                $Familienname .= ' '.$Name[$key];
             }
 
             return $Familienname;
@@ -233,6 +239,5 @@ class User extends Authenticatable
     public function mails()
     {
         return $this->hasMany(Mail::class, 'senders_id')->orderByDesc('created_at');
-
     }
 }

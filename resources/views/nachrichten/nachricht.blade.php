@@ -59,7 +59,7 @@
                             <div class="carousel-item text-center @if($loop->first) active @endif">
                                 <a href="{{url('/image/'.$media->id)}}" target="_blank">
                                     <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}">
-                                    @if(optional($nachricht->rueckmeldung)->type == 'bild')
+                                    @if($nachricht->rueckmeldung?->type == 'bild')
                                         <h6 class="small">{{$media->name}}</h6>
                                     @endif
                                 </a>
@@ -113,11 +113,11 @@
                                     aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}
                                 </div>
                                 <div class="col-auto">
-                                    Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}
+                                    Archiv ab: {{$nachricht->archiv_ab?->isoFormat('DD. MMMM YYYY')}}
                                 </div>
                                 <div class="col-auto">
                                     <div class="pull-right">
-                                        Autor: {{optional($nachricht->autor)->name}}
+                                        Autor: {{$nachricht->autor?->name}}
                                     </div>
                                 </div>
                             </div>

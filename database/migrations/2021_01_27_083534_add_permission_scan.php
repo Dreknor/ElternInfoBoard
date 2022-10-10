@@ -1,10 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-class AddPermissionScan extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -14,8 +12,8 @@ class AddPermissionScan extends Migration
     public function up()
     {
         \Illuminate\Support\Facades\DB::table('permissions')->insert([
-            'name'  => 'scan files',
-            'guard_name'    => 'web',
+            'name' => 'scan files',
+            'guard_name' => 'web',
         ]);
     }
 
@@ -28,4 +26,4 @@ class AddPermissionScan extends Migration
     {
         //
     }
-}
+};

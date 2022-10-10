@@ -6,7 +6,6 @@ use App\Model\Changelog;
 use App\Support\Collection;
 use Closure;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 
 class CheckNewsForUser
@@ -24,17 +23,15 @@ class CheckNewsForUser
             return $next($request);
         }
 
-
-
         if (auth()->user()->changeSettings) {
             $user = auth()->user();
             $user->changeSettings = 0;
             $user->save();
 
-            return redirect()->to('/einstellungen')->with(['changelog'    => true]);
+            return redirect()->to('/einstellungen')->with(['changelog' => true]);
         }
 
-        if (auth()->user()->track_login == true or auth()->user()->track_login == 1)   {
+        if (auth()->user()->track_login == true or auth()->user()->track_login == 1) {
             $news = Cache::remember('news_'.auth()->id(), 60 * 5, function () {
                 $news = [];
                 $changelog = Changelog::whereDate('created_at', '>=', auth()->user()->last_online_at)->first();

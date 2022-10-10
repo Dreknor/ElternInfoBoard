@@ -13,7 +13,6 @@ use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
 use Carbon\Carbon;
-use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,7 +38,7 @@ class UserController extends Controller
     public function index()
     {
         return view('user.index', [
-            'users' =>  User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles')
+            'users' => User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles'),
 
         ]);
     }
@@ -52,7 +51,7 @@ class UserController extends Controller
     public function create()
     {
         return view('user.create', [
-            'gruppen'   => Cache::remember('groups', 60 * 5, function () {
+            'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
         ]);
@@ -61,7 +60,7 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param  Request  $request
      * @return RedirectResponse
      */
     public function store(createUserRequest $request)
@@ -87,8 +86,8 @@ class UserController extends Controller
         }
 
         return redirect(url("users/$user->id"))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Benutzer wurde angelegt',
+            'type' => 'success',
+            'Meldung' => 'Benutzer wurde angelegt',
         ]);
     }
 
@@ -102,27 +101,27 @@ class UserController extends Controller
     {
         return view('user.show', [
             'user' => $user->load('groups'),
-            'gruppen'   => Cache::remember('groups', 60 * 5, function () {
+            'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();
             }),
-            'roles'     => Cache::remember('role', 60 * 5, function () {
+            'roles' => Cache::remember('role', 60 * 5, function () {
                 return Role::all();
             }),
             'users' => User::where([
                 ['sorg2', null],
                 ['id', '!=', $user->id],
-            ])->orWhere('sorg2', $user->id)->get()
+            ])->orWhere('sorg2', $user->id)->get(),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
-     * @param int $id
+     * @param  Request  $request
+     * @param  int  $id
      * @return RedirectResponse
      */
     public function update(verwaltungEditUserRequest $request, User $user)
@@ -153,23 +152,23 @@ class UserController extends Controller
             $user->password = Hash::make($request->input('new-password'));
         }
 
-        if ($request->sorg2 != ""){
+        if ($request->sorg2 != '') {
             $sorg2 = User::where('id', $request->sorg2)->update([
-                'sorg2' => $user->id
+                'sorg2' => $user->id,
             ]);
         }
 
         if ($user->save()) {
             return redirect()->back()->with([
-               'type'   => 'success',
-               'Meldung'    => 'Daten gespeichert.',
+                'type' => 'success',
+                'Meldung' => 'Daten gespeichert.',
             ]);
         }
 
         return redirect()->back()->with([
-        'type'   => 'danger',
-        'Meldung'    => 'Update fehlgeschlagen',
-    ]);
+            'type' => 'danger',
+            'Meldung' => 'Update fehlgeschlagen',
+        ]);
     }
 
     /**
@@ -187,8 +186,8 @@ class UserController extends Controller
             $sorg2 = User::where('id', '=', $user->sorg2)->first();
             if (! is_null($sorg2)) {
                 $sorg2->update([
-                        'sorg2' => null,
-                    ]
+                    'sorg2' => null,
+                ]
                 );
             }
 
@@ -196,7 +195,6 @@ class UserController extends Controller
                 'sorg2' => null,
             ]);
         }
-
 
         $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
 
@@ -215,15 +213,13 @@ class UserController extends Controller
         $user->krankmeldungen()->withTrashed()->forceDelete();
         $user->comments()->delete();
 
-
         Post::where('author', $user->id)->update(['author' => null]);
-
 
         $user->delete();
 
         return redirect()->back()->with([
-            'type' => "success",
-            'Meldung' => 'Benutzer gelöscht'
+            'type' => 'success',
+            'Meldung' => 'Benutzer gelöscht',
         ]);
         /*
          *
@@ -236,8 +232,8 @@ class UserController extends Controller
     {
         if (! $request->user()->can('loginAsUser')) {
             return redirect()->back()->with([
-               'Meldung'    => 'Berechtigung fehlt',
-               'type'       => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+                'type' => 'danger',
             ]);
         }
         session(['ownID' => $request->user()->id]);
@@ -267,8 +263,8 @@ class UserController extends Controller
         ]);
 
         return redirect()->back()->with([
-            'type'=>'success',
-            'Meldung'   => 'Verknüpfung der Konten aufgehoben',
+            'type' => 'success',
+            'Meldung' => 'Verknüpfung der Konten aufgehoben',
         ]);
     }
 }

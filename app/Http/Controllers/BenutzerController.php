@@ -7,7 +7,6 @@ use App\Model\Changelog;
 use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 
 class BenutzerController extends Controller
 {
@@ -32,7 +31,7 @@ class BenutzerController extends Controller
         }
 
         return view('user.settings', [
-            'user'  => $this->user,
+            'user' => $this->user,
             'changelog' => $changelog,
         ]);
     }
@@ -43,8 +42,8 @@ class BenutzerController extends Controller
         $user->update($request->all());
 
         return redirect()->back()->with([
-           'type'   => 'success',
-           'Meldung'    => 'Gespeichert.',
+            'type' => 'success',
+            'Meldung' => 'Gespeichert.',
         ]);
     }
 }

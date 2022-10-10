@@ -27,7 +27,7 @@ class SchickzeitenStundenExport implements FromView, WithTitle, WithEvents
 
         return view('export.schickzeiten', [
             'schickzeiten' => Schickzeiten::query()->where('time', '<', $stunde)->orderBy('time')->orderBy('type')->get(),
-            'stunde'    => $this->stunde,
+            'stunde' => $this->stunde,
         ]);
     }
 
@@ -43,7 +43,7 @@ class SchickzeitenStundenExport implements FromView, WithTitle, WithEvents
                 'outline' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                     'color' => [
-                        'rgb'   => '#000000',
+                        'rgb' => '#000000',
                     ],
                 ],
             ],

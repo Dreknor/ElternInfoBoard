@@ -12,7 +12,7 @@ class RolesController extends Controller
     {
         return view('permissions.edit', [
             'Rollen' => Role::all(),
-            'Rechte'    => Permission::all(),
+            'Rechte' => Permission::all(),
         ]);
     }
 
@@ -23,8 +23,8 @@ class RolesController extends Controller
         }
 
         return  redirect()->back()->with([
-            'type'   => 'success',
-            'Meldung'    => 'Berechtigungen gespeichert',
+            'type' => 'success',
+            'Meldung' => 'Berechtigungen gespeichert',
         ]);
     }
 
@@ -33,8 +33,8 @@ class RolesController extends Controller
         $Role = Role::firstOrCreate(['name' => $request->name]);
 
         return redirect()->back()->with([
-            'type'   => 'success',
-            'Meldung'    => 'Rolle erstellt',
+            'type' => 'success',
+            'Meldung' => 'Rolle erstellt',
         ]);
     }
 
@@ -43,8 +43,8 @@ class RolesController extends Controller
         $Role = Permission::firstOrCreate(['name' => $request->name]);
 
         return redirect()->back()->with([
-            'type'   => 'success',
-            'Meldung'    => 'Berechtigung erstellt',
+            'type' => 'success',
+            'Meldung' => 'Berechtigung erstellt',
         ]);
     }
 }

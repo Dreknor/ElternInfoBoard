@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Model\Group;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -14,6 +13,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class UsersImport implements ToCollection, WithHeadingRow
 {
     protected $header;
+
     protected $groups;
 
     public function __construct($header)
@@ -42,9 +42,9 @@ class UsersImport implements ToCollection, WithHeadingRow
                     'email' => $email1,
                 ],
                     [
-                        'name'  => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
-                        'changePassword'  => 1,
-                        'password'      => Hash::make(config('import_eltern')),
+                        'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
+                        'changePassword' => 1,
+                        'password' => Hash::make(config('import_eltern')),
                         'lastEmail' => Carbon::now(),
                     ]);
 
@@ -53,9 +53,8 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user1->removeRole('Aufnahme');
 
                 if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user1->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
+                    $user1->groups()->attach([$Klassenstufe?->id, $Lerngruppe?->id]);
                 } else {
-
                 }
             }
 
@@ -77,9 +76,8 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user2->assignRole('Eltern');
                 $user2->removeRole('Aufnahme');
                 if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user2->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
+                    $user2->groups()->attach([$Klassenstufe?->id, $Lerngruppe?->id]);
                 } else {
-
                 }
             }
 

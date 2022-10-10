@@ -2,10 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAbfrageOptionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +13,6 @@ class CreateAbfrageOptionsTable extends Migration
      */
     public function up()
     {
-
         Schema::table('rueckmeldungen', function (Blueprint $table) {
             $table->boolean('multiple')->nullable();
             $table->integer('max_answers')->default(1);
@@ -66,4 +64,4 @@ class CreateAbfrageOptionsTable extends Migration
             $table->dropColumn('rueckmeldung_number');
         });
     }
-}
+};

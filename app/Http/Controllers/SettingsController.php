@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Model\Settings;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class SettingsController extends Controller
@@ -54,12 +53,9 @@ class SettingsController extends Controller
         $modul = Settings::where('setting', $modulname)->first();
         $options = $modul->options;
         if (array_key_exists('nav', $modul->options)) {
-
-
-            if (array_key_exists('bottom-nav', $options['nav']) and $options['nav']['bottom-nav'] == "true") {
-                $options['nav']['bottom-nav'] = "false";
+            if (array_key_exists('bottom-nav', $options['nav']) and $options['nav']['bottom-nav'] == 'true') {
+                $options['nav']['bottom-nav'] = 'false';
             } else {
-
                 $options['nav']['bottom-nav'] = 'true';
             }
             $modul->options = $options;
@@ -70,9 +66,7 @@ class SettingsController extends Controller
                 'type' => 'success',
                 'Meldung' => 'Status geändert',
             ]);
-
         }
-
 
         return redirect()->back()->with([
             'type' => 'danger',

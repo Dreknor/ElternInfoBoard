@@ -26,7 +26,7 @@
                                         {{$eintrag->eintragung}}
                                     </div>
                                     <div class="col-auto pull-right">
-                                        {{optional($eintrag->user)->name }}
+                                        {{$eintrag->user?->name }}
                                     </div>
                                 </div>
                             </li>

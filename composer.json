@@ -8,39 +8,38 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.4|^8.0",
-        "barryvdh/laravel-dompdf": "^0.9",
-        "benjivm/commentable": "^5.0",
-        "bkwld/cloner": "^3.5",
+        "php": "^8.0",
+        "barryvdh/laravel-dompdf": "^1.0",
+        "benjivm/commentable": "^6.0",
+        "bkwld/cloner": "^3.10",
         "devdojo/chatter": "0.2.*",
         "devdojo/laravel-reactions": "^1.0",
-        "enlightn/enlightn": "^1.11",
-        "fideloper/proxy": "^4.4",
-        "fruitcake/laravel-cors": "^2.0",
-        "guzzlehttp/guzzle": "^7.0.1",
-        "laravel-notification-channels/webpush": "^5.0",
-        "laravel/framework": "^8.32",
-        "laravel/tinker": "^2.5",
-        "laravel/ui": "^3.2",
+        "enlightn/enlightn": "^1.25",
+        "guzzlehttp/guzzle": "^7.2",
+        "laravel-notification-channels/webpush": "^6.0",
+        "laravel/framework": "^9.33",
+        "laravel/tinker": "^2.7",
+        "laravel/ui": "^3.3",
         "maatwebsite/excel": "^3.1",
-        "sentry/sentry-laravel": "^2.4",
+        "sentry/sentry-laravel": "^2.11",
         "spatie/calendar-links": "^1.4",
         "spatie/icalendar-generator": "^2.3",
-        "spatie/laravel-medialibrary": "^9.4",
-        "spatie/laravel-permission": "^4.0",
-        "staudenmeir/eloquent-has-many-deep": "^1.8"
+        "spatie/laravel-medialibrary": "^10.0",
+        "spatie/laravel-permission": "^5.5",
+        "staudenmeir/eloquent-has-many-deep": "^1.15",
+        "league/flysystem-aws-s3-v3": "^3.0"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.5",
-        "beyondcode/laravel-dump-server": "^1.7",
+        "barryvdh/laravel-debugbar": "^3.6",
+        "beyondcode/laravel-dump-server": "^1.8",
         "doctrine/dbal": "^3.0",
         "filp/whoops": "^2.9",
-        "mockery/mockery": "^1.4.2",
-        "nunomaduro/collision": "^5.0",
-        "phpunit/phpunit": "^9.3.3",
-        "samasend/laravel-make-scope": "^1.0",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "^6.3",
+        "phpunit/phpunit": "^9.5.10",
+        "samasend/laravel-make-scope": "dev-master",
         "fakerphp/faker": "^1.9.1",
-        "facade/ignition": "^2.5"
+        "spatie/laravel-ignition": "^1.4"
     },
     "config": {
         "optimize-autoloader": true,
@@ -76,6 +75,9 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ]
     }
 }

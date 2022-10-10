@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePollsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -27,7 +27,6 @@ class CreatePollsTable extends Migration
 
             $table->foreign('author_id')->references('id')->on('users');
             $table->foreign('post_id')->references('id')->on('posts');
-
         });
 
         Schema::create('poll_options', function (Blueprint $table) {
@@ -47,7 +46,6 @@ class CreatePollsTable extends Migration
 
             $table->foreign('poll_id')->references('id')->on('polls');
             $table->foreign('author_id')->references('id')->on('users');
-
         });
 
         DB::table('permissions')->insert([
@@ -65,4 +63,4 @@ class CreatePollsTable extends Migration
     {
         Schema::dropIfExists('polls');
     }
-}
+};

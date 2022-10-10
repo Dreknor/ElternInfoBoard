@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,8 +11,11 @@ class TerminAbsage extends Mailable
     use Queueable, SerializesModels;
 
     public $liste;
+
     public $termin;
+
     public $empfaenger;
+
     public $user;
 
     /**
@@ -42,10 +44,10 @@ class TerminAbsage extends Mailable
              )
             ->subject('Absage Termin: '.$this->termin->format('d.m.Y H:i'))
             ->view('emails.terminAbsage')->with([
-                'empfaenger'  => $this->empfaenger,
-                'termin'        => $this->termin,
-                'liste'         => $this->liste,
-                'user'          => $this->user->name,
+                'empfaenger' => $this->empfaenger,
+                'termin' => $this->termin,
+                'liste' => $this->liste,
+                'user' => $this->user->name,
             ]);
     }
 }

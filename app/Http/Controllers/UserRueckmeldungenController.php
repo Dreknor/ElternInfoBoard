@@ -17,13 +17,12 @@ class UserRueckmeldungenController extends Controller
         $this->middleware(['auth', 'password_expired']);
     }
 
-
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
     {
         if (auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() > 0 and $rueckmeldung->multiple != 1) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Abfrage wurde bereits beantwortet'
+                'Meldung' => 'Abfrage wurde bereits beantwortet',
             ]);
         }
 
@@ -31,7 +30,7 @@ class UserRueckmeldungenController extends Controller
             'post_id' => $rueckmeldung->post->id,
             'users_id' => auth()->id(),
             'rueckmeldung_number' => auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() + 1,
-            'text' => ''
+            'text' => '',
         ]);
         $userRueckmeldung->save();
 
@@ -43,7 +42,7 @@ class UserRueckmeldungenController extends Controller
                     'rueckmeldung_id' => $userRueckmeldung->id,
                     'user_id' => auth()->id(),
                     'option_id' => $option,
-                    'answer' => ''
+                    'answer' => '',
                 ];
             }
         }
@@ -53,7 +52,7 @@ class UserRueckmeldungenController extends Controller
                     'rueckmeldung_id' => $userRueckmeldung->id,
                     'user_id' => auth()->id(),
                     'option_id' => $key,
-                    'answer' => $answer
+                    'answer' => $answer,
                 ];
             }
         }
@@ -62,9 +61,8 @@ class UserRueckmeldungenController extends Controller
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Abfrage wurde gespeichert'
+            'Meldung' => 'Abfrage wurde gespeichert',
         ]);
-
     }
 
     public function sendRueckmeldung(Request $request, $post_id)
@@ -76,14 +74,14 @@ class UserRueckmeldungenController extends Controller
         if (auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() > 0 and $rueckmeldung->multiple != 1) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Abfrage wurde bereits beantwortet'
+                'Meldung' => 'Abfrage wurde bereits beantwortet',
             ]);
         }
         $rueckmeldungUser = UserRueckmeldungen::create([
             'post_id' => $post_id->id,
             'users_id' => $user->id,
             'rueckmeldung_number' => auth()->user()->rueckmeldung?->where('post_id', $rueckmeldung->post->id)->count() + 1,
-            'text' => $request->input('text')
+            'text' => $request->input('text'),
         ]);
 
         $rueckmeldungUser->save();
@@ -91,11 +89,11 @@ class UserRueckmeldungenController extends Controller
         $Empfaenger = $post_id->rueckmeldung->empfaenger;
 
         $Rueckmeldung = [
-            'text'  => $request->input('text').'<br>'.$request->user()->name,
-            'subject'   => "Rückmeldung $post_id->header",
-            'name'  => $user->name,
+            'text' => $request->input('text').'<br>'.$request->user()->name,
+            'subject' => "Rückmeldung $post_id->header",
+            'name' => $user->name,
             'email' => $user->email,
-            'empfaenger'    =>  $Empfaenger,
+            'empfaenger' => $Empfaenger,
         ];
 
         if ($user->sendCopy == 1) {
@@ -108,10 +106,10 @@ class UserRueckmeldungenController extends Controller
         }
 
         return redirect(url('/home#'.$post_id->id))->with([
-                'id' => $post_id->id,
-                'type'  => 'success',
-                'Meldung'   => 'Die Rückmeldung wurde der Schule gesendet',
-            ]);
+            'id' => $post_id->id,
+            'type' => 'success',
+            'Meldung' => 'Die Rückmeldung wurde der Schule gesendet',
+        ]);
     }
 
     public function edit(UserRueckmeldungen $userRueckmeldungen)
@@ -119,7 +117,7 @@ class UserRueckmeldungenController extends Controller
         if ($userRueckmeldungen->users_id != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -132,6 +130,7 @@ class UserRueckmeldungenController extends Controller
             case 'abfrage':
                 $rueckmeldung = $userRueckmeldungen->nachricht->rueckmeldung;
                 $userRueckmeldungen->load('answers');
+
                 return view('userrueckmeldung.editAbfrage', [
                     'userRueckmeldung' => $userRueckmeldungen,
                     'rueckmeldung' => $rueckmeldung,
@@ -140,11 +139,10 @@ class UserRueckmeldungenController extends Controller
             default:
                 return redirect()->back()->with([
                     'type' => 'warning',
-                    'Meldung' => 'Bearbeiten ist nicht möglich'
+                    'Meldung' => 'Bearbeiten ist nicht möglich',
                 ]);
                 break;
         }
-
     }
 
     public function update(Request $request, UserRueckmeldungen $userRueckmeldungen)
@@ -169,8 +167,8 @@ class UserRueckmeldungenController extends Controller
                 $Empfaenger = $userRueckmeldungen->nachricht->rueckmeldung->empfaenger;
 
                 $Rueckmeldung = [
-                    'text' => $request->input('text') . '<br>' . $request->user()->name,
-                    'subject' => 'geänderte Rückmeldung ' . $userRueckmeldungen->nachricht->header,
+                    'text' => $request->input('text').'<br>'.$request->user()->name,
+                    'subject' => 'geänderte Rückmeldung '.$userRueckmeldungen->nachricht->header,
                     'name' => $user->name,
                     'email' => $user->email,
                     'empfaenger' => $Empfaenger,
@@ -196,7 +194,7 @@ class UserRueckmeldungenController extends Controller
                             'rueckmeldung_id' => $userRueckmeldungen->id,
                             'user_id' => auth()->id(),
                             'option_id' => $option,
-                            'answer' => ''
+                            'answer' => '',
                         ];
                     }
                 }
@@ -206,7 +204,7 @@ class UserRueckmeldungenController extends Controller
                             'rueckmeldung_id' => $userRueckmeldungen->id,
                             'user_id' => auth()->id(),
                             'option_id' => $key,
-                            'answer' => $answer
+                            'answer' => $answer,
                         ];
                     }
                 }
@@ -222,8 +220,7 @@ class UserRueckmeldungenController extends Controller
                 break;
         }
 
-
-        return redirect(url('/home#' . $userRueckmeldungen->post_id))->with([
+        return redirect(url('/home#'.$userRueckmeldungen->post_id))->with([
             'type' => 'success',
             'Meldung' => 'Rückmeldung versendet',
             'RueckmeldungCheck' => $userRueckmeldungen->post_id,

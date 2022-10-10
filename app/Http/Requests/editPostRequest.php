@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Model\Post;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -37,14 +36,14 @@ class editPostRequest extends FormRequest
             ],
             'news' => [
                 'news' => [
-                    Rule::requiredIf(request()->type != "image")
+                    Rule::requiredIf(request()->type != 'image'),
                 ],
             ],
             'gruppen' => [
                 'required',
             ],
             'archiv_ab' => [
-                'required', 'date'
+                'required', 'date',
             ],
             'password' => [
                 'required_with:urgent',
@@ -53,10 +52,10 @@ class editPostRequest extends FormRequest
                 'required',
             ],
             'reactable' => [
-                'nullable', 'boolean'
+                'nullable', 'boolean',
             ],
             'released' => [
-                'nullable', 'boolean'
+                'nullable', 'boolean',
             ],
 
         ];

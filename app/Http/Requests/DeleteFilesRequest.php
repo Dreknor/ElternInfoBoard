@@ -24,7 +24,7 @@ class DeleteFilesRequest extends FormRequest
     public function rules()
     {
         return [
-            'deleteBeforeDate' => ['date', 'required']
+            'deleteBeforeDate' => ['date', 'required'],
         ];
     }
 }

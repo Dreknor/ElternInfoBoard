@@ -34,7 +34,7 @@ class PollController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StorePollRequest $request
+     * @param  StorePollRequest  $request
      * @return Response
      */
     public function store(Post $post, StorePollRequest $request)
@@ -48,24 +48,18 @@ class PollController extends Controller
         foreach ($request->options as $option) {
             $options[] = [
                 'option' => $option,
-                'poll_id' => $poll->id
+                'poll_id' => $poll->id,
             ];
         }
         $poll->options()->insert($options);
 
         return redirect(url('/'));
-
     }
 
-    /**
-     *
-     *
-     *
-     */
     public function vote(Post $post, Request $request)
     {
         $poll = $post->poll;
-        $string = $poll->id . '_answers';
+        $string = $poll->id.'_answers';
         $answers = $request->$string;
 
         if ($poll->votes->where('author_id', auth()->id())->first() != null) {
@@ -91,12 +85,11 @@ class PollController extends Controller
         foreach ($answers as $answer) {
             $query[] = [
                 'poll_id' => $poll->id,
-                'option_id' => $answer
+                'option_id' => $answer,
             ];
         }
 
         $poll->answers()->insert($query);
-
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -104,25 +97,23 @@ class PollController extends Controller
         ]);
     }
 
-
     /**
      * Update the specified resource in storage.
      *
-     * @param UpdatePollRequest $request
-     * @param \App\Poll $poll
+     * @param  UpdatePollRequest  $request
+     * @param  \App\Poll  $poll
      * @return Response
      */
     public function update(UpdatePollRequest $request, Poll $poll)
     {
         $poll->update($request->validated());
 
-
         $options = [];
         foreach ($request->options as $option) {
-            if ($option != "") {
+            if ($option != '') {
                 $options[] = [
                     'option' => $option,
-                    'poll_id' => $poll->id
+                    'poll_id' => $poll->id,
                 ];
             }
         }
@@ -132,18 +123,16 @@ class PollController extends Controller
             $poll->options()->insert($options);
         }
 
-
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Umfrage geändert'
+            'Meldung' => 'Umfrage geändert',
         ]);
-
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param \App\Poll $poll
+     * @param  \App\Poll  $poll
      * @return Response
      */
     public function destroy(Poll $poll)

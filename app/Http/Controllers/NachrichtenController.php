@@ -14,7 +14,6 @@ use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
-use App\Model\Termin;
 use App\Model\User;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
@@ -30,7 +29,6 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
@@ -40,7 +38,6 @@ use Spatie\Permission\Models\Role;
 
 /**
  * Class NachrichtenController
- * @package App\Http\Controllers
  */
 class NachrichtenController extends Controller
 {
@@ -63,7 +60,7 @@ class NachrichtenController extends Controller
     public function index($archiv = null)
     {
         return view('home', [
-            'datum'     => Carbon::now(),
+            'datum' => Carbon::now(),
             'archiv' => $archiv,
 
         ]);
@@ -76,20 +73,20 @@ class NachrichtenController extends Controller
      */
     public function postsArchiv(Request $request)
     {
- //       $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
-            if (! auth()->user()->can('view all')) {
-                $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->orderByDesc('updated_at')->paginate(15);
-                /*
-                                if (auth()->user()->can('create posts')) {
-                                    $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
-                                    $Nachrichten = $Nachrichten->concat($eigenePosts);
-                                }
-                */
+        //       $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
+        if (! auth()->user()->can('view all')) {
+            $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->orderByDesc('updated_at')->paginate(15);
+        /*
+                        if (auth()->user()->can('create posts')) {
+                            $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
+                            $Nachrichten = $Nachrichten->concat($eigenePosts);
+                        }
+        */
                 //$Nachrichten = $Nachrichten->unique('id');
-            } else {
-                $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->orderByDesc('updated_at')->paginate(15);
-                //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
-            }
+        } else {
+            $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->orderByDesc('updated_at')->paginate(15);
+            //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
+        }
         /*
                     return $Nachrichten;
                 });
@@ -120,7 +117,7 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Post $posts
+     * @param  Post  $posts
      * @return Factory|RedirectResponse|Redirector|View
      */
     public function edit(Request $request, Post $posts, $kiosk = '')
@@ -149,7 +146,7 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param createNachrichtRequest $request
+     * @param  createNachrichtRequest  $request
      * @return Factory|RedirectResponse|Redirector|View
      */
     public function store(createNachrichtRequest $request)
@@ -161,7 +158,7 @@ class NachrichtenController extends Controller
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
-        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and (!$user->can('send urgent message') or !Hash::check($request->input('password'), $user->password))) {
+        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and (! $user->can('send urgent message') or ! Hash::check($request->input('password'), $user->password))) {
             return redirect()->back()->withInput()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt für dringende Nachrichten oder Passwort ist falsch',
@@ -171,7 +168,7 @@ class NachrichtenController extends Controller
         $post = new Post($request->validated());
 
         $post->author = $user->id;
-        ($post->news == "") ? $post->news = $post->header : null;
+        ($post->news == '') ? $post->news = $post->header : null;
 
         $post->save();
 
@@ -180,7 +177,7 @@ class NachrichtenController extends Controller
 
         $post->groups()->attach($gruppen);
 
-        if (!auth()->user()->can('release posts')) {
+        if (! auth()->user()->can('release posts')) {
             $permission = Permission::query()->where('name', 'release posts')->first();
 
             foreach ($permission->users as $user) {
@@ -201,7 +198,7 @@ class NachrichtenController extends Controller
                 } catch (Exception $exception) {
                     redirect()->back()->with([
                         'type' => 'danger',
-                        'Meldung' => $exception
+                        'Meldung' => $exception,
                     ]);
                 }
             }
@@ -254,13 +251,13 @@ class NachrichtenController extends Controller
             }
 
             @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo));
-            $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
+            $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
         }
 
         //Umleitung bei Rückmeldungsbedarf
         switch ($request->input('rueckmeldung')) {
             case 'abfrage':
-                return redirect(url('rueckmeldung/create/' . $post->id . '/abfrage'));
+                return redirect(url('rueckmeldung/create/'.$post->id.'/abfrage'));
                 break;
             case 'email':
                 return view('nachrichten.createRueckmeldung', [
@@ -283,8 +280,8 @@ class NachrichtenController extends Controller
                     'post_id' => $post->id,
                     'type' => 'bild',
                     'empfaenger' => auth()->user()->email,
-                    'ende'      => $post->archiv_ab,
-                    'text'      => ' ',
+                    'ende' => $post->archiv_ab,
+                    'text' => ' ',
                 ]);
                 $rueckmeldung->save();
 
@@ -295,12 +292,12 @@ class NachrichtenController extends Controller
                 break;
             case 'bild_commentable':
                     $rueckmeldung = new Rueckmeldungen([
-                        'post_id'  => $post->id,
-                        'type'  => 'bild',
-                        'commentable'  => 1,
-                        'empfaenger'  => auth()->user()->email,
-                        'ende'      => $post->archiv_ab,
-                        'text'      => ' ',
+                        'post_id' => $post->id,
+                        'type' => 'bild',
+                        'commentable' => 1,
+                        'empfaenger' => auth()->user()->email,
+                        'ende' => $post->archiv_ab,
+                        'text' => ' ',
                     ]);
                     $rueckmeldung->save();
 
@@ -311,12 +308,12 @@ class NachrichtenController extends Controller
                 break;
             case 'commentable':
                     $rueckmeldung = new Rueckmeldungen([
-                        'post_id'  => $post->id,
-                        'type'  => 'commentable',
-                        'commentable'  => 1,
-                        'empfaenger'  => auth()->user()->email,
-                        'ende'      => $post->archiv_ab,
-                        'text'      => ' ',
+                        'post_id' => $post->id,
+                        'type' => 'commentable',
+                        'commentable' => 1,
+                        'empfaenger' => auth()->user()->email,
+                        'ende' => $post->archiv_ab,
+                        'text' => ' ',
                     ]);
                     $rueckmeldung->save();
 
@@ -336,8 +333,8 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Post $posts
-     * @param editPostRequest $request
+     * @param  Post  $posts
+     * @param  editPostRequest  $request
      * @return RedirectResponse|Redirector
      */
     public function update(Post $posts, editPostRequest $request, $kiosk = null)
@@ -361,11 +358,11 @@ class NachrichtenController extends Controller
 
         $posts->updated_at = $request->input('updated_at');
 
-        if (!is_null($posts->rueckmeldung) and $posts->rueckmeldung->ende->gt($posts->archiv_ab)) {
+        if (! is_null($posts->rueckmeldung) and $posts->rueckmeldung->ende->gt($posts->archiv_ab)) {
             $posts->archiv_ab = $posts->rueckmeldung->ende;
         }
 
-        ($posts->news == "") ? $posts->news = $posts->header : null;
+        ($posts->news == '') ? $posts->news = $posts->header : null;
 
         $posts->save();
 
@@ -379,9 +376,9 @@ class NachrichtenController extends Controller
 
         if ($request->hasFile('files')) {
             if (auth()->user()->can('upload great files')) {
-                    @ini_set('upload_max_filesize', '300M');
-                    @ini_set('post_max_size', '300M');
-                    @ini_set('upload_max_size', '300M');
+                @ini_set('upload_max_filesize', '300M');
+                @ini_set('post_max_size', '300M');
+                @ini_set('upload_max_size', '300M');
             }
             if ($request->input('collection') == 'files') {
                 $posts->addAllMediaFromRequest(['files'])
@@ -435,8 +432,8 @@ class NachrichtenController extends Controller
                 @Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));
 
                 $sendTo[] = [
-                    'name'    => $mailUser->name,
-                    'email'   => $mailUser->email,
+                    'name' => $mailUser->name,
+                    'email' => $mailUser->email,
                 ];
             }
 
@@ -454,10 +451,9 @@ class NachrichtenController extends Controller
         ]);
     }
 
-
     /**
-     * @param null $daily
-     * @param null $userSend
+     * @param  null  $daily
+     * @param  null  $userSend
      * @return RedirectResponse
      */
     public function email($daily = null, $userSend = null)
@@ -477,14 +473,14 @@ class NachrichtenController extends Controller
         $countUser = 0;
 
         foreach ($users as $key => $user) {
-            if (!$user->can('view all')) {
+            if (! $user->can('view all')) {
                 $Nachrichten = $user->postsNotArchived;
             } else {
                 $Nachrichten = Post::where('updated_at', '>', $user->lastEmail)->where('archiv_ab', '>', Carbon::now())->get();
             }
 
             $Nachrichten = $Nachrichten->filter(function ($post) use ($user) {
-                if (!is_null($post->archiv_ab)) {
+                if (! is_null($post->archiv_ab)) {
                     if ($post->released == 1 and $post->updated_at->greaterThanOrEqualTo($user->lastEmail) and $post->archiv_ab->greaterThan(Carbon::now())) {
                         return $post;
                     }
@@ -506,14 +502,13 @@ class NachrichtenController extends Controller
             $termine = $termine->unique();
             //@ToDo neue Dateien
 
-
             if (count($Nachrichten) > 0) {
                 try {
                     Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
-                    if (!is_null($userSend)) {
+                    if (! is_null($userSend)) {
                         return redirect()->back()->with([
                             'type' => 'success',
                             'Meldung' => 'Mail versandt',
@@ -523,9 +518,7 @@ class NachrichtenController extends Controller
                     $admin = Role::findByName('Admin');
                     $admin = $admin->users()->first();
 
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email . 'konnte nicht gesendet werden'));
-
-
+                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
                 }
             }
         }
@@ -537,7 +530,7 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Post $posts
+     * @param  Post  $posts
      * @return RedirectResponse|Redirector
      */
     public function touch(Post $posts)
@@ -556,7 +549,7 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Post $posts
+     * @param  Post  $posts
      * @return RedirectResponse|Redirector
      */
     public function release(Request $request, Post $posts)
@@ -569,7 +562,7 @@ class NachrichtenController extends Controller
         }
 
         $posts->released = 1;
-        $posts->save(['timestamps'=>false]);
+        $posts->save(['timestamps' => false]);
 
         if ($posts->released) {
             $this->push($posts);
@@ -601,7 +594,7 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param null $archiv
+     * @param  null  $archiv
      * @return mixed
      */
     public function pdf(Request $request, $archiv = null)
@@ -646,8 +639,9 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * @param Post $posts
+     * @param  Post  $posts
      * @return JsonResponse
+     *
      * @throws Exception
      */
     public function destroy(Request $request, Post $posts)
@@ -717,24 +711,24 @@ class NachrichtenController extends Controller
             }
 
             return view('kiosk.index', [
-                'Nachrichten'    => $Nachrichten->unique('id')->sortByDesc('updated_at'),
-                'counter'       =>          0,
-                'archiv'        => 0,
-                'user'          => auth()->user(),
-                'listen'    => $listen,
+                'Nachrichten' => $Nachrichten->unique('id')->sortByDesc('updated_at'),
+                'counter' => 0,
+                'archiv' => 0,
+                'user' => auth()->user(),
+                'listen' => $listen,
             ]);
         }
 
         return redirect()->back()->with([
-                'type'  => 'danger',
-                'Meldung'   => 'Berechtigung fehlt',
-            ]);
+            'type' => 'danger',
+            'Meldung' => 'Berechtigung fehlt',
+        ]);
     }
 
     public function storeComment(Post $posts, CommentPostRequest $request)
     {
         $posts->comment([
-            'body'=> $request->comment, ],
+            'body' => $request->comment, ],
             auth()->user()
         );
 
