@@ -535,10 +535,11 @@
                                                           action="{{'rueckmeldungen/'.$post->id}}">
                                                         @csrf
                                                         @method('delete')
+
+                                                        <button type="submit" class="btn btn-danger btn-block">
+                                                            Abfrage löschen
+                                                        </button>
                                                     </form>
-                                                    <button type="submit" class="btn btn-danger btn-block">
-                                                        Abfrage löschen
-                                                    </button>
                                                 </div>
                                             @endif
 
