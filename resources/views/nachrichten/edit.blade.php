@@ -530,16 +530,26 @@
                                                         Abfrage bearbeiten
                                                     </a>
                                                 </div>
+                                                <div class="card-body text-danger">
+                                                    <form method="post" class="form-inline"
+                                                          action="{{'rueckmeldungen/'.$post->id}}">
+                                                        @csrf
+                                                        @method('delete')
+                                                    </form>
+                                                    <button type="submit" class="btn btn-danger btn-block">
+                                                        Abfrage löschen
+                                                    </button>
+                                                </div>
                                             @endif
 
                                         </div>
-                                @break
-                        @endswitch
-                    @endif
-            @endif
+                                        @break
+                                        @endswitch
+                                    @endif
+                                    @endif
 
+                                </div>
         </div>
-    </div>
 
 
     @if(is_null($post->rueckmeldung))

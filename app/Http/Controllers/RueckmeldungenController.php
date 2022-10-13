@@ -269,6 +269,26 @@ class RueckmeldungenController extends Controller
         ], 200);
     }
 
+    public function destroyAbfrage(Post $post)
+    {
+        $rueckmeldung = $post->rueckmeldung;
+
+        if (!$rueckmeldung->type == 'abfrage') {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Kann nicht gelöscht werden'
+            ]);
+        }
+
+        $rueckmeldung->options()->delete();
+        $rueckmeldung->delete();
+
+        return redirect()->back()->with([
+            'type' => 'warning',
+            'Meldung' => 'Abfrage wurde gelöscht'
+        ]);
+    }
+
     /**
      * Remove the specified resource from storage.
      *

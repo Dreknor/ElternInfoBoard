@@ -119,6 +119,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/userrueckmeldung/{rueckmeldung}', [UserRueckmeldungenController::class, 'store']);
         Route::get('/rueckmeldung/{rueckmeldung}/editAbfrage', [RueckmeldungenController::class, 'editAbfrage']);
         Route::put('/rueckmeldung/{rueckmeldung}/updateAbfrage', [RueckmeldungenController::class, 'updateAbfrage']);
+        Route::delete('rueckmeldungen/{post}/', [RueckmeldungenController::class, 'destroyAbfrage']);
+
 
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
         Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
