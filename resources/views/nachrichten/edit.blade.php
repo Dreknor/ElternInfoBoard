@@ -532,7 +532,7 @@
                                                 </div>
                                                 <div class="card-body text-danger">
                                                     <form method="post" class="form-inline"
-                                                          action="{{'rueckmeldungen/'.$post->id}}">
+                                                          action="{{url('rueckmeldungen/'.$post->id)}}">
                                                         @csrf
                                                         @method('delete')
 
