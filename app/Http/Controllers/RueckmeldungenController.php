@@ -161,7 +161,7 @@ class RueckmeldungenController extends Controller
                 ]);
                 break;
             case 'abfrage':
-                return Excel::download(new AbfrageExport($rueckmeldung), Str::camel($rueckmeldung->text).Carbon::now()->format('Ymd_Hi').'.xlsx');
+                return Excel::download(new AbfrageExport($rueckmeldung), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
 
                 break;
         }
