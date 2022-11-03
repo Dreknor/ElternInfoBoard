@@ -14,8 +14,12 @@ class ImageController extends Controller
 
     public function getImage(Media $media_id)
     {
+
+        if ($media_id->collection_name != "images" and $media_id->collection_name != "header") {
+            return $media_id;
+        }
         $response = new BinaryFileResponse($media_id->getPath());
-        $response->headers->set('Content-Disposition', 'inline; filename="'.$media_id->file_name.'"');
+        $response->headers->set('Content-Disposition', 'inline; filename="' . $media_id->file_name . '"');
 
         return $response;
     }
