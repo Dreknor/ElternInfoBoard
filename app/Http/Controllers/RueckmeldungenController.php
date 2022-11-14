@@ -199,10 +199,8 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->type = 'abfrage';
         $rueckmeldung->text = $request->description;
         $rueckmeldung->post_id = $posts_id;
-        $rueckmeldung->max_answers = ($request->max_answers > 0) ? $request->max_answers : '0';
+        $rueckmeldung->max_answers = ($request->max_number > 0) ? $request->max_number : '0';
         $rueckmeldung->save();
-
-        $post = Post::find($posts_id);
 
         $options = [];
         foreach ($request->options as $key => $value) {
