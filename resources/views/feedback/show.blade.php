@@ -10,15 +10,17 @@
             </h6>
         </div>
         <div class="card-body">
-            <form action="{{url("/feedback")}}" method="post" class="form form-horizontal" enctype="multipart/form-data">
+            <form action="{{url("/feedback")}}" method="post" class="form form-horizontal"
+                  enctype="multipart/form-data">
                 @csrf
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
                             <select name="mitarbeiter" class="custom-select">
                                 <option value="">Sekretariat</option>
-                                @foreach($mitarbeiter as $Mitarbeiter)
-                                    <option value="{{$Mitarbeiter->id}}">{{$Mitarbeiter->name}}</option>
+                                @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
+                                    <option value="{{$Mitarbeiter->id}}">{{$Mitarbeiter->familieName}}
+                                        , {{$Mitarbeiter->vorname}}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -27,7 +29,8 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <input class="form-control border-input" name="betreff" value="{{old('betreff', 'Nachricht von '.auth()->user()->name)}}">
+                            <input class="form-control border-input" name="betreff"
+                                   value="{{old('betreff', 'Nachricht von '.auth()->user()->name)}}">
                         </div>
                     </div>
                 </div>

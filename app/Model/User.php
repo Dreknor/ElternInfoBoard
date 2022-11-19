@@ -209,6 +209,15 @@ class User extends Authenticatable
         return $this->name;
     }
 
+
+    public function getVornameAttribute()
+    {
+
+        $vorname = Str::before($this->name, ' ');
+        return $vorname;
+    }
+
+
     public function schickzeiten()
     {
         return $this->hasMany(Schickzeiten::class, 'users_id')->orWhere('users_id', $this->sorg2);
