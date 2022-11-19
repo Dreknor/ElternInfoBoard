@@ -206,7 +206,7 @@ class User extends Authenticatable
             return $Name[1];
         }
 
-        return $this->name;
+        return Str::of($this->name)->trim();
     }
 
 
