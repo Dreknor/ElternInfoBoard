@@ -256,6 +256,8 @@ Route::middleware('auth')->group(function () {
             Route::get('settings', [SettingsController::class, 'module']);
             Route::get('settings/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
             Route::get('settings/modul/{modul}', [SettingsController::class, 'change_status']);
+            Route::get('settings/losungen/import', [\App\Http\Controllers\LosungController::class, 'importView']);
+            Route::post('settings/losungen/import', [\App\Http\Controllers\LosungController::class, 'import']);
         });
 
         Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {

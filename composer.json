@@ -16,7 +16,7 @@
         "devdojo/laravel-reactions": "^1.0",
         "enlightn/enlightn": "^1.25",
         "guzzlehttp/guzzle": "^7.2",
-        "laravel-notification-channels/webpush": "^6.0",
+        "laravel-notification-channels/webpush": "^7.0",
         "laravel/framework": "^9.33",
         "laravel/tinker": "^2.7",
         "laravel/ui": "^3.3",

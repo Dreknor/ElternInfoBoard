@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Losung extends Model
 {
     protected $table = 'losungen';
+    protected $fillable = ['date', 'Losungsvers', 'Losungstext', 'Lehrtextvers', 'Lehrtext'];
 
     protected $casts = [
         'date' => 'datetime',
