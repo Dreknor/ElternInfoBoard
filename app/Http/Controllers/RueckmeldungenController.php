@@ -21,6 +21,11 @@ use PDF;
 
 class RueckmeldungenController extends Controller
 {
+    /**
+     * @param updateRueckmeldeDateRequest $request
+     * @param Rueckmeldungen $rueckmeldung
+     * @return RedirectResponse
+     */
     public function updateDate(updateRueckmeldeDateRequest $request, Rueckmeldungen $rueckmeldung)
     {
         $rueckmeldung->update([
@@ -33,6 +38,11 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param Post $post
+     * @param $type
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function create(Post $post, $type)
     {
         return view('nachrichten.createAbfrage', [
@@ -43,6 +53,10 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param Rueckmeldungen $rueckmeldung
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     */
     public function editAbfrage(Rueckmeldungen $rueckmeldung)
     {
         if ($rueckmeldung->userRueckmeldungen()->count() > 0) {
@@ -57,6 +71,11 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param createAbfrageRequest $request
+     * @param Rueckmeldungen $rueckmeldung
+     * @return \Illuminate\Contracts\Foundation\Application|RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function updateAbfrage(createAbfrageRequest $request, Rueckmeldungen $rueckmeldung)
     {
         if ($rueckmeldung->userRueckmeldungen->count() > 0) {
@@ -111,6 +130,11 @@ class RueckmeldungenController extends Controller
     }
 
     //zeigt alle Rückmeldungen zu einem Post
+
+    /**
+     * @param Rueckmeldungen $rueckmeldung
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     */
     public function show(Rueckmeldungen $rueckmeldung)
     {
         if (! auth()->user()->can('manage rueckmeldungen')) {
@@ -126,6 +150,11 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param Rueckmeldungen $rueckmeldung
+     * @param $user_id
+     * @return RedirectResponse
+     */
     public function download(Rueckmeldungen $rueckmeldung, $user_id)
     {
         if (! auth()->user()->can('manage rueckmeldungen')) {
@@ -143,6 +172,10 @@ class RueckmeldungenController extends Controller
         return $pdf->download(Carbon::now()->format('Y-m-d').'_Rückmeldung.pdf');
     }
 
+    /**
+     * @param Rueckmeldungen $rueckmeldung
+     * @return RedirectResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
         if (! auth()->user()->can('manage rueckmeldungen')) {
@@ -267,6 +300,10 @@ class RueckmeldungenController extends Controller
         ], 200);
     }
 
+    /**
+     * @param Post $post
+     * @return RedirectResponse
+     */
     public function destroyAbfrage(Post $post)
     {
         $rueckmeldung = $post->rueckmeldung;
@@ -303,6 +340,9 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function sendErinnerung()
     {
         $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now(), Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users', 'post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
@@ -322,6 +362,10 @@ class RueckmeldungenController extends Controller
         }
     }
 
+    /**
+     * @param Rueckmeldungen $rueckmeldungen
+     * @return RedirectResponse
+     */
     public function updateCommentable(Rueckmeldungen $rueckmeldungen)
     {
         if ($rueckmeldungen->commentable) {
@@ -337,6 +381,11 @@ class RueckmeldungenController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * @param Request $request
+     * @param $posts_id
+     * @return RedirectResponse
+     */
     public function createImageRueckmeldung(Request $request, $posts_id)
     {
         $posts = Post::find($posts_id);
@@ -356,6 +405,11 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param $posts_id
+     * @return RedirectResponse
+     */
     public function createDiskussionRueckmeldung(Request $request, $posts_id)
     {
         $posts = Post::find($posts_id);

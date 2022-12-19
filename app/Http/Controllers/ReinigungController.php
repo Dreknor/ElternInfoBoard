@@ -16,6 +16,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReinigungController extends Controller
 {
+    /**
+     * @param $bereich
+     * @return RedirectResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
     public function export($bereich)
     {
         if (auth()->user()->can('edit reinigung')) {
@@ -28,6 +32,11 @@ class ReinigungController extends Controller
         ]);
     }
 
+    /**
+     * @param $Bereich
+     * @param Reinigung $reinigung
+     * @return RedirectResponse|void
+     */
     public function destroy($Bereich, Reinigung $reinigung)
     {
         if (auth()->user()->can('edit reinigung') and $reinigung->bereich == $Bereich) {
@@ -89,7 +98,7 @@ class ReinigungController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return RedirectResponse
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
      */
     public function create(Request $request, $Bereich, $Datum)
     {
@@ -135,7 +144,7 @@ class ReinigungController extends Controller
      *
      * @param $Bereich
      * @param  ReinigungsRequest  $request
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function store($Bereich, ReinigungsRequest $request)
     {

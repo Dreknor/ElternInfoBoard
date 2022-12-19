@@ -24,6 +24,11 @@ use Illuminate\Support\Facades\Notification;
  */
 class ListenTerminController extends Controller
 {
+    /**
+     * @param listen_termine $listen_termine
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
     public function copy(listen_termine $listen_termine)
     {
         $this->authorize('storeTerminToListe', $listen_termine->liste);
@@ -82,6 +87,8 @@ class ListenTerminController extends Controller
     }
 
     /**
+     *
+     *
      * @param  listen_termine  $listen_termine
      * @return RedirectResponse|Redirector
      */
@@ -117,11 +124,15 @@ class ListenTerminController extends Controller
     public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {
         if ($request->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == $request->user()->sorg2 or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
+
+            //Email an Listenersteller
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
                 ->queue(new TerminAbsageEltern($request->user(),
                     $listen_termine->liste,
                     $listen_termine->termin,
                     $request->text));
+
+            //Email an eingetragene Person
             Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
                             ->queue(new TerminAbsageEltern($request->user(),
                                 $listen_termine->liste,
@@ -129,9 +140,6 @@ class ListenTerminController extends Controller
                                 $request->text));
 
             $listen_termine->update(['reserviert_fuer' => null]);
-
-            //$body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde durch '.$request->user()->name.' abgesagt.';
-            //Notification::send($listen_termine->liste->ersteller,new PushTerminAbsage($body));
 
             return redirect()->back()->with([
                 'type' => 'success',
@@ -145,6 +153,11 @@ class ListenTerminController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param listen_termine $listen_termine
+     * @return RedirectResponse
+     */
     public function destroy(Request $request, listen_termine $listen_termine)
     {
         if ($request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {

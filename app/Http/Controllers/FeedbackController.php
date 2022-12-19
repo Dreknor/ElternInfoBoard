@@ -11,13 +11,18 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Mail;
 
+
 class FeedbackController extends Controller
 {
+
     public function __construct()
     {
         $this->middleware('auth');
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function show()
     {
         return view('feedback.show', [
@@ -28,6 +33,12 @@ class FeedbackController extends Controller
         ]);
     }
 
+    /**
+     *
+     * Send Mail
+     * @param KontaktRequest $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function send(KontaktRequest $request)
     {
         if ($request->mitarbeiter != '') {
@@ -54,6 +65,9 @@ class FeedbackController extends Controller
                 }
             }
         }
+
+/*
+        //create Mail Model for logging Mail in Database
         $mail = new MailModel([
             'senders_id' => auth()->id(),
             'to' => $email,
@@ -68,7 +82,7 @@ class FeedbackController extends Controller
         foreach ($mail->getMedia('files') as $media) {
             $data['document'][] = $media->getPath();
         }
-
+*/
         try {
             Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
             $feedback = [
@@ -85,6 +99,10 @@ class FeedbackController extends Controller
         return redirect()->back()->with($feedback);
     }
 
+    /**
+     * @param MailModel $mail
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function showMail(MailModel $mail)
     {
         if (! auth()->user()->can('see mails') and auth()->id() != $mail->senders_id) {
@@ -99,6 +117,9 @@ class FeedbackController extends Controller
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function dailyReport()
     {
         $mails = MailModel::where('created_at', '<', Carbon::now())

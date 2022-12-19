@@ -19,7 +19,6 @@ class ModulesComposer
             $modules = [];
         }
 
-        //TODO Add bottom nav items
         $view->with('modules', $modules);
     }
 }

@@ -11,16 +11,26 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ImportController extends Controller
 {
+    /**
+     * Permission to import user is required
+     */
     public function __construct()
     {
         $this->middleware(['permission:import user']);
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function importForm()
     {
         return view('user.import');
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function import(Request $request)
     {
         if ($request->hasFile('file')) {

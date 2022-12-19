@@ -12,11 +12,19 @@ use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware(['auth', 'password_expired']);
     }
 
+    /**
+     * @param Request $request
+     * @param Rueckmeldungen $rueckmeldung
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
     {
         if (auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() > 0 and $rueckmeldung->multiple != 1) {
@@ -65,6 +73,11 @@ class UserRueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param $post_id
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function sendRueckmeldung(Request $request, $post_id)
     {
         $user = $request->user();
@@ -112,6 +125,10 @@ class UserRueckmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * @param UserRueckmeldungen $userRueckmeldungen
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
     {
         if ($userRueckmeldungen->users_id != auth()->id()) {
@@ -145,6 +162,11 @@ class UserRueckmeldungenController extends Controller
         }
     }
 
+    /**
+     * @param Request $request
+     * @param UserRueckmeldungen $userRueckmeldungen
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function update(Request $request, UserRueckmeldungen $userRueckmeldungen)
     {
         $user = $request->user();

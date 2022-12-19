@@ -10,6 +10,10 @@ use Spatie\IcalendarGenerator\Components\Event;
 
 class ICalController extends Controller
 {
+    /**
+     * @param $uuid
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|void
+     */
     public function createICal($uuid)
     {
         $user = User::where('uuid', $uuid)->firstOrFail();
@@ -78,6 +82,9 @@ class ICalController extends Controller
         }
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     */
     public function publicICal()
     {
         $Termine = Termin::where('public', true)->get();

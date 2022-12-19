@@ -7,6 +7,7 @@ use App\Model\Changelog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class ChangelogController extends Controller
 {
     /**
@@ -61,50 +62,5 @@ class ChangelogController extends Controller
             'type' => 'success',
             'Meldung' => 'Changelog angelegt',
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Model\Changelog  $changelog
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Changelog $changelog)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Model\Changelog  $changelog
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(CreateChangelogRequest $changelog)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Model\Changelog  $changelog
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Changelog $changelog)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Model\Changelog  $changelog
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Changelog $changelog)
-    {
-        //
     }
 }

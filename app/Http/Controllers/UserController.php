@@ -175,7 +175,7 @@ class UserController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return JsonResponse
+     * @return RedirectResponse
      */
     public function destroy($id)
     {
@@ -221,13 +221,14 @@ class UserController extends Controller
             'type' => 'success',
             'Meldung' => 'Benutzer gelöscht',
         ]);
-        /*
-         *
-        return response()->json([
-            'message'   => 'Gelöscht',
-        ], 200);*/
+
     }
 
+    /**
+     * @param Request $request
+     * @param $id
+     * @return RedirectResponse
+     */
     public function loginAsUser(Request $request, $id)
     {
         if (! $request->user()->can('loginAsUser')) {
@@ -243,6 +244,10 @@ class UserController extends Controller
         return redirect()->to(url('/'));
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function logoutAsUser(Request $request)
     {
         if ($request->session()->has('ownID')) {
@@ -252,6 +257,10 @@ class UserController extends Controller
         return redirect()->to(url('/'));
     }
 
+    /**
+     * @param User $user
+     * @return RedirectResponse
+     */
     public function removeVerknuepfung(User $user)
     {
         $user->sorgeberechtigter2()->update([

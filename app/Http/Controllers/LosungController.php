@@ -13,6 +13,9 @@ use Maatwebsite\Excel\Facades\Excel;
 class LosungController extends Controller
 {
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function importView()
     {
         if (!auth()->user()->can('edit settings')) {
@@ -24,6 +27,10 @@ class LosungController extends Controller
         return view('losung.import');
     }
 
+    /**
+     * @param ImportLosungenRequest $request
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function import(ImportLosungenRequest $request)
     {
         if (!auth()->user()->can('edit settings')) {
@@ -42,6 +49,9 @@ class LosungController extends Controller
 
     }
 
+    /**
+     * @return \Illuminate\Http\Response
+     */
     public function getImage()
     {
         return response()->view('losung.image', [

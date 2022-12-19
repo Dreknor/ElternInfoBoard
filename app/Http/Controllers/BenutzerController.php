@@ -8,10 +8,19 @@ use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ *
+ */
 class BenutzerController extends Controller
 {
+    /**
+     * @var
+     */
     protected $user;
 
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware('auth');
@@ -22,6 +31,10 @@ class BenutzerController extends Controller
         });
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function show(Request $request)
     {
         if ($request->session()->get('changelog') == true) {
@@ -36,6 +49,10 @@ class BenutzerController extends Controller
         ]);
     }
 
+    /**
+     * @param editUserRequest $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(editUserRequest $request)
     {
         $user = User::find($this->user->id);

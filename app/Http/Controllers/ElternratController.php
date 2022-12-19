@@ -11,8 +11,14 @@ use Spatie\MediaLibrary\Models\Media;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
+/**
+ *
+ */
 class ElternratController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware(['permission:view elternrat']);
@@ -27,9 +33,7 @@ class ElternratController extends Controller
     {
         $themen = Discussion::query()->orderbyDesc('sticky')->orderbyDesc('updated_at')->paginate(15);
         $Group = Group::where('name', '=', 'Elternrat')->first();
-        //$files = $Group->getMedia();
 
-        //dd(config('app.directories_elternrat'));
 
         $user = Role::findByName('Elternrat');
         $user = $user->users;
@@ -51,21 +55,23 @@ class ElternratController extends Controller
         ]);
     }
 
+
     /**
-     * Show the form for creating a new resource.
+     * show view for creating new discussion
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function create()
     {
         return view('elternrat.createDiscussion');
     }
 
+
     /**
-     * Store a newly created resource in storage.
+     * store new discussion
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param createDiscussionRequest $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(createDiscussionRequest $request)
     {
@@ -84,11 +90,13 @@ class ElternratController extends Controller
         ]);
     }
 
+
     /**
-     * Show the form for editing the specified resource.
      *
-     * @param  \App\discussion  $discussion
-     * @return \Illuminate\Http\Response
+     * show view to edit the given discussion
+     *
+     * @param Discussion $discussion
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
     public function edit(Discussion $discussion)
     {
@@ -97,16 +105,17 @@ class ElternratController extends Controller
         ]);
     }
 
+
     /**
-     * Update the specified resource in storage.
+     * Update the Ressource
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\discussion  $discussion
-     * @return \Illuminate\Http\Response
+     * @param createDiscussionRequest $request
+     * @param Discussion $discussion
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(createDiscussionRequest $request, Discussion $discussion)
     {
-        $discussion->update($request->all());
+        $discussion->update($request->validated());
 
         return redirect()->to(url('elternrat'))->with([
             'type' => 'success',
@@ -114,17 +123,15 @@ class ElternratController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\discussion  $discussion
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(discussion $discussion)
-    {
-        //
-    }
 
+    /**
+     *
+     * delete the given Media
+     *
+     * @param Request $request
+     * @param Media $file
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function deleteFile(Request $request, Media $file)
     {
         if ($request->user()->can('delete elternrat file')) {
@@ -142,6 +149,12 @@ class ElternratController extends Controller
         ]);
     }
 
+    /**
+     *
+     * Show view to add new file
+     *
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function addFile()
     {
         return view('elternrat.createFile', [
@@ -149,6 +162,13 @@ class ElternratController extends Controller
         ]);
     }
 
+    /**
+     *
+     * Add new File
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storeFile(Request $request)
     {
         $gruppe = Group::where('name', 'Elternrat')->first();
@@ -165,6 +185,13 @@ class ElternratController extends Controller
         ]);
     }
 
+    /**
+     * Store the new Comment
+     *
+     * @param Discussion $discussion
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storeComment(Discussion $discussion, Request $request)
     {
         if ($request->body != '') {
@@ -176,6 +203,11 @@ class ElternratController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Delete the given comment
+     * @param Comment $comment
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     */
     public function deleteComment(Comment $comment)
     {
         $comment->delete();

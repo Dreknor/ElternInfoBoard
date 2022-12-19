@@ -4,11 +4,17 @@ namespace App\Http\Controllers;
 
 class VertretungsplanController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware(['permission:view vertretungsplan']);
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function index()
     {
         $gruppen = '/keine';

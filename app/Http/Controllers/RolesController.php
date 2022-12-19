@@ -8,6 +8,9 @@ use Spatie\Permission\Models\Role;
 
 class RolesController extends Controller
 {
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function edit()
     {
         return view('permissions.edit', [
@@ -16,6 +19,10 @@ class RolesController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request)
     {
         foreach (Role::all() as $role) {
@@ -28,6 +35,10 @@ class RolesController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $Role = Role::firstOrCreate(['name' => $request->name]);
@@ -38,6 +49,10 @@ class RolesController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function storePermission(Request $request)
     {
         $Role = Permission::firstOrCreate(['name' => $request->name]);

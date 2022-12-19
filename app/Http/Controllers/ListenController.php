@@ -155,17 +155,13 @@ class ListenController extends Controller
         return redirect()->to(url('listen'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  TerminListe  $terminListe
-     * @return Response
-     */
-    public function destroy(Liste $terminListe)
-    {
-        //
-    }
 
+    /**
+     * Veröffentlicht die Liste
+     *
+     * @param $liste
+     * @return RedirectResponse
+     */
     public function activate($liste)
     {
         $liste = Liste::find($liste);
@@ -176,6 +172,12 @@ class ListenController extends Controller
         return redirect()->back();
     }
 
+    /**
+     *
+     * Liste ausblenden
+     * @param $liste
+     * @return RedirectResponse
+     */
     public function deactivate($liste)
     {
         $liste = Liste::find($liste);
@@ -186,15 +188,15 @@ class ListenController extends Controller
         return redirect()->back();
     }
 
+    /**
+     *  Erstellt eine druckbare Ansicht im Browser
+     * @param Request $request
+     * @param Liste $liste
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     */
     public function pdf(Request $request, Liste $liste)
     {
         if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste')) {
-            /*$pdf = \PDF::loadView('listen.listenExport', [
-                "Liste" => $liste,
-                'listentermine' => $liste->eintragungen->sortBy('termin')
-            ]);
-            return $pdf->download('test.pdf');
-            */
 
             if ($liste->type == 'termin') {
                 return view('listen.listenTerminExport', [
@@ -215,6 +217,13 @@ class ListenController extends Controller
         ]);
     }
 
+    /**
+     * Abgelaufene Liste verlängern um 2 Wochen
+     *
+     * @param Liste $liste
+     * @return RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     public function refresh(Liste $liste)
     {
         $this->authorize('editListe', $liste);
@@ -229,6 +238,13 @@ class ListenController extends Controller
         ]);
     }
 
+    /**
+     * Aktive Liste archivieren
+     *
+     * @param Liste $liste
+     * @return RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     public function archiv(Liste $liste)
     {
         $this->authorize('editListe', $liste);

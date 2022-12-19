@@ -22,6 +22,10 @@ class FileController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
+    /**
+     * @param Media $file
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function delete(Media $file)
     {
         $file->delete();
@@ -31,6 +35,10 @@ class FileController extends Controller
         ], 200);
     }
 
+    /**
+     * @param Media $file
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Media $file)
     {
         $file->delete();
@@ -41,6 +49,9 @@ class FileController extends Controller
         ]);
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function index()
     {
         $user = auth()->user();
@@ -76,6 +87,9 @@ class FileController extends Controller
         }
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function create()
     {
         return view('files.create', [
@@ -83,6 +97,10 @@ class FileController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         if (! $request->user()->can('upload files')) {
@@ -109,6 +127,11 @@ class FileController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param Post $posts
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function saveFileRueckmeldung(Request $request, Post $posts)
     {
         if ($request->hasFile('files')) {
@@ -133,6 +156,9 @@ class FileController extends Controller
         ]);
     }
 
+    /**
+     * @return array
+     */
     protected function scanDir()
     {
         $dirs = scandir(storage_path().'/app');
@@ -163,6 +189,9 @@ class FileController extends Controller
         return $noMedia;
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function showScan()
     {
         $noMedia = CacheAlias::remember('old_files', 1, function () {
@@ -180,6 +209,9 @@ class FileController extends Controller
         ]);
     }
 
+    /**
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function deleteUnusedFiles()
     {
         $noMedia = $this->scanDir();
@@ -195,6 +227,10 @@ class FileController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * @param DeleteFilesRequest $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function removeOldFiles(DeleteFilesRequest $request)
     {
         $media = Media::where('model_type', \App\Model\Post::class)->whereDate('created_at', '<', $request->deleteBeforeDate)->get();

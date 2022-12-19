@@ -18,6 +18,9 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class SchickzeitenController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware('auth');
@@ -48,6 +51,9 @@ class SchickzeitenController extends Controller
         ]);
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|View
+     */
     public function indexVerwaltung()
     {
         $zeiten = Schickzeiten::all();
@@ -94,6 +100,10 @@ class SchickzeitenController extends Controller
         ]);
     }
 
+    /**
+     * @param CreateChildRequest $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function createChildVerwaltung(CreateChildRequest $request)
     {
         $Kind = Schickzeiten::firstOrCreate([
@@ -287,6 +297,12 @@ class SchickzeitenController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param $day
+     * @param $child
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Request $request, $day, $child)
     {
         $schickzeit = $request->user()->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
@@ -306,6 +322,12 @@ class SchickzeitenController extends Controller
         ]);
     }
 
+    /**
+     * @param $day
+     * @param $child
+     * @param $parent
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroyVerwaltung($day, $child, $parent)
     {
         $schickzeit = Schickzeiten::query()->where('weekday', '=', $day)->where('child_name', '=', $child)->where('users_id', $parent)->update([
@@ -319,11 +341,17 @@ class SchickzeitenController extends Controller
         ]);
     }
 
+    /**
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
     public function download()
     {
         return Excel::download(new SchickzeitenExport, Carbon::now()->format('Ymd').'_schickzeiten.xlsx');
     }
 
+    /**
+     * @return void
+     */
     public function sendReminder()
     {
         $users = User::has('schickzeiten')->get();

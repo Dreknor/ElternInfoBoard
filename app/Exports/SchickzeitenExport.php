@@ -5,8 +5,14 @@ namespace App\Exports;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
+/**
+ *
+ */
 class SchickzeitenExport implements WithMultipleSheets
 {
+    /**
+     * @return array
+     */
     public function sheets(): array
     {
         $sheets = [];

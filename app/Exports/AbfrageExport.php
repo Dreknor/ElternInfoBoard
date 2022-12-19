@@ -5,10 +5,19 @@ namespace App\Exports;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 
+/**
+ *
+ */
 class AbfrageExport implements FromView
 {
+    /**
+     * @var
+     */
     public $rueckmeldung;
 
+    /**
+     * @param $rueckmeldung
+     */
     public function __construct($rueckmeldung)
     {
         $this->rueckmeldung = $rueckmeldung;

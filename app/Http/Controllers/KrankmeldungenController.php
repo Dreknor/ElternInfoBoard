@@ -50,6 +50,10 @@ class KrankmeldungenController extends Controller
         ]);
     }
 
+    /**
+     * versendet täglich die derzeit erkrankten SuS
+     * @return void
+     */
     public function dailyReport()
     {
         $krankmeldungen = krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
@@ -60,14 +64,4 @@ class KrankmeldungenController extends Controller
             ->queue(new DailyReportKrankmeldungen($krankmeldungen));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  krankmeldungen  $krankmeldungen
-     * @return Response
-     */
-    public function destroy(krankmeldungen $krankmeldungen)
-    {
-        //
-    }
 }

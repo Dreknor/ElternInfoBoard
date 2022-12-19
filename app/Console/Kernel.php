@@ -6,6 +6,9 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Spatie\Permission\Models\Role;
 
+/**
+ *
+ */
 class Kernel extends ConsoleKernel
 {
     /**
@@ -24,7 +27,9 @@ class Kernel extends ConsoleKernel
             $email = config('mail.from.address');
         }
 
+
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00')->emailOutputOnFailure($email);
+
         $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at('08:30')->emailOutputOnFailure($email);
         $schedule->call('App\Http\Controllers\FeedbackController@dailyReport')->weekdays()->at('08:30')->emailOutputOnFailure($email);
         $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00')->emailOutputOnFailure($email);

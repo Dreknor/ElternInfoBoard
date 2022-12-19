@@ -8,11 +8,21 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ *
+ */
 class ReinigungExport implements FromCollection, WithMapping, WithHeadings
 {
+    /**
+     * @var
+     */
     private $bereich;
 
-    public function __construct($bereich)
+
+    /**
+     * @param String $bereich
+     */
+    public function __construct(String $bereich)
     {
         $this->bereich = $bereich;
     }
@@ -29,6 +39,10 @@ class ReinigungExport implements FromCollection, WithMapping, WithHeadings
             ->get();
     }
 
+    /**
+     * @param $reinigung
+     * @return array
+     */
     public function map($reinigung): array
     {
         return [
@@ -39,6 +53,9 @@ class ReinigungExport implements FromCollection, WithMapping, WithHeadings
         ];
     }
 
+    /**
+     * @return string[]
+     */
     public function headings(): array
     {
         return [

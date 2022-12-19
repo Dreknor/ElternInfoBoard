@@ -129,14 +129,4 @@ class PollController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Poll  $poll
-     * @return Response
-     */
-    public function destroy(Poll $poll)
-    {
-        //
-    }
 }

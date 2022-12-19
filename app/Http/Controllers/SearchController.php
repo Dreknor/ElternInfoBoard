@@ -9,11 +9,18 @@ use App\Support\Collection;
 
 class SearchController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware(['auth', 'password_expired']);
     }
 
+    /**
+     * @param searchRequest $request
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function search(searchRequest $request)
     {
         $months = new Collection([

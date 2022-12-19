@@ -5,13 +5,23 @@ namespace App\Http\Controllers;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ *
+ */
 class ImageController extends Controller
 {
+    /**
+     * Medien werden nur angezeigt, wenn der Benutzer angemeldet ist
+     */
     public function __construct()
     {
         $this->middleware('auth');
     }
 
+    /**
+     * @param Media $media_id
+     * @return Media|BinaryFileResponse
+     */
     public function getImage(Media $media_id)
     {
 

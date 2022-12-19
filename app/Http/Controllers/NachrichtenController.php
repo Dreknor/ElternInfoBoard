@@ -524,6 +524,9 @@ class NachrichtenController extends Controller
         }
     }
 
+    /**
+     * @return void
+     */
     public function emailDaily()
     {
         $this->email('daily');
@@ -574,6 +577,11 @@ class NachrichtenController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param Post $posts
+     * @return RedirectResponse
+     */
     public function archiv(Request $request, Post $posts)
     {
         if (! auth()->user()->can('edit posts')) {
@@ -668,6 +676,10 @@ class NachrichtenController extends Controller
         ], 401);
     }
 
+    /**
+     * @param $post
+     * @return RedirectResponse
+     */
     public function deleteTrashed($post)
     {
         $post = Post::onlyTrashed()->find($post);
@@ -685,6 +697,10 @@ class NachrichtenController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\Foundation\Application|Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     */
     public function kioskView(Request $request)
     {
         if (auth()->user()->can('view all')) {
@@ -725,6 +741,11 @@ class NachrichtenController extends Controller
         ]);
     }
 
+    /**
+     * @param Post $posts
+     * @param CommentPostRequest $request
+     * @return \Illuminate\Contracts\Foundation\Application|RedirectResponse|Redirector
+     */
     public function storeComment(Post $posts, CommentPostRequest $request)
     {
         $posts->comment([
@@ -736,6 +757,11 @@ class NachrichtenController extends Controller
     }
 
     //Sendet Push-Nachricht an User
+
+    /**
+     * @param Post $post
+     * @return RedirectResponse
+     */
     public function push(Post $post)
     {
         $User = $post->users;
@@ -746,6 +772,10 @@ class NachrichtenController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * @param Post $post
+     * @return RedirectResponse
+     */
     public function stickPost(Post $post)
     {
         $post->timestamps = false;

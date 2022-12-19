@@ -10,10 +10,10 @@ use Illuminate\Support\Facades\Hash;
 
 class GroupsController extends Controller
 {
-    public function __construct()
-    {
-    }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function index()
     {
         if (auth()->user()->can('view groups')) {
@@ -27,6 +27,12 @@ class GroupsController extends Controller
         ]);
     }
 
+    /**
+     * erstellt neue Gruppe
+     *
+     * @param CreateGroupRequest $createGroupRequest
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(CreateGroupRequest $createGroupRequest)
     {
         if (! auth()->user()->can('view groups')) {
@@ -50,6 +56,14 @@ class GroupsController extends Controller
         ]);
     }
 
+    /**
+     *
+     * Löscht die angegebene Gruppe
+     *
+     * @param Request $request
+     * @param Group $group
+     * @return \Illuminate\Http\RedirectResponse|void
+     */
     public function delete(Request $request, Group $group)
     {
         if (! auth()->user()->can('delete groups')) {

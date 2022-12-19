@@ -7,12 +7,18 @@ use Illuminate\Support\Facades\Cache;
 
 class SettingsController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware('auth');
         $this->middleware(['permission:edit settings']);
     }
 
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     */
     public function module()
     {
         $module = Settings::where('category', 'module')->get();
@@ -22,6 +28,10 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * @param $modulname
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function change_status($modulname)
     {
         $modul = Settings::where('setting', $modulname)->first();
@@ -48,6 +58,10 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * @param $modulname
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function change_nav($modulname)
     {
         $modul = Settings::where('setting', $modulname)->first();
