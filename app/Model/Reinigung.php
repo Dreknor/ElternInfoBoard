@@ -2,12 +2,15 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reinigung extends Model
 {
+    use HasFactory;
+
     protected $table = 'reinigung';
 
     protected $visible = ['bereich', 'aufgabe', 'datum', 'bemerkung'];
