@@ -6,8 +6,17 @@ use App\Http\Requests\createDiscussionRequest;
 use App\Model\Comment;
 use App\Model\Discussion;
 use App\Model\Group;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Spatie\MediaLibrary\Models\Media;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -27,7 +36,7 @@ class ElternratController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return View
      */
     public function index()
     {
@@ -39,9 +48,8 @@ class ElternratController extends Controller
         $user = $user->users;
 
         $permission = Permission::findByName('view elternrat');
-        $userPermission = $permission->users;
 
-        foreach ($userPermission as $pushUser) {
+        foreach ($permission->users as $pushUser) {
             $user = $user->push($pushUser);
         }
 
@@ -59,7 +67,7 @@ class ElternratController extends Controller
     /**
      * show view for creating new discussion
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return \Illuminate\Contracts\View\View
      */
     public function create()
     {
@@ -71,7 +79,7 @@ class ElternratController extends Controller
      * store new discussion
      *
      * @param createDiscussionRequest $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(createDiscussionRequest $request)
     {
@@ -96,7 +104,7 @@ class ElternratController extends Controller
      * show view to edit the given discussion
      *
      * @param Discussion $discussion
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return Application|Factory|\Illuminate\Contracts\View\View
      */
     public function edit(Discussion $discussion)
     {
@@ -111,7 +119,7 @@ class ElternratController extends Controller
      *
      * @param createDiscussionRequest $request
      * @param Discussion $discussion
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(createDiscussionRequest $request, Discussion $discussion)
     {
@@ -130,7 +138,7 @@ class ElternratController extends Controller
      *
      * @param Request $request
      * @param Media $file
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function deleteFile(Request $request, Media $file)
     {
@@ -139,7 +147,7 @@ class ElternratController extends Controller
 
             return response()->json([
                 'message' => 'Gelöscht',
-            ], 200);
+            ]);
         }
 
         return response()->json([
@@ -153,7 +161,7 @@ class ElternratController extends Controller
      *
      * Show view to add new file
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return Application|Factory|\Illuminate\Contracts\View\View
      */
     public function addFile()
     {
@@ -167,7 +175,9 @@ class ElternratController extends Controller
      * Add new File
      *
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
+     * @throws FileDoesNotExist
+     * @throws FileIsTooBig
      */
     public function storeFile(Request $request)
     {
@@ -190,7 +200,7 @@ class ElternratController extends Controller
      *
      * @param Discussion $discussion
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function storeComment(Discussion $discussion, Request $request)
     {
@@ -206,7 +216,7 @@ class ElternratController extends Controller
     /**
      * Delete the given comment
      * @param Comment $comment
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|Response
      */
     public function deleteComment(Comment $comment)
     {

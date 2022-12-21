@@ -1,7 +1,10 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +14,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -23,12 +26,12 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        \Illuminate\Support\Facades\DB::table('users')->insert([
-            'name' => env('MAIL_FROM_NAME'),
-            'email' => env('MAIL_FROM_ADDRESS'),
-            'password' => \Illuminate\Support\Facades\Hash::make(\Carbon\Carbon::now()->format('dmY')),
-            'created_at' => \Carbon\Carbon::now(),
-            'updated_at' => \Carbon\Carbon::now(),
+        DB::table('users')->insert([
+            'name' => config('mail.from.name'),
+            'email' => config('mail.from.address'),
+            'password' => Hash::make(Carbon::now()->format('dmY')),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ]);
     }
 
@@ -37,7 +40,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('users');
     }

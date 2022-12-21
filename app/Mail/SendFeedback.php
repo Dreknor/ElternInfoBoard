@@ -10,18 +10,18 @@ class SendFeedback extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $text;
+    protected string $text;
 
-    protected $betreff;
+    protected string $betreff;
 
-    public $data;
+    public array $data;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($text, $betreff, $data)
+    public function __construct(string $text, string $betreff, array $data)
     {
         $this->text = $text;
         $this->betreff = $betreff;
@@ -33,7 +33,7 @@ class SendFeedback extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         $Mail = $this
             ->from(config('mail.from.address'),

@@ -9,16 +9,19 @@ use App\Model\Reinigung;
 use App\Model\ReinigungsTask;
 use App\Model\User;
 use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReinigungController extends Controller
 {
     /**
      * @param $bereich
-     * @return RedirectResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return RedirectResponse|BinaryFileResponse
      */
     public function export($bereich)
     {
@@ -67,7 +70,7 @@ class ReinigungController extends Controller
         if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
             $Bereiche = $user->groups->pluck('bereich')->unique();
-            $Bereiche = $Bereiche->filter(function ($value, $key) {
+            $Bereiche = $Bereiche->filter(function ($value) {
                 if ($value != 'Aufnahme') {
                     return $value;
                 }
@@ -98,7 +101,7 @@ class ReinigungController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     * @return Application|Factory|\Illuminate\Contracts\View\View|RedirectResponse
      */
     public function create(Request $request, $Bereich, $Datum)
     {
@@ -109,7 +112,6 @@ class ReinigungController extends Controller
             ]);
         }
 
-        $user = $request->user();
         $datum = Carbon::createFromFormat('Ymd', $Datum)->startOfWeek()->startOfDay();
         $ende = $datum->copy()->endOfWeek()->endOfDay();
 
@@ -119,7 +121,6 @@ class ReinigungController extends Controller
 
         $newusers = $newusers->sortBy('familie_name');
 
-        $Reinigung = [];
 
         $Reinigung = Reinigung::query()
                 ->where('bereich', $Bereich)
@@ -148,7 +149,6 @@ class ReinigungController extends Controller
      */
     public function store($Bereich, ReinigungsRequest $request)
     {
-        $Datum = Carbon::createFromFormat('Y-m-d', $request->datum);
         $task = ReinigungsTask::find($request->aufgabe);
         $reinigung = new Reinigung($request->validated());
         $reinigung->bereich = $Bereich;

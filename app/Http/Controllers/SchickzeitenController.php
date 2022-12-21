@@ -9,8 +9,11 @@ use App\Mail\SchickzeitenReminder;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -52,14 +55,12 @@ class SchickzeitenController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|View
+     * @return Application|Factory|View
      */
     public function indexVerwaltung()
     {
         $zeiten = Schickzeiten::all();
-        $childs = $zeiten->unique(function ($item) {
-            return $item['users_id'].$item['child_name'];
-        });
+        $childs = $zeiten->unique(fn($item) => $item['users_id'].$item['child_name']);
 
         $parents = User::whereHas('groups', function (Builder $query) {
             $query->where('bereich', 'Grundschule');
@@ -85,11 +86,11 @@ class SchickzeitenController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function createChild(CreateChildRequest $request)
     {
-        $Kind = Schickzeiten::firstOrCreate([
+       Schickzeiten::firstOrCreate([
             'users_id' => auth()->id(),
             'child_name' => $request->child,
         ]);
@@ -102,11 +103,11 @@ class SchickzeitenController extends Controller
 
     /**
      * @param CreateChildRequest $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function createChildVerwaltung(CreateChildRequest $request)
     {
-        $Kind = Schickzeiten::firstOrCreate([
+        Schickzeiten::firstOrCreate([
             'users_id' => $request->parent,
             'child_name' => $request->child,
         ], [
@@ -122,8 +123,9 @@ class SchickzeitenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param $parent
+     * @param SchickzeitRequest $request
+     * @return RedirectResponse
      */
     public function storeVerwaltung($parent, SchickzeitRequest $request)
     {
@@ -135,7 +137,7 @@ class SchickzeitenController extends Controller
             'Freitag' => '5',
         ];
 
-        $schickzeiten = Schickzeiten::query()->where([
+       Schickzeiten::query()->where([
             'child_name' => $request->child,
             'weekday' => $weekdays[$request->weekday],
             'users_id' => $parent,
@@ -178,7 +180,7 @@ class SchickzeitenController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function store(SchickzeitRequest $request)
     {
@@ -301,7 +303,7 @@ class SchickzeitenController extends Controller
      * @param Request $request
      * @param $day
      * @param $child
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(Request $request, $day, $child)
     {
@@ -326,7 +328,7 @@ class SchickzeitenController extends Controller
      * @param $day
      * @param $child
      * @param $parent
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroyVerwaltung($day, $child, $parent)
     {

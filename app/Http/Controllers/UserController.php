@@ -13,7 +13,6 @@ use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,7 +59,7 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
+     * @param createUserRequest $request
      * @return RedirectResponse
      */
     public function store(createUserRequest $request)
@@ -76,6 +75,7 @@ class UserController extends Controller
             if ($gruppen[0] == 'all') {
                 $gruppen = Group::where('protected', 0)->get();
             } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
+                #TODO Bereiche per Config definieren
                 $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
                 $gruppen = $gruppen->unique();
             } else {
@@ -94,7 +94,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param User $user
      * @return View
      */
     public function show(User $user)
@@ -120,8 +120,8 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
-     * @param  int  $id
+     * @param verwaltungEditUserRequest $request
+     * @param User $user
      * @return RedirectResponse
      */
     public function update(verwaltungEditUserRequest $request, User $user)
@@ -153,7 +153,7 @@ class UserController extends Controller
         }
 
         if ($request->sorg2 != '') {
-            $sorg2 = User::where('id', $request->sorg2)->update([
+            User::where('id', $request->sorg2)->update([
                 'sorg2' => $user->id,
             ]);
         }
@@ -174,10 +174,10 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      * @return RedirectResponse
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $user = User::find($id);
         $user->groups()->detach();
@@ -259,10 +259,18 @@ class UserController extends Controller
 
     /**
      * @param User $user
+     * @param Int $sorg2
      * @return RedirectResponse
      */
-    public function removeVerknuepfung(User $user)
+    public function removeVerknuepfung(User $user, Int $sorg2)
     {
+        if ($user->sorg2 != $sorg2){
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Verknüpfung konnte nicht aufgehoben werden, da User und Sorgeberechtigter nicht übereinstimmen.',
+            ]);
+        }
+
         $user->sorgeberechtigter2()->update([
             'sorg2' => null,
         ]);

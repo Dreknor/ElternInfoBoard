@@ -11,7 +11,7 @@ class CreateTerminRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->user()->can('edit termin');
     }
@@ -21,7 +21,7 @@ class CreateTerminRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'terminname' => [

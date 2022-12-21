@@ -22,7 +22,7 @@
 
             $.fn.extend({
                 toggleText: function (a, b) {
-                    return this.text(this.text() == b ? a : b);
+                    return this.text(this.text() === b ? a : b);
                 }
             });
 
@@ -45,7 +45,7 @@
                 @foreach(auth()->user()->groups as $group)
                     $('#{{\Illuminate\Support\Str::camel($group->name)}}').on('click', function (event) {
                         let target = event.target
-                        if(target.dataset.show == 'true'){
+                        if(target.dataset.show === 'true'){
                             $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
                             $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
 
@@ -79,7 +79,7 @@
                 ],
                 setup:function(ed) {
                     ed.on('change', function(e) {
-                        var id = "#btnSave_"+ ed.id;
+                        let id = "#btnSave_" + ed.id;
                         $(id).show();
                     });
                 }
@@ -108,8 +108,8 @@
 
         <script>
             $('.fileDelete').on('click', function () {
-                var fileId = $(this).data('id');
-                var button = $(this);
+                let fileId = $(this).data('id');
+                let button = $(this);
 
                 swal.fire({
                     title: "Datei wirklich entfernen?",
@@ -140,7 +140,7 @@
 
         <script>
             $('.btnShow').on('click', function () {
-                var btn = this;
+                let btn = this;
 
                 if ($(btn).hasClass('aktiv')){
                     $(btn).html( '<i class="fa fa-eye"></i> Text anzeigen') ;
@@ -154,7 +154,7 @@
             });
 
             $('.btnShowRueckmeldungen').on('click', function () {
-                var btn = this;
+                let btn = this;
 
                 if ($(btn).hasClass('aktiv')){
                     $(btn).html( '<i class="fa fa-eye"></i> Rückmeldungen anzeigen') ;
@@ -170,8 +170,8 @@
 
     <script>
         $('.commentLinks').on('click', function () {
-            var btn = this;
-                $(btn).addClass('d-none');
+            let btn = this;
+            $(btn).addClass('d-none');
                 $('.comment').removeClass('d-none');
 
 

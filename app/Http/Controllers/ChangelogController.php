@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateChangelogRequest;
 use App\Model\Changelog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 
 class ChangelogController extends Controller
@@ -13,7 +15,7 @@ class ChangelogController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
@@ -27,7 +29,7 @@ class ChangelogController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     * @return RedirectResponse|View
      */
     public function create(Request $request)
     {
@@ -44,8 +46,8 @@ class ChangelogController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param CreateChangelogRequest $request
+     * @return RedirectResponse
      */
     public function store(CreateChangelogRequest $request)
     {

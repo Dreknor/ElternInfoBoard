@@ -8,15 +8,16 @@ use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
 use App\Repositories\GroupsRepository;
-use App\TerminListe;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ListenController extends Controller
 {
+    private GroupsRepository $grousRepository;
+
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->grousRepository = $groupsRepository;
@@ -26,6 +27,7 @@ class ListenController extends Controller
      * Display a listing of the resource.
      *
      * @return View
+     * @throws AuthorizationException
      */
     public function index(Request $request)
     {
@@ -45,8 +47,8 @@ class ListenController extends Controller
         }
 
         $listen = $listen->unique('id');
-        $eintragungen = Listen_Eintragungen::query()->user(auth()->id())->orWhere->user(auth()->user()->sorg2)->get();
-        $termine = listen_termine::query()->user(auth()->id())->orWhere->user(auth()->user()->sorg2)->get();
+        $eintragungen = Listen_Eintragungen::query()->where('user_id',auth()->id())->orWhere('user_id',auth()->user()->sorg2)->get();
+        $termine = listen_termine::query()->where('user_id',auth()->id())->orWhere('user_id',auth()->user()->sorg2)->get();
 
         return view('listen.index', [
             'listen' => $listen,
@@ -60,6 +62,7 @@ class ListenController extends Controller
      * Show the form for creating a new resource.
      *
      * @return View
+     * @throws AuthorizationException
      */
     public function create()
     {
@@ -73,8 +76,9 @@ class ListenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
+     * @param CreateListeRequest $request
      * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function store(CreateListeRequest $request)
     {
@@ -96,7 +100,7 @@ class ListenController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Liste  $Liste
+     * @param Liste $terminListe
      * @return View
      */
     public function show(Liste $terminListe)
@@ -120,8 +124,9 @@ class ListenController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  TerminListe  $terminListe
+     * @param Liste $terminListe
      * @return View
+     * @throws AuthorizationException
      */
     public function edit(Liste $terminListe)
     {
@@ -136,9 +141,10 @@ class ListenController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
-     * @param  TerminListe  $terminListe
-     * @return Response
+     * @param Request $request
+     * @param Liste $terminListe
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function update(Request $request, Liste $terminListe)
     {
@@ -190,11 +196,10 @@ class ListenController extends Controller
 
     /**
      *  Erstellt eine druckbare Ansicht im Browser
-     * @param Request $request
      * @param Liste $liste
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     * @return View|RedirectResponse
      */
-    public function pdf(Request $request, Liste $liste)
+    public function pdf(Liste $liste)
     {
         if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste')) {
 
@@ -222,7 +227,7 @@ class ListenController extends Controller
      *
      * @param Liste $liste
      * @return RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function refresh(Liste $liste)
     {
@@ -243,7 +248,7 @@ class ListenController extends Controller
      *
      * @param Liste $liste
      * @return RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function archiv(Liste $liste)
     {

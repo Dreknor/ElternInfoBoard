@@ -6,25 +6,27 @@ use App\Http\Requests\StorePollRequest;
 use App\Http\Requests\UpdatePollRequest;
 use App\Model\Poll;
 use App\Model\Post;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Routing\Redirector;
 
 class PollController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return Response
+     * @return RedirectResponse
      */
     public function index()
     {
-        return redirect() - back();
+        return redirect()->back();
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return Response
+     * @return RedirectResponse
      */
     public function create()
     {
@@ -34,8 +36,9 @@ class PollController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  StorePollRequest  $request
-     * @return Response
+     * @param Post $post
+     * @param StorePollRequest $request
+     * @return Application|RedirectResponse|Redirector
      */
     public function store(Post $post, StorePollRequest $request)
     {
@@ -62,7 +65,7 @@ class PollController extends Controller
         $string = $poll->id.'_answers';
         $answers = $request->$string;
 
-        if ($poll->votes->where('author_id', auth()->id())->first() != null) {
+        if ($poll->votes->firstWhere('author_id', auth()->id()) != null) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Stimme wurde bereits abgegeben.',
@@ -101,8 +104,8 @@ class PollController extends Controller
      * Update the specified resource in storage.
      *
      * @param  UpdatePollRequest  $request
-     * @param  \App\Poll  $poll
-     * @return Response
+     * @param  Poll  $poll
+     * @return RedirectResponse
      */
     public function update(UpdatePollRequest $request, Poll $poll)
     {

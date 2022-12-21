@@ -2,7 +2,9 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\CalendarLinks\Link;
 
 class listen_termine extends Model
@@ -17,12 +19,12 @@ class listen_termine extends Model
         'termin' => 'datetime',
     ];
 
-    public function eingetragenePerson()
+    public function eingetragenePerson(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reserviert_fuer');
     }
 
-    public function link($Listenname)
+    public function link($Listenname): Link
     {
         return Link::create($Listenname, $this->termin, $this->termin->copy()->addMinutes($this->duration));
     }
@@ -32,12 +34,12 @@ class listen_termine extends Model
         return ($value != '') ? $value : $this->liste->duration;
     }
 
-    public function liste()
+    public function liste(): BelongsTo
     {
         return $this->belongsTo(Liste::class, 'listen_id');
     }
 
-    public function scopeUser($query, $user)
+    public function scopeUser(Builder $query, $user)
     {
         if ($user != null) {
             return $query->where('reserviert_fuer', $user);

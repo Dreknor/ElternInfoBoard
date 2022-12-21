@@ -3,6 +3,8 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -38,17 +40,17 @@ class Rueckmeldungen extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
-    public function post()
+    public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class, 'post_id');
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
-    public function userRueckmeldungen()
+    public function userRueckmeldungen(): HasMany
     {
         if ($this->type == 'abfrage') {
             return $this->hasMany(AbfrageAntworten::class, 'rueckmeldung_id');
@@ -57,7 +59,7 @@ class Rueckmeldungen extends Model
         return $this->hasMany(UserRueckmeldungen::class, 'post_id', 'post_id');
     }
 
-    public function options()
+    public function options(): ?HasMany
     {
         if ($this->type == 'abfrage') {
             return $this->hasMany(AbfrageOptions::class, 'rueckmeldung_id');
@@ -71,7 +73,7 @@ class Rueckmeldungen extends Model
      *
      * @return void
      */
-    protected static function booted()
+    protected static function booted(): void
     {
         static::saved(function ($rueckmeldung) {
             $post = $rueckmeldung->post;

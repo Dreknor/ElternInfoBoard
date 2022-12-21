@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 
 class NachrichtenComposer
 {
-    public function compose($view)
+    public function compose($view): void
     {
         $expire = 1;
 

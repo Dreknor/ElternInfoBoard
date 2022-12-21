@@ -7,12 +7,15 @@ use App\Model\Group;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 
 class TerminController extends Controller
 {
+    private GroupsRepository $grousRepository;
+
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->middleware('password_expired');
@@ -22,7 +25,8 @@ class TerminController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     * @return View|RedirectResponse
+     * @throws AuthorizationException
      */
     public function create()
     {
@@ -41,8 +45,9 @@ class TerminController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param CreateTerminRequest $request
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function store(CreateTerminRequest $request)
     {
@@ -80,8 +85,9 @@ class TerminController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  Termin  $termin
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Termin $termin
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function destroy(Termin $termin)
     {

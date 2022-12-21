@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Cache;
 
 class TermineComposer
 {
-    public function compose($view)
+    public function compose($view): void
     {
-        $expire = 60 * 30;
+        $expire = now()->diffInSeconds(now()->endOfDay());
 
         $termine = Cache::remember('termine'.auth()->id(), $expire, function () {
-            $expire = now()->diffInSeconds(now()->endOfDay());
+
 
             //Termine holen
             if (! auth()->user()->can('edit termin') and ! auth()->user()->can('view all')) {
@@ -53,11 +53,7 @@ class TermineComposer
                     $Termine->push($newTermin);
                 }
             }
-
-            $Termine = $Termine->unique('id');
-            $Termine = $Termine->sortBy('start');
-
-            return $Termine;
+            return $Termine->unique('id')->sortBy('start');
         });
 
         $view->with('termine', $termine);

@@ -5,6 +5,7 @@ namespace App\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 use Spatie\CalendarLinks\Link;
 
@@ -24,7 +25,7 @@ class Termin extends Model
         'public' => 'boolean',
     ];
 
-    public function getfullDayAttribute($value)
+    public function getfullDayAttribute($value): bool
     {
         if (is_null($value) or $value = false) {
             return false;
@@ -33,7 +34,7 @@ class Termin extends Model
         return true;
     }
 
-    public function groups()
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_termine');
     }
@@ -52,7 +53,7 @@ class Termin extends Model
         });
     }
 
-    public function link()
+    public function link(): Link
     {
         if ($this->fullDay == 1) {
             $ende = $this->ende->addDay();

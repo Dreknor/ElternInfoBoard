@@ -11,7 +11,7 @@ class DeleteFilesRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->user()->can('scan files');
     }
@@ -21,7 +21,7 @@ class DeleteFilesRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'deleteBeforeDate' => ['date', 'required'],

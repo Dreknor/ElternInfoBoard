@@ -8,7 +8,7 @@
             </h6>
         </div>
         <div class="card-body">
-            <form action="{{url("/posts/$post->id/$kiosk")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
+            <form action="{{url("/posts/$post->id")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
                 @csrf
                 @method('put')
                 <div class="row">
@@ -124,7 +124,7 @@
                                                 <div class="col-12">
                                                     <div class="form-group">
                                                         <label for="password">Passwort zur Bestätigung</label>
-                                                        <input type="password" class="form-control border-input" name="password" autocomplete="new-password".>
+                                                        <input type="password" class="form-control border-input" name="password" autocomplete="new-password">
                                                     </div>
                                                 </div>
                                             </div>

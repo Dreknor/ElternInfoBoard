@@ -9,6 +9,8 @@ use App\Model\Mail as MailModel;
 use App\Model\User;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 
 
@@ -21,7 +23,7 @@ class FeedbackController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View
      */
     public function show()
     {
@@ -37,7 +39,7 @@ class FeedbackController extends Controller
      *
      * Send Mail
      * @param KontaktRequest $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function send(KontaktRequest $request)
     {
@@ -101,7 +103,7 @@ class FeedbackController extends Controller
 
     /**
      * @param MailModel $mail
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     * @return View|RedirectResponse
      */
     public function showMail(MailModel $mail)
     {
@@ -118,6 +120,7 @@ class FeedbackController extends Controller
     }
 
     /**
+     * Called from Console/Kernel
      * @return void
      */
     public function dailyReport()

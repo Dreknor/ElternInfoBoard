@@ -1,7 +1,10 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,14 +14,14 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         DB::table('permissions')->insert([
             'name' => 'manage rueckmeldungen',
             'guard_name' => 'web',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('settings')->insert([
+        DB::table('settings')->insert([
             'setting' => 'bearbeite Rueckmeldungen',
             'category' => 'module',
             'options' => '
@@ -33,9 +36,9 @@ return new class extends Migration
                         "icon":"fas fa-comment-dots"
                     }
             }',
-            'created_at' => \Carbon\Carbon::now(),
+            'created_at' => Carbon::now(),
         ]);
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        Artisan::call('cache:clear');
     }
 
     /**
@@ -43,7 +46,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('see_all_rueckmeldungen', function (Blueprint $table) {
             //

@@ -8,14 +8,12 @@ use Illuminate\Support\Facades\Cache;
 
 class LosungComposer
 {
-    public function compose($view)
+    public function compose($view): void
     {
         $expire = now()->diffInSeconds(now()->endOfDay());
 
         $losung = Cache::remember('losung', $expire, function () {
-            $losung = Losung::where('date', Carbon::today())->first();
-
-            return $losung;
+            return Losung::where('date', Carbon::today())->first();
         });
 
         $view->with('losung', $losung);

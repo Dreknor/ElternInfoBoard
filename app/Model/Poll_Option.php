@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Poll_Option extends Model
 {
@@ -12,7 +13,7 @@ class Poll_Option extends Model
 
     protected $visible = ['option'];
 
-    public function poll()
+    public function poll(): BelongsTo
     {
         return $this->belongsTo(Poll::class, 'poll_id');
     }

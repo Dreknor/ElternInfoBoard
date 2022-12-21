@@ -10,24 +10,24 @@ class krankmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $email;
+    public string $email;
 
-    public $name;
+    public string $name;
 
-    public $NameDesKindes;
+    public string $NameDesKindes;
 
-    public $krankVon;
+    public string $krankVon;
 
-    public $krankBis;
+    public string $krankBis;
 
-    public $bemerkung;
+    public string $bemerkung;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($Email, $Name, $NameDesKindes, $krankVon, $krankBis, $bemerkung)
+    public function __construct(string $Email, string $Name, string $NameDesKindes, string $krankVon, string $krankBis, string $bemerkung)
     {
         $this->email = $Email;
         $this->name = $Name;
@@ -42,7 +42,7 @@ class krankmeldung extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->subject('Krankmeldung '.$this->NameDesKindes.': '.$this->krankVon.' - '.$this->krankBis)

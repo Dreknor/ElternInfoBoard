@@ -7,7 +7,7 @@ use Illuminate\Support\Collection as BaseCollection;
 
 class Collection extends BaseCollection
 {
-    public function paginate($perPage, $total = null, $page = null, $pageName = 'page')
+    public function paginate($perPage, $total = null, $page = null, $pageName = 'page'): LengthAwarePaginator
     {
         $page = $page ?: LengthAwarePaginator::resolveCurrentPage($pageName);
 

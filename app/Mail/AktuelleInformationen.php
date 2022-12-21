@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\Collection;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -10,24 +11,24 @@ class AktuelleInformationen extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $news;
+    protected Collection|array $news;
 
-    protected $name;
+    protected string $name;
 
-    protected $diskussionen;
+    protected Collection|array $diskussionen;
 
-    protected $termine;
+    protected Collection|array $termine;
 
-    protected $files;
+    //protected $files;
 
-    protected $listen;
+    protected Collection|array $listen;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($news, $name, $diskussionen, $listen, $termine)
+    public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine)
     {
         $this->news = $news;
         $this->name = $name;
@@ -41,7 +42,7 @@ class AktuelleInformationen extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this->subject('Aktuelle Informationen')
             ->view('emails.nachrichten', [

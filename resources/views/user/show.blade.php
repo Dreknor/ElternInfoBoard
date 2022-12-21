@@ -119,6 +119,12 @@
                                                             </a>
                                                         </b>.
                                                     </p>
+
+                                                    <p>
+                                                        <a href="{{url('users/'.$user->id.'/remove/sorg2/'.$user->sorg2)}}">
+                                                            {{$user->sorgeberechtigter2?->name}}
+                                                        </a>
+                                                    </p>
                                                 @else
                                                     <label for="sorg2">Verknüpfen mit:</label>
                                                     <select class="custom-select" name="sorg2" id="sorg2">

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 
 class ReinigungComposer
 {
-    public function compose($view)
+    public function compose($view): void
     {
         $expire = now()->diffInSeconds(now()->endOfDay());
 

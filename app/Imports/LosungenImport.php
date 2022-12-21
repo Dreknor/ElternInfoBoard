@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class LosungenImport implements ToCollection, WithHeadingRow
 {
@@ -19,7 +20,7 @@ class LosungenImport implements ToCollection, WithHeadingRow
 
         foreach ($collection as $row) {
             $newLosungenArray[] = [
-                'date' => \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['datum'])->format('Y-m-d'),
+                'date' => Date::excelToDateTimeObject($row['datum'])->format('Y-m-d'),
                 'Losungsvers' => $row['losungsvers'],
                 'Losungstext' => Str::remove('/', $row['losungstext']),
                 'Lehrtextvers' => $row['lehrtextvers'],

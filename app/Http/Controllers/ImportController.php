@@ -6,6 +6,10 @@ use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
 use App\Model\group_user;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -20,7 +24,7 @@ class ImportController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return Application|Factory|View
      */
     public function importForm()
     {
@@ -29,7 +33,7 @@ class ImportController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function import(Request $request)
     {

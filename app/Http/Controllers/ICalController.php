@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
+use Illuminate\Http\Response;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
 
@@ -12,12 +13,12 @@ class ICalController extends Controller
 {
     /**
      * @param $uuid
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|void
+     * @return Response
      */
     public function createICal($uuid)
     {
         $user = User::where('uuid', $uuid)->firstOrFail();
-        if ($user->releaseCalendar == true) {
+        if ($user->releaseCalendar) {
             $Termine = $user->termine;
 
             //Termine aus Listen holen
@@ -56,10 +57,10 @@ class ICalController extends Controller
 
             // loop over events
             foreach ($Termine as $event) {
-                if ($event->fullDay == true) {
+                if ($event->fullDay) {
                     $icalObject->event(Event::create()
                         ->name($event->terminname)
-                        ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
+                        ->uniqueIdentifier(($event->id) ?: uuid_create())
                         ->startsAt($event->start->timezone('Europe/Berlin'))
                         ->withoutTimezone()
                         ->fullDay());
@@ -68,7 +69,7 @@ class ICalController extends Controller
                         ->name($event->terminname)
                         ->startsAt($event->start->timezone('Europe/Berlin'))
                         ->endsAt($event->ende->timezone('Europe/Berlin'))
-                        ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
+                        ->uniqueIdentifier(($event->id) ?: uuid_create())
                     );
                 }
             }
@@ -83,7 +84,7 @@ class ICalController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return Response
      */
     public function publicICal()
     {
@@ -97,10 +98,10 @@ class ICalController extends Controller
 
         // loop over events
         foreach ($Termine as $event) {
-            if ($event->fullDay == true) {
+            if ($event->fullDay) {
                 $icalObject->event(Event::create()
                     ->name($event->terminname)
-                    ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
+                    ->uniqueIdentifier(($event->id) ?: uuid_create())
                     ->startsAt($event->start->timezone('Europe/Berlin'))
                     ->fullDay());
             } else {
@@ -108,7 +109,7 @@ class ICalController extends Controller
                     ->name($event->terminname)
                     ->startsAt($event->start->timezone('Europe/Berlin'))
                     ->endsAt($event->ende->timezone('Europe/Berlin'))
-                    ->uniqueIdentifier(($event->id) ? $event->id : uuid_create())
+                    ->uniqueIdentifier(($event->id) ?: uuid_create())
                 );
             }
         }

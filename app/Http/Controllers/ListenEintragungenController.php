@@ -6,7 +6,7 @@ use App\Http\Requests\createListenEintragungsRequest;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Throwable;
 
 class ListenEintragungenController extends Controller
 {
@@ -45,9 +45,9 @@ class ListenEintragungenController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
-     * @param  Listen_Eintragungen  $listen_eintragung
+     * @param Listen_Eintragungen $listen_eintragung
      * @return RedirectResponse
+     * @throws Throwable
      */
     public function update(Listen_Eintragungen $listen_eintragung)
     {
@@ -72,7 +72,7 @@ class ListenEintragungenController extends Controller
      * @param  Listen_Eintragungen  $listen_eintragung
      * @return RedirectResponse
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function destroy(Listen_Eintragungen $listen_eintragung)
     {

@@ -10,7 +10,7 @@ class dringendeNachrichtStatus extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $empfaenger;
+    public array $empfaenger;
 
     /**
      * Create a new message instance.
@@ -27,7 +27,7 @@ class dringendeNachrichtStatus extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->from(

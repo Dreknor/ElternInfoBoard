@@ -3,6 +3,9 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Liste extends Model
 {
@@ -19,22 +22,22 @@ class Liste extends Model
         'multiple' => 'boolean',
     ];
 
-    public function ersteller()
+    public function ersteller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'besitzer');
     }
 
-    public function groups()
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_listen', 'liste_id');
     }
 
-    public function eintragungen()
+    public function eintragungen(): HasMany
     {
         return $this->hasMany(Listen_Eintragungen::class, 'listen_id');
     }
 
-    public function termine()
+    public function termine(): HasMany
     {
         return $this->hasMany(listen_termine::class, 'listen_id');
     }

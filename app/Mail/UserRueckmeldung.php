@@ -10,20 +10,20 @@ class UserRueckmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $email;
+    public mixed $email;
 
-    public $name;
+    public mixed $name;
 
     public $subject;
 
-    public $text;
+    public mixed $text;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($Rueckmeldung)
+    public function __construct(array $Rueckmeldung)
     {
         $this->email = $Rueckmeldung['email'];
         $this->name = $Rueckmeldung['name'];
@@ -36,7 +36,7 @@ class UserRueckmeldung extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->from(

@@ -11,11 +11,11 @@ use App\Http\Controllers\GroupsController;
 use App\Http\Controllers\ICalController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
-use App\Http\Controllers\KioskController;
 use App\Http\Controllers\KrankmeldungenController;
 use App\Http\Controllers\ListenController;
 use App\Http\Controllers\ListenEintragungenController;
 use App\Http\Controllers\ListenTerminController;
+use App\Http\Controllers\LosungController;
 use App\Http\Controllers\NachrichtenController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\PushController;
@@ -227,12 +227,14 @@ Route::middleware('auth')->group(function () {
             /*             Route::get('email/daily', [NachrichtenController::class, 'emailDaily']);
             */
 
+
             Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
 
             Route::resource('users', UserController::class);
+            Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
             //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
                 //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
                 //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
@@ -256,21 +258,15 @@ Route::middleware('auth')->group(function () {
             Route::get('settings', [SettingsController::class, 'module']);
             Route::get('settings/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
             Route::get('settings/modul/{modul}', [SettingsController::class, 'change_status']);
-            Route::get('settings/losungen/import', [\App\Http\Controllers\LosungController::class, 'importView']);
-            Route::post('settings/losungen/import', [\App\Http\Controllers\LosungController::class, 'import']);
+            Route::get('settings/losungen/import', [LosungController::class, 'importView']);
+            Route::post('settings/losungen/import', [LosungController::class, 'import']);
         });
 
         Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
             Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
-        Route::get('logoutAsUser', function () {
-            if (session()->has('ownID')) {
-                Auth::loginUsingId(session()->pull('ownID'));
-            }
-
-            return redirect(url('/'));
-        });
+        Route::get('logoutAsUser',[UserController::class, 'logoutAsUser']);
 
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {

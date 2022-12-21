@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,14 +12,14 @@ class dailyMailReport extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $mails;
+    public Collection|array $mails;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($mails)
+    public function __construct(Collection|array $mails)
     {
         $this->mails = $mails;
     }
@@ -28,7 +29,7 @@ class dailyMailReport extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->subject('Nachrichtenübersicht am '.Carbon::yesterday()->format('d.m.Y'))

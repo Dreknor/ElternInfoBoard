@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Model\Termin;
 use App\Model\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -13,10 +12,9 @@ class TerminPolicy
     /**
      * Determine whether the user can view any termins.
      *
-     * @param  \App\Model\User  $user
-     * @return mixed
+     * @return bool
      */
-    public function viewAny(User $user)
+    public function viewAny(): bool
     {
         return auth()->check();
     }
@@ -24,11 +22,9 @@ class TerminPolicy
     /**
      * Determine whether the user can view the termin.
      *
-     * @param  \App\Model\User  $user
-     * @param  \App\Model\Termin  $termin
-     * @return mixed
+     * @return bool
      */
-    public function view(User $user, Termin $termin)
+    public function view(): bool
     {
         return auth()->check();
     }
@@ -36,10 +32,9 @@ class TerminPolicy
     /**
      * Determine whether the user can create termins.
      *
-     * @param  \App\Model\User  $user
      * @return mixed
      */
-    public function create(User $user)
+    public function create(): mixed
     {
         return auth()->user()->can('edit termin');
     }
@@ -47,11 +42,10 @@ class TerminPolicy
     /**
      * Determine whether the user can update the termin.
      *
-     * @param  \App\Model\User  $user
-     * @param  \App\Model\Termin  $termin
-     * @return mixed
+     * @param User $user
+     * @return bool
      */
-    public function update(User $user, Termin $termin)
+    public function update(User $user): bool
     {
         return $user->can('edit termin');
     }
@@ -59,11 +53,10 @@ class TerminPolicy
     /**
      * Determine whether the user can delete the termin.
      *
-     * @param  \App\Model\User  $user
-     * @param  \App\Model\Termin  $termin
-     * @return mixed
+     * @param User $user
+     * @return bool
      */
-    public function delete(User $user, Termin $termin)
+    public function delete(User $user): bool
     {
         return $user->can('edit termin');
     }
@@ -71,11 +64,10 @@ class TerminPolicy
     /**
      * Determine whether the user can restore the termin.
      *
-     * @param  \App\Model\User  $user
-     * @param  \App\Model\Termin  $termin
-     * @return mixed
+     * @param User $user
+     * @return bool
      */
-    public function restore(User $user, Termin $termin)
+    public function restore(User $user): bool
     {
         return $user->can('edit termin');
     }
@@ -83,11 +75,10 @@ class TerminPolicy
     /**
      * Determine whether the user can permanently delete the termin.
      *
-     * @param  \App\Model\User  $user
-     * @param  \App\Model\Termin  $termin
-     * @return mixed
+     * @param User $user
+     * @return bool
      */
-    public function forceDelete(User $user, Termin $termin)
+    public function forceDelete(User $user): bool
     {
         return $user->can('edit termin');
     }

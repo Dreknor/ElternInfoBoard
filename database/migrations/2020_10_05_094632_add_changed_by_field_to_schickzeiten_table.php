@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('schickzeiten', function (Blueprint $table) {
             $table->addColumn('integer', 'changedBy')->unsigned()->default(1);
@@ -23,7 +23,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('schickzeiten', function (Blueprint $table) {
             //

@@ -11,11 +11,11 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('reinigungs_tasks', function (Blueprint $table) {
             $table->id();
-            $table->tinyText('task', 60);
+            $table->tinyText('task');
             $table->timestamps();
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('reinigungs_tasks');
     }

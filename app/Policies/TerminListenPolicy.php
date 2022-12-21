@@ -13,10 +13,9 @@ class TerminListenPolicy
     /**
      * Determine whether the user can view any termins.
      *
-     * @param  \App\Model\User  $user
-     * @return mixed
+     * @return bool
      */
-    public function viewAny(User $user)
+    public function viewAny(): bool
     {
         return auth()->check();
     }
@@ -24,20 +23,19 @@ class TerminListenPolicy
     /**
      * Determine whether the user can create termins.
      *
-     * @param  \App\Model\User  $user
      * @return mixed
      */
-    public function create(User $user)
+    public function create(): mixed
     {
         return auth()->user()->can('create terminliste');
     }
 
-    public function storeTerminToListe(User $user, Liste $liste)
+    public function storeTerminToListe(User $user, Liste $liste): bool
     {
         return $liste->besitzer == $user->id or $user->can('edit terminliste');
     }
 
-    public function editListe(User $user, Liste $liste)
+    public function editListe(User $user, Liste $liste): bool
     {
         return $liste->besitzer == $user->id or $user->can('edit terminliste');
     }

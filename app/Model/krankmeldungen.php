@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class krankmeldungen extends Model
@@ -15,7 +16,7 @@ class krankmeldungen extends Model
 
     protected $visible = ['name', 'kommentar', 'start', 'ende'];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'users_id');
     }

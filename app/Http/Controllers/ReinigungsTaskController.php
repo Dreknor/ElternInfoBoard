@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ReinigsungsTaskRequest;
 use App\Model\ReinigungsTask;
+use Illuminate\Http\RedirectResponse;
 
 class ReinigungsTaskController extends Controller
 {
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param ReinigsungsTaskRequest $request
+     * @return RedirectResponse
      */
     public function store(ReinigsungsTaskRequest $request)
     {
@@ -27,8 +28,8 @@ class ReinigungsTaskController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Model\ReinigungsTask  $reinigungsTask
-     * @return \Illuminate\Http\RedirectResponse
+     * @param ReinigungsTask $reinigungsTask
+     * @return RedirectResponse
      */
     public function destroy(ReinigungsTask $reinigungsTask)
     {

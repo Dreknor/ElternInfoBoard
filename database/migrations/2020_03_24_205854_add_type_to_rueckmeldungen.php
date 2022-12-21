@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('rueckmeldungen', function (Blueprint $table) {
             $table->string('type')->after('post_id')->default('email');
@@ -23,7 +23,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('rueckmeldungen', function (Blueprint $table) {
             $table->removeColumn('type');

@@ -9,13 +9,22 @@ use App\Model\Post;
 use App\Repositories\GroupsRepository;
 use App\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache  as CacheAlias;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class FileController extends Controller
 {
+    private GroupsRepository $grousRepository;
+
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->middleware('password_expired');
@@ -24,7 +33,7 @@ class FileController extends Controller
 
     /**
      * @param Media $file
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function delete(Media $file)
     {
@@ -32,12 +41,12 @@ class FileController extends Controller
 
         return response()->json([
             'message' => 'Gelöscht',
-        ], 200);
+        ]);
     }
 
     /**
      * @param Media $file
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(Media $file)
     {
@@ -50,7 +59,7 @@ class FileController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View
      */
     public function index()
     {
@@ -88,7 +97,7 @@ class FileController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View
      */
     public function create()
     {
@@ -99,7 +108,7 @@ class FileController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -130,17 +139,17 @@ class FileController extends Controller
     /**
      * @param Request $request
      * @param Post $posts
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse
+     * @throws FileDoesNotExist
+     * @throws FileIsTooBig
      */
     public function saveFileRueckmeldung(Request $request, Post $posts)
     {
         if ($request->hasFile('files')) {
-            $posts->addAllMediaFromRequest(['files'])
-                ->each(function ($fileAdder) use ($request) {
-                    $fileAdder
-                        ->usingName($request->name)
-                        ->toMediaCollection('images');
-                });
+            $posts->addAllMediaFromRequest()
+                ->each(fn($fileAdder) => $fileAdder
+                    ->usingName($request->name)
+                    ->toMediaCollection('images'));
 
             @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
         } else {
@@ -171,9 +180,7 @@ class FileController extends Controller
                 continue;
             }
 
-            $MediaModel = $Media->filter(function ($item) use ($dir) {
-                return $item->id == $dir;
-            })->first();
+            $MediaModel = $Media->filter(fn($item) => $item->id == $dir)->first();
 
             if ($MediaModel == null) {
                 $scan = scandir(storage_path().'/app/'.$dir);
@@ -190,7 +197,7 @@ class FileController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return Application|Factory|\Illuminate\Contracts\View\View
      */
     public function showScan()
     {
@@ -210,7 +217,7 @@ class FileController extends Controller
     }
 
     /**
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function deleteUnusedFiles()
     {
@@ -229,11 +236,11 @@ class FileController extends Controller
 
     /**
      * @param DeleteFilesRequest $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function removeOldFiles(DeleteFilesRequest $request)
     {
-        $media = Media::where('model_type', \App\Model\Post::class)->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
+        $media = Media::where('model_type', Post::class)->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
 
         foreach ($media as $Media) {
             $Media->delete();

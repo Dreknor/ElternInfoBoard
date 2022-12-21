@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Model\Post;
 use DevDojo\LaravelReactions\Models\Reaction;
+use Illuminate\Http\RedirectResponse;
 
 class ReactionController extends Controller
 {
@@ -18,7 +19,7 @@ class ReactionController extends Controller
     /**
      * @param Post $post
      * @param $reaction
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function react(Post $post, $reaction)
     {

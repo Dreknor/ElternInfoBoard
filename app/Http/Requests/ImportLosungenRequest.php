@@ -11,7 +11,7 @@ class ImportLosungenRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->user()->can('edit settings');
     }
@@ -21,7 +21,7 @@ class ImportLosungenRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'files' => 'required|max:50000|mimes:xlsx,xls'

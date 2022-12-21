@@ -12,19 +12,26 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class AufnahmeImport implements ToCollection, WithHeadingRow
 {
-    protected $header;
+    protected array $header;
 
-    protected $groups;
+    protected \Illuminate\Database\Eloquent\Collection $groups;
 
-    public function __construct($header)
+    /**
+     * @param array $header
+     */
+    public function __construct(array $header)
     {
         $this->header = $header;
         $this->groups = Group::all();
     }
 
-    public function collection(Collection $rows)
+    /**
+     * @param Collection $collection
+     * @return void
+     */
+    public function collection(Collection $collection): void
     {
-        foreach ($rows as $row) {
+        foreach ($collection as $row) {
             set_time_limit(20);
 
             $user1 = null;
@@ -32,8 +39,8 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
 
             $row = array_values($row->toArray());
 
-            $AufnahmeGS = $this->groups->where('name', 'Aufnahme GS')->first();
-            $AufnahmeOS = $this->groups->where('name', 'Aufnahme OS')->first();
+            $AufnahmeGS = $this->groups->firstWhere('name', 'Aufnahme GS');
+            $AufnahmeOS = $this->groups->firstWhere('name', 'Aufnahme OS');
 
             if (strpos($row[$this->header['gruppen']], 'GS')) {
                 $Gruppe = $AufnahmeGS;

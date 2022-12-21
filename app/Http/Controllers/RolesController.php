@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -9,7 +13,7 @@ use Spatie\Permission\Models\Role;
 class RolesController extends Controller
 {
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return Application|Factory|View
      */
     public function edit()
     {
@@ -21,7 +25,7 @@ class RolesController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request)
     {
@@ -37,11 +41,12 @@ class RolesController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
-        $Role = Role::firstOrCreate(['name' => $request->name]);
+        Role::firstOrCreate(['name' => $request->name]);
+
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -51,11 +56,11 @@ class RolesController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function storePermission(Request $request)
     {
-        $Role = Permission::firstOrCreate(['name' => $request->name]);
+       Permission::firstOrCreate(['name' => $request->name]);
 
         return redirect()->back()->with([
             'type' => 'success',

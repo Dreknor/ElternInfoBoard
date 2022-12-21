@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,14 +12,14 @@ class DailyReportKrankmeldungen extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $krankmeldungen;
+    public Collection|array $krankmeldungen;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($krankmeldungen)
+    public function __construct(Collection|array $krankmeldungen)
     {
         $this->krankmeldungen = $krankmeldungen;
     }
@@ -28,7 +29,7 @@ class DailyReportKrankmeldungen extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->subject('Krankmeldungen am '.Carbon::now()->format('d.m.Y'))

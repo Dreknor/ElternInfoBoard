@@ -67,12 +67,12 @@
 
 @push('css')
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="{{asset('css/fileinput.min.css')}}" media="all" rel="stylesheet" type="text/css" />
 
 @endpush
 
 @push('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
+    <script src="{{asset('js/piexif.min.js')}}" type="text/javascript"></script>
 
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
@@ -100,10 +100,10 @@
 
     <!-- piexif.min.js is needed for auto orienting image files OR when restoring exif data in resized images and when you
         wish to resize images before upload. This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
+    <script src="{{asset('js/piexif.min.js')}}" type="text/javascript"></script>
     <!-- sortable.min.js is only needed if you wish to sort / rearrange files in initial preview.
         This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/sortable.min.js" type="text/javascript"></script>
+    <script src="{{asset('js/plugins/sortable.min.js')}}" type="text/javascript"></script>
     <!-- purify.min.js is only needed if you wish to purify HTML content in your preview for
         HTML files. This must be loaded before fileinput.min.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/purify.min.js" type="text/javascript"></script>
@@ -130,7 +130,7 @@
     <script>
         $('#veroeffentlichenSelect').change(function(){
             $('#veroeffentlichenSelect option:selected').each(function(){
-                if($(this).text() == "Ja"){
+                if($(this).text() === "Ja"){
                     $('#submitBtn').text('Beitrag veröffentlichen');
                 } else {
                     $('#submitBtn').text('Beitrag speichern');

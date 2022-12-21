@@ -4,19 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\editUserRequest;
 use App\Model\Changelog;
-use App\Model\User;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 /**
  *
  */
 class BenutzerController extends Controller
 {
-    /**
-     * @var
-     */
-    protected $user;
+
 
     /**
      *
@@ -24,39 +22,35 @@ class BenutzerController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware(function ($request, $next) {
-            $this->user = Auth::user();
 
-            return $next($request);
-        });
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return Application|View
      */
     public function show(Request $request)
     {
-        if ($request->session()->get('changelog') == true) {
+        if ($request->session()->get('changelog')) {
             $changelog = Changelog::where('changeSettings', 1)->orderByDesc('created_at')->first();
         } else {
             $changelog = null;
         }
 
         return view('user.settings', [
-            'user' => $this->user,
+            'user' => auth()->user(),
             'changelog' => $changelog,
         ]);
     }
 
     /**
      * @param editUserRequest $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(editUserRequest $request)
     {
-        $user = User::find($this->user->id);
-        $user->update($request->all());
+        $user = auth()->user();
+        $user->update($request->validated());
 
         return redirect()->back()->with([
             'type' => 'success',

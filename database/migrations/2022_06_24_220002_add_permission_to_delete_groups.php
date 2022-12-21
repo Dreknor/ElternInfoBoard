@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,14 +13,14 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         DB::table('permissions')->insert([
             'name' => 'delete groups',
             'guard_name' => 'web',
         ]);
 
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        Artisan::call('cache:clear');
     }
 
     /**
@@ -26,7 +28,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('delete_groups', function (Blueprint $table) {
             //

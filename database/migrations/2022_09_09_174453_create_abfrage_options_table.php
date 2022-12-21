@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('rueckmeldungen', function (Blueprint $table) {
             $table->boolean('multiple')->nullable();
@@ -52,7 +52,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('abfrage_options');
         Schema::dropIfExists('abfrage_answers');

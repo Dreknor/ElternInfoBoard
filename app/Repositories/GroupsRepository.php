@@ -13,7 +13,7 @@ class GroupsRepository
      * @param  array  $gruppen
      * @return array
      */
-    public function getGroups(array $gruppen)
+    public function getGroups(array $gruppen): array
     {
         if ($gruppen[0] == 'all') {
             $gruppen = Group::where('protected', 0)->get();

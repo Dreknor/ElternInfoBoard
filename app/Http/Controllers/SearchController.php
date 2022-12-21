@@ -6,6 +6,7 @@ use App\Http\Requests\searchRequest;
 use App\Model\Group;
 use App\Model\Post;
 use App\Support\Collection;
+use Illuminate\View\View;
 
 class SearchController extends Controller
 {
@@ -19,7 +20,7 @@ class SearchController extends Controller
 
     /**
      * @param searchRequest $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View
      */
     public function search(searchRequest $request)
     {

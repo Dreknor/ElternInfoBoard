@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateGroupRequest;
 use App\Model\Group;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 
 class GroupsController extends Controller
 {
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View
      */
     public function index()
     {
@@ -31,7 +33,7 @@ class GroupsController extends Controller
      * erstellt neue Gruppe
      *
      * @param CreateGroupRequest $createGroupRequest
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(CreateGroupRequest $createGroupRequest)
     {
@@ -62,7 +64,7 @@ class GroupsController extends Controller
      *
      * @param Request $request
      * @param Group $group
-     * @return \Illuminate\Http\RedirectResponse|void
+     * @return RedirectResponse|void
      */
     public function delete(Request $request, Group $group)
     {

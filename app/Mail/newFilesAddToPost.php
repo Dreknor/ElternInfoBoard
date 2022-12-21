@@ -14,22 +14,22 @@ class newFilesAddToPost extends Mailable
     use Queueable, SerializesModels;
 
     /**
-     * @var
+     * @var string
      */
-    public $von;
+    public string $von;
 
     /**
-     * @var
+     * @var string
      */
-    public $Betreff;
+    public string $Betreff;
 
     /**
      * newFilesAddToPost constructor.
      *
-     * @param $von
-     * @param $Betreff
+     * @param string $von
+     * @param string $Betreff
      */
-    public function __construct($von, $Betreff)
+    public function __construct(string $von, string $Betreff)
     {
         $this->von = $von;
         $this->Betreff = $Betreff;
@@ -40,7 +40,7 @@ class newFilesAddToPost extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->subject('neuer Bild-Upload')

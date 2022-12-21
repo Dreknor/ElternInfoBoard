@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reinigung extends Model
 {
@@ -13,12 +14,12 @@ class Reinigung extends Model
 
     protected $fillable = ['bereich', 'aufgabe', 'datum', 'bemerkung', 'users_id'];
 
-    public function getDatumAttribute($value)
+    public function getDatumAttribute($value): bool|Carbon
     {
         return Carbon::createFromFormat('Y-m-d', $value);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'users_id', 'id');
     }

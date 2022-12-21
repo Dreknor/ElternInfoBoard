@@ -53,6 +53,12 @@ class editUserRequest extends FormRequest
                 'min:0',
                 'max:1',
             ],
+            'changePassword' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:1',
+            ]
 
         ];
     }

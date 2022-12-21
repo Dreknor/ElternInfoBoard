@@ -11,13 +11,14 @@ use App\Model\AbfrageOptions;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RueckmeldungenController extends Controller
 {
@@ -41,10 +42,17 @@ class RueckmeldungenController extends Controller
     /**
      * @param Post $post
      * @param $type
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View|RedirectResponse
      */
     public function create(Post $post, $type)
     {
+        if ($type != 'abfrage'){
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Rückmeldung erstellen fehlgeschlagen. Rückmeldetyp nicht gefunden.'
+            ]);
+        }
+
         return view('nachrichten.createAbfrage', [
             'nachricht' => $post,
         ])->with([
@@ -55,7 +63,7 @@ class RueckmeldungenController extends Controller
 
     /**
      * @param Rueckmeldungen $rueckmeldung
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     * @return View|RedirectResponse
      */
     public function editAbfrage(Rueckmeldungen $rueckmeldung)
     {
@@ -74,7 +82,7 @@ class RueckmeldungenController extends Controller
     /**
      * @param createAbfrageRequest $request
      * @param Rueckmeldungen $rueckmeldung
-     * @return \Illuminate\Contracts\Foundation\Application|RedirectResponse|\Illuminate\Routing\Redirector
+     * @return RedirectResponse
      */
     public function updateAbfrage(createAbfrageRequest $request, Rueckmeldungen $rueckmeldung)
     {
@@ -133,7 +141,7 @@ class RueckmeldungenController extends Controller
 
     /**
      * @param Rueckmeldungen $rueckmeldung
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|RedirectResponse
+     * @return View|RedirectResponse
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
@@ -174,7 +182,7 @@ class RueckmeldungenController extends Controller
 
     /**
      * @param Rueckmeldungen $rueckmeldung
-     * @return RedirectResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return RedirectResponse|BinaryFileResponse
      */
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
@@ -192,6 +200,7 @@ class RueckmeldungenController extends Controller
                     'nachricht' => $rueckmeldung->post,
                     'rueckmeldungen' => $rueckmeldung->userRueckmeldungen,
                 ]);
+                return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
                 break;
             case 'abfrage':
                 return Excel::download(new AbfrageExport($rueckmeldung), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
@@ -199,13 +208,17 @@ class RueckmeldungenController extends Controller
                 break;
         }
 
-        return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
+        return redirect()->back()->with([
+            'type' => 'warning',
+            'Meldung' => 'Fehlerhafter Rückmeldetyp'
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
+     * @param createRueckmeldungRequest $request
+     * @param $posts_id
      * @return RedirectResponse
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
@@ -223,7 +236,8 @@ class RueckmeldungenController extends Controller
     /**
      * Store a newly created Abfrage in storage.
      *
-     * @param  Request  $request
+     * @param createAbfrageRequest $request
+     * @param $posts_id
      * @return RedirectResponse
      */
     public function storeAbfrage(createAbfrageRequest $request, $posts_id)
@@ -297,7 +311,7 @@ class RueckmeldungenController extends Controller
 
         return response()->json([
             'message' => 'Gelöscht',
-        ], 200);
+        ]);
     }
 
     /**
@@ -327,10 +341,10 @@ class RueckmeldungenController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  Rueckmeldungen  $rueckmeldungen
+     * @param Rueckmeldungen $rueckmeldungen
      * @return RedirectResponse
      */
-    public function destroyRueckmeldung($rueckmeldungen)
+    public function destroyRueckmeldung(Rueckmeldungen $rueckmeldungen)
     {
         $rueckmeldungen->delete();
 

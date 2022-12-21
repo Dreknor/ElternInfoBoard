@@ -5,18 +5,19 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 
 class SchickzeitenReminder extends Mailable
 {
     use Queueable, SerializesModels;
 
-    private $name;
+    private string $name;
 
-    private $schickzeiten;
+    private Collection $schickzeiten;
 
-    private $kinder;
+    private Collection $kinder;
 
-    private $weekdays = [
+    private array $weekdays = [
         '1' => 'Montag',
         '2' => 'Dienstag',
         '3' => 'Mittwoch',
@@ -29,7 +30,7 @@ class SchickzeitenReminder extends Mailable
      *
      * @return void
      */
-    public function __construct($name, $schickzeiten)
+    public function __construct(string $name, Collection $schickzeiten)
     {
         $this->schickzeiten = $schickzeiten;
         $this->name = $name;
@@ -41,7 +42,7 @@ class SchickzeitenReminder extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->subject('Übersicht Schickzeiten')

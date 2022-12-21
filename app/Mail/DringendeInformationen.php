@@ -10,16 +10,16 @@ class DringendeInformationen extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $header;
+    public string $header;
 
-    public $text;
+    public string $text;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($header, $text)
+    public function __construct(string $header, string $text)
     {
         $this->header = $header;
         $this->text = $text;
@@ -30,7 +30,7 @@ class DringendeInformationen extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this->subject($this->header)
             ->view('emails.dringendeNachricht', [

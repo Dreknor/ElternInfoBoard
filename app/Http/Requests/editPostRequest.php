@@ -12,7 +12,7 @@ class editPostRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         $posts = $this->route('posts');
 
@@ -28,7 +28,7 @@ class editPostRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'header' => [

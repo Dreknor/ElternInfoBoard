@@ -12,27 +12,30 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class UsersImport implements ToCollection, WithHeadingRow
 {
-    protected $header;
+    protected array $header;
 
-    protected $groups;
+    protected \Illuminate\Database\Eloquent\Collection $groups;
 
-    public function __construct($header)
+    /**
+     * @param array $header
+     */
+    public function __construct(array $header)
     {
         $this->header = $header;
         $this->groups = Group::all();
     }
 
-    public function collection(Collection $rows)
+    public function collection(Collection $collection)
     {
-        foreach ($rows as $row) {
+        foreach ($collection as $row) {
             set_time_limit(20);
 
             $user1 = null;
             $user2 = null;
 
             $row = array_values($row->toArray());
-            $Klassenstufe = $this->groups->where('name', 'Klassenstufe '.$row[$this->header['klassenstufe']])->first();
-            $Lerngruppe = $this->groups->where('name', $row[$this->header['lerngruppe']])->first();
+            $Klassenstufe = $this->groups->firstWhere('name', 'Klassenstufe '.$row[$this->header['klassenstufe']]);
+            $Lerngruppe = $this->groups->firstWhere('name', $row[$this->header['lerngruppe']]);
 
             if (! is_null($row[$this->header['S1Email']])) {
                 $email1 = explode(';', $row[$this->header['S1Email']]);
@@ -53,8 +56,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user1->removeRole('Aufnahme');
 
                 if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user1->groups()->attach([$Klassenstufe?->id, $Lerngruppe?->id]);
-                } else {
+                    $user1->groups()->attach([$Klassenstufe->id, $Lerngruppe?->id]);
                 }
             }
 
@@ -76,8 +78,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user2->assignRole('Eltern');
                 $user2->removeRole('Aufnahme');
                 if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user2->groups()->attach([$Klassenstufe?->id, $Lerngruppe?->id]);
-                } else {
+                    $user2->groups()->attach([$Klassenstufe->id, $Lerngruppe?->id]);
                 }
             }
 

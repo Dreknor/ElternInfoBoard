@@ -23,7 +23,7 @@ class TerminAbsage extends Mailable
      *
      * @return void
      */
-    public function __construct($empfaenger, $liste, $termin, $user)
+    public function __construct(string $empfaenger, $liste, $termin, $user)
     {
         $this->liste = $liste;
         $this->termin = $termin;

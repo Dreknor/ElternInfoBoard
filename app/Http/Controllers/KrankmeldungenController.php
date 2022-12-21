@@ -7,8 +7,8 @@ use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -31,7 +31,8 @@ class KrankmeldungenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Request  $request
+     * @param KrankmeldungRequest $request
+     * @return RedirectResponse
      */
     public function store(KrankmeldungRequest $request)
     {

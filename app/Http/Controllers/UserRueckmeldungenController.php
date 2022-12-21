@@ -7,7 +7,12 @@ use App\Model\AbfrageAntworten;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller
@@ -23,7 +28,7 @@ class UserRueckmeldungenController extends Controller
     /**
      * @param Request $request
      * @param Rueckmeldungen $rueckmeldung
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
     {
@@ -42,30 +47,7 @@ class UserRueckmeldungenController extends Controller
         ]);
         $userRueckmeldung->save();
 
-        $answers = [];
-
-        if (array_key_exists('options', $request->answers)) {
-            foreach ($request->answers['options'] as $option) {
-                $answers[] = [
-                    'rueckmeldung_id' => $userRueckmeldung->id,
-                    'user_id' => auth()->id(),
-                    'option_id' => $option,
-                    'answer' => '',
-                ];
-            }
-        }
-        if (array_key_exists('text', $request->answers)) {
-            foreach ($request->answers['text'] as $key => $answer) {
-                $answers[] = [
-                    'rueckmeldung_id' => $userRueckmeldung->id,
-                    'user_id' => auth()->id(),
-                    'option_id' => $key,
-                    'answer' => $answer,
-                ];
-            }
-        }
-
-        AbfrageAntworten::insert($answers);
+        $this->generateAnswerModels($request, $userRueckmeldung);
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -76,7 +58,7 @@ class UserRueckmeldungenController extends Controller
     /**
      * @param Request $request
      * @param $post_id
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return Application|RedirectResponse|Redirector
      */
     public function sendRueckmeldung(Request $request, $post_id)
     {
@@ -127,7 +109,7 @@ class UserRueckmeldungenController extends Controller
 
     /**
      * @param UserRueckmeldungen $userRueckmeldungen
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     * @return Application|Factory|View|RedirectResponse
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
     {
@@ -165,7 +147,7 @@ class UserRueckmeldungenController extends Controller
     /**
      * @param Request $request
      * @param UserRueckmeldungen $userRueckmeldungen
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return Application|RedirectResponse|Redirector
      */
     public function update(Request $request, UserRueckmeldungen $userRueckmeldungen)
     {
@@ -208,30 +190,7 @@ class UserRueckmeldungenController extends Controller
             case 'abfrage':
                 AbfrageAntworten::where('rueckmeldung_id', $userRueckmeldungen->id)->delete();
 
-                $answers = [];
-
-                if (array_key_exists('options', $request->answers)) {
-                    foreach ($request->answers['options'] as $option) {
-                        $answers[] = [
-                            'rueckmeldung_id' => $userRueckmeldungen->id,
-                            'user_id' => auth()->id(),
-                            'option_id' => $option,
-                            'answer' => '',
-                        ];
-                    }
-                }
-                if (array_key_exists('text', $request->answers)) {
-                    foreach ($request->answers['text'] as $key => $answer) {
-                        $answers[] = [
-                            'rueckmeldung_id' => $userRueckmeldungen->id,
-                            'user_id' => auth()->id(),
-                            'option_id' => $key,
-                            'answer' => $answer,
-                        ];
-                    }
-                }
-
-                AbfrageAntworten::insert($answers);
+                $this->generateAnswerModels($request, $userRueckmeldungen);
                 break;
 
             default:
@@ -247,5 +206,38 @@ class UserRueckmeldungenController extends Controller
             'Meldung' => 'Rückmeldung versendet',
             'RueckmeldungCheck' => $userRueckmeldungen->post_id,
         ]);
+    }
+
+    /**
+     * @param Request $request
+     * @param UserRueckmeldungen $userRueckmeldung
+     * @return void
+     */
+    public function generateAnswerModels(Request $request, UserRueckmeldungen $userRueckmeldung): void
+    {
+        $answers = [];
+
+        if (array_key_exists('options', $request->answers)) {
+            foreach ($request->answers['options'] as $option) {
+                $answers[] = [
+                    'rueckmeldung_id' => $userRueckmeldung->id,
+                    'user_id' => auth()->id(),
+                    'option_id' => $option,
+                    'answer' => '',
+                ];
+            }
+        }
+        if (array_key_exists('text', $request->answers)) {
+            foreach ($request->answers['text'] as $key => $answer) {
+                $answers[] = [
+                    'rueckmeldung_id' => $userRueckmeldung->id,
+                    'user_id' => auth()->id(),
+                    'option_id' => $key,
+                    'answer' => $answer,
+                ];
+            }
+        }
+
+        AbfrageAntworten::insert($answers);
     }
 }

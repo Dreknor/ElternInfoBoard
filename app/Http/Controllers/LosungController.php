@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ImportLosungenRequest;
 use App\Imports\LosungenImport;
-use App\Imports\UsersImport;
 use App\Model\Losung;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Redirector;
 use Maatwebsite\Excel\Facades\Excel;
 
 class LosungController extends Controller
 {
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     * @return View|RedirectResponse
      */
     public function importView()
     {
@@ -29,7 +32,7 @@ class LosungController extends Controller
 
     /**
      * @param ImportLosungenRequest $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return Application|RedirectResponse|Redirector
      */
     public function import(ImportLosungenRequest $request)
     {
@@ -50,7 +53,7 @@ class LosungController extends Controller
     }
 
     /**
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function getImage()
     {

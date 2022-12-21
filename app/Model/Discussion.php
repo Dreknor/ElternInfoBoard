@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Benjivm\Commentable\Traits\HasComments;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -20,7 +21,7 @@ class Discussion extends Model implements HasMedia
         'sticky' => 'boolean',
     ];
 
-    public function author()
+    public function author(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'owner');
     }

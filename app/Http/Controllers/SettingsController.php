@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Model\Settings;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 
 class SettingsController extends Controller
@@ -17,7 +19,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+     * @return View
      */
     public function module()
     {
@@ -29,26 +31,22 @@ class SettingsController extends Controller
     }
 
     /**
-     * @param $modulname
-     * @return \Illuminate\Http\RedirectResponse
+     * @param string $modulname
+     * @return RedirectResponse
      */
-    public function change_status($modulname)
+    public function change_status(string $modulname)
     {
         $modul = Settings::where('setting', $modulname)->first();
 
+        $options = $modul->options;
         if ($modul->options['active'] == 1) {
-            $options = $modul->options;
             $options['active'] = '0';
-            $modul->options = $options;
 
-            $modul->save();
         } else {
-            $options = $modul->options;
             $options['active'] = '1';
-            $modul->options = $options;
-
-            $modul->save();
         }
+        $modul->options = $options;
+        $modul->save();
 
         Cache::forget('modules');
 
@@ -59,10 +57,10 @@ class SettingsController extends Controller
     }
 
     /**
-     * @param $modulname
-     * @return \Illuminate\Http\RedirectResponse
+     * @param string $modulname
+     * @return RedirectResponse
      */
-    public function change_nav($modulname)
+    public function change_nav(string $modulname)
     {
         $modul = Settings::where('setting', $modulname)->first();
         $options = $modul->options;

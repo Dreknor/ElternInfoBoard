@@ -1,7 +1,9 @@
 <?php
 
+use App\Model\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +13,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         $tableNames = config('permission.table_names');
         $columnNames = config('permission.column_names');
@@ -79,7 +81,7 @@ return new class extends Migration
             $table->primary(['permission_id', 'role_id']);
         });
 
-        \Illuminate\Support\Facades\DB::table($tableNames['permissions'])->insert([
+        DB::table($tableNames['permissions'])->insert([
             [
                 'name' => 'edit permission',
                 'guard_name' => 'web',
@@ -202,7 +204,7 @@ return new class extends Migration
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['roles'])->insert([
+        DB::table($tableNames['roles'])->insert([
             [
                 'name' => 'Administrator',
                 'guard_name' => 'web',
@@ -221,32 +223,32 @@ return new class extends Migration
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
+        DB::table($tableNames['model_has_permissions'])->insert([
             [
                 'permission_id' => 1,
-                'model_type' => \App\Model\User::class,
+                'model_type' => User::class,
                 'model_id' => 1, ],
             [
                 'permission_id' => 2,
-                'model_type' => \App\Model\User::class,
+                'model_type' => User::class,
                 'model_id' => 1,
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['model_has_roles'])->insert([
+        DB::table($tableNames['model_has_roles'])->insert([
             [
                 'role_id' => 1,
-                'model_type' => \App\Model\User::class,
+                'model_type' => User::class,
                 'model_id' => 1,
             ],
             [
                 'role_id' => 2,
-                'model_type' => \App\Model\User::class,
+                'model_type' => User::class,
                 'model_id' => 1,
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['role_has_permissions'])->insert([
+        DB::table($tableNames['role_has_permissions'])->insert([
             [
                 'permission_id' => 1,
                 'role_id' => 1,
@@ -271,7 +273,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         $tableNames = config('permission.table_names');
 

@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Http\View\Composers\LosungComposer;
+use App\Http\View\Composers\ModulesComposer;
+use App\Http\View\Composers\NachrichtenComposer;
+use App\Http\View\Composers\ReinigungComposer;
+use App\Http\View\Composers\TermineComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,7 +17,7 @@ class ComposerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         //
     }
@@ -23,13 +27,13 @@ class ComposerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         // You can use a class for composer
         // you will need ModulesComposer@compose method
         //
         View::composer(
-            'layouts.elements.modules', \App\Http\View\Composers\ModulesComposer::class
+            'layouts.elements.modules', ModulesComposer::class
         );
 
         View::composer(
@@ -37,14 +41,14 @@ class ComposerServiceProvider extends ServiceProvider
         );
 
         View::composer(
-            'reinigung.nachricht', \App\Http\View\Composers\ReinigungComposer::class
+            'reinigung.nachricht', ReinigungComposer::class
         );
 
         View::composer(
-            'nachrichten.start', \App\Http\View\Composers\NachrichtenComposer::class
+            'nachrichten.start', NachrichtenComposer::class
         );
         View::composer(
-            'termine.nachricht', \App\Http\View\Composers\TermineComposer::class
+            'termine.nachricht', TermineComposer::class
         );
     }
 }
