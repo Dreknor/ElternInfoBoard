@@ -25,6 +25,9 @@ class GroupsRepository
             $gruppen = Group::find($gruppen);
         }
 
+        if (is_null($gruppen)){
+            return [];
+        }
         return $gruppen;
     }
 }

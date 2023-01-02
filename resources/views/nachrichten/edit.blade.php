@@ -26,7 +26,7 @@
                     <div class="col-md-6 col-sm-12">
                         <div class="form-group">
                             <label>Überschrift</label>
-                            <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{$post->header}}" required>
+                            <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header',$post->header)}}"  maxlength="120" required>
                         </div>
                     </div>
                     <div class="col-md-5 col-sm-12">

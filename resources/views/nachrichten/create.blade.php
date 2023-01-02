@@ -38,7 +38,7 @@
                 <div class="col-md-7 col-sm-12">
                     <div class="form-group">
                         <label>Überschrift</label>
-                        <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}" required>
+                        <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}"  maxlength="120" required>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-12">
