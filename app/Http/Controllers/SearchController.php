@@ -6,15 +6,22 @@ use App\Http\Requests\searchRequest;
 use App\Model\Group;
 use App\Model\Post;
 use App\Support\Collection;
-use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class SearchController extends Controller
 {
+    /**
+     *
+     */
     public function __construct()
     {
         $this->middleware(['auth', 'password_expired']);
     }
 
+    /**
+     * @param searchRequest $request
+     * @return View
+     */
     public function search(searchRequest $request)
     {
         $months = new Collection([
@@ -61,11 +68,11 @@ class SearchController extends Controller
         $Nachrichten = $Nachrichten->unique()->sortByDesc('updated_at')->all();
 
         return view('search.result', [
-            'nachrichten'   => $Nachrichten,
-            'archiv'    => null,
-            'user'      => $request->user(),
-            'gruppen'   => Group::all(),
-            'Suche'     => $request->input('suche'),
+            'nachrichten' => $Nachrichten,
+            'archiv' => null,
+            'user' => $request->user(),
+            'gruppen' => Group::all(),
+            'Suche' => $request->input('suche'),
         ]);
     }
 }

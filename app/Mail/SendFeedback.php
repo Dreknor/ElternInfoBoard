@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -11,16 +10,18 @@ class SendFeedback extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $text;
-    protected $betreff;
-    public $data;
+    protected string $text;
+
+    protected string $betreff;
+
+    public array $data;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($text, $betreff, $data)
+    public function __construct(string $text, string $betreff, array $data)
     {
         $this->text = $text;
         $this->betreff = $betreff;
@@ -32,7 +33,7 @@ class SendFeedback extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         $Mail = $this
             ->from(config('mail.from.address'),
@@ -41,17 +42,13 @@ class SendFeedback extends Mailable
             ->replyTo(auth()->user()->email, auth()->user()->name)
             ->subject($this->betreff)
             ->view('emails.feedback')->with([
-                'text'  => $this->text,
-                'from'  =>  auth()->user()->name,
+                'text' => $this->text,
+                'from' => auth()->user()->name,
             ]);
 
         if (count($this->data) > 0) {
             foreach ($this->data as $file) {
-                $Mail->attach($file['document']->getRealPath(),
-                    [
-                        'as' => $file['document']->getClientOriginalName(),
-                        'mime' => $file['document']->getClientMimeType(),
-                    ]);
+                $Mail->attach($file[0]);
             }
         }
 

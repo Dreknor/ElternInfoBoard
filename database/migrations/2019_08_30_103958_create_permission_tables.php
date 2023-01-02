@@ -1,17 +1,19 @@
 <?php
 
+use App\Model\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePermissionTables extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         $tableNames = config('permission.table_names');
         $columnNames = config('permission.column_names');
@@ -79,185 +81,185 @@ class CreatePermissionTables extends Migration
             $table->primary(['permission_id', 'role_id']);
         });
 
-        \Illuminate\Support\Facades\DB::table($tableNames['permissions'])->insert([
+        DB::table($tableNames['permissions'])->insert([
             [
-                'name'  => 'edit permission',
+                'name' => 'edit permission',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'edit user',
+                'name' => 'edit user',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'create posts',
+                'name' => 'create posts',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view all',
+                'name' => 'view all',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'edit posts',
+                'name' => 'edit posts',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'upload files',
+                'name' => 'upload files',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'import user',
+                'name' => 'import user',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'release posts',
+                'name' => 'release posts',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'use scriptTag',
+                'name' => 'use scriptTag',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view elternrat',
+                'name' => 'view elternrat',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'send urgent message',
+                'name' => 'send urgent message',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'edit reinigung',
+                'name' => 'edit reinigung',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'upload great files',
+                'name' => 'upload great files',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'edit termin',
+                'name' => 'edit termin',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'edit terminliste',
+                'name' => 'edit terminliste',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'create terminliste',
+                'name' => 'create terminliste',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view protected',
+                'name' => 'view protected',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'add changelog',
+                'name' => 'add changelog',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'set password',
+                'name' => 'set password',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'make sticky',
+                'name' => 'make sticky',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view reinigung',
+                'name' => 'view reinigung',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'delete elternrat file',
+                'name' => 'delete elternrat file',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view rueckmeldungen',
+                'name' => 'view rueckmeldungen',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'download schickzeiten',
+                'name' => 'download schickzeiten',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'edit schickzeiten',
+                'name' => 'edit schickzeiten',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view schickzeiten',
+                'name' => 'view schickzeiten',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view krankmeldung',
+                'name' => 'view krankmeldung',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view groups',
+                'name' => 'view groups',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'view mitarbeiterboard',
+                'name' => 'view mitarbeiterboard',
                 'guard_name' => 'web',
             ],
             [
-                'name'  => 'loginAsUser',
+                'name' => 'loginAsUser',
                 'guard_name' => 'web',
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['roles'])->insert([
+        DB::table($tableNames['roles'])->insert([
             [
-                'name'=>'Administrator',
-                'guard_name'    => 'web',
+                'name' => 'Administrator',
+                'guard_name' => 'web',
             ],
             [
-                'name'=>'Mitarbeiter',
-                'guard_name'    => 'web',
+                'name' => 'Mitarbeiter',
+                'guard_name' => 'web',
             ],
             [
-                'name'=>'Elternrat',
-                'guard_name'    => 'web',
+                'name' => 'Elternrat',
+                'guard_name' => 'web',
             ],
             [
-                'name'=>'Sekretariat',
-                'guard_name'    => 'web',
-            ],
-        ]);
-
-        \Illuminate\Support\Facades\DB::table($tableNames['model_has_permissions'])->insert([
-            [
-           'permission_id' => 1,
-            'model_type'    => \App\Model\User::class,
-            'model_id'  => 1, ],
-            [
-           'permission_id' => 2,
-            'model_type'    => \App\Model\User::class,
-            'model_id'  => 1,
+                'name' => 'Sekretariat',
+                'guard_name' => 'web',
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['model_has_roles'])->insert([
+        DB::table($tableNames['model_has_permissions'])->insert([
+            [
+                'permission_id' => 1,
+                'model_type' => User::class,
+                'model_id' => 1, ],
+            [
+                'permission_id' => 2,
+                'model_type' => User::class,
+                'model_id' => 1,
+            ],
+        ]);
+
+        DB::table($tableNames['model_has_roles'])->insert([
             [
                 'role_id' => 1,
-                'model_type'    => \App\Model\User::class,
-                'model_id'  => 1,
+                'model_type' => User::class,
+                'model_id' => 1,
             ],
             [
-               'role_id' => 2,
-                'model_type'    => \App\Model\User::class,
-                'model_id'  => 1,
+                'role_id' => 2,
+                'model_type' => User::class,
+                'model_id' => 1,
             ],
         ]);
 
-        \Illuminate\Support\Facades\DB::table($tableNames['role_has_permissions'])->insert([
+        DB::table($tableNames['role_has_permissions'])->insert([
             [
-           'permission_id' => 1,
-            'role_id'  => 1,
+                'permission_id' => 1,
+                'role_id' => 1,
             ],
             [
-            'permission_id' => 2,
-            'role_id'  => 1,
+                'permission_id' => 2,
+                'role_id' => 1,
             ],
             [
-            'permission_id' => 10,
-            'role_id'  => 3,
+                'permission_id' => 10,
+                'role_id' => 3,
             ],
         ]);
 
@@ -271,7 +273,7 @@ class CreatePermissionTables extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         $tableNames = config('permission.table_names');
 
@@ -281,4 +283,4 @@ class CreatePermissionTables extends Migration
         Schema::drop($tableNames['roles']);
         Schema::drop($tableNames['permissions']);
     }
-}
+};

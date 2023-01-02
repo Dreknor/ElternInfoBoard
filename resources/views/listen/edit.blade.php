@@ -19,34 +19,26 @@
                                     <label for="listenname">
                                         Name der Liste
                                     </label>
-                                    <input name="listenname" id="listenname" class="form-control" value="{{$liste->listenname}}" required>
+                                    <input name="listenname" id="listenname" class="form-control"
+                                           value="{{$liste->listenname}}" required>
                                 </div>
-                                <div class="col-md-4 col-sm-8">
-                                    <label for="type">
-                                        Listentyp
-                                    </label>
-                                    <select name="type" id="type" class="custom-select">
-                                        <option value="termin" selected>
-                                            Terminliste
-                                        </option>
-                                        <option value="eintrag" disabled>
-                                            Eintrageliste
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 col-sm-4">
-                                    <label for="duration">
-                                        Dauer (in Minuten) -> ändert keine bestehenden Termine
-                                    </label>
-                                    <input type="number" min="0" name="duration" id="duration" class="form-control" value="{{$liste->duration}}">
-                                </div>
+                                @if($liste->type == 'termin')
+                                    <div class="col-md-4 col-sm-4">
+                                        <label for="duration">
+                                            Dauer (in Minuten) -> ändert keine bestehenden Termine
+                                        </label>
+                                        <input type="number" min="0" name="duration" id="duration" class="form-control"
+                                               value="{{$liste->duration}}">
+                                    </div>
+                                @endif
                             </div>
                             <div class="form-row">
                                 <div class=" col-md-3 col-sm-6">
                                     <label for="ende">
                                         Ausblenden ab:
                                     </label>
-                                    <input type="date" name="ende" value="{{$liste->ende->format('Y-m-d')}}" class="form-control" required>
+                                    <input type="date" name="ende" value="{{$liste->ende->format('Y-m-d')}}"
+                                           class="form-control" required>
                                 </div>
                                 <div class=" col-md-3 col-sm-6">
                                     <label for="visible_for_all">

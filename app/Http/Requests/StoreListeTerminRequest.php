@@ -11,7 +11,7 @@ class StoreListeTerminRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->check();
     }
@@ -21,19 +21,29 @@ class StoreListeTerminRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'termin'    => [
+            'termin' => [
                 'required',
                 'date',
             ],
-            'zeit'    => [
+            'zeit' => [
                 'required',
                 'date_format:H:i',
             ],
-            'comment'   => [
+            'comment' => [
                 'string',
+                'nullable',
+            ],
+            'weekly' => [
+                'integer',
+                'max:1',
+                'nullable',
+            ],
+            'repeat' => [
+                'integer',
+                'min:1',
                 'nullable',
             ],
         ];

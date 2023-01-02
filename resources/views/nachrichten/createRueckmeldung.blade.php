@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     <div class="card">
         <div class="card-header">
             <h6 class="card-title">

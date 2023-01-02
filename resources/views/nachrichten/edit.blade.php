@@ -8,7 +8,7 @@
             </h6>
         </div>
         <div class="card-body">
-            <form action="{{url("/posts/$post->id/$kiosk")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
+            <form action="{{url("/posts/$post->id")}}" method="post" class="form form-horizontal"  enctype="multipart/form-data">
                 @csrf
                 @method('put')
                 <div class="row">
@@ -19,6 +19,7 @@
                                 <option value="info" @if($post->type == "info") selected @endif>Info</option>
                                 <option value="pflicht" @if($post->type == "pflicht") selected @endif>Aufgabe - Pflicht</option>
                                 <option value="wahl" @if($post->type == "wahl") selected @endif>Aufgabe - Wahl</option>
+                                <option value="image" @if($post->type == "image") selected @endif>Bilder</option>
                             </select>
                         </div>
                     </div>
@@ -123,7 +124,7 @@
                                                 <div class="col-12">
                                                     <div class="form-group">
                                                         <label for="password">Passwort zur Bestätigung</label>
-                                                        <input type="password" class="form-control border-input" name="password" autocomplete="new-password".>
+                                                        <input type="password" class="form-control border-input" name="password" autocomplete="new-password">
                                                     </div>
                                                 </div>
                                             </div>
@@ -239,52 +240,320 @@
         </div>
     </div>
 
-    @if(!is_null($post->poll) )
-        @if($post->poll->author_id == auth()->id() and $post->poll->answers->count() == 0)
-            @include('nachrichten.editPoll')
-        @else
-            <div class="card">
-                <div class="card-header">
-                    <h6>
-                        {{$post->poll->poll_name}}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <p>
-                        Berechtigung fehlt oder es wurden bereits Stimmen abgegeben.
-                    </p>
-                </div>
-            </div>
-        @endif
-    @endif
-    @if(is_null($post->rueckmeldung))
-        <div class="row" id="createButtons">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-4">
-                                <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}" id="CommentsButton"
-                                   class="btn btn-block btn-outline-primary">
-                                    Diskussion
-                                </a>
-                            </div>
-                            <div class="col-4">
-                                <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}" id="bilderButton" class="btn btn-block btn-outline-primary">
-                                    Bilder-Upload ermöglichen
-                                </a>
-                            </div>
-                            <div class="col-4">
-                                <a id="rueckmeldungButton" class="btn btn-block btn-outline-primary">
-                                    Rückmeldung erstellen
-                                </a>
+    <div class="card">
+        <div class="card-header">
+            <h6>
+                Rückmeldungen
+            </h6>
+        </div>
+        <div class="card-body">
+            @if(is_null($post->poll) and is_null($post->rueckmeldung))
+                <div class="row" id="createButtons">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldung/create/$post->id/abfrage")}}" id="AbfrageButton"
+                                           class="btn btn-block btn-outline-primary text-secondary">
+                                            Abfrage erstellen
+                                        </a>
+                                    </div>
+                                    <div class="col">
+                                        <a id="rueckmeldungButton"
+                                           class="btn btn-block btn-outline-primary text-secondary">
+                                            E-Mail - Rückmeldung erstellen
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}"
+                                           id="CommentsButton"
+                                           class="btn btn-block btn-outline-primary">
+                                            Diskussion
+                                        </a>
+                                    </div>
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldungen/$post->id/createImageUpload")}}"
+                                           id="bilderButton" class="btn btn-block btn-outline-primary">
+                                            Bilder-Upload ermöglichen
+                                        </a>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
+                </div>
+            @else
+                @if(!is_null($post->poll) )
+                    @if($post->poll->author_id == auth()->id() and $post->poll->answers->count() == 0)
+                        @include('nachrichten.editPoll')
+                    @else
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>
+                                    {{$post->poll->poll_name}}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    Berechtigung fehlt oder es wurden bereits Stimmen abgegeben.
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+                @if(!is_null($post->rueckmeldung))
+                    @switch($post->rueckmeldung->type)
+                        @case('email')
+                            <div class="card" id="rueckmeldungCard">
+                                <div class="card-header">
+                                    <h6 class="card-title">
+                                        Rückmeldung
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="card-body">
+                                        <form action="{{url("/rueckmeldung/$post->id/create")}}" method="post"
+                                              class="form form-horizontal">
+                                            @csrf
+                                            @method('put')
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label>Empfänger</label>
+                                                        <input type="email" class="form-control border-input"
+                                                               name="empfaenger"
+                                                               value="{{old('empfaenger')? old('empfaenger') : $rueckmeldung->empfaenger}}"
+                                                               required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label>Ende</label>
+                                                        <input type="date" class="form-control border-input" name="ende"
+                                                               value="{{$rueckmeldung->ende?->format('Y-m-d')}}"
+                                                               required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="form-group">
+                                                        <label>Rückmeldung verpflichtend?</label>
+                                                        <select class="custom-select" name="pflicht">
+                                                            <option value="0">Nein</option>
+                                                            <option value="1"
+                                                                    @if($rueckmeldung and $rueckmeldung->pflicht ==1) selected @endif>
+                                                                Ja
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label>Rückmeldung</label>
+                                                        <textarea class="form-control border-input" name="text">
+                                {{$rueckmeldung?->text}}
+                            </textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col">
+                                                    <button type="submit" class="btn btn-primary btn-block">
+                                                        Rückmeldung erstellen
+                                                    </button>
+                                                </div>
+                                                @if(!is_null($post->rueckmeldung))
+                                                    <div class="col">
+                                                        <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen"
+                                                             data-id="{{$rueckmeldung->id}}"
+                                                             @if(count($post->userRueckmeldung)>0) disabled @endif>
+                                                            @if(count($post->userRueckmeldung)>0)
+                                                                Es wurden bereits Rückmeldungen abgegeben
+                                                            @else
+                                                                Rückmeldung löschen
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </form>
+
+                                    </div>
+                                </div>
+                            </div>
+                            @break
+                        @case('bild')
+                            <div class="card" id="rueckmeldungCard">
+                                <div class="card-header">
+                                    <h6>
+                                        Bilder-Upload entfernen?
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            @if( $post->rueckmeldung->commentable)
+                                                <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}"
+                                                   class="btn btn-warning btn-block">
+                                                    Kommentare abschalten
+                                                </a>
+                                            @else
+                                                <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}"
+                                                   class="btn btn-primary btn-block">
+                                                    Kommentare erlauben
+                                                </a>
+                                            @endif
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen"
+                                                 data-id="{{$rueckmeldung->id}}">
+                                                Bilder-Upload endgültig löschen
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            @break
+                        @case('commentable')
+                            <div class="card" id="rueckmeldungCard">
+                                <div class="card-header">
+                                    <h6>
+                                        Diskussion entfernen?
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            @if( $post->rueckmeldung->commentable)
+                                                <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}"
+                                                   class="btn btn-warning btn-block">
+                                                    Kommentare abschalten
+                                                </a>
+                                            @else
+                                                <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}"
+                                                   class="btn btn-primary btn-block">
+                                                    Kommentare erlauben
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                                @break
+                            @case('abfrage')
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                Ersteller:
+                                            </div>
+                                            <div class="col-6">
+                                                {{$post->rueckmeldung->empfaenger}}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                Bis:
+                                            </div>
+                                            <div class="col-6">
+                                                {{$post->rueckmeldung->ende->format('d.m.Y')}}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                Verpflichtend:
+                                            </div>
+                                            <div class="col-6">
+                                                {{($post->rueckmeldung->pflicht == 1)? 'ja' : 'nein'}}
+                                            </div>
+                                        </div>
+                                        <div class="row border-bottom">
+                                            <div class="col-6">
+                                                mehrere:
+                                            </div>
+                                            <div class="col-6">
+                                                {{($post->rueckmeldung->multiple == 1)? 'ja' : 'nein'}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if($post->userRueckmeldung->count()>0)
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="alert alert-info">
+                                                        Abfragen können nicht mehr bearbeitet werden, wenn erste
+                                                        Rückmeldungen
+                                                        abgegen wurden
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <form
+                                                                action="{{url('rueckmeldung/'.$rueckmeldung->id.'/update/date')}}"
+                                                                class="form-horizontal" id="updateDateForm"
+                                                                method="post">
+                                                                @csrf
+                                                                @method('put')
+                                                                <label class="label w-100">
+                                                                    Zeitraum verlängern
+                                                                    <input type="date" class="form-control" name="date"
+                                                                           min="{{\Carbon\Carbon::tomorrow()->format('Y-m-d')}}"
+                                                                           value="{{\Carbon\Carbon::today()->addWeek()->format('Y-m-d')}}">
+                                                                </label>
+                                                            </form>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <button form="updateDateForm" type="submit"
+                                                                    class="btn btn-success">
+                                                                verlängern
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            @else
+                                                <div class="card-body text-warning">
+                                                    <a href="{{url('rueckmeldung/'.$post->rueckmeldung->id.'/editAbfrage')}}"
+                                                       class="btn btn-info btn-block">
+                                                        Abfrage bearbeiten
+                                                    </a>
+                                                </div>
+                                                <div class="card-body text-danger">
+                                                    <form method="post" class="form-inline"
+                                                          action="{{url('rueckmeldungen/'.$post->id)}}">
+                                                        @csrf
+                                                        @method('delete')
+
+                                                        <button type="submit" class="btn btn-danger btn-block">
+                                                            Abfrage löschen
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
+
+                                        </div>
+                                        @break
+                                        @endswitch
+                                    @endif
+                                    @endif
+
+                                </div>
         </div>
+
+
+    @if(is_null($post->rueckmeldung))
         <div class="row d-none" id="createForm">
             <div class="col-12">
                 <div class="card" id="rueckmeldungCard">
@@ -348,125 +617,6 @@
             </div>
 
         </div>
-    @elseif(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'bild')
-        <div class="card" id="rueckmeldungCard">
-            <div class="card-header">
-                <h6>
-                    Bilder-Upload entfernen?
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        @if( $post->rueckmeldung->commentable)
-                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-warning btn-block">
-                                Kommentare abschalten
-                            </a>
-                        @else
-                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-primary btn-block">
-                                Kommentare erlauben
-                            </a>
-                        @endif
-                    </div>
-                    <div class="col-6">
-                        <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" >
-                            Bilder-Upload endgültig löschen
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    @elseif(!is_null($post->rueckmeldung) and $post->rueckmeldung->type == 'commentable')
-        <div class="card" id="rueckmeldungCard">
-            <div class="card-header">
-                <h6>
-                    Diskussion entfernen?
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        @if( $post->rueckmeldung->commentable)
-                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-warning btn-block">
-                                Kommentare abschalten
-                            </a>
-                        @else
-                            <a href="{{url("rueckmeldungen/".$post->rueckmeldung->id."/commentable")}}" class="btn btn-primary btn-block">
-                                Kommentare erlauben
-                            </a>
-                        @endif
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    @else
-        <div class="card" id="rueckmeldungCard">
-        <div class="card-header">
-            <h6 class="card-title">
-                Rückmeldung
-            </h6>
-        </div>
-        <div class="card-body">
-            <div class="card-body">
-                <form action="{{url("/rueckmeldung/$post->id/create")}}" method="post" class="form form-horizontal">
-                    @csrf
-                    @method('put')
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Empfänger</label>
-                                <input type="email" class="form-control border-input" name="empfaenger" value="{{old('empfaenger')? old('empfaenger') : $rueckmeldung->empfaenger}}" required >
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Ende</label>
-                                <input type="date" class="form-control border-input" name="ende" value="{{optional($rueckmeldung->ende)->format('Y-m-d')}}" required >
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Rückmeldung verpflichtend?</label>
-                                <select class="custom-select" name="pflicht">
-                                    <option value="0" >Nein</option>
-                                    <option value="1" @if($rueckmeldung and $rueckmeldung->pflicht ==1) selected @endif>Ja</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Rückmeldung</label>
-                                <textarea class="form-control border-input" name="text">
-                                {{optional($rueckmeldung)->text}}
-                            </textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <button type="submit" class="btn btn-primary btn-block">
-                                Rückmeldung erstellen
-                            </button>
-                        </div>
-                        @if(!is_null($post->rueckmeldung))
-                            <div class="col">
-                                <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen" data-id="{{$rueckmeldung->id}}" @if(count($post->userRueckmeldung)>0) disabled  @endif>
-                                    @if(count($post->userRueckmeldung)>0) Es wurden bereits Rückmeldungen abgegeben @else Rückmeldung löschen @endif
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
     @endif
 
 @endsection

@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Model\Group;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -13,26 +12,30 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class UsersImport implements ToCollection, WithHeadingRow
 {
-    protected $header;
-    protected $groups;
+    protected array $header;
 
-    public function __construct($header)
+    protected \Illuminate\Database\Eloquent\Collection $groups;
+
+    /**
+     * @param array $header
+     */
+    public function __construct(array $header)
     {
         $this->header = $header;
         $this->groups = Group::all();
     }
 
-    public function collection(Collection $rows)
+    public function collection(Collection $collection)
     {
-        foreach ($rows as $row) {
+        foreach ($collection as $row) {
             set_time_limit(20);
 
             $user1 = null;
             $user2 = null;
 
             $row = array_values($row->toArray());
-            $Klassenstufe = $this->groups->where('name', 'Klassenstufe '.$row[$this->header['klassenstufe']])->first();
-            $Lerngruppe = $this->groups->where('name', $row[$this->header['lerngruppe']])->first();
+            $Klassenstufe = $this->groups->firstWhere('name', 'Klassenstufe '.$row[$this->header['klassenstufe']]);
+            $Lerngruppe = $this->groups->firstWhere('name', $row[$this->header['lerngruppe']]);
 
             if (! is_null($row[$this->header['S1Email']])) {
                 $email1 = explode(';', $row[$this->header['S1Email']]);
@@ -42,19 +45,18 @@ class UsersImport implements ToCollection, WithHeadingRow
                     'email' => $email1,
                 ],
                     [
-                        'name'  => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
-                        'changePassword'  => 1,
-                        'password'      => Hash::make(config('import_eltern')),
+                        'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
+                        'changePassword' => 1,
+                        'password' => Hash::make(config('import_eltern')),
                         'lastEmail' => Carbon::now(),
                     ]);
 
                 $user1->touch();
                 $user1->assignRole('Eltern');
                 $user1->removeRole('Aufnahme');
-                if (is_object($Klassenstufe)) {
-                    $user1->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
-                } else {
 
+                if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
+                    $user1->groups()->attach([$Klassenstufe->id, $Lerngruppe?->id]);
                 }
             }
 
@@ -75,10 +77,8 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user2->touch();
                 $user2->assignRole('Eltern');
                 $user2->removeRole('Aufnahme');
-                if (is_object($Klassenstufe)) {
-                    $user2->groups()->attach([optional($Klassenstufe)->id, optional($Lerngruppe)->id]);
-                } else {
-
+                if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
+                    $user2->groups()->attach([$Klassenstufe->id, $Lerngruppe?->id]);
                 }
             }
 

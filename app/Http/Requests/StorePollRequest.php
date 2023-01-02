@@ -11,7 +11,7 @@ class StorePollRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->user()->can('create polls');
     }
@@ -21,14 +21,14 @@ class StorePollRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'poll_name' => ['required', 'string'],
             'description' => ['nullable', 'string'],
             'ends' => ['required', 'date', 'after:today'],
             'max_number' => ['required', 'integer', 'min:1'],
-            'options' => ['required']
+            'options' => ['required'],
         ];
     }
 }

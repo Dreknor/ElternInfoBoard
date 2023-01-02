@@ -1,10 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\ExpiredPasswordController;
-use App\Http\Controllers\PollController;
-use App\Http\Controllers\ReactionController;
-use App\Http\Controllers\ReinigungsTaskController;
-use App\Http\Controllers\VertretungsplanController;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\DatenschutzController;
@@ -12,15 +8,20 @@ use App\Http\Controllers\ElternratController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GroupsController;
+use App\Http\Controllers\ICalController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
-use App\Http\Controllers\KioskController;
 use App\Http\Controllers\KrankmeldungenController;
 use App\Http\Controllers\ListenController;
+use App\Http\Controllers\ListenEintragungenController;
 use App\Http\Controllers\ListenTerminController;
+use App\Http\Controllers\LosungController;
 use App\Http\Controllers\NachrichtenController;
+use App\Http\Controllers\PollController;
 use App\Http\Controllers\PushController;
+use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReinigungController;
+use App\Http\Controllers\ReinigungsTaskController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\RueckmeldungenController;
 use App\Http\Controllers\SchickzeitenController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
+use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -45,24 +47,29 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
+Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
+Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
 
-Route::group([
-    'middleware' => ['auth'],
-],
-    function () {
-
-
-
-    Route::get('password/expired', [ExpiredPasswordController::class,'expired'])
+Route::middleware('auth')->group(function () {
+    Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
         ->name('password.expired');
-    Route::post('password/post_expired', [ExpiredPasswordController::class,'postExpired'])
+    Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])
         ->name('password.post_expired');
 
     Route::middleware(['password_expired'])->group(function () {
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
+        Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');
         Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
         Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
+
+        //Routen für die Verwaltung der Rückmeldungen
+        Route::middleware('permission:manage rueckmeldungen')->group(function () {
+            Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
+            Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
+            Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
+            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
+        });
 
         //Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
@@ -76,7 +83,6 @@ Route::group([
 
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');
-
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
@@ -99,12 +105,25 @@ Route::group([
         //Termine
         Route::resource('termin', TerminController::class);
 
+        //Rückmeldungen
+
+        Route::get('rueckmeldung/create/{post}/{type}', [RueckmeldungenController::class, 'create']);
+        Route::put('rueckmeldung/{rueckmeldung}/update/date', [RueckmeldungenController::class, 'updateDate']);
+
+        //Text userRueckmeldungen
         Route::post('/rueckmeldung/{posts_id}', [UserRueckmeldungenController::class, 'sendRueckmeldung']);
         Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'edit']);
         Route::put('/userrueckmeldung/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'update']);
 
-        //Rückmeldungen
+        //AbfrageRueckmeldung
+        Route::post('/userrueckmeldung/{rueckmeldung}', [UserRueckmeldungenController::class, 'store']);
+        Route::get('/rueckmeldung/{rueckmeldung}/editAbfrage', [RueckmeldungenController::class, 'editAbfrage']);
+        Route::put('/rueckmeldung/{rueckmeldung}/updateAbfrage', [RueckmeldungenController::class, 'updateAbfrage']);
+        Route::delete('rueckmeldungen/{post}/', [RueckmeldungenController::class, 'destroyAbfrage']);
+
+
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
+        Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
         Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
@@ -126,9 +145,9 @@ Route::group([
 
         //KioskAnsicht
         //Route::get('kiosk/{bereich?}', [NachrichtenController::class, 'kioskView']);
-        Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
+        //Route::get('kiosk/{bereich?}', [KioskController::class, 'kioskView']);
 
-        //Terminlisten
+        //Listen
         Route::get('listen', [ListenController::class, 'index']);
         Route::post('listen', [ListenController::class, 'store']);
         Route::get('listen/create', [ListenController::class, 'create']);
@@ -141,18 +160,29 @@ Route::group([
         Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
-        Route::post('eintragungen/{liste}/store', [ListenTerminController::class, 'store']);
-        Route::put('eintragungen/{listen_termine}', [ListenTerminController::class, 'update']);
-        Route::delete('eintragungen/{listen_termine}', [ListenTerminController::class, 'destroy']);
-        Route::delete('eintragungen/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
+
+        //TerminListe
+        Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
+        Route::put('listen/termine/{listen_termine}', [ListenTerminController::class, 'update']);
+        Route::get('listen/termine/{listen_termine}/copy', [ListenTerminController::class, 'copy']);
+        Route::delete('listen/termine/{listen_termine}', [ListenTerminController::class, 'destroy']);
+        Route::delete('listen/termine/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
+        //EintragListe
+        Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
+        Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
+        Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
-        Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
-        Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
-        Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
-        Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
 
+        Route::middleware('permission:edit reinigung')->group(function () {
+            Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
+            Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
+            Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
+            Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
+            Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+            Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+        });
 
         //Edit and create posts
         Route::get('/posts/create', [NachrichtenController::class, 'create']);
@@ -197,12 +227,14 @@ Route::group([
             /*             Route::get('email/daily', [NachrichtenController::class, 'emailDaily']);
             */
 
+
             Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
 
             Route::resource('users', UserController::class);
+            Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
             //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
                 //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
                 //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
@@ -211,6 +243,7 @@ Route::group([
         //Gruppenverwaltung
         Route::get('/groups', [GroupsController::class, 'index']);
         Route::post('/groups', [GroupsController::class, 'store'])->middleware(['permission:view groups']);
+        Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
 
         //Routen zur Rechteverwaltung
         Route::middleware('permission:edit permission')->group(function () {
@@ -223,20 +256,17 @@ Route::group([
         //Routen zur Rechteverwaltung
         Route::middleware('permission:edit settings')->group(function () {
             Route::get('settings', [SettingsController::class, 'module']);
+            Route::get('settings/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
             Route::get('settings/modul/{modul}', [SettingsController::class, 'change_status']);
+            Route::get('settings/losungen/import', [LosungController::class, 'importView']);
+            Route::post('settings/losungen/import', [LosungController::class, 'import']);
         });
 
         Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
             Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
-        Route::get('logoutAsUser', function () {
-            if (session()->has('ownID')) {
-                Auth::loginUsingId(session()->pull('ownID'));
-            }
-
-            return redirect(url('/'));
-        });
+        Route::get('logoutAsUser',[UserController::class, 'logoutAsUser']);
 
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
@@ -256,4 +286,5 @@ Route::group([
     //Feedback
     Route::get('feedback', [FeedbackController::class, 'show']);
     Route::post('feedback', [FeedbackController::class, 'send']);
+    Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 });

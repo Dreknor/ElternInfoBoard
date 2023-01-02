@@ -3,18 +3,18 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class verwaltungEditUserRequest extends FormRequest
 {
+
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return \auth()->user()->can('edit user');
+        return auth()->user()->can('edit user');
     }
 
     /**
@@ -22,26 +22,26 @@ class verwaltungEditUserRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'name'  => [
+            'name' => [
                 'required',
                 'string',
                 'unique:users,id,'.$this->user->id,
             ],
-            'email'  => [
+            'email' => [
                 'required',
                 'email',
                 'unique:users,id,'.$this->user->id,
             ],
-            'publicMail'  => [
+            'publicMail' => [
                 'nullable',
-                'email'
+                'email',
             ],
-            'publicPhone'  => [
+            'publicPhone' => [
                 'nullable',
-                'string'
+                'string',
             ],
             'benachrichtigung' => [
                 'required',

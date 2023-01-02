@@ -19,7 +19,9 @@
                                     <label for="name">
                                         Name des Schülers / der Schülerin*:
                                     </label>
-                                    <input type="text" class="form-control" name="name" id="name" autofocus required>
+                                    <input type="text" class="form-control" name="name" id="name" required
+                                           @if($krankmeldungen->count() > 0) value="{{$krankmeldungen->first()->name}}"
+                                           @else autofocus @endif>
                                 </div>
                             </div>
                         </div>
@@ -29,7 +31,10 @@
                                     <label for="start">
                                         Krank ab*:
                                     </label>
-                                    <input type="date" class="form-control" name="start" id="start" min="{{\Carbon\Carbon::now()->subDays(3)->format('Y-m-d')}}" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
+                                    <input type="date" class="form-control" name="start" id="start"
+                                           min="{{\Carbon\Carbon::now()->subDays(3)->format('Y-m-d')}}"
+                                           value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required
+                                           @if($krankmeldungen->count() > 0) autofocus @endif>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -37,7 +42,8 @@
                                     <label for="ende">
                                         Krank bis*:
                                     </label>
-                                    <input type="date" class="form-control" name="ende" id="ende" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
+                                    <input type="date" class="form-control" name="ende" id="ende"
+                                           value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
                                 </div>
                             </div>
                         </div>
@@ -64,22 +70,21 @@
 
             @if($krankmeldungen)
                 <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title">
-                        bisherige Krankmeldungen:
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-bordered table-hover">
-                        <thead>
+                    <div class="card-header">
+                        <h6 class="card-title">
+                            bisherige Krankmeldungen:
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped table-bordered">
+                            <thead>
                             <tr>
                                 <th>Kind</th>
-                                <th>von</th>
-                                <th>bis</th>
+                                <th>Datum</th>
                                 <th>Erstellt</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             @foreach($krankmeldungen as $krankmeldung)
                                 <tr>
                                     <td>
@@ -87,32 +92,28 @@
                                     </td>
                                     <td>
                                         {{$krankmeldung->start->format('d.m.Y')}}
+                                        - {{$krankmeldung->ende->format('d.m.Y')}}
                                     </td>
                                     <td>
-                                        {{$krankmeldung->ende->format('d.m.Y')}}
-                                    </td>
-                                    <td>
-                                        {!! $krankmeldung->kommentar !!}
-                                    </td>
-                                    <td>
-                                        <small>
-                                            {{$krankmeldung->created_at->format('d.m.Y h:i ')}} Uhr <br>
-                                            von {{$krankmeldung->user->name}}
-                                        </small>
+                                        <p class="d-none d-md-block">
+                                            {!! $krankmeldung->kommentar !!}
+                                        </p>
+                                        <p>
+                                            <small>
+                                                {{$krankmeldung->created_at->format('d.m.Y h:i ')}} Uhr <br>
+                                                von {{$krankmeldung->user->name}}
+                                            </small>
+                                        </p>
 
                                     </td>
                                 </tr>
                             @endforeach
-                        </tbody>
-                        <tfoot>
-                        <tr>
-                            <td colspan="4">
-                                {{ $krankmeldungen->links() }}
-                            </td>
-                        </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        {{ $krankmeldungen->links() }}
+                    </div>
                 </div>
             @endif
 

@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateListeRequest;
 use App\Model\Group;
 use App\Model\Liste;
+use App\Model\Listen_Eintragungen;
+use App\Model\listen_termine;
 use App\Repositories\GroupsRepository;
-use App\TerminListe;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class ListenController extends Controller
 {
+    private GroupsRepository $grousRepository;
+
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->grousRepository = $groupsRepository;
@@ -24,6 +27,7 @@ class ListenController extends Controller
      * Display a listing of the resource.
      *
      * @return View
+     * @throws AuthorizationException
      */
     public function index(Request $request)
     {
@@ -33,7 +37,7 @@ class ListenController extends Controller
             $listen = Liste::where('ende', '>=', Carbon::today())->get();
             $oldListen = Liste::where('ende', '<', Carbon::today())->orderByDesc('ende')->paginate(15);
         } else {
-            $oldListen = "";
+            $oldListen = '';
             $listen = $request->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
             if ($request->user()->can('create terminliste')) {
                 $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now())->get();
@@ -43,16 +47,14 @@ class ListenController extends Controller
         }
 
         $listen = $listen->unique('id');
-        $eintragungen = $request->user()->listen_eintragungen;
-
-        if ($request->user()->sorg2 != null) {
-            $eintragungen = $eintragungen->merge($request->user()->sorgeberechtigter2->listen_eintragungen);
-        }
+        $eintragungen = Listen_Eintragungen::query()->where('user_id',auth()->id())->orWhere('user_id',auth()->user()->sorg2)->get();
+        $termine = listen_termine::query()->where('user_id',auth()->id())->orWhere('user_id',auth()->user()->sorg2)->get();
 
         return view('listen.index', [
             'listen' => $listen,
-            'eintragungen'  => $eintragungen,
-            'archiv' => $oldListen
+            'eintragungen' => $eintragungen,
+            'termine' => $termine,
+            'archiv' => $oldListen,
         ]);
     }
 
@@ -60,29 +62,31 @@ class ListenController extends Controller
      * Show the form for creating a new resource.
      *
      * @return View
+     * @throws AuthorizationException
      */
     public function create()
     {
         $this->authorize('create', Liste::class);
 
         return view('listen.create', [
-            'gruppen'   => Group::all(),
+            'gruppen' => Group::all(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param CreateListeRequest $request
      * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function store(CreateListeRequest $request)
     {
         $this->authorize('create', Liste::class);
 
-        $Liste = new Liste($request->all());
+        $Liste = new Liste($request->validated());
         //$Liste->active = 0;
-        $Liste->besitzer = $request->user()->id;
+        $Liste->besitzer = auth()->id();
 
         $Liste->save();
 
@@ -96,34 +100,41 @@ class ListenController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Liste  $Liste
+     * @param Liste $terminListe
      * @return View
      */
     public function show(Liste $terminListe)
     {
-        $terminListe->load('eintragungen');
-        $terminListe->eintragungen->sortBy('termin');
-
         if ($terminListe->type == 'termin') {
+            $terminListe->load('termine');
+            $terminListe->termine->sortBy('termin');
+
             return view('listen.terminAuswahl', [
                 'liste' => $terminListe,
             ]);
         }
+
+        $terminListe->load('eintragungen');
+
+        return view('listen.listenEintrag', [
+            'liste' => $terminListe,
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param TerminListe $terminListe
+     * @param Liste $terminListe
      * @return View
+     * @throws AuthorizationException
      */
     public function edit(Liste $terminListe)
     {
         $this->authorize('editListe', $terminListe);
 
         return view('listen.edit', [
-            'liste'    => $terminListe,
-            'gruppen'=> Group::all(),
+            'liste' => $terminListe,
+            'gruppen' => Group::all(),
         ]);
     }
 
@@ -131,8 +142,9 @@ class ListenController extends Controller
      * Update the specified resource in storage.
      *
      * @param Request $request
-     * @param TerminListe $terminListe
-     * @return Response
+     * @param Liste $terminListe
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function update(Request $request, Liste $terminListe)
     {
@@ -149,17 +161,13 @@ class ListenController extends Controller
         return redirect()->to(url('listen'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param TerminListe $terminListe
-     * @return Response
-     */
-    public function destroy(Liste $terminListe)
-    {
-        //
-    }
 
+    /**
+     * Veröffentlicht die Liste
+     *
+     * @param $liste
+     * @return RedirectResponse
+     */
     public function activate($liste)
     {
         $liste = Liste::find($liste);
@@ -170,6 +178,12 @@ class ListenController extends Controller
         return redirect()->back();
     }
 
+    /**
+     *
+     * Liste ausblenden
+     * @param $liste
+     * @return RedirectResponse
+     */
     public function deactivate($liste)
     {
         $liste = Liste::find($liste);
@@ -180,20 +194,26 @@ class ListenController extends Controller
         return redirect()->back();
     }
 
-    public function pdf(Request $request, Liste $liste)
+    /**
+     *  Erstellt eine druckbare Ansicht im Browser
+     * @param Liste $liste
+     * @return View|RedirectResponse
+     */
+    public function pdf(Liste $liste)
     {
-
         if (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste')) {
-            /*$pdf = \PDF::loadView('listen.listenExport', [
-                "Liste" => $liste,
-                'listentermine' => $liste->eintragungen->sortBy('termin')
-            ]);
-            return $pdf->download('test.pdf');
-            */
-            return view('listen.listenExport', [
-                'Liste' => $liste,
-                'listentermine' => $liste->eintragungen->sortBy('termin'),
-            ]);
+
+            if ($liste->type == 'termin') {
+                return view('listen.listenTerminExport', [
+                    'Liste' => $liste,
+                    'listentermine' => $liste->termine->sortBy('termin'),
+                ]);
+            } else {
+                return view('listen.listenEintragExport', [
+                    'liste' => $liste,
+                    'listentermine' => $liste->termine->sortBy('termin'),
+                ]);
+            }
         }
 
         return redirect()->back()->with([
@@ -202,31 +222,45 @@ class ListenController extends Controller
         ]);
     }
 
+    /**
+     * Abgelaufene Liste verlängern um 2 Wochen
+     *
+     * @param Liste $liste
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
     public function refresh(Liste $liste)
     {
         $this->authorize('editListe', $liste);
 
         $liste->update([
-            'ende' => Carbon::now()->addWeeks(2)
+            'ende' => Carbon::now()->addWeeks(2),
         ]);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Liste verlängert'
+            'Meldung' => 'Liste verlängert',
         ]);
     }
 
+    /**
+     * Aktive Liste archivieren
+     *
+     * @param Liste $liste
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
     public function archiv(Liste $liste)
     {
         $this->authorize('editListe', $liste);
 
         $liste->update([
-            'ende' => Carbon::now()->subDay()
+            'ende' => Carbon::now()->subDay(),
         ]);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Liste beendet'
+            'Meldung' => 'Liste beendet',
         ]);
     }
 }

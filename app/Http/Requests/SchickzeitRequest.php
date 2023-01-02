@@ -11,7 +11,7 @@ class SchickzeitRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->check();
     }
@@ -21,27 +21,27 @@ class SchickzeitRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'child' => [
                 'required',
                 'string',
             ],
-            'weekday'   => [
+            'weekday' => [
                 'required',
                 'in:Montag,Dienstag,Mittwoch,Donnerstag,Freitag',
             ],
-            'time'      => [
+            'time' => [
                 'required',
                 'date_format:H:i',
             ],
-            'time_spaet'=> [
+            'time_spaet' => [
                 'sometimes',
                 'nullable',
                 'date_format:H:i',
             ],
-            'type'      => [
+            'type' => [
                 'sometimes',
                 'string',
             ],

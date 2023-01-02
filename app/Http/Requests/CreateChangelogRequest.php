@@ -11,7 +11,7 @@ class CreateChangelogRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->user()->can('add changelog');
     }
@@ -21,14 +21,14 @@ class CreateChangelogRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'header'    => [
+            'header' => [
                 'required',
                 'string',
             ],
-            'text'      => [
+            'text' => [
                 'required',
                 'string',
             ],

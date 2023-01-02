@@ -1,4 +1,3 @@
-<div class="container-fluid">
     <div class="card blur">
         <div class="card-header border-bottom">
             <h5>
@@ -8,26 +7,48 @@
 
         @if($nachrichten != null and count($nachrichten)>0)
             <div class="card-body">
-                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse" data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
+                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse"
+                        data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
                     Themen zeigen
                 </button>
                 <div class="row collapse d-md-block" id="Themen">
                     <div class="col">
                         @foreach($nachrichten AS $nachricht)
                             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                                <a href="#{{$nachricht->id}}" class="btn btn-sm {{$nachricht->type}} @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif">
-
+                                <a href="#{{$nachricht->id}}"
+                                   class="anker_link btn btn-sm wrap
+                                   @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif
+                                   @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach
+                                   ">
                                     <div class="
                                         @switch($nachricht->type)
-                                    @case('pflicht')
-                                        text-danger
-                                        @break
+                                            @case('pflicht')
+                                                text-danger
+                                                @break
 
-                                    @case('wahl')
-                                        text-warning
-                                        @break
-                                    @endswitch
+                                            @case('wahl')
+                                                text-warning
+                                                @break
+                                        @endswitch
                                         ">
+                                        @if(! is_null($nachricht->rueckmeldung))
+                                            <div
+                                                class="d-inline @if($nachricht->rueckmeldung->pflicht == 1) text-danger @endif">
+                                                @switch($nachricht->rueckmeldung->type)
+                                                    @case('email')
+                                                        <i class="fas fa-comment-dots"></i>
+                                                        @break
+
+                                                    @case('abfrage')
+                                                        <i class="fa fa-poll-h"></i>
+                                                        @break
+                                                    @default
+
+                                                        @break
+                                                @endswitch
+                                            </div>
+
+                                        @endif
                                         {{$nachricht->header}}
                                     </div>
                                 </a>
@@ -37,7 +58,7 @@
                 </div>
             </div>
 
-                <div class="card-body">
+            <div class="card-footer border-top">
                     <div class="row">
 
                     @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "info") { return $item;}})) > 0)
@@ -63,6 +84,16 @@
                         @endif
 
                     </div>
+                    <div class="row mt-1">
+
+                        @foreach(auth()->user()->groups as $group)
+                            <div class="col">
+                                    <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="{{\Illuminate\Support\Str::camel($group->name)}}" data-show="true">
+                                        {{$group->name}}
+                                    </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
 
         @else
@@ -75,9 +106,6 @@
 
         @endif
     </div>
-
-    <div id="">
-
         @foreach($nachrichten AS $nachricht)
             @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
                 <div class="@foreach($nachricht->groups as $group) {{$group->name}} @endforeach">
@@ -85,11 +113,3 @@
                 </div>
             @endif
         @endforeach
-    </div>
-
-    @if($nachrichten != null and count($nachrichten)>0)
-        <div class="archiv">
-            {{$nachrichten->links()}}
-        </div>
-    @endif
-</div>

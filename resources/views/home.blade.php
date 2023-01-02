@@ -13,13 +13,20 @@
 @push('js')
     @if(is_null($archiv))
         <script>
+            function showRueckmeldung(event, nachricht_id) {
+                event.preventDefault();
+                $("#rueckmeldeForm_" + nachricht_id).removeClass('d-none')
+                $("#rueckmeldeButton_" + nachricht_id).addClass('d-none')
+
+            }
+
             $.fn.extend({
-                toggleText: function(a, b){
-                    return this.text(this.text() == b ? a : b);
+                toggleText: function (a, b) {
+                    return this.text(this.text() === b ? a : b);
                 }
             });
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 $('#infoButton').on('click', function (event) {
                     $('.info').toggle('show');
                     $("#infoButton").toggleText('Infos ausblenden', 'Infos einblenden');
@@ -34,6 +41,29 @@
                     $('.pflicht').toggle('show');
                     $(this).toggleText('Pflichtaufgaben ausblenden', 'Pflichtaufgaben einblenden');
                 });
+
+                @foreach(auth()->user()->groups as $group)
+                    $('#{{\Illuminate\Support\Str::camel($group->name)}}').on('click', function (event) {
+                        let target = event.target
+                        if(target.dataset.show === 'true'){
+                            $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
+                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
+
+                            target.dataset.show = 'false'
+                            target.classList.add("btn-success")
+                            target.classList.remove("btn-outline-primary")
+                        } else {
+                            $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
+                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
+                            target.dataset.show = 'true'
+
+                            target.classList.remove("btn-success")
+                            target.classList.add("btn-outline-primary")
+
+                        }
+
+                    });
+                @endforeach
             });
         </script>
         <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
@@ -49,7 +79,7 @@
                 ],
                 setup:function(ed) {
                     ed.on('change', function(e) {
-                        var id = "#btnSave_"+ ed.id;
+                        let id = "#btnSave_" + ed.id;
                         $(id).show();
                     });
                 }
@@ -78,8 +108,8 @@
 
         <script>
             $('.fileDelete').on('click', function () {
-                var fileId = $(this).data('id');
-                var button = $(this);
+                let fileId = $(this).data('id');
+                let button = $(this);
 
                 swal.fire({
                     title: "Datei wirklich entfernen?",
@@ -110,7 +140,7 @@
 
         <script>
             $('.btnShow').on('click', function () {
-                var btn = this;
+                let btn = this;
 
                 if ($(btn).hasClass('aktiv')){
                     $(btn).html( '<i class="fa fa-eye"></i> Text anzeigen') ;
@@ -124,7 +154,7 @@
             });
 
             $('.btnShowRueckmeldungen').on('click', function () {
-                var btn = this;
+                let btn = this;
 
                 if ($(btn).hasClass('aktiv')){
                     $(btn).html( '<i class="fa fa-eye"></i> Rückmeldungen anzeigen') ;
@@ -140,8 +170,8 @@
 
     <script>
         $('.commentLinks').on('click', function () {
-            var btn = this;
-                $(btn).addClass('d-none');
+            let btn = this;
+            $(btn).addClass('d-none');
                 $('.comment').removeClass('d-none');
 
 

@@ -6,24 +6,35 @@ use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
 use App\Model\group_user;
-use App\Model\User;
-use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use Spatie\Permission\Models\Role;
 
 class ImportController extends Controller
 {
+    /**
+     * Permission to import user is required
+     */
     public function __construct()
     {
         $this->middleware(['permission:import user']);
     }
 
+    /**
+     * @return Application|Factory|View
+     */
     public function importForm()
     {
         return view('user.import');
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function import(Request $request)
     {
         if ($request->hasFile('file')) {
@@ -31,20 +42,19 @@ class ImportController extends Controller
                 group_user::truncate();
 
                 $header = [
-                    'klassenstufe' => $request->input('klassenstufe') - 1,
-                    'lerngruppe' => $request->input('lerngruppe') - 1,
-                    'S1Vorname' => $request->input('S1Vorname') - 1,
-                    'S1Nachname' => $request->input('S1Nachname') - 1,
-                    'S1Email' => $request->input('S1Email') - 1,
-                    'S2Email' => $request->input('S2Email') - 1,
-                    'S2Vorname' => $request->input('S2Vorname') - 1,
-                    'S2Nachname' => $request->input('S2Nachname') - 1,
+                    'klassenstufe' => $request->klassenstufe - 1,
+                    'lerngruppe' => $request->lerngruppe - 1,
+                    'S1Vorname' => $request->S1Vorname - 1,
+                    'S1Nachname' => $request->S1Nachname - 1,
+                    'S1Email' => $request->S1Email - 1,
+                    'S2Email' => $request->S2Email - 1,
+                    'S2Vorname' => $request->S2Vorname - 1,
+                    'S2Nachname' => $request->S2Nachname - 1,
                 ];
 
                 Excel::import(new UsersImport($header), $request->file('file'));
 
                 $Meldung = 'Eltern wurden importiert';
-
             } elseif ($request->input('type') == 'aufnahme') {
                 $header = [
                     'S1Vorname' => $request->input('S1Vorname') - 1,
@@ -64,8 +74,8 @@ class ImportController extends Controller
             }
 
             return redirect()->to(url('users'))->with([
-                'type'  => 'success',
-                'Meldung'   => $Meldung,
+                'type' => 'success',
+                'Meldung' => $Meldung,
             ]);
         } else {
             return redirect()->back()->with([

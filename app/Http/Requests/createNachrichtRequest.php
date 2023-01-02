@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\ValidCurrentUserPassword;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +12,7 @@ class createNachrichtRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         if (auth()->user()->can('create posts')) {
             return true;
@@ -27,17 +26,20 @@ class createNachrichtRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'header'    => [
                 'required','max:120'
             ],
-            'news'      => [
-                'required',
+            'news' => [
+                Rule::requiredIf(request()->type != 'image'),
             ],
             'gruppen' => [
                 'required',
+            ],
+            'archiv_ab' => [
+                'required', 'date',
             ],
             'password' => [
                 'required_with:urgent',
@@ -46,8 +48,12 @@ class createNachrichtRequest extends FormRequest
                 'required',
             ],
             'reactable' => [
-                'boolean'
+                'boolean',
             ],
+            'released' => [
+                'nullable', 'boolean',
+            ],
+
         ];
     }
 }

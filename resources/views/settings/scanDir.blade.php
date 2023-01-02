@@ -2,6 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
+        @if(count($media) > 0)
             <div class="card">
                 <div class="card-header">
                     <h5>
@@ -12,29 +13,30 @@
                     <ul class="list-group">
                         @foreach($media as $items)
                             @foreach($items as $item)
-                            <li class="list-group-item">
-                                {{$item}}
-                            </li>
+                                <li class="list-group-item">
+                                    {{$item}}
+                                </li>
                             @endforeach
                         @endforeach
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <form action="{{url('settings/removeFiles')}}" method="post">
+                    <form action="{{url('settings/removeUnusedFiles')}}" method="post" class="form-horizontal">
                         @csrf
                         @method('delete')
                         <button type="submit" class="btn btn-danger btn-block">
-                            Alle Datein endgültig löschen
+                            ungenutze Dateien löschen
                         </button>
                     </form>
                 </div>
             </div>
+        @endif
     </div>
     <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h5>
-                        gelöschte Nachrichten ({{@count($deletedPosts)}})
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    gelöschte Nachrichten ({{@count($deletedPosts)}})
                     </h5>
                 </div>
                 <div class="card-body">
@@ -79,25 +81,39 @@
                         @endforeach
                     </table>
                 </div>
-            </div>
+        </div>
     </div>
     <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h5>
-                        alte Dateien ({{@count($oldMedia)}})
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                          <tr>
-                              <th>
-                                  erstellt
-                              </th>
-                              <th>
-                                  Name
-                              </th>
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    alte Dateien ({{@count($oldMedia)}})
+                </h5>
+            </div>
+            <div class="card-footer">
+                <form action="{{url('settings/removeFiles')}}" method="post" class="form-horizontal">
+                    @csrf
+                    @method('delete')
+                    <label>
+                        ältere Dateien vor diesem Datum löschen
+                        <input type="date" name="deleteBeforeDate" class="form-control"
+                               value="{{\Carbon\Carbon::now()->subYear()->format('Y-m-d')}}">
+                    </label>
+                    <button type="submit" class="btn btn-danger btn-block">
+                        löschen
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>
+                            erstellt
+                        </th>
+                        <th>
+                            Name
+                        </th>
                               <th>
                                   gehört zu
                               </th>
@@ -117,7 +133,7 @@
                                        <b>Dateidownload</b> für {{$item->model->name}}
                                    @elseif($item->model_type == "App\Model\Post")
                                        <b>Post:</b>
-                                       {{optional($item->model)->header}}
+                                       {{$item->model?->header}}
                                    @endif
                                </td>
                                <td>

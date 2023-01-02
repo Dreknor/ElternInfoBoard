@@ -16,84 +16,170 @@
                 </div>
             </div>
         @endif
+        @if($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0 or (!is_null($user->sorgeberechtigter2) and $user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0))
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>
+                                Eigene Reinigungstermine
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                @foreach($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                    <li class="list-group-item">
+                                        Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
+                                        - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
+                                    </li>
+                                @endforeach
+                                @if(!is_null($user->sorg2))
+                                    @foreach($user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                        <li class="list-group-item">
+                                            Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
+                                            - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
+                                        </li>
+                                    @endforeach
+                                @endif
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @foreach($Bereiche as $Bereich)
             <div class="row justify-content-center">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
+                            @can('edit reinigung')
+                                <div class="pull-right small">
+                                    <a href="{{url('reinigung/'.$Bereich.'/export')}}" class="btn btn-sm">
+                                        Export
+                                    </a>
+                                </div>
+                            @endcan
                             <h5 class="card-title">
                                 Reinigungsplan {{$Bereich}}
+
                             </h5>
                         </div>
                         <div class="card-body">
-                            <table class="table table-striped w-100 table-responsive-sm">
+                            <table class="table w-100 table-responsive-sm">
                                 <thead>
-                                    <tr>
-                                        <th>Woche</th>
-                                        <th>Familie</th>
-                                        <th>Reinigungsarbeit</th>
-                                        <th>Familie</th>
-                                        <th>Reinigungsarbeit</th>
-                                        <th>Bemerkung</th>
-                                        <th></th>
-                                    </tr>
+                                <tr class="d-none d-sm-block">
+                                    <th>Woche</th>
+                                    <th></th>
+                                </tr>
+                                <tr class="d-block d-sm-none">
+                                    <th class="w-100">Woche</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @for($Woche = $datum->copy(); $Woche->lessThanOrEqualTo($ende); $Woche->addWeek())
-                                        @php
-                                            $familien=$Familien[$Bereich]->filter(function ($familie) use ($Woche) {
-                                                    return $familie->datum->equalTo($Woche->copy()->startOfWeek());
-                                                });
+                                @for($Woche = $datum->copy(); $Woche->lessThanOrEqualTo($ende); $Woche->addWeek())
+                                    <tr class="d-none d-sm-block">
+                                        <th>
+                                            <div class="card bg-light ">
+                                                <div class="card-header">
+                                                    {{$Woche->copy()->startOfWeek()->format('d.m.')}} - {{$Woche->copy()->endOfWeek()->format('d.m.Y')}}
+                                                    </div>
+                                                    @can('edit reinigung')
+                                                        <div class="card-body">
+                                                            <a href="{{url('reinigung/create/'.$Bereich.'/'.$Woche->startOfWeek()->format('Ymd'))}}" class="btn btn-sm">
+                                                                <i class="fas fa-plus-circle"></i>
+                                                            </a>
+                                                        </div>
+                                                    @endcan
+                                                </div>
+                                            </th>
+                                        <td>
+                                            <div class="row">
+                                                @foreach($Familien[$Bereich]->filter(function ($value) use ($Woche){
+                                                    if ($Woche->startOfWeek()->eq($value->datum->startOfWeek())) {return $value;}
+                                                }) as $reinigung)
+                                                    <div class="col">
+                                                        <div
+                                                            class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
+                                                            <div class="card-header">
+                                                                <h6>
+                                                                    Familie {{$reinigung->user->familie_name}}
+                                                                    @can('edit reinigung')
+                                                                        <div class="pull-right">
+                                                                            <a class="link text-danger"
+                                                                               href="{{url('reinigung/'.$Bereich.'/'.$reinigung->id.'/trash')}}">
+                                                                                <i class="fa fa-trash"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    @endcan
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                {{$reinigung->aufgabe}}
+                                                            </div>
+                                                            <div class="card-footer">
+                                                                {{$reinigung->bemerkung}}
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                                            $familie1 = $familien->first();
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="d-block d-sm-none">
+                                        <th class="w-100">
+                                            <div class="card bg-light ">
+                                                <div class="card-header">
+                                                    {{$Woche->copy()->startOfWeek()->format('d.m.')}}
+                                                    - {{$Woche->copy()->endOfWeek()->format('d.m.Y')}}
+                                                </div>
+                                                @can('edit reinigung')
+                                                    <div class="card-body">
+                                                        <a href="{{url('reinigung/create/'.$Bereich.'/'.$Woche->startOfWeek()->format('Ymd'))}}"
+                                                           class="btn btn-sm">
+                                                            <i class="fas fa-plus-circle"></i>
+                                                        </a>
+                                                    </div>
+                                                @endcan
+                                            </div>
+                                        </th>
+                                    </tr>
+                                    <tr class="d-block d-sm-none">
+                                        <td class="w-100">
+                                            <div class="row">
+                                                @foreach($Familien[$Bereich]->filter(function ($value) use ($Woche){
+                                                    if ($Woche->startOfWeek()->eq($value->datum->startOfWeek())) {return $value;}
+                                                }) as $reinigung)
+                                                    <div class="col">
+                                                        <div
+                                                            class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
+                                                            <div class="card-header">
+                                                                <h6>
+                                                                    Familie {{$reinigung->user->familie_name}}
+                                                                    @can('edit reinigung')
+                                                                        <div class="pull-right">
+                                                                            <a class="link text-danger"
+                                                                               href="{{url('reinigung/'.$Bereich.'/'.$reinigung->id.'/trash')}}">
+                                                                                <i class="fa fa-trash"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    @endcan
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                {{$reinigung->aufgabe}}
+                                                            </div>
+                                                            <div class="card-footer">
+                                                                {{$reinigung->bemerkung}}
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-
-                                            $familie2 = $familien->last();
-
-                                            if ($familie1 == $familie2) {
-                                            $familie2=null;
-                                            }
-                                        @endphp
-                                        <tr @if((isset($familie1) and $familie1->users_id == auth()->user()->id) or (isset($familie2) and $familie2->users_id == auth()->user()->id)) class="table-info" @endif>
-                                            <td class="text-monospace">
-                                                {{$Woche->startOfWeek()->format('d.m.')}} - {{$Woche->endOfWeek()->format('d.m.Y')}}
-                                            </td>
-                                            <td class="familie editable" @if(isset($familie1)) data-id="{{$familie1->id}}" @else data-datum="{{$Woche->format('Ymd')}}" data-bereich="{{$Bereich}}" @endif>
-                                                @if(isset($familie1))
-                                                    Familie {{$familie1->user->familie_name}}
-                                                @endif
-                                            </td>
-                                            <td >
-                                                @if(isset($familie1))
-                                                    {{$familie1->aufgabe}}
-                                                @endif
-                                            </td>
-                                            <td class="familie">
-                                                @if(isset($familie2))
-                                                    Familie {{$familie2->user->familie_name}}
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if(isset($familie2))
-                                                    {{$familie2->aufgabe}}
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if(isset($familie1) and $familie1->bemerkung != "")
-                                                    {{$familie1->bemerkung}}
-                                                @elseif(isset($familie2) and $familie2->bemerkung != "")
-                                                    {{$familie2->bemerkung}}
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($user->can('edit reinigung'))
-                                                    <a href="{{url("reinigung/create/$Bereich/".$Woche->startOfWeek()->format('Ymd'))}}" class="btn btn-warning">
-                                                        <i class="far fa-edit"></i>
-                                                    </a>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endfor
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endfor
                                 </tbody>
                             </table>
                         </div>

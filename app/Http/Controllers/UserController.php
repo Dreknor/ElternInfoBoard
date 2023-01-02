@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\createUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
+use App\Model\Discussion;
 use App\Model\Group;
+use App\Model\Listen_Eintragungen;
+use App\Model\listen_termine;
+use App\Model\Poll;
+use App\Model\Poll_Votes;
+use App\Model\Post;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +37,7 @@ class UserController extends Controller
     public function index()
     {
         return view('user.index', [
-            'users' =>  User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles')
+            'users' => User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles'),
 
         ]);
     }
@@ -45,7 +50,7 @@ class UserController extends Controller
     public function create()
     {
         return view('user.create', [
-            'gruppen'   => Cache::remember('groups', 60 * 5, function () {
+            'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
         ]);
@@ -54,7 +59,7 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param createUserRequest $request
      * @return RedirectResponse
      */
     public function store(createUserRequest $request)
@@ -70,6 +75,7 @@ class UserController extends Controller
             if ($gruppen[0] == 'all') {
                 $gruppen = Group::where('protected', 0)->get();
             } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
+                #TODO Bereiche per Config definieren
                 $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
                 $gruppen = $gruppen->unique();
             } else {
@@ -80,42 +86,42 @@ class UserController extends Controller
         }
 
         return redirect(url("users/$user->id"))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Benutzer wurde angelegt',
+            'type' => 'success',
+            'Meldung' => 'Benutzer wurde angelegt',
         ]);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param User $user
      * @return View
      */
     public function show(User $user)
     {
         return view('user.show', [
             'user' => $user->load('groups'),
-            'gruppen'   => Cache::remember('groups', 60 * 5, function () {
+            'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();
             }),
-            'roles'     => Cache::remember('role', 60 * 5, function () {
+            'roles' => Cache::remember('role', 60 * 5, function () {
                 return Role::all();
             }),
             'users' => User::where([
                 ['sorg2', null],
                 ['id', '!=', $user->id],
-            ])->orWhere('sorg2', $user->id)->get()
+            ])->orWhere('sorg2', $user->id)->get(),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param verwaltungEditUserRequest $request
+     * @param User $user
      * @return RedirectResponse
      */
     public function update(verwaltungEditUserRequest $request, User $user)
@@ -146,32 +152,32 @@ class UserController extends Controller
             $user->password = Hash::make($request->input('new-password'));
         }
 
-        if ($request->sorg2 != ""){
-            $sorg2 = User::where('id', $request->sorg2)->update([
-                'sorg2' => $user->id
+        if ($request->sorg2 != '') {
+            User::where('id', $request->sorg2)->update([
+                'sorg2' => $user->id,
             ]);
         }
 
         if ($user->save()) {
             return redirect()->back()->with([
-               'type'   => 'success',
-               'Meldung'    => 'Daten gespeichert.',
+                'type' => 'success',
+                'Meldung' => 'Daten gespeichert.',
             ]);
         }
 
         return redirect()->back()->with([
-        'type'   => 'danger',
-        'Meldung'    => 'Update fehlgeschlagen',
-    ]);
+            'type' => 'danger',
+            'Meldung' => 'Update fehlgeschlagen',
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
-     * @return JsonResponse
+     * @param int $id
+     * @return RedirectResponse
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $user = User::find($id);
         $user->groups()->detach();
@@ -180,17 +186,25 @@ class UserController extends Controller
             $sorg2 = User::where('id', '=', $user->sorg2)->first();
             if (! is_null($sorg2)) {
                 $sorg2->update([
-                        'sorg2'=>null,
-                    ]
+                    'sorg2' => null,
+                ]
                 );
             }
 
             $user->update([
-                'sorg2'=>null,
+                'sorg2' => null,
             ]);
         }
 
-        //$user->groups()->sync([]);
+        $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
+
+        Listen_Eintragungen::where('created_by', $user->id)->delete();
+        Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
+        Discussion::where('owner', $user->id)->update(['owner' => null]);
+        listen_termine::where('reserviert_fuer', $user->id)->delete();
+        Poll::where('author_id', $user->id)->update(['author_id' => null]);
+        Poll_Votes::where('author_id', $user->id)->delete();
+
         $user->listen_eintragungen()->delete();
         $user->userRueckmeldung()->delete();
         $user->reinigung()->delete();
@@ -199,24 +213,28 @@ class UserController extends Controller
         $user->krankmeldungen()->withTrashed()->forceDelete();
         $user->comments()->delete();
 
-
-        $user->posts()->update([
-            'author'=>null,
-        ]);
+        Post::where('author', $user->id)->update(['author' => null]);
 
         $user->delete();
 
-        return response()->json([
-            'message'   => 'Gelöscht',
-        ], 200);
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Benutzer gelöscht',
+        ]);
+
     }
 
+    /**
+     * @param Request $request
+     * @param $id
+     * @return RedirectResponse
+     */
     public function loginAsUser(Request $request, $id)
     {
         if (! $request->user()->can('loginAsUser')) {
             return redirect()->back()->with([
-               'Meldung'    => 'Berechtigung fehlt',
-               'type'       => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+                'type' => 'danger',
             ]);
         }
         session(['ownID' => $request->user()->id]);
@@ -226,6 +244,10 @@ class UserController extends Controller
         return redirect()->to(url('/'));
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function logoutAsUser(Request $request)
     {
         if ($request->session()->has('ownID')) {
@@ -235,8 +257,20 @@ class UserController extends Controller
         return redirect()->to(url('/'));
     }
 
-    public function removeVerknuepfung(User $user)
+    /**
+     * @param User $user
+     * @param Int $sorg2
+     * @return RedirectResponse
+     */
+    public function removeVerknuepfung(User $user, Int $sorg2)
     {
+        if ($user->sorg2 != $sorg2){
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Verknüpfung konnte nicht aufgehoben werden, da User und Sorgeberechtigter nicht übereinstimmen.',
+            ]);
+        }
+
         $user->sorgeberechtigter2()->update([
             'sorg2' => null,
         ]);
@@ -246,8 +280,8 @@ class UserController extends Controller
         ]);
 
         return redirect()->back()->with([
-            'type'=>'success',
-            'Meldung'   => 'Verknüpfung der Konten aufgehoben',
+            'type' => 'success',
+            'Meldung' => 'Verknüpfung der Konten aufgehoben',
         ]);
     }
 }

@@ -9,8 +9,9 @@ class ReinigungsTask extends Model
 {
     use HasFactory;
 
-    protected $table = "reinigungs_tasks";
+    protected $table = 'reinigungs_tasks';
 
     protected $fillable = ['task'];
+
     protected $visible = ['task'];
 }

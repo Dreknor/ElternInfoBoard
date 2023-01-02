@@ -21,6 +21,7 @@
                         </p>
                     </div>
                 @endif
+
                 <div class="row">
                     <div class="col-md-6 col-sm-12">
                         <div class="card">
@@ -77,7 +78,7 @@
                                     <div class="row">
                                         <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
-                                                <label>Benachrichtigung per E-Mail (zuletzt: {{optional($user->lastEmail)->format('d.m.Y H:i')}})</label>
+                                                <label>Benachrichtigung per E-Mail (zuletzt: {{$user->lastEmail?->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
                                                     <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif>Täglich (bei neuen Nachrichten)</option>
                                                     <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif >Wöchentlich (Freitags)</option>
@@ -89,27 +90,47 @@
                                                 <label>Kopie von Rückmeldungen erhalten</label>
                                                 <select class="custom-select" name="sendCopy">
                                                     <option value="1" @if($user->sendCopy == 1) selected @endif >Kopie erhalten</option>
-                                                    <option value="0" @if($user->sendCopy == 0) selected @endif >keine Kopie senden</option>
+                                                    <option value="0" @if($user->sendCopy == 0) selected @endif >keine
+                                                        Kopie senden
+                                                    </option>
                                                 </select>
                                             </div>
-
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-6 col-sm-12">
+                                        <div class="col-md-5 col-sm-12">
                                             <div class="form-group">
                                                 <label>Login aufzeichnen um Benachrichtigungen zu erhalten</label>
                                                 <select class="custom-select" name="track_login">
-                                                    <option value="1" @if($user->track_login == true) selected @endif >letzten Login aufzeichnen</option>
-                                                    <option value="0" @if($user->track_login == false) selected @endif >keine Speicherung </option>
+                                                    <option value="1" @if($user->track_login == true) selected @endif >
+                                                        letzten Login aufzeichnen
+                                                    </option>
+                                                    <option value="0" @if($user->track_login == false) selected @endif >
+                                                        keine Speicherung
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="form-group">
+                                                <label>Termine freigeben (Termine können dann per Link in externe
+                                                    Kalender integiert werden)</label>
+                                                <select class="custom-select" name="releaseCalendar">
+                                                    <option value="1"
+                                                            @if($user->releaseCalendar == true) selected @endif >ja
+                                                    </option>
+                                                    <option value="0"
+                                                            @if($user->releaseCalendar == false) selected @endif >nein
+                                                    </option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="row">
                                         <div class="col-12">
-                                            <button type="submit" class="btn btn-success btn-block collapse" id="btn-save">speichern</button>
+                                            <button type="submit" class="btn btn-success btn-block collapse"
+                                                    id="btn-save">speichern
+                                            </button>
                                         </div>
                                     </div>
 
@@ -134,19 +155,42 @@
                             </div>
                             <div class="card-footer">
                                 <p class="footer-default small">
-                                    Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den Gruppen abgebildet sein, wenden Sie sich bitte an <a href="mailto:info@esz-radebeul.de" class="card-link">info@esz-radebeul.de</a>
+                                    Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den
+                                    Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
+                    @if($user->releaseCalendar == 1)
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6>
+                                            ICAL-Kalender
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="info">
+                                            Die angegebene URL kann in den meisten Kalender-Anwendungen hinzugefügt
+                                            werden
+                                            um die Termine direkt einzubinden
+                                        </p>
+                                        <p>
+                                            {{config('app.url')."/".$user->uuid.'/ical'}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
             </div>
             @if($user->sorg2 != null)
                 <div class="card-footer">
                     <p>
-                        Das Konto ist verknüpft mit <b>{{optional($user->sorgeberechtigter2)->name}}</b>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.<br>
-                        Sollte dies nicht korrekt sein, so wenden Sie sich bitte an <a href="mailto://daniel.roehrich@esz-radebeul.de">daniel.roehrich@esz-radebeul.de</a>.
-                    </p>
+                        Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2?->name}}</b>. Dadurch sind
+                        die Rückmeldungen in beiden Konten sichtbar.
                 </div>
             @endif
         </div>

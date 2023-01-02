@@ -44,6 +44,17 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <label for="public">öffentlich?</label>
+                                                <select name="public" id="public" class=custom-select>
+                                                    <option value="" selected>nein</option>
+                                                    <option value="1">ja</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

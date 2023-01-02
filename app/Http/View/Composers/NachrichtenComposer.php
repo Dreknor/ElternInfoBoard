@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 
 class NachrichtenComposer
 {
-    public function compose($view)
+    public function compose($view): void
     {
         $expire = 1;
 
@@ -16,7 +16,6 @@ class NachrichtenComposer
             $user = auth()->user();
 
             if (! $user->can('view all')) {
-
                 $Nachrichten = $user->postsNotArchived()->distinct()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups')->withCount('users')->get();
 
                 if ($user->can('create posts')) {
@@ -35,7 +34,7 @@ class NachrichtenComposer
             return $Nachrichten->paginate(30);
         });
         $view->with([
-            'nachrichten'=> $nachrichten,
+            'nachrichten' => $nachrichten,
             'user' => auth()->user(),
         ]);
     }

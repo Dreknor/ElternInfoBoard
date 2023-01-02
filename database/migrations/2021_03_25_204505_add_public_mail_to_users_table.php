@@ -2,23 +2,24 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class AddPublicMailToUsersTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('publicMail')->after('email')->nullable();
         });
 
-        \Illuminate\Support\Facades\DB::table('settings')->where('setting', 'Gruppen')->update([
-           'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}'
+        DB::table('settings')->where('setting', 'Gruppen')->update([
+            'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}',
         ]);
     }
 
@@ -27,8 +28,7 @@ class AddPublicMailToUsersTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-
     }
-}
+};

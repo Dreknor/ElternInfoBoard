@@ -1,5 +1,5 @@
 <ul class="comment-section w-100">
-    @foreach(optional($nachricht->comments)->sortByDesc('created_at') as $comment)
+    @foreach($nachricht->comments?->sortByDesc('created_at') as $comment)
         <li class="comment @if ($loop->index % 2 == 0) user-comment @else author-comment @endif @if ($loop->index >= 10) d-none @endif">
             <div class="info">
                 <a href="">{{$comment->creator->name}}</a>
@@ -10,7 +10,7 @@
 
     @endforeach
 
-    @if(optional($nachricht->comments)->count() >= 10)
+    @if($nachricht->comments?->count() >= 10)
         <a href="#{{$nachricht->id}}" class="commentLinks">
             alle Kommentare anzeigen
         </a>

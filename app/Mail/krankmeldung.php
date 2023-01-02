@@ -2,9 +2,7 @@
 
 namespace App\Mail;
 
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,19 +10,24 @@ class krankmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $email;
-    public $name;
-    public $NameDesKindes;
-    public $krankVon;
-    public $krankBis;
-    public $bemerkung;
+    public string $email;
+
+    public string $name;
+
+    public string $NameDesKindes;
+
+    public string $krankVon;
+
+    public string $krankBis;
+
+    public string $bemerkung;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($Email, $Name, $NameDesKindes, $krankVon, $krankBis, $bemerkung)
+    public function __construct(string $Email, string $Name, string $NameDesKindes, string $krankVon, string $krankBis, string $bemerkung)
     {
         $this->email = $Email;
         $this->name = $Name;
@@ -39,7 +42,7 @@ class krankmeldung extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->subject('Krankmeldung '.$this->NameDesKindes.': '.$this->krankVon.' - '.$this->krankBis)

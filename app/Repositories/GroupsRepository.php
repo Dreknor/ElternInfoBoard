@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Model\Group;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class GroupsRepository
@@ -11,9 +12,9 @@ class GroupsRepository
 {
     /**
      * @param array $gruppen
-     * @return array
+     * @return Collection
      */
-    public function getGroups(array $gruppen)
+    public function getGroups(array $gruppen): Collection
     {
         if ($gruppen[0] == 'all') {
             $gruppen = Group::where('protected', 0)->get();

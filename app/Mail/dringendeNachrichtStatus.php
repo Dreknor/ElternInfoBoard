@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -11,7 +10,7 @@ class dringendeNachrichtStatus extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $empfaenger;
+    public array $empfaenger;
 
     /**
      * Create a new message instance.
@@ -28,7 +27,7 @@ class dringendeNachrichtStatus extends Mailable
      *
      * @return $this
      */
-    public function build()
+    public function build(): static
     {
         return $this
             ->from(
@@ -37,7 +36,7 @@ class dringendeNachrichtStatus extends Mailable
             )
             ->subject('Status dringender Nachricht')
             ->view('emails.statusDringend')->with([
-                'empfaenger'  => $this->empfaenger,
+                'empfaenger' => $this->empfaenger,
             ]);
     }
 }

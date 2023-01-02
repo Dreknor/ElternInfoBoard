@@ -11,11 +11,11 @@
                         aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}
                     </div>
                     <div class="col">
-                        Archiv ab: {{optional($nachricht->archiv_ab)->isoFormat('DD. MMMM YYYY')}}
+                        Archiv ab: {{$nachricht->archiv_ab?->isoFormat('DD. MMMM YYYY')}}
                     </div>
                     <div class="col">
                         <div class="pull-right">
-                            Autor: {{optional($nachricht->autor)->name}}
+                            Autor: {{$nachricht->autor?->name}}
                         </div>
                     </div>
                 </div>

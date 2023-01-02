@@ -11,7 +11,11 @@ use App\Model\listen_termine;
 use App\Notifications\Push;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
@@ -21,11 +25,32 @@ use Illuminate\Support\Facades\Notification;
 class ListenTerminController extends Controller
 {
     /**
+     * @param listen_termine $listen_termine
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
+    public function copy(listen_termine $listen_termine)
+    {
+        $this->authorize('storeTerminToListe', $listen_termine->liste);
+
+        $new = $listen_termine->replicate();
+        $new->reserviert_fuer = null;
+        $new->save();
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Termin kopiert',
+        ]);
+    }
+
+    /**
      * Speichert verfügbare Termine
-     * @param Liste $liste
-     * @param StoreListeTerminRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @param  Liste  $liste
+     * @param  StoreListeTerminRequest  $request
+     * @return RedirectResponse
+     *
+     * @throws AuthorizationException
      */
     public function store(Liste $liste, StoreListeTerminRequest $request)
     {
@@ -33,14 +58,22 @@ class ListenTerminController extends Controller
         $datum = Carbon::createFromFormat('Y-m-d H:i', $request->termin.' '.$request->zeit);
         $termin = new listen_termine([
             'listen_id' => $liste->id,
-            'termin'    => $datum,
-            'comment'   => $request->comment,
+            'termin' => $datum,
+            'duration' => ($request->duration != '') ? $request->duration : $liste->duration,
+            'comment' => $request->comment,
+
         ]);
 
-        if ($request->repeat > 1) {
+        if ($request->weekly == 1) {
             for ($x = 1; $x < $request->repeat; $x++) {
                 $newTermin = $termin->replicate();
-                $newTermin->termin = $newTermin->termin->addMinutes($x * $liste->duration);
+                $newTermin->termin = $newTermin->termin->addWeeks($x);
+                $newTermin->save();
+            }
+        } elseif ($request->weekly == 0 and $request->repeat > 1) {
+            for ($x = 1; $x < $request->repeat; $x++) {
+                $newTermin = $termin->replicate();
+                $newTermin->termin = $newTermin->termin->addMinutes($x * $termin->duration);
                 $newTermin->save();
             }
         }
@@ -48,14 +81,16 @@ class ListenTerminController extends Controller
         $termin->save();
 
         return redirect()->back()->with([
-            'type'  => 'success',
-            'Meldung'=> 'Termin erstellt',
+            'type' => 'success',
+            'Meldung' => 'Termin erstellt',
         ]);
     }
 
     /**
-     * @param listen_termine $listen_termine
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     *
+     *
+     * @param  listen_termine  $listen_termine
+     * @return RedirectResponse|Redirector
      */
     public function update(Request $request, listen_termine $listen_termine)
     {
@@ -63,8 +98,8 @@ class ListenTerminController extends Controller
 
         if (count($Eintragungen) > 0 and $listen_termine->liste->multiple != 1) {
             return redirect()->back()->with([
-               'type'   => 'warning',
-               'Meldung'    => 'Es kann nur ein Termin reserviert werden',
+                'type' => 'warning',
+                'Meldung' => 'Es kann nur ein Termin reserviert werden',
             ]);
         }
 
@@ -75,25 +110,29 @@ class ListenTerminController extends Controller
         Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', $request->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
 
         return redirect()->to(url('listen'))->with([
-            'type'  => 'success',
-            'Meldung'   => 'Termin wurde reserviert.',
+            'type' => 'success',
+            'Meldung' => 'Termin wurde reserviert.',
         ]);
     }
 
     /**
-     * @param listen_termine $listen_termine
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Exception
+     * @param  listen_termine  $listen_termine
+     * @return RedirectResponse
+     *
+     * @throws Exception
      */
     public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {
-
         if ($request->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == $request->user()->sorg2 or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
+
+            //Email an Listenersteller
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
                 ->queue(new TerminAbsageEltern($request->user(),
                     $listen_termine->liste,
                     $listen_termine->termin,
                     $request->text));
+
+            //Email an eingetragene Person
             Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
                             ->queue(new TerminAbsageEltern($request->user(),
                                 $listen_termine->liste,
@@ -102,21 +141,23 @@ class ListenTerminController extends Controller
 
             $listen_termine->update(['reserviert_fuer' => null]);
 
-            //$body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde durch '.$request->user()->name.' abgesagt.';
-            //Notification::send($listen_termine->liste->ersteller,new PushTerminAbsage($body));
-
             return redirect()->back()->with([
-                'type'  => 'success',
-                'Meldung'=> 'Termin abgesagt',
+                'type' => 'success',
+                'Meldung' => 'Termin abgesagt',
             ]);
         }
 
         return redirect()->back()->with([
-            'type'  => 'danger',
-            'Meldung'=> 'Keine Recht den Termin abzusagen?',
+            'type' => 'danger',
+            'Meldung' => 'Keine Recht den Termin abzusagen?',
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param listen_termine $listen_termine
+     * @return RedirectResponse
+     */
     public function destroy(Request $request, listen_termine $listen_termine)
     {
         if ($request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
@@ -139,21 +180,21 @@ class ListenTerminController extends Controller
                 Mail::to($listen_termine->eingetragenePerson->email, $listen_termine->eingetragenePerson->name)
                     ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name, $listen_termine->liste, $listen_termine->termin, $request->user()));
                 $listen_termine->update([
-                    'reserviert_fuer'   => null,
+                    'reserviert_fuer' => null,
                 ]);
             } else {
                 $listen_termine->delete();
             }
 
             return redirect()->back()->with([
-                'type'  => 'success',
-                'Meldung'=> 'Termin gelöscht bzw. abgesagt',
+                'type' => 'success',
+                'Meldung' => 'Termin gelöscht bzw. abgesagt',
             ]);
         }
 
         return redirect()->back()->with([
-            'type'  => 'danger',
-            'Meldung'=> 'Keine Recht den Termin abzusagen?',
+            'type' => 'danger',
+            'Meldung' => 'Keine Recht den Termin abzusagen?',
         ]);
     }
 }

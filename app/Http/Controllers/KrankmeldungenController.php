@@ -7,8 +7,8 @@ use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -24,14 +24,15 @@ class KrankmeldungenController extends Controller
         $krankmeldungen = $request->user()->krankmeldungen->paginate(15);
 
         return view('krankmeldung.index', [
-                'krankmeldungen' => $krankmeldungen,
-            ]);
+            'krankmeldungen' => $krankmeldungen,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param KrankmeldungRequest $request
+     * @return RedirectResponse
      */
     public function store(KrankmeldungRequest $request)
     {
@@ -46,10 +47,14 @@ class KrankmeldungenController extends Controller
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung'   => 'Krankmeldung wurde gespeichert',
+            'Meldung' => 'Krankmeldung wurde gespeichert',
         ]);
     }
 
+    /**
+     * versendet täglich die derzeit erkrankten SuS
+     * @return void
+     */
     public function dailyReport()
     {
         $krankmeldungen = krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
@@ -60,14 +65,4 @@ class KrankmeldungenController extends Controller
             ->queue(new DailyReportKrankmeldungen($krankmeldungen));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param krankmeldungen $krankmeldungen
-     * @return Response
-     */
-    public function destroy(krankmeldungen $krankmeldungen)
-    {
-        //
-    }
 }

@@ -10,32 +10,51 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 
+/**
+ *
+ */
 class SchickzeitenStundenExport implements FromView, WithTitle, WithEvents
 {
     use RegistersEventListeners;
 
+    /**
+     * @var int
+     */
     private $stunde;
 
+    /**
+     * @param int $stunde
+     */
     public function __construct(int $stunde)
     {
         $this->stunde = $stunde;
     }
 
+    /**
+     * @return View
+     */
     public function view(): View
     {
         $stunde = $this->stunde + 1 .':00:00';
 
         return view('export.schickzeiten', [
             'schickzeiten' => Schickzeiten::query()->where('time', '<', $stunde)->orderBy('time')->orderBy('type')->get(),
-            'stunde'    => $this->stunde,
+            'stunde' => $this->stunde,
         ]);
     }
 
+    /**
+     * @return string
+     */
     public function title(): string
     {
         return 'ab '.$this->stunde.' Uhr';
     }
 
+    /**
+     * @param AfterSheet $event
+     * @return void
+     */
     public static function afterSheet(AfterSheet $event)
     {
         $styleArrayHeading = [
@@ -43,7 +62,7 @@ class SchickzeitenStundenExport implements FromView, WithTitle, WithEvents
                 'outline' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                     'color' => [
-                        'rgb'   => '#000000',
+                        'rgb' => '#000000',
                     ],
                 ],
             ],

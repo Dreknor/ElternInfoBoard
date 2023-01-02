@@ -2,44 +2,65 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteFilesRequest;
 use App\Mail\newFilesAddToPost;
 use App\Model\Group;
 use App\Model\Post;
 use App\Repositories\GroupsRepository;
 use App\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache  as CacheAlias;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class FileController extends Controller
 {
+    private GroupsRepository $grousRepository;
+
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->middleware('password_expired');
         $this->grousRepository = $groupsRepository;
     }
 
+    /**
+     * @param Media $file
+     * @return JsonResponse
+     */
     public function delete(Media $file)
     {
         $file->delete();
 
         return response()->json([
-            'message'   => 'Gelöscht',
-        ], 200);
+            'message' => 'Gelöscht',
+        ]);
     }
 
+    /**
+     * @param Media $file
+     * @return RedirectResponse
+     */
     public function destroy(Media $file)
     {
         $file->delete();
 
         return redirect()->back()->with([
-            'type'  => 'warning',
-            'Meldung'   => 'Datei gelöscht',
+            'type' => 'warning',
+            'Meldung' => 'Datei gelöscht',
         ]);
     }
 
+    /**
+     * @return View
+     */
     public function index()
     {
         $user = auth()->user();
@@ -70,24 +91,31 @@ class FileController extends Controller
 
             return view('files.index', [
                 'gruppen' => $gruppen,
-                'medien'  =>  $media,
+                'medien' => $media,
             ]);
         }
     }
 
+    /**
+     * @return View
+     */
     public function create()
     {
         return view('files.create', [
-            'groups'    => Group::all(),
+            'groups' => Group::all(),
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function store(Request $request)
     {
         if (! $request->user()->can('upload files')) {
             return redirect()->to('/home')->with([
-                'type'   => 'danger',
-                'Meldung'    => 'Berechtigung fehlt',
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -97,41 +125,49 @@ class FileController extends Controller
         if ($request->hasFile('files')) {
             foreach ($gruppen as $gruppe) {
                 $gruppe->addMediaFromRequest('files')
-                        ->preservingOriginal()
-                        ->toMediaCollection();
+                    ->preservingOriginal()
+                    ->toMediaCollection();
             }
         }
 
         return redirect()->to('/files')->with([
-                'type'  => 'success',
-                'Meldung'   => 'Download erzeugt',
-            ]);
+            'type' => 'success',
+            'Meldung' => 'Download erzeugt',
+        ]);
     }
 
+    /**
+     * @param Request $request
+     * @param Post $posts
+     * @return RedirectResponse
+     * @throws FileDoesNotExist
+     * @throws FileIsTooBig
+     */
     public function saveFileRueckmeldung(Request $request, Post $posts)
     {
         if ($request->hasFile('files')) {
-            $posts->addAllMediaFromRequest(['files'])
-                ->each(function ($fileAdder) use ($request) {
-                    $fileAdder
-                        ->usingName($request->name)
-                        ->toMediaCollection('images');
-                });
+            $posts->addAllMediaFromRequest()
+                ->each(fn($fileAdder) => $fileAdder
+                    ->usingName($request->name)
+                    ->toMediaCollection('images'));
 
             @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
         } else {
             return redirect()->to(url('home/'))->with([
-                'type'  => 'warning',
-                'Meldung'   => 'Upload fehlgeschlagen',
+                'type' => 'warning',
+                'Meldung' => 'Upload fehlgeschlagen',
             ]);
         }
 
         return redirect(url('home/#'.$posts->id))->with([
-                'type'  => 'success',
-                'Meldung'   => 'Bild erfolgreich hinzugefügt',
-            ]);
+            'type' => 'success',
+            'Meldung' => 'Bild erfolgreich hinzugefügt',
+        ]);
     }
 
+    /**
+     * @return array
+     */
     protected function scanDir()
     {
         $dirs = scandir(storage_path().'/app');
@@ -144,9 +180,7 @@ class FileController extends Controller
                 continue;
             }
 
-            $MediaModel = $Media->filter(function ($item) use ($dir) {
-                return $item->id == $dir;
-            })->first();
+            $MediaModel = $Media->filter(fn($item) => $item->id == $dir)->first();
 
             if ($MediaModel == null) {
                 $scan = scandir(storage_path().'/app/'.$dir);
@@ -162,27 +196,32 @@ class FileController extends Controller
         return $noMedia;
     }
 
+    /**
+     * @return Application|Factory|\Illuminate\Contracts\View\View
+     */
     public function showScan()
     {
-        $noMedia = CacheAlias::remember('old_files', 60, function () {
-            return$this->scanDir();
+        $noMedia = CacheAlias::remember('old_files', 1, function () {
+            return $this->scanDir();
         });
 
-        $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', \App\Model\Post::class)->get();
+        $oldMedia = Media::where('created_at', '<', Carbon::now()->subMonths(6))->where('model_type', Post::class)->get();
 
         $deletedPosts = Post::onlyTrashed()->get();
 
         return view('settings.scanDir', [
             'media' => $noMedia,
-            'oldMedia'  => $oldMedia,
+            'oldMedia' => $oldMedia,
             'deletedPosts' => $deletedPosts,
         ]);
     }
 
-    public function removeOldFiles()
+    /**
+     * @return RedirectResponse
+     */
+    public function deleteUnusedFiles()
     {
         $noMedia = $this->scanDir();
-        $noMedia = CacheAlias::forget('old_files');
         foreach ($noMedia as $id => $mediaDir) {
             foreach ($mediaDir as $media) {
                 $link = storage_path().'/app/'.$id.'/'.$media;
@@ -190,6 +229,21 @@ class FileController extends Controller
             }
             $link = storage_path().'/app/'.$id;
             rmdir($link);
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * @param DeleteFilesRequest $request
+     * @return RedirectResponse
+     */
+    public function removeOldFiles(DeleteFilesRequest $request)
+    {
+        $media = Media::where('model_type', Post::class)->whereDate('created_at', '<', $request->deleteBeforeDate)->get();
+
+        foreach ($media as $Media) {
+            $Media->delete();
         }
 
         return redirect()->back();

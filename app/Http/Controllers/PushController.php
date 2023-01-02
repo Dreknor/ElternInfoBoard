@@ -3,11 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePushRequest;
-use App\Model\User;
-use App\Notifications\PushNews;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Http\JsonResponse;
 
 class PushController extends Controller
 {
@@ -19,8 +15,8 @@ class PushController extends Controller
     /**
      * Store the PushSubscription.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param StorePushRequest $request
+     * @return JsonResponse
      */
     public function store(StorePushRequest $request)
     {
@@ -30,13 +26,7 @@ class PushController extends Controller
         $user = $request->user();
         $user->updatePushSubscription($endpoint, $key, $token);
 
-        return response()->json(['success' => true], 200);
+        return response()->json(['success' => true]);
     }
 
-    /*
-        public function push(){
-            Notification::send(User::all(),new PushNews());
-            return redirect()->back();
-        }
-    */
 }

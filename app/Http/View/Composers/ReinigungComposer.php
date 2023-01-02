@@ -2,13 +2,12 @@
 
 namespace App\Http\View\Composers;
 
-use App\Model\Losung;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class ReinigungComposer
 {
-    public function compose($view)
+    public function compose($view): void
     {
         $expire = now()->diffInSeconds(now()->endOfDay());
 

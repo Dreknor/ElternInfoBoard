@@ -24,7 +24,8 @@
                                     <tr>
                                         <th>Modulname</th>
                                         <th>Beschreibung</th>
-                                        <th></th>
+                                        <th>mobile Navigation</th>
+                                        <th>Aktiv</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -37,9 +38,22 @@
                                                 {{$modul->description}}
                                             </td>
                                             <td>
+                                                @if(array_key_exists('nav', $modul->options))
+                                                    <label class="switch">
+                                                        <input type="checkbox" class="bottomMenuButton"
+                                                               id="{{$modul->setting}}"
+                                                               @if(array_key_exists('bottom-nav' , $modul->options['nav']) and $modul->options['nav']['bottom-nav']== "true") checked @endif>
+                                                        <span class="slider round"></span>
+                                                    </label>
+                                                @else
+                                                    ---
+                                                @endif
+                                            </td>
+                                            <td>
                                                 <!-- Rounded switch -->
                                                 <label class="switch">
-                                                    <input type="checkbox" id="{{$modul->setting}}" @if($modul->options['active'] ==1) checked @endif>
+                                                    <input type="checkbox" class="activButton" id="{{$modul->setting}}"
+                                                           @if($modul->options['active'] ==1) checked @endif>
                                                     <span class="slider round"></span>
                                                 </label>
                                             </td>
@@ -82,11 +96,15 @@
 
 @push('js')
     <script>
-        $('input').on('click', function (e) {
+        $('input.activButton').on('click', function (e) {
             var Id = this.id;
-            console.log(Id);
-            console.log(this.checked);
-            location.href = '{{url("/settings/modul")}}'+'/'+ Id
+            location.href = '{{url("/settings/modul")}}' + '/' + Id
+
+        });
+
+        $('input.bottomMenuButton').on('click', function (e) {
+            var Id = this.id;
+            location.href = '{{url("/settings/modul/bottomnav")}}' + '/' + Id
 
         });
 

@@ -2,17 +2,19 @@
 
 namespace App\Providers;
 
-use App\Model\Schickzeiten;
-use App\Observers\SchickzeitObserver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
+/**
+ *
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -20,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         //
     }
@@ -30,10 +32,9 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        \Illuminate\Pagination\Paginator::useBootstrap();
-
+        Paginator::useBootstrap();
 
         Schema::defaultStringLength(191);
 
@@ -41,15 +42,14 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale('de_DE');
 
         //ModelEventObserver
-        Schickzeiten::observe(SchickzeitObserver::class);
 
         /**
          * Paginate a standard Laravel Collection.
          *
-         * @param int $perPage
-         * @param int $total
-         * @param int $page
-         * @param string $pageName
+         * @param  int  $perPage
+         * @param  int  $total
+         * @param  int  $page
+         * @param  string  $pageName
          * @return array
          */
         Collection::macro('paginate', function ($perPage, $total = null, $page = null, $pageName = 'page') {
@@ -67,7 +67,13 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        Builder::macro('whereLike', function ($attributes, string $searchTerm) {
+
+        /**
+         * @param array|string $attributes
+         * @param string $searchTerm
+         * @return Builder $query
+         */
+        Builder::macro( 'whereLike', function ($attributes, string $searchTerm) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach (Arr::wrap($attributes) as $attribute) {
                     $query->when(
@@ -89,6 +95,11 @@ class AppServiceProvider extends ServiceProvider
             return $this;
         });
 
+        /**
+         * @param array|string $attributes
+         * @param string $searchTerm
+         * @return Builder $query
+         */
         Builder::macro('orWhereLike', function ($attributes, string $searchTerm) {
             $this->orWhere(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach (Arr::wrap($attributes) as $attribute) {
@@ -113,9 +124,7 @@ class AppServiceProvider extends ServiceProvider
 
         Collection::macro('sortByDate', function ($column = 'created_at', $order = SORT_DESC) {
             /* @var $this Collection */
-            return $this->sortBy(function ($datum) use ($column) {
-                return strtotime($datum->$column);
-            }, SORT_REGULAR, $order == SORT_DESC);
+            return $this->sortBy(fn($datum) => strtotime($datum->$column), SORT_REGULAR, $order == SORT_DESC);
         });
 
         if (! Collection::hasMacro('sortByMulti')) {
@@ -123,7 +132,7 @@ class AppServiceProvider extends ServiceProvider
              * An extension of the {@see Collection::sortBy()} method that allows for sorting against as many different
              * keys. Uses a combination of {@see Collection::sortBy()} and {@see Collection::groupBy()} to achieve this.
              *
-             * @param array $keys An associative array that uses the key to sort by (which accepts dot separated values,
+             * @param  array  $keys An associative array that uses the key to sort by (which accepts dot separated values,
              *                    as {@see Collection::sortBy()} would) and the value is the order (either ASC or DESC)
              */
             Collection::macro('sortByMulti', function (array $keys) {

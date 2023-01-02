@@ -31,6 +31,7 @@
                             <option value="info" selected>Info</option>
                             <option value="pflicht" >Aufgabe - Pflicht</option>
                             <option value="wahl" >Aufgabe - Wahl</option>
+                            <option value="image" >Bild</option>
                         </select>
                     </div>
                 </div>
@@ -81,12 +82,13 @@
                             <div class="form-group">
                                 <label>Rückmeldungen benötigt?</label>
                                 <select class="custom-select" name="rueckmeldung">
-                                    <option value="email">Ja, E-Mail</option>
+                                    <option value="abfrage">Ja, Abfrage</option>
+                                    <option value="email">Ja, Text (E-Mail)</option>
                                     <option value="commentable">Ja, Diskussion</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
                                     @if(auth()->user()->can('create polls'))
-                                        <option value="poll">Ja, Umfrage</option>
+                                        <option value="poll">Ja, Umfrage (anonym)</option>
                                     @endif
                                     <option value="0" selected>nein</option>
                                 </select>

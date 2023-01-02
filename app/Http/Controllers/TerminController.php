@@ -7,43 +7,47 @@ use App\Model\Group;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 
 class TerminController extends Controller
 {
+    private GroupsRepository $grousRepository;
+
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->middleware('password_expired');
         $this->grousRepository = $groupsRepository;
     }
 
-
     /**
      * Show the form for creating a new resource.
      *
-     * @return Response
+     * @return View|RedirectResponse
+     * @throws AuthorizationException
      */
     public function create()
     {
         if (! $this->authorize('create', Termin::class)) {
             return redirect()->to(url('home'))->with([
-               'type'   => 'danger',
-               'Meldung'    => 'Berechtigung fehlt',
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
         return view('termine.create', [
-            'gruppen'   => Group::all(),
+            'gruppen' => Group::all(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
-     * @return Response
+     * @param CreateTerminRequest $request
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function store(CreateTerminRequest $request)
     {
@@ -58,8 +62,8 @@ class TerminController extends Controller
         }
 
         $termin = new Termin([
-            'terminname'    => $request->terminname,
-            'start'         => $start,
+            'terminname' => $request->terminname,
+            'start' => $start,
             'ende' => $ende,
             'fullDay' => $request->fullDay,
         ]);
@@ -70,7 +74,7 @@ class TerminController extends Controller
 
         $termin->groups()->attach($gruppen);
 
-        Cache::forget('termine' . auth()->id());
+        Cache::forget('termine'.auth()->id());
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -82,7 +86,8 @@ class TerminController extends Controller
      * Remove the specified resource from storage.
      *
      * @param Termin $termin
-     * @return Response
+     * @return RedirectResponse
+     * @throws AuthorizationException
      */
     public function destroy(Termin $termin)
     {
@@ -91,7 +96,7 @@ class TerminController extends Controller
         $termin->groups()->detach();
         $termin->delete();
 
-        Cache::forget('termine' . auth()->id());
+        Cache::forget('termine'.auth()->id());
 
         return redirect()->back()->with([
             'type' => 'success',

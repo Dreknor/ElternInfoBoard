@@ -12,18 +12,18 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class MitarbeiterImport implements ToCollection, WithHeadingRow
 {
     /**
-     * @param Collection $collection
+     * @param  Collection  $collection
      */
-    public function collection(Collection $rows)
+    public function collection(Collection $collection)
     {
-        foreach ($rows as $row) {
-            if (isset($row['e_mail']) and ! is_null($row['e_mail'])) {
+        foreach ($collection as $row) {
+            if (array_key_exists('e_mail', $row) and ! is_null($row['e_mail'])) {
                 $user = User::firstOrCreate([
                     'email' => $row['e_mail'],
                 ], [
-                    'name'  => $row['vorname'].' '.$row['nachname'],
-                    'changePassword'  => 1,
-                    'password'      => Hash::make(config('app.import_mitarbeiter')),
+                    'name' => $row['vorname'].' '.$row['nachname'],
+                    'changePassword' => 1,
+                    'password' => Hash::make(config('app.import_mitarbeiter')),
                     'lastEmail' => Carbon::now(),
                 ]);
 

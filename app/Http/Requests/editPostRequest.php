@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class editPostRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class editPostRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         $posts = $this->route('posts');
 
@@ -27,17 +28,22 @@ class editPostRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'header'    => [
                 'required', 'max:120'
             ],
-            'news'      => [
-                'required',
+            'news' => [
+                'news' => [
+                    Rule::requiredIf(request()->type != 'image'),
+                ],
             ],
             'gruppen' => [
                 'required',
+            ],
+            'archiv_ab' => [
+                'required', 'date',
             ],
             'password' => [
                 'required_with:urgent',
@@ -46,8 +52,12 @@ class editPostRequest extends FormRequest
                 'required',
             ],
             'reactable' => [
-                'nullable', 'boolean'
+                'nullable', 'boolean',
             ],
+            'released' => [
+                'nullable', 'boolean',
+            ],
+
         ];
     }
 }

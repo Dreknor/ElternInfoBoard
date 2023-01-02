@@ -11,7 +11,7 @@ class searchRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->check();
     }
@@ -21,10 +21,10 @@ class searchRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'suche'    => [
+            'suche' => [
                 'required',
                 'string',
             ],

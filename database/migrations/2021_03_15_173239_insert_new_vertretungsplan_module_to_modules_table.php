@@ -1,31 +1,33 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
-
-class InsertNewVertretungsplanModuleToModulesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        \Illuminate\Support\Facades\DB::table('permissions')->insert([
-            'name'  => 'view vertretungsplan',
-            'guard_name'    => 'web',
+        DB::table('permissions')->insert([
+            'name' => 'view vertretungsplan',
+            'guard_name' => 'web',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('permissions')->insert([
-            'name'  => 'view vertretungsplan all',
-            'guard_name'    => 'web',
+        DB::table('permissions')->insert([
+            'name' => 'view vertretungsplan all',
+            'guard_name' => 'web',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('settings')->insert([
-            'setting'=> 'Vertretungsplan',
-            'category'=> 'module',
-            'options'=> '
+        DB::table('settings')->insert([
+            'setting' => 'Vertretungsplan',
+            'category' => 'module',
+            'options' => '
             {
                 "active":"0",
                 "rights":{"0":"view vertretungsplan"},
@@ -36,10 +38,10 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
                         "icon":"fas fa-columns"
                     }
             }',
-            'created_at'=> \Carbon\Carbon::now()
-    ]);
+            'created_at' => Carbon::now(),
+        ]);
 
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        Artisan::call('cache:clear');
     }
 
     /**
@@ -47,8 +49,7 @@ class InsertNewVertretungsplanModuleToModulesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-
     }
-}
+};

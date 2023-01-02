@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Model\Group;
 use App\Model\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -13,18 +12,26 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class AufnahmeImport implements ToCollection, WithHeadingRow
 {
-    protected $header;
-    protected $groups;
+    protected array $header;
 
-    public function __construct($header)
+    protected \Illuminate\Database\Eloquent\Collection $groups;
+
+    /**
+     * @param array $header
+     */
+    public function __construct(array $header)
     {
         $this->header = $header;
         $this->groups = Group::all();
     }
 
-    public function collection(Collection $rows)
+    /**
+     * @param Collection $collection
+     * @return void
+     */
+    public function collection(Collection $collection): void
     {
-        foreach ($rows as $row) {
+        foreach ($collection as $row) {
             set_time_limit(20);
 
             $user1 = null;
@@ -32,8 +39,8 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
 
             $row = array_values($row->toArray());
 
-            $AufnahmeGS = $this->groups->where('name', 'Aufnahme GS')->first();
-            $AufnahmeOS = $this->groups->where('name', 'Aufnahme OS')->first();
+            $AufnahmeGS = $this->groups->firstWhere('name', 'Aufnahme GS');
+            $AufnahmeOS = $this->groups->firstWhere('name', 'Aufnahme OS');
 
             if (strpos($row[$this->header['gruppen']], 'GS')) {
                 $Gruppe = $AufnahmeGS;
@@ -48,15 +55,15 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                     'email' => $row[$this->header['S1Email']],
                 ],
                     [
-                        'name'  => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
-                        'changePassword'  => 1,
-                        'password'      => Hash::make(config('app.import_aufnahme')),
+                        'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
+                        'changePassword' => 1,
+                        'password' => Hash::make(config('app.import_aufnahme')),
                         'lastEmail' => Carbon::now(),
                     ]);
 
                 if (! $user1->wasRecentlyCreated) {
                     $user1->update([
-                        'changeSettings'    => 1,
+                        'changeSettings' => 1,
                     ]);
                 }
 
@@ -80,7 +87,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
 
                 if (! $user2->wasRecentlyCreated) {
                     $user2->update([
-                        'changeSettings'    => 1,
+                        'changeSettings' => 1,
                     ]);
                 }
 

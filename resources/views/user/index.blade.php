@@ -85,18 +85,25 @@
 
                                 <td>
                                     @if(!is_null($user->sorgeberechtigter2))
-                                       {{$user->sorgeberechtigter2->name}}
+                                        {{$user->sorgeberechtigter2->name}}
                                     @endif
                                 </td>
                                 <td>
-                                            <a class="btn  @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-danger @else btn-success @endif  btn-sm" href="{{url('email/daily/'.$user->id)}}">
-                                                letzte Mail: {{optional($user->lastEmail)->format('d.m.Y')}} - Email senden?
-                                            </a>
+                                    <a class="btn  @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-danger @else btn-success @endif  btn-sm"
+                                       href="{{url('email/daily/'.$user->id)}}">
+                                        letzte Mail: {{$user->lastEmail?->format('d.m.Y')}} - Email senden?
+                                    </a>
                                 </td>
                                 <td>
-                                    <div class="btn btn-sm btn-danger user-delete" data-id="{{$user->id}}">
-                                        <i class="fas fa-user-slash"></i>
-                                    </div>
+                                    <form action="{{url('users').'/'.$user->id}}" method="post" class="form-inline">
+                                        @csrf
+                                        @method('delete')
+                                        <button type="submit" class="btn btn-sm btn-danger user_ajax-delete"
+                                                data-id="{{$user->id}}">
+                                            <i class="fas fa-user-slash"></i>
+                                        </button>
+                                    </form>
+
                                     @can('loginAsUser')
                                         <a href="{{url("showUser/$user->id")}}" class="btn btn-sm btn-warning">
                                             <i class="fas fa-eye"></i>

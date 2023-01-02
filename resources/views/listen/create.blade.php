@@ -28,16 +28,17 @@
                                         <option value="termin" selected>
                                             Terminliste
                                         </option>
-                                        <option value="eintrag" disabled>
+                                        <option value="eintrag">
                                             Eintrageliste
                                         </option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 col-sm-4">
                                     <label for="duration">
-                                        Dauer (in Minuten)
+                                        Dauer (in Minuten) für Terminlisten
                                     </label>
-                                    <input type="number" min="0" name="duration" id="duration" class="form-control" value="30">
+                                    <input type="number" min="0" name="duration" id="duration" class="form-control"
+                                           value="30">
                                 </div>
                             </div>
                             <div class="form-row">
