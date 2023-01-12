@@ -29,8 +29,8 @@ class createNachrichtRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'header' => [
-                'required',
+            'header'    => [
+                'required','max:120'
             ],
             'news' => [
                 Rule::requiredIf(request()->type != 'image'),
