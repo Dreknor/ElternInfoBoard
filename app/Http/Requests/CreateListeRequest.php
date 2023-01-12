@@ -52,6 +52,10 @@ class CreateListeRequest extends FormRequest
                 'sometimes',
                 'nullable',
             ],
+            'gruppen' => [
+                'array',
+                'min:1'
+            ]
         ];
     }
 }
