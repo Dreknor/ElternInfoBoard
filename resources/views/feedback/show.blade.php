@@ -83,36 +83,6 @@
                     </th>
                     <th>
 
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($emails as $email)
-                    <tr>
-                        <td>
-                            {{$email->created_at->format('d.m.Y H:i')}}
-                        </td>
-                        <td>
-                            {{$email->to}}
-                        </td>
-                        <td>
-                            {{$email->subject}}
-                        </td>
-                        <td>
-                            <div class="row">
-                                <div class="col-auto">
-                                    <a href="{{url('/feedback/show/'.$email->id)}}" class="card-link">
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
 @endsection
 
 
