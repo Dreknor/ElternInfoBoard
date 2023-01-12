@@ -19,12 +19,6 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
 
         ],
-        'Illuminate\Mail\Events\MessageSending' => [
-            \App\Listeners\LogSendingMessage::class,
-        ],
-        'Illuminate\Mail\Events\MessageSent' => [
-            \App\Listeners\LogSentMessage::class,
-        ],
     ];
 
     /**
