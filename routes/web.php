@@ -171,6 +171,7 @@ Route::middleware('auth')->group(function () {
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
+        Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
