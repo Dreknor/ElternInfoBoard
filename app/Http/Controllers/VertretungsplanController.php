@@ -29,7 +29,7 @@ class VertretungsplanController extends Controller
 
             return redirect(url('/'))->with([
                'type' => 'danger',
-               'Meldung' => ''
+               'Meldung' => $meldung
             ]);
         }
         $gruppen = '/keine';
