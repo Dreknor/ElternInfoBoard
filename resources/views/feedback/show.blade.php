@@ -64,24 +64,6 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5>Verlauf</h5>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>
-                        Datum
-                    </th>
-                    <th>
-                        An
-                    </th>
-                    <th>
-                        Betreff
-                    </th>
-                    <th>
 
 @endsection
 
