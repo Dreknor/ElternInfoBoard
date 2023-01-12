@@ -48,7 +48,7 @@ class ListenController extends Controller
 
         $listen = $listen->unique('id');
         $eintragungen = Listen_Eintragungen::query()->where('user_id', auth()->id())->orWhere('user_id', auth()->user()->sorg2)->get();
-        $termine = listen_termine::query()->where('reserviert_fuer', auth()->id())->orWhere('reserviert_fuer', auth()->user()->sorg2)->get();
+        $termine = listen_termine::query()->where('reserviert_fuer', '=', auth()->id())->orWhere('reserviert_fuer', '=', auth()->user()->sorg2)->get();
 
         return view('listen.index', [
             'listen' => $listen,
