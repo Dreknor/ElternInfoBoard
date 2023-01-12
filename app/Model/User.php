@@ -125,9 +125,26 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function listen_eintragungen()
+    public function listen_termine()
     {
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
+    }
+
+    public function getListenTermine()
+    {
+        $eigeneEintragungen = $this->listen_termine;
+
+        if (!is_null($this->sorg2)) {
+            $sorgEintragung = $this->sorgeberechtigter2?->listen_termine;
+            if (!is_null($sorgEintragung) and !is_null($eigeneEintragungen)) {
+                return $eigeneEintragungen->merge($sorgEintragung);
+            } elseif (is_null($eigeneEintragungen)) {
+                return $sorgEintragung;
+            }
+        }
+
+        // Merge collections and return single collection.
+        return $eigeneEintragungen;
     }
 
     //Sorgeberechtigter 2

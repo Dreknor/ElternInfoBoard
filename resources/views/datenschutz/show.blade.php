@@ -257,7 +257,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach($user->listen_eintragungen as $eintrag)
+                    @foreach($user->getListenTermine() as $eintrag)
                         <tr>
                             <td>
                                 {{$eintrag->liste->listenname}}
