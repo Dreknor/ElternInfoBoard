@@ -27,9 +27,9 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['permission:edit user', [
+        $this->middleware('permission:edit user', [
             'except' => ['logoutAsUser']
-        ]]);
+        ]);
     }
 
     /**
