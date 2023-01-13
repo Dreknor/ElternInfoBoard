@@ -94,7 +94,7 @@ class ListenTerminController extends Controller
      */
     public function update(Request $request, listen_termine $listen_termine)
     {
-        $Eintragungen = $request->user()->listen_eintragungen()->where('listen_id', $listen_termine->liste->id)->get();
+        $Eintragungen = $request->user()->getListenTermine()->where('listen_id', $listen_termine->liste->id);
 
         if (count($Eintragungen) > 0 and $listen_termine->liste->multiple != 1) {
             return redirect()->back()->with([

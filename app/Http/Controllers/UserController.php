@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
@@ -205,7 +206,7 @@ class UserController extends Controller
         Poll::where('author_id', $user->id)->update(['author_id' => null]);
         Poll_Votes::where('author_id', $user->id)->delete();
 
-        $user->listen_eintragungen()->delete();
+        $user->listen_termine()->delete();
         $user->userRueckmeldung()->delete();
         $user->reinigung()->delete();
 
@@ -237,25 +238,13 @@ class UserController extends Controller
                 'type' => 'danger',
             ]);
         }
-        session(['ownID' => $request->user()->id]);
+        session(['ownID' => Crypt::encryptString($request->user()->id)]);
 
         Auth::loginUsingId($id);
 
         return redirect()->to(url('/'));
     }
 
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function logoutAsUser(Request $request)
-    {
-        if ($request->session()->has('ownID')) {
-            Auth::loginUsingId($request->session()->pull('ownID'));
-        }
-
-        return redirect()->to(url('/'));
-    }
 
     /**
      * @param User $user

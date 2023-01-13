@@ -32,6 +32,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -171,6 +172,7 @@ Route::middleware('auth')->group(function () {
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
+        Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
@@ -266,8 +268,14 @@ Route::middleware('auth')->group(function () {
             Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
-        Route::get('logoutAsUser',[UserController::class, 'logoutAsUser']);
+        Route::get('logoutAsUser', function () {
+            if (session()->has('ownID')) {
+                Auth::loginUsingId(Crypt::decryptString(session()->get('ownID')));
+                session()->remove('ownID');
+            }
 
+            return redirect(url('/'));
+        });
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
             Route::resource('elternrat', ElternratController::class);

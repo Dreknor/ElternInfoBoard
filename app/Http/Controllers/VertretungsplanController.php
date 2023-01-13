@@ -20,6 +20,18 @@ class VertretungsplanController extends Controller
      */
     public function index()
     {
+        if (config('app.mitarbeiterboard') == ""){
+
+            $meldung = "Es ist ein Fehler aufgetreten.";
+                if (auth()->user()->can('edit settings')){
+                    $meldung .= " Die Einstellung LINK_MITARBEITERBOARD in der env-Datei muss eine URL zum MitarbeiterBoard enthalten.";
+                }
+
+            return redirect(url('/'))->with([
+               'type' => 'danger',
+               'Meldung' => $meldung
+            ]);
+        }
         $gruppen = '/keine';
         foreach (auth()->user()->groups as $group) {
             $gruppen .= '/'.$group->name;
