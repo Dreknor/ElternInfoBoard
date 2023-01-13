@@ -245,6 +245,7 @@ class UserController extends Controller
         return redirect()->to(url('/'));
     }
 
+
     /**
      * @param User $user
      * @param Int $sorg2

@@ -270,7 +270,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('logoutAsUser', function () {
             if (session()->has('ownID')) {
-                Auth::loginUsingId(Crypt::decryptString(session()->has('ownID')));
+                Auth::loginUsingId(Crypt::decryptString(session()->get('ownID')));
+                session()->remove('ownID');
             }
 
             return redirect(url('/'));
