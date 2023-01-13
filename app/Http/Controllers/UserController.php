@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
@@ -26,7 +27,9 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['permission:edit user']);
+        $this->middleware(['permission:edit user', ['except' => [
+            'logoutAsUser'
+        ]]]);
     }
 
     /**
@@ -237,7 +240,7 @@ class UserController extends Controller
                 'type' => 'danger',
             ]);
         }
-        session(['ownID' => $request->user()->id]);
+        session(['ownID' => Crypt::encryptString($request->user()->id)]);
 
         Auth::loginUsingId($id);
 
@@ -248,10 +251,11 @@ class UserController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
+
     public function logoutAsUser(Request $request)
     {
         if ($request->session()->has('ownID')) {
-            Auth::loginUsingId($request->session()->pull('ownID'));
+            Auth::loginUsingId(Crypt::decryptString($request->session()->has('ownID')));
         }
 
         return redirect()->to(url('/'));
