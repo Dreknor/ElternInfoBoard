@@ -27,9 +27,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:edit user', [
-            'except' => ['logoutAsUser']
-        ]);
+        $this->middleware(['permission:edit user']);
     }
 
     /**
@@ -243,20 +241,6 @@ class UserController extends Controller
         session(['ownID' => Crypt::encryptString($request->user()->id)]);
 
         Auth::loginUsingId($id);
-
-        return redirect()->to(url('/'));
-    }
-
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-
-    public function logoutAsUser(Request $request)
-    {
-        if ($request->session()->has('ownID')) {
-            Auth::loginUsingId(Crypt::decryptString($request->session()->has('ownID')));
-        }
 
         return redirect()->to(url('/'));
     }

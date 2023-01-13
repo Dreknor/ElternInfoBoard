@@ -32,6 +32,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -267,8 +268,13 @@ Route::middleware('auth')->group(function () {
             Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
-        Route::get('logoutAsUser',[UserController::class, 'logoutAsUser']);
+        Route::get('logoutAsUser', function () {
+            if (session()->has('ownID')) {
+                Auth::loginUsingId(Crypt::decryptString(session()->has('ownID')));
+            }
 
+            return redirect(url('/'));
+        });
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
             Route::resource('elternrat', ElternratController::class);
