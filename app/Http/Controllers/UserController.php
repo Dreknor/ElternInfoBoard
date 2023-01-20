@@ -50,10 +50,23 @@ class UserController extends Controller
      */
     public function create()
     {
+
+
+        if (auth()->user()->can('edit permission')) {
+            $roles = Role::all();
+        } elseif (auth()->user()->can('assign roles to users')) {
+            $roles = Role::whereHas('permissions', function ($query) {
+                $query->where('name', 'role is assignable');
+            })->get();
+        } else {
+            $roles = collect([]);
+        }
+
         return view('user.create', [
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
+            'roles' => $roles
         ]);
     }
 
@@ -71,19 +84,32 @@ class UserController extends Controller
         $user->lastEmail = Carbon::now();
         $user->save();
 
+
         $gruppen = $request->input('gruppen');
         if (isset($gruppen)) {
             if ($gruppen[0] == 'all') {
                 $gruppen = Group::where('protected', 0)->get();
             } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
-                #TODO Bereiche per Config definieren
                 $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
                 $gruppen = $gruppen->unique();
             } else {
                 $gruppen = Group::find($gruppen);
             }
+            $user->groups()->sync($gruppen);
+        }
 
-            $user->groups()->attach($gruppen);
+        if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
+            if (auth()->user()->can('edit permission')) {
+                $roles = Role::whereIn('name', $request->roles)->get();
+                $roles->unique();
+                $user->roles()->attach($roles);
+            } elseif (auth()->user()->can('assign roles to users')) {
+                $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
+                    $query->where('name', 'role is assignable');
+                })->get();
+                $roles->unique();
+                $user->roles()->attach($roles);
+            }
         }
 
         return redirect(url("users/$user->id"))->with([
@@ -100,6 +126,16 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        if (auth()->user()->can('edit permission')) {
+            $roles = Role::all();
+        } elseif (auth()->user()->can('assign roles to users')) {
+            $roles = Role::whereHas('permissions', function ($query) {
+                $query->where('name', 'role is assignable');
+            })->get();
+        } else {
+            $roles = collect([]);
+        }
+
         return view('user.show', [
             'user' => $user->load('groups'),
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
@@ -108,9 +144,7 @@ class UserController extends Controller
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();
             }),
-            'roles' => Cache::remember('role', 60 * 5, function () {
-                return Role::all();
-            }),
+            'roles' => $roles,
             'users' => User::where([
                 ['sorg2', null],
                 ['id', '!=', $user->id],
@@ -144,9 +178,26 @@ class UserController extends Controller
         if ($request->user()->can('edit permission')) {
             $permissions = $request->input('permissions');
             $user->syncPermissions($permissions);
+        }
 
-            $roles = $request->input('roles');
-            $user->syncRoles($roles);
+        if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
+            if (auth()->user()->can('edit permission')) {
+                $roles = Role::whereIn('name', $request->roles)->get();
+                $roles->unique();
+                $user->roles()->sync($roles);
+            } elseif (auth()->user()->can('assign roles to users')) {
+                $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
+                    $query->where('name', 'role is assignable');
+                })->get();
+                $roles->unique();
+
+                $old_roles = $user->roles()->whereDoesntHave('permissions', function ($query) {
+                    $query->where('name', 'role is assignable');
+                })->get();
+
+                $user->roles()->sync($roles);
+                $user->roles()->attach($old_roles);
+            }
         }
 
         if ($request->user()->can('set password') and $request->input('new-password') != '') {

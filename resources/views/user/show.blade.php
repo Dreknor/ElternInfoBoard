@@ -169,7 +169,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                @can('edit permission')
+                                @if($roles->count() > 0)
                                     @foreach($roles as $role)
                                         <div>
                                             <input type="checkbox" id="{{$role->name}}" name="roles[]" value="{{$role->name}}" @if($user->hasRole($role->name)) checked @endif>

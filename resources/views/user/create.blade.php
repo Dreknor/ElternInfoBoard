@@ -60,29 +60,61 @@
                                             </div>
                                         </div>
 
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <button type="submit" class="btn btn-success btn-block" id="btn-save">speichern</button>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-success btn-block" id="btn-save">
+                                                    speichern
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
 
                                 </div>
                             </div>
 
                         </div>
-                        <div class="col-5 offset-1">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title">
-                                        Gruppen
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    @include('include.formGroups')
-                                </div>
-                                <div class="card-footer">
+                        <div class="col-6">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title">
+                                                Gruppen
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            @include('include.formGroups')
+                                        </div>
+                                        <div class="card-footer">
 
+                                        </div>
+                                    </div>
                                 </div>
+                                <div class="col">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title">
+                                                Rollen
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            @if($roles->count() > 0)
+                                                @foreach($roles as $role)
+                                                    <div>
+                                                        <input type="checkbox" id="{{$role->name}}" name="roles[]"
+                                                               value="{{$role->name}}">
+                                                        <label for="{{$role->name}}">{{$role->name}}</label>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <p>Kein Recht zur Rollenzuordnung</p>
+                                            @endcan
+                                        </div>
+                                        <div class="card-footer">
+
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
