@@ -45,18 +45,25 @@
                                 {{$userRueckmeldung->user->name}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
-                                <th>
-                                    @if($userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
+                                <td class="text-center">
+                                    @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                         @switch($option->type)
                                             @case('text')
-                                                {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
-                                                @break
-                                            @case('check')
-                                                1
-                                                @break
-                                        @endswitch
-                                    @endif
-                                </th>
+                                                @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
+                                                    {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
+                                                @else
+                                                    <i class="fa fa-slash text-danger">
+
+                                                        @endif
+                                                        @break
+                                                        @case('check')
+                                                            <i class="fa fa-check text-success">
+                                                                @break
+                                                                @endswitch
+                                                                @else
+                                                                    <i class="fa fa-slash text-danger">
+                                                @endif
+                                </td>
                             @endforeach
                         </tr>
                     @endforeach
