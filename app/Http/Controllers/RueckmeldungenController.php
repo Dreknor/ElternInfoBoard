@@ -7,9 +7,11 @@ use App\Http\Requests\createAbfrageRequest;
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Http\Requests\updateRueckmeldeDateRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
+use App\Model\AbfrageAntworten;
 use App\Model\AbfrageOptions;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
+use App\Model\UserRueckmeldungen;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -145,17 +147,31 @@ class RueckmeldungenController extends Controller
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
-        if (! auth()->user()->can('manage rueckmeldungen')) {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
-        return view('rueckmeldungen.show', [
-            'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->orderByDesc('created_at')->get(),
-            'rueckmeldung' => $rueckmeldung,
-        ]);
+        if ($rueckmeldung->type == 'email') {
+            return view('rueckmeldungen.show', [
+                'rueckmeldungen' => $rueckmeldung->userRueckmeldungen()->orderByDesc('created_at')->get(),
+                'rueckmeldung' => $rueckmeldung,
+            ]);
+        } elseif ($rueckmeldung->type == 'abfrage') {
+            //dd($rueckmeldung->userRueckmeldungen);
+            return view('rueckmeldungen.showAbfrage', [
+                'rueckmeldung' => $rueckmeldung->load('userRueckmeldungen'),
+            ]);
+        } else {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Keine Darstellung für diesen Rückmeldetyp möglich',
+            ]);
+        }
+
+
     }
 
     /**
@@ -203,6 +219,7 @@ class RueckmeldungenController extends Controller
                 return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
                 break;
             case 'abfrage':
+                //dd($rueckmeldung->userRueckmeldungen);
                 return Excel::download(new AbfrageExport($rueckmeldung), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
 
                 break;
@@ -223,6 +240,12 @@ class RueckmeldungenController extends Controller
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
     {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
         $rueckmeldung = new Rueckmeldungen($request->validated());
         $rueckmeldung->post_id = $posts_id;
         $rueckmeldung->save();
@@ -230,6 +253,58 @@ class RueckmeldungenController extends Controller
         return redirect()->to(url('/home'))->with([
             'type' => 'success',
             'Meldung' => 'Rückmeldung erstellt.',
+        ]);
+    }
+
+
+    public function editUserAbfrage(Rueckmeldungen $rueckmeldung, UserRueckmeldungen $userrueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+        return view('rueckmeldungen.updateAbfrage', [
+            'rueckmeldung' => $rueckmeldung,
+            'userRueckmeldung' => $userrueckmeldung
+        ]);
+    }
+
+    public function updateUserAbfrage(Request $request, Rueckmeldungen $rueckmeldung, UserRueckmeldungen $userrueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+        AbfrageAntworten::where('rueckmeldung_id', $userrueckmeldung->id)->delete();
+
+        $userrueckmeldungenController = new UserRueckmeldungenController();
+        $userrueckmeldungenController->generateAnswerModels($request, $userrueckmeldung);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => "Daten geändert"
+        ]);
+    }
+
+    public function deleteUserAbfrage(Rueckmeldungen $rueckmeldung, UserRueckmeldungen $userrueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+        AbfrageAntworten::where('rueckmeldung_id', $userrueckmeldung->id)->delete();
+        $userrueckmeldung->delete();
+
+
+        return redirect(url('rueckmeldungen/' . $rueckmeldung->id . '/show'))->with([
+            'type' => 'success',
+            'Meldung' => "Rückmeldung gelöscht"
         ]);
     }
 

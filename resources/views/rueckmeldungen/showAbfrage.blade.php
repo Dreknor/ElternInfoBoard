@@ -4,6 +4,7 @@
 @endsection
 
 @section('content')
+    <a href="{{url('rueckmeldungen')}}" class="btn btn-round btn-primary">zurück</a>
 
     <div class="container-fluid">
         <div class="card">
@@ -17,15 +18,14 @@
                 </div>
             </div>
             <div class="card-body">
-                <table>
+                <table class="table table-bordered table-hover table-striped">
                     <thead>
                     <tr>
+                        <th></th>
                         <th>
                             Name
                         </th>
-                        <th>
-                            Zeitpunkt
-                        </th>
+
                         @foreach($rueckmeldung->options as $option)
                             <th>
                                 {{$option->option}}
@@ -37,10 +37,12 @@
                     @foreach($rueckmeldung->userRueckmeldungen as $userRueckmeldung)
                         <tr>
                             <td>
-                                {{$userRueckmeldung->user->name}}
+                                <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/edit/'.$userRueckmeldung->id)}}">
+                                    <i class="fa fa-edit"></i>
+                                </a>
                             </td>
                             <td>
-                                {{$userRueckmeldung->created_at->format('Y-m-d H:i')}}
+                                {{$userRueckmeldung->user->name}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
                                 <th>

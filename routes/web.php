@@ -111,6 +111,11 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldung/create/{post}/{type}', [RueckmeldungenController::class, 'create']);
         Route::put('rueckmeldung/{rueckmeldung}/update/date', [RueckmeldungenController::class, 'updateDate']);
 
+        Route::get('userrueckmeldung/{rueckmeldung}/edit/{userrueckmeldung}', [RueckmeldungenController::class, 'editUserAbfrage']);
+        Route::put('userrueckmeldung/{rueckmeldung}/update/{userrueckmeldung}', [RueckmeldungenController::class, 'updateUserAbfrage']);
+        Route::delete('userrueckmeldung/{rueckmeldung}/delete/{userrueckmeldung}', [RueckmeldungenController::class, 'deleteUserAbfrage']);
+
+
         //Text userRueckmeldungen
         Route::post('/rueckmeldung/{posts_id}', [UserRueckmeldungenController::class, 'sendRueckmeldung']);
         Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'edit']);
@@ -128,6 +133,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
         Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
+
 
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);
