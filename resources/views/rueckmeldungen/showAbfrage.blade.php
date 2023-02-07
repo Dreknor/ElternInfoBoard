@@ -45,7 +45,7 @@
                                 {{$userRueckmeldung->user->name}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
-                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id)) bg-success @endif">
+                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type == 'check') bg-success @endif">
                                     @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                         @switch($option->type)
                                             @case('text')
