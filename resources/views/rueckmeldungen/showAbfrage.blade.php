@@ -45,23 +45,23 @@
                                 {{$userRueckmeldung->user->name}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
-                                <td class="text-center">
+                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id)) bg-success @endif">
                                     @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                         @switch($option->type)
                                             @case('text')
                                                 @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
                                                     {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
                                                 @else
-                                                    <i class="fa fa-slash text-danger">
+                                                    <i class="fa fa-slash ">
 
                                                         @endif
                                                         @break
                                                         @case('check')
-                                                            <i class="fa fa-check text-success">
+                                                            <i class="fa fa-check">
                                                                 @break
                                                                 @endswitch
                                                                 @else
-                                                                    <i class="fa fa-slash text-danger">
+                                                                    <i class="fa fa-slash ">
                                                 @endif
                                 </td>
                             @endforeach
