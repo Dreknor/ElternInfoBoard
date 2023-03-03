@@ -32,14 +32,24 @@
 
                         </div>
                     @endcan
+                    @can('edit user')
+                        <div class="col">
+                            <p class=" pull-right">
+                                <a href="{{url('users/mass/delete')}}" class="btn btn-warning">
+                                    <i class="far fa-trash"></i>
+                                    mehrere Benutzer löschen
+                                </a>
+                            </p>
+                        </div>
+                    @endcan
                 </div>
             </div>
             <div class="card-body">
                 <table class="table table-hover" id="userTable">
                     <thead>
-                        <tr>
-                            <td></td>
-                            <th>Name</th>
+                    <tr>
+                        <td></td>
+                        <th>Name</th>
                             <th>E-Mail</th>
                             <th>Gruppen</th>
                             <th>Rechte</th>
