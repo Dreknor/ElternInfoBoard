@@ -128,6 +128,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('rueckmeldungen/{post}/', [RueckmeldungenController::class, 'destroyAbfrage']);
 
 
+
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
         Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
@@ -240,12 +241,14 @@ Route::middleware('auth')->group(function () {
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
+            Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
+            Route::delete('users/mass/delete', [UserController::class, 'massDelete']);
 
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
             //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
-                //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
-                //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
+            //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
+            //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
         });
 
         //Gruppenverwaltung

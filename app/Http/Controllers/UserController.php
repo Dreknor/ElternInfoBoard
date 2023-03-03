@@ -229,50 +229,60 @@ class UserController extends Controller
      * @param int $id
      * @return RedirectResponse
      */
-    public function destroy(int $id)
+    public function destroy(int $id, $redirect = true)
     {
-        $user = User::find($id);
-        $user->groups()->detach();
+        try {
+            $user = User::findOrFail($id);
+            $user->groups()->detach();
 
-        if ($user->sorg2 != null) {
-            $sorg2 = User::where('id', '=', $user->sorg2)->first();
-            if (! is_null($sorg2)) {
-                $sorg2->update([
+            if ($user->sorg2 != null) {
+                $sorg2 = User::where('id', '=', $user->sorg2)->first();
+                if (!is_null($sorg2)) {
+                    $sorg2->update([
+                            'sorg2' => null,
+                        ]
+                    );
+                }
+
+                $user->update([
                     'sorg2' => null,
-                ]
-                );
+                ]);
             }
 
-            $user->update([
-                'sorg2' => null,
-            ]);
+            $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
+
+            Listen_Eintragungen::where('created_by', $user->id)->delete();
+            Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
+            Discussion::where('owner', $user->id)->update(['owner' => null]);
+            listen_termine::where('reserviert_fuer', $user->id)->delete();
+            Poll::where('author_id', $user->id)->update(['author_id' => null]);
+            Poll_Votes::where('author_id', $user->id)->delete();
+
+            $user->listen_termine()->delete();
+            $user->userRueckmeldung()->delete();
+            $user->reinigung()->delete();
+
+            $user->schickzeiten_own()->delete();
+            $user->krankmeldungen()->withTrashed()->forceDelete();
+            $user->comments()->delete();
+
+            Post::where('author', $user->id)->update(['author' => null]);
+
+            $user->delete();
+
+            $Fehler = "";
+        } catch (\Exception $exception) {
+            $Fehler = $exception;
         }
 
-        $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
-
-        Listen_Eintragungen::where('created_by', $user->id)->delete();
-        Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
-        Discussion::where('owner', $user->id)->update(['owner' => null]);
-        listen_termine::where('reserviert_fuer', $user->id)->delete();
-        Poll::where('author_id', $user->id)->update(['author_id' => null]);
-        Poll_Votes::where('author_id', $user->id)->delete();
-
-        $user->listen_termine()->delete();
-        $user->userRueckmeldung()->delete();
-        $user->reinigung()->delete();
-
-        $user->schickzeiten_own()->delete();
-        $user->krankmeldungen()->withTrashed()->forceDelete();
-        $user->comments()->delete();
-
-        Post::where('author', $user->id)->update(['author' => null]);
-
-        $user->delete();
-
-        return redirect()->back()->with([
-            'type' => 'success',
-            'Meldung' => 'Benutzer gelöscht',
-        ]);
+        if ($redirect) {
+            return redirect()->back()->with([
+                'type' => ($Fehler == "") ? 'success' : 'danger',
+                'Meldung' => ($Fehler != "") ? $Fehler : 'Benutzer gelöscht',
+            ]);
+        } else {
+            return $Fehler;
+        }
 
     }
 
@@ -322,6 +332,48 @@ class UserController extends Controller
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Verknüpfung der Konten aufgehoben',
+        ]);
+    }
+
+    public function showMassDelete()
+    {
+
+
+        $users = User::query()->whereHas('roles', function ($query) {
+            return $query->where('name', 'Eltern');
+        })->doesntHave('groups')->get();
+
+        return view('user.showMassDelete')->with([
+            'users' => $users
+        ]);
+    }
+
+    public function massDelete(Request $request)
+    {
+
+        if ($request->users) {
+            $fehler = "";
+
+            foreach ($request->users as $user) {
+                $ergebnis = $this->destroy($user, false);
+                if ($ergebnis != "") {
+                    if ($fehler) {
+                        $fehler .= ', ' . $user;
+                    } else {
+                        $fehler = 'Fehler bei folgenden Benutzern: ' . $user;
+                    }
+                }
+            }
+
+            return redirect()->back()->with([
+                'type' => ($fehler == "") ? 'success' : 'danger',
+                'Meldung' => ($fehler != "") ? $fehler : 'Benutzer gelöscht',
+            ]);
+        }
+
+        return redirect(url('users'))->with([
+            'type' => 'warning',
+            'Meldung' => "Keine Benutzer zum Löschen ausgewählt"
         ]);
     }
 }
