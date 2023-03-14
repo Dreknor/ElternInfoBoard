@@ -34,6 +34,7 @@ use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class NachrichtenController
@@ -691,7 +692,7 @@ class NachrichtenController extends Controller
      * @param Post $post
      * @return array
      */
-    public function sendMailToGroupsUsers(array $gruppen, Post $post): array
+    public function sendMailToGroupsUsers(Collection|array $gruppen, Post $post): array
     {
         $MailGruppen = [];
 
