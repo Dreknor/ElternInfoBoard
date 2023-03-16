@@ -35,23 +35,38 @@
 @section('content')
     <div class="container-fluid">
         <div class="row justify-content-center">
-                    <div class="col-md-12 col-sm-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>
-                                    aktuelle Listen
-                                </h5>
-                            </div>
-                            @if(count($listen)<1)
-                                <div class="card-body alert-info">
-                                    <p>
-                                        Es wurden keine aktuellen Listen gefunden
-                                    </p>
+            <div class="col-md-12 col-sm-12">
+                <div class="card">
+                    <div class="card-header border-bottom">
+                        <h5>
+                            aktuelle Listen
+                        </h5>
+                    </div>
+                    <div class="card-body ">
+                        @if(count($listen)<1)
+                            <p>
+                                Es wurden keine aktuellen Listen gefunden
+                            </p>
+                        @endif
+                        <div class="card-columns">
+                            @can('create terminliste')
+                                <div class="card border">
+                                    <div class="card-header border-bottom">
+                                        <h5>
+                                            Neue Liste
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <a class="btn btn-block btn-outline-success text-success"
+                                           href="{{url('listen/create')}}">
+                                            <div class="m-4">
+                                                <i class="fa fa-plus"></i> neue Liste erstellen
+                                            </div>
+                                        </a>
+                                    </div>
                                 </div>
-                            @endif
-                        </div>
-                        @if(count($listen)>=1)
-                            <div class="card-columns">
+                            @endcan
+                            @if(count($listen)>=1)
                                 @foreach($listen as $liste)
                                     @if($liste->type == 'termin')
                                         @include('listen.cards.terminListe')
@@ -59,17 +74,19 @@
                                         @include('listen.cards.eintragListe')
                                     @endif
                                 @endforeach
-                            </div>
-                        @endif
+
+                            @endif
+                        </div>
                     </div>
+                </div>
+            </div>
         </div>
-    </div>
-    @if(auth()->user()->can('edit terminliste'))
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        abgelaufene Listen
+        @if(auth()->user()->can('edit terminliste'))
+            <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            abgelaufene Listen
                     </h5>
                 </div>
                 <div class="card-body">
