@@ -58,12 +58,15 @@ class FeedbackController extends Controller
                 // maximum allowed file size
                 if ($document->getError() == 1) {
                     $max_size = $document->getMaxFileSize() / 1024 / 1024;  // Get size in Mb
-                    $error = 'The document size must be less than '.$max_size.'Mb.';
+                    $error = 'The document size must be less than ' . $max_size . 'Mb.';
 
                     return redirect()->back()->with([
                         'type' => 'danger',
                         'Meldung' => $error,
                     ]);
+                }
+                foreach ($files as $media) {
+                    $data[] = $media->getPath();
                 }
             }
         }
