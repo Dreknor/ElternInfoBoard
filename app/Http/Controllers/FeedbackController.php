@@ -65,9 +65,7 @@ class FeedbackController extends Controller
                         'Meldung' => $error,
                     ]);
                 }
-                foreach ($files as $media) {
-                    $data[] = $media->getPath();
-                }
+                $data[] = $document;
             }
         }
 
@@ -88,16 +86,18 @@ class FeedbackController extends Controller
             $data['document'][] = $media->getPath();
         }
 */
+        Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
+        $feedback = [
+            'type' => 'success',
+            'Meldung' => 'Nachricht wurde versandt',
+        ];
         try {
-            Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
-            $feedback = [
-                'type' => 'success',
-                'Meldung' => 'Nachricht wurde versandt',
-            ];
+
         } catch (Exception $e) {
+
             $feedback = [
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: '.$e->getMessage(),
+                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: ' . $e->getMessage(),
             ];
         }
 

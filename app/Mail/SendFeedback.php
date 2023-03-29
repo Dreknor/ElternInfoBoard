@@ -48,7 +48,7 @@ class SendFeedback extends Mailable
 
         if (count($this->data) > 0) {
             foreach ($this->data as $file) {
-                $Mail->attach($file[0]);
+                $Mail->attach($file);
             }
         }
 
