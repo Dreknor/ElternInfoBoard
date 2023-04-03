@@ -290,6 +290,59 @@ class RueckmeldungenController extends Controller
         ]);
     }
 
+    public function createUserAbfrage(Rueckmeldungen $rueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $users = $rueckmeldung->post->users;
+        return view('rueckmeldungen.createUserRueckmeldungAbfrage', [
+            'rueckmeldung' => $rueckmeldung,
+            'users' => $users->sortBy('name')
+        ]);
+    }
+
+    public function storeNewUserAbfrage(Request $request, Rueckmeldungen $rueckmeldung)
+    {
+        if (!auth()->user()->can('manage rueckmeldungen')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $userRueckmeldung = UserRueckmeldungen::where('post_id', $rueckmeldung->post_id)->where('users_id', $request->user)->latest()->limit(1)->get();
+
+        if ($rueckmeldung->multiple != 1 and $userRueckmeldung != null) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Rückmeldung bereits abgegeben',
+            ]);
+        }
+
+        $newUserRueckmeldung = new UserRueckmeldungen([
+            'post_id' => $rueckmeldung->post_id,
+            'users_id' => $request->user,
+            'text' => ' ',
+            'rueckmeldung_number' => ($userRueckmeldung->first() != null) ? $userRueckmeldung->first()->rueckmeldung_number : 1
+        ]);
+        $newUserRueckmeldung->save();
+
+        $userrueckmeldungenController = new UserRueckmeldungenController();
+
+        $userrueckmeldungenController->generateAnswerModels($request, $newUserRueckmeldung);
+
+        return redirect(url('rueckmeldungen/' . $rueckmeldung->id . '/show'))->with([
+            'type' => 'success',
+            'Meldung' => 'Rückmeldung gespeichert',
+        ]);
+
+    }
+
     public function deleteUserAbfrage(Rueckmeldungen $rueckmeldung, UserRueckmeldungen $userrueckmeldung)
     {
         if (!auth()->user()->can('manage rueckmeldungen')) {
@@ -307,7 +360,6 @@ class RueckmeldungenController extends Controller
             'Meldung' => "Rückmeldung gelöscht"
         ]);
     }
-
     /**
      * Store a newly created Abfrage in storage.
      *

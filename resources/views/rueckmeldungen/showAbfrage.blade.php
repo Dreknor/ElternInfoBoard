@@ -15,6 +15,15 @@
                             Rückmeldungen
                         </h5>
                     </div>
+                    <div class="col-auto pull-right">
+                        <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/new')}}" class="btn btn-outline-info">
+                            <i class="fa fa-plus-circle"></i>
+                            <div class="d-none d-md-inline">
+                                neue Rückmeldung anlegen
+                            </div>
+                        </a>
+
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -45,7 +54,7 @@
                                 {{$userRueckmeldung->user->name}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
-                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type == 'check') bg-success @endif">
+                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type) bg-success @endif">
                                     @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                         @switch($option->type)
                                             @case('text')
@@ -53,7 +62,6 @@
                                                     {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
                                                 @else
                                                     <i class="fa fa-slash ">
-
                                                         @endif
                                                         @break
                                                         @case('check')
