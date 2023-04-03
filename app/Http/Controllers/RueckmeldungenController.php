@@ -302,7 +302,7 @@ class RueckmeldungenController extends Controller
         $users = $rueckmeldung->post->users;
         return view('rueckmeldungen.createUserRueckmeldungAbfrage', [
             'rueckmeldung' => $rueckmeldung,
-            'users' => $users->sortBy('name')
+            'users' => $users->sortBy('name')->unique('id')
         ]);
     }
 
