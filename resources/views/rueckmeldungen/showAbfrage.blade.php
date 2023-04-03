@@ -75,6 +75,18 @@
                             @endforeach
                         </tr>
                     @endforeach
+                    <tr class="text-center">
+                        <th colspan="2">
+                            Summe:
+                        </th>
+                        @foreach($rueckmeldung->options as $option)
+                            <th>
+                                @if($option->type == 'check')
+                                    {{$option->answers->count()}}
+                                @endif
+                            </th>
+                        @endforeach
+                    </tr>
                     </tbody>
                 </table>
             </div>
