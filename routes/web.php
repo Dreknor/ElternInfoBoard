@@ -241,6 +241,8 @@ Route::middleware('auth')->group(function () {
 
             Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
+            Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
+            Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
             Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);

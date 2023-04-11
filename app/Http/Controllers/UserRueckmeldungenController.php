@@ -223,7 +223,7 @@ class UserRueckmeldungenController extends Controller
                     'rueckmeldung_id' => $userRueckmeldung->id,
                     'user_id' => auth()->id(),
                     'option_id' => $option,
-                    'answer' => '',
+                    'answer' => '1',
                 ];
             }
         }

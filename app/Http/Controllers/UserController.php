@@ -12,6 +12,7 @@ use App\Model\Poll;
 use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
+use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,8 +26,11 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct()
+    private $groupsRepository;
+
+    public function __construct(GroupsRepository $groupsRepository)
     {
+        $this->groupsRepository = $groupsRepository;
         $this->middleware(['permission:edit user']);
     }
 
@@ -164,13 +168,8 @@ class UserController extends Controller
         $user->fill($request->validated());
         $gruppen = $request->input('gruppen');
 
-        if (! is_null($gruppen)) {
-            if ($gruppen[0] == 'all') {
-                $gruppen = Group::all();
-            } else {
-                $gruppen = Group::find($gruppen);
-            }
-        }
+        $gruppen = $this->groupsRepository->getGroups($gruppen);
+
 
         $user->groups()->detach();
         $user->groups()->attach($gruppen);

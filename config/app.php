@@ -235,6 +235,7 @@ return [
     'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
     'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),
     'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', Carbon::now()->format('dmY')),
+    'import_verein' => env('PW_IMPORT_VEREIN', Carbon::now()->format('dmY')),
 
     //Reactions
     'enable_reactions' => env('ENABLE_REACTIONS', true),

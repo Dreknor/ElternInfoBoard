@@ -24,9 +24,18 @@
                     @can('import user')
                         <div class="col">
                             <p class=" pull-right">
-                                <a href="{{url('users/import')}}" class="btn btn-secondary">
+                                <a href="{{url('users/import')}}" class="btn btn-outline-info">
                                     <i class="far fa-address-book"></i>
                                     Benutzer importieren
+                                </a>
+                            </p>
+
+                        </div>
+                        <div class="col">
+                            <p class=" pull-right">
+                                <a href="{{url('users/importVerein')}}" class="btn btn-outline-warning">
+                                    <i class="far fa-address-book"></i>
+                                    Vereinsmitglieder importieren
                                 </a>
                             </p>
 
