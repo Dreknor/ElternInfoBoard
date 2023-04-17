@@ -40,17 +40,21 @@ class VereinImport implements ToCollection, WithHeadingRow
                 $email = explode(';', $row['person_e_mail_privat']);
                 if (count($email) > 1) {
                     foreach ($email as $mail) {
-                        $user = User::where('email', $mail)->first();
+                        $user = User::where('email', Str::remove(' ', $mail))->first();
                         if (!is_null($user)) {
                             $email = $user->email;
                         }
                     }
+
+                    if (is_array($email)) {
+                        $email = $email[0];
+                    }
                 } else {
-                    $email = $email[0];
+                    $email = $row['person_e_mail_privat'];
                 }
 
                 $user1 = User::firstOrCreate([
-                    'email' => $email,
+                    'email' => "$email",
                 ],
                     [
                         'name' => $row['person_vorname_nachname'],
@@ -67,6 +71,7 @@ class VereinImport implements ToCollection, WithHeadingRow
 
                 $user1->assignRole('Vereinsmitglied');
                 $user1->groups()->attach($this->Gruppe);
+
             }
         }
     }
