@@ -7,6 +7,7 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -36,8 +37,20 @@ class VereinImport implements ToCollection, WithHeadingRow
 
 
             if (!is_null($row['person_e_mail_privat'])) {
+                $email = explode(';', $row['person_e_mail_privat']);
+                if (count($email) > 1) {
+                    foreach ($email as $mail) {
+                        $user = User::where('email', $mail)->first();
+                        if (!is_null($user)) {
+                            $email = $user->email;
+                        }
+                    }
+                } else {
+                    $email = $email[0];
+                }
+
                 $user1 = User::firstOrCreate([
-                    'email' => $row['person_e_mail_privat'],
+                    'email' => $email,
                 ],
                     [
                         'name' => $row['person_vorname_nachname'],
