@@ -168,11 +168,12 @@ class UserController extends Controller
         $user->fill($request->validated());
         $gruppen = $request->input('gruppen');
 
-        $gruppen = $this->groupsRepository->getGroups($gruppen);
+        if (!is_null($gruppen)) {
+            $gruppen = $this->groupsRepository->getGroups($gruppen);
+            $user->groups()->detach();
+            $user->groups()->attach($gruppen);
+        }
 
-
-        $user->groups()->detach();
-        $user->groups()->attach($gruppen);
 
         if ($request->user()->can('edit permission')) {
             $permissions = $request->input('permissions');
