@@ -18,10 +18,15 @@ class GroupsController extends Controller
      */
     public function index()
     {
-        if (auth()->user()->can('view groups')) {
+        if (auth()->user()->can('edit groups')) {
             $groups = Group::with('users')->get();
-        } else {
+        } elseif (auth()->user()->can('view groups')) {
             $groups = auth()->user()->groups;
+        } else {
+            return redirect(url('/'))->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt'
+            ]);
         }
 
         return view('groups.index')->with([
