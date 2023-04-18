@@ -97,7 +97,7 @@ class User extends Authenticatable
     /**
      * Eigene Posts
      *
-     * @return HasManyDeep
+     * @return HasMany
      */
     public function own_posts()
     {

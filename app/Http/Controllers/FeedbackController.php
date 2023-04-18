@@ -30,8 +30,7 @@ class FeedbackController extends Controller
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
-            })->orderBy('name')->get(),
-            'emails' => (! auth()->user()->can('see mails')) ? auth()->user()->mails : MailModel::orderByDesc('created_at')->paginate(30),
+            })->orderBy('name')->get()
         ]);
     }
 
