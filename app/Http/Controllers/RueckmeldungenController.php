@@ -96,7 +96,9 @@ class RueckmeldungenController extends Controller
         }
 
         $rueckmeldung->update($request->validated());
+
         $rueckmeldung->update([
+            'text' => $request->description,
             'max_answers' => $request->max_number,
         ]);
 
