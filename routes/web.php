@@ -141,6 +141,7 @@ Route::middleware('auth')->group(function () {
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
+        Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 

@@ -83,5 +83,14 @@ class Rueckmeldungen extends Model
                 ]);
             }
         });
+
+        static::updated(function ($rueckmeldung) {
+            $post = $rueckmeldung->post;
+            if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+                $post->update([
+                    'archiv_ab' => $rueckmeldung->ende,
+                ]);
+            }
+        });
     }
 }
