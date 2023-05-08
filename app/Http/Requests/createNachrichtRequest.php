@@ -55,7 +55,10 @@ class createNachrichtRequest extends FormRequest
             ],
             'external' => [
                 'nullable', 'sometimes','boolean',
-            ]
+            ],
+            'wp_push' => [
+                'nullable', 'sometimes','boolean',
+            ],
 
         ];
     }

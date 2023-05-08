@@ -18,6 +18,7 @@ use App\Model\User;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
+use App\Repositories\WordpressRepository;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
@@ -151,11 +152,18 @@ class NachrichtenController extends Controller
         $external = Cache::remember('external_offers', 120, function (){
            return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
+        $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
+            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+                return true;
+            }
+           return false;
+        });
 
 
         return view('nachrichten.create', [
             'gruppen' => $gruppen,
-            'external' => $external
+            'external' => $external,
+            'wp_push' =>$wp_push
         ]);
     }
 
@@ -183,13 +191,20 @@ class NachrichtenController extends Controller
         $external = Cache::remember('external_offers', 120, function (){
             return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
+        $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
+            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+                return true;
+            }
+            return false;
+        });
 
         return view('nachrichten.edit', [
             'gruppen' => $gruppen,
             'post' => $posts,
             'rueckmeldung' => $rueckmeldung,
             'kiosk' => null,
-            'external' => $external
+            'external' => $external,
+            'wp_push' => $wp_push
         ]);
     }
 
@@ -237,6 +252,11 @@ class NachrichtenController extends Controller
             if ($post->released) {
                 $this->push($post);
             }
+        }
+
+        if ($request->wp_push){
+            $repository = new WordpressRepository();
+            $repository->should_post($post);
         }
 
         //Dateien verarbeiten
@@ -391,6 +411,13 @@ class NachrichtenController extends Controller
         ($posts->news == '') ? $posts->news = $posts->header : null;
 
         $posts->save();
+
+
+        if ($request->wp_push){
+            $repository = new WordpressRepository();
+            $repository->should_post($posts);
+        }
+
 
         //Gruppen
 

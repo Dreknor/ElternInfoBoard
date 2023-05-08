@@ -27,7 +27,7 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasRelationships;
     use Reactable;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external','published_wp_id'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',

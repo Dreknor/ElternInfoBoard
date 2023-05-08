@@ -60,7 +60,17 @@
                         </div>
                     </div>
                 @endif
-
+                @if($wp_push)
+                    <div class="col-md-auto col-sm-12">
+                        <div class="form-group">
+                            <label>Homepage veröffentlichen?</label>
+                            <select class="custom-select" name="wp_push">
+                                <option value="0" selected>nein</option>
+                                <option value="1" >ja</option>
+                            </select>
+                        </div>
+                    </div>
+                @endif
             </div>
             <div class="row">
                 <div class="col-md-12">

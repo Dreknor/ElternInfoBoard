@@ -48,6 +48,17 @@
                             </div>
                         </div>
                     @endif
+                    @if($wp_push)
+                        <div class="col-md-auto col-sm-12">
+                            <div class="form-group">
+                                <label>Homepage veröffentlichen?</label>
+                                <select class="custom-select" name="wp_push">
+                                    <option value="0" @if($post->published_wp_id == NULL) selected @else disabled @endif>nein</option>
+                                    <option value="1"  @if($post->published_wp_id != NULL) selected @endif>ja</option>
+                                </select>
+                            </div>
+                        </div>
+                    @endif
                     <div class="col-md-auto col-sm-12">
                         <div class="form-group">
                             <label>zuletzt bearbeitet:</label>
