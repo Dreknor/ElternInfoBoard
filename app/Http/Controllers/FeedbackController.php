@@ -30,8 +30,7 @@ class FeedbackController extends Controller
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
-            })->orderBy('name')->get(),
-            'emails' => (! auth()->user()->can('see mails')) ? auth()->user()->mails : MailModel::orderByDesc('created_at')->paginate(30),
+            })->orderBy('name')->get()
         ]);
     }
 
@@ -58,13 +57,14 @@ class FeedbackController extends Controller
                 // maximum allowed file size
                 if ($document->getError() == 1) {
                     $max_size = $document->getMaxFileSize() / 1024 / 1024;  // Get size in Mb
-                    $error = 'The document size must be less than '.$max_size.'Mb.';
+                    $error = 'The document size must be less than ' . $max_size . 'Mb.';
 
                     return redirect()->back()->with([
                         'type' => 'danger',
                         'Meldung' => $error,
                     ]);
                 }
+                $data[] = $document;
             }
         }
 
@@ -85,16 +85,18 @@ class FeedbackController extends Controller
             $data['document'][] = $media->getPath();
         }
 */
+        Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
+        $feedback = [
+            'type' => 'success',
+            'Meldung' => 'Nachricht wurde versandt',
+        ];
         try {
-            Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
-            $feedback = [
-                'type' => 'success',
-                'Meldung' => 'Nachricht wurde versandt',
-            ];
+
         } catch (Exception $e) {
+
             $feedback = [
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: '.$e->getMessage(),
+                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: ' . $e->getMessage(),
             ];
         }
 

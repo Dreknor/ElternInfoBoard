@@ -32,7 +32,7 @@
                     @foreach($rueckmeldungen as $rueckmeldung)
                         <tr>
                             <td>
-                                @if($rueckmeldung->type == "email")
+                                @if($rueckmeldung->type == "email" or $rueckmeldung->type == "abfrage")
                                     <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
                                         <i class="fa fa-eye"></i>
                                     </a>

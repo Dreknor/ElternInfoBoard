@@ -12,7 +12,7 @@
                                 @if(!$group->protected) <i class="fas fa-unlock-alt"></i> @else <i class="fas fa-lock"></i> @endif
                                 {{$group->name}}
                             </h5>
-                            @can('view groups')
+                            @can('edit groups')
                                 <i>
                                     Es gibt {{$group->users->count()}} Benutzer
                                 </i>
@@ -20,7 +20,7 @@
                         </div>
                         <div class="card-body">
                             <div class="container-fluid">
-                                    @can('view groups')
+                                @can('edit groups')
                                         <div class="">
                                             <table class="table table-bordered table-striped table-sm">
                                                 <thead>
@@ -102,7 +102,7 @@
                             </div>
                         @can('delete groups')
                             <div class="card-footer border border-danger">
-                                Soll diese Grupper gelöscht werden? Dies muss per Passwort bestätigt werden.
+                                Soll diese Gruppe gelöscht werden? Dies muss per Passwort bestätigt werden.
                                 <form method="post" action="{{url('groups/'.$group->id.'/delete')}}" class="form-horizontal">
                                     @csrf
                                     @method('delete')
@@ -118,7 +118,7 @@
         @endforeach
     </div>
 
-@can('view groups')
+    @can('edit groups')
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">

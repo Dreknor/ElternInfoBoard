@@ -22,7 +22,7 @@ class ICalController extends Controller
             $Termine = $user->termine;
 
             //Termine aus Listen holen
-            $listen_termine = $user->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
+            $listen_termine = $user->listen_termine()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
 
             //Ergänze Listeneintragungen
             if (! is_null($listen_termine) and count($listen_termine) > 0) {
@@ -39,7 +39,7 @@ class ICalController extends Controller
 
             //Listentermine von Sorg2
             if (! is_null($user->sorgeberechtigter2)) {
-                foreach ($user->sorgeberechtigter2->listen_eintragungen()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
+                foreach ($user->sorgeberechtigter2->listen_termine()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
                     $newTermin = new Termin([
                         'terminname' => $termin->liste->listenname,
                         'start' => $termin->termin->timezone('Europe/Berlin'),

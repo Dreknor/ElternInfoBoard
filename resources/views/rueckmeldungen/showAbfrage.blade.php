@@ -4,6 +4,7 @@
 @endsection
 
 @section('content')
+    <a href="{{url('rueckmeldungen')}}" class="btn btn-round btn-primary">zurück</a>
 
     <div class="container-fluid">
         <div class="card">
@@ -14,18 +15,26 @@
                             Rückmeldungen
                         </h5>
                     </div>
+                    <div class="col-auto pull-right">
+                        <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/new')}}" class="btn btn-outline-info">
+                            <i class="fa fa-plus-circle"></i>
+                            <div class="d-none d-md-inline">
+                                neue Rückmeldung anlegen
+                            </div>
+                        </a>
+
+                    </div>
                 </div>
             </div>
             <div class="card-body">
-                <table>
+                <table class="table table-bordered table-hover table-striped">
                     <thead>
                     <tr>
+                        <th></th>
                         <th>
                             Name
                         </th>
-                        <th>
-                            Zeitpunkt
-                        </th>
+
                         @foreach($rueckmeldung->options as $option)
                             <th>
                                 {{$option->option}}
@@ -37,27 +46,47 @@
                     @foreach($rueckmeldung->userRueckmeldungen as $userRueckmeldung)
                         <tr>
                             <td>
-                                {{$userRueckmeldung->user->name}}
+                                <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/edit/'.$userRueckmeldung->id)}}">
+                                    <i class="fa fa-edit"></i>
+                                </a>
                             </td>
                             <td>
-                                {{$userRueckmeldung->created_at->format('Y-m-d H:i')}}
+                                {{$userRueckmeldung->user->name}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
-                                <th>
-                                    @if($userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
+                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type) bg-success @endif">
+                                    @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                         @switch($option->type)
                                             @case('text')
-                                                {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
-                                                @break
-                                            @case('check')
-                                                1
-                                                @break
-                                        @endswitch
-                                    @endif
-                                </th>
+                                                @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
+                                                    {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
+                                                @else
+                                                    <i class="fa fa-slash ">
+                                                        @endif
+                                                        @break
+                                                        @case('check')
+                                                            <i class="fa fa-check">
+                                                                @break
+                                                                @endswitch
+                                                                @else
+                                                                    <i class="fa fa-slash ">
+                                                @endif
+                                </td>
                             @endforeach
                         </tr>
                     @endforeach
+                    <tr class="text-center">
+                        <th colspan="2">
+                            Summe:
+                        </th>
+                        @foreach($rueckmeldung->options as $option)
+                            <th>
+                                @if($option->type == 'check')
+                                    {{$option->answers->count()}}
+                                @endif
+                            </th>
+                        @endforeach
+                    </tr>
                     </tbody>
                 </table>
             </div>

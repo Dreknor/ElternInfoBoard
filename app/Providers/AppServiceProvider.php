@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Model\Post;
+use App\Observers\PostObserver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -35,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
+        Post::observe(PostObserver::class);
 
         Schema::defaultStringLength(191);
 

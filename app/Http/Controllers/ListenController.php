@@ -47,8 +47,8 @@ class ListenController extends Controller
         }
 
         $listen = $listen->unique('id');
-        $eintragungen = Listen_Eintragungen::query()->where('user_id',auth()->id())->orWhere('user_id',auth()->user()->sorg2)->get();
-        $termine = listen_termine::query()->where('user_id',auth()->id())->orWhere('user_id',auth()->user()->sorg2)->get();
+        $eintragungen = Listen_Eintragungen::query()->where('user_id', auth()->id())->orWhere('user_id', auth()->user()->sorg2)->get();
+        $termine = auth()->user()->getListenTermine();
 
         return view('listen.index', [
             'listen' => $listen,
@@ -83,6 +83,13 @@ class ListenController extends Controller
     public function store(CreateListeRequest $request)
     {
         $this->authorize('create', Liste::class);
+        $gruppen = $request->input('gruppen');
+        if (is_null($gruppen)) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Es muss mindestens eine Gruppe ausgewählt werden.'
+            ]);
+        }
 
         $Liste = new Liste($request->validated());
         //$Liste->active = 0;
@@ -90,7 +97,7 @@ class ListenController extends Controller
 
         $Liste->save();
 
-        $gruppen = $request->input('gruppen');
+
         $gruppen = $this->grousRepository->getGroups($gruppen);
         $Liste->groups()->attach($gruppen);
 

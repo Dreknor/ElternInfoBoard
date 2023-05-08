@@ -133,6 +133,22 @@
                                     @endforeach
                                 </div>
                             </div>
+                            @if(Cache::remember('wp_push_'.auth()->id(), 120, function (){
+                                    if (\App\Model\Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+                                        return true;
+                                    }
+                                   return false;
+                                }))
+                                <div class="row mt-1">
+                                    <div class="col-12">
+                                        @if($nachricht->published_wp_id != null)
+                                            <div class="text-info">
+                                                Diese Nachricht wurde im Wordpress veröffentlicht.
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                             <div class="row mt-1 mb-1">
                                 <div class="col-12">
 

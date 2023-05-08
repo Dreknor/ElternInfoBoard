@@ -16,15 +16,26 @@ class GroupsRepository
      */
     public function getGroups(array $gruppen): Collection
     {
-        if ($gruppen[0] == 'all') {
-            $gruppen = Group::where('protected', 0)->get();
-        } elseif (Group::whereIn('bereich', $gruppen)->first() != null) {
-            $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-            $gruppen = $gruppen->unique();
-        } else {
-            $gruppen = Group::find($gruppen);
+        $groups = new Collection();
+
+        //($gruppen);
+        if ($gruppen[0] == "all") {
+            $groups = Group::where('protected', 0)->get();
         }
 
-        return $gruppen;
+        if (Group::whereIn('bereich', $gruppen)->first() != null) {
+            $getGruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+            $getGruppen = $getGruppen->unique();
+            $groups = $groups->merge($getGruppen);
+        }
+
+        $groups = $groups->merge(Group::find($gruppen));
+        $groups->unique();
+
+        if (count($gruppen) < 1) {
+            return [];
+        }
+        return $groups;
+
     }
 }

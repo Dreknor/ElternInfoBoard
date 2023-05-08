@@ -38,6 +38,14 @@ class createUserRequest extends FormRequest
                 'required',
                 'confirmed',
             ],
+            'gruppen' => [
+                'sometimes',
+                'array',
+            ],
+            'roles' => [
+                'sometimes',
+                'array',
+            ],
         ];
     }
 }

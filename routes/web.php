@@ -31,7 +31,9 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
+use App\Repositories\WordpressRepository;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -110,6 +112,13 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldung/create/{post}/{type}', [RueckmeldungenController::class, 'create']);
         Route::put('rueckmeldung/{rueckmeldung}/update/date', [RueckmeldungenController::class, 'updateDate']);
 
+        Route::get('userrueckmeldung/{rueckmeldung}/edit/{userrueckmeldung}', [RueckmeldungenController::class, 'editUserAbfrage']);
+        Route::get('userrueckmeldung/{rueckmeldung}/new', [RueckmeldungenController::class, 'createUserAbfrage']);
+        Route::post('userrueckmeldung/{rueckmeldung}/save', [RueckmeldungenController::class, 'storeNewUserAbfrage']);
+        Route::put('userrueckmeldung/{rueckmeldung}/update/{userrueckmeldung}', [RueckmeldungenController::class, 'updateUserAbfrage']);
+        Route::delete('userrueckmeldung/{rueckmeldung}/delete/{userrueckmeldung}', [RueckmeldungenController::class, 'deleteUserAbfrage']);
+
+
         //Text userRueckmeldungen
         Route::post('/rueckmeldung/{posts_id}', [UserRueckmeldungenController::class, 'sendRueckmeldung']);
         Route::get('/userrueckmeldung/edit/{userRueckmeldungen}', [UserRueckmeldungenController::class, 'edit']);
@@ -122,15 +131,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('rueckmeldungen/{post}/', [RueckmeldungenController::class, 'destroyAbfrage']);
 
 
+
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
         Route::post('/rueckmeldung/{posts_id}/create/abfrage', [RueckmeldungenController::class, 'storeAbfrage']);
         Route::put('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'update']);
         Route::get('rueckmeldungen/{posts_id}/createImageUpload', [RueckmeldungenController::class, 'createImageRueckmeldung']);
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
 
+
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
+        Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
@@ -171,6 +183,7 @@ Route::middleware('auth')->group(function () {
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
+        Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
         //Reinigungsplan
         Route::get('reinigung', [ReinigungController::class, 'index']);
@@ -230,14 +243,18 @@ Route::middleware('auth')->group(function () {
 
             Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
+            Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
+            Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
+            Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
+            Route::delete('users/mass/delete', [UserController::class, 'massDelete']);
 
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
             //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
-                //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
-                //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
+            //Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
+            //Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
         });
 
         //Gruppenverwaltung
@@ -266,8 +283,14 @@ Route::middleware('auth')->group(function () {
             Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
-        Route::get('logoutAsUser',[UserController::class, 'logoutAsUser']);
+        Route::get('logoutAsUser', function () {
+            if (session()->has('ownID')) {
+                Auth::loginUsingId(Crypt::decryptString(session()->get('ownID')));
+                session()->remove('ownID');
+            }
 
+            return redirect(url('/'));
+        });
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
             Route::resource('elternrat', ElternratController::class);

@@ -19,8 +19,9 @@
                             <select name="mitarbeiter" class="custom-select">
                                 <option value="">Sekretariat</option>
                                 @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
-                                    <option value="{{$Mitarbeiter->id}}">{{$Mitarbeiter->familieName}}
-                                        , {{$Mitarbeiter->vorname}}</option>
+                                    <option value="{{$Mitarbeiter->id}}">
+                                        {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -64,55 +65,7 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5>Verlauf</h5>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>
-                        Datum
-                    </th>
-                    <th>
-                        An
-                    </th>
-                    <th>
-                        Betreff
-                    </th>
-                    <th>
 
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($emails as $email)
-                    <tr>
-                        <td>
-                            {{$email->created_at->format('d.m.Y H:i')}}
-                        </td>
-                        <td>
-                            {{$email->to}}
-                        </td>
-                        <td>
-                            {{$email->subject}}
-                        </td>
-                        <td>
-                            <div class="row">
-                                <div class="col-auto">
-                                    <a href="{{url('/feedback/show/'.$email->id)}}" class="card-link">
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
 @endsection
 
 

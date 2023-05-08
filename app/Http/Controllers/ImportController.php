@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
+use App\Imports\VereinImport;
+use App\Model\Group;
 use App\Model\group_user;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -12,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Role;
 
 class ImportController extends Controller
 {
@@ -77,6 +80,48 @@ class ImportController extends Controller
                 'type' => 'success',
                 'Meldung' => $Meldung,
             ]);
+        } else {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Keine Datei ausgewählt',
+            ]);
+        }
+    }
+
+    public function importVereinForm()
+    {
+        return view('user.importVerein');
+    }
+
+    public function importVerein(Request $request)
+    {
+        if ($request->hasFile('file')) {
+
+            $group = Group::firstOrCreate(['name' => 'Vereinsmitglied'], [
+                'protected' => 1,
+                'bereich' => "Verein"
+            ]);
+
+
+            group_user::where('group_id', $group->id)->delete();
+
+            $role = Role::firstOrCreate(['name' => 'Vereinsmitglied'], [
+                'guard_name' => "web",
+            ]);
+
+            foreach ($role->users as $user) {
+                $user->removeRole($role);
+            }
+
+
+            Excel::import(new VereinImport($group), $request->file('file'));
+            $Meldung = 'Mitglieder wurden importiert';
+
+            return redirect()->to(url('users'))->with([
+                'type' => 'success',
+                'Meldung' => $Meldung,
+            ]);
+
         } else {
             return redirect()->back()->with([
                 'type' => 'danger',

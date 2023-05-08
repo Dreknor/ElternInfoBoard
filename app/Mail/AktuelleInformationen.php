@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;

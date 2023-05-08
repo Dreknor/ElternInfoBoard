@@ -4,13 +4,19 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Envelope;
+
+use Illuminate\Mail\Mailables\Content;
 
 class SendFeedback extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected string $text;
+    public string $text;
+    public string $von;
 
     protected string $betreff;
 
@@ -26,32 +32,58 @@ class SendFeedback extends Mailable
         $this->text = $text;
         $this->betreff = $betreff;
         $this->data = $data;
+        $this->von = auth()->user()->name;
+    }
+
+
+    /**
+     * Get the message envelope.
+     *
+     * @return \Illuminate\Mail\Mailables\Envelope
+     */
+    public function envelope()
+    {
+        return new Envelope(
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
+            replyTo: [
+                new Address(auth()->user()->email, auth()->user()->name),
+            ],
+            subject: $this->betreff,
+        );
     }
 
     /**
-     * Build the message.
+     * Get the message content definition.
      *
-     * @return $this
+     * @return \Illuminate\Mail\Mailables\Content
      */
-    public function build(): static
+    public function content()
     {
-        $Mail = $this
-            ->from(config('mail.from.address'),
-               config('mail.from.name')
-            )
-            ->replyTo(auth()->user()->email, auth()->user()->name)
-            ->subject($this->betreff)
-            ->view('emails.feedback')->with([
-                'text' => $this->text,
-                'from' => auth()->user()->name,
-            ]);
+        return new Content(
+            view: 'emails.feedback',
+        );
+    }
+
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return \Illuminate\Mail\Mailables\Attachment[]
+     */
+    public function attachments()
+    {
 
         if (count($this->data) > 0) {
+            $return = [];
             foreach ($this->data as $file) {
-                $Mail->attach($file[0]);
+                $return[] = Attachment::fromPath($file->getRealPath())
+                    ->as($file->getClientOriginalName());
             }
-        }
 
-        return $Mail;
+            return $return;
+        }
+        return [
+
+        ];
     }
 }

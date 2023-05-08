@@ -31,8 +31,8 @@ class editPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'header' => [
-                'required',
+            'header'    => [
+                'required', 'max:120'
             ],
             'news' => [
                 'news' => [
@@ -56,6 +56,12 @@ class editPostRequest extends FormRequest
             ],
             'released' => [
                 'nullable', 'boolean',
+            ],
+            'external' => [
+                'nullable', 'sometimes','boolean',
+            ],
+            'wp_push' => [
+                'nullable', 'sometimes','boolean',
             ],
 
         ];

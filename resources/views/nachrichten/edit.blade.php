@@ -12,6 +12,14 @@
                 @csrf
                 @method('put')
                 <div class="row">
+                    <div class="col-12 col-sm-12">
+                        <div class="form-group">
+                            <label>Überschrift</label>
+                            <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header',$post->header)}}"  maxlength="120" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-md-2 col-sm-12">
                         <div class="form-group">
                             <label>Typ</label>
@@ -23,19 +31,41 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6 col-sm-12">
+                    <div class="col-md-auto col-sm-6">
                         <div class="form-group">
-                            <label>Überschrift</label>
-                            <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{$post->header}}" required>
+                            <label>Archiv ab</label>
+                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{$post->archiv_ab->format('Y-m-d')}}" >
                         </div>
                     </div>
-                    <div class="col-md-5 col-sm-12">
+                    @if($external == 1)
+                        <div class="col-md-auto col-sm-12">
+                            <div class="form-group">
+                                <label>externes Angebot</label>
+                                <select class="custom-select" name="external">
+                                    <option value="0" @if($post->external == false) selected @endif>nein</option>
+                                    <option value="1" @if($post->external == true) selected @endif>ja</option>
+                                </select>
+                            </div>
+                        </div>
+                    @endif
+                    @if($wp_push)
+                        <div class="col-md-auto col-sm-12">
+                            <div class="form-group">
+                                <label>Homepage veröffentlichen?</label>
+                                <select class="custom-select" name="wp_push">
+                                    <option value="0" @if($post->published_wp_id == NULL) selected @else disabled @endif>nein</option>
+                                    <option value="1"  @if($post->published_wp_id != NULL) selected @endif>ja</option>
+                                </select>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="col-md-auto col-sm-12">
                         <div class="form-group">
                             <label>zuletzt bearbeitet:</label>
                             <input type="datetime" class="form-control border-input date-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeString()}}" >
                         </div>
                     </div>
-                    <div class="col-md-5 col-sm-6">
+                    <div class="col-md-3 col-sm-6">
                         <div class="form-group">
                             <div class="">
                                 <label>Autor</label>
@@ -46,13 +76,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-sm-6">
-                        <div class="form-group">
-                            <label>Archiv ab</label>
-                            <input type="date" class="form-control border-input date-input" name="archiv_ab" value="{{$post->archiv_ab->format('Y-m-d')}}" >
-                        </div>
-                    </div>
-
                 </div>
                 <div class="row">
                     <div class="col-md-12">

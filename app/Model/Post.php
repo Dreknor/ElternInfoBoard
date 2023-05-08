@@ -29,11 +29,12 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasRelationships;
     use Reactable;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external','published_wp_id'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
         'reactable' => 'boolean',
+        'external' => 'boolean',
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
