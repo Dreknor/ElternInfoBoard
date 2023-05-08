@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
@@ -21,6 +22,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Post extends Model implements HasMedia, ReactableInterface
 {
     use InteractsWithMedia;
+    use HasFactory;
     use SoftDeletes;
     use Cloneable;
     use HasComments;

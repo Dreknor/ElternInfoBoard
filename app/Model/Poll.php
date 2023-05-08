@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Poll extends Model
 {
     use SoftDeletes;
+    use HasFactory;
 
     protected $fillable = ['poll_name', 'description', 'ends', 'post_id', 'author_id', 'max_number'];
 

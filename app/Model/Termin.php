@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,8 @@ use Spatie\CalendarLinks\Link;
 
 class Termin extends Model
 {
+    use HasFactory;
+
     protected $table = 'termine';
 
     protected $fillable = ['start', 'ende', 'terminname', 'fullDay', 'public'];

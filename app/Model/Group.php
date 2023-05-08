@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Scopes\SortGroupsScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +12,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Group extends Model implements HasMedia
 {
     use InteractsWithMedia;
+    use HasFactory;
 
     protected $fillable = ['name', 'bereich', 'protected'];
 
