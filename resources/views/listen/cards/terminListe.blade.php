@@ -64,7 +64,7 @@
         @endif
 
         @if($termine->where('listen_id', $liste->id)->count() > 0)
-            @foreach($termine->where('listen_id', $liste->id)->sortBy('termin')->all() as $eintragung)
+            @foreach($termine->where('listen_id', $liste->id)->where('termin', '>=', \Carbon\Carbon::now())->sortBy('termin')->all() as $eintragung)
                 <div class="row">
                     <div class="col-8">
                         <b>Ihr Termin:</b> <br>{{$eintragung->termin->format('d.m.Y H:i')}} Uhr
