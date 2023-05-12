@@ -20,7 +20,7 @@
             <ul class="list-group">
                 @foreach($nachrichten as $nachricht)
                         <li class="list-group-item">
-                            {{$nachricht->header}} @if($nachricht->external == 0) (externes Angebot) @endif
+                            {{$nachricht->header}} @if($nachricht->external) (externes Angebot) @endif
                         </li>
                 @endforeach
             </ul>
