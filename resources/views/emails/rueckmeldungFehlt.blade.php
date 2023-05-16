@@ -8,10 +8,12 @@
 
 <p>Liebe/r {{$name}}</p>
 <p>
-    Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema "{{$thema}}". Wir benötigen die Rückmeldung bis spätestens zum {{$ende->format('d.m.Y')}}.
+    Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema "{{$thema}}". Wir benötigen die
+    Rückmeldung bis spätestens zum {{$ende}}.
 </p>
 <p>
-    Diese E-Mail wird automatisch erstellt, solange keine Rückmeldung über das ElternInfoBoard erfolgt. Rückmeldungen per E-Mail oder in anderer Form werden dabei nicht erfasst.
+    Diese E-Mail wird automatisch erstellt, solange keine Rückmeldung über das ElternInfoBoard erfolgt. Rückmeldungen
+    per E-Mail oder in anderer Form werden dabei nicht erfasst.
 </p>
 <p>
     Mit freundlichen Grüßen<br>

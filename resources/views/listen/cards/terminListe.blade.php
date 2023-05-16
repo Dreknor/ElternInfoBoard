@@ -64,7 +64,13 @@
         @endif
 
         @if($termine->where('listen_id', $liste->id)->count() > 0)
-            @foreach($termine->where('listen_id', $liste->id)->sortBy('termin')->all() as $eintragung)
+            @foreach($termine->filter(function ($eintrag) use ($liste)
+                {
+                    if ($eintrag->listen_id == $liste->id and $eintrag->termin->greaterThanOrEqualTo(\Carbon\Carbon::now()))
+                    {
+                        return $eintrag;
+                    }
+                })->sortBy('termin') as $eintragung)
                 <div class="row">
                     <div class="col-8">
                         <b>Ihr Termin:</b> <br>{{$eintragung->termin->format('d.m.Y H:i')}} Uhr

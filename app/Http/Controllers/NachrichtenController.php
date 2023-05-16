@@ -13,10 +13,12 @@ use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
+use App\Model\Settings;
 use App\Model\User;
 use App\Notifications\Push;
 use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
+use App\Repositories\WordpressRepository;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
@@ -25,6 +27,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -34,6 +37,7 @@ use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class NachrichtenController
@@ -74,26 +78,60 @@ class NachrichtenController extends Controller
      */
     public function postsArchiv()
     {
-        //       $Nachrichten = Cache::remember('archiv_posts_'.auth()->id(), 60 * 5, function () {
         if (! auth()->user()->can('view all')) {
             $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->orderByDesc('updated_at')->paginate(15);
-        /*
-                        if (auth()->user()->can('create posts')) {
-                            $eigenePosts = Post::query()->where('author', auth()->id())->whereDate('archiv_ab', '<=', Carbon::now()->startOfDay())->get();
-                            $Nachrichten = $Nachrichten->concat($eigenePosts);
-                        }
-        */
-                //$Nachrichten = $Nachrichten->unique('id');
         } else {
             $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->orderByDesc('updated_at')->paginate(15);
-            //$Nachrichten = $Nachrichten->unique('id')->sortByDesc('updated_at');
         }
-        /*
-                    return $Nachrichten;
-                });
-          */
+
         return view('archiv.archiv', [
             'nachrichten' => $Nachrichten,
+            'user' => auth()->user(),
+        ]);
+    }
+
+    public function postsExternal()
+    {
+        if (!auth()->user()->can('view external offer') or Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'] !=1){
+            return redirect()->back()->with([
+               'type' => 'warning',
+               'Medldung' => 'Aufruf nicht möglich'
+            ]);
+        }
+
+        $nachrichten = Cache::remember('posts_external_'.auth()->id(), 1, function () {
+            $user = auth()->user();
+
+            if (! $user->can('view all')) {
+                $Nachrichten = $user->postsNotArchived()
+                    ->distinct()
+                    ->where('external', 1)
+                    ->orderByDesc('updated_at')
+                    ->get();
+
+                if ($user->can('create posts')) {
+                    $eigenePosts = Post::query()
+                        ->where('author', $user->id)
+                        ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                        ->where('external', 1)
+                        ->get();
+                    $Nachrichten = $Nachrichten->concat($eigenePosts);
+                }
+            } else {
+                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                    ->where('external', 1)
+                    ->orderByDesc('updated_at')
+                    ->get();
+            }
+
+            $Nachrichten = $Nachrichten->unique('id');
+
+
+            return $Nachrichten->paginate(30);
+        });
+
+        return view('externalPost.index', [
+            'nachrichten' => $nachrichten,
             'user' => auth()->user(),
         ]);
     }
@@ -111,9 +149,21 @@ class NachrichtenController extends Controller
         }
 
         $gruppen = Group::all();
+        $external = Cache::remember('external_offers', 120, function (){
+           return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
+        });
+        $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
+            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+                return true;
+            }
+           return false;
+        });
+
 
         return view('nachrichten.create', [
             'gruppen' => $gruppen,
+            'external' => $external,
+            'wp_push' =>$wp_push
         ]);
     }
 
@@ -138,11 +188,23 @@ class NachrichtenController extends Controller
             $rueckmeldung = $posts->rueckmeldung;
         }
 
+        $external = Cache::remember('external_offers', 120, function (){
+            return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
+        });
+        $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
+            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+                return true;
+            }
+            return false;
+        });
+
         return view('nachrichten.edit', [
             'gruppen' => $gruppen,
             'post' => $posts,
             'rueckmeldung' => $rueckmeldung,
             'kiosk' => null,
+            'external' => $external,
+            'wp_push' => $wp_push
         ]);
     }
 
@@ -190,6 +252,11 @@ class NachrichtenController extends Controller
             if ($post->released) {
                 $this->push($post);
             }
+        }
+
+        if ($request->wp_push){
+            $repository = new WordpressRepository();
+            $repository->should_post($post);
         }
 
         //Dateien verarbeiten
@@ -344,6 +411,13 @@ class NachrichtenController extends Controller
         ($posts->news == '') ? $posts->news = $posts->header : null;
 
         $posts->save();
+
+
+        if ($request->wp_push){
+            $repository = new WordpressRepository();
+            $repository->should_post($posts);
+        }
+
 
         //Gruppen
 
@@ -691,7 +765,7 @@ class NachrichtenController extends Controller
      * @param Post $post
      * @return array
      */
-    public function sendMailToGroupsUsers(array $gruppen, Post $post): array
+    public function sendMailToGroupsUsers(Collection|array $gruppen, Post $post): array
     {
         $MailGruppen = [];
 

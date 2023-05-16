@@ -39,6 +39,16 @@ class editUserRequest extends FormRequest
                 'required',
                 'in:weekly,daily',
             ],
+            'sendCopy' => [
+                'nullable',
+                'min:0',
+                'max:1'
+            ],
+            'track_login' => [
+                'nullable',
+                'min:0',
+                'max:1'
+            ],
             'publicMail' => [
                 'nullable',
                 'email',

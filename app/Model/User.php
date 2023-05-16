@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +21,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class User extends Authenticatable
 {
     use Notifiable;
+    use HasFactory;
     use HasRoles;
     use HasPushSubscriptions;
     use HasRelationships;
@@ -97,7 +99,7 @@ class User extends Authenticatable
     /**
      * Eigene Posts
      *
-     * @return HasManyDeep
+     * @return HasMany
      */
     public function own_posts()
     {

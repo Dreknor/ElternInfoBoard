@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Benjivm\Commentable\Traits\HasComments;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -12,6 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Discussion extends Model implements HasMedia
 {
     use SoftDeletes;
+    use HasFactory;
     use InteractsWithMedia;
     use HasComments;
 

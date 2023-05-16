@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AbfrageOptions extends Model
 {
+    use HasFactory;
+
 
     protected $fillable = ['rueckmeldung_id', 'type', 'option'];
 

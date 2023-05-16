@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AbfrageAntworten extends Model
 {
+    use HasFactory;
+
 
     protected $table = 'abfrage_answers';
 

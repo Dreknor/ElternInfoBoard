@@ -19,8 +19,9 @@
                             <select name="mitarbeiter" class="custom-select">
                                 <option value="">Sekretariat</option>
                                 @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
-                                    <option value="{{$Mitarbeiter->id}}">{{$Mitarbeiter->familieName}}
-                                        , {{$Mitarbeiter->vorname}}</option>
+                                    <option value="{{$Mitarbeiter->id}}">
+                                        {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>

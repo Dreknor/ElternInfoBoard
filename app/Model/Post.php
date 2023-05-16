@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
@@ -21,17 +22,19 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Post extends Model implements HasMedia, ReactableInterface
 {
     use InteractsWithMedia;
+    use HasFactory;
     use SoftDeletes;
     use Cloneable;
     use HasComments;
     use HasRelationships;
     use Reactable;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external','published_wp_id'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
         'reactable' => 'boolean',
+        'external' => 'boolean',
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];

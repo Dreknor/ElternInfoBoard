@@ -51,6 +51,16 @@ class verwaltungEditUserRequest extends FormRequest
                 'nullable',
                 'exists:users,id',
             ],
+            'sendCopy' => [
+                'nullable',
+                'min:0',
+                'max:1'
+            ],
+            'track_login' => [
+                'nullable',
+                'min:0',
+                'max:1'
+            ],
         ];
     }
 }

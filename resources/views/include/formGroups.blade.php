@@ -15,8 +15,11 @@
 
     @foreach($gruppen as $gruppe)
         <div>
-            <input type="checkbox" id="{{$gruppe->name}}" name="gruppen[]" value="{{$gruppe->id}}" @if(isset($post) and $post->groups->contains($gruppe->id) or (isset($user) and $user->groups->contains($gruppe)) or (isset($liste) and $liste->groups->contains($gruppe))) checked @endif>
-            <label for="{{$gruppe->name}}">{{$gruppe->name}}</label>
+            <input type="checkbox" id="{{$gruppe->name}}" name="gruppen[]" value="{{$gruppe->id}}"
+                   @if(isset($post) and $post->groups->contains($gruppe->id) or (isset($user) and $user->groups->contains($gruppe)) or (isset($liste) and $liste->groups->contains($gruppe))) checked @endif>
+            <label for="{{$gruppe->name}}">{{$gruppe->name}} @if($gruppe->protected)
+                    <i class="fas fa-lock"></i>
+                @endif</label>
         </div>
     @endforeach
 </div>

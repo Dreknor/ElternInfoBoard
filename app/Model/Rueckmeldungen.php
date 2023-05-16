@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Rueckmeldungen extends Model
 {
     use SoftDeletes;
+    use HasFactory;
 
     /**
      * @var string
@@ -76,6 +78,15 @@ class Rueckmeldungen extends Model
     protected static function booted(): void
     {
         static::saved(function ($rueckmeldung) {
+            $post = $rueckmeldung->post;
+            if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+                $post->update([
+                    'archiv_ab' => $rueckmeldung->ende,
+                ]);
+            }
+        });
+
+        static::updated(function ($rueckmeldung) {
             $post = $rueckmeldung->post;
             if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
                 $post->update([

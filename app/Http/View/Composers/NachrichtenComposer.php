@@ -16,14 +16,31 @@ class NachrichtenComposer
             $user = auth()->user();
 
             if (! $user->can('view all')) {
-                $Nachrichten = $user->postsNotArchived()->distinct()->orderByDesc('sticky')->orderByDesc('updated_at')->whereDate('archiv_ab', '>', $user->created_at)->with('media', 'autor', 'groups')->withCount('users')->get();
+                $Nachrichten = $user->postsNotArchived()
+                    ->distinct()
+                    ->where('external', 0)
+                    ->orderByDesc('sticky')
+                    ->orderByDesc('updated_at')
+                    ->whereDate('archiv_ab', '>', $user->created_at)
+                    ->with('media', 'autor', 'groups')
+                    ->withCount('users')->get();
 
                 if ($user->can('create posts')) {
-                    $eigenePosts = Post::query()->where('author', $user->id)->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->get();
+                    $eigenePosts = Post::query()
+                        ->where('author', $user->id)
+                        ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                        ->where('external', 0)
+                        ->get();
                     $Nachrichten = $Nachrichten->concat($eigenePosts);
                 }
             } else {
-                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())->orderByDesc('sticky')->orderByDesc('updated_at')->with('media', 'autor', 'groups', 'rueckmeldung')->withCount('users')->get();
+                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                    ->where('external', 0)
+                    ->orderByDesc('sticky')
+                    ->orderByDesc('updated_at')
+                    ->with('media', 'autor', 'groups', 'rueckmeldung')
+                    ->withCount('users')
+                    ->get();
             }
 
             $Nachrichten = $Nachrichten->unique('id');

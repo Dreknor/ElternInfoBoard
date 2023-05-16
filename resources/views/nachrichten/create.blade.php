@@ -24,7 +24,15 @@
         <form action="{{url('/posts')}}" method="post" class="form form-horizontal" enctype="multipart/form-data" id="nachrichtenForm">
             @csrf
             <div class="row">
-                <div class="col-md-2 col-sm-12">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label>Überschrift</label>
+                        <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}"  maxlength="120" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 col-sm-12">
                     <div class="form-group">
                         <label>Typ</label>
                         <select class="custom-select" name="type">
@@ -35,23 +43,39 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-7 col-sm-12">
-                    <div class="form-group">
-                        <label>Überschrift</label>
-                        <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}"  maxlength="120" required>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-12">
+                <div class="col-md-4 col-sm-12">
                     <div class="form-group">
                         <label>Archiv ab</label>
                         <input type="date" class="form-control border-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
                     </div>
                 </div>
+                @if($external == 1)
+                    <div class="col-md-auto col-sm-12">
+                        <div class="form-group">
+                            <label>externes Angebot</label>
+                            <select class="custom-select" name="external">
+                                <option value="0" selected>nein</option>
+                                <option value="1" >ja</option>
+                            </select>
+                        </div>
+                    </div>
+                @endif
+                @if($wp_push)
+                    <div class="col-md-auto col-sm-12">
+                        <div class="form-group">
+                            <label>Homepage veröffentlichen?</label>
+                            <select class="custom-select" name="wp_push">
+                                <option value="0" selected>nein</option>
+                                <option value="1" >ja</option>
+                            </select>
+                        </div>
+                    </div>
+                @endif
             </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label>Nachrichtentext</label>
+                        <label>Npachrichtentext</label>
                         <textarea class="form-control border-input" name="news">
                             {{old('news')}}
                         </textarea>

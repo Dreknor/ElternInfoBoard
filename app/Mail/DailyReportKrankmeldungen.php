@@ -2,11 +2,11 @@
 
 namespace App\Mail;
 
-use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Database\Eloquent\Collection;
 
 class DailyReportKrankmeldungen extends Mailable
 {

@@ -20,14 +20,16 @@
         "laravel/framework": "^9.33",
         "laravel/tinker": "^2.7",
         "laravel/ui": "^3.3",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
+        "ryangjchandler/blade-cache-directive": "^0.3",
         "sentry/sentry-laravel": "^2.11",
         "spatie/calendar-links": "^1.4",
         "spatie/icalendar-generator": "^2.3",
         "spatie/laravel-medialibrary": "^10.0",
         "spatie/laravel-permission": "^5.5",
         "staudenmeir/eloquent-has-many-deep": "^1.15",
-        "league/flysystem-aws-s3-v3": "^3.0"
+        "ext-curl": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.6",
@@ -39,12 +41,17 @@
         "phpunit/phpunit": "^9.5.10",
         "samasend/laravel-make-scope": "dev-master",
         "fakerphp/faker": "^1.9.1",
-        "spatie/laravel-ignition": "^1.4"
+        "spatie/laravel-ignition": "^1.4",
+        "jasonmccreary/laravel-test-assertions": "^2.0",
+        "laravel-shift/factory-generator": "dev-master"
     },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "extra": {
         "laravel": {

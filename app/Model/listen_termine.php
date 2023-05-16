@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,8 @@ use Spatie\CalendarLinks\Link;
 
 class listen_termine extends Model
 {
+    use HasFactory;
+
     protected $table = 'listen_termine';
 
     protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];

@@ -23,7 +23,7 @@ class SettingsController extends Controller
      */
     public function module()
     {
-        $module = Settings::where('category', 'module')->get();
+        $module = Settings::all();
 
         return view('settings.module', [
             'module' => $module,
