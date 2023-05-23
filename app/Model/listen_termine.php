@@ -2,6 +2,8 @@
 
 namespace App\Model;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -47,5 +49,13 @@ class listen_termine extends Model
         if ($user != null) {
             return $query->where('reserviert_fuer', $user);
         }
+    }
+
+    public function ende () : Attribute {
+        return Attribute::make(
+            get: function (){
+                return $this->termin->addMinutes($this->duration);
+            }
+        );
     }
 }
