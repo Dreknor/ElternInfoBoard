@@ -152,6 +152,7 @@ class NachrichtenController extends Controller
         $external = Cache::remember('external_offers', 120, function (){
            return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
+
         $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
             if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
                 return true;
@@ -254,10 +255,7 @@ class NachrichtenController extends Controller
             }
         }
 
-        if ($request->wp_push){
-            $repository = new WordpressRepository();
-            $repository->should_post($post);
-        }
+
 
         //Dateien verarbeiten
         if ($request->hasFile('files')) {
@@ -285,6 +283,11 @@ class NachrichtenController extends Controller
                         ->withResponsiveImages()
                         ->toMediaCollection('images'));
             }
+        }
+
+        if ($request->wp_push){
+            $repository = new WordpressRepository();
+            $repository->should_post($post);
         }
 
         $Meldung = 'Nachricht wurde erstellt.';
