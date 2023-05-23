@@ -317,9 +317,9 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
-        $userRueckmeldung = UserRueckmeldungen::where('post_id', $rueckmeldung->post_id)->where('users_id', $request->user)->latest()->limit(1)->get();
+        $userRueckmeldung = UserRueckmeldungen::where('post_id', $rueckmeldung->post_id)->where('users_id', $request->user)->get();
 
-        if ($rueckmeldung->multiple != 1 and $userRueckmeldung != null) {
+        if ($rueckmeldung->multiple != 1 and $userRueckmeldung->count() > 0) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Rückmeldung bereits abgegeben',
