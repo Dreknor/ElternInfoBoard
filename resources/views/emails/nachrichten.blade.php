@@ -20,7 +20,7 @@
             <ul class="list-group">
                 @foreach($nachrichten as $nachricht)
                         <li class="list-group-item">
-                            {{$nachricht->header}} @if($nachricht->external != 0) ({{$nachricht->external}}) @endif
+                            {{$nachricht->header}}
                         </li>
                 @endforeach
             </ul>
