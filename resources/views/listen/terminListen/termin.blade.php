@@ -28,7 +28,7 @@
         <div class="col-sm-6 col-md-3 m-auto">
             <b>
                 @if($eintrag->reserviert_fuer != null)
-                    @if($eintrag->eingetragenePerson->id == auth()->id() or $eintrag->eingetragenePerson->sorg2 == auth()->id() or $liste->visible_for_all)
+                    @if($eintrag->eingetragenePerson->id == auth()->id() or $eintrag->eingetragenePerson->sorg2 == auth()->id() or $liste->visible_for_all or auth()->user()->can('edit terminliste'))
                         {{$eintrag->eingetragenePerson->name }}
                     @else
                         reserviert
