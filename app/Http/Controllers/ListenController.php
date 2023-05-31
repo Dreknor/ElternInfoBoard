@@ -119,7 +119,7 @@ class ListenController extends Controller
             $terminListe->load('termine');
             $terminListe->termine->sortBy('termin');
 
-            return view('listen.terminAuswahl', [
+            return view('listen.terminListen.terminAuswahl', [
                 'liste' => $terminListe,
             ]);
         }

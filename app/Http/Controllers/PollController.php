@@ -49,10 +49,13 @@ class PollController extends Controller
 
         $options = [];
         foreach ($request->options as $option) {
-            $options[] = [
-                'option' => $option,
-                'poll_id' => $poll->id,
-            ];
+            if ($option != ""){
+                $options[] = [
+                    'option' => $option,
+                    'poll_id' => $poll->id,
+                ];
+            }
+
         }
         $poll->options()->insert($options);
 

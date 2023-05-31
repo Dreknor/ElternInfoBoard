@@ -2,6 +2,8 @@
 
 namespace App\Model;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -65,6 +67,12 @@ class User extends Authenticatable
         'track_login' => 'boolean',
         'changeSettings' => 'boolean',
     ];
+
+    protected function lastEmail(): Attribute {
+        return Attribute::make(
+            get: fn ($value) => Carbon::createFromFormat('Y-m-d H:i:s', ($value != null)? $value : $this->created_at),
+        );
+    }
 
     /**
      * Verknüpfte Gruppen

@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,4 +67,6 @@ class Termin extends Model
 
         return Link::create($this->terminname, $this->start, $this->ende, $this->fullDay);
     }
+
+
 }

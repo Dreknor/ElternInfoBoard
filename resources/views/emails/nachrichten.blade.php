@@ -20,14 +20,31 @@
             <ul class="list-group">
                 @foreach($nachrichten as $nachricht)
                         <li class="list-group-item">
-                            {{$nachricht->header}} @if($nachricht->external) (externes Angebot) @endif
+                            {{$nachricht->header}}
                         </li>
                 @endforeach
             </ul>
         </div>
     </div>
 
-
+    @if(count($nachrichten_extern)>0)
+        <div class="card">
+            <div class="card-header">
+                <p>
+                    Folgende neue externe Angebote liegen vor:
+                </p>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    @foreach($nachrichten_extern as $nachricht)
+                        <li class="list-group-item">
+                            {{$nachricht->header}}
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
 
     @if(count($discussionen)>0)
         <div class="card">

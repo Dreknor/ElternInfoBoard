@@ -12,6 +12,7 @@ class AktuelleInformationen extends Mailable
     use Queueable, SerializesModels;
 
     protected Collection|array $news;
+    protected Collection|array $news_external;
 
     protected string $name;
 
@@ -30,7 +31,18 @@ class AktuelleInformationen extends Mailable
      */
     public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine)
     {
-        $this->news = $news;
+            $news = new Collection($news);
+
+
+        $this->news = $news->filter(function ($post){
+           return $post->external == 0;
+        });
+
+        $this->news_external = $news->filter(function ($post){
+           return $post->external != 0;
+        });
+
+
         $this->name = $name;
         $this->diskussionen = $diskussionen;
         $this->listen = $listen;
@@ -47,6 +59,7 @@ class AktuelleInformationen extends Mailable
         return $this->subject('Aktuelle Informationen')
             ->view('emails.nachrichten', [
                 'nachrichten' => $this->news,
+                'nachrichten_extern' => $this->news_external,
                 'name' => $this->name,
                 'discussionen' => $this->diskussionen,
                 'listen' => $this->listen,
