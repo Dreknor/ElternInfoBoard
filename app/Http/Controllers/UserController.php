@@ -108,11 +108,13 @@ class UserController extends Controller
                 $roles->unique();
                 $user->roles()->attach($roles);
             } elseif (auth()->user()->can('assign roles to users')) {
-                $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
-                    $query->where('name', 'role is assignable');
-                })->get();
-                $roles->unique();
-                $user->roles()->attach($roles);
+                if (!is_null($request->roles)) {
+                    $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
+                        $query->where('name', 'role is assignable');
+                    })->get();
+                    $roles->unique();
+                    $user->roles()->attach($roles);
+                }
             }
         }
 
@@ -180,25 +182,28 @@ class UserController extends Controller
             $user->syncPermissions($permissions);
         }
 
-        if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-            if (auth()->user()->can('edit permission') and !is_null($request->roles)) {
-                $roles = Role::whereIn('name', $request->roles)->get();
-                $roles->unique();
-                $user->roles()->sync($roles);
-            } elseif (auth()->user()->can('assign roles to users') and !is_null($request->roles)) {
-                $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
-                    $query->where('name', 'role is assignable');
-                })->get();
-                $roles->unique();
+        if (!is_null($request->roles)) {
+            if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
+                if (auth()->user()->can('edit permission') and !is_null($request->roles)) {
+                    $roles = Role::whereIn('name', $request->roles)->get();
+                    $roles->unique();
+                    $user->roles()->sync($roles);
+                } elseif (auth()->user()->can('assign roles to users') and !is_null($request->roles)) {
+                    $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
+                        $query->where('name', 'role is assignable');
+                    })->get();
+                    $roles->unique();
 
-                $old_roles = $user->roles()->whereDoesntHave('permissions', function ($query) {
-                    $query->where('name', 'role is assignable');
-                })->get();
+                    $old_roles = $user->roles()->whereDoesntHave('permissions', function ($query) {
+                        $query->where('name', 'role is assignable');
+                    })->get();
 
-                $user->roles()->sync($roles);
-                $user->roles()->attach($old_roles);
+                    $user->roles()->sync($roles);
+                    $user->roles()->attach($old_roles);
+                }
             }
         }
+
 
         if ($request->user()->can('set password') and $request->input('new-password') != '') {
             $user->password = Hash::make($request->input('new-password'));

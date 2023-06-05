@@ -12,8 +12,8 @@ Obwohl das ElternInfoBoard ausschließlich für das Evangelische Schulzentrum Ra
 
 ## Systemvoraussetzungen
 
-* PHP 7.4
-* Composer 2
+* PHP 8
+* Composer
 
 ## Installation
 
