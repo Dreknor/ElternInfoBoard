@@ -24,7 +24,45 @@ Nach dem Upload der Dateien auf den Server ist zunächst die Datei ".env.example
 cp .env.example .env
 ```
 
+## Anpassung der .env
+
 Die Datei per Texteditor öffnen und mindestens die angegebenen Daten ausfüllen:
+
+```bash
+APP_NAME => Wie die Anwendung dann benannt werden soll 
+APP_ENV => in Produktivumgebungen unbedingt production einsetzen. Zum Testen local nutzen
+APP_KEY => wird später durch den Befehl "php artisan key:generate" gesetzt
+
+APP_DEBUG => sollte false sein. Wenn Fehler auftreten kann der Wert kurzfristig auf true gesetzt werden, um ausführliche Fehlermeldungen zu erhalten. ACHTUNG: Sicherheitslücke!
+APP_URL => URL durch die die Anwendung erreichbar ist. Wird als Grundlage zur Erstellung von Links benötigt
+
+Wenn Stanardtpasswörter für den Import verwendet werden sollen, so können diese hier gesetzt werden
+PW_IMPORT_AUFNAHME
+PW_IMPORT_MITARBEITER
+PW_IMPORT_VEREIN
+
+Logo und Favicon ablegen unter /public/img and set name here
+APP_LOGO    => eigenes Logo
+APP_FAVICON => eigenes Icon (In der Adressleiste des Browsers)
+
+Datenbankangaben sind zwingend erforderlich
+DB_HOST
+DB_PORT
+DB_DATABASE
+DB_USERNAME
+DB_PASSWORD
+
+Hier werden die Angaben zur SMTP-Server für die E-Mails eingetragen (Zwingend)
+MAIL_MAILER
+MAIL_HOST
+MAIL_PORT
+MAIL_USERNAME
+MAIL_PASSWORD
+MAIL_ENCRYPTION
+
+MAIL_FROM_ADDRESS => Welche E-Mail wird als Absender verwendet
+MAIL_FROM_NAME => Name des Abenders
+```
 
 Anschließend die Installation durchführen:
 
