@@ -13,7 +13,10 @@ Obwohl das ElternInfoBoard ausschließlich für das Evangelische Schulzentrum Ra
 ## Systemvoraussetzungen
 
 * PHP 8
+* Mysql/MariaDB
 * Composer
+* am besten git auf dem Server
+* cronjobs
 
 ## Installation
 
