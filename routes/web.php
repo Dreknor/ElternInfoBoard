@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
 
         //Krankmeldung
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
+        Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
         Route::get('krankmeldung/test', [KrankmeldungenController::class, 'dailyReport']);
 
