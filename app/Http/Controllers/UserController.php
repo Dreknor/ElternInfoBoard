@@ -184,11 +184,11 @@ class UserController extends Controller
 
         if (!is_null($request->roles)) {
             if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-                if (auth()->user()->can('edit permission')) {
+                if (auth()->user()->can('edit permission') and !is_null($request->roles)) {
                     $roles = Role::whereIn('name', $request->roles)->get();
                     $roles->unique();
                     $user->roles()->sync($roles);
-                } elseif (auth()->user()->can('assign roles to users')) {
+                } elseif (auth()->user()->can('assign roles to users') and !is_null($request->roles)) {
                     $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
                         $query->where('name', 'role is assignable');
                     })->get();
