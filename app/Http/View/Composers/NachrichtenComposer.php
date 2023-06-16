@@ -34,6 +34,7 @@ class NachrichtenComposer
                     $Nachrichten = $Nachrichten->concat($eigenePosts);
                 }
             } else {
+
                 $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                     ->where('external', 0)
                     ->orderByDesc('sticky')
@@ -41,6 +42,21 @@ class NachrichtenComposer
                     ->with('media', 'autor', 'groups', 'rueckmeldung')
                     ->withCount('users')
                     ->get();
+
+                if (!auth()->user()->can('view protected')) {
+                    $Nachrichten = $Nachrichten->filter(function ($nachricht) {
+                        $unprotected = 0;
+                        foreach ($nachricht->groups as $group) {
+                            if ($group->protected == 0) {
+                                $unprotected++;
+                            }
+                        }
+                        if (($unprotected > 0) or $nachricht->author == auth()->id()) {
+                            return $nachricht;
+                        }
+                    });
+                }
+
             }
 
             $Nachrichten = $Nachrichten->unique('id');
