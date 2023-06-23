@@ -128,10 +128,17 @@
 
                     <div class=" col-12  col-sm-6">
                         @can('send urgent message')
+
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card border border-danger">
+
                                         <div class="card-body">
+                                            @if(!is_null($post->send))
+                                                <div class="alert alert-warning w-100">
+                                                    Nachricht wurde am {{$post->send->format('d.m.Y H:i')}} versandt.
+                                                </div>
+                                            @endif
                                             <div class="row">
                                                 <div class="col-12">
                                                     <div class="form-group">

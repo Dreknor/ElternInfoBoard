@@ -29,7 +29,7 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasRelationships;
     use Reactable;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external','published_wp_id'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
@@ -84,5 +84,14 @@ class Post extends Model implements HasMedia, ReactableInterface
     public function scopeReleased(Builder $query): Builder
     {
         return $query->where('released', 1);
+    }
+
+    public function getSendAttribute(): Carbon|null
+    {
+        if (!is_null($this->send_at)) {
+            return Carbon::createFromFormat('Y-m-d H:i:s', $this->send_at);
+        }
+
+        return null;
     }
 }

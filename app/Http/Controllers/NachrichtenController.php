@@ -297,7 +297,10 @@ class NachrichtenController extends Controller
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $post);
 
             @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo));
-            $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
+            $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
+            $post->update([
+                'send_at' => Carbon::now()
+            ]);
         }
 
         //Umleitung bei Rückmeldungsbedarf
@@ -465,7 +468,10 @@ class NachrichtenController extends Controller
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $posts);
 
             @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
-            $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
+            $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
+            $posts->update([
+                'send_at' => Carbon::now()
+            ]);
         }
 
         if ($kiosk == 'true') {
@@ -568,6 +574,7 @@ class NachrichtenController extends Controller
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
             $newPost = $posts->duplicate();
             $newPost->archiv_ab = Carbon::now()->addWeek();
+            $newPost->send_at = null;
             $newPost->save();
         } else {
             $posts->updated_at = Carbon::now();
