@@ -42,7 +42,7 @@ class NachrichtenComposer
                     ->with('media', 'autor', 'groups', 'rueckmeldung')
                     ->withCount('users')
                     ->get();
-
+/*
                 if (!auth()->user()->can('view protected')) {
                     $Nachrichten = $Nachrichten->filter(function ($nachricht) {
                         $unprotected = 0;
@@ -56,7 +56,7 @@ class NachrichtenComposer
                         }
                     });
                 }
-
+*/
             }
 
             $Nachrichten = $Nachrichten->unique('id');
