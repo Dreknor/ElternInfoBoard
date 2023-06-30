@@ -804,4 +804,13 @@ class NachrichtenController extends Controller
         }
         return $sendTo;
     }
+
+    public function findPost(Post $post)
+    {
+        if ($post->archiv_ab->lte(Carbon::now())) {
+            return redirect(url('/archiv#' . $post->id));
+        }
+
+        return redirect(url('/#' . $post->id));
+    }
 }

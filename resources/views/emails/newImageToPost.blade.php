@@ -8,9 +8,9 @@
     {{$von}} hat ein neues Bild hochgeladen
 </h2>
 
-    Das Bild wurde der Nachricht "{{$betreff}}" hinzugefügt
+Das Bild wurde der Nachricht "{{$betreff}}" hinzugefügt
 
 
-    <a href="https://eltern.esz-radebeul.de">zum ElternInfoBoard</a>
+<a href="{{config('app.url')}}">{{config('app.name')}}</a>
 </body>
 </html>

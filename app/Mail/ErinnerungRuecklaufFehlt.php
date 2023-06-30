@@ -15,20 +15,21 @@ class ErinnerungRuecklaufFehlt extends Mailable
     public string $name;
 
     public string $thema;
-
     public string $ende;
+    public int $theme_id;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $Email, string $Name, string $thema, string $ende)
+    public function __construct(string $Email, string $Name, string $thema, string $ende, int $theme_id)
     {
         $this->email = $Email;
         $this->name = $Name;
         $this->thema = $thema;
         $this->ende = $ende;
+        $this->theme_id = $theme_id;
     }
 
     /**
@@ -44,6 +45,7 @@ class ErinnerungRuecklaufFehlt extends Mailable
                 'name' => $this->name,
                 'thema' => $this->thema,
                 'ende' => $this->ende,
+                'theme_id' => $this->theme_id
             ]);
     }
 }

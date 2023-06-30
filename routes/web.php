@@ -145,6 +145,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
+        Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
