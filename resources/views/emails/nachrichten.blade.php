@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Aktuelle Informationen aus dem Schulzentrum</title>
+    <title>Aktuelle Informationen</title>
     <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet" />
 
 </head>
@@ -101,14 +101,14 @@
                     @endforeach
                 </ul>
             </div>
-    @endif
-    <p>
-        Für genauere Inhalte loggen Sie sich bitte ein.
-    </p>
+            @endif
+            <p>
+                Für genauere Inhalte loggen Sie sich bitte ein.
+            </p>
 
-    <p>
-        <a href="{{config('app.url')}}">{{config('app.url')}}</a>
-    </p>
-</div>
+            <p>
+                <a href="{{config('app.url')}}">{{config('app.name')}}</a>
+            </p>
+        </div>
 </body>
 </html>

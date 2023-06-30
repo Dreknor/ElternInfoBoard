@@ -6,6 +6,7 @@ use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\krankmeldungen;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,22 @@ class KrankmeldungenController extends Controller
 
         Mail::to(config('mail.from.address'))
             ->queue(new DailyReportKrankmeldungen($krankmeldungen));
+    }
+
+    public function download()
+    {
+        if (auth()->user()->can('download krankmeldungen')) {
+            $pdf = PDF::loadView('pdf.krankmeldungen', [
+                'meldungen' => krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
+            ]);
+
+            return $pdf->download(Carbon::now()->format('Y-m-d') . '_Krankmeldungen.pdf');
+        }
+
+        return redirect()->back()->with([
+            'type' => 'warning',
+            'Meldung' => "Berechtigung fehlt"
+        ]);
     }
 
 }

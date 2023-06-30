@@ -8,7 +8,8 @@
 
 <p>Liebe/r {{$name}}</p>
 <p>
-    Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema "{{$thema}}". Wir benötigen die
+    Im ElternInfoBoard des Schulzentrums fehlt uns Ihre Rückmeldung zum Thema <a
+        href="{{url('post/'.$theme_id)}}">"{{$thema}}"</a>. Wir benötigen die
     Rückmeldung bis spätestens zum {{$ende}}.
 </p>
 <p>
@@ -21,7 +22,7 @@
 </p>
 
 <p>
-    <a href="https://eltern.esz-radebeul.de">eltern.esz-radebeul.de</a>
+    <a href="{{config('app.url')}}">{{config('app.name')}}</a>
 </p>
 
 </body>

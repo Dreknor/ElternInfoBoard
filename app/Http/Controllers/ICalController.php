@@ -62,6 +62,7 @@ class ICalController extends Controller
                         ->name($event->terminname)
                         ->uniqueIdentifier(($event->id) ?: uuid_create())
                         ->startsAt($event->start->timezone('Europe/Berlin'))
+                        ->endsAt($event->ende->timezone('Europe/Berlin'))
                         ->withoutTimezone()
                         ->fullDay());
                 } else {
@@ -103,6 +104,7 @@ class ICalController extends Controller
                     ->name($event->terminname)
                     ->uniqueIdentifier(($event->id) ?: uuid_create())
                     ->startsAt($event->start->timezone('Europe/Berlin'))
+                    ->endsAt($event->ende->timezone('Europe/Berlin'))
                     ->fullDay());
             } else {
                 $icalObject->event(Event::create()

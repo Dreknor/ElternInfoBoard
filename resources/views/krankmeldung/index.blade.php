@@ -1,18 +1,27 @@
 @extends('layouts.app')
-@section('title') - Krankmeldung @endsection
+@section('title')
+    - Krankmeldung
+@endsection
 
 @section('content')
+    @can('download krankmeldungen')
+        <div class="row">
+            <div class="col-12">
+                <a href="{{url('krankmeldung/download')}}" class="btn btn-block btn-primary">aktuelle Krankmeldung
+                    herunterladen</a>
+            </div>
+        </div>
+    @endcan
 
-
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title">
-                        neue Krankmeldung erstellen:
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <form action="{{url("/krankmeldung")}}" method="post" class="form form-horizontal">
-                        @csrf
+    <div class="card">
+        <div class="card-header">
+            <h6 class="card-title">
+                neue Krankmeldung erstellen:
+            </h6>
+        </div>
+        <div class="card-body">
+            <form action="{{url("/krankmeldung")}}" method="post" class="form form-horizontal">
+                @csrf
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">

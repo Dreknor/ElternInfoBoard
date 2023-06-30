@@ -10,7 +10,7 @@
 </p>
 
 <p>
-    <a href="https://eltern.esz-radebeul.de">eltern.esz-radebeul.de</a>
+    <a href="{{config('app.url')}}">{{config('app.name')}}</a>
 </p>
 
 </body>

@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
 
         //Krankmeldung
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
+        Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
         Route::get('krankmeldung/test', [KrankmeldungenController::class, 'dailyReport']);
 
@@ -144,6 +145,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
+        Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
