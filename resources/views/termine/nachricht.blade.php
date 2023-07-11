@@ -7,6 +7,14 @@
                         aktuelle Termine
                     </h6>
                 </div>
+                @can('edit termin')
+                    <div class="col-md-2">
+                        <a href="{{url('termin/create')}}" class="btn btn-sm btn-primary">
+                            <i class="fa fa-plus"></i>
+                            <div class="d-none d-md-inline">neuer Termin</div>
+                        </a>
+                    </div>
+                @endcan
             </div>
         </div>
         <div class="card-body">
