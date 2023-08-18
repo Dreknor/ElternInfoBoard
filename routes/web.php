@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
+        Route::get('schickzeiten/{user}/trash/{child}', [SchickzeitenController::class, 'deleteChild']);
+        Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
         Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);

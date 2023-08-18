@@ -22,6 +22,12 @@
                 <div class="col-lg-6 col-md-6 "col-sm-12>
                     <div class="card">
                         <div class="card-header">
+                            <div class="d-inline pull-right">
+                                <a class="text-danger"
+                                   href="{{url('schickzeiten/'.auth()->id().'/trash/'.\Illuminate\Support\Str::replace(' ', '_',$child))}}">
+                                    <i class="fa fa-trash"></i> alles löschen
+                                </a>
+                            </div>
                             <h6 class="card-title">
                                 {{$child}}
                             </h6>

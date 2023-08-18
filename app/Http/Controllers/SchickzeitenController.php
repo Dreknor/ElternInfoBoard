@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SchickzeitenController extends Controller
@@ -361,5 +362,52 @@ class SchickzeitenController extends Controller
         foreach ($users as $user) {
             Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten));
         }
+    }
+
+    /**
+     * @return RedirectResponse
+     */
+    public function deleteChild(User $user, string $child)
+    {
+
+        if (\auth()->id() != $user->id) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Sie können nur Ihre eigenen Kinder löschen',
+            ]);
+        }
+
+        $user->schickzeiten_own()->where('child_name', Str::replace('_', ' ', $child))->update([
+            'changedBy' => Auth::id(),
+            'deleted_at' => Carbon::now(),
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'warning',
+            'Meldung' => 'Kind wurde gelöscht',
+        ]);
+
+    }
+
+    public function deleteChildVerwaltung(User $parent, string $child)
+    {
+
+        if (\auth()->user()->can('edit schickzeiten') == false) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Sie können nur Ihre eigenen Kinder löschen',
+            ]);
+        }
+
+        $parent->schickzeiten()->where('child_name', Str::replace('_', ' ', $child))->update([
+            'changedBy' => Auth::id(),
+            'deleted_at' => Carbon::now(),
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'warning',
+            'Meldung' => 'Kind wurde gelöscht',
+        ]);
+
     }
 }
