@@ -95,8 +95,9 @@ class NachrichtenController extends Controller
                 ->orderByDesc('updated_at')->paginate(15);
         } else {
             $Nachrichten = Post::query()
-                ->where('archiv_ab', '<=', $month->copy()->endOfMonth())
+                ->where('archiv_ab', '<=', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
                 ->where('archiv_ab', '>', $month->copy()->startOfMonth())
+                ->where('archiv_ab', '<=', $month->copy()->startOfMonth())
                 ->orderByDesc('updated_at')
                 ->paginate(15);
         }
