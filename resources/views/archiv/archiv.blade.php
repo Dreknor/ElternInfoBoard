@@ -15,7 +15,7 @@
                 Hier finden Sie alle archivierten Nachrichten.
             </p>
             <p>
-                @for($x = \Carbon\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
+                @for($x = \Carbon\Carbon::now(); $x->greaterThanOrEqualTo((!is_null($first_post))? $first_post->archiv_ab : \Carbon\Carbon::now()); $x->subMonth())
                     <a href="{{url('archiv/'.$x->format('Y-m'))}}"
                        class="btn btn-outline-primary btn-sm">{{$x->locale('de')->monthName}} {{$x->format ('Y')}}</a>
                 @endfor
