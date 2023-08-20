@@ -88,9 +88,8 @@ class NachrichtenController extends Controller
 
         if (! auth()->user()->can('view all')) {
             $Nachrichten = auth()->user()->posts()
-                ->where('archiv_ab', '<', $month->endOfMonth())
-                ->where('archiv_ab', '>', $month->startOfMonth())
-                ->where('archiv_ab', '<=', Carbon::now()->startOfDay())
+                ->where('archiv_ab', '<', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
+                ->where('archiv_ab', '>', $month->copy()->startOfMonth())
                 ->where('archiv_ab', '>', auth()->user()->created_at)
                 ->orderByDesc('updated_at')->paginate(15);
         } else {
