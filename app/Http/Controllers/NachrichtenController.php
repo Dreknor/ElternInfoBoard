@@ -78,7 +78,7 @@ class NachrichtenController extends Controller
      */
     public function postsArchiv($month = null)
     {
-        $first_post = (auth()->user()->can('view all')) ? Post::query()->orderBy('archiv_ab')->first() : auth()->user()->posts()->orderBy('updated_at')->first();
+        $first_post = (auth()->user()->can('view all')) ? Post::first() : auth()->user()->posts()->orderBy('updated_at')->first();
 
         if ($month == null) {
             $month = Carbon::now();
