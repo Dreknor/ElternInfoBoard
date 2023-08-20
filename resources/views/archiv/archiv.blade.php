@@ -11,12 +11,14 @@
             </h5>
         </div>
         <div class="card-body">
-            Auswahl:
-
-            @for($x = \Illuminate\Support\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
-                <a href="{{url('archiv/'.$x->format('Y-m'))}}"
-                   class="btn btn-outline-primary btn-sm">{{$x->locale('de')->monthName}} {{$x->locale('de')->format('Y')}}</a>
-            @endfor
+            <p>
+                Hier finden Sie alle archivierten Nachrichten. <br>
+                @for($x = \Illuminate\Support\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
+                    <a href="{{url('archiv/'.$x->format('Y-m'))}}"
+                       class="btn btn-outline-primary btn-sm">{{$x->locale('de')->monthName}} {{$x->locale('de')->format('Y')}}
+                    </a>
+                @endfor
+            </p>
         </div>
         @if($nachrichten == null or count($nachrichten)<1)
             <div class="card-body bg-info">
