@@ -76,17 +76,36 @@ class NachrichtenController extends Controller
      *
      * @return Renderable
      */
-    public function postsArchiv()
+    public function postsArchiv($month = null)
     {
-        if (! auth()->user()->can('view all')) {
-            $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->orderByDesc('updated_at')->paginate(15);
+        $first_post = (auth()->user()->can('view all')) ? Post::query()->orderBy('archiv_ab')->first() : auth()->user()->posts()->orderBy('updated_at')->first();
+
+        if ($month == null) {
+            $month = Carbon::now();
         } else {
-            $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->orderByDesc('updated_at')->paginate(15);
+            $month = Carbon::parse($month);
+        }
+
+        if (! auth()->user()->can('view all')) {
+            $Nachrichten = auth()->user()->posts()
+                ->where('archiv_ab', '<', $month->endOfMonth())
+                ->where('archiv_ab', '>', $month->startOfMonth())
+                ->where('archiv_ab', '<=', Carbon::now()->startOfDay())
+                ->where('archiv_ab', '>', auth()->user()->created_at)
+                ->orderByDesc('updated_at')->paginate(15);
+        } else {
+            $Nachrichten = Post::query()
+                ->where('archiv_ab', '<=', $month->copy()->endOfMonth())
+                ->where('archiv_ab', '>', $month->copy()->startOfMonth())
+                ->orderByDesc('updated_at')
+                ->paginate(15);
         }
 
         return view('archiv.archiv', [
             'nachrichten' => $Nachrichten,
             'user' => auth()->user(),
+            'first_post' => $first_post
+
         ]);
     }
 

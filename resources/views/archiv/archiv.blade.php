@@ -10,14 +10,20 @@
                 archivierte Nachrichten
             </h5>
         </div>
+        <div class="card-body">
+            @for($x = \Illuminate\Support\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
+                <a href="{{url('archiv/'.$x->format('Y-m'))}}"
+                   class="btn btn-outline-primary btn-sm">{{$x->locale('de')->monthName}} {{$x->locale('de')->format('Y')}}</a>
+            @endfor
+        </div>
         @if($nachrichten == null or count($nachrichten)<1)
             <div class="card-body bg-info">
                 <p>
                     Es sind keine Nachrichten vorhanden
                 </p>
             </div>
-
         @endif
+
     </div>
 
     @foreach($nachrichten AS $nachricht)
