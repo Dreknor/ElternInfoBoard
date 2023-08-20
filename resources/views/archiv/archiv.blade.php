@@ -12,11 +12,10 @@
         </div>
         <div class="card-body">
             <p>
-                Hier finden Sie alle archivierten Nachrichten. <br>
+                Hier finden Sie alle archivierten Nachrichten.
                 @for($x = \Illuminate\Support\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
                     <a href="{{url('archiv/'.$x->format('Y-m'))}}"
-                       class="btn btn-outline-primary btn-sm">{{$x->locale('de')->monthName}} {{$x->format('Y')}}
-                    </a>
+                       class="btn btn-outline-primary btn-sm">{{$x->format('m.Y')}}</a>
                 @endfor
             </p>
         </div>
