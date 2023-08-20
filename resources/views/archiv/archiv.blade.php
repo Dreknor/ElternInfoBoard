@@ -12,8 +12,7 @@
         </div>
         <div class="card-body">
             <p>
-                @for($x = \Illuminate\Support\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
-                    {{$x}}
+                @for($x = \Carbon\Carbon::now(); $x->greaterThanOrEqualTo($first_post->archiv_ab); $x->subMonth())
                     <a href="{{url('archiv/'.$x->format('Y-m'))}}"
                        class="btn btn-outline-primary btn-sm">{{$x->format('m.Y')}}</a>
                 @endfor
