@@ -42,6 +42,9 @@ class TerminController extends Controller
 
         $termin->update($request->validated());
         $termin->groups()->sync($request->input('gruppen'));
+
+        Cache::forget('termine' . auth()->id());
+
         return redirect(url('/'))->with([
             'type' => 'success',
             'Meldung' => 'Termin aktualisiert.',

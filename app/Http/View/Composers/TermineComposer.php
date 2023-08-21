@@ -10,7 +10,7 @@ class TermineComposer
 {
     public function compose($view): void
     {
-        $expire = now()->diffInSeconds(now()->endOfDay());
+        $expire = 60;
 
         $termine = Cache::remember('termine'.auth()->id(), $expire, function () {
 
