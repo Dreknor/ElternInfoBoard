@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-header border-bottom">
-                Termin erstellen
+                Termin bearbeiten
             </div>
             <div class="card-body">
                 <form action="{{url('/termin/'.$termin->id)}}" method="post" class="form form-horizontal"
