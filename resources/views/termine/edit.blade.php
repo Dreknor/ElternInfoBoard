@@ -49,7 +49,7 @@
                                             <div class="form-group">
                                                 <label for="fullDay">Ganztägig?</label>
                                                 <select name="fullDay" id="fullDay" class="custom-select">
-                                                    <option value="0" @if($termin->fullDay == null) selected @endif>
+                                                    <option value="" @if($termin->fullDay == null) selected @endif>
                                                         nein
                                                     </option>
                                                     <option value="1" @if($termin->fullDay == true) selected @endif>ja
@@ -63,7 +63,7 @@
                                             <div class="form-group">
                                                 <label for="public">öffentlich?</label>
                                                 <select name="public" id="public" class="custom-select">
-                                                    <option value="0" @if($termin->public == null) selected @endif>nein
+                                                    <option value="" @if($termin->public == null) selected @endif>nein
                                                     </option>
                                                     <option value="1" @if($termin->public == true) selected @endif>ja
                                                     </option>
