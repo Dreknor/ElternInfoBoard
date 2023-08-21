@@ -38,4 +38,10 @@
             </form>
         @endif
     </div>
+    @if(auth()->user()->can('edit termin'))
+        <div class="col-auto">
+            <i class="fa fa-info-circle"
+               title="@foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"></i>
+        </div>
+    @endif
 </div>
