@@ -22,6 +22,33 @@ class TerminController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
+
+    public function edit(Termin $termin)
+    {
+        return view('termine.edit', [
+            'gruppen' => Group::all(),
+            'termin' => $termin,
+        ]);
+    }
+
+    public function update(CreateTerminRequest $request, Termin $termin)
+    {
+        if (!auth()->user()->can('edit termin')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $termin->update($request->validated());
+        $termin->groups()->sync($request->input('gruppen'));
+        return redirect(url('/'))->with([
+            'type' => 'success',
+            'Meldung' => 'Termin aktualisiert.',
+        ]);
+    }
+
+
     /**
      * Show the form for creating a new resource.
      *

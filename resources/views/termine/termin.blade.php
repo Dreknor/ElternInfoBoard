@@ -32,7 +32,7 @@
             <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
                 @csrf
                 @method('delete')
-                <button type="submit" class="btn-link ">
+                <button type="submit" class="btn-link text-danger">
                     <i class="far fa-trash-alt"></i>
                 </button>
             </form>
@@ -42,6 +42,11 @@
         <div class="col-auto">
             <i class="fa fa-info-circle"
                title="@foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"></i>
+        </div>
+        <div class="col-auto">
+            <a href="{{url("termin/$termin->id/edit")}}" class="text-black-50">
+                <i class="fa fa-edit"></i> bearbeiten
+            </a>
         </div>
     @endif
 </div>

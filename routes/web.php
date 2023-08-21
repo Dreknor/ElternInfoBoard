@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
 
         //Termine
         Route::resource('termin', TerminController::class);
+        //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
         //Rückmeldungen
 

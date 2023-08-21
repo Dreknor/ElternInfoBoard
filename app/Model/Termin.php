@@ -48,8 +48,8 @@ class Termin extends Model
         parent::boot();
 
         static::addGlobalScope('date', function (Builder $builder) {
-            $builder->where('start', '>=', Carbon::now())
-                ->orWhere('ende', '>=', Carbon::now());
+            $builder->where('start', '>=', Carbon::now()->startOfDay())
+                ->orWhere('ende', '>=', Carbon::now()->startOfDay());
         });
 
         static::created(function () {
