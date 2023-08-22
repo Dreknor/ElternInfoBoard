@@ -238,6 +238,14 @@
         this.value='wird bearbeitet…';
 
     });
+
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    });
+
+    $('.popover-dismiss').popover({
+        trigger: 'focus'
+    });
 </script>
     @yield('js')
     @stack('js')

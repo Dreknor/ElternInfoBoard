@@ -40,12 +40,19 @@
     </div>
     @if(auth()->user()->can('edit termin'))
         <div class="col-auto">
-            <i class="fa fa-info-circle"
-               title="@foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"></i>
+            <a href="#"
+               tabindex="0" role="button"
+               data-toggle="popover" title="{{$termin->terminname}} @if($termin->public == 1) (öffentlich) @endif"
+               data-content="Gruppen: @foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"
+               data-trigger="focus">
+                <i class="fa fa-info-circle">
+                </i>
+            </a>
         </div>
         <div class="col-auto">
             <a href="{{url("termin/$termin->id/edit")}}" class="text-black-50">
-                <i class="fa fa-edit"></i> bearbeiten
+                <i class="fa fa-edit"></i>
+                <div class="d-none d-lg-inline ">bearbeiten</div>
             </a>
         </div>
     @endif
