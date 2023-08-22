@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\createUserRequest;
+use App\Http\Requests\PasswordlessUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Model\Discussion;
 use App\Model\Group;
@@ -14,6 +15,8 @@ use App\Model\Post;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
+use Grosv\LaravelPasswordlessLogin\LoginUrl;
+use Grosv\LaravelPasswordlessLogin\PasswordlessLogin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -381,4 +384,5 @@ class UserController extends Controller
             'Meldung' => "Keine Benutzer zum Löschen ausgewählt"
         ]);
     }
+
 }
