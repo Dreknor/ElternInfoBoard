@@ -10,7 +10,7 @@ class NachrichtenComposer
 {
     public function compose($view): void
     {
-        $expire = 1;
+        $expire = 30;
 
         $nachrichten = Cache::remember('posts_'.auth()->id(), $expire, function () {
             $user = auth()->user();
