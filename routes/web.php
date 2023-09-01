@@ -266,6 +266,10 @@ Route::middleware('auth')->group(function () {
         //Gruppenverwaltung
         Route::get('/groups', [GroupsController::class, 'index']);
         Route::post('/groups', [GroupsController::class, 'store'])->middleware(['permission:view groups']);
+        Route::post('groups/own', [GroupsController::class, 'storeOwnGroup'])->middleware(['permission:create own group']);
+        Route::post('groups/{group}/removeUser', [GroupsController::class, 'removeUserFromOwnGroup'])->middleware(['permission:create own group']);
+        Route::get('groups/{group}/add', [GroupsController::class, 'addUserToOwnGroup'])->middleware(['permission:create own group']);
+        Route::post('groups/{group}/addUser', [GroupsController::class, 'storeUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
 
         //Routen zur Rechteverwaltung

@@ -124,7 +124,7 @@
                             <div class="row mt-1">
                                 <div class="col-12">
                                     Gruppen:
-                                    @foreach($nachricht->groups as $group)
+                                    @foreach($nachricht->groups()->withoutGlobalScopes([\App\Scopes\GetGroupsScope::class])->get() as $group)
                                         <span class="badge">
                                                 {{$group->name}}@if(!$loop->last)
                                                 ,

@@ -85,6 +85,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany
+     */
+    public function ownGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'owner_id');
+    }
+
+    /**
      * Posts verknüpft über die Gruppen
      *
      * @return HasManyDeep

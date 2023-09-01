@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AddUserToOwnGroupRequest;
 use App\Http\Requests\CreateGroupRequest;
+use App\Http\Requests\CreateOwnGroupRequest;
 use App\Model\Group;
+use App\Model\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -63,6 +67,81 @@ class GroupsController extends Controller
         ]);
     }
 
+    public function storeOwnGroup(CreateOwnGroupRequest $request)
+    {
+        $group = new Group($request->validated());
+        $group->owner_id = auth()->user()->id;
+        $group->save();
+
+
+        Cache::forget('groups');
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Gruppe wurde erstellt',
+        ]);
+
+    }
+
+    public function addUserToOwnGroup(Group $group)
+    {
+        if ($group->owner->id !== auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
+            ]);
+        }
+
+
+        return view('groups.addUser')->with([
+            'group' => $group,
+            'users' => User::whereDoesntHave('groups', function (Builder $query) use ($group) {
+                $query->where('group_id', $group->id);
+            })->get(),
+        ]);
+    }
+
+    public function storeUserToOwnGroup(AddUserToOwnGroupRequest $request, Group $group)
+    {
+        if ($group->owner->id !== auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
+            ]);
+        }
+
+        $group->users()->syncWithoutDetaching($request->user_id);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Benutzer wurde hinzugefügt.',
+        ]);
+    }
+
+    public function removeUserFromOwnGroup(Request $request, Group $group)
+    {
+        if ($group->owner->id !== auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
+            ]);
+        }
+
+        if (!$group->users->contains($request->user_id)) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Benutzer ist nicht in der Gruppe.',
+            ]);
+        }
+
+        $group->users()->detach($request->user_id);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Benutzer wurde entfernt.',
+        ]);
+    }
+
     /**
      *
      * Löscht die angegebene Gruppe
@@ -73,7 +152,7 @@ class GroupsController extends Controller
      */
     public function delete(Request $request, Group $group)
     {
-        if (! auth()->user()->can('delete groups')) {
+        if (!auth()->user()->can('delete groups') and $group->owner_id !== auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt.',
@@ -96,6 +175,19 @@ class GroupsController extends Controller
                 'type' => 'warning',
                 'Meldung' => 'Gruppe wurde gelöscht.',
             ]);
+        }
+    }
+
+    public function deletePrivateGroups()
+    {
+        $groups = Group::whereNot('owner_id', null)->get();
+        foreach ($groups as $group) {
+            $group->users()->sync([]);
+            $group->posts()->sync([]);
+            $group->termine()->sync([]);
+            $group->listen()->sync([]);
+            $group->media()->delete();
+            $group->delete();
         }
     }
 }
