@@ -57,6 +57,11 @@ class editUserRequest extends FormRequest
                 'nullable',
                 'string',
             ],
+            'calendar_prefix' => [
+                'nullable',
+                'string',
+                'max:8'
+            ],
             'releaseCalendar' => [
                 'nullable',
                 'integer',

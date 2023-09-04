@@ -16,11 +16,11 @@
         {{$termin->terminname}}
         <div class="d-inline">
             <div class="pull-right">
-                <a href="{{$termin->link()->ics()}}" class="card-link"
+                <a href="{{$termin->link(auth()->user()->calendar_prefix)->ics()}}" class="card-link"
                    title="ICS-Download für Apple und Windows">
                     <img src="{{asset('img/ics-icon.png')}}" height="25px">
                 </a>
-                <a href="{{$termin->link()->google()}}" class="card-link" target="_blank"
+                <a href="{{$termin->link(auth()->user()->calendar_prefix)->google()}}" class="card-link" target="_blank"
                    title="Goole-Kalender-Link">
                     <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
                 </a>
