@@ -88,9 +88,7 @@ class WordpressRepository
         if ($post->published_wp_id != null and Str::contains($image->mime_type, 'image')) {
 
             $url = 'https://'.$this->url.'/wp-json/wp/v2/media/';
-
             $ch = curl_init($url);
-
 
             curl_setopt($ch, CURLOPT_USERPWD, $this->user . ":" . $this->password);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
