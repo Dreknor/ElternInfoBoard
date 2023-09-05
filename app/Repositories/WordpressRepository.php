@@ -66,10 +66,12 @@ class WordpressRepository
         if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')){
             $repository = new WordpressRepository();
             $media_id = null;
+            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
+            $return = json_decode($wp_call);
+
             if (count($post->getMedia('header'))>0){
                 $return = $this->push_image($post, $post->getMedia('header')->first());
-                dd(json_decode($return));
-                $media_id = json_decode($return)?->id;
+                $media_id = $return->id;
             }
 
             $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
@@ -83,7 +85,7 @@ class WordpressRepository
     }
 
     public function push_image(Post $post, Media $image){
-        if (Str::contains($image->mime_type, 'image')) {
+        if ($post->published_wp_id != null and Str::contains($image->mime_type, 'image')) {
 
             $url = 'https://'.$this->url.'/wp-json/wp/v2/media/';
 
