@@ -76,6 +76,7 @@ class WordpressRepository
 
             if (count($post->getMedia('header'))>0){
                 $return = $this->push_image($post, $post->getMedia('header')->first());
+                dd($return);
                 $media_id = $return->id;
                 $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
 
