@@ -65,20 +65,21 @@ class WordpressRepository
 
         if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')){
             $repository = new WordpressRepository();
-            $media_id = null;
-            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
-            $return = json_decode($wp_call);
+            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
 
-            if (count($post->getMedia('header'))>0){
-                $return = $this->push_image($post, $post->getMedia('header')->first());
-                $media_id = $return->id;
-            }
-
-            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
             $return = json_decode($wp_call);
             $post->update([
                 'published_wp_id' => $return->id
             ]);
+
+
+
+            if (count($post->getMedia('header'))>0){
+                $return = $this->push_image($post, $post->getMedia('header')->first());
+                $media_id = $return->id;
+                $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
+
+            }
 
 
         }
