@@ -68,7 +68,7 @@ class WordpressRepository
             $media_id = null;
             if (count($post->getMedia('header'))>0){
                 $return = $this->push_image($post, $post->getMedia('header')->first());
-                dd(son_decode($return));
+                dd(json_decode($return));
                 $media_id = json_decode($return)?->id;
             }
 
