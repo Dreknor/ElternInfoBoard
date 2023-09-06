@@ -42,21 +42,7 @@ class NachrichtenComposer
                     ->with('media', 'autor', 'groups', 'rueckmeldung')
                     ->withCount('users')
                     ->get();
-/*
-                if (!auth()->user()->can('view protected')) {
-                    $Nachrichten = $Nachrichten->filter(function ($nachricht) {
-                        $unprotected = 0;
-                        foreach ($nachricht->groups as $group) {
-                            if ($group->protected == 0) {
-                                $unprotected++;
-                            }
-                        }
-                        if (($unprotected > 0) or $nachricht->author == auth()->id()) {
-                            return $nachricht;
-                        }
-                    });
-                }
-*/
+
             }
 
             $Nachrichten = $Nachrichten->unique('id');
@@ -64,7 +50,7 @@ class NachrichtenComposer
             $Nachrichten = $Nachrichten->load('reactions');
             $Nachrichten = $Nachrichten->load('poll', 'poll.options', 'poll.votes', 'poll.answers');
 
-            return $Nachrichten->paginate(30);
+            return $Nachrichten;
         });
         $view->with([
             'nachrichten' => $nachrichten,
