@@ -31,15 +31,19 @@
 
                 @if(auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author )
                     <div class="col-md-2 col-sm-4">
-                        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
                             <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
                                id="editTextBtn" data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
                                 <i class="far fa-edit"></i>
                             </a>
-                        @endif
                         @if($nachricht->released == 0)
                             <a href="{{url('/posts/release/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"  data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
                                 <i class="far fa-eye"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 1 and !$nachricht->is_archived)
+                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                <i class="fas fa-archive"></i>
                             </a>
                         @endif
                     </div>
