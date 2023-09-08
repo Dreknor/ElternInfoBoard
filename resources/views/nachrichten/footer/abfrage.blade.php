@@ -81,7 +81,8 @@
                                     <label class="label w-100">
                                         {{$option->option}}
                                         @if($option->type == 'textbox')
-                                            <textarea name="answers[text][{{$option->id}}]" class="form-control"
+                                            <textarea name="answers[text][{{$option->id}}]"
+                                                      class="form-control rueckmeldung"
                                                       height="">
 
                                             </textarea>
