@@ -76,6 +76,7 @@
                                             <select class="custom-select w-100" name="types[]">
                                                 <option value="check">Auswahl</option>
                                                 <option value="text">Texteingabe</option>
+                                                <option value="textbox">gr. Textfeld</option>
                                             </select>
                                         </label>
                                     </div>
@@ -94,6 +95,8 @@
                                             <select class="custom-select w-100" name="types[]">
                                                 <option value="check">Auswahl</option>
                                                 <option value="text">Texteingabe</option>
+                                                <option value="textbox">gr. Textfeld</option>
+
                                             </select>
                                         </label>
                                     </div>
@@ -112,6 +115,8 @@
                                             <select class="custom-select w-100" name="types[]">
                                                 <option value="check">Auswahl</option>
                                                 <option value="text">Texteingabe</option>
+                                                <option value="textbox">gr. Textfeld</option>
+
                                             </select>
                                         </label>
                                     </div>

@@ -30,6 +30,9 @@
                             @case('text')
                                 {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
                                 @break
+                            @case('textbox')
+                                {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
+                                @break
                             @case('check')
                                 1
                                 @break

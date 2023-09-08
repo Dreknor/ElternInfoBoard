@@ -104,7 +104,6 @@ class NachrichtenController extends Controller
             'nachrichten' => $Nachrichten,
             'user' => auth()->user(),
             'first_post' => $first_post
-
         ]);
     }
 

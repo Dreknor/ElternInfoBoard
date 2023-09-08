@@ -80,7 +80,14 @@
                                 <div class="col-12">
                                     <label class="label w-100">
                                         {{$option->option}}
-                                        <input name="answers[text][{{$option->id}}]" class="form-control">
+                                        @if($option->type == 'textbox')
+                                            <textarea name="answers[text][{{$option->id}}]" class="form-control"
+                                                      height="">
+
+                                            </textarea>
+                                        @else
+                                            <input name="answers[text][{{$option->id}}]" class="form-control">
+                                        @endif
                                     </label>
                                 </div>
                             </div>

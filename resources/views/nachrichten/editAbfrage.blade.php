@@ -82,6 +82,10 @@
                                                     <option value="text" @if($option->type == 'text') selected @endif>
                                                         Texteingabe
                                                     </option>
+                                                    <option value="text"
+                                                            @if($option->type == 'textbox') selected @endif>
+                                                        gr. Textfeld
+                                                    </option>
                                                 </select>
                                             </label>
                                         </div>
