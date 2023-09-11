@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+
 use PDF;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -162,7 +163,6 @@ class RueckmeldungenController extends Controller
                 'rueckmeldung' => $rueckmeldung,
             ]);
         } elseif ($rueckmeldung->type == 'abfrage') {
-            //dd($rueckmeldung->userRueckmeldungen);
             return view('rueckmeldungen.showAbfrage', [
                 'rueckmeldung' => $rueckmeldung->load('userRueckmeldungen'),
             ]);
@@ -221,9 +221,9 @@ class RueckmeldungenController extends Controller
                 return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
                 break;
             case 'abfrage':
-                //dd($rueckmeldung->userRueckmeldungen);
-                return Excel::download(new AbfrageExport($rueckmeldung), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
+                //Excel für Abfrage-Rückmeldungen
 
+                return Excel::download(new AbfrageExport($rueckmeldung->options, $rueckmeldung->userRueckmeldungen), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
                 break;
         }
 
