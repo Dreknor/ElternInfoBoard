@@ -222,7 +222,6 @@ class RueckmeldungenController extends Controller
                 break;
             case 'abfrage':
                 //Excel für Abfrage-Rückmeldungen
-
                 return Excel::download(new AbfrageExport($rueckmeldung->options, $rueckmeldung->userRueckmeldungen), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
                 break;
         }
