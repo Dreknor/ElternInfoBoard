@@ -54,7 +54,6 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
             $answer = Str::replace('<br/>', '', $answer);
             $answer = Str::replace('<br />', '', $answer);
 
-
             $row[] = $answer;
         };
 

@@ -33,13 +33,26 @@
                                 </label>
                             </div>
                         </div>
-                    @else
+                    @elseif($option->type == 'text')
                         <div class="row ">
                             <div class="col-12">
                                 <label class="label w-100">
                                     {{$option->option}}
                                     <input name="answers[text][{{$option->id}}]" class="form-control"
                                            @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first())) value="{{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}" @endif>
+                                </label>
+                            </div>
+                        </div>
+                    @elseif($option->type == 'textbox')
+                        <div class="row ">
+                            <div class="col-12">
+                                <label class="label w-100">
+                                    {{$option->option}}
+                                    <textarea name="answers[text][{{$option->id}}]" class="form-control rueckmeldung">
+                                        @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first()))
+                                            {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
+                                        @endif
+                                    </textarea>
                                 </label>
                             </div>
                         </div>
