@@ -47,7 +47,10 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
         $row[] = $userrueckmeldung->user->name;
         $row[] = $userrueckmeldung->created_at;
         foreach ($this->options as $option) {
-            $answer = $answers->where('option_id', $option->id)->first()->answer;
+            $answer = $answers->where('option_id', $option->id)->first()?->answer;
+            if ($answer == null) {
+                $answer = '';
+            }
             $answer = Str::replace('<p>', '', $answer);
             $answer = Str::replace('</p>', '', $answer);
             $answer = Str::replace('<br>', '', $answer);
