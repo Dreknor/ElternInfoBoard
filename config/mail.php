@@ -34,12 +34,6 @@ return [
     */
 
     'mailers' => [
-        'failover' => [
-            'transport' => 'failover',
-            'mailers' => [
-                'sendmail', 'smtp'
-            ],
-        ],
         'smtp' => [
             'transport' => 'smtp',
             'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
@@ -50,6 +44,7 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
+
 
         'ses' => [
             'transport' => 'ses',
