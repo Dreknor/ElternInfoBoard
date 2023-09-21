@@ -600,6 +600,7 @@ class NachrichtenController extends Controller
             $newPost->updated_at = Carbon::now();
             $newPost->released = 0;
             $newPost->send_at = null;
+            $newPost->author = auth()->id();
             $newPost->save();
         } else {
             $posts->updated_at = Carbon::now();
