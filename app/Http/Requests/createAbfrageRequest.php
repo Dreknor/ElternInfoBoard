@@ -29,6 +29,7 @@ class createAbfrageRequest extends FormRequest
             'max_number' => ['required', 'integer', 'min:0'],
             'options' => ['required', 'array', 'min:2'],
             'types' => ['required', 'array', 'min:2'],
+            'required' => ['required', 'array', 'min:2'],
             'empfaenger' => ['required', 'exists:users,email'],
             'pflicht' => ['integer', 'nullable', 'max:1'],
             'multiple' => ['integer', 'nullable', 'max:1'],

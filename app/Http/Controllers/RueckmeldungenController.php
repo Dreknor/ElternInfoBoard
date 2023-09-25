@@ -112,6 +112,7 @@ class RueckmeldungenController extends Controller
                     'rueckmeldung_id' => $rueckmeldung->id,
                     'type' => $request->types[$key],
                     'option' => $value,
+                    'required' => $request->required[$key],
                 ];
             }
 
@@ -383,6 +384,7 @@ class RueckmeldungenController extends Controller
                 $options[] = [
                     'rueckmeldung_id' => $rueckmeldung->id,
                     'type' => $request->types[$key],
+                    'required' => $request->required[$key],
                     'option' => $value,
                 ];
             }
