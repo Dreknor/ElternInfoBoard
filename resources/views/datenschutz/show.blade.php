@@ -532,5 +532,36 @@
             </div>
         </div>
     </div>
+ <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    Lesebestätigungen
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>Beitrag</th>
+                        <th>bestätigt</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($user->read_receipts as $receipt)
+                        <tr>
+                            <td>
+                                {{$receipt->post->header}}
+                            </td>
+                            <td>
+                                {{$receipt->created_at->format('d.m.Y h:i')}} Uhr
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 @endsection
