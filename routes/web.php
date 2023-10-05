@@ -150,6 +150,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
+        Route::post('post/readReceipt', [\App\Http\Controllers\ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);

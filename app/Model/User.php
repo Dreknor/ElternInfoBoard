@@ -284,4 +284,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Mail::class, 'senders_id')->orderByDesc('created_at');
     }
+
+    public function read_receipts()
+    {
+        return $this->hasMany(ReadReceipts::class, 'user_id');
+    }
 }

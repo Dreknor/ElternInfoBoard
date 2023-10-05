@@ -29,12 +29,13 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasRelationships;
     use Reactable;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
         'reactable' => 'boolean',
         'external' => 'boolean',
+        'read_receipt' => 'boolean',
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
@@ -93,5 +94,10 @@ class Post extends Model implements HasMedia, ReactableInterface
         }
 
         return null;
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(ReadReceipts::class);
     }
 }

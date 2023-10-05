@@ -240,6 +240,9 @@
                 @endif
             </div>
         </div>
+            @if($nachricht->read_receipt == 1)
+                @include('nachrichten.footer.read_receipt', ['post' => $nachricht])
+            @endif
         @include('nachrichten.footer.reactions')
         @include('nachrichten.footer.poll_anonym')
         @if(!is_null($nachricht->rueckmeldung))
