@@ -108,6 +108,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Lesebestätigung anfordern?</label>
+                                <select class="custom-select" name="read_receipt" id="read_receiptSelect">
+                                    <option value="0" >keine Lesebestätigung</option>
+                                    <option value="1" @if($post->read_receipt ==0) selected @endif>Lesebestätigung anfordern</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
