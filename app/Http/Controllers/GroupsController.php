@@ -26,6 +26,7 @@ class GroupsController extends Controller
             $groups = Group::with('users')->get();
         } elseif (auth()->user()->can('view groups')) {
             $groups = auth()->user()->groups;
+            $groups = $groups->merge(auth()->user()->ownGroups);
         } else {
             return redirect(url('/'))->with([
                 'type' => 'warning',
