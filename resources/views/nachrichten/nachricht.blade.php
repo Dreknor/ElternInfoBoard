@@ -161,7 +161,7 @@
 
                     @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
                         <div class="col-md-2 col-sm-4">
-                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)) or $nachricht->archiv_ab->greaterThan(\Carbon\Carbon::now()))
                                 <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
                                    id="editTextBtn" data-toggle="tooltip" data-placement="top"
                                    title="Nachricht bearbeiten">
