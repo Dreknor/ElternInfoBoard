@@ -113,7 +113,7 @@
                                 <label>Lesebestätigung anfordern?</label>
                                 <select class="custom-select" name="read_receipt" id="read_receiptSelect">
                                     <option value="0" >keine Lesebestätigung</option>
-                                    <option value="1" @if($post->read_receipt ==0) selected @endif>Lesebestätigung anfordern</option>
+                                    <option value="1" @if($post->read_receipt ==1) selected @endif>Lesebestätigung anfordern</option>
                                 </select>
                             </div>
                         </div>

@@ -54,7 +54,7 @@ class createNachrichtRequest extends FormRequest
                 'nullable', 'boolean',
             ],
             'read_receipt' => [
-                'nullable', 'boolean',
+                'nullable', 'sometimes','boolean',
             ],
             'external' => [
                 'nullable', 'sometimes','boolean',
