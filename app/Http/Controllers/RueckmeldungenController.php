@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+
 use PDF;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -111,6 +112,7 @@ class RueckmeldungenController extends Controller
                     'rueckmeldung_id' => $rueckmeldung->id,
                     'type' => $request->types[$key],
                     'option' => $value,
+                    'required' => $request->required[$key],
                 ];
             }
 
@@ -162,7 +164,6 @@ class RueckmeldungenController extends Controller
                 'rueckmeldung' => $rueckmeldung,
             ]);
         } elseif ($rueckmeldung->type == 'abfrage') {
-            //dd($rueckmeldung->userRueckmeldungen);
             return view('rueckmeldungen.showAbfrage', [
                 'rueckmeldung' => $rueckmeldung->load('userRueckmeldungen'),
             ]);
@@ -221,9 +222,8 @@ class RueckmeldungenController extends Controller
                 return $pdf->download(Carbon::now()->format('Y-m-d').'_Nachrichten.pdf');
                 break;
             case 'abfrage':
-                //dd($rueckmeldung->userRueckmeldungen);
-                return Excel::download(new AbfrageExport($rueckmeldung), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
-
+                //Excel für Abfrage-Rückmeldungen
+                return Excel::download(new AbfrageExport($rueckmeldung->options, $rueckmeldung->userRueckmeldungen), 'Rueckmeldung_' . Carbon::now()->format('Ymd_Hi') . '.xlsx');
                 break;
         }
 
@@ -384,6 +384,7 @@ class RueckmeldungenController extends Controller
                 $options[] = [
                     'rueckmeldung_id' => $rueckmeldung->id,
                     'type' => $request->types[$key],
+                    'required' => $request->required[$key],
                     'option' => $value,
                 ];
             }
@@ -498,7 +499,7 @@ class RueckmeldungenController extends Controller
                     $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)) {
                         $email = $User->email;
-                        Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende, $Rueckmeldung->post->id));
+                        Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
                     }
                 }
             }

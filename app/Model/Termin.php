@@ -57,15 +57,21 @@ class Termin extends Model
         });
     }
 
-    public function link(): Link
+    public function link($prefix = null): Link
     {
+        if (!is_null($prefix)) {
+            $terminname = '(' . $prefix . ') ' . $this->terminname;
+        } else {
+            $terminname = $this->terminname;
+        }
+
         if ($this->fullDay == 1) {
             $ende = $this->ende->addDay();
 
-            return Link::create($this->terminname, $this->start, $ende, $this->fullDay);
+            return Link::create($terminname, $this->start, $ende, $this->fullDay);
         }
 
-        return Link::create($this->terminname, $this->start, $this->ende, $this->fullDay);
+        return Link::create($terminname, $this->start, $this->ende, $this->fullDay);
     }
 
 

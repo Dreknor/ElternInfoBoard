@@ -57,6 +57,9 @@ class editPostRequest extends FormRequest
             'released' => [
                 'nullable', 'boolean',
             ],
+            'read_receipt' => [
+                'nullable', 'boolean',
+            ],
             'external' => [
                 'nullable', 'sometimes','boolean',
             ],

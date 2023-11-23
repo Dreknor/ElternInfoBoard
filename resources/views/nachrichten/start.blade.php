@@ -49,6 +49,9 @@
                                             </div>
 
                                         @endif
+                                        @if($nachricht->read_receipt ==1 )
+                                                <i class="fas fa-book-open"></i>
+                                        @endif
                                         {{$nachricht->header}}
                                     </div>
                                 </a>

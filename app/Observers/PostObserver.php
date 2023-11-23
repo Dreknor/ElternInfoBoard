@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Model\Settings;
 use App\Model\Post;
 use App\Repositories\WordpressRepository;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class PostObserver
@@ -17,6 +18,7 @@ class PostObserver
      */
     public function created(Post $post)
     {
+        Cache::forget('posts_' . auth()->id());
 
     }
 
@@ -35,6 +37,8 @@ class PostObserver
             $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
         }
 
+        Cache::forget('posts_' . auth()->id());
+
     }
 
     /**
@@ -45,7 +49,8 @@ class PostObserver
      */
     public function deleted(Post $post)
     {
-        //
+        Cache::forget('posts_' . auth()->id());
+
     }
 
     /**
@@ -56,7 +61,8 @@ class PostObserver
      */
     public function restored(Post $post)
     {
-        //
+        Cache::forget('posts_' . auth()->id());
+
     }
 
     /**
@@ -67,6 +73,7 @@ class PostObserver
      */
     public function forceDeleted(Post $post)
     {
-        //
+        Cache::forget('posts_' . auth()->id());
+
     }
 }

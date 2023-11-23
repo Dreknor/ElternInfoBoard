@@ -23,7 +23,7 @@
                 @endif
 
                 <div class="row">
-                    <div class="col-md-6 col-sm-12">
+                    <div class="col-md-8 col-sm-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">
@@ -98,7 +98,7 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-5 col-sm-12">
+                                        <div class="col-md-3 col-sm-12">
                                             <div class="form-group">
                                                 <label>Login aufzeichnen um Benachrichtigungen zu erhalten</label>
                                                 <select class="custom-select" name="track_login">
@@ -111,7 +111,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-md-6 col-sm-12">
+                                        <div class="col-md-4 col-sm-6">
                                             <div class="form-group">
                                                 <label>Termine freigeben (Termine können dann per Link in externe
                                                     Kalender integiert werden)</label>
@@ -123,6 +123,16 @@
                                                             @if($user->releaseCalendar == false) selected @endif >nein
                                                     </option>
                                                 </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 col-sm-6">
+                                            <div class="form-group">
+                                                <label>Prefix für Termine (die Namen der Termine bekommen das angegebene
+                                                    Prefix vorangestellt, damit diese leichter gefunden werden
+                                                    können)</label>
+                                                <input type="text" class="form-control border-input"
+                                                       name="calendar_prefix" value="{{$user->calendar_prefix}}"
+                                                       max="8">
                                             </div>
                                         </div>
                                     </div>
@@ -139,7 +149,7 @@
                         </div>
 
                     </div>
-                    <div class="col-md-5 offset-md-1 col-sm-12">
+                    <div class="col-md-4 col-sm-12">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title">

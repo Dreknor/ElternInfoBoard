@@ -13,6 +13,6 @@ class SortPostsScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->orderBy('sticky')->orderByDesc('updated_at');
+        $builder->orderBy('sticky')->orderByDesc('read_receipt')->orderByDesc('updated_at');
     }
 }

@@ -30,6 +30,8 @@ class FeedbackController extends Controller
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
+            })->orWhereHas('permissions', function ($q) {
+                $q->where('name', 'show in contact form');
             })->orderBy('name')->get()
         ]);
     }

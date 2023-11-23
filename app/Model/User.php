@@ -42,7 +42,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar',
+        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
     ];
 
     /**
@@ -82,6 +82,14 @@ class User extends Authenticatable
     public function groups()
     {
         return $this->belongsToMany(Group::class)->withTimestamps();
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function ownGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'owner_id');
     }
 
     /**
@@ -275,5 +283,10 @@ class User extends Authenticatable
     public function mails()
     {
         return $this->hasMany(Mail::class, 'senders_id')->orderByDesc('created_at');
+    }
+
+    public function read_receipts()
+    {
+        return $this->hasMany(ReadReceipts::class, 'user_id');
     }
 }

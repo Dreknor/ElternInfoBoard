@@ -45,6 +45,7 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -70,14 +71,6 @@ return [
         'array' => [
             'transport' => 'array',
         ],
-
-        'failover' => [
-            'transport' => 'failover',
-            'mailers' => [
-                'smtp',
-                'log',
-            ],
-        ],
     ],
 
     /*
@@ -93,7 +86,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'name' => env('MAIL_FROM_NAME', 'ElternInfoBoard'),
     ],
 
     /*

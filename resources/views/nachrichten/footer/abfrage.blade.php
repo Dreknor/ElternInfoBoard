@@ -47,7 +47,7 @@
 
     @endforeach
 @endif
-@if($nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()) and ($nachricht->rueckmeldung->multiple == true or $user->getRueckmeldung()->where('post_id', $nachricht->id)->count()==0))
+@if($nachricht->rueckmeldung->ende->endOfDay()->greaterThan(\Carbon\Carbon::now()) and ($nachricht->rueckmeldung->multiple == true or $user->getRueckmeldung()->where('post_id', $nachricht->id)->count()==0))
     <div id="rueckmeldeForm_{{$nachricht->id}}"
          class="card-footer @if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first())) d-none @endif">
         <div class="card">
@@ -62,13 +62,16 @@
                         @if($option->type == 'check')
                             <div class="row ">
                                 <div class="col-12">
-                                    <label class="label w-100">
+                                    <label class="label w-100 @if($option->required == true) text-danger @endif">
                                         @if($nachricht->rueckmeldung->max_answers ==1)
                                             <input type="radio" name="answers[options][]"
-                                                   value="{{$option->id}}" class="custom-radio">
+                                                   value="{{$option->id}}"
+                                                   @if($option->required == true) required @endif
+                                                   class="custom-radio">
                                         @else
                                             <input type="checkbox" name="answers[options][]"
                                                    value="{{$option->id}}"
+                                                   @if($option->required == true) required @endif
                                                    class="custom-checkbox abfrage_{{$nachricht->rueckmeldung->id}}">
                                         @endif
                                         {{$option->option}}
@@ -78,9 +81,20 @@
                         @else
                             <div class="row ">
                                 <div class="col-12">
-                                    <label class="label w-100">
+                                    <label class="label w-100 @if($option->required == true) text-danger @endif">
                                         {{$option->option}}
-                                        <input name="answers[text][{{$option->id}}]" class="form-control">
+                                        @if($option->type == 'textbox')
+                                            <textarea name="answers[text][{{$option->id}}]"
+                                                      class="form-control rueckmeldung"
+                                                      @if($option->required == true) required @endif
+                                                      height="">
+
+                                            </textarea>
+                                        @else
+                                            <input name="answers[text][{{$option->id}}]"
+                                                   @if($option->required == true) required @endif
+                                                   class="form-control">
+                                        @endif
                                     </label>
                                 </div>
                             </div>

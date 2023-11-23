@@ -104,7 +104,6 @@ class NachrichtenController extends Controller
             'nachrichten' => $Nachrichten,
             'user' => auth()->user(),
             'first_post' => $first_post
-
         ]);
     }
 
@@ -457,16 +456,22 @@ class NachrichtenController extends Controller
                 @ini_set('post_max_size', '300M');
                 @ini_set('upload_max_size', '300M');
             }
-            if ($request->input('collection') == 'files') {
-                $posts->addAllMediaFromRequest()
-                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
-            } elseif ($request->input('collection') == 'header') {
-                $posts->addAllMediaFromRequest()
-                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('header'));
-            } else {
-                $posts->addAllMediaFromRequest()
-                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('images'));
+
+            $files = $request->files->all();
+            foreach ($files['files'] as $file) {
+                if (substr($file->getMimeType(), 0, 5) == 'image')
+                    $collection = 'images';
+                if ($request->input('collection') == 'header') {
+                    $collection = 'header';
+                } else {
+                    $collection = 'files';
+                }
+
+                $posts
+                    ->addMedia($file)
+                    ->toMediaCollection($collection);
             }
+
         }
 
         if ($posts->released and $push == 1) {
@@ -591,8 +596,11 @@ class NachrichtenController extends Controller
     {
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
             $newPost = $posts->duplicate();
-            $newPost->archiv_ab = Carbon::now()->addWeek();
+            $newPost->archiv_ab = Carbon::now()->addWeeks(2);
+            $newPost->updated_at = Carbon::now();
+            $newPost->released = 0;
             $newPost->send_at = null;
+            $newPost->author = auth()->id();
             $newPost->save();
         } else {
             $posts->updated_at = Carbon::now();

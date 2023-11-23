@@ -2,9 +2,11 @@
 
 namespace App\Model;
 
+use App\Scopes\GetGroupsScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Scopes\SortGroupsScope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -14,9 +16,9 @@ class Group extends Model implements HasMedia
     use InteractsWithMedia;
     use HasFactory;
 
-    protected $fillable = ['name', 'bereich', 'protected'];
+    protected $fillable = ['name', 'bereich', 'protected', 'owner_id'];
 
-    protected $visible = ['name', 'bereich', 'protected'];
+    protected $visible = ['name', 'bereich', 'protected', 'owner_id'];
 
     protected $casts = [
         'protected' => 'boolean',
@@ -25,6 +27,7 @@ class Group extends Model implements HasMedia
     protected static function booted()
     {
         static::addGlobalScope(new SortGroupsScope());
+        static::addGlobalScope(new GetGroupsScope());
     }
 
     public function users(): BelongsToMany
@@ -45,5 +48,13 @@ class Group extends Model implements HasMedia
     public function listen(): BelongsToMany
     {
         return $this->belongsToMany(Liste::class, 'group_listen');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 }

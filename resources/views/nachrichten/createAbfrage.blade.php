@@ -31,9 +31,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12 col-md-4">
-                        <div class="row">
-                            <div class="col-6">
+                    <div class="col-3">
                                 <div class="form-group">
                                     <label>Ende</label>
                                     <input type="date" class="form-control border-input" name="ende"
@@ -41,14 +39,14 @@
                                 </div>
                             </div>
 
-                            <div class="col-6">
+                    <div class="col-3">
                                 <div class="form-group">
                                     <label>max. Antwortmöglichkeiten (0 für unbegrenzt)</label>
                                     <input type="number" min="0" class="form-control border-input" name="max_number"
                                            value="{{old('max_number',1)}}" required>
                                 </div>
                             </div>
-                            <div class="col-6">
+                    <div class="col-3">
                                 <label class="w-100">Rückmeldung verpflichtend?
                                     <select class="custom-select w-100" name="pflicht">
                                         <option value="0">Nein</option>
@@ -56,7 +54,7 @@
                                     </select>
                                 </label>
                             </div>
-                            <div class="col-6">
+                    <div class="col-3">
                                 <label class="w-100">mehrere Rückmeldungen?
                                     <select class="custom-select w-100" name="multiple">
                                         <option value="0">Nein</option>
@@ -64,66 +62,39 @@
                                     </select>
                                 </label>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-8">
+                </div>
+                <div class="row">
+                    <div class="col-12 col-md-12">
                         <label>Antworten</label>
                         <ul class="list-group">
-                            <li class="list-group-item">
-                                <div class="row">
-                                    <div class="col-4">
-                                        <label class="w-100">Typ
-                                            <select class="custom-select w-100" name="types[]">
-                                                <option value="check">Auswahl</option>
-                                                <option value="text">Texteingabe</option>
-                                            </select>
-                                        </label>
+                            @for($x = 0; $x<3; $x++)
+                                <li class="list-group-item">
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <label class="w-100">Typ
+                                                <select class="custom-select w-100" name="types[]">
+                                                    <option value="check">Auswahl</option>
+                                                    <option value="text">Texteingabe</option>
+                                                    <option value="textbox">gr. Textfeld</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="w-100">Antwort
+                                                <input type="text" name="options[]" class="form-control p-2">
+                                            </label>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="w-100">Pflicht?
+                                                <select class="custom-select w-100" name="required[]">
+                                                    <option value="0">Nein</option>
+                                                    <option value="1">JA</option>
+                                                </select>
+                                            </label>
+                                        </div>
                                     </div>
-                                    <div class="col-8">
-                                        <label class="w-100">Antwort
-                                            <input type="text" name="options[]" class="form-control" required>
-                                        </label>
-
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="row">
-                                    <div class="col-4">
-                                        <label class="w-100">Typ
-                                            <select class="custom-select w-100" name="types[]">
-                                                <option value="check">Auswahl</option>
-                                                <option value="text">Texteingabe</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <div class="col-8">
-                                        <label class="w-100">Antwort
-                                            <input type="text" name="options[]" class="form-control">
-                                        </label>
-
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="list-group-item">
-                                <div class="row">
-                                    <div class="col-4">
-                                        <label class="w-100">Typ
-                                            <select class="custom-select w-100" name="types[]">
-                                                <option value="check">Auswahl</option>
-                                                <option value="text">Texteingabe</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <div class="col-8">
-                                        <label class="w-100">Antwort
-                                            <input type="text" name="options[]" class="form-control">
-                                        </label>
-
-                                    </div>
-                                </div>
-                            </li>
-
+                                </li>
+                            @endfor
                             <li class="list-group-item">
                                 <a href="#" class="card-link" id="addOption">
                                     <i class="fa fa-plus-circle"></i> weitere Option anfügen
@@ -172,17 +143,26 @@
 
             let li = htmlToElement('<li class="list-group-item">' +
                 '<div class="row">' +
-                '<div class="col-4">' +
+                '<div class="col-md-2">' +
                 '<label class="w-100">Typ' +
                 '<select class="custom-select w-100" name="types[]">' +
                 '<option value="check">Auswahl</option>' +
                 '<option value="text">Texteingabe</option>' +
+                '<option value="textbox">gr. Textfeld</option>' +
                 '</select>' +
                 '</label>' +
                 '</div>' +
-                '<div class="col-8">' +
+                '<div class="col-md-8">' +
                 '<label class="w-100">Antwort' +
-                '<input type="text" name="options[]" class="form-control" >' +
+                '<input type="text" name="options[]" class="form-control p-2" >' +
+                '</label>' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<label class="w-100">Pflicht?' +
+                '<select class="custom-select w-100" name="required[]">' +
+                '<option value="0">Nein</option>' +
+                '<option value="1">JA</option>' +
+                '</select>' +
                 '</label>' +
                 '</div>' +
                 '</div>' +

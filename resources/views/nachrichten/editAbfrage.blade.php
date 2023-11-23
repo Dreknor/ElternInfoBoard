@@ -73,7 +73,7 @@
                             @foreach($rueckmeldung->options as $option)
                                 <li class="list-group-item" id="option_{{$option->id}}">
                                     <div class="row">
-                                        <div class="col-4">
+                                        <div class="col-md-2">
                                             <label class="w-100">Typ
                                                 <select class="custom-select w-100" name="types[]">
                                                     <option value="check" @if($option->type == 'check') selected @endif>
@@ -82,13 +82,26 @@
                                                     <option value="text" @if($option->type == 'text') selected @endif>
                                                         Texteingabe
                                                     </option>
+                                                    <option value="text"
+                                                            @if($option->type == 'textbox') selected @endif>
+                                                        gr. Textfeld
+                                                    </option>
                                                 </select>
                                             </label>
                                         </div>
-                                        <div class="col-7">
+                                        <div class="col-md-6">
                                             <label class="w-100">Antwort
                                                 <input type="text" name="options[]" class="form-control"
                                                        value="{{$option->option}}">
+                                            </label>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="w-100">Pflicht?
+                                                <select class="custom-select w-100" name="required[]">
+                                                    <option value="0">Nein</option>
+                                                    <option value="1" @if($option->required == 1) selected @endif>JA
+                                                    </option>
+                                                </select>
                                             </label>
                                         </div>
                                         <div class="col-1">
@@ -157,17 +170,26 @@
 
             let li = htmlToElement('<li class="list-group-item">' +
                 '<div class="row">' +
-                '<div class="col-4">' +
+                '<div class="col-md-2">' +
                 '<label class="w-100">Typ' +
                 '<select class="custom-select w-100" name="types[]">' +
                 '<option value="check">Auswahl</option>' +
                 '<option value="text">Texteingabe</option>' +
+                '<option value="textbox">gr. Textfeld</option>' +
                 '</select>' +
                 '</label>' +
                 '</div>' +
-                '<div class="col-8">' +
+                '<div class="col-md-8">' +
                 '<label class="w-100">Antwort' +
-                '<input type="text" name="options[]" class="form-control" >' +
+                '<input type="text" name="options[]" class="form-control p-2" >' +
+                '</label>' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<label class="w-100">Pflicht?' +
+                '<select class="custom-select w-100" name="required[]">' +
+                '<option value="0">Nein</option>' +
+                '<option value="1">JA</option>' +
+                '</select>' +
                 '</label>' +
                 '</div>' +
                 '</div>' +
