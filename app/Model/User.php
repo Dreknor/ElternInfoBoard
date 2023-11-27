@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
@@ -28,6 +29,7 @@ class User extends Authenticatable
     use HasPushSubscriptions;
     use HasRelationships;
     use Reacts;
+    use HasApiTokens;
 
     //fill uuid column
     protected static function booted()

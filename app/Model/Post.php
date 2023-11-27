@@ -100,4 +100,15 @@ class Post extends Model implements HasMedia, ReactableInterface
     {
         return $this->hasMany(ReadReceipts::class);
     }
+
+       public function userReaction(User $user = null)
+    {
+        if (is_null($user)) {
+            $user = auth()->user();
+        }
+
+        return $this->reactions()
+                ->where('responder_id', $user->id)
+                ->where('responder_type', get_class($user))->first()?->name;
+    }
 }
