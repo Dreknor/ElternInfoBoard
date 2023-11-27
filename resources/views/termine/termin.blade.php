@@ -27,18 +27,8 @@
             </div>
         </div>
     </div>
-    <div class="col-auto">
-        @if(auth()->user()->can('edit termin'))
-            <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
-                @csrf
-                @method('delete')
-                <button type="submit" class="btn-link text-danger">
-                    <i class="far fa-trash-alt"></i>
-                </button>
-            </form>
-        @endif
-    </div>
-    @if(auth()->user()->can('edit termin'))
+
+@if(auth()->user()->can('edit termin'))
         <div class="col-auto">
             <a href="#"
                tabindex="0" role="button"

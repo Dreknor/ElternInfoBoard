@@ -90,9 +90,25 @@
                                 Termin speichern
                             </div>
                         </div>
+
                     </div>
                 </form>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        @if(auth()->user()->can('edit termin'))
+                            <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
+                                @csrf
+                                @method('delete')
+                                <button type="submit" class="btn-link text-danger">
+                                    Termin löschen<i class="far fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        @endif
+                    </div>
 
+                </div>
             </div>
         </div>
     </div>
