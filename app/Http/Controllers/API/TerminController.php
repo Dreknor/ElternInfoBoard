@@ -22,8 +22,8 @@ class TerminController extends Controller
  public function index()
  {
         $user = request()->user();
-        
-        $termine = $user->termine()->where('start', '>=', now()->startOfDay())->get();
+
+        $termine = $user->termine()->where('start', '>=', now()->startOfDay())->orderBy('start')->get();
         $termine = $termine->unique('id');
         $termine = $termine->map(function ($termin) {
             $termin->start = $termin->start->format('Y-m-d H:i:s');
