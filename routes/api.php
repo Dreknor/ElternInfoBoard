@@ -35,6 +35,7 @@ Route::post('/token/create', function (Request $request) {
     return $user->createToken($request->device_name)->plainTextToken;
 });
 
+Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -43,7 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 
     Route::get('image/{media_id}', [ImageController::class, 'getImage']);
-    Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
 
     Route::get('contact', [\App\Http\Controllers\API\ContactController::class, 'index']);
     Route::post('contact', [\App\Http\Controllers\API\ContactController::class, 'send']);
