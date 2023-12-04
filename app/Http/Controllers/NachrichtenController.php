@@ -457,21 +457,37 @@ class NachrichtenController extends Controller
                 @ini_set('upload_max_size', '300M');
             }
 
-            $files = $request->files->all();
-            foreach ($files['files'] as $file) {
-                if (substr($file->getMimeType(), 0, 5) == 'image')
-                    $collection = 'images';
-                if ($request->input('collection') == 'header') {
-                    $collection = 'header';
-                } else {
-                    $collection = 'files';
-                }
 
-                $posts
-                    ->addMedia($file)
-                    ->toMediaCollection($collection);
+            if ($request->input('collection') == 'files') {
+                $posts->addAllMediaFromRequest()
+                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
+            } elseif ($request->input('collection') == 'header') {
+                $posts->addAllMediaFromRequest()
+                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('header'));
+            } else {
+                $posts->addAllMediaFromRequest()
+                    ->each(fn($fileAdder) => $fileAdder
+                        ->withResponsiveImages()
+                        ->toMediaCollection('images'));
             }
 
+
+            /*
+                        $files = $request->files->all();
+                        foreach ($files['files'] as $file) {
+                            if (substr($file->getMimeType(), 0, 5) == 'image')
+                                $collection = 'images';
+                            if ($request->input('collection') == 'header') {
+                                $collection = 'header';
+                            } else {
+                                $collection = 'files';
+                            }
+
+                            $posts
+                                ->addMedia($file)
+                                ->toMediaCollection($collection);
+                        }
+            */
         }
 
         if ($posts->released and $push == 1) {
