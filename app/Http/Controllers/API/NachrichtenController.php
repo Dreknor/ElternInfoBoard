@@ -109,7 +109,7 @@ class NachrichtenController extends Controller
                 $reactions[$reaction->name] = $reaction->count;
             }
 
-            $nachricht->userReceipt = (is_null($nachricht->receipts->first())) ? false : true;
+            $nachricht->userReceipt = (is_null($nachricht->receipts()->where('user_id', request()->user()->id)->first())) ? false : true;
 
             unset($nachricht->reactions);
             $nachricht->userReaction = $nachricht->userReaction($user);

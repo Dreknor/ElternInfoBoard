@@ -22,15 +22,23 @@ class TerminController extends Controller
  public function index()
  {
         $user = request()->user();
-        
-        $termine = $user->termine()->where('start', '>=', now()->startOfDay())->get();
+
+        if (is_null($user)) {
+           $user = User::first();
+        }
+
+        $termine = $user->termine;
+
         $termine = $termine->unique('id');
-        $termine = $termine->map(function ($termin) {
-            $termin->start = $termin->start->format('Y-m-d H:i:s');
-            $termin->ende = $termin->ende->format('Y-m-d H:i:s');
+        $termine = $termine->sortBy('start');
+
+        $termine_fertig = $termine->map(function ($termin) {
+            $termin->start = $termin->start;
+            $termin->ende = $termin->ende;
             return $termin;
         });
-        return response()->json($termine);
+
+        return response()->json($termine_fertig);
  }
 
 }
