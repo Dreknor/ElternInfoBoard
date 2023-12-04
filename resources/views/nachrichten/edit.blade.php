@@ -227,7 +227,11 @@
                                                             <a href="{{url('posts/'.$media->id.'/changeCollection/files')}}"
                                                                class="btn btn-sm btn-outline-warning"
                                                                title="Als Download anzeigen">
-                                                                <i class="fas fa-toggle-left"></i> Als Download anzeigen
+                                                                <i class="fa-regular fa-image"></i><i
+                                                                    class="fa-duotone fa-arrows-rotate"
+                                                                    style="--fa-secondary-color: #888d96;"></i><i
+                                                                    class="fa-regular fa-file"></i> Als Download
+                                                                anzeigen
                                                             </a>
                                                         </div>
                                                             <div class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$media->id}}">
@@ -263,8 +267,12 @@
                                                             <div class="pull-right">
                                                                 <a href="{{url('posts/'.$media->id.'/changeCollection/images')}}"
                                                                    class="btn btn-sm btn-outline-warning"
-                                                                   title="Als Download anzeigen">
-                                                                    <i class="fas fa-toggle-left"></i> Als Bild anzeigen
+                                                                   title="Als Bild anzeigen">
+                                                                    <i class="fa-regular fa-file"></i><i
+                                                                        class="fa-duotone fa-arrows-rotate"
+                                                                        style="--fa-secondary-color: #888d96;"></i> <i
+                                                                        class="fa-regular fa-image"></i>Als Bild
+                                                                    anzeigen
                                                                 </a>
                                                             </div>
                                                             <div class="pull-right btn btn-sm btn-danger fileDelete"
