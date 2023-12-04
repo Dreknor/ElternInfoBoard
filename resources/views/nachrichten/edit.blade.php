@@ -223,6 +223,13 @@
                                                             <i class="fas fa-file-download"></i>
                                                             {{$media->name}}
                                                         </a>
+                                                        <div class="pull-right">
+                                                            <a href="{{url('posts/'.$media->id.'/changeCollection/files')}}"
+                                                               class="btn btn-sm btn-outline-warning"
+                                                               title="Als Download anzeigen">
+                                                                <i class="fas fa-toggle-left"></i> Als Download anzeigen
+                                                            </a>
+                                                        </div>
                                                             <div class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$media->id}}">
                                                                 <i class="fas fa-times"></i>
                                                             </div>
@@ -234,6 +241,44 @@
                                     </div>
                                 </div>
                             @endif
+                                @if(count($post->getMedia('files'))>0)
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header border-bottom">
+                                                <p>
+                                                    <b>
+                                                        vorhandene Dateien
+                                                    </b>
+                                                </p>
+                                            </div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush">
+                                                    @foreach($post->getMedia('files') as $media)
+                                                        <li class="list-group-item  list-group-item-action ">
+                                                            <a href="{{url('/image/'.$media->id)}}" target="_blank"
+                                                               class="mx-auto ">
+                                                                <i class="fas fa-file-download"></i>
+                                                                {{$media->name}}
+                                                            </a>
+                                                            <div class="pull-right">
+                                                                <a href="{{url('posts/'.$media->id.'/changeCollection/images')}}"
+                                                                   class="btn btn-sm btn-outline-warning"
+                                                                   title="Als Download anzeigen">
+                                                                    <i class="fas fa-toggle-left"></i> Als Bild anzeigen
+                                                                </a>
+                                                            </div>
+                                                            <div class="pull-right btn btn-sm btn-danger fileDelete"
+                                                                 data-id="{{$media->id}}">
+                                                                <i class="fas fa-times"></i>
+                                                            </div>
+
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             <div class="col-12">
                                 <div class="form-group">
                                     <div class="">

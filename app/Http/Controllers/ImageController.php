@@ -33,4 +33,14 @@ class ImageController extends Controller
 
         return $response;
     }
+
+    public function changeCollection(Media $media_id, string $collection_name)
+    {
+        $media_id->collection_name = $collection_name;
+        $media_id->save();
+        return redirect()->back()->with([
+            'type' => 'success',
+            'message' => 'Datei in ' . $collection_name . ' verschoben',
+        ]);
+    }
 }
