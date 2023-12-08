@@ -7,6 +7,7 @@
 
 <p>Für das Kind {{$NameDesKindes}} wurde eine neue Krankmeldung erstellt.</p>
 <p>Zeitraum:  {{$krankVon}} - {{$krankBis}}</p>
+<p>Erkrankung: {{$disease}}</p>
 <p>Nachricht:<br>
 {!! $bemerkung !!}
 </p>

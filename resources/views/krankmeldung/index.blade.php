@@ -35,7 +35,20 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            @if($diseases)
+                                <div class="col-md-6 col-sm-12">
+                                    <label for="start">
+                                        besondere Erkrankung:
+                                    </label>
+                                    <select name="disease_id" id="disease" class="form-control">
+                                        <option value="0">keine genannte</option>
+                                        @foreach($diseases as $disease)
+                                            <option value="{{$disease->id}}">{{$disease->name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="start">
                                         Krank ab*:
@@ -46,7 +59,7 @@
                                            @if($krankmeldungen->count() > 0) autofocus @endif>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="ende">
                                         Krank bis*:

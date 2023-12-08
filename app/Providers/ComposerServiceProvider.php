@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\DiseaseComposer;
 use App\Http\View\Composers\LosungComposer;
 use App\Http\View\Composers\ModulesComposer;
 use App\Http\View\Composers\NachrichtenComposer;
@@ -47,6 +48,11 @@ class ComposerServiceProvider extends ServiceProvider
         View::composer(
             'nachrichten.start', NachrichtenComposer::class
         );
+
+        View::composer(
+            'krankmeldung.diseases', DiseaseComposer::class
+        );
+
         View::composer(
             'termine.nachricht', TermineComposer::class
         );

@@ -105,7 +105,11 @@ Route::middleware('auth')->group(function () {
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
         Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
-        Route::get('krankmeldung/test', [KrankmeldungenController::class, 'dailyReport']);
+        Route::get('krankmeldung/disaese/activate/{disease}', [\App\Http\Controllers\ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
+
+        Route::get('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases');
+        Route::post('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
+
 
         //Termine
         Route::resource('termin', TerminController::class);

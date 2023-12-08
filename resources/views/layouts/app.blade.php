@@ -188,12 +188,9 @@
                 </div>
             </div>
         @endif
-
             @stack('home-view-top')
             @stack('home-view')
             @yield('content')
-
-
     </div>
 
 
