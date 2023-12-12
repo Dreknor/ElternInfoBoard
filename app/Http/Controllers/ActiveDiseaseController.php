@@ -25,6 +25,7 @@ class ActiveDiseaseController extends Controller
     {
         return view('krankmeldung.createDisease', [
             'diseases' => Disease::all('id', 'name'),
+            'activeDiseases' => ActiveDisease::whereDate('start', '<=', now())->whereDate('end', '>=', now())->get(),
         ]);
     }
 
@@ -44,5 +45,38 @@ class ActiveDiseaseController extends Controller
             'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen',
             'type' => 'success',
         ]);
+    }
+
+    public function destroy(ActiveDisease $disease)
+    {
+        if (!auth()->user()->can('manage diseases')) {
+            return redirect()->back()->with([
+                'Meldung' => 'Du hast keine Berechtigung diese Krankmeldung zu löschen',
+                'type' => 'danger',
+            ]);
+        }
+
+        if ($disease->active) {
+            return redirect()->back()->with([
+                'Meldung' => 'Du kannst keine aktive Krankmeldung löschen',
+                'type' => 'danger',
+            ]);
+        }
+
+        $disease->delete();
+        return redirect()->back();
+    }
+
+    public function update(ActiveDisease $disease)
+    {
+        if (!auth()->user()->can('manage diseases')) {
+            return redirect()->back()->with([
+                'Meldung' => 'Du hast keine Berechtigung diese Krankmeldung zu löschen',
+                'type' => 'danger',
+            ]);
+        }
+
+        $disease->update(['active' => false]);
+        return redirect()->back();
     }
 }
