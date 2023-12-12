@@ -91,7 +91,7 @@ class ICalController extends Controller
      */
     public function publicICal()
     {
-        $Termine = Termin::where('public', true)->get();
+        $Termine = Termin::where('public', 1)->get();
         $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');
 
