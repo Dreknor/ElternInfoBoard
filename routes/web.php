@@ -107,9 +107,6 @@ Route::middleware('auth')->group(function () {
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
         Route::get('krankmeldung/disaese/activate/{disease}', [\App\Http\Controllers\ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
 
-        // Route::get('activeDisease/{disease}', [\App\Http\Controllers\ActiveDiseaseController::class, 'update'])->middleware('permission:manage diseases');
-        //Route::delete('active/disease/{disease}', [\App\Http\Controllers\ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
-
         Route::get('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases');
         Route::post('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
         Route::put('diseases/{disease}/active', [\App\Http\Controllers\ActiveDiseaseController::class, 'update'])->middleware('permission:manage diseases');
