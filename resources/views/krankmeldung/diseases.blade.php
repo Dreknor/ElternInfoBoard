@@ -1,4 +1,4 @@
-@canany(['see disease', 'manage diseases'])
+@canany(['see diseases', 'manage diseases'])
     @if(count($diseases) > 0)
         <div class="card border border-danger">
             <div class="card-header bg-danger">
