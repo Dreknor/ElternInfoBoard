@@ -60,6 +60,9 @@ class Handler extends ExceptionHandler
         Log::info("404 in {$url}");
         }
 
+        if ($exception instanceof HttpException && $exception->getStatusCode() == 302) {
+            Log::info("302 in {$url}");
+        }
 
         if ($exception instanceof MethodNotAllowedException) {
             Log::info("405 in {$url}");
