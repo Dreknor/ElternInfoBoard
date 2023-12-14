@@ -24,6 +24,7 @@ Route::post('/token/create', function (Request $request) {
         'device_name' => 'required',
     ]);
 
+
     $user = User::where('email', $request->email)->first();
 
     if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -31,15 +32,21 @@ Route::post('/token/create', function (Request $request) {
             'email' => ['The provided credentials are incorrect.'],
         ]);
     }
-
-    return $user->createToken($request->device_name)->plainTextToken;
+    return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
 });
 
-Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
+Route::post('/token/logout', function (Request $request) {
+    $request->user()->tokens()->delete();
+
+    return response()->json(['message' => 'Tokens Revoked']);
+});
+
+Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
 
-    Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
     Route::post('posts/{postID}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 

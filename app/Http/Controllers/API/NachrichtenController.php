@@ -41,7 +41,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk');
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk', 'uuid');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -81,7 +81,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk');
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk', 'uuid');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -109,7 +109,7 @@ class NachrichtenController extends Controller
                 $reactions[$reaction->name] = $reaction->count;
             }
 
-            $nachricht->userReceipt = (is_null($nachricht->receipts()->where('user_id', request()->user()->id)->first())) ? false : true;
+            $nachricht->userReceipt = (is_null($nachricht->receipts()->where('user_id', $user->id)->first())) ? false : true;
 
             unset($nachricht->reactions);
             $nachricht->userReaction = $nachricht->userReaction($user);

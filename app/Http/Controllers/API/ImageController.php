@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Response;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -12,6 +14,24 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class ImageController extends Controller
 {
+
+    public function __construct()
+    {
+       // $this->middleware('auth:sanctum');
+    }
+
+    public function getFileByUuid(Request $request, $uuid)
+    {
+        Log::info($uuid);
+
+        $media = Media::where('uuid', $uuid)->firstOrFail();
+
+        return response()->file($media->getPath(), [
+            'Content-Type' => $media->mime_type,
+            'content-transfer-encoding' => 'binary',
+        ]);
+
+    }
 
     /**
      * @param Media $media_id
