@@ -14,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
@@ -75,6 +76,12 @@ class User extends Authenticatable
             get: fn ($value) => Carbon::createFromFormat('Y-m-d H:i:s', ($value != null)? $value : $this->created_at),
         );
     }
+
+    public function files()
+    {
+        return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
+    }
+
 
     /**
      * Verknüpfte Gruppen

@@ -11,6 +11,7 @@
 |
 */
 
+use App\Http\Controllers\API\FilesController;
 use App\Http\Controllers\API\ImageController;
 use App\Model\User;
 use Illuminate\Http\Request;
@@ -41,14 +42,24 @@ Route::post('/token/logout', function (Request $request) {
     return response()->json(['message' => 'Tokens Revoked']);
 });
 
+//TODO: remove this route
+//Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+
+
+
+
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
-    Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+    Route::get('files', [FilesController::class, 'index']);
 
+    Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
+    //Todo: uncomment this route
+    Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
     Route::post('posts/{postID}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
+
+    //Route::get('files', [\App\Http\Controllers\API\FilesController::class, 'index']);
 
     Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 
