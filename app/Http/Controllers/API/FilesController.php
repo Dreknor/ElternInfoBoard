@@ -22,10 +22,6 @@ class FilesController extends Controller
 
         $user = $request->user();
 
-        if (!$user) {
-            $user = User::first();
-        }
-
         $files = $user->files();
 
 

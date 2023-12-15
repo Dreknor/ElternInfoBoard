@@ -36,25 +36,22 @@ Route::post('/token/create', function (Request $request) {
     return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
 });
 
-Route::post('/token/logout', function (Request $request) {
-    $request->user()->tokens()->delete();
-
-    return response()->json(['message' => 'Tokens Revoked']);
-});
-
-//TODO: remove this route
-//Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
-
 
 
 
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/token/logout', function (Request $request) {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Tokens Revoked']);
+    });
+
+
     Route::get('files', [FilesController::class, 'index']);
 
     Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
-    //Todo: uncomment this route
     Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
     Route::post('posts/{postID}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
@@ -65,4 +62,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('contact', [\App\Http\Controllers\API\ContactController::class, 'index']);
     Route::post('contact', [\App\Http\Controllers\API\ContactController::class, 'send']);
+
+    Route::get('losungen', [\App\Http\Controllers\API\LosungController::class, 'getLosung']);
 });
