@@ -18,6 +18,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+Route::get('home/{post_id}', function () {
+    return redirect(url('/'.'#'.request()->post_id));
+});
+
 Route::post('/token/create', function (Request $request) {
     $request->validate([
         'email' => 'required|email',
@@ -37,9 +41,14 @@ Route::post('/token/create', function (Request $request) {
 });
 
 
+Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
 
 
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
+
+
+
+
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -48,20 +57,38 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Tokens Revoked']);
     });
 
+    /**
+     * Rueckmeldungen
+     */
+    Route::post('rueckmeldung', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'store']);
 
+    /**
+     * Dateien, Bilder, Downloads
+     */
     Route::get('files', [FilesController::class, 'index']);
+    Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 
+    /**
+     * Termine
+     */
     Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
-    Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+
+    /**
+     * Nachrichten
+     */
+    //Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
     Route::post('posts/{postID}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 
-    //Route::get('files', [\App\Http\Controllers\API\FilesController::class, 'index']);
 
-    Route::get('image/{media_id}', [ImageController::class, 'getImage']);
-
+    /**
+     * Kontakt
+     */
     Route::get('contact', [\App\Http\Controllers\API\ContactController::class, 'index']);
     Route::post('contact', [\App\Http\Controllers\API\ContactController::class, 'send']);
 
+    /**
+     * Losungen
+     */
     Route::get('losungen', [\App\Http\Controllers\API\LosungController::class, 'getLosung']);
 });

@@ -21,7 +21,9 @@ class NachrichtenController extends Controller
     {
 
         $user = $request->user();
-
+        if (!$user){
+            $user = User::query()->first();
+        }
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
@@ -112,6 +114,7 @@ class NachrichtenController extends Controller
             $nachricht->userReaction = $nachricht->userReaction($user);
             $nachricht->reactions = $reactions;
         }
+        $nachrichten->load('userRueckmeldung');
 
         return response()->json($nachrichten);
     }
