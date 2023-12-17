@@ -41,7 +41,7 @@ Route::post('/token/create', function (Request $request) {
 });
 
 
-Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+//Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
 
 
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * Nachrichten
      */
-    //Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+    Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
     Route::post('posts/{postID}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 
