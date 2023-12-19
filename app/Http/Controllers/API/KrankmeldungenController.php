@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use function Aws\map;
 
 class KrankmeldungenController extends Controller
 {
@@ -65,7 +66,34 @@ class KrankmeldungenController extends Controller
             ->cc($request->user()->email)
             ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null));
 
-        return response()->json('Krankmwldung gesendet.',200);
+        return response()->json('Krankmeldung gesendet.',200);
+    }
+
+    public function getActiveDisease(Request $request)
+    {
+        $activeDisease = ActiveDisease::query()
+            ->where('active', true)
+            ->with('disease')
+            ->get();
+
+        if (count($activeDisease) >0) {
+                $result = [];
+
+               foreach ($activeDisease as $key => $disease) {
+                   $result[] = [
+                          'id' => $disease->id,
+                       'name' => $disease->disease->name,
+                       'start' => $disease->start->format('Y-m-d'),
+                   ] ;
+               }
+
+
+            return response()->json([
+                'data' => $result
+            ], 200);
+        } else {
+            return response()->json(null, 200);
+        }
     }
 
 

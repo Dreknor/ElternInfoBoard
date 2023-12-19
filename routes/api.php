@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::post('krankmeldung', [\App\Http\Controllers\API\KrankmeldungenController::class, 'store']);
     Route::get('krankmeldung', [\App\Http\Controllers\API\KrankmeldungenController::class, 'getDiseses']);
+    Route::get('activeDisease', [\App\Http\Controllers\API\KrankmeldungenController::class, 'getActiveDisease']);
 
     /**
      * Rueckmeldungen
