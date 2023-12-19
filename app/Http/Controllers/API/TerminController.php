@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Model\Termin;
 use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +31,13 @@ class TerminController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-     $termine = $user->termine;
+        if ($user->can('edit termine')) {
+            $termine = Termin::whereEnde('>=', now())->get();
+        } else {
+            $termine = $user->termine;
+        }
+
+
         $termine = $termine->unique('id');
         $termine = $termine->sortBy('start');
 
