@@ -21,11 +21,6 @@ class NachrichtenController extends Controller
     {
 
         $user = $request->user();
-        /*
-        if (!$user){
-            $user = User::query()->first();
-        }
-        */
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);

@@ -47,6 +47,8 @@ Route::post('/token/create', function (Request $request) {
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 
+//Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+//Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
 
 
 
@@ -56,6 +58,12 @@ Route::middleware('auth:sanctum')->group(function () {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Tokens Revoked']);
     });
+
+    /**
+     * Krankmeldung
+     */
+    Route::post('krankmeldung', [\App\Http\Controllers\API\KrankmeldungenController::class, 'store']);
+    Route::get('krankmeldung', [\App\Http\Controllers\API\KrankmeldungenController::class, 'getDiseses']);
 
     /**
      * Rueckmeldungen
