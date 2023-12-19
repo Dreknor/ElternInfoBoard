@@ -45,7 +45,12 @@ class NachrichtenController extends Controller
                 ->with(['receipts' => function ($query) use ($user) {
                     return $query->where('user_id', $user->id);
                 }])
-                ->withCount('users')->get();
+                ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                    return $query->where([
+                        'users_id' => $user->id,
+                    ]);
+                }])
+                ->get();
 
             if ($user->can('create posts')) {
                 $eigenePosts = Post::query()
@@ -63,6 +68,11 @@ class NachrichtenController extends Controller
                     }])
                     ->with(['receipts' => function ($query) use ($user) {
                         return $query->where('user_id', $user->id);
+                    }])
+                    ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                        return $query->where([
+                            'users_id' => $user->id,
+                        ]);
                     }])
                     ->get();
                 $nachrichten = $nachrichten->concat($eigenePosts);
@@ -84,6 +94,11 @@ class NachrichtenController extends Controller
                 }])
                 ->with(['receipts' => function ($query) use ($user) {
                     return $query->where('user_id', $user->id);
+                }])
+                ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                    return $query->where([
+                        'users_id' => $user->id,
+                        ]);
                 }])
                 ->withCount('users')
                 ->get();
@@ -111,7 +126,7 @@ class NachrichtenController extends Controller
             $nachricht->userReaction = $nachricht->userReaction($user);
             $nachricht->reactions = $reactions;
         }
-        $nachrichten->load('userRueckmeldung');
+
 
         return response()->json($nachrichten);
     }
