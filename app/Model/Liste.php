@@ -16,7 +16,7 @@ class Liste extends Model
 
     protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
 
-    protected $visible = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
+    protected $visible = ['id','listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
 
     protected $casts = [
         'ende' => 'datetime',

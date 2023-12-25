@@ -41,16 +41,9 @@ Route::post('/token/create', function (Request $request) {
 });
 
 
-//Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
 
 
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
-
-
-//Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
-//Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
-
-
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -58,6 +51,17 @@ Route::middleware('auth:sanctum')->group(function () {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Tokens Revoked']);
     });
+
+    /**
+     * Listen
+     */
+    Route::get('listen', [\App\Http\Controllers\API\ListenController::class, 'index']);
+    Route::get('liste/{id}', [\App\Http\Controllers\API\ListenController::class, 'show']);
+    Route::put('listen/termin/{id}/cancel', [\App\Http\Controllers\API\ListenController::class, 'cancelTermin']);
+    Route::put('listen/termin/{id}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveTermin']);
+    Route::post('/listen/{id}/eintrag/add', [\App\Http\Controllers\API\ListenController::class, 'addEintrag']);
+    Route::put('/listen/eintrag/{id}/stornieren', [\App\Http\Controllers\API\ListenController::class, 'removeEintrag']);
+    Route::put('/listen/eintrag/{id}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveEintrag']);
 
     /**
      * Krankmeldung
