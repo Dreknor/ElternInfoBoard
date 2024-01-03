@@ -49,7 +49,9 @@ class Post extends Model implements HasMedia, ReactableInterface
 
     public function autor(): HasOne
     {
-        return $this->hasOne(User::class, 'id', 'author');
+        return $this->hasOne(User::class, 'id', 'author')->withDefault([
+            'name' => config('app.name'),
+        ]);
     }
 
     public function rueckmeldung(): HasOne

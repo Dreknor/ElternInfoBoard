@@ -22,7 +22,9 @@ class UserRueckmeldungen extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'users_id');
+        return $this->belongsTo(User::class, 'users_id')->withDefault([
+            'name' => config('app.name'),
+        ]);
     }
 
     public function answers(): HasMany

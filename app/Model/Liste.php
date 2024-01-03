@@ -27,7 +27,9 @@ class Liste extends Model
 
     public function ersteller(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'besitzer');
+        return $this->belongsTo(User::class, 'besitzer')->withDefault([
+            'name' => config('app.name'),
+        ]);
     }
 
     public function groups(): BelongsToMany
