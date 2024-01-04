@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+
+
 Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });

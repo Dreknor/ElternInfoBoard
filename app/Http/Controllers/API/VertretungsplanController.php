@@ -15,7 +15,7 @@ class VertretungsplanController extends Controller
      */
     public function __construct()
     {
-        //$this->middleware('auth:sanctum');
+        $this->middleware('auth:sanctum');
     }
 
     /**
@@ -30,13 +30,9 @@ class VertretungsplanController extends Controller
         }
 
         if (!$request->user()){
-
-            $user = User::first();
-            /*
            return response()->json([
                 'message' => 'Sie sind nicht angemeldet.'
             ], 401);
-            */
         } else {
             $user = $request->user();
         }
