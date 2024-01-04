@@ -30,9 +30,10 @@ class VertretungsplanController extends Controller
         }
 
         if (!$request->user()){
-           return response()->json([
+            return response()->json([
                 'message' => 'Sie sind nicht angemeldet.'
             ], 401);
+
         } else {
             $user = $request->user();
         }

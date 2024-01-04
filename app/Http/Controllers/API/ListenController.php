@@ -6,10 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
-use App\Model\Termin;
-use App\Model\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 /**
  *
@@ -27,7 +24,6 @@ class ListenController extends Controller
      $user = $request->user();
 
      if (!$user) {
-
          return response()->json(['message' => 'User not found'], 404);
      }
 
@@ -111,7 +107,7 @@ class ListenController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        if ($user->can('edit terminliste')) {
+        if ($user->hasPermissionTo('edit terminliste', 'web')) {
 
             $listen = Liste::query()
                 ->whereDate('ende', '>=', now())
@@ -150,7 +146,7 @@ class ListenController extends Controller
                 if ($eintragung->user_id == $user->id) {
                     $eintragungen[$key]->user_id = 'own';
                 } else {
-                    if ($liste->visible_for_all == true or $user->can('edit terminliste')) {
+                    if ($liste->visible_for_all == true or $user->hasPermissionTo('edit terminliste', 'web')) {
                         $eintragungen[$key]->user_id = $eintragung->eingetragenePerson->name;
                     } else {
                         $eintragungen[$key]->user_id = 'vergeben';
@@ -169,7 +165,7 @@ class ListenController extends Controller
  }
 
  public function getTermine ($user, $liste){
-     if ($user->can('edit terminliste') or $liste->besitzer == $user->id or $liste->visible_for_all) {
+     if ($user->hasPermissionTo('edit terminliste', 'web') or $liste->besitzer == $user->id or $liste->visible_for_all) {
          $termine = listen_termine::query()
              ->where('listen_id', $liste->id)
              ->whereDate('termin', '>=', now())
@@ -203,8 +199,9 @@ class ListenController extends Controller
              if ($termin->reserviert_fuer == $user->id or $termin->reserviert_fuer == $user->sorg2) {
                  $termine[$key]->reserviert_fuer = 'own';
              } else {
-                 if ($liste->visible_for_all == true or $user->can('edit terminliste')) {
+                 if ($liste->visible_for_all == true or $user->hasPermissionTo('edit terminliste', 'web')) {
                      $termine[$key]->reserviert_fuer = $termin->eingetragenePerson->name;
+
                  } else {
                      $termine[$key]->reserviert_fuer = 'vergeben';
                  }
@@ -252,7 +249,7 @@ class ListenController extends Controller
 
      $termin = listen_termine::findOrFail($id);
 
-     if ($user->can('edit terminliste') or $termin->liste->besitzer == $user->id or $termin->reserviert_fuer == $user->id) {
+     if ($user->hasPermissionTo('edit terminliste', 'web') or $termin->liste->besitzer == $user->id or $termin->reserviert_fuer == $user->id) {
          $termin->reserviert_fuer = null;
          $termin->save();
 

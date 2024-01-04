@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Model\Termin;
 use App\Model\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -19,7 +20,7 @@ class TerminController extends Controller
 
  public function __construct()
  {
-       // $this->middleware('auth:sanctum');
+       $this->middleware('auth:sanctum');
  }
 
  public function index(Request $request)
@@ -31,14 +32,15 @@ class TerminController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        if ($user->can('edit termine')) {
-            $termine = Termin::whereEnde('>=', now())->get();
+        if ($user->hasPermissionTo('edit termin', 'web')) {
+
+            $termine = Termin::all();
         } else {
             $termine = $user->termine;
         }
 
 
-        $termine = $termine->unique('id');
+           $termine = $termine->unique('id');
         $termine = $termine->sortBy('start');
 
 
