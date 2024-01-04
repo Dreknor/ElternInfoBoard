@@ -88,9 +88,9 @@ class KrankmeldungenController extends Controller
                }
 
 
-            return response()->json([
-                'data' => $result
-            ], 200);
+            return response()->json(
+               ['data' => $result]
+            , 200);
         } else {
             return response()->json(null, 200);
         }

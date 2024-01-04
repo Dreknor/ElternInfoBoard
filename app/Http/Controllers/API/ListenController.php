@@ -150,7 +150,7 @@ class ListenController extends Controller
                 if ($eintragung->user_id == $user->id) {
                     $eintragungen[$key]->user_id = 'own';
                 } else {
-                    if ($liste->visible_for_all == true) {
+                    if ($liste->visible_for_all == true or $user->can('edit terminliste')) {
                         $eintragungen[$key]->user_id = $eintragung->eingetragenePerson->name;
                     } else {
                         $eintragungen[$key]->user_id = 'vergeben';
@@ -203,7 +203,7 @@ class ListenController extends Controller
              if ($termin->reserviert_fuer == $user->id or $termin->reserviert_fuer == $user->sorg2) {
                  $termine[$key]->reserviert_fuer = 'own';
              } else {
-                 if ($liste->visible_for_all == true) {
+                 if ($liste->visible_for_all == true or $user->can('edit terminliste')) {
                      $termine[$key]->reserviert_fuer = $termin->eingetragenePerson->name;
                  } else {
                      $termine[$key]->reserviert_fuer = 'vergeben';
@@ -220,8 +220,7 @@ class ListenController extends Controller
      $user = $request->user();
 
      if (!$user) {
-         $user = User::first();
-         //return response()->json(['message' => 'User not found'], 404);
+         return response()->json(['message' => 'User not found'], 404);
      }
 
      $liste = Liste::findOrFail($id);

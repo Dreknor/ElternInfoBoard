@@ -42,7 +42,6 @@ Route::post('/token/create', function (Request $request) {
 
 
 
-
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -104,4 +103,10 @@ Route::middleware('auth:sanctum')->group(function () {
      * Losungen
      */
     Route::get('losungen', [\App\Http\Controllers\API\LosungController::class, 'getLosung']);
+
+    /**
+     * Vertretungsplan
+     */
+    Route::get('vertretungsplan', [\App\Http\Controllers\API\VertretungsplanController::class, 'index']);
+
 });
