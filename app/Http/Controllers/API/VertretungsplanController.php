@@ -62,7 +62,7 @@ class VertretungsplanController extends Controller
         $json = json_decode($inhalt, true);
 
 
-        $order = array('klasse' => 'asc','date' => 'asc', 'stunde' => 'desc');
+        $order = array('klasse' => 'asc','date' => 'asc', 'stunde' => 'asc');
 
         usort($json['vertretungen'], function ($a, $b) use ($order) {
             $t = array(true => -1, false => 1);
