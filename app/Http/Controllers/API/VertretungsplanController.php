@@ -15,7 +15,7 @@ class VertretungsplanController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
+        //$this->middleware('auth:sanctum');
     }
 
     /**
@@ -30,9 +30,13 @@ class VertretungsplanController extends Controller
         }
 
         if (!$request->user()){
+
+            $user = User::first();
+            /*
            return response()->json([
                 'message' => 'Sie sind nicht angemeldet.'
             ], 401);
+            */
         } else {
             $user = $request->user();
         }
@@ -58,7 +62,7 @@ class VertretungsplanController extends Controller
         $json = json_decode($inhalt, true);
 
 
-        $order = array('klasse' => 'asc', 'stunde' => 'asc');
+        $order = array('klasse' => 'asc','date' => 'asc', 'stunde' => 'desc');
 
         usort($json['vertretungen'], function ($a, $b) use ($order) {
             $t = array(true => -1, false => 1);
