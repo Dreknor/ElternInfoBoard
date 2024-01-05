@@ -73,6 +73,7 @@ class KrankmeldungenController extends Controller
     {
         $activeDisease = ActiveDisease::query()
             ->where('active', true)
+            ->whereDate('end', '>=', Carbon::now()->addDay())
             ->with('disease')
             ->get();
 
