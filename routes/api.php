@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+
+
 Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });
@@ -39,7 +41,6 @@ Route::post('/token/create', function (Request $request) {
     }
     return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
 });
-
 
 
 
@@ -104,4 +105,10 @@ Route::middleware('auth:sanctum')->group(function () {
      * Losungen
      */
     Route::get('losungen', [\App\Http\Controllers\API\LosungController::class, 'getLosung']);
+
+    /**
+     * Vertretungsplan
+     */
+    Route::get('vertretungsplan', [\App\Http\Controllers\API\VertretungsplanController::class, 'index']);
+
 });
