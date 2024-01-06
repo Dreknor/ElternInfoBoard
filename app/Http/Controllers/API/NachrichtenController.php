@@ -79,9 +79,9 @@ class NachrichtenController extends Controller
             }
         } else {
 
-            $nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
-                ->where('external', 0)
-                ->where('released', 1)
+            $nachrichten = Post::query()
+                ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                ->where('released', '==', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
                 ->with(['autor' => function ($query) {
