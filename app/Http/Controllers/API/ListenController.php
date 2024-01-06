@@ -115,6 +115,7 @@ class ListenController extends Controller
         } else {
             $listen = $user->listen()
                 ->whereDate('ende', '>=', now())
+                ->where('active', 1)
                 ->get();
         }
 
