@@ -26,7 +26,33 @@ class NachrichtenController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        if (! $user->hasPermissionTo('view all', 'web')) {
+        if ( $user->hasPermissionTo('view all', 'web')) {
+            $nachrichten = Post::query()
+                ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                ->orderByDesc('sticky')
+                ->orderByDesc('updated_at')
+                ->with(['autor' => function ($query) {
+                    $query->select('id', 'name');
+                }])
+                ->with(['media' => function ($query) {
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk', 'uuid');
+                }])
+                ->with(['reactions' => function ($query) {
+                    return $query->select('name');
+                }])
+                ->with(['receipts' => function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                }])
+                ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                    return $query->where([
+                        'users_id' => $user->id,
+                    ]);
+                }])
+                ->get();
+
+        } else {
+
+
             $nachrichten = $user->postsNotArchived()
                 ->distinct()
                 ->where('released', 1)
@@ -45,7 +71,7 @@ class NachrichtenController extends Controller
                 ->with(['receipts' => function ($query) use ($user) {
                     return $query->where('user_id', $user->id);
                 }])
-                ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                ->with(['userRueckmeldung' => function ($query) use ($user) {
                     return $query->where([
                         'users_id' => $user->id,
                     ]);
@@ -69,39 +95,16 @@ class NachrichtenController extends Controller
                     ->with(['receipts' => function ($query) use ($user) {
                         return $query->where('user_id', $user->id);
                     }])
-                    ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                    ->with(['userRueckmeldung' => function ($query) use ($user) {
                         return $query->where([
                             'users_id' => $user->id,
                         ]);
                     }])
                     ->get();
+
                 $nachrichten = $nachrichten->concat($eigenePosts);
+
             }
-        } else {
-
-            $nachrichten = Post::query()
-                ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
-                ->orderByDesc('sticky')
-                ->orderByDesc('updated_at')
-                ->with(['autor' => function ($query) {
-                    $query->select('id', 'name');
-                }])
-                ->with(['media' => function ($query) {
-                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk', 'uuid');
-                }])
-                ->with(['reactions' => function ($query) {
-                    return $query->select('name');
-                }])
-                ->with(['receipts' => function ($query) use ($user) {
-                    return $query->where('user_id', $user->id);
-                }])
-                ->with(['userRueckmeldung' => function ($query) use ($user)  {
-                    return $query->where([
-                        'users_id' => $user->id,
-                        ]);
-                }])
-                ->get();
-
         }
 
         $nachrichten = $nachrichten->unique('id');
