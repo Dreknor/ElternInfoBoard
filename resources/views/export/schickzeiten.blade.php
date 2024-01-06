@@ -2,11 +2,11 @@
     <thead>
     <tr>
         <th></th>
-        <th>Montag</th>
-        <th>Dienstag</th>
-        <th>Mittwoch</th>
-        <th>Donnerstag</th>
-        <th>Freitag</th>
+        <th>Montag ({{\Carbon\Carbon::today()->startOfWeek()->modify('monday')->format('d.m.Y')}})</th>
+        <th>Dienstag ({{\Carbon\Carbon::today()->startOfWeek()->modify('tuesday')->format('d.m.Y')}})</th>
+        <th>Mittwoch ({{\Carbon\Carbon::today()->startOfWeek()->modify('wednesday')->format('d.m.Y')}})</th>
+        <th>Donnerstag ({{\Carbon\Carbon::today()->startOfWeek()->modify('thursday')->format('d.m.Y')}})</th>
+        <th>Freitag ({{\Carbon\Carbon::today()->startOfWeek()->modify('friday')->format('d.m.Y')}})</th>
     </tr>
     </thead>
     <tbody>
