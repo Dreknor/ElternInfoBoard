@@ -29,7 +29,7 @@ class NachrichtenController extends Controller
         if (! $user->hasPermissionTo('view all', 'web')) {
             $nachrichten = $user->postsNotArchived()
                 ->distinct()
-                ->where('external', 0)
+                ->where('released', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
                 ->whereDate('archiv_ab', '>', $user->created_at)
@@ -81,7 +81,6 @@ class NachrichtenController extends Controller
 
             $nachrichten = Post::query()
                 ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
-                ->where('released', '==', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
                 ->with(['autor' => function ($query) {
