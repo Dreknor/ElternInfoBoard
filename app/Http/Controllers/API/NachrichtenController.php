@@ -26,7 +26,7 @@ class NachrichtenController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        if (! $user->can('view all')) {
+        if (! $user->hasPermissionTo('view all', 'web')) {
             $nachrichten = $user->postsNotArchived()
                 ->distinct()
                 ->where('external', 0)
@@ -52,7 +52,7 @@ class NachrichtenController extends Controller
                 }])
                 ->get();
 
-            if ($user->can('create posts')) {
+            if ($user->hasPermissionTo('create posts', 'web')) {
                 $eigenePosts = Post::query()
                     ->where('author', $user->id)
                     ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
@@ -81,6 +81,7 @@ class NachrichtenController extends Controller
 
             $nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                 ->where('external', 0)
+                ->where('released', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
                 ->with(['autor' => function ($query) {
@@ -100,7 +101,6 @@ class NachrichtenController extends Controller
                         'users_id' => $user->id,
                         ]);
                 }])
-                ->withCount('users')
                 ->get();
 
         }
