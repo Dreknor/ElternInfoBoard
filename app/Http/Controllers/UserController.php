@@ -7,6 +7,7 @@ use App\Http\Requests\PasswordlessUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Model\Discussion;
 use App\Model\Group;
+use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
 use App\Model\Poll;
@@ -265,6 +266,9 @@ class UserController extends Controller
             listen_termine::where('reserviert_fuer', $user->id)->delete();
             Poll::where('author_id', $user->id)->update(['author_id' => null]);
             Poll_Votes::where('author_id', $user->id)->delete();
+            Post::query()->where('author', $user->id)->update(['author' => null]);
+            Liste::query()->where('author', $user->id)->update(['author' => null]);
+
 
             $user->listen_termine()->delete();
             $user->userRueckmeldung()->delete();
