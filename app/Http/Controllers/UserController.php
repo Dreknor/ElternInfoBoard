@@ -267,7 +267,7 @@ class UserController extends Controller
             Poll::where('author_id', $user->id)->update(['author_id' => null]);
             Poll_Votes::where('author_id', $user->id)->delete();
             Post::query()->where('author', $user->id)->update(['author' => null]);
-            Liste::query()->where('author', $user->id)->update(['author' => null]);
+            Liste::query()->where('besitzer', $user->id)->update(['besitzer' => null]);
 
 
             $user->listen_termine()->delete();
