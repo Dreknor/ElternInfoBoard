@@ -19,7 +19,7 @@ class ContactController extends Controller
 
      public function __construct()
      {
-            //$this->middleware('auth:sanctum');
+            $this->middleware('auth:sanctum');
      }
 
      public function index()
@@ -32,17 +32,13 @@ class ContactController extends Controller
 
             $mitarbeiter->prepend(['id' => 0, 'name' => 'Sekretariat']);
 
-            return response()->json($mitarbeiter);
+            return response()->json(
+                ['data' => $mitarbeiter]
+            );
      }
 
      public function send(KontaktRequest $request)
      {
-        Log::info('Send Mail');
-        Log::info($request->input('mitarbeiter'));
-        Log::info($request->input('text'));
-        Log::info($request->input('betreff'));
-
-        Log::info(auth()->user()->email);
 
         if ($request->input('mitarbeiter') != 0) {
             $email = User::query()->where('id', $request->input('mitarbeiter') )->value('email');
@@ -50,8 +46,16 @@ class ContactController extends Controller
             $email = config('mail.from.address');
         }
 
-        Mail::to($email)->send(new SendFeedback($request->input('text'),$request->input('betreff')));
+         try {
 
-        return response()->json(['success' => 'Mail sent'], 200);
+
+             Mail::to($email)->send(new SendFeedback($request->input('text'),$request->input('betreff')));
+
+             return response()->json(['success' => 'Mail sent'], 200);
+         } catch (\Exception $e) {
+
+             return response()->json(['error' => 'Mail not sent'], 500);
+         }
+
      }
 }
