@@ -33,15 +33,15 @@ class TerminController extends Controller
         }
 
         if ($user->hasPermissionTo('edit termin', 'web')) {
-
             $termine = Termin::all();
         } else {
             $termine = $user->termine;
         }
 
 
-           $termine = $termine->unique('id');
+        $termine->unique('id');
         $termine = $termine->sortBy('start');
+
 
 
         return response()->json([
