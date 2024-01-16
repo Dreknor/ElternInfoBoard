@@ -148,7 +148,7 @@ class ListenController extends Controller
                     $eintragungen[$key]->user_id = 'own';
                 } else {
                     if ($liste->visible_for_all == true or $user->hasPermissionTo('edit terminliste', 'web')) {
-                        $eintragungen[$key]->user_id = $eintragung->eingetragenePerson->name;
+                        $eintragungen[$key]->user_id = $eintragung->user->name;
                     } else {
                         $eintragungen[$key]->user_id = 'vergeben';
                     }
