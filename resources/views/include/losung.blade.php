@@ -5,7 +5,7 @@
                     <div class="col-sm-12 col-md-6">
                         <p>
                             <b>
-                                Tageslosung zum {{$losung?->date}}:
+                                Tageslosung zum {{$losung?->date->format('d.m.Y')}}:
                             </b>
                         </p>
                         <p>
