@@ -5,7 +5,11 @@
                     <div class="col-sm-12 col-md-6">
                         <p>
                             <b>
-                                Tageslosung zum {{$losung?->date->format('d.m.Y')}}:
+                                Tageslosung zum @if(is_string($losung->date))
+                                    {{\Carbon\Carbon::parse($losung->date)}}:
+                                @else
+                                    {{$losung?->date->format('d.m.Y')}}:
+                                @endif
                             </b>
                         </p>
                         <p>
