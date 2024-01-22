@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Traits\NotificationTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
@@ -28,6 +29,7 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasComments;
     use HasRelationships;
     use Reactable;
+    use NotificationTrait;
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt'];
 

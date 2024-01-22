@@ -266,7 +266,7 @@ class UserController extends Controller
             listen_termine::where('reserviert_fuer', $user->id)->delete();
             Poll::where('author_id', $user->id)->update(['author_id' => null]);
             Poll_Votes::where('author_id', $user->id)->delete();
-            Post::query()->where('author', $user->id)->update(['author' => null]);
+
             Liste::query()->where('besitzer', $user->id)->update(['besitzer' => null]);
 
 
@@ -278,7 +278,7 @@ class UserController extends Controller
             $user->krankmeldungen()->withTrashed()->forceDelete();
             $user->comments()->delete();
 
-            Post::where('author', $user->id)->update(['author' => null]);
+            Post::query()->where('author', $user->id)->update(['author' => null]);
 
             $user->delete();
 

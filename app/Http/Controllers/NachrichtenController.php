@@ -647,6 +647,8 @@ class NachrichtenController extends Controller
             $this->push($posts);
         }
 
+
+
         return redirect(url('/home#'.$posts->id))->with([
             'type' => 'success',
             'Meldung' => 'Nachricht veröffentlicht',
@@ -792,6 +794,27 @@ class NachrichtenController extends Controller
     {
         $User = $post->users;
         $User = $User->unique('id');
+
+        if ($post->external) {
+            $header = 'Neues externes Angebot';
+        } else {
+            $header = 'Neue Nachricht';
+        }
+
+        if ($post->media('header')->count() > 0){
+            $icon = url('/image/'.$post->getMedia('header')->first()->id);
+        } else {
+            $icon = (config('app.favicon')) ? url('img/'.config('app.favicon')) : '';
+        }
+
+
+        $post->notify($User,
+            title: $header,
+            message: $post->header,
+            url: ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
+            icon: $icon,
+            type: 'news',
+        );
 
         Notification::send($User, new PushNews($post));
 

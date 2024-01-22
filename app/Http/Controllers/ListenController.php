@@ -16,6 +16,7 @@ use Illuminate\View\View;
 
 class ListenController extends Controller
 {
+
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
@@ -103,6 +104,17 @@ class ListenController extends Controller
 
         $gruppen = $this->grousRepository->getGroups($gruppen);
         $Liste->groups()->attach($gruppen);
+
+        if ($Liste->active) {
+            $Liste->notify(
+                users: $Liste->users,
+                title: 'Neue Liste erstellt',
+                message: 'Es wurde eine die Liste ' . $Liste->listenname . ' veröffentlicht.',
+                url: url('listen/' . $Liste->id),
+                type: 'info'
+            );
+        }
+
 
         return redirect(url("listen/$Liste->id"));
     }

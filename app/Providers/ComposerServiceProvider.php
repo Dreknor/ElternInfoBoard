@@ -6,6 +6,7 @@ use App\Http\View\Composers\DiseaseComposer;
 use App\Http\View\Composers\LosungComposer;
 use App\Http\View\Composers\ModulesComposer;
 use App\Http\View\Composers\NachrichtenComposer;
+use App\Http\View\Composers\NotificationComposer;
 use App\Http\View\Composers\ReinigungComposer;
 use App\Http\View\Composers\TermineComposer;
 use Illuminate\Support\Facades\View;
@@ -35,6 +36,11 @@ class ComposerServiceProvider extends ServiceProvider
         //
         View::composer(
             'layouts.elements.modules', ModulesComposer::class
+        );
+
+        View::composer(
+            'include.benachrichtigung',
+            NotificationComposer::class
         );
 
         View::composer(

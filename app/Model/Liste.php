@@ -2,15 +2,18 @@
 
 namespace App\Model;
 
+use App\Traits\NotificationTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 
 class Liste extends Model
 {
     use HasFactory;
+    use NotificationTrait;
 
     protected $table = 'listen';
 
@@ -45,5 +48,10 @@ class Liste extends Model
     public function termine(): HasMany
     {
         return $this->hasMany(listen_termine::class, 'listen_id');
+    }
+
+    public function users(): HasManyDeep
+    {
+        return $this->hasManyDeep(User::class, ['group_listen', Group::class, 'group_user']);
     }
 }

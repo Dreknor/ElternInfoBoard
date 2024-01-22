@@ -71,6 +71,16 @@ class User extends Authenticatable
         'changeSettings' => 'boolean',
     ];
 
+    /**
+     * @return HasMany
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
+
+
     protected function lastEmail(): Attribute {
         return Attribute::make(
             get: fn ($value) => Carbon::createFromFormat('Y-m-d H:i:s', ($value != null)? $value : $this->created_at),

@@ -85,6 +85,7 @@ Route::middleware('auth')->group(function () {
 
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');
+        Route::post('/notification/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notification.read');
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
@@ -328,3 +329,4 @@ Route::middleware('auth')->group(function () {
     Route::post('feedback', [FeedbackController::class, 'send']);
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 });
+

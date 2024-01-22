@@ -48,6 +48,15 @@ Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    /**
+     * Notifications
+     */
+    Route::get('notifications', [\App\Http\Controllers\API\NotificationController::class, 'index']);
+
+    /**
+     * User
+     */
+
     Route::post('/token/logout', function (Request $request) {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Tokens Revoked']);
