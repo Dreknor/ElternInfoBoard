@@ -31,7 +31,15 @@
                     <li class="@if(request()->path() ==$module->options['nav']['link']) active @endif">
                         <a href="{{url($module->options['nav']['link'])}}">
                             <i class="{{$module->options['nav']['icon']}}"></i>
-                            <p>{{$module->options['nav']['name'] }}</p>
+                            <p>
+                                {{$module->options['nav']['name'] }}
+                                @if(isset($notifications) and $notifications->where('type', $module->options['nav']['name'])->where('read',0)->count() > 0)
+                                    <span class="badge badge-pill badge-info" style="font-size: 13px;">
+                                        {{$notifications->where('type', $module->options['nav']['name'])->where('read',0)->count()}}
+                                    </span>
+                                @endif
+                            </p>
+
                         </a>
                     </li>
                 @endpush

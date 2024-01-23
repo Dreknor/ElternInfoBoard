@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Traits\NotificationTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
@@ -10,10 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 use Spatie\CalendarLinks\Link;
+use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 
 class Termin extends Model
 {
     use HasFactory;
+    use NotificationTrait;
 
     protected $table = 'termine';
 
@@ -74,5 +77,9 @@ class Termin extends Model
         return Link::create($terminname, $this->start, $this->ende, $this->fullDay);
     }
 
+    public function users(): HasManyDeep
+    {
+        return $this->hasManyDeep(User::class, ['group_termine', Group::class, 'group_user']);
+    }
 
 }

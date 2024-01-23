@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
             $email = config('mail.from.address');
         }
 
-
+        $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
 
         $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at('08:30');

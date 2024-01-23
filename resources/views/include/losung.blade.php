@@ -1,3 +1,4 @@
+@if($losung)
     <div class="card blur">
         <div class="card-body">
             <div class="container-fluid">
@@ -33,4 +34,4 @@
             </div>
         </div>
     </div>
-
+@endif

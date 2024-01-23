@@ -104,6 +104,12 @@ class TerminController extends Controller
 
         $termin->groups()->attach($gruppen);
 
+        $termin->notify(
+            users: $termin->users,
+            message: 'Neuer Termin: ' . $termin->terminname,
+            title: 'Neuer Termin',
+            type: 'Termine');
+
         Cache::forget('termine'.auth()->id());
 
         return redirect()->back()->with([

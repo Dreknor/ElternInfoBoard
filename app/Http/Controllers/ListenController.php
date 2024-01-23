@@ -111,7 +111,7 @@ class ListenController extends Controller
                 title: 'Neue Liste erstellt',
                 message: 'Es wurde eine die Liste ' . $Liste->listenname . ' veröffentlicht.',
                 url: url('listen/' . $Liste->id),
-                type: 'info'
+                type: 'Listen'
             );
         }
 

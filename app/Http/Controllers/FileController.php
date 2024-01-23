@@ -128,6 +128,8 @@ class FileController extends Controller
                     ->preservingOriginal()
                     ->toMediaCollection();
             }
+
+
         }
 
         return redirect()->to('/files')->with([

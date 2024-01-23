@@ -813,7 +813,7 @@ class NachrichtenController extends Controller
             message: $post->header,
             url: ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
             icon: $icon,
-            type: 'news',
+            type: ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
         );
 
         Notification::send($User, new PushNews($post));

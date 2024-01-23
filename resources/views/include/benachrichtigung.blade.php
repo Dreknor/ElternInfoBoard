@@ -1,6 +1,7 @@
 @if(!isset($notifications) || $notifications == false)
     <li>
         <i class="fas fa-bell-slash" title="Benachrichtigungsfunktion ist nicht aktiviert. Dazu bitte in den Einstellungen die Speicherung des Logins erlauben."></i>
+
     </li>
 
 @elseif(count($notifications) == 0)
@@ -9,13 +10,29 @@
     </li>
 @else
     <li class="nav-item dropdown">
-        <a href="#" class="dropdown-toggle text-success" data-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-bell" title="Keine neuen Benachrichtigungen vorhanden"></i>
+        <a href="#" class="dropdown-toggle @if($notifications->where('read', 0)->count() > 0) text-success @endif "
+           data-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bell" title=""></i>
+
         </a>
         <ul class="dropdown-menu dropdown-menu-right">
-            @foreach($notifications as $item)
+            <li class="dropdown-header">
+                <b>
+                    Benachrichtigungen
+                </b>
+            </li>
+            @if($notifications->where('read', 0)->count() > 0)
+                <li class="dropdown-header">
+                    <a href="{{route('notification.readAll')}}">
+                        Alle gelesen
+                    </a>
+                </li>
+            @endif
+
+            @foreach($notifications->sortBy('read') as $item)
             <li class="" id="notification-{{$item->id}}">
-                <a class="dropdown-item" href="{{$item['url']}}" onclick="readNotification({{$item->id}})">
+                <a class="dropdown-item @if(!$item->read) bg-light @endif" @if($item->read) style="opacity: 0.5"
+                   @endif href="{{$item['url']}}" onclick="readNotification({{$item->id}})">
                     <div class="container-fluid">
                         <div class="row h-100">
                             @if($item['icon'])

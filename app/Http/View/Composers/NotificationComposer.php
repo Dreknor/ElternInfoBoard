@@ -12,7 +12,7 @@ class NotificationComposer
     {
 
 
-        $notifications = auth()->user()->notifications()->where('read', 0)->orderBy('important')->get();
+        $notifications = auth()->user()->notifications()->orderBy('important')->get();
         $view->with([
             'notifications' => $notifications,
             'user' => auth()->user(),

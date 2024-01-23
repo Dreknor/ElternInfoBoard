@@ -39,7 +39,7 @@ class ComposerServiceProvider extends ServiceProvider
         );
 
         View::composer(
-            'include.benachrichtigung',
+            'layouts.app',
             NotificationComposer::class
         );
 
