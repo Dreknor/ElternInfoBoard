@@ -12,11 +12,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 use Spatie\CalendarLinks\Link;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+
 
 class Termin extends Model
 {
     use HasFactory;
     use NotificationTrait;
+    use HasRelationships;
+
 
     protected $table = 'termine';
 

@@ -55,31 +55,37 @@ class VertretungsplanController extends Controller
         $inhalt = file_get_contents($url);
 
 
+        if ($inhalt == "" || $inhalt == null){
+            return response()->json([
+                'message' => 'Der Vertretungsplan ist nicht verfügbar.'
+            ], 404);
+        } else {
 
-        $json = json_decode($inhalt, true);
+            $json = json_decode($inhalt, true);
 
 
-        $order = array('klasse' => 'asc','date' => 'asc', 'stunde' => 'asc');
+                $order = array('klasse' => 'asc', 'date' => 'asc', 'stunde' => 'asc');
 
-        usort($json['vertretungen'], function ($a, $b) use ($order) {
-            $t = array(true => -1, false => 1);
-            $r = true;
-            $k = 1;
-            foreach ($order as $key => $value) {
-                $k = ($value === 'asc') ? 1 : -1;
-                $r = ($a[$key] < $b[$key]);
-                if ($a[$key] !== $b[$key]) {
-                    return $t[$r] * $k;
+                if (is_array($json) and array_key_exists('vertretungen',$json)){
+                    usort($json['vertretungen'], function ($a, $b) use ($order) {
+                        $t = array(true => -1, false => 1);
+                        $r = true;
+                        $k = 1;
+                        foreach ($order as $key => $value) {
+                            $k = ($value === 'asc') ? 1 : -1;
+                            $r = ($a[$key] < $b[$key]);
+                            if ($a[$key] !== $b[$key]) {
+                                return $t[$r] * $k;
+                            }
+
+                        }
+                        return $t[$r] * $k;
+                    });
                 }
 
             }
-            return $t[$r] * $k;
-        });
-        /*
-        usort($json['vertretungen'], function($a, $b) {
-            return $a['klasse'] <=> $b['klasse'];
-        });
-        */
+
+
 
         return response()->json([
             'data' => $json,
