@@ -122,7 +122,7 @@
                                         </p>
                                         <p>
                                             <small>
-                                                {{$krankmeldung->created_at->format('d.m.Y h:i ')}} Uhr <br>
+                                                {{$krankmeldung->created_at->format('d.m.Y H:i ')}} Uhr <br>
                                                 von {{$krankmeldung->user->name}}
                                             </small>
                                         </p>
