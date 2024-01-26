@@ -36,6 +36,18 @@ class NotificationController extends Controller
         return redirect()->back();
     }
 
+    public function readByType(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|string',
+        ]);
+
+        auth()->user()->notifications()->where('type', $request->type)->update(['read' => true]);
+
+    }
+
+
+
     public function clean_up()
     {
         Notification::query()->where('created_at', '<', now()->subDays(14))->delete();

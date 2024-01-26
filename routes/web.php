@@ -51,7 +51,6 @@ Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
-Route::get('notifications', [\App\Http\Controllers\API\NotificationController::class, 'index']);
 
 Route::middleware('auth')->group(function () {
     Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
@@ -88,6 +87,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/push', [PushController::class, 'push'])->name('push');
         Route::post('/notification/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notification.read');
         Route::get('/notification/read/all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notification.readAll');
+        Route::post('markNotificationAsRead',[ \App\Http\Controllers\NotificationController::class, 'readByType']);
+
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
