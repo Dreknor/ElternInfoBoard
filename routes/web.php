@@ -51,6 +51,7 @@ Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
+Route::get('notifications', [\App\Http\Controllers\API\NotificationController::class, 'index']);
 
 Route::middleware('auth')->group(function () {
     Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
@@ -81,7 +82,7 @@ Route::middleware('auth')->group(function () {
 
         //Push
         Route::post('/push', [PushController::class, 'store']);
-        Route::get('/push2', [PushController::class, 'store']);
+        //Route::get('/push2', [PushController::class, 'store']);
 
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');
