@@ -23,19 +23,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        $notification = new Notification([
-            'user_id' => $user->id,
-            'title' => 'Abruf',
-            'message' => 'Benachrichtigungen abgerufen um ' . Carbon::now()->format('d.m.Y H:i:s') . ' Uhr',
-            'url' => '',
-            'type' => 'info',
-            'icon' => 'info',
-            'read' => false,
-            'important' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        $notification->save();
+
 
         $notifications = $user->notifications()->where('read',0)->orderBy('created_at', 'desc')->get();
 

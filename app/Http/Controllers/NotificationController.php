@@ -50,7 +50,7 @@ class NotificationController extends Controller
 
     public function clean_up()
     {
-        Notification::query()->where('created_at', '<', now()->subDays(14))->delete();
+        Notification::query()->where('created_at', '<', now()->subDays(3))->delete();
         $admins = Role::query()->where('name', 'Administrator')->first()->users()->get();
 
         foreach ($admins as $admin) {
