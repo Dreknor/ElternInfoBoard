@@ -33,18 +33,33 @@ class ActiveDiseaseController extends Controller
     {
         $disease = Disease::find($request->disease_id);
 
-        ActiveDisease::insert([
-            'user_id' => auth()->id(),
-            'disease_id' => $request->disease_id,
-            'start' => now(),
-            'end' => now()->addDays($disease->aushang_dauer),
-            'active' => false,
-        ]);
+        $activeDisease = ActiveDisease::where('user_id', auth()->id())->where('disease_id', $request->disease_id)->whereDate('start', '<=', now())->whereDate('end', '>=', now())->first();
 
-        return redirect(url('/'))->with([
-            'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen',
-            'type' => 'success',
-        ]);
+        if ($activeDisease) {
+            $activeDisease->update(['end' => $activeDisease->end->addDays($disease->aushang_dauer)]);
+
+            return redirect(url('/'))->with([
+                'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
+                'type' => 'success',
+            ]);
+
+
+        } else {
+            ActiveDisease::insert([
+                'user_id' => auth()->id(),
+                'disease_id' => $request->disease_id,
+                'start' => now(),
+                'end' => now()->addDays($disease->aushang_dauer),
+                'active' => false,
+            ]);
+
+            return redirect(url('/'))->with([
+                'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen',
+                'type' => 'success',
+            ]);
+        }
+
+
     }
 
     public function destroy(ActiveDisease $disease)
