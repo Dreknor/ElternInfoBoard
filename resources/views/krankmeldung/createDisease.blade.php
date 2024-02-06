@@ -73,7 +73,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($activeDisease->active)
+                                        @if(!$activeDisease->active)
                                             <form action="{{url('diseases/'.$activeDisease->id.'/active')}}"
                                                   method="post">
                                                 @csrf
