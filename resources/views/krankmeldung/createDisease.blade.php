@@ -73,8 +73,17 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{url('diseases/'.$activeDisease->id.'/extend')}}"
-                                           class="btn btn-primary">verlängern</a>
+                                        @if($activeDisease->active)
+                                            <form action="{{url('diseases/'.$activeDisease->id.'/active')}}"
+                                                  method="post">
+                                                @csrf
+                                                @method('put')
+                                                <button type="submit" class="btn btn-warning">freigeben</button>
+                                            </form>
+                                        @else
+                                            <a href="{{url('diseases/'.$activeDisease->id.'/extend')}}"
+                                                  class="btn btn-primary">verlängern</a>
+                                        @endif
 
                                     </td>
                                 </tr>

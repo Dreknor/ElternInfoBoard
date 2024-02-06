@@ -12,7 +12,7 @@ class DiseaseComposer
     {
 
         if (auth()->user()->can('manage diseases')) {
-            $disaeses = ActiveDisease::whereDate('end', '>=', Carbon::today())->with('disease')->orderBy('end')->get()->unique('disease_id');
+            $disaeses = ActiveDisease::whereDate('end', '>=', Carbon::today())->with('disease')->orderBy('end')->get();
         } else {
             $disaeses = ActiveDisease::whereDate('end', '>=', Carbon::today())->active()->with('disease')->orderBy('end')->get()->unique('disease_id');
 
