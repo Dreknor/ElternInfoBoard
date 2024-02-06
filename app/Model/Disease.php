@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Disease extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer'
