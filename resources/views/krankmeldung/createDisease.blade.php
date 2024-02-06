@@ -45,7 +45,7 @@
                             <tr>
                                 <th scope="col">Name</th>
                                 <th scope="col">von - bis</th>
-                                <th scope="col">Aktionen</th>
+                                <th scope="col" colspan="2">Aktionen</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -54,6 +54,7 @@
                                     <td>{{$activeDisease->disease->name}}</td>
                                     <td>{{$activeDisease->start->format('d.m.Y')}}
                                         - {{$activeDisease->end->format('d.m.Y')}}</td>
+
                                     <td>
                                         @if($activeDisease->active)
                                             <form action="{{url('diseases/'.$activeDisease->id.'/active')}}"
@@ -70,6 +71,11 @@
                                                 <button type="submit" class="btn btn-danger">löschen</button>
                                             </form>
                                         @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{url('diseases/'.$activeDisease->id.'/extend')}}"
+                                           class="btn btn-primary">verlängern</a>
+
                                     </td>
                                 </tr>
                             @endforeach

@@ -115,7 +115,7 @@ Route::middleware('auth')->group(function () {
         Route::post('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
         Route::put('diseases/{disease}/active', [\App\Http\Controllers\ActiveDiseaseController::class, 'update'])->middleware('permission:manage diseases');
         Route::delete('diseases/{disease}/delete', [\App\Http\Controllers\ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
-
+        Route::get('diseases/{disease}/extend', [\App\Http\Controllers\ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
         Route::resource('termin', TerminController::class);
         //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
