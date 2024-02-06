@@ -32,7 +32,7 @@ class ActiveDiseaseController extends Controller
 
         if ($existingActiveDisease) {
 
-            $existingActiveDisease->update(['end' => $existingActiveDisease->end->addDays($disease->disease->aushang_dauer)]);
+            $existingActiveDisease->update(['end' => $disease->start->addDays($disease->disease->aushang_dauer)]);
             $disease->delete();
 
             return redirect()->back()->with([
