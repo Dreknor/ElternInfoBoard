@@ -4,10 +4,12 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ActiveDisease extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = ['disease_id', 'user_id', 'start', 'end', 'comment', 'active'];
 
