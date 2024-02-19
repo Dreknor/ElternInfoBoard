@@ -25,27 +25,12 @@ class ActiveDiseaseController extends Controller
     }
     public function activate(ActiveDisease $disease)
     {
-        $existingActiveDisease = ActiveDisease::query()
-            ->where('disease_id', $disease->disease_id)
-            ->whereDate('start', '<=', now())
-            ->whereDate('end', '>=', now())->first();
 
-        if ($existingActiveDisease) {
-
-            $existingActiveDisease->update(['end' => $disease->start->addDays($disease->disease->aushang_dauer)]);
-            $disease->delete();
-
-            return redirect()->back()->with([
-                'Meldung' => 'Es existiert bereits eine aktive Krankmeldung für diese Krankheit, daher wurde diese verlängert',
-                'type' => 'danger',
-            ]);
-        } else {
-            $disease->update(['active' => true]);
+        $disease->update(['active' => true]);
             return redirect()->back()->with([
                 'Meldung' => 'Krankmeldung wurde erfolgreich aktiviert',
                 'type' => 'success',
             ]);
-        }
 
     }
 
