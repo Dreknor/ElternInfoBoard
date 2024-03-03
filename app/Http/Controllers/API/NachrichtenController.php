@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\Request;
 use App\Model\User;
+use Illuminate\Support\Facades\Log;
 
 
 class NachrichtenController extends Controller
@@ -122,11 +123,14 @@ class NachrichtenController extends Controller
                 $reactions[$reaction->name] = $reaction->count;
             }
 
+            $nachricht->read_receipt = ($nachricht->read_receipt == true) ? '1' : false;
+
             $nachricht->userReceipt = (is_null($nachricht->receipts()->where('user_id', $user->id)->first())) ? false : true;
 
             unset($nachricht->reactions);
             $nachricht->userReaction = $nachricht->userReaction($user);
             $nachricht->reactions = $reactions;
+
         }
 
 

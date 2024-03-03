@@ -87,6 +87,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('rueckmeldung', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'store']);
 
     /**
+     * Abfragen
+     */
+
+    Route::get('abfrage/{post_id}', [\App\Http\Controllers\API\AbfragenController::class, 'getFields']);
+    Route::post('abfrage/{post}', [\App\Http\Controllers\API\AbfragenController::class, 'storeAnswer']);
+
+    /**
      * Dateien, Bilder, Downloads
      */
     Route::get('files', [FilesController::class, 'index']);

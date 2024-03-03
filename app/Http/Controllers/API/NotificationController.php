@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Model\Notification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -45,7 +44,11 @@ class NotificationController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        $user->notifications()->where('id', $request->id)->update(['read' => 1]);
+
+        $notification = $user->notifications()->where('id', $request->id)->first();
+
+        $user->notifications()->where('type', $notification->type)->where('user_id', $user->id)->update(['read' => 1]);
+
 
         return response()->json([
             'message' => 'success',
