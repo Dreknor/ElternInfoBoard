@@ -1,0 +1,34 @@
+.bg-light-gray {
+    @apply bg-white;
+    /*~ background-color: #999; */
+    background-color: radial-gradient(circle,#f4fcf6 0%,rgba(169,168,168,.47) 100%);
+}
+
+.main-panel {
+    @apply bg-white;
+    background-color: radial-gradient(circle,#f4fcf6 0%,rgba(106,168,242,.47382703081232) 100%);
+}
+
+.blur {
+    backdrop-filter: blur(5px);
+}
+
+.wrap {
+    @apply whitespace-normal;
+    word-wrap: break-word;
+}
+
+.reaction > i {
+    @apply text-2xl;
+    /*~ font-size: 1.6rem; */
+}
+
+.reaction:hover {
+    @apply text-green-500;
+    /*~ color: #0f0; */
+}
+
+.reacted > i {
+    color: rgba(64,108,254,.44);
+}
+
