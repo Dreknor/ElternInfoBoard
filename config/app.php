@@ -230,6 +230,7 @@ return [
 
     //Link Mitarbeiterboard - Benötigt für Vertretungsplan
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
+    'mitarbeiterboard_api_key' => env('API_KEY_MITARBEITERBOARD'),
 
     //Passwort für Import
     'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
