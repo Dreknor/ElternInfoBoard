@@ -41,7 +41,7 @@ class VertretungsplanController extends Controller
             $gruppen = '';
         }
 
-        $url = config('app.mitarbeiterboard') . '/api/' . config('app.mitarbeiterboard_api_key') . '/vertretungsplan' . $gruppen;
+        $url = config('app.mitarbeiterboard') . '/api/vertretungsplan/' . config('app.mitarbeiterboard_api_key') . '/' . $gruppen;
         $inhalt = file_get_contents($url);
 
         $json = json_decode($inhalt, true);
