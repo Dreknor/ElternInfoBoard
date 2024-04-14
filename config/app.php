@@ -232,6 +232,9 @@ return [
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
     'mitarbeiterboard_api_key' => env('API_KEY_MITARBEITERBOARD'),
 
+    //API-Key
+    'api_key' => env('API_KEY'),
+
     //Passwort für Import
     'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
     'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),

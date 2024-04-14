@@ -121,6 +121,12 @@ class User extends Authenticatable
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post']);
     }
 
+
+    public function vertretungen()
+    {
+        return $this->hasManyDeep(Vertretung::class, ['group_user', Group::class, 'group_post']);
+    }
+
     /**
      * Posts verknüpft über die Gruppen
      *

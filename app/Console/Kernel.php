@@ -32,7 +32,6 @@ class Kernel extends ConsoleKernel
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
 
         $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at('08:30');
-        //$schedule->call('App\Http\Controllers\FeedbackController@dailyReport')->weekdays()->at('08:30');
         $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00');
 
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:00');

@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Vertretung;
+use App\Model\VertretungsplanNews;
+use App\Model\VertretungsplanWeek;
+use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 
@@ -41,6 +45,7 @@ class VertretungsplanController extends Controller
             $gruppen = '';
         }
 
+        /*
         $url = config('app.mitarbeiterboard') . '/api/vertretungsplan/' . config('app.mitarbeiterboard_api_key') . '/' . $gruppen;
         $inhalt = file_get_contents($url);
 
@@ -69,7 +74,30 @@ class VertretungsplanController extends Controller
                 $plan[$key] = $value;
             }
         }
+   */
 
-        return view('vertretungsplan.index', $plan);
+        if (auth()->user()->can('view vertretungsplan all')) {
+            $vertretungen = Vertretung::orderBy('date', 'desc')->get();
+        } else {
+            $vertretungen = auth()->user()->vertretungen()->orderBy('date', 'desc')->get();
+        }
+
+        $news = VertretungsplanNews::all();
+
+
+        $targetDate = Carbon::now()->addDays(3);
+        while ($targetDate->isWeekend()) {
+            $targetDate->addDay();
+        }
+
+
+        return view('vertretungsplan.index', [
+            'targetDate' => $targetDate,
+            'weeks' => VertretungsplanWeek::all(),
+            'vertretungen' => $vertretungen,
+            'mitteilungen' => $news,
+            'absences' => collect([])
+
+        ]);
     }
 }

@@ -31,6 +31,11 @@ class Groups extends Model implements HasMedia
         return $this->belongsToMany(Post::class)->withTimestamps();
     }
 
+    public function vertretungen()
+    {
+        return $this->hasMany(Vertretung::class);
+    }
+
     public function termine(): BelongsToMany
     {
         return $this->belongsToMany(Termin::class, 'group_termine');

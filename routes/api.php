@@ -19,6 +19,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 
+/*
+ * Vertretungsplan aus MitarbeiterBoard
+ */
+
+Route::post('vertretungen/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'store']);
+Route::put('vertretungen/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'update']);
+Route::delete('vertretungen/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'destroy']);
+Route::post('news/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeNews']);
+Route::delete('news/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteNews']);
+Route::post('week/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeWeek']);
+Route::put('week/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'updateWeek']);
+Route::delete('week/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteWeek']);
 
 Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));

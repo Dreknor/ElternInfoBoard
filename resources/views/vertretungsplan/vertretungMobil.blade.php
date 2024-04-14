@@ -6,8 +6,9 @@
                     Vertretungen für
                     <div class="text-danger d-inline">{{$x->locale('de')->dayName}} </div>
                     ,
-                    den {{$x->format('d.m.Y')}} @if(count($weeks) > 0 and array_key_exists($x->copy()->startOfWeek()->format('Y-m-d'), $weeks))
-                        ({{$weeks[$x->copy()->startOfWeek()->format('Y-m-d')]}} - Woche)
+                    den {{$x->format('d.m.Y')}} @if(count($weeks->where('week', $x->copy()->startOfWeek()->format('Y-m-d'))) > 0 )
+                        )
+                        {{$weeks->where('week', $x->copy()->startOfWeek()->format('Y-m-d'))->type}} - Woche)
                     @endif
                 </h6>
             </div>
@@ -31,7 +32,7 @@
                             }) as $vertretung)
                             <tr @if(($loop->iteration-1)%2 == 0) class="bg-secondary text-white" @endif>
                                 <td class="">
-                                    {{\Illuminate\Support\Str::after($vertretung->klasse, ' ')}}
+                                    {{\Illuminate\Support\Str::after($vertretung->group->name, ' ')}}
                                 </td>
                                 <td>
                                     {{$vertretung->stunde}}
@@ -55,17 +56,19 @@
 
                         </tr>
                         @foreach($mitteilungen->filter(function ($mitteilungen) use ($x) {
-                                if ((\Carbon\Carbon::make($mitteilungen->date_start)->eq($x) and \Carbon\Carbon::make($mitteilungen->date_end) == null) or (\Carbon\Carbon::make($mitteilungen->date_start)->lessThanOrEqualTo($x) and \Carbon\Carbon::make($mitteilungen->date_end) != null and \Carbon\Carbon::make($mitteilungen->date_end)->greaterThanOrEqualTo($x))){
-                                    return $mitteilungen;
-                                }
-                            }) as $dailyNews)
+                                        if ((\Carbon\Carbon::make($mitteilungen->start)->eq($x) and \Carbon\Carbon::make($mitteilungen->end) == null)
+                                        or (\Carbon\Carbon::make($mitteilungen->start)->lessThanOrEqualTo($x)
+                                        and \Carbon\Carbon::make($mitteilungen->end) != null and \Carbon\Carbon::make($mitteilungen->end)->greaterThanOrEqualTo($x))){
+                                            return $mitteilungen;
+                                        }
+                                    }) as $dailyNews)
                             <tr>
                                 <th colspan="6" class="border-outline-info">
                                     {{$dailyNews->news}}
                                 </th>
                             </tr>
                         @endforeach
-                        @if(!is_null($absences))
+                        @if(!is_null($absences) and $absences->count() > 0)
                             <tr>
                                 <th colspan="6">
                                     @if($absences->count() > 1)
