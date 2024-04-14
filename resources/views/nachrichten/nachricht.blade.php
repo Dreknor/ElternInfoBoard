@@ -86,7 +86,7 @@
         </div>
     </div>
 @else
-    <div class=" max-w-sm mx-auto bg-white flex space-x-4 {{$nachricht->type}}  @if($nachricht->released == 0) border border-info @endif @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach"
+    <div class="card max-w-sm mx-auto bg-white flex space-x-4 {{$nachricht->type}}  @if($nachricht->released == 0) border border-info @endif @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach"
          id="{{$nachricht->id}}">
         @if(count($nachricht->getMedia('header'))>0)
             <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
