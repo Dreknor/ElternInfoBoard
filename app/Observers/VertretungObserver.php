@@ -20,7 +20,7 @@ class VertretungObserver
                 'title' => 'Vertretung',
                 'url' => '/vertretungsplan/',
                 'type' => 'vertretung',
-                'message' => 'Änderung im Vertretungsplan für ' . $vertretung->klasse . ' am ' . Carbon::createFromFormat('Y-m-d', $vertretung->date)->format('d.m.Y') . ' in der ' . $vertretung->stunde . ' Stunde.'
+                'message' => 'Änderung im Vertretungsplan für ' . $group->name . ' am ' . Carbon::createFromFormat('Y-m-d', $vertretung->date)->format('d.m.Y') . ' in der ' . $vertretung->stunde . ' Stunde.'
 
             ]);
             $user->notifications()->save($notification);
