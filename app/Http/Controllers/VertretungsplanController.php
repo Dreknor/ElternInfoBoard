@@ -77,9 +77,9 @@ class VertretungsplanController extends Controller
    */
 
         if (auth()->user()->can('view vertretungsplan all')) {
-            $vertretungen = Vertretung::orderBy('date', 'desc')->get();
+            $vertretungen = Vertretung::orderBy('date', 'desc')->orderBy('stunde')->get();
         } else {
-            $vertretungen = auth()->user()->vertretungen()->orderBy('date', 'desc')->get();
+            $vertretungen = auth()->user()->vertretungen()->orderBy('stunde', 'asc')->get();
         }
 
         $news = VertretungsplanNews::all();
