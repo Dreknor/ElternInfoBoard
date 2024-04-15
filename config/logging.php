@@ -53,8 +53,17 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['database','daily'],
             'ignore_exceptions' => false,
+        ],
+
+        'database' => [
+            'driver' => 'custom',
+            'via' => danielme85\LaravelLogToDB\LogToDbHandler::class,
+            'name' => 'DB-Logging',
+            'detailed' => true,
+            'queue' => true,
+            'queue_name' => 'logToDBQueue',
         ],
 
         'single' => [
