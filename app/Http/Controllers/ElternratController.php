@@ -98,6 +98,32 @@ class ElternratController extends Controller
         ]);
     }
 
+    /**
+     *
+     * delete the given discussion
+     *
+     * @param Discussion $discussion
+     * @return RedirectResponse
+     */
+    public function destroy(Discussion $discussion)
+    {
+
+        if (auth()->user()->can('delete elternrat file')) {
+            $discussion->comments()->delete();
+            $discussion->delete();
+            return redirect()->to(url('elternrat'))->with([
+                'type' => 'success',
+                'meldung' => 'Beitrag gelöscht',
+            ]);
+        }
+
+        return redirect()->to(url('elternrat'))->with([
+            'type' => 'danger',
+            'meldung' => 'Berechtigung fehlt',
+        ]);
+    }
+
+
 
     /**
      *

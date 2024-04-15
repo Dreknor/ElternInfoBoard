@@ -316,6 +316,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:view elternrat')->group(function () {
             Route::resource('elternrat', ElternratController::class);
             Route::delete('elternrat/file/{file}', [ElternratController::class, 'deleteFile']);
+            Route::delete('elternrat/discussion/{discussion}/delete', [ElternratController::class, 'destroy']);
             Route::delete('elternrat/comment/{comment}', [ElternratController::class, 'deleteComment']);
             Route::get('elternrat/add/file', [ElternratController::class, 'addFile']);
             Route::post('elternrat/file', [ElternratController::class, 'storeFile']);

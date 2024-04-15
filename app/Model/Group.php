@@ -57,4 +57,9 @@ class Group extends Model implements HasMedia
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
+
+    public function vertretungen()
+    {
+        return $this->hasMany(Vertretung::class, 'klasse');
+    }
 }
