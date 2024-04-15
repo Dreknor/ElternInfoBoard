@@ -16,7 +16,6 @@ class VertretungObserver
         $users = $group->users;
 
         foreach ($users as $user) {
-            //$user->notify(new VertretungNotification($vertretung));
             $notification = new Notification([
                 'title' => 'Vertretung',
                 'url' => '/vertretungsplan/',
@@ -27,6 +26,7 @@ class VertretungObserver
             $user->notifications()->save($notification);
 
             if ($user->webPushSubscriptions->count() > 0 and $user->can('testing')) {
+                Log::info('Sending notification to ' . $user->name);
                 $user->notify(new VertretungsplanNotification($notification->title, $notification->message));
             }
         }

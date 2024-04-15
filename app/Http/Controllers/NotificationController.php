@@ -62,6 +62,8 @@ class NotificationController extends Controller
                 'important' => false,
                 'type' => 'Admin',
             ]);
+
+
             $notification->save();
         }
 
