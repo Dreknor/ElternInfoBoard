@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Model\Notification;
 use App\Model\Vertretung;
+use App\Notifications\VertretungsplanNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -24,6 +25,10 @@ class VertretungObserver
 
             ]);
             $user->notifications()->save($notification);
+
+            if ($user->webPushSubscriptions->count() > 0 and $user->can('testing')) {
+                $user->notify(new VertretungsplanNotification($notification->title, $notification->message));
+            }
         }
     }
 
