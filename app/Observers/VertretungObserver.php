@@ -15,6 +15,8 @@ class VertretungObserver
         $group = $vertretung->group;
         $users = $group->users;
 
+        Log::info('Vertretung created: ' . $vertretung->id . ' for ' . $group->name . ' on ' . $vertretung->date . ' in the ' . $vertretung->stunde . ' hour.');
+        Log::info('Sending notification to ' . $users->count() . ' users.');
         foreach ($users as $user) {
             $notification = new Notification([
                 'title' => 'Vertretung',
