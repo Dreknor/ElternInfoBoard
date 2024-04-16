@@ -8,6 +8,7 @@ use App\Model\VertretungsplanWeek;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 
 class VertretungsplanController extends Controller
 {
@@ -24,6 +25,7 @@ class VertretungsplanController extends Controller
      */
     public function index()
     {
+        Log::channel('database')->info('VertretungsplanController@index');
         if (config('app.mitarbeiterboard') == ""){
 
             $meldung = "Es ist ein Fehler aufgetreten.";

@@ -8,11 +8,12 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.0",
+        "php": "^8.2",
         "ext-curl": "*",
         "barryvdh/laravel-dompdf": "^2.0",
         "benjivm/commentable": "^6.0",
         "bkwld/cloner": "^3.10",
+        "danielme85/laravel-log-to-db": "^3.0",
         "devdojo/chatter": "0.2.*",
         "devdojo/laravel-reactions": "^1.0",
         "enlightn/enlightn": "^1.25",
