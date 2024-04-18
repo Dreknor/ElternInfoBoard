@@ -11,9 +11,9 @@
                             Vertretungen für
                             <div class="text-danger d-inline">{{$x->locale('de')->dayName}} </div>
                             ,
-                            den {{$x->format('d.m.Y')}} @if(count($weeks->where('week', $x->copy()->startOfWeek()->format('Y-m-d'))) > 0 )
+                            den {{$x->format('d.m.Y')}} @if(count($weeks->where('week', $x->copy()->startOfWeek())) > 0 )
                                 )
-                                ({{$weeks->where('week', $x->copy()->startOfWeek()->format('Y-m-d'))->type}} - Woche)
+                                ({{$weeks->where('week', $x->copy()->startOfWeek())->first()?->type}} - Woche)
                             @endif
                         </h6>
                     </div>
