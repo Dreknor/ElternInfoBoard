@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePushRequest;
+use App\Model\Notification;
+use App\Notifications\PushNews;
 use Illuminate\Http\JsonResponse;
 
 class PushController extends Controller
@@ -10,6 +12,31 @@ class PushController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+
+    public function test()
+    {
+        if (auth()->user()->cant('testing')) {
+            return response()->json(['success' => false, 'message' => 'No permission']);
+        }
+
+        auth()->user()->notify(new PushNews(
+            ['title' => 'Test-header', 'body' => 'Test']
+        ));
+
+        Notification::insert([
+            'title' => 'Test-header',
+            'message' => 'Test',
+            'type' => 'push',
+            'icon' => '',
+            'url' => '',
+            'user_id' => auth()->id()
+        ]);
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Testnachricht wurde versendet.'
+        ]);
     }
 
     /**
