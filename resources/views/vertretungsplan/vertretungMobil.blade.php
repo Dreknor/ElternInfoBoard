@@ -8,7 +8,7 @@
                     ,
                     den {{$x->format('d.m.Y')}} @if(count($weeks->where('week', $x->copy()->startOfWeek())) > 0 )
                         )
-                        {{$weeks->where('week', $x->copy()->startOfWeek()->first)?->type}} - Woche)
+                        {{$weeks->where('week', $x->copy()->startOfWeek()->first())?->type}} - Woche)
                     @endif
                 </h6>
             </div>
