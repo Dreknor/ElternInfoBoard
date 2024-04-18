@@ -22,7 +22,7 @@ class PushController extends Controller
         }
 
         auth()->user()->notify(new Push(
-            ['title' => 'Test-header', 'body' => 'Test']
+            'Test-header', 'body'
         ));
 
         Notification::insert([
