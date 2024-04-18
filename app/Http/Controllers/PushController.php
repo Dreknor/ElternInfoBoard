@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePushRequest;
 use App\Model\Notification;
-use App\Notifications\PushNews;
+use App\Notifications\Push;
 use Illuminate\Http\JsonResponse;
 
 class PushController extends Controller
@@ -21,7 +21,7 @@ class PushController extends Controller
             return response()->json(['success' => false, 'message' => 'No permission']);
         }
 
-        auth()->user()->notify(new PushNews(
+        auth()->user()->notify(new Push(
             ['title' => 'Test-header', 'body' => 'Test']
         ));
 
