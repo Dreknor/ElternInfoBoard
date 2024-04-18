@@ -725,7 +725,7 @@ class NachrichtenController extends Controller
      */
     public function destroy(Post $posts)
     {
-        if ($posts->author == auth()->user()->id and $posts->released == 0) {
+        if ($posts->author == auth()->user()->id or auth()->user()->can('delete posts')) {
             $posts->groups()->detach();
             if (! is_null($posts->rueckmeldung())) {
                 $posts->rueckmeldung()->delete();
