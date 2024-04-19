@@ -15,29 +15,7 @@ class PushController extends Controller
     }
 
 
-    public function test()
-    {
-        if (auth()->user()->cant('testing')) {
-            return response()->json(['success' => false, 'message' => 'No permission']);
-        }
 
-        auth()->user()->notify(new Push(
-            'Test-header', 'body'
-        ));
-
-        Notification::insert([
-            'title' => 'Test-header',
-            'message' => 'Test',
-            'type' => 'push',
-            'icon' => '',
-            'url' => '',
-            'user_id' => auth()->id()
-        ]);
-        return redirect()->back()->with([
-            'type' => 'success',
-            'Meldung' => 'Testnachricht wurde versendet.'
-        ]);
-    }
 
     /**
      * Store the PushSubscription.

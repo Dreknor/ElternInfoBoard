@@ -590,7 +590,8 @@ class NachrichtenController extends Controller
                     $admin = Role::findByName('Administrator');
                     $admin = $admin->users()->first();
 
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
+                    $admin->notify(new Push('Fehler beim Mailversand', $exception->getMessage()));
+
                 }
             }
         }
@@ -815,8 +816,6 @@ class NachrichtenController extends Controller
             icon: $icon,
             type: ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
         );
-
-        Notification::send($User, new PushNews($post));
 
         return redirect()->back();
     }
