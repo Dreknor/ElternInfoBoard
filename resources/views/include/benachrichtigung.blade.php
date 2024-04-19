@@ -65,13 +65,7 @@
             </li>
             @endforeach
 
-            @can('testing')
-                <li class="dropdown-item">
-                    <a href="{{url('push/test')}}" class="btn btn-danger">
-                        Test
-                    </a>
-                </li>
-            @endcan
+
         </ul>
     </li>
 @endif
