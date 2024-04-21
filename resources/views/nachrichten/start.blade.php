@@ -7,20 +7,22 @@
 
         @if($nachrichten != null and count($nachrichten)>0)
             <div class="card-body">
-                <button class="btn btn-primary hidden  d-md-none" type="button" data-toggle="collapse"
-                        data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
-                    Themen zeigen
-                </button>
-                <div class="row collapse d-md-block" id="Themen">
-                    <div class="col">
-                        @foreach($nachrichten AS $nachricht)
-                            @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                                <a href="#{{$nachricht->id}}"
-                                   class="anker_link btn btn-sm wrap
-                                   @if($nachricht->released == 1) btn-outline-primary @else btn-outline-warning @endif
+                <div class="row">
+                    <div class="col-sm-12 col-md-9 col-lg-10">
+                        <button class="btn btn-primary btn-block hidden  d-md-none" type="button" data-toggle="collapse"
+                                data-target="#Themen" aria-expanded="false" aria-controls="collapseThemen">
+                            Themen zeigen
+                        </button>
+                        <div class="row collapse d-md-block" id="Themen">
+                            <div class="col">
+                                @foreach($nachrichten AS $nachricht)
+                                    @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
+                                        <a href="#{{$nachricht->id}}"
+                                           class="anker_link btn btn-sm wrap
+                                   @if($nachricht->released == 1) btn-primary @else btn-outline-warning @endif
                                    @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach
                                    ">
-                                    <div class="
+                                            <div class="
                                         @switch($nachricht->type)
                                             @case('pflicht')
                                                 text-danger
@@ -31,73 +33,53 @@
                                                 @break
                                         @endswitch
                                         ">
-                                        @if(! is_null($nachricht->rueckmeldung))
-                                            <div
-                                                class="d-inline @if($nachricht->rueckmeldung->pflicht == 1) text-danger @endif">
-                                                @switch($nachricht->rueckmeldung->type)
-                                                    @case('email')
-                                                        <i class="fas fa-comment-dots"></i>
-                                                        @break
+                                                @if(! is_null($nachricht->rueckmeldung))
+                                                    <div
+                                                        class="d-inline @if($nachricht->rueckmeldung->pflicht == 1) text-danger @endif">
+                                                        @switch($nachricht->rueckmeldung->type)
+                                                            @case('email')
+                                                                <i class="fas fa-comment-dots"></i>
+                                                                @break
 
-                                                    @case('abfrage')
-                                                        <i class="fa fa-poll-h"></i>
-                                                        @break
-                                                    @default
+                                                            @case('abfrage')
+                                                                <i class="fa fa-poll-h"></i>
+                                                                @break
+                                                            @default
 
-                                                        @break
-                                                @endswitch
+                                                                @break
+                                                        @endswitch
+                                                    </div>
+
+                                                @endif
+                                                @if($nachricht->read_receipt ==1 )
+                                                    <i class="fas fa-book-open"></i>
+                                                @endif
+                                                {{$nachricht->header}}
                                             </div>
-
-                                        @endif
-                                        @if($nachricht->read_receipt ==1 )
-                                                <i class="fas fa-book-open"></i>
-                                        @endif
-                                        {{$nachricht->header}}
-                                    </div>
-                                </a>
-                            @endif
-                        @endforeach
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-3 col-lg-2 border-left">
+                        <h6>Filter</h6>
+                        <div class="row mt-1">
+                            @foreach(auth()->user()->groups as $group)
+                                <div class="col-auto">
+                                    <label class="switch switch-sm ">
+                                        <input type="checkbox" class="filter_switch"
+                                               id="{{\Illuminate\Support\Str::camel($group->name)}}">
+                                        <span class="slider slider-sm round"></span>
+                                    </label>
+                                    {{$group->name}}
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
+
             </div>
-
-            <div class="card-footer border-top">
-                    <div class="row">
-
-                    @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "info") { return $item;}})) > 0)
-                            <div class="col">
-                                <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="infoButton">
-                                    <i class="fas fa-eye"></i> Infos ausblenden
-                                </div>
-                            </div>
-                        @endif
-                        @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "pflicht") { return $item;}})) > 0)
-                            <div class="col">
-                                <div class="btn btn-outline-danger btn-sm btn-block" type="button" id="pflichtButton">
-                                    <i class="fas fa-eye"></i> Pflichtaufgaben ausblenden
-                                </div>
-                            </div>
-                        @endif
-                        @if(count($nachrichten->filter(function ($item, $key){ if ($item->type == "wahl") { return $item;}})) > 0)
-                            <div class="col">
-                                <div class="btn btn-outline-warning btn-sm btn-block" type="button" id="wahlButton">
-                                    <i class="fas fa-eye"></i> Wahlaufgaben ausblenden
-                                </div>
-                            </div>
-                        @endif
-
-                    </div>
-                    <div class="row mt-1">
-
-                        @foreach(auth()->user()->groups as $group)
-                            <div class="col">
-                                    <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="{{\Illuminate\Support\Str::camel($group->name)}}" data-show="true">
-                                        {{$group->name}}
-                                    </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
 
         @else
 
@@ -110,8 +92,9 @@
         @endif
     </div>
         @foreach($nachrichten AS $nachricht)
-            @if($nachricht->released == 1 or auth()->user()->can('edit posts'))
-                <div class="@foreach($nachricht->groups as $group) {{$group->name}} @endforeach">
+            @if($nachricht->released == 1 or auth()->user()->can('edit posts') or $nachricht->author == auth()->id())
+                <div
+                    class="nachricht @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
                     @include('nachrichten.nachricht')
                 </div>
             @endif

@@ -9,9 +9,6 @@
     <p class="text-danger">
         Beachten Sie, dass wir die Kinder der 1. und 2. Klassenstufe zur vollen oder halben Stunde losschicken. Geben Sie andere Zeiten an, muss Ihr Kind selbstständig daran denken.
     </p>
-    <p class="text-danger">
-        Die Schickzeiten gelten NICHT für die Ferien.
-    </p>
     <p class="container-fluid">
         Die Liste wird jeweils montags aktualisiert. Gewünschte Änderungen müssen daher bis Montag 8.00 Uhr eingetragen sein. <br>
         Änderungen werden berücksichtigt ab: <b>{{\Carbon\Carbon::now()->next('monday')->format('d.m.Y')}}</b>

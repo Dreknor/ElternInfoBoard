@@ -5,9 +5,9 @@
 
     <div class="card">
         <div class="card-header">
-            <h6 class="card-title">
+            <h5>
                 Nachricht erstellen an:
-            </h6>
+            </h5>
         </div>
         <div class="card-body">
             <form action="{{url("/feedback")}}" method="post" class="form form-horizontal"

@@ -1,60 +1,61 @@
-@if(!isset($notifications) || $notifications == false)
-    <li>
-        <i class="fas fa-bell-slash" title="Benachrichtigungsfunktion ist nicht aktiviert. Dazu bitte in den Einstellungen die Speicherung des Logins erlauben."></i>
-
-    </li>
-
-@elseif(count($notifications) == 0)
-    <li>
+@if(count($notifications) == 0)
+    <div class="">
         <i class="fas fa-bell" title="Keine neuen Benachrichtigungen vorhanden"></i>
-    </li>
+    </div>
 @else
-    <li class="nav-item dropdown">
-        <a href="#" class="dropdown-toggle @if($notifications->where('read', 0)->count() > 0) text-success @endif "
+    <div class="nav-item ">
+        <a href="#" class=""
            data-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-bell" title=""></i>
-
+            <i class="far fa-bell nav-item" style="font-size: 1.5rem"></i>
+            @if($notifications->where('read', 0)->count() > 0)
+                <span class="badge badge-primary ">
+                        {{count($notifications->where('read', 0))}}
+                </span>
+            @endif
         </a>
         <ul class="dropdown-menu dropdown-menu-right">
             <li class="dropdown-header">
                 <b>
                     Benachrichtigungen
                 </b>
+
+            </li>
+            <li class="dropdown-divider"></li>
+            <li class="dropdown-item" onclick="event.stopPropagation()">
+                <label class="switch switch-sm ">
+                    <input type="checkbox" class="filter_switch" id="show_readed_switch">
+                    <span class="slider slider-sm round"></span>
+                </label>
+                alle anzeigen
             </li>
             @if($notifications->where('read', 0)->count() > 0)
-                <li class="dropdown-header">
+                <li class="dropdown-header" style="font-size: 0.7rem">
                     <a href="{{route('notification.readAll')}}">
                         Alle gelesen
                     </a>
                 </li>
+                <li class="dropdown-divider"></li>
             @endif
-
             @foreach($notifications->sortBy('read') as $item)
-            <li class="" id="notification-{{$item->id}}">
+                <li class="@if($item->read) read_1 d-none @endif" id="notification-{{$item->id}}">
                 <a class="dropdown-item @if(!$item->read) bg-light @endif" @if($item->read) style="opacity: 0.5"
                    @endif href="{{$item['url']}}" onclick="readNotification({{$item->id}})">
                     <div class="container-fluid">
                         <div class="row h-100">
                             @if($item['icon'])
-                                <div class="col-md-2 p-0 my-auto">
+                                <div class="col-md-2 p-0 my-auto d-none d-md-block">
                                     <img src="{{$item['icon']}}" alt="Circle Image" class="rounded-circle img-fluid">
                                 </div>
                             @endif
                             <div class="col-md-9">
                                 <div class="row">
-                                    <div class="col-12">
-                                        <p>
-                                            <b>
-                                                {{$item['title']}}
-                                            </b>
-                                        </p>
+                                    <div class="col-12 title">
+                                        {{$item['title']}}
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-12">
-                                        <p>
-                                            {{$item['message']}}
-                                        </p>
+                                    <div class="col-12 message">
+                                        {{ $item['message']}}
                                     </div>
                                 </div>
                             </div>
@@ -67,10 +68,21 @@
 
 
         </ul>
-    </li>
+    </div>
 @endif
 
 @push('js')
+    <script>
+        $(document).ready(function () {
+            $('#show_readed_switch').change(function () {
+                if ($(this).is(':checked')) {
+                    $('.read_1').removeClass('d-none');
+                } else {
+                    $('.read_1').addClass('d-none');
+                }
+            });
+        });
+    </script>
     <script>
         function readNotification(id) {
             $.ajax({

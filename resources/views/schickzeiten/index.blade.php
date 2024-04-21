@@ -19,81 +19,83 @@
     <div class="container-fluid">
         <div class="row">
             @foreach($childs as $child)
-                <div class="col-lg-6 col-md-6 "col-sm-12>
+                <div class="col-lg-6 col-md-6 col-sm-12">
                     <div class="card">
                         <div class="card-header">
-                            <div class="d-inline pull-right">
-                                <a class="text-danger"
-                                   href="{{url('schickzeiten/'.auth()->id().'/trash/'.\Illuminate\Support\Str::replace(' ', '_',$child))}}">
-                                    <i class="fa fa-trash"></i> alles löschen
-                                </a>
-                            </div>
                             <h6 class="card-title">
                                 {{$child}}
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="container-fluid">
-                                <table class="table table-striped">
-                                    <tr>
-                                        <th>
-
-                                        </th>
-                                        <th>
-                                            ab
-                                        </th>
-                                        <th>
-                                            genau
-                                        </th>
-                                        <th>
-                                            spätestens
-                                        </th>
-                                        <td></td>
-                                    </tr>
+                                <ul class="list-group">
                                     @for($x=1;$x<6;$x++)
-                                        <tr>
-                                            <th>
-                                                {{$weekdays[$x]}}
-                                            </th>
-                                            <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->where('type','ab')->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('type','spät.')->where('child_name',$child)->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','=','spät.')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <a href="{{url("schickzeiten/edit/$x/".$child)}}" class="card-link">
-                                                            <i class="fa fa-edit"></i>
+                                        <li class="list-group-item">
+                                            <div class="row">
+                                                <div class="col-10">
+                                                    <b>
+                                                        {{$weekdays[$x]}}
+                                                    </b>
+                                                </div>
+                                                <div class="col-1 ml-auto">
+                                                    <div class="btn-group">
+                                                        <a href="#" class="card-link " data-toggle="dropdown"
+                                                           aria-haspopup="true" aria-expanded="false">
+                                                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                                                         </a>
-                                                    </div>
-                                                    <div class="col">
-                                                        @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->first())
-                                                            <form action="{{url("schickzeiten/$x/".$child)}}" method="post">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="submit" class="btn btn-link btn-danger text-danger"><i class="fa fa-trash"></i></button>
-                                                            </form>
-                                                        @endif
+                                                        <div class="dropdown-menu">
+                                                            <a href="{{url("schickzeiten/edit/$x/".$child)}}"
+                                                               class="dropdown-item">
+                                                                <i class="fa fa-edit"></i> bearbeiten
+                                                            </a>
+                                                            @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->first())
+                                                                <form action="{{url("schickzeiten/$x/".$child)}}"
+                                                                      method="post" class="form-inline">
+                                                                    @csrf
+                                                                    @method('delete')
+                                                                    <button type="submit"
+                                                                            class="dropdown-item btn-danger">
+                                                                        <i class="fa fa-trash"></i> löschen
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->where('type','ab')->first())
+                                                        ab <span
+                                                            class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
+                                                        Uhr
+                                                        @if($schickzeiten->where('weekday', $x)->where('type','spät.')->where('child_name',$child)->first())
+                                                            bis spät. <span
+                                                                class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','=','spät.')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
+                                                            Uhr
+                                                        @endif
+                                                    @elseif($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first())
+                                                        <span
+                                                            class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
+                                                        Uhr
+                                                    @else
+                                                        <span class="text-danger">Keine Zeit eingetragen</span>
+                                                    @endif
+
+                                                </div>
+                                            </div>
+
+                                        </li>
                                     @endfor
-
-                                </table>
+                                </ul>
                             </div>
+                        </div>
 
+                        <div class="card-footer">
+                            <a class="text-danger"
+                               href="{{url('schickzeiten/'.auth()->id().'/trash/'.\Illuminate\Support\Str::replace(' ', '_',$child))}}">
+                                <i class="fa fa-trash"></i> alles löschen
+                            </a>
                         </div>
                     </div>
                 </div>

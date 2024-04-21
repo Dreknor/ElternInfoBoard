@@ -8,10 +8,59 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="card-title">
-                                @if(!$group->protected) <i class="fas fa-unlock-alt"></i> @else <i class="fas fa-lock"></i> @endif
-                                {{$group->name}}
-                            </h5>
+                            <div class="row">
+                                <div class="col-10">
+                                    <h6 class="card-title">
+                                        @if(!$group->protected)
+                                            <i class="fas fa-unlock-alt"></i>
+                                        @else
+                                            <i class="fas fa-lock"></i>
+                                        @endif
+                                        {{$group->name}}
+                                    </h6>
+                                </div>
+                                @canany(['edit groups', 'delete groups'])
+                                    <div class="col-1 ml-auto">
+                                        <div class="pull-right">
+                                            <a href="#" class="card-link text-black-50" data-toggle="dropdown"
+                                               aria-haspopup="true" aria-expanded="false">
+                                                <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                            </a>
+                                            <div class="dropdown-menu">
+                                                @if(auth()->user()->can('create own group') and $group->owner_id == auth()->user()->id)
+                                                    <a href="{{url('groups/'.$group->id.'/add')}}"
+                                                       class="dropdown-item">
+                                                        <i class="fas fa-user-plus"></i>
+                                                        hinzufügen
+                                                    </a>
+                                                @endcan
+                                                @if( auth()->user()->can('delete groups') or $group->owner_id == auth()->user()->id)
+                                                    <div class="dropdown-divider"></div>
+                                                    <div class="dropdown-footer">
+                                                        <div class="dropdown-item dropdown-danger">
+                                                            Soll diese Gruppe gelöscht werden? Dies muss per Passwort
+                                                            bestätigt werden.
+                                                            <form method="post"
+                                                                  action="{{url('groups/'.$group->id.'/delete')}}"
+                                                                  class="form-horizontal">
+                                                                @csrf
+                                                                @method('delete')
+                                                                <input name="passwort" type="password"
+                                                                       placeholder="Passwort eingeben"
+                                                                       class="form-control">
+                                                                <button type="submit" class="btn btn-danger mt-2">
+                                                                    Grupper endgültig löschen
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endcan
+                            </div>
+
                             @canany(['edit groups', 'create own group'])
                                 <div class="row">
                                     <div class="col-md-6 col-sm-12">
@@ -21,13 +70,7 @@
                                     </div>
                                     <div class="col-md-6 col-sm-12">
                                         <div class="float-right">
-                                            @if(auth()->user()->can('create own group') and $group->owner_id == auth()->user()->id)
-                                                <a href="{{url('groups/'.$group->id.'/add')}}"
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-user-plus"></i>
-                                                    hinzufügen
-                                                </a>
-                                            @endcan
+
                                         </div>
                                     </div>
                                 </div>
@@ -90,60 +133,37 @@
                                             </table>
                                         </div>
                                     @else
-                                        <div class="">
-                                            <table class="table table-bordered table-striped table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>
-                                                            Name
-                                                        </th>
-                                                        <th>
-                                                            E-Mail
-                                                        </th>
-                                                        <th>
-                                                            Telefon
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
+                                    <div class="card-body">
                                                     @foreach($group->users->filter(function ($user){
-                                                    if ($user->publicMail !="" or $user->publicPhone !=""){ return $user; }
-                                                }) as $user)
-                                                        <tr>
-                                                            <td>
-                                                                {{$user->name}}:
-                                                            </td>
-                                                            <td>
-                                                                @if($user->publicMail !="")
-                                                                    <a href="mailto://{{$user->publicMail}}" class="card-link">{{$user->publicMail}}</a>
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                @if($user->publicPhone !="")
-                                                                    <a href="tel://{{$user->publicPhone}}" class="card-link">{{$user->publicPhone}}</a>
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                        if ($user->publicMail !="" or $user->publicPhone !=""){ return $user; }
+                                                        }) as $user)
 
+                                            <div class="row">
+                                                                {{$user->name}}:
+                                            </div>
+                                            @if($user->publicMail !="")
+                                                <div class="row mt-2">
+                                                    <div class="col-auto" style="overflow: hidden">
+                                                        <a href="mailto://{{$user->publicMail}}" class="card-link"
+                                                           style="font-size: 0.8rem">{{$user->publicMail}}</a>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            @if($user->publicPhone !="")
+                                                <div class="row mt-2">
+                                                    <div class="col-auto overflow-auto" style="font-size: 0.8em">
+                                                        <a href="tel://{{$user->publicPhone}}"
+                                                           class="card-link">{{$user->publicPhone}}</a>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                                    @endforeach
+                                    </div>
                                     @endcan
                                 </div>
                             </div>
-                        @if( auth()->user()->can('delete groups') or $group->owner_id == auth()->user()->id)
-                            <div class="card-footer border border-danger bg-light-gray">
-                                Soll diese Gruppe gelöscht werden? Dies muss per Passwort bestätigt werden.
-                                <form method="post" action="{{url('groups/'.$group->id.'/delete')}}" class="form-horizontal">
-                                    @csrf
-                                    @method('delete')
-                                    <input name="passwort" type="password" placeholder="Passwort eingeben" class="form-control">
-                                    <button type="submit" class="btn btn-danger mt-2">Grupper endgültig löschen</button>
-                                </form>
-                            </div>
-                        @endif
-                        </div>
+
+                    </div>
                     </div>
                 </div>
 
@@ -252,10 +272,5 @@
                 </div>
             </div>
         @endif
-
-@endsection
-
-@section('css')
-    <link href="{{asset('css/switch.css')}}" rel="stylesheet" />
 
 @endsection
