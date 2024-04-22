@@ -15,13 +15,13 @@
 
 <div class="d-md-block collapse" id="info_{{$nachricht->id}}">
     <div class="row mt-1">
-        <div class="col-auto">
-            @foreach($nachricht->groups as $group)
+        @foreach($nachricht->groups as $group)
+            <div class="col-auto">
                 <span class="badge badge-green p-2">
                 {{ $group->name }}
-            </span>
-            @endforeach
-        </div>
+                </span>
+            </div>
+        @endforeach
     </div>
     <div class="row mt-1">
         <div class="col-auto">
