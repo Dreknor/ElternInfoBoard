@@ -29,11 +29,10 @@ class VertretungObserver
                 'user_id' => $user->id,
             );
 
-            if ($user->webPushSubscriptions->count() > 0 and $user->can('testing')) {
-                Log::info('Sending notification to ' . $user->name);
-                $user->notify(new VertretungsplanNotification($notification->title, $notification->message));
-            }
+
         }
+
+        Log::info('Notifications: ' . count($notifications));
 
         Notification::insert($notifications);
     }
