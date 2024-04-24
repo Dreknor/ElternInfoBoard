@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +26,7 @@ class Vertretung extends Model
     protected static function booted(): void
     {
         static::addGlobalScope('date', function (Builder $builder) {
-            $builder->where('date', '>=', now());
+            $builder->where('date', '>', Carbon::now()->subDay());
         });
 
     }
