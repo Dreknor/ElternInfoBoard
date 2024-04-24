@@ -802,12 +802,16 @@ class NachrichtenController extends Controller
             $header = 'Neue Nachricht';
         }
 
-        if ($post->media('header')->count() > 0){
+
+        $media = $post->getMedia('header')->first();
+
+        if (!is_null($media)){
+
             $icon = url('/image/'.$post->getMedia('header')->first()->id);
         } else {
             $icon = (config('app.favicon')) ? url('img/'.config('app.favicon')) : '';
         }
-
+/*
 
         $post->notify($User,
             title: $header,
@@ -816,6 +820,21 @@ class NachrichtenController extends Controller
             icon: $icon,
             type: ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
         );
+*/
+        $notifications= [];
+
+        foreach ($User as $user) {
+            $notifications[] = [
+                'user_id' => $user->id,
+                'title' => $header,
+                'message' => $post->header,
+                'url' => ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
+                'icon' => $icon,
+                'type' => ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
+            ];
+        }
+
+        Notification::insert($notifications);
 
         return redirect()->back();
     }
