@@ -31,6 +31,25 @@ class NotificationController extends Controller
         ], 200);
     }
 
+
+    public function readAllByType (Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $request->validate([
+            'type' => 'required|string'
+        ]);
+
+        $user->notifications()->where('type', $request->type)->where('user_id', $user->id)->update(['read' => 1]);
+
+        return response()->json([
+            'message' => 'success',
+        ], 200);
+    }
     public function read(Request $request)
     {
         $user = $request->user();
