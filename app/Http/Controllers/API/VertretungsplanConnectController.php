@@ -11,6 +11,7 @@ use App\Http\Requests\ApiImportVertretungsWeekRequest;
 use App\Model\Group;
 use App\Model\User;
 use App\Model\Vertretung;
+use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use Illuminate\Http\Request;
@@ -170,6 +171,60 @@ class VertretungsplanConnectController extends Controller
 
         return response()->json([
             'success' => 'Vertretungen erfolgreich gelöscht'
+        ]);
+    }
+ public function storeAbsence(Request $request)
+    {
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'name' => 'required|string',
+            'reason' => 'nullable|string'
+        ]);
+
+        $absence = new VertretungsplanAbsence($request->validated());
+        $absence->save();
+
+        return response()->json([
+            'success' => 'Abwesenheit erfolgreich gespeichert'
+        ]);
+
+    }
+
+    public function updateAbsence(Request $request, $id)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'name' => 'required|string',
+            'reason' => 'nullable|string'
+        ]);
+
+        $week = VertretungsplanAbsence::firstOrNew(['id' => $id]);
+        $week->fill($request->validated());
+        $week->id = $id;
+        $week->save();
+
+        return response()->json([
+            'success' => 'Vertretungen erfolgreich aktualisiert'
+        ]);
+    }
+
+    public function deleteAbsence(Request $request, $id)
+    {
+        $absence = VertretungsplanAbsence::find($id);
+
+        if (!$absence) {
+            return response()->json([
+                'error' => 'Abwesenheit nicht gefunden'
+            ], 404);
+        }
+
+        $absence->delete();
+
+        return response()->json([
+            'success' => 'Abwesenheit erfolgreich gelöscht'
         ]);
     }
 
