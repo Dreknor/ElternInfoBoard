@@ -78,11 +78,12 @@
                                                     Es fehlt:
                                                 @endif
                                                 @foreach($absences->filter(function ($absence) use ($x) {
-                                                    if (Carbon\Carbon::make($absence->start)->lte($x) and Carbon\Carbon::make($absence->end)->gte($x)){
+                                                    if (Carbon\Carbon::make($absence->start_date)->lte($x)
+                                                    and Carbon\Carbon::make($absence->end_date)->gte($x)){
                                                         return $absence;
                                                     }
                                                 }) as $absence)
-                                                    {{$absence->user}}@if(!$loop->last),@endif
+                                                    {{$absence->name}} @if($absence->reason != "") ({{$absence->reason}}) @endif @if(!$loop->last),@endif
                                                 @endforeach
                                             </th>
                                         </tr>
