@@ -180,14 +180,16 @@ class VertretungsplanConnectController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'name' => 'required|string',
-            'reason' => 'nullable|string'
+            'reason' => 'nullable|string',
+            'id' => 'required|integer'
         ]);
 
         $absence = new VertretungsplanAbsence([
             'start_date' => $request->get('start_date'),
             'end_date' => $request->get('end_date'),
             'name' => $request->get('name'),
-            'reason' => $request->get('reason')
+            'reason' => $request->get('reason'),
+            'absence_id' => $request->get('id')
         ]);
         $absence->save();
 
