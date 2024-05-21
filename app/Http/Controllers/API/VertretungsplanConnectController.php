@@ -183,7 +183,12 @@ class VertretungsplanConnectController extends Controller
             'reason' => 'nullable|string'
         ]);
 
-        $absence = new VertretungsplanAbsence($request->validated());
+        $absence = new VertretungsplanAbsence([
+            'start_date' => $request->get('start_date'),
+            'end_date' => $request->get('end_date'),
+            'name' => $request->get('name'),
+            'reason' => $request->get('reason')
+        ]);
         $absence->save();
 
         return response()->json([
