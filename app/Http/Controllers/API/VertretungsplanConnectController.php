@@ -184,6 +184,8 @@ class VertretungsplanConnectController extends Controller
             'id' => 'required|integer'
         ]);
 
+        Log::info($request->all());
+
         $absence = new VertretungsplanAbsence([
             'start_date' => $request->get('start_date'),
             'end_date' => $request->get('end_date'),
