@@ -719,7 +719,7 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return JsonResponse
+     * @return RedirectResponse
      *
      */
     public function destroy(Post $posts)
@@ -736,14 +736,17 @@ class NachrichtenController extends Controller
 
             $posts->delete();
 
-            return response()->json([
-                'message' => 'Gelöscht',
+            return redirect()->to('/home')->with([
+                'type' => 'success',
+                'Meldung' => 'Nachricht gelöscht',
             ]);
+
         }
 
-        return response()->json([
-            'message' => 'Berechtigung fehlt',
-        ], 401);
+        return redirect()->to('/home')->with([
+            'type' => 'danger',
+            'Meldung' => 'Berechtigung fehlt',
+        ]);
     }
 
     /**
