@@ -724,6 +724,7 @@ class NachrichtenController extends Controller
      */
     public function destroy(Post $posts)
     {
+        dd($posts);
         if ($posts->author == auth()->user()->id or auth()->user()->can('delete posts')) {
             $posts->groups()->detach();
             if (! is_null($posts->rueckmeldung())) {
@@ -734,7 +735,9 @@ class NachrichtenController extends Controller
                 $media->delete();
             }
 
-            $posts->delete();
+            $posts->update([
+                'deleted_at' => Carbon::now(),
+            ]);
 
             return redirect()->to('/home')->with([
                 'type' => 'success',
