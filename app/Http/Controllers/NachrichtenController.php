@@ -722,22 +722,20 @@ class NachrichtenController extends Controller
      * @return RedirectResponse
      *
      */
-    public function destroy(Post $posts)
+    public function destroy(Post $post)
     {
-        dd($posts);
-        if ($posts->author == auth()->user()->id or auth()->user()->can('delete posts')) {
-            $posts->groups()->detach();
-            if (! is_null($posts->rueckmeldung())) {
-                $posts->rueckmeldung()->delete();
+
+        if ($post->author == auth()->user()->id or auth()->user()->can('delete posts')) {
+            $post->groups()->detach();
+            if (!is_null($post->rueckmeldung())) {
+                $post->rueckmeldung()->delete();
             }
 
-            foreach ($posts->media as $media) {
+            foreach ($post->media as $media) {
                 $media->delete();
             }
 
-            $posts->update([
-                'deleted_at' => Carbon::now(),
-            ]);
+            $post->delete();
 
             return redirect()->to('/home')->with([
                 'type' => 'success',
