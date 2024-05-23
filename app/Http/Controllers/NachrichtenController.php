@@ -719,31 +719,35 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return JsonResponse
+     * @return RedirectResponse
      *
      */
-    public function destroy(Post $posts)
+    public function destroy(Post $post)
     {
-        if ($posts->author == auth()->user()->id or auth()->user()->can('delete posts')) {
-            $posts->groups()->detach();
-            if (! is_null($posts->rueckmeldung())) {
-                $posts->rueckmeldung()->delete();
+
+        if ($post->author == auth()->user()->id or auth()->user()->can('delete posts')) {
+            $post->groups()->detach();
+            if (!is_null($post->rueckmeldung())) {
+                $post->rueckmeldung()->delete();
             }
 
-            foreach ($posts->media as $media) {
+            foreach ($post->media as $media) {
                 $media->delete();
             }
 
-            $posts->delete();
+            $post->delete();
 
-            return response()->json([
-                'message' => 'Gelöscht',
+            return redirect()->to('/home')->with([
+                'type' => 'success',
+                'Meldung' => 'Nachricht gelöscht',
             ]);
+
         }
 
-        return response()->json([
-            'message' => 'Berechtigung fehlt',
-        ], 401);
+        return redirect()->to('/home')->with([
+            'type' => 'danger',
+            'Meldung' => 'Berechtigung fehlt',
+        ]);
     }
 
     /**

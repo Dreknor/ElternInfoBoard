@@ -225,6 +225,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
         Route::post('/posts/', [NachrichtenController::class, 'store']);
         Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts']);
+        Route::get('posts/delete/{post}', [NachrichtenController::class, 'destroy'])->middleware(['permission:delete posts']);
 
         Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
         Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);
