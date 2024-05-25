@@ -29,9 +29,16 @@ class FeedbackController extends Controller
     {
 
         if (auth()->user()->can('see mails')) {
-            $mails = MailModel::orderBy('created_at', 'desc')->paginate(25);
+            $mails = MailModel::withoutGlobalScope('own')
+                ->orderBy('created_at', 'desc')
+                ->paginate(25);
         } else {
-            $mails = MailModel::where('senders_id', auth()->id())->orWhere('to', auth()->user()->email)->orderBy('created_at', 'desc')->paginate(25);
+
+
+
+            $mails = MailModel::where('senders_id', auth()->id())
+                ->orWhere('to', auth()->user()->email)
+                ->orderBy('created_at', 'desc')->paginate(25);
         }
 
         return view('feedback.show', [
