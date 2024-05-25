@@ -70,7 +70,7 @@ class FeedbackController extends Controller
             }
         }
 
-/*
+
         //create Mail Model for logging Mail in Database
         $mail = new MailModel([
             'senders_id' => auth()->id(),
@@ -86,12 +86,13 @@ class FeedbackController extends Controller
         foreach ($mail->getMedia('files') as $media) {
             $data['document'][] = $media->getPath();
         }
-*/
+
         Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
         $feedback = [
             'type' => 'success',
             'Meldung' => 'Nachricht wurde versandt',
         ];
+
         try {
 
         } catch (Exception $e) {
