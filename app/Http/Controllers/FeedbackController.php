@@ -27,12 +27,20 @@ class FeedbackController extends Controller
      */
     public function show()
     {
+
+        if (auth()->user()->can('see mails')) {
+            $mails = MailModel::orderBy('created_at', 'desc')->paginate(25);
+        } else {
+            $mails = MailModel::where('senders_id', auth()->id())->orWhere('to', auth()->user()->email)->orderBy('created_at', 'desc')->paginate(25);
+        }
+
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
             })->orWhereHas('permissions', function ($q) {
                 $q->where('name', 'show in contact form');
-            })->orderBy('name')->get()
+            })->orderBy('name')->get(),
+            'mails' => $mails,
         ]);
     }
 

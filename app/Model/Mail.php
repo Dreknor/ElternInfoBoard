@@ -21,4 +21,6 @@ class Mail extends Model implements HasMedia
     {
         return $this->belongsTo(User::class, 'senders_id', 'id');
     }
+
+
 }
