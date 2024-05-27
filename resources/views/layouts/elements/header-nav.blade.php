@@ -38,12 +38,14 @@
                                   id="searchForm">
                                 @csrf
                                 <div class="input-group">
+                                    <label for="suchInput" class="sr-only">Suche</label>
                                     <input type="text" class="form-control my-auto" placeholder="Suchen" name="suche"
                                            id="suchInput" style="min-width: 200px;">
-                                    <button type="submit" class="btn" id="searchButton">
-                                        <i class="fas fa-search"></i>
-                                    </button>
+
                                 </div>
+                                <button type="submit" class="btn" id="searchButton">
+                                    <i class="fas fa-search"></i>
+                                </button>
                             </form>
                         </li>
 
