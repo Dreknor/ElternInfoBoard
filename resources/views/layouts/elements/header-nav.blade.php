@@ -43,7 +43,7 @@
                                            id="suchInput" style="min-width: 200px;">
 
                                 </div>
-                                <button type="submit" class="btn" id="searchButton">
+                                <button type="submit" class="btn btn-block" id="searchButton">
                                     <i class="fas fa-search"></i>
                                 </button>
                             </form>
