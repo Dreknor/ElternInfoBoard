@@ -9,6 +9,7 @@ use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -31,6 +32,7 @@ class User extends Authenticatable
     use HasRelationships;
     use Reacts;
     use HasApiTokens;
+    use SoftDeletes;
 
     //fill uuid column
     protected static function booted()
