@@ -37,7 +37,7 @@
                             <form class="form-inline " role="search" method="post" action="{{url('search')}}"
                                   id="searchForm">
                                 @csrf
-                                <div class="input-group">
+                                <div class="form-group">
                                     <label for="suchInput" class="sr-only">Suche</label>
                                     <input type="text" class="form-control my-auto" placeholder="Suchen" name="suche"
                                            id="suchInput" style="min-width: 200px;">
