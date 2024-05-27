@@ -33,7 +33,7 @@
                                 Suche
                             </b>
                         </li>
-                        <li class="dropdown-item">
+                        <li class="dropdown-item" style="min-width: 250px;">
                             <form class="form-inline " role="search" method="post" action="{{url('search')}}"
                                   id="searchForm">
                                 @csrf
