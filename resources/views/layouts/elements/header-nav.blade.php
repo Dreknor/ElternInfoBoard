@@ -39,7 +39,7 @@
                                 @csrf
                                 <div class="input-group">
                                     <input type="text" class="form-control my-auto" placeholder="Suchen" name="suche"
-                                           id="suchInput">
+                                           id="suchInput" style="min-width: 200px;">
                                     <button type="submit" class="btn" id="searchButton">
                                         <i class="fas fa-search"></i>
                                     </button>
