@@ -39,6 +39,7 @@
                                                     @if($rueckmeldung->max_answers ==1)
                                                         <input type="radio" name="answers[options][]"
                                                                value="{{$option->id}}" class="custom-radio">
+
                                                     @else
                                                         <input type="checkbox" name="answers[options][]"
                                                                value="{{$option->id}}"
@@ -46,6 +47,12 @@
                                                     @endif
                                                     {{$option->option}}
                                                 </label>
+                                            </div>
+                                        </div>
+                                    @elseif($option->type == 'trenner')
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <h6>{{$option->option}}</h6>
                                             </div>
                                         </div>
                                     @else

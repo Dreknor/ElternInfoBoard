@@ -21,9 +21,17 @@
                             @foreach($nachricht->rueckmeldung->options as $option)
                                 <div class="row border-bottom">
                                     <div class="col-6">
-                                        {{$option->option}}
+                                        @if($option->type == "trenner")
+
+                                            <b>{{$option->option}}</b>
+
+                                        @else
+                                            {{$option->option}}
+
+                                        @endif
                                     </div>
                                     <div class="col-6">
+
                                         @if($rueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                             @switch($option->type)
                                                 @case('text')
@@ -76,6 +84,12 @@
                                         @endif
                                         {{$option->option}}
                                     </label>
+                                </div>
+                            </div>
+                        @elseif($option->type == 'trenner')
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <h6>{{$option->option}}</h6>
                                 </div>
                             </div>
                         @else

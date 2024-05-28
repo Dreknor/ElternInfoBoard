@@ -86,6 +86,10 @@
                                                             @if($option->type == 'textbox') selected @endif>
                                                         gr. Textfeld
                                                     </option>
+                                                    <option value="trenner"
+                                                            @if($option->type == 'trenner') selected @endif>
+                                                        Trenner (nur zur visuellen Abtrennung)
+                                                    </option>
                                                 </select>
                                             </label>
                                         </div>
@@ -176,6 +180,7 @@
                 '<option value="check">Auswahl</option>' +
                 '<option value="text">Texteingabe</option>' +
                 '<option value="textbox">gr. Textfeld</option>' +
+                '<option value="trenner">Trenner (nur zur visuellen Abtrennung)</option>' +
                 '</select>' +
                 '</label>' +
                 '</div>' +
