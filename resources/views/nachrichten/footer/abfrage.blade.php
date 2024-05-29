@@ -134,13 +134,14 @@
         </div>
     @endif
 @endif
-@can('edit posts')
+@if(auth()->user()->can('edit posts') or auth()->id() == $nachricht->author)
+
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-footer">
-                        @can('manage rueckmeldungen')
+                        @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
                             <div class="pull-right">
                                 <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
                                     <i class="fa fa-download"></i>
@@ -166,7 +167,7 @@
             </div>
         </div>
     </div>
-@endcan
+@endif
 @push('js')
     <script type="text/javascript">
         // Limit the number of checkboxes that can be selected at one time
