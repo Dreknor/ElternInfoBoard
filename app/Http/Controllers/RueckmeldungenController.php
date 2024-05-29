@@ -208,7 +208,7 @@ class RueckmeldungenController extends Controller
         if (!auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt',
+                'Meldung' => 'Berechtigung fehlt für den Download',
             ]);
         }
 
