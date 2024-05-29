@@ -15,7 +15,7 @@
                 <i class="far fa-clone"></i> kopieren
             </a>
         @endif
-        @if($nachricht->released == 0)
+        @if($nachricht->released == 0 and auth()->user()->can('release posts'))
             <a class="dropdown-item" href="{{url('/posts/release/'.$nachricht->id)}}">
                 <i class="far fa-eye"></i> veröffentlichen
             </a>
