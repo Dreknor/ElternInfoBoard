@@ -205,10 +205,10 @@ class RueckmeldungenController extends Controller
      */
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
-        if (!auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
+        if (!auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt für den Download der Rückmeldungen: ' . $rueckmeldung->post->author_id . "!=" . auth()->id(),
+                'Meldung' => 'Berechtigung fehlt für den Download der Rückmeldungen ',
             ]);
         }
 
