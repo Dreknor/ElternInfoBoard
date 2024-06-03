@@ -69,7 +69,8 @@
 
         </div>
     </div>
-    <div class="row">
+    @can('see mails')
+        <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
@@ -131,6 +132,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
 </div>
 
