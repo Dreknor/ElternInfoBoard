@@ -100,17 +100,9 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-12">
-                                        <ul class="list-group
-                                        @if($mail->getMedia('files')?->count() > 0)
-                                            list-group-flush
-                                        @endif
-                                            ">
+                                        <ul class="list-group">
                                             @foreach($mail->getMedia('files') as $file)
-                                                <li class="list-group
-                                                @if($loop->last)
-                                                    list-group-item
-                                                @endif
-                                                    ">
+                                                <li class="list-group-item">
                                                     <a href="{{url('/image/'.$file->id)}}" target="_blank" class="mx-auto ">
                                                         <i class="fas fa-file-download"></i>
                                                         {{$file->name}}
