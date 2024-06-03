@@ -82,7 +82,7 @@
                         @foreach($mails as $mail)
                             <li class="list-group-item">
                                 <div class="row">
-                                    <div class="col-10">
+                                    <div class="col-9">
                                         <h6>
                                             {{$mail->subject}}
                                         </h6>
@@ -90,6 +90,16 @@
                                     <div class="col-2">
                                         {{$mail->created_at->format('d.m.Y H:i')}}
                                     </div>
+                                    @can('see mails')
+                                        <div class="col-1">
+                                            <form action="{{url('/feedback/'.$mail->id)}}" method="post">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-12">

@@ -22,6 +22,21 @@ class FeedbackController extends Controller
         $this->middleware('auth');
     }
 
+    public function deleteMail(MailModel $mail)
+    {
+        if (!auth()->user()->can('see mails')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Zugriff verweigert',
+            ]);
+        }
+        $mail->delete();
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Nachricht wurde gelöscht',
+        ]);
+    }
+
     /**
      * @return View
      */
