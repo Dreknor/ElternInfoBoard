@@ -99,7 +99,7 @@ class FeedbackController extends Controller
                 $fileAdder->toMediaCollection('files');
             });
         foreach ($mail->getMedia('files') as $media) {
-            $data['document'][] = $media->getPath();
+            $data['document'][] = $media;
         }
 
         Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));

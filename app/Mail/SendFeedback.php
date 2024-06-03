@@ -73,9 +73,9 @@ class SendFeedback extends Mailable
     public function attachments()
     {
 
-        if (count($this->data) > 0) {
+        if (count($this->data) > 0 and array_key_exists('document', $this->data)) {
             $return = [];
-            foreach ($this->data as $file) {
+            foreach ($this->data['document'] as $file) {
                 $return[] = Attachment::fromPath($file->getRealPath())
                     ->as($file->getClientOriginalName());
             }
