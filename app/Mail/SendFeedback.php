@@ -77,7 +77,7 @@ class SendFeedback extends Mailable
             $return = [];
             foreach ($this->data['document'] as $file) {
                 $return[] = Attachment::fromPath($file->getPath())
-                    ->as($file->file_name());
+                    ->as($file->file_name);
             }
 
             return $return;
