@@ -11,6 +11,10 @@
                         Nachricht erstellen an:
                     </h5>
                 </div>
+                <div class="card-body border border-danger">
+                    Auf Grund eines Problems mit den Anhängen sind diese vorübergehend deaktiviert.
+                    Anhänge bitte direkt per E-Mail versenden.
+                </div>
                 <div class="card-body">
                     <form action="{{url("/feedback")}}" method="post" class="form form-horizontal"
                           enctype="multipart/form-data">
