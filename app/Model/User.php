@@ -9,10 +9,13 @@ use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
@@ -28,6 +31,8 @@ class User extends Authenticatable
     use HasPushSubscriptions;
     use HasRelationships;
     use Reacts;
+    use HasApiTokens;
+    use SoftDeletes;
 
     //fill uuid column
     protected static function booted()
@@ -42,7 +47,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar',
+        'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
     ];
 
     /**
@@ -68,11 +73,27 @@ class User extends Authenticatable
         'changeSettings' => 'boolean',
     ];
 
+    /**
+     * @return HasMany
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
+
+
     protected function lastEmail(): Attribute {
         return Attribute::make(
             get: fn ($value) => Carbon::createFromFormat('Y-m-d H:i:s', ($value != null)? $value : $this->created_at),
         );
     }
+
+    public function files()
+    {
+        return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
+    }
+
 
     /**
      * Verknüpfte Gruppen
@@ -85,6 +106,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany
+     */
+    public function ownGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'owner_id');
+    }
+
+    /**
      * Posts verknüpft über die Gruppen
      *
      * @return HasManyDeep
@@ -92,6 +121,12 @@ class User extends Authenticatable
     public function posts()
     {
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post']);
+    }
+
+
+    public function vertretungen()
+    {
+        return $this->hasManyDeep(Vertretung::class, ['group_user', Group::class], ['user_id', 'id', 'klasse']);
     }
 
     /**
@@ -275,5 +310,10 @@ class User extends Authenticatable
     public function mails()
     {
         return $this->hasMany(Mail::class, 'senders_id')->orderByDesc('created_at');
+    }
+
+    public function read_receipts()
+    {
+        return $this->hasMany(ReadReceipts::class, 'user_id');
     }
 }

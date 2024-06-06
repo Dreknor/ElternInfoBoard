@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\createUserRequest;
+use App\Http\Requests\PasswordlessUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Model\Discussion;
 use App\Model\Group;
+use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
 use App\Model\Poll;
@@ -14,6 +16,8 @@ use App\Model\Post;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
+use Grosv\LaravelPasswordlessLogin\LoginUrl;
+use Grosv\LaravelPasswordlessLogin\PasswordlessLogin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -263,6 +267,9 @@ class UserController extends Controller
             Poll::where('author_id', $user->id)->update(['author_id' => null]);
             Poll_Votes::where('author_id', $user->id)->delete();
 
+            Liste::query()->where('besitzer', $user->id)->update(['besitzer' => null]);
+
+
             $user->listen_termine()->delete();
             $user->userRueckmeldung()->delete();
             $user->reinigung()->delete();
@@ -271,7 +278,7 @@ class UserController extends Controller
             $user->krankmeldungen()->withTrashed()->forceDelete();
             $user->comments()->delete();
 
-            Post::where('author', $user->id)->update(['author' => null]);
+            Post::query()->where('author', $user->id)->update(['author' => null]);
 
             $user->delete();
 
@@ -381,4 +388,5 @@ class UserController extends Controller
             'Meldung' => "Keine Benutzer zum Löschen ausgewählt"
         ]);
     }
+
 }

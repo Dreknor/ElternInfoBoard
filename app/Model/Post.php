@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Traits\NotificationTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
@@ -28,13 +29,15 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasComments;
     use HasRelationships;
     use Reactable;
+    use NotificationTrait;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
         'reactable' => 'boolean',
         'external' => 'boolean',
+        'read_receipt' => 'boolean',
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
@@ -48,7 +51,9 @@ class Post extends Model implements HasMedia, ReactableInterface
 
     public function autor(): HasOne
     {
-        return $this->hasOne(User::class, 'id', 'author');
+        return $this->hasOne(User::class, 'id', 'author')->withDefault([
+            'name' => config('app.name'),
+        ]);
     }
 
     public function rueckmeldung(): HasOne
@@ -93,5 +98,21 @@ class Post extends Model implements HasMedia, ReactableInterface
         }
 
         return null;
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(ReadReceipts::class);
+    }
+
+       public function userReaction(User $user = null)
+    {
+        if (is_null($user)) {
+            $user = auth()->user();
+        }
+
+        return $this->reactions()
+                ->where('responder_id', $user->id)
+                ->where('responder_type', get_class($user))->first()?->name;
     }
 }

@@ -75,7 +75,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label>Npachrichtentext</label>
+                        <label>Nachrichtentext</label>
                         <textarea class="form-control border-input" name="news">
                             {{old('news')}}
                         </textarea>
@@ -99,6 +99,15 @@
                                         <option value="0" >später veröffentlichen</option>
                                     @endcannot
                                         <option value="1" @cannot('release posts') disabled @endcannot>Ja</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Lesebestätigung anfordern?</label>
+                                <select class="custom-select" name="read_receipt" id="read_receiptSelect">
+                                        <option value="0" >keine Lesebestätigung</option>
+                                        <option value="1">Lesebestätigung anfordern</option>
                                 </select>
                             </div>
                         </div>
@@ -231,7 +240,7 @@
                 'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime table paste code wordcount',
-                'contextmenu media',
+                'contextmenu media textcolor',
             ],
             link_class_list: [
                 {title: 'None', value: ''},
@@ -242,7 +251,7 @@
                 {title: 'Listen', value: '{{url('listen')}}'},
                 {title: 'Downloads', value: '{{url('files')}}'}
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
+            toolbar: 'undo redo | formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
             contextmenu: " link image inserttable | cell row column deletetable",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : "script[src|async|defer|type|charset]",

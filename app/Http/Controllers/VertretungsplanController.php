@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Vertretung;
+use App\Model\VertretungsplanAbsence;
+use App\Model\VertretungsplanNews;
+use App\Model\VertretungsplanWeek;
+use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 
 class VertretungsplanController extends Controller
 {
@@ -41,36 +47,29 @@ class VertretungsplanController extends Controller
             $gruppen = '';
         }
 
-        //$url = config('app.mitarbeiterboard').'/api/vertretungsplan'.$gruppen;
-        $url = config('app.mitarbeiterboard').'/api/vertretungsplan'.$gruppen;
-        $inhalt = file_get_contents($url);
 
-        $json = json_decode($inhalt, true);
-
-        $plan = [];
-
-        foreach ($json as $key => $value) {
-            if ($key != 'targetDate') {
-                if ($key == 'news') {
-                    $key = 'mitteilungen';
-                }
-
-                if ($key == 'weeks') {
-                    $values = $value;
-                } else {
-                    $values = collect();
-
-                    foreach ($value as $value_item) {
-                        $values->push((object) $value_item);
-                    }
-                }
-
-                $plan[$key] = $values;
-            } else {
-                $plan[$key] = $value;
-            }
+        if (auth()->user()->can('view vertretungsplan all')) {
+            $vertretungen = Vertretung::orderBy('date', 'desc')->orderBy('stunde')->get();
+        } else {
+            $vertretungen = auth()->user()->vertretungen()->orderBy('stunde', 'asc')->get();
         }
 
-        return view('vertretungsplan.index', $plan);
+        $news = VertretungsplanNews::all();
+
+
+        $targetDate = Carbon::now()->addDays(3);
+        while ($targetDate->isWeekend()) {
+            $targetDate->addDay();
+        }
+
+
+        return view('vertretungsplan.index', [
+            'targetDate' => $targetDate,
+            'weeks' => VertretungsplanWeek::all(),
+            'vertretungen' => $vertretungen,
+            'mitteilungen' => $news,
+            'absences' => VertretungsplanAbsence::whereDate('end_date', '>=', Carbon::yesterday())->get(),
+
+        ]);
     }
 }

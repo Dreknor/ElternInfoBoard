@@ -16,10 +16,10 @@
     <div class="row">
         <div class="col-sm-6 col-md-3 m-auto">
             {{	$eintrag->termin->formatLocalized('%A')}}, <br>
-            <b>{{	$eintrag->termin->format('d.m.Y')}} {{	$eintrag->termin->format('H:i')}}</b>
+            <b>{{	$eintrag->termin->format('d.m.Y')}}
         </div>
         <div class="col-sm-6 col-md-3 m-auto h-100">
-            @if($eintrag->ende->day != $eintrag->termin->day)  {{	$eintrag->ende->formatLocalized('%A')}},  @endif <br>
+            {{	$eintrag->termin->format('H:i')}} Uhr - </b>
             <b>@if($eintrag->ende->day != $eintrag->termin->day) {{$eintrag->ende->format('d.m.Y')}}@endif  {{$eintrag->ende->format('H:i')}} Uhr</b>
         </div>
         <div class="col-sm-6 col-md-3 m-auto">

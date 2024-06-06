@@ -35,7 +35,23 @@ class UsersImport implements ToCollection, WithHeadingRow
 
             $row = array_values($row->toArray());
             $Klassenstufe = $this->groups->firstWhere('name', 'Klassenstufe '.$row[$this->header['klassenstufe']]);
-            $Lerngruppe = $this->groups->firstWhere('name', $row[$this->header['lerngruppe']]);
+            $Lerngruppe = $this->groups->firstWhere('name', substr($row[$this->header['lerngruppe']], 1));
+
+            $gruppen = [];
+            if (!is_null($Klassenstufe)) {
+                $gruppen[$Klassenstufe->id] = $Klassenstufe->id;
+            }
+            if (!is_null($Lerngruppe)) {
+                $gruppen[$Lerngruppe->id] = $Lerngruppe->id;
+            }
+
+
+            foreach (explode($row[$this->header['gruppen']], ';') as $user_group) {
+                $group = $this->groups->firstWhere('name', $user_group);
+                if (!is_null($group)) {
+                    $gruppen[$group->id] = $group->id;
+                }
+            }
 
             if (! is_null($row[$this->header['S1Email']])) {
                 $email1 = explode(';', $row[$this->header['S1Email']]);
@@ -55,9 +71,8 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user1->assignRole('Eltern');
                 $user1->removeRole('Aufnahme');
 
-                if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user1->groups()->attach([$Klassenstufe->id, $Lerngruppe?->id]);
-                }
+                $user1->groups()->attach($gruppen);
+
             }
 
             if (! is_null($row[$this->header['S2Email']])) {
@@ -77,9 +92,8 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $user2->touch();
                 $user2->assignRole('Eltern');
                 $user2->removeRole('Aufnahme');
-                if (is_object($Klassenstufe) and $Klassenstufe->id != null) {
-                    $user2->groups()->attach([$Klassenstufe->id, $Lerngruppe?->id]);
-                }
+                $user2->groups()->attach($gruppen);
+
             }
 
             if (isset($user2) and isset($user1) and $user2->id != $user1->id and isset($user2->email) and isset($user1->email)) {

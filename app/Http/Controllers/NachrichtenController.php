@@ -11,12 +11,11 @@ use App\Mail\dringendeNachrichtStatus;
 use App\Mail\newUnveroeffentlichterBeitrag;
 use App\Model\Discussion;
 use App\Model\Group;
+use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\Settings;
 use App\Model\User;
-use App\Notifications\Push;
-use App\Notifications\PushNews;
 use App\Repositories\GroupsRepository;
 use App\Repositories\WordpressRepository;
 use Carbon\Carbon;
@@ -30,7 +29,6 @@ use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 use PDF;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
@@ -76,17 +74,34 @@ class NachrichtenController extends Controller
      *
      * @return Renderable
      */
-    public function postsArchiv()
+    public function postsArchiv($month = null)
     {
-        if (! auth()->user()->can('view all')) {
-            $Nachrichten = auth()->user()->posts()->where('archiv_ab', '<', Carbon::now()->startOfDay())->where('archiv_ab', '>', auth()->user()->created_at)->orderByDesc('updated_at')->paginate(15);
+        $first_post = (auth()->user()->can('view all')) ? Post::first() : auth()->user()->posts()->orderBy('updated_at')->first();
+
+        if ($month == null) {
+            $month = Carbon::now();
         } else {
-            $Nachrichten = Post::where('archiv_ab', '<=', Carbon::now()->startOfDay())->withCount('users')->orderByDesc('updated_at')->paginate(15);
+            $month = Carbon::parse($month);
+        }
+
+        if (! auth()->user()->can('view all')) {
+            $Nachrichten = auth()->user()->posts()
+                ->where('archiv_ab', '<', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
+                ->where('archiv_ab', '>', $month->copy()->startOfMonth())
+                ->where('archiv_ab', '>', auth()->user()->created_at)
+                ->orderByDesc('updated_at')->paginate(15);
+        } else {
+            $Nachrichten = Post::query()
+                ->where('archiv_ab', '<=', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
+                ->where('archiv_ab', '>', $month->copy()->startOfMonth())
+                ->orderByDesc('updated_at')
+                ->paginate(15);
         }
 
         return view('archiv.archiv', [
             'nachrichten' => $Nachrichten,
             'user' => auth()->user(),
+            'first_post' => $first_post
         ]);
     }
 
@@ -439,6 +454,8 @@ class NachrichtenController extends Controller
                 @ini_set('post_max_size', '300M');
                 @ini_set('upload_max_size', '300M');
             }
+
+
             if ($request->input('collection') == 'files') {
                 $posts->addAllMediaFromRequest()
                     ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
@@ -447,8 +464,28 @@ class NachrichtenController extends Controller
                     ->each(fn($fileAdder) => $fileAdder->toMediaCollection('header'));
             } else {
                 $posts->addAllMediaFromRequest()
-                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('images'));
+                    ->each(fn($fileAdder) => $fileAdder
+                        ->withResponsiveImages()
+                        ->toMediaCollection('images'));
             }
+
+
+            /*
+                        $files = $request->files->all();
+                        foreach ($files['files'] as $file) {
+                            if (substr($file->getMimeType(), 0, 5) == 'image')
+                                $collection = 'images';
+                            if ($request->input('collection') == 'header') {
+                                $collection = 'header';
+                            } else {
+                                $collection = 'files';
+                            }
+
+                            $posts
+                                ->addMedia($file)
+                                ->toMediaCollection($collection);
+                        }
+            */
         }
 
         if ($posts->released and $push == 1) {
@@ -551,7 +588,8 @@ class NachrichtenController extends Controller
                     $admin = Role::findByName('Administrator');
                     $admin = $admin->users()->first();
 
-                    Notification::send($admin, new Push('Fehler bei E-Mail', $user->email.'konnte nicht gesendet werden'));
+                    $admin->notify(new Push('Fehler beim Mailversand', $exception->getMessage()));
+
                 }
             }
         }
@@ -573,8 +611,11 @@ class NachrichtenController extends Controller
     {
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
             $newPost = $posts->duplicate();
-            $newPost->archiv_ab = Carbon::now()->addWeek();
+            $newPost->archiv_ab = Carbon::now()->addWeeks(2);
+            $newPost->updated_at = Carbon::now();
+            $newPost->released = 0;
             $newPost->send_at = null;
+            $newPost->author = auth()->id();
             $newPost->save();
         } else {
             $posts->updated_at = Carbon::now();
@@ -604,6 +645,8 @@ class NachrichtenController extends Controller
         if ($posts->released) {
             $this->push($posts);
         }
+
+
 
         return redirect(url('/home#'.$posts->id))->with([
             'type' => 'success',
@@ -676,31 +719,35 @@ class NachrichtenController extends Controller
 
     /**
      * @param Post $posts
-     * @return JsonResponse
+     * @return RedirectResponse
      *
      */
-    public function destroy(Post $posts)
+    public function destroy(Post $post)
     {
-        if ($posts->author == auth()->user()->id and $posts->released == 0) {
-            $posts->groups()->detach();
-            if (! is_null($posts->rueckmeldung())) {
-                $posts->rueckmeldung()->delete();
+
+        if ($post->author == auth()->user()->id or auth()->user()->can('delete posts')) {
+            $post->groups()->detach();
+            if (!is_null($post->rueckmeldung())) {
+                $post->rueckmeldung()->delete();
             }
 
-            foreach ($posts->media as $media) {
+            foreach ($post->media as $media) {
                 $media->delete();
             }
 
-            $posts->delete();
+            $post->delete();
 
-            return response()->json([
-                'message' => 'Gelöscht',
+            return redirect()->to('/home')->with([
+                'type' => 'success',
+                'Meldung' => 'Nachricht gelöscht',
             ]);
+
         }
 
-        return response()->json([
-            'message' => 'Berechtigung fehlt',
-        ], 401);
+        return redirect()->to('/home')->with([
+            'type' => 'danger',
+            'Meldung' => 'Berechtigung fehlt',
+        ]);
     }
 
     /**
@@ -751,7 +798,45 @@ class NachrichtenController extends Controller
         $User = $post->users;
         $User = $User->unique('id');
 
-        Notification::send($User, new PushNews($post));
+        if ($post->external) {
+            $header = 'Neues externes Angebot';
+        } else {
+            $header = 'Neue Nachricht';
+        }
+
+
+        $media = $post->getMedia('header')->first();
+
+        if (!is_null($media)){
+
+            $icon = url('/image/'.$post->getMedia('header')->first()->id);
+        } else {
+            $icon = (config('app.favicon')) ? url('img/'.config('app.favicon')) : '';
+        }
+/*
+
+        $post->notify($User,
+            title: $header,
+            message: $post->header,
+            url: ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
+            icon: $icon,
+            type: ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
+        );
+*/
+        $notifications= [];
+
+        foreach ($User as $user) {
+            $notifications[] = [
+                'user_id' => $user->id,
+                'title' => $header,
+                'message' => $post->header,
+                'url' => ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
+                'icon' => $icon,
+                'type' => ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
+            ];
+        }
+
+        Notification::insert($notifications);
 
         return redirect()->back();
     }

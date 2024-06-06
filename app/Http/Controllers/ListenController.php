@@ -16,6 +16,7 @@ use Illuminate\View\View;
 
 class ListenController extends Controller
 {
+
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
@@ -47,10 +48,18 @@ class ListenController extends Controller
         }
 
         $listen = $listen->unique('id');
-        $eintragungen = Listen_Eintragungen::query()
-            ->where('user_id', auth()->id())
-            ->orWhere('user_id', auth()->user()->sorg2)
-            ->get();
+
+        if (auth()->user()->sorg2 == null) {
+            $eintragungen = Listen_Eintragungen::query()
+                ->where('user_id', auth()->id())
+                ->get();
+        } else {
+            $eintragungen = Listen_Eintragungen::query()
+                ->where('user_id', auth()->id())
+                ->orWhere('user_id', auth()->user()->sorg2)
+                ->get();
+        }
+
         $termine = auth()->user()->getListenTermine();
 
         return view('listen.index', [
@@ -103,6 +112,17 @@ class ListenController extends Controller
 
         $gruppen = $this->grousRepository->getGroups($gruppen);
         $Liste->groups()->attach($gruppen);
+
+        if ($Liste->active) {
+            $Liste->notify(
+                users: $Liste->users,
+                title: 'Neue Liste erstellt',
+                message: 'Es wurde eine die Liste ' . $Liste->listenname . ' veröffentlicht.',
+                url: url('listen/' . $Liste->id),
+                type: 'Listen'
+            );
+        }
+
 
         return redirect(url("listen/$Liste->id"));
     }

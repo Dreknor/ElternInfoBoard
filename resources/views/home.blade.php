@@ -4,6 +4,7 @@
 @section('content')
 
 
+
 @endsection
 
 
@@ -43,23 +44,20 @@
                 });
 
                 @foreach(auth()->user()->groups as $group)
-                    $('#{{\Illuminate\Support\Str::camel($group->name)}}').on('click', function (event) {
+                $('#{{\Illuminate\Support\Str::camel($group->name)}}').on('change', function (event) {
                         let target = event.target
-                        if(target.dataset.show === 'true'){
-                            $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
-                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').hide()
 
-                            target.dataset.show = 'false'
-                            target.classList.add("btn-success")
-                            target.classList.remove("btn-outline-primary")
+                    if (target.checked) {
+                        $('.filter_switch').prop('checked', false)
+                        target.checked = true
+                        $('.nachricht').hide()
+                        $('.anker_link').hide()
+                        $('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
+
+
                         } else {
-                            $('.nachricht').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
-                            $('.anker_link').not('.{{\Illuminate\Support\Str::camel($group->name)}}').show()
-                            target.dataset.show = 'true'
-
-                            target.classList.remove("btn-success")
-                            target.classList.add("btn-outline-primary")
-
+                        $('.nachricht').show()
+                        $('.anker_link').show()
                         }
 
                     });
@@ -112,7 +110,7 @@
                 let button = $(this);
 
                 swal.fire({
-                    title: "Datei wirklich entfernen?",
+                    title: Hedwig - Fröhlich - Haus"Datei wirklich entfernen?",
                     type: "warning",
                     showCancelButton: true,
                     cancelButtonText: "Datei behalten",

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateChangelogRequest;
 use App\Model\Changelog;
+use App\Model\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,8 +52,15 @@ class ChangelogController extends Controller
      */
     public function store(CreateChangelogRequest $request)
     {
-        $changelog = new Changelog($request->all());
+        $changelog = new Changelog($request->validated());
         $changelog->save();
+
+        $changelog->notify(
+            users: User::all(),
+            title: 'Update des ' . config('app.name'),
+            message: $changelog->header,
+            url: url('changelog')
+        );
 
         if ($changelog->changeSettings) {
             DB::table('users')->update([

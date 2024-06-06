@@ -84,8 +84,13 @@
                                                 </td>
                                             </tr>
                                         @endfor
-
                                     </table>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="{{url('verwaltung/schickzeiten/'.$child->users_id.'/trash/'.\Illuminate\Support\Str::replace(' ', '_',$child->child_name))}}"
+                                       class="btn btn-danger">
+                                        <i class="fa fa-trash"></i> alle Schickzeiten löschen
+                                    </a>
                                 </div>
 
                             </div>

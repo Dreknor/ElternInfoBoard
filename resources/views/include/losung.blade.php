@@ -1,3 +1,4 @@
+@if($losung)
     <div class="card blur">
         <div class="card-body">
             <div class="container-fluid">
@@ -5,7 +6,8 @@
                     <div class="col-sm-12 col-md-6">
                         <p>
                             <b>
-                                Tageslosung zum {{$losung?->date}}:
+                                Tageslosung zum {{\Carbon\Carbon::parse($losung->date)->format('d.m.Y')}}:
+
                             </b>
                         </p>
                         <p>
@@ -32,4 +34,4 @@
             </div>
         </div>
     </div>
-
+@endif

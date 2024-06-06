@@ -2,6 +2,20 @@
 
 @section('content')
 <div class="container">
+    @if(session('Meldung'))
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-{{session('type')}} alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        {{session('Meldung')}}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -34,7 +48,7 @@
                             <div class="col-md-6">
                                 <input id="password" type="password"
                                        class="form-control @error('password') is-invalid @enderror" name="password"
-                                       required autocomplete="current-password">
+                                       autocomplete="current-password">
 
                                 @error('password')
                                 <span class="invalid-feedback" role="alert">
@@ -63,6 +77,11 @@
                                     {{ __('Anmelden') }}
                                 </button>
 
+                                <button type="submit" class="btn btn-success" name="submit" value="password-less">
+                                    Passwortloser Login
+                                </button>
+
+                                <br/>
                                 @if (Route::has('password.request'))
                                     <a class="btn btn-link" href="{{ route('password.request') }}">
                                         {{ __('Passwort vergessen?') }}

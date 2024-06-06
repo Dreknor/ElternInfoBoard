@@ -64,12 +64,19 @@
                                                     <i class="fa fa-slash ">
                                                         @endif
                                                         @break
-                                                        @case('check')
-                                                            <i class="fa fa-check">
-                                                                @break
-                                                                @endswitch
-                                                                @else
-                                                                    <i class="fa fa-slash ">
+                                                        @case('textbox')
+                                                            @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
+                                                                {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
+                                                            @else
+                                                                <i class="fa fa-slash ">
+                                                                    @endif
+                                                                    @break
+                                                                    @case('check')
+                                                                        <i class="fa fa-check">
+                                                                            @break
+                                                                            @endswitch
+                                                                            @else
+                                                                                <i class="fa fa-slash ">
                                                 @endif
                                 </td>
                             @endforeach
@@ -83,6 +90,8 @@
                             <th>
                                 @if($option->type == 'check')
                                     {{$option->answers->count()}}
+                                @else
+                                    {{$option->answers->where('answer', '!=', '')->count()}}
                                 @endif
                             </th>
                         @endforeach

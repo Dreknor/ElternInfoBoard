@@ -27,7 +27,7 @@ class SendFeedback extends Mailable
      *
      * @return void
      */
-    public function __construct(string $text, string $betreff, array $data)
+    public function __construct(string $text, string $betreff, array $data = [])
     {
         $this->text = $text;
         $this->betreff = $betreff;
@@ -46,7 +46,7 @@ class SendFeedback extends Mailable
         return new Envelope(
             from: new Address(config('mail.from.address'), config('mail.from.name')),
             replyTo: [
-                new Address(auth()->user()->email, auth()->user()->name),
+                new Address(request()->user()->email, request()->user()->name),
             ],
             subject: $this->betreff,
         );
@@ -73,11 +73,11 @@ class SendFeedback extends Mailable
     public function attachments()
     {
 
-        if (count($this->data) > 0) {
+        if (count($this->data) > 0 and array_key_exists('document', $this->data)) {
             $return = [];
-            foreach ($this->data as $file) {
-                $return[] = Attachment::fromPath($file->getRealPath())
-                    ->as($file->getClientOriginalName());
+            foreach ($this->data['document'] as $file) {
+                $return[] = Attachment::fromPath($file->getPath())
+                    ->as($file->file_name);
             }
 
             return $return;

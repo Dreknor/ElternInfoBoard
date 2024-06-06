@@ -29,5 +29,146 @@
 
 .reacted > i {
     color: rgba(64, 108, 254, 0.44);
+}
+
+.reacted > i :hover {
+    color: rgba(64, 254, 181, 0.44);
+}
+
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch-sm {
+
+    width: 40px;
+    height: 20px;
+}
+
+.switch-xs {
+    width: 30px;
+    height: 15px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+
+.switch-sm > .slider:before {
+    position: absolute;
+    content: "";
+    height: 15px;
+    width: 15px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+input:checked + .slider-sm:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.badge-green {
+    background-color: #85cc6c;
+    color: white;
+}
+
+.nav-icon {
+    font-size: 1.5rem;
+}
+
+.nav-item .badge {
+    position: relative;
+    left: -10px;
+
+}
+
+
+.dropdown-menu .dropdown-item:hover, .dropdown-menu .dropdown-item:focus {
+    background-color: #c2c1c1;
+}
+
+@media only screen and (max-width: 600px) {
+    .navbar .dropdown-menu {
+        position: fixed;
+        top: 40px;
+        left: 3vw;
+        width: 95vw;
+
+    }
+
+    .dropdown-item {
+        padding: 0.5rem 0.5rem;
+    }
+
+    .title {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .message {
+        font-size: 0.8rem;
+    }
+
 
 }

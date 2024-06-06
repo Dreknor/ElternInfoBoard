@@ -40,6 +40,10 @@ class KrankmeldungRequest extends FormRequest
                 'required',
                 'date_format:Y-m-d',
             ],
+            'disease' => [
+                'nullable',
+                'exists:diseases,id',
+            ],
         ];
     }
 }

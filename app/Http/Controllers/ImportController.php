@@ -42,7 +42,11 @@ class ImportController extends Controller
     {
         if ($request->hasFile('file')) {
             if ($request->input('type') == 'eltern') {
-                group_user::truncate();
+                //group_user::truncate();
+
+                foreach (Group::where('protected', 0)->get() as $group) {
+                    $group->users()->detach();
+                }
 
                 $header = [
                     'klassenstufe' => $request->klassenstufe - 1,
@@ -53,6 +57,7 @@ class ImportController extends Controller
                     'S2Email' => $request->S2Email - 1,
                     'S2Vorname' => $request->S2Vorname - 1,
                     'S2Nachname' => $request->S2Nachname - 1,
+                    'gruppen' => $request->gruppen - 1,
                 ];
 
                 Excel::import(new UsersImport($header), $request->file('file'));

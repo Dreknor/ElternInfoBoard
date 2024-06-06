@@ -53,6 +53,7 @@ Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
 
 Route::middleware('auth')->group(function () {
+
     Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
         ->name('password.expired');
     Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])
@@ -70,8 +71,8 @@ Route::middleware('auth')->group(function () {
             Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
             Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
             Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
-            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
         });
+        Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
 
         //Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
@@ -81,13 +82,19 @@ Route::middleware('auth')->group(function () {
 
         //Push
         Route::post('/push', [PushController::class, 'store']);
-        Route::get('/push2', [PushController::class, 'store']);
+        Route::get('/push/test', [PushController::class, 'test'])->name('push.test');
 
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');
+        Route::post('/notification/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notification.read');
+        Route::get('/notification/read/all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notification.readAll');
+        Route::post('markNotificationAsRead',[ \App\Http\Controllers\NotificationController::class, 'readByType']);
+
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
+        Route::get('schickzeiten/{user}/trash/{child}', [SchickzeitenController::class, 'deleteChild']);
+        Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
         Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
@@ -103,10 +110,16 @@ Route::middleware('auth')->group(function () {
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
         Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
-        Route::get('krankmeldung/test', [KrankmeldungenController::class, 'dailyReport']);
+        Route::get('krankmeldung/disaese/activate/{disease}', [\App\Http\Controllers\ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
 
+        Route::get('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases');
+        Route::post('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
+        Route::put('diseases/{disease}/active', [\App\Http\Controllers\ActiveDiseaseController::class, 'update'])->middleware('permission:manage diseases');
+        Route::delete('diseases/{disease}/delete', [\App\Http\Controllers\ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
+        Route::get('diseases/{disease}/extend', [\App\Http\Controllers\ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
         Route::resource('termin', TerminController::class);
+        //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
         //Rückmeldungen
 
@@ -143,9 +156,11 @@ Route::middleware('auth')->group(function () {
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
+        Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
+        Route::post('post/readReceipt', [\App\Http\Controllers\ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
@@ -209,6 +224,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
         Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
         Route::post('/posts/', [NachrichtenController::class, 'store']);
+        Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts']);
+        Route::get('posts/delete/{post}', [NachrichtenController::class, 'destroy'])->middleware(['permission:delete posts']);
 
         Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
         Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);
@@ -262,6 +279,10 @@ Route::middleware('auth')->group(function () {
         //Gruppenverwaltung
         Route::get('/groups', [GroupsController::class, 'index']);
         Route::post('/groups', [GroupsController::class, 'store'])->middleware(['permission:view groups']);
+        Route::post('groups/own', [GroupsController::class, 'storeOwnGroup'])->middleware(['permission:create own group']);
+        Route::post('groups/{group}/removeUser', [GroupsController::class, 'removeUserFromOwnGroup'])->middleware(['permission:create own group']);
+        Route::get('groups/{group}/add', [GroupsController::class, 'addUserToOwnGroup'])->middleware(['permission:create own group']);
+        Route::post('groups/{group}/addUser', [GroupsController::class, 'storeUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
 
         //Routen zur Rechteverwaltung
@@ -297,6 +318,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:view elternrat')->group(function () {
             Route::resource('elternrat', ElternratController::class);
             Route::delete('elternrat/file/{file}', [ElternratController::class, 'deleteFile']);
+            Route::delete('elternrat/discussion/{discussion}/delete', [ElternratController::class, 'destroy']);
             Route::delete('elternrat/comment/{comment}', [ElternratController::class, 'deleteComment']);
             Route::get('elternrat/add/file', [ElternratController::class, 'addFile']);
             Route::post('elternrat/file', [ElternratController::class, 'storeFile']);
@@ -311,5 +333,7 @@ Route::middleware('auth')->group(function () {
     //Feedback
     Route::get('feedback', [FeedbackController::class, 'show']);
     Route::post('feedback', [FeedbackController::class, 'send']);
+    Route::delete('feedback/{mail}', [FeedbackController::class, 'deleteMail'])->middleware('can:see mails');
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 });
+

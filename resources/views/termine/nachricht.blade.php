@@ -2,11 +2,27 @@
     <div class="card border blur">
         <div class="card-header border-bottom">
             <div class="row">
-                <div class="col-md-10">
-                    <h6 class="card-title">
+                <div class="col-10">
+                    <h5 class="">
                         aktuelle Termine
-                    </h6>
+                    </h5>
                 </div>
+                @can('edit termin')
+                    <div class="col-1 ml-auto">
+                        <div class="pull-right">
+                            <a href="#" class="card-link text-black-50" data-toggle="dropdown" aria-haspopup="true"
+                               aria-expanded="false">
+                                <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                            </a>
+                            <div class="dropdown-menu">
+                                <a href="{{url('termin/create')}}" class="dropdown-item">
+                                    <i class="fa fa-plus"></i>
+                                    neuer Termin
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endcan
             </div>
         </div>
         <div class="card-body">

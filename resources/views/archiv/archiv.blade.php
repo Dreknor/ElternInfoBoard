@@ -10,14 +10,25 @@
                 archivierte Nachrichten
             </h5>
         </div>
+        <div class="card-body">
+            <p>
+                Hier finden Sie alle archivierten Nachrichten.
+            </p>
+            <p>
+                @for($x = \Carbon\Carbon::now(); $x->greaterThanOrEqualTo((!is_null($first_post))? $first_post->archiv_ab : \Carbon\Carbon::now()); $x->subMonth())
+                    <a href="{{url('archiv/'.$x->format('Y-m'))}}"
+                       class="btn btn-outline-primary btn-sm">{{$x->locale('de')->monthName}} {{$x->format ('Y')}}</a>
+                @endfor
+            </p>
+        </div>
         @if($nachrichten == null or count($nachrichten)<1)
             <div class="card-body bg-info">
                 <p>
                     Es sind keine Nachrichten vorhanden
                 </p>
             </div>
-
         @endif
+
     </div>
 
     @foreach($nachrichten AS $nachricht)

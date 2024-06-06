@@ -21,9 +21,17 @@
                             @foreach($nachricht->rueckmeldung->options as $option)
                                 <div class="row border-bottom">
                                     <div class="col-6">
-                                        {{$option->option}}
+                                        @if($option->type == "trenner")
+
+                                            <b>{{$option->option}}</b>
+
+                                        @else
+                                            {{$option->option}}
+
+                                        @endif
                                     </div>
                                     <div class="col-6">
+
                                         @if($rueckmeldung->answers->where('option_id', $option->id)->first() != null)
                                             @switch($option->type)
                                                 @case('text')
@@ -47,7 +55,7 @@
 
     @endforeach
 @endif
-@if($nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()) and ($nachricht->rueckmeldung->multiple == true or $user->getRueckmeldung()->where('post_id', $nachricht->id)->count()==0))
+@if($nachricht->rueckmeldung->ende->endOfDay()->greaterThan(\Carbon\Carbon::now()) and ($nachricht->rueckmeldung->multiple == true or $user->getRueckmeldung()->where('post_id', $nachricht->id)->count()==0))
     <div id="rueckmeldeForm_{{$nachricht->id}}"
          class="card-footer @if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first())) d-none @endif">
         <div class="card">
@@ -62,25 +70,45 @@
                         @if($option->type == 'check')
                             <div class="row ">
                                 <div class="col-12">
-                                    <label class="label w-100">
+                                    <label class="label w-100 @if($option->required == true) text-danger @endif">
                                         @if($nachricht->rueckmeldung->max_answers ==1)
                                             <input type="radio" name="answers[options][]"
-                                                   value="{{$option->id}}" class="custom-radio">
+                                                   value="{{$option->id}}"
+                                                   @if($option->required == true) required @endif
+                                                   class="custom-radio">
                                         @else
                                             <input type="checkbox" name="answers[options][]"
                                                    value="{{$option->id}}"
+                                                   @if($option->required == true) required @endif
                                                    class="custom-checkbox abfrage_{{$nachricht->rueckmeldung->id}}">
                                         @endif
                                         {{$option->option}}
                                     </label>
                                 </div>
                             </div>
+                        @elseif($option->type == 'trenner')
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <h6>{{$option->option}}</h6>
+                                </div>
+                            </div>
                         @else
                             <div class="row ">
                                 <div class="col-12">
-                                    <label class="label w-100">
+                                    <label class="label w-100 @if($option->required == true) text-danger @endif">
                                         {{$option->option}}
-                                        <input name="answers[text][{{$option->id}}]" class="form-control">
+                                        @if($option->type == 'textbox')
+                                            <textarea name="answers[text][{{$option->id}}]"
+                                                      class="form-control rueckmeldung"
+                                                      @if($option->required == true) required @endif
+                                                      height="">
+
+                                            </textarea>
+                                        @else
+                                            <input name="answers[text][{{$option->id}}]"
+                                                   @if($option->required == true) required @endif
+                                                   class="form-control">
+                                        @endif
                                     </label>
                                 </div>
                             </div>
@@ -106,13 +134,14 @@
         </div>
     @endif
 @endif
-@can('edit posts')
+@if(auth()->user()->can('edit posts') or auth()->id() == $nachricht->author)
+
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-footer">
-                        @can('manage rueckmeldungen')
+                        @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
                             <div class="pull-right">
                                 <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
                                     <i class="fa fa-download"></i>
@@ -138,7 +167,7 @@
             </div>
         </div>
     </div>
-@endcan
+@endif
 @push('js')
     <script type="text/javascript">
         // Limit the number of checkboxes that can be selected at one time

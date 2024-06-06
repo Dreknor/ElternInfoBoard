@@ -30,6 +30,8 @@
                                                 <i class="far fa-edit"></i>
                                             </a>
                                         @endif
+
+
                                     </div>
                                 </div>
                                 <div class="row small">
@@ -70,11 +72,23 @@
                             <div class="card-footer">
                                 <div class="container-fluid">
                                     <div class="row">
-                                        <div class="col-sm-12 col-md-12 col-lg-4">
+                                        <div class="col-sm-12 col-md-12 col-lg-auto ">
                                             <button class="btn btn-outline-default" type="button" data-toggle="collapse" data-target="#collapse{{$beitrag->id}}" aria-expanded="false" aria-controls="collapse{{$beitrag->id}}">
                                                 <i class="fas fa-comment"></i>
                                                 {{$beitrag->commentCount()}} Kommentare
                                             </button>
+                                        </div>
+                                        <div class="col-sm-12 col-md-12 col-lg-auto ml-auto  ">
+                                            @can('delete elternrat file')
+                                                <form action="{{url('elternrat/discussion/'.$beitrag->id.'/delete')}}"
+                                                      method="post" class="form-horizontal">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                        Beitrag endgültig löschen
+                                                    </button>
+                                            @endcan
                                         </div>
                                     </div>
                                 </div>

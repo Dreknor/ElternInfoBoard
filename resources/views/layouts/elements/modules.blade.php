@@ -28,10 +28,22 @@
             @if(array_key_exists('nav', $module->options) and  is_array($module->options['nav']))
 
                 @push('nav')
-                    <li class="@if(request()->path() ==$module->options['nav']['link']) active @endif">
+                    <li class="@if(request()->path() ==$module->options['nav']['link']) active @endif"
+                        @if(isset($notifications) and $notifications->where('type', $module->options['nav']['name'])->where('read',0)->count() > 0)
+                            onclick="markNotificationAsRead('{{url('markNotificationAsRead')}}','{{$module->options['nav']['name']}}')"
+                        @endif
+                    >
                         <a href="{{url($module->options['nav']['link'])}}">
                             <i class="{{$module->options['nav']['icon']}}"></i>
-                            <p>{{$module->options['nav']['name'] }}</p>
+                            <p>
+                                {{$module->options['nav']['name'] }}
+                                @if(isset($notifications) and $notifications->where('type', $module->options['nav']['name'])->where('read',0)->count() > 0)
+                                    <span class="badge badge-pill badge-info" style="font-size: 13px;">
+                                        {{$notifications->where('type', $module->options['nav']['name'])->where('read',0)->count()}}
+                                    </span>
+                                @endif
+                            </p>
+
                         </a>
                     </li>
                 @endpush
@@ -67,4 +79,17 @@
     @endforeach
 @endauth
 @push('js')
+    <script>
+        function markNotificationAsRead(url, type) {
+            $.ajax({
+                type: "POST",
+                url: url,
+                data:
+                {
+                    "_token": "{{ csrf_token() }}",
+                    "type": type
+                },
+            });
+        }
+    </script>
 @endpush

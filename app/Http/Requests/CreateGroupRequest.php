@@ -13,7 +13,7 @@ class CreateGroupRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()->can('view groups');
+        return auth()->user()->can('edit groups');
     }
 
     /**

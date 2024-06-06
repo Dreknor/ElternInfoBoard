@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Http\Controllers\GroupsController;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Spatie\Permission\Models\Role;
@@ -27,11 +28,10 @@ class Kernel extends ConsoleKernel
             $email = config('mail.from.address');
         }
 
-
+        $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
 
         $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at('08:30');
-        //$schedule->call('App\Http\Controllers\FeedbackController@dailyReport')->weekdays()->at('08:30');
         $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00');
 
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:00');
@@ -43,6 +43,8 @@ class Kernel extends ConsoleKernel
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:55');
 
         $schedule->call('App\Http\Controllers\SchickzeitenController@sendReminder')->weeklyOn(5, '18:00');
+
+        $schedule->call('App\Http\Controllers\GroupsController@deletePrivateGroups')->yearlyOn(7, 31, '00:00');
     }
 
     /**

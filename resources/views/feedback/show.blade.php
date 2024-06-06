@@ -2,68 +2,146 @@
 @section('title') - Kontakt @endsection
 
 @section('content')
-
-    <div class="card">
-        <div class="card-header">
-            <h6 class="card-title">
-                Nachricht erstellen an:
-            </h6>
-        </div>
-        <div class="card-body">
-            <form action="{{url("/feedback")}}" method="post" class="form form-horizontal"
-                  enctype="multipart/form-data">
-                @csrf
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <select name="mitarbeiter" class="custom-select">
-                                <option value="">Sekretariat</option>
-                                @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
-                                    <option value="{{$Mitarbeiter->id}}">
-                                        {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        Nachricht erstellen an:
+                    </h5>
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <input class="form-control border-input" name="betreff"
-                                   value="{{old('betreff', 'Nachricht von '.auth()->user()->name)}}">
-                        </div>
-                    </div>
+                <div class="card-body border border-danger">
+                    Auf Grund eines Problems mit den Anhängen sind diese vorübergehend deaktiviert.
+                    Anhänge bitte direkt per E-Mail versenden.
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
+                <div class="card-body">
+                    <form action="{{url("/feedback")}}" method="post" class="form form-horizontal"
+                          enctype="multipart/form-data">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <select name="mitarbeiter" class="custom-select">
+                                        <option value="">Sekretariat</option>
+                                        @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
+                                            <option value="{{$Mitarbeiter->id}}">
+                                                {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input class="form-control border-input" name="betreff"
+                                           value="{{old('betreff', 'Nachricht von '.auth()->user()->name)}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
                             <textarea class="form-control border-input" name="text">
                                 {{old('text')}}
                             </textarea>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+<!--
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="customFile">Datei anfügen</label>
+                                    <input type="file"  name="files[]" id="customFile" multiple>
+                                </div>
+                            </div>
+                        </div>
+                        -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    Feedback senden
+                                </button>
+                            </div>
+                        </div>
+                    </form>
 
-                <div class="row">
-                    <div class="col-12">
-                        <div class="form-group">
-                            <label for="customFile">Datei anfügen</label>
-                            <input type="file"  name="files[]" id="customFile" multiple>
-                        </div>
-                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <button type="submit" class="btn btn-primary btn-block">
-                            Feedback senden
-                        </button>
-                    </div>
-                </div>
-            </form>
+            </div>
 
         </div>
     </div>
+    @can('see mails')
+        <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>
+                        alte Nachrichten
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach($mails as $mail)
+                            <li class="list-group-item">
+                                <div class="row">
+                                    <div class="col-9">
+                                        <h6>
+                                            {{$mail->subject}}
+                                        </h6>
+                                    </div>
+                                    <div class="col-2">
+                                        {{$mail->created_at->format('d.m.Y H:i')}}
+                                    </div>
+                                    @can('see mails')
+                                        <div class="col-1">
+                                            <form action="{{url('/feedback/'.$mail->id)}}" method="post">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endcan
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <p>
+                                            {!! $mail->text !!}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <ul class="list-group">
+                                            @foreach($mail->getMedia('files') as $file)
+                                                <li class="list-group-item">
+                                                    <a href="{{url('/image/'.$file->id)}}" target="_blank" class="mx-auto ">
+                                                        <i class="fas fa-file-download"></i>
+                                                        {{$file->name}}
+                                                    </a>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcan
+
+</div>
+
 
 
 @endsection

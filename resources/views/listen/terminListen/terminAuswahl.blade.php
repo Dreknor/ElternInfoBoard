@@ -109,7 +109,7 @@
                            <label for="repeat">
                                Anzahl aufeinderfolgender Termine (bei wöchentlich Anzahl der Wochen)
                            </label>
-                           <input type="number" name="repeat" class="form-control" min="1" step="1" max="8" value="1">
+                           <input type="number" name="repeat" class="form-control" min="1" step="1" value="1">
                        </div>
                    </form>
                 </div>

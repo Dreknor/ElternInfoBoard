@@ -22,15 +22,47 @@ class FeedbackController extends Controller
         $this->middleware('auth');
     }
 
+    public function deleteMail(MailModel $mail)
+    {
+        if (!auth()->user()->can('see mails')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Zugriff verweigert',
+            ]);
+        }
+        $mail->delete();
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Nachricht wurde gelöscht',
+        ]);
+    }
+
     /**
      * @return View
      */
     public function show()
     {
+
+        if (auth()->user()->can('see mails')) {
+            $mails = MailModel::withoutGlobalScope('own')
+                ->orderBy('created_at', 'desc')
+                ->paginate(25);
+        } else {
+
+
+
+            $mails = MailModel::where('senders_id', auth()->id())
+                ->orWhere('to', auth()->user()->email)
+                ->orderBy('created_at', 'desc')->paginate(25);
+        }
+
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
-            })->orderBy('name')->get()
+            })->orWhereHas('permissions', function ($q) {
+                $q->where('name', 'show in contact form');
+            })->orderBy('name')->get(),
+            'mails' => $mails,
         ]);
     }
 
@@ -50,6 +82,7 @@ class FeedbackController extends Controller
 
         $data = [];
 
+        /*
         if ($request->hasFile('files')) {
             $files = $request->files->all();
             foreach ($files['files'] as $document) {
@@ -67,8 +100,8 @@ class FeedbackController extends Controller
                 $data[] = $document;
             }
         }
+*/
 
-/*
         //create Mail Model for logging Mail in Database
         $mail = new MailModel([
             'senders_id' => auth()->id(),
@@ -77,12 +110,14 @@ class FeedbackController extends Controller
             'text' => $request->text,
         ]);
         $mail->save();
+        $data = [];
+        /*
         $mail->addAllMediaFromRequest(['files'])
             ->each(function ($fileAdder) {
                 $fileAdder->toMediaCollection('files');
             });
         foreach ($mail->getMedia('files') as $media) {
-            $data['document'][] = $media->getPath();
+            $data['document'][] = $media;
         }
 */
         Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
@@ -90,6 +125,7 @@ class FeedbackController extends Controller
             'type' => 'success',
             'Meldung' => 'Nachricht wurde versandt',
         ];
+
         try {
 
         } catch (Exception $e) {

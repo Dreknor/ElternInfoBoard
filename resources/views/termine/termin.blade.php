@@ -16,26 +16,34 @@
         {{$termin->terminname}}
         <div class="d-inline">
             <div class="pull-right">
-                <a href="{{$termin->link()->ics()}}" class="card-link"
+                <a href="{{$termin->link(auth()->user()->calendar_prefix)->ics()}}" class="card-link"
                    title="ICS-Download für Apple und Windows">
                     <img src="{{asset('img/ics-icon.png')}}" height="25px">
                 </a>
-                <a href="{{$termin->link()->google()}}" class="card-link" target="_blank"
+                <a href="{{$termin->link(auth()->user()->calendar_prefix)->google()}}" class="card-link" target="_blank"
                    title="Goole-Kalender-Link">
                     <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
                 </a>
             </div>
         </div>
     </div>
-    <div class="col-auto">
-        @if(auth()->user()->can('edit termin'))
-            <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
-                @csrf
-                @method('delete')
-                <button type="submit" class="btn-link ">
-                    <i class="far fa-trash-alt"></i>
-                </button>
-            </form>
-        @endif
-    </div>
+
+@if(auth()->user()->can('edit termin'))
+        <div class="col-auto">
+            <a href="#"
+               tabindex="0" role="button"
+               data-toggle="popover" title="{{$termin->terminname}} @if($termin->public == 1) (öffentlich) @endif"
+               data-content="Gruppen: @foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"
+               data-trigger="focus">
+                <i class="fa fa-info-circle">
+                </i>
+            </a>
+        </div>
+        <div class="col-auto">
+            <a href="{{url("termin/$termin->id/edit")}}" class="text-black-50">
+                <i class="fa fa-edit"></i>
+                <div class="d-none d-lg-inline ">bearbeiten</div>
+            </a>
+        </div>
+    @endif
 </div>

@@ -48,6 +48,13 @@ class CreateTerminRequest extends FormRequest
                 'max:1',
             ],
 
+            'fullDay' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:1',
+            ],
+
         ];
     }
 }

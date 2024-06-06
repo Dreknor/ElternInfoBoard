@@ -18,14 +18,16 @@
                     @if($option->type == 'check')
                         <div class="row ">
                             <div class="col-12">
-                                <label class="label w-100">
+                                <label class="label w-100 @if($option->required == true) text-danger @endif">
                                     @if($rueckmeldung->max_answers ==1)
                                         <input type="radio" name="answers[options][]"
                                                value="{{$option->id}}" class="custom-radio"
+                                                @if($option->required == true) required @endif
                                                @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first())) checked @endif>
                                     @else
                                         <input type="checkbox" name="answers[options][]"
                                                value="{{$option->id}}"
+                                                @if($option->required == true) required @endif
                                                class="custom-checkbox abfrage_{{$rueckmeldung->id}}"
                                                @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first())) checked @endif>
                                     @endif
@@ -33,13 +35,28 @@
                                 </label>
                             </div>
                         </div>
-                    @else
+                    @elseif($option->type == 'text')
                         <div class="row ">
                             <div class="col-12">
-                                <label class="label w-100">
+                                <label class="label w-100 @if($option->required == true) text-danger @endif">
                                     {{$option->option}}
-                                    <input name="answers[text][{{$option->id}}]" class="form-control"
+                                    <input name="answers[text][{{$option->id}}]" class="form-control"  @if($option->required == true) required @endif
                                            @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first())) value="{{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}" @endif>
+                                </label>
+                            </div>
+                        </div>
+                    @elseif($option->type == 'textbox')
+                        <div class="row ">
+                            <div class="col-12">
+                                <label class="label w-100 @if($option->required == true) text-danger @endif">
+                                    {{$option->option}}
+                                    <textarea name="answers[text][{{$option->id}}]"
+                                         @if($option->required == true) required @endif
+                                        class="form-control rueckmeldung">
+                                        @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first()))
+                                            {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
+                                        @endif
+                                    </textarea>
                                 </label>
                             </div>
                         </div>

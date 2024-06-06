@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\DiseaseComposer;
 use App\Http\View\Composers\LosungComposer;
 use App\Http\View\Composers\ModulesComposer;
 use App\Http\View\Composers\NachrichtenComposer;
+use App\Http\View\Composers\NotificationComposer;
 use App\Http\View\Composers\ReinigungComposer;
 use App\Http\View\Composers\TermineComposer;
 use Illuminate\Support\Facades\View;
@@ -37,6 +39,11 @@ class ComposerServiceProvider extends ServiceProvider
         );
 
         View::composer(
+            'layouts.app',
+            NotificationComposer::class
+        );
+
+        View::composer(
             'include.losung', LosungComposer::class
         );
 
@@ -47,6 +54,11 @@ class ComposerServiceProvider extends ServiceProvider
         View::composer(
             'nachrichten.start', NachrichtenComposer::class
         );
+
+        View::composer(
+            'krankmeldung.diseases', DiseaseComposer::class
+        );
+
         View::composer(
             'termine.nachricht', TermineComposer::class
         );

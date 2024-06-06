@@ -6,16 +6,31 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ *
+ */
 class UserRueckmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 
+    /**
+     * @var mixed
+     */
     public mixed $email;
 
+    /**
+     * @var mixed
+     */
     public mixed $name;
 
+    /**
+     * @var mixed
+     */
     public $subject;
 
+    /**
+     * @var mixed
+     */
     public mixed $text;
 
     /**

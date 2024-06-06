@@ -96,7 +96,11 @@
                 <ul class="list-group">
                     @foreach($termine as $termin)
                         <li class="list-group-item">
-                            {{$termin->terminname}} ({{$termin->start->format('d.m.Y')}})
+                            {{$termin->terminname}} ( @if($termin->start->day != $termin->ende->day)
+                                {{$termin->start->format('d.m. ')}} - {{$termin->ende->format('d.m.Y')}}
+                            @else
+                                {{$termin->start->format('d.m.Y')}}
+                            @endif )
                         </li>
                     @endforeach
                 </ul>

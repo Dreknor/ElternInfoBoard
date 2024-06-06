@@ -192,7 +192,7 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
@@ -230,6 +230,10 @@ return [
 
     //Link Mitarbeiterboard - Benötigt für Vertretungsplan
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
+    'mitarbeiterboard_api_key' => env('API_KEY_MITARBEITERBOARD'),
+
+    //API-Key
+    'api_key' => env('API_KEY'),
 
     //Passwort für Import
     'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),

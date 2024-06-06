@@ -108,6 +108,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Lesebestätigung anfordern?</label>
+                                <select class="custom-select" name="read_receipt" id="read_receiptSelect">
+                                    <option value="0" >keine Lesebestätigung</option>
+                                    <option value="1" @if($post->read_receipt ==1) selected @endif>Lesebestätigung anfordern</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
@@ -214,6 +223,17 @@
                                                             <i class="fas fa-file-download"></i>
                                                             {{$media->name}}
                                                         </a>
+                                                        <div class="pull-right">
+                                                            <a href="{{url('posts/'.$media->id.'/changeCollection/files')}}"
+                                                               class="btn btn-sm btn-outline-warning"
+                                                               title="Als Download anzeigen">
+                                                                <i class="fa-regular fa-image"></i><i
+                                                                    class="fa-duotone fa-arrows-rotate"
+                                                                    style="--fa-secondary-color: #888d96;"></i><i
+                                                                    class="fa-regular fa-file"></i> Als Download
+                                                                anzeigen
+                                                            </a>
+                                                        </div>
                                                             <div class="pull-right btn btn-sm btn-danger fileDelete" data-id="{{$media->id}}">
                                                                 <i class="fas fa-times"></i>
                                                             </div>
@@ -225,6 +245,48 @@
                                     </div>
                                 </div>
                             @endif
+                                @if(count($post->getMedia('files'))>0)
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header border-bottom">
+                                                <p>
+                                                    <b>
+                                                        vorhandene Dateien
+                                                    </b>
+                                                </p>
+                                            </div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush">
+                                                    @foreach($post->getMedia('files') as $media)
+                                                        <li class="list-group-item  list-group-item-action ">
+                                                            <a href="{{url('/image/'.$media->id)}}" target="_blank"
+                                                               class="mx-auto ">
+                                                                <i class="fas fa-file-download"></i>
+                                                                {{$media->name}}
+                                                            </a>
+                                                            <div class="pull-right">
+                                                                <a href="{{url('posts/'.$media->id.'/changeCollection/images')}}"
+                                                                   class="btn btn-sm btn-outline-warning"
+                                                                   title="Als Bild anzeigen">
+                                                                    <i class="fa-regular fa-file"></i><i
+                                                                        class="fa-duotone fa-arrows-rotate"
+                                                                        style="--fa-secondary-color: #888d96;"></i> <i
+                                                                        class="fa-regular fa-image"></i>Als Bild
+                                                                    anzeigen
+                                                                </a>
+                                                            </div>
+                                                            <div class="pull-right btn btn-sm btn-danger fileDelete"
+                                                                 data-id="{{$media->id}}">
+                                                                <i class="fas fa-times"></i>
+                                                            </div>
+
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             <div class="col-12">
                                 <div class="form-group">
                                     <div class="">
@@ -672,7 +734,7 @@
                 'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime table paste code wordcount',
-                'contextmenu media',
+                'contextmenu media textcolor',
             ],
             link_class_list: [
                 {title: 'None', value: ''},
@@ -683,7 +745,7 @@
                 {title: 'Listen', value: '{{url('listen')}}'},
                 {title: 'Downloads', value: '{{url('files')}}'}
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
+            toolbar: 'undo redo | formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
             contextmenu: " link image inserttable | cell row column deletetable | pageembed",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : ["script[src|async|defer|type|charset]",
