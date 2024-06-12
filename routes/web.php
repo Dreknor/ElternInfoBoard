@@ -82,7 +82,7 @@ Route::middleware('auth')->group(function () {
 
         //Push
         Route::post('/push', [PushController::class, 'store']);
-        Route::get('/push/test', [PushController::class, 'test'])->name('push.test');
+        Route::get('/push/{user}', [PushController::class, 'push'])->name('push.test');
 
         //make a push notification.
         Route::get('/push', [PushController::class, 'push'])->name('push');

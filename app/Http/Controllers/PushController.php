@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\Push;
 
 use Illuminate\Http\JsonResponse;
 
@@ -37,6 +40,25 @@ class PushController extends Controller
         $user->updatePushSubscription($endpoint, $key, $token);
 
         return response()->json(['success' => true]);
+    }
+
+    public function push(User $user)
+    {
+
+        if (auth()->user()->can('testing')) {
+
+            Notification::send($user, new Push('test', 'test'));
+            return redirect()->back()->with([
+                'message' => 'Push notification sent!',
+                'alert-type' => 'success'
+
+            ]);
+        }
+        return redirect()->back()->with([
+            'message' => 'You are not authorized to send push notifications!',
+            'alert-type' => 'error'
+        ]);
+
     }
 
 }
