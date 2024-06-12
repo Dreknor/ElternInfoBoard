@@ -49,13 +49,13 @@ class PushController extends Controller
 
             Notification::send($user, new Push('test', 'test'));
             return redirect()->back()->with([
-                'message' => 'Push notification sent!',
-                'type' => 'success'
+                'Meldung' => 'Push wurde erfolgreich gesendet',
+                'type' => 'success',
 
             ]);
         }
         return redirect()->back()->with([
-            'message' => 'You are not authorized to send push notifications!',
+            'Meldung' => 'Keine Berechtigung',
             'type' => 'error'
         ]);
 
