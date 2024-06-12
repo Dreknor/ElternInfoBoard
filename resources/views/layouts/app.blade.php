@@ -146,9 +146,7 @@
     })
 
 
-
-
-    $('input[type=submit]').click(function (){
+    $('button[type=submit]').click(function () {
         this.form.submit();
         this.disabled=true;
         this.value='wird bearbeitet…';
@@ -166,6 +164,7 @@
     @yield('js')
     @stack('js')
 
+<script src="{{ asset('js/enable-push.js') }}" defer></script>
 
 </body>
 </html>
