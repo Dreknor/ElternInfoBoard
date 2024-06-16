@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\ActiveDisease;
+use App\Model\krankmeldungen;
 use App\Model\Losung;
 use App\Model\Mail;
 use App\Model\Notification;
@@ -11,6 +12,7 @@ use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CleanupController extends Controller
 {
@@ -123,6 +125,59 @@ class CleanupController extends Controller
                 ]);
                 $notification->save();
             }
+        }
+
+        try {
+            //delete old Schickzeiten
+            $schickzeiten = Schickzeiten::withTrashed()->where('deleted_at', '<', now()->subMonth(2))->forceDelete();
+
+        } catch (\Exception $e) {
+            Log::error('Error while cleaning up Schickzeiten: ' . $e->getMessage());
+            foreach ($admins as $admin) {
+                $notification = new Notification([
+                    'user_id' => $admin->id,
+                    'title' => 'Clean up Error',
+                    'message' => 'Error while cleaning up Schickzeiten ',
+                    'type' => 'error',
+                ]);
+                $notification->save();
+            }
+        }
+
+        try {
+            //delete krankmeldungen older than last august
+
+            if (now()->month < 8) {
+                $date = now()->subYear()->month(8)->day(1)->hour(0)->minute(0)->second(0);
+            } else {
+                $date = now()->month(8)->day(1)->hour(0)->minute(0)->second(0);
+            }
+
+            krankmeldungen::withTrashed()->where('created_at', '<', $date)->forceDelete();
+
+        } catch (\Exception $e) {
+            Log::error('Error while cleaning up Krankmeldungen: ' . $e->getMessage());
+            foreach ($admins as $admin) {
+                $notification = new Notification([
+                    'user_id' => $admin->id,
+                    'title' => 'Clean up Error',
+                    'message' => 'Error while cleaning up Krankmeldungen ',
+                    'type' => 'error',
+                ]);
+                $notification->save();
+            }
+        }
+
+
+
+        foreach ($admins as $admin) {
+            $notification = new Notification([
+                'user_id' => $admin->id,
+                'title' => 'Clean up Success',
+                'message' => 'Clean up was successful.',
+                'type' => 'success',
+            ]);
+            $notification->save();
         }
     }
 }
