@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('reason');
+            $table->string('reason')->nullable();
             $table->string('absence_id');
             $table->timestamps();
         });

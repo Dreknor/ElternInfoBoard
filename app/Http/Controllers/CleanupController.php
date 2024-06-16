@@ -23,6 +23,7 @@ class CleanupController extends Controller
             Notification::query()->where('created_at', '<', now()->subDays(10))->delete();#
             // Delete read notifications older than 3 days
             Notification::query()->where('created_at', '<', now()->subDays(3))->where('read', 1)->delete();
+            Notification::query()->whereNull('created_at')->update(['created_at' => now()]);
         } catch (\Exception $e) {
             Log::error('Error while cleaning up notifications: ' . $e->getMessage());
             foreach ($admins as $admin) {
