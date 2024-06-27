@@ -19,7 +19,7 @@
                     <thead>
                     <tr>
                         <td></td>
-                        <td>Benutzer</td>
+                        <td>Level</td>
                         <td>Log</td>
                         <td>Zeit</td>
                     </tr>
@@ -27,10 +27,10 @@
                     <tbody>
                     @foreach($logs as $log)
                         <tr>
-                            <td>{{$log->datetime}}</td>
+                            <td></td>
                             <td>{{$log->level_name}}</td>
                             <td>{{$log->message}}</td>
-                            <td>{{$log->created_at}}</td>
+                            <td>{{$log->created_at->format('d.m.Y H:m:s')}}</td>
                         </tr>
                     @endforeach
                     </tbody>
