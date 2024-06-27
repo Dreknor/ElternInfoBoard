@@ -335,5 +335,9 @@ Route::middleware('auth')->group(function () {
     Route::post('feedback', [FeedbackController::class, 'send']);
     Route::delete('feedback/{mail}', [FeedbackController::class, 'deleteMail'])->middleware('can:see mails');
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
+
+    Route::group(['middlewareGroups' => ['can:see logs']], function () {
+        Route::get('logs', [\App\Http\Controllers\LogController::class, 'index']);
+    });
 });
 
