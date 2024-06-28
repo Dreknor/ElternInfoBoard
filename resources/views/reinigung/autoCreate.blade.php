@@ -67,7 +67,7 @@
                                     </option>
                                     @foreach($bereich as $group)
                                         <option value="{{$group->id}}">
-                                            {{$group->name}} ({{$group->users->count()}})
+                                            {{$group->name}}
                                         </option>
                                     @endforeach
                                 </select>
