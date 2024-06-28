@@ -145,14 +145,6 @@
         </div>
     </nav>
     <!-- End Navbar -->
-
-
-    $('#suchInput').blur(function () {
-        $('#searchForm').addClass('w-auto');
-        $('#searchForm').removeClass('w-75');
-    });
-
-
     <div class="content">
         @if(session()->has('ownID'))
             <div class="container-fluid">
@@ -219,7 +211,7 @@
 <script>
     $('#toogleSidebarButton').on('click', function () {
         $('html').toggleClass('nav-open')
-    })
+    });
 
     $('#suchInput').on('focus', function () {
         $('#searchForm').addClass('w-75');
@@ -244,7 +236,6 @@
     @yield('js')
     @stack('js')
 
-<script src="{{ asset('js/enable-push.js') }}" defer></script>
 @auth
     <script src="{{asset('js/enable-push.js')}}" defer></script>
 @endauth
