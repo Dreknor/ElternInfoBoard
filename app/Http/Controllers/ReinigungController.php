@@ -61,11 +61,14 @@ class ReinigungController extends Controller
     {
         $user = $request->user();
         $datum = Carbon::now()->startOfWeek()->startOfDay();
-        $ende = Carbon::createFromFormat('d.m', '30.8');
 
-        if ($datum->month > 6) {
+        if ($datum->month < 6) {
+            $ende = Carbon::createFromFormat('d.m', '30.8');
+        } else {
+            $ende = Carbon::createFromFormat('d.m', '30.8');
             $ende->addYear();
         }
+
 
         if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
