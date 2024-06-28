@@ -32,21 +32,21 @@
                               action="{{url('reinigung/'.$bereich->first()->bereich.'/auto')}}" method="post">
                             @csrf
                             <div class="form-row">
-                                <label class="label">
-                                    Startdatum:
+                                <label class="label text-danger">
+                                    Startdatum*:
                                 </label>
                                 <input class="form-control" name="start" type="date" value="{{now()->format('Y-m-d')}}">
                             </div>
                             <div class="form-row">
-                                <label class="label">
-                                    Enddatum:
+                                <label class="label text-danger">
+                                    Enddatum*:
                                 </label>
                                 <input class="form-control" name="end" type="date"
                                        value="{{\Carbon\Carbon::createFromFormat('d.m', '01.08')->addYear()->format('Y-m-d')}}">
                             </div>
                             <div class="form-row mt-2">
-                                <label class="label">
-                                    Aufgaben:
+                                <label class="label text-danger">
+                                    Aufgaben*:
                                 </label>
                                 <select name="aufgaben[]" class="custom-select" multiple>
                                     @foreach($aufgaben as $task)
@@ -56,17 +56,22 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="form-row mt-2">
+                            <div class="form-row mt-3">
+                                <div class="col-12">
                                 <label class="label">
                                     Ausgeschlossene Gruppen:
                                 </label>
-                                <select name="exclude[]" class="custom-select" multiple>
+                                <select name="exclude[]" class="custom-select" multiple size="{{$bereich->count()+1}}">
+                                    <option value="" selected>
+                                        keine
+                                    </option>
                                     @foreach($bereich as $group)
                                         <option value="{{$group->id}}">
-                                            {{$group->name}}
+                                            {{$group->name}} ({{$group->users->count()}})
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
                             </div>
 
 

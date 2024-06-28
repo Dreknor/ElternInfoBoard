@@ -27,7 +27,7 @@ class CreateAutoReinigungRequest extends FormRequest
             'aufgaben' => 'required|array',
             'aufgaben.*' => 'required|int|exists:reinigungs_tasks,id',
             'exclude' => 'nullable|array',
-            'exclude.*' => 'required|int|exists:groups,id',
+            'exclude.*' => 'nullable|int|exists:groups,id',
             'start' => 'required|date',
             'end' => 'required|date|after:start',
         ];

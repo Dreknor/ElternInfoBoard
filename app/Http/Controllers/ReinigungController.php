@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReinigungController extends Controller
@@ -49,6 +50,7 @@ class ReinigungController extends Controller
         return view('reinigung.autoCreate', [
             'bereich' => $bereich,
             'aufgaben' => $task,
+            'roles' => Role::all(),
         ]);
     }
 
@@ -67,14 +69,13 @@ class ReinigungController extends Controller
         $ende = Carbon::createFromFormat('Y-m-d', $request->end)->endOfWeek();
 
 
-        if (!is_null($request->exclude) and count($request->exclude) > 0) {
-            $exclude = $request->exclude;
+        if (!is_null($request->exclude) and count($request->exclude) > 0 and $request->exclude[0] != 0) {
+            $excludeGroups = $request->exclude;
         } else {
-            $exclude = [];
+            $excludeGroups = [];
         }
-
-        $users = User::whereHas('groups', function ($query) use ($exclude, $bereich) {
-            $query->where('bereich', '=', $bereich)->whereNotIn('groups.id', $exclude);
+        $users = User::whereHas('groups', function ($query) use ($excludeGroups, $bereich) {
+            $query->where('bereich', '=', $bereich)->whereNotIn('groups.id', $excludeGroups);
         })->whereHas('reinigung', function ($query) use ($start, $ende, $bereich) {
             $query->whereBetween('datum', [$start, $ende])
                 ->where('bereich', '=', $bereich);
@@ -82,7 +83,6 @@ class ReinigungController extends Controller
 
 
         $users->shuffle();
-        //dd($users);
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
 
@@ -110,12 +110,12 @@ class ReinigungController extends Controller
             }
 
         }
-        /*
+
 
                 return redirect()->to(url('reinigung'))->with([
                     'type' => 'success',
                     'Meldung' => 'Plan aktualisiert',
-                ]);*/
+                ]);
     }
 
     /**
@@ -201,6 +201,7 @@ class ReinigungController extends Controller
             'datum' => $datum,
             'user' => $user,
             'ende' => $ende,
+            'aufgaben' => ReinigungsTask::all(),
         ]);
     }
 

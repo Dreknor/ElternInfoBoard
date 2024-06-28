@@ -215,7 +215,7 @@ Route::middleware('auth')->group(function () {
 
         Route::middleware('permission:edit reinigung')->group(function () {
             Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
-            Route::delete('reinigung/task/', [ReinigungsTaskController::class, 'destroy']);
+            Route::get('reinigung/task/{task}/trash', [ReinigungsTaskController::class, 'destroy']);
             Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
             Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
             Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
