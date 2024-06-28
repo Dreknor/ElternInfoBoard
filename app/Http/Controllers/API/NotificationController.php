@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Model\Notification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -22,6 +23,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        Log::info('User ' . $user->id . ' requested notifications');
 
 
         $notifications = $user->notifications()->where('read',0)->orderBy('created_at', 'desc')->get();

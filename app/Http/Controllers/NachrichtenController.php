@@ -833,6 +833,7 @@ class NachrichtenController extends Controller
                 'url' => ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
                 'icon' => $icon,
                 'type' => ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
+                'created_at' => Carbon::now(),
             ];
         }
 
