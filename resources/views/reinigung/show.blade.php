@@ -58,6 +58,11 @@
                                         Export
                                     </a>
                                 </div>
+                                <div class="pull-right small">
+                                    <a href="{{url('reinigung/'.$Bereich.'/auto')}}" class="btn btn-sm">
+                                        füllen
+                                    </a>
+                                </div>
                             @endcan
                             <h5 class="card-title">
                                 Reinigungsplan {{$Bereich}}

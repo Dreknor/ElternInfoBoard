@@ -212,6 +212,8 @@ Route::middleware('auth')->group(function () {
             Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
             Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
             Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+            Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
+            Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
         });
 
         //Edit and create posts

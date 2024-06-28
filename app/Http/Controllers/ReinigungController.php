@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ReinigungExport;
+use App\Http\Requests\CreateAutoReinigungRequest;
 use App\Http\Requests\ReinigungsRequest;
 use App\Model\Group;
 use App\Model\Reinigung;
@@ -19,6 +20,104 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReinigungController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    public function autoCreateStart($bereich)
+    {
+        $task = ReinigungsTask::all();
+
+        $bereich = Group::where('bereich', $bereich)->get();
+
+        if (!auth()->user()->can('edit reinigung')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        if ($bereich->count() < 1) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Bereich enthält keine Gruppen',
+            ]);
+        }
+
+        return view('reinigung.autoCreate', [
+            'bereich' => $bereich,
+            'aufgaben' => $task,
+        ]);
+    }
+
+
+    public function autoCreate(CreateAutoReinigungRequest $request, $bereich)
+    {
+
+        if (!auth()->user()->can('edit reinigung')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $start = Carbon::createFromFormat('Y-m-d', $request->start)->startOfWeek();
+        $ende = Carbon::createFromFormat('Y-m-d', $request->end)->endOfWeek();
+
+
+        if (!is_null($request->exclude) and count($request->exclude) > 0) {
+            $exclude = $request->exclude;
+        } else {
+            $exclude = [];
+        }
+
+        $users = User::whereHas('groups', function ($query) use ($exclude, $bereich) {
+            $query->where('bereich', '=', $bereich)->whereNotIn('groups.id', $exclude);
+        })->whereHas('reinigung', function ($query) use ($start, $ende, $bereich) {
+            $query->whereBetween('datum', [$start, $ende])
+                ->where('bereich', '=', $bereich);
+        }, '<', 1)->get();
+
+
+        $users->shuffle();
+        //dd($users);
+
+        $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
+
+        for ($date = $start; $date->lte($ende); $date->addWeek()) {
+            if ($users->count() > 0) {
+                foreach ($tasks as $task) {
+                    $user = $users->shift();
+                    if (!is_null($user)) {
+                        $reinigung = new Reinigung();
+                        $reinigung->bereich = $bereich;
+                        $reinigung->datum = $date;
+                        $reinigung->users_id = $user->id;
+                        $reinigung->aufgabe = $task->task;
+                        $reinigung->save();
+
+                        if ($user->sorg2 != null) {
+                            $users->forget(
+                                $users->search(function ($user) {
+                                    return $user->sorg2;
+                                })
+                            );
+                        }
+                    }
+                }
+            }
+
+        }
+        /*
+
+                return redirect()->to(url('reinigung'))->with([
+                    'type' => 'success',
+                    'Meldung' => 'Plan aktualisiert',
+                ]);*/
+    }
+
     /**
      * @param $bereich
      * @return RedirectResponse|BinaryFileResponse
@@ -79,7 +178,11 @@ class ReinigungController extends Controller
                 }
             });
         } else {
-            $Bereiche = Group::query()->whereNotNull('bereich')->where('bereich', '!=', 'Aufnahme')->pluck('bereich')->unique();
+            $Bereiche = Group::query()
+                ->whereNotNull('bereich')
+                ->where('bereich', '!=', 'Aufnahme')
+                ->pluck('bereich')
+                ->unique();
         }
 
         $Reinigung = [];
