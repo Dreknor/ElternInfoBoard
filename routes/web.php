@@ -52,6 +52,14 @@ Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
 
+//Apple Touch Icon
+Route::get('apple-touch-icon-precomposed.png', function () {
+    return response()->file(public_path('img/'.config('app.logo_small')));
+});
+Route::get('apple-touch-icon.png', function () {
+    return response()->file(public_path('img/'.config('app.logo_small')));
+});
+
 Route::middleware('auth')->group(function () {
 
     Route::get('password/expired', [ExpiredPasswordController::class, 'expired'])
