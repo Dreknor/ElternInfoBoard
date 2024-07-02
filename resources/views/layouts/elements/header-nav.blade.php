@@ -19,13 +19,7 @@
                     <span class="d-none d-md-block">
                 <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
             </span>
-                    @can('testing')
-                        <div class="nav-item">
-                            <a href="{{route('push.test', ['user' => auth()->id()])}}" class="btn btn-info">
-                                <i class="fa fa-info" style="font-size: 1.4rem"></i>
-                            </a>
-                        </div>
-                    @endcan
+
                 </div>
             </div>
             <div class="col-auto my-auto ml-auto ">
