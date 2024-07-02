@@ -196,7 +196,32 @@
     </div>
     @if($user->can('edit reinigung'))
         <div class="container-fluid">
-                <div class="card">
+            <div class="row justify-content-center">
+                <div class="col-sm-12 col-md-6">
+                    <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            Aufgaben
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            @foreach($aufgaben as $task)
+                                <li class="list-group-item">
+                                    {{$task->task}}
+                                    <div class="d-inline float-right">
+                                        <a href="{{url('reinigung/task/'.$task->id.'/trash')}}" class="text-danger">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">
                             Neue Aufgabe erstellen
@@ -219,6 +244,8 @@
                         </form>
                     </div>
                 </div>
+                </div>
+            </div>
         </div>
     @endif
 

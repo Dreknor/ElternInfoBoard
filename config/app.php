@@ -227,6 +227,7 @@ return [
     //Logo
     'logo' => env('APP_LOGO', 'logo.png'),
     'favicon' => env('APP_FAVICON', 'favicon.ico'),
+    'logo_small' => env('APP_LOGO_SMALL', 'app_logo.png'),
 
     //Link Mitarbeiterboard - Benötigt für Vertretungsplan
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
