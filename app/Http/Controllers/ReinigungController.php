@@ -85,14 +85,16 @@ class ReinigungController extends Controller
         Log::info('Users: ' . $users->count());
 
 
-        $users->shuffle();
+        $users_all = $users->shuffle();
+
+
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
 
         for ($date = $start; $date->lte($ende); $date->addWeek()) {
             if ($users->count() > 0) {
                 foreach ($tasks as $task) {
-                    $user = $users->shift();
+                    $user = $users_all->shift();
                     if (!is_null($user)) {
                         $reinigung = new Reinigung();
                         $reinigung->bereich = $bereich;
@@ -108,6 +110,7 @@ class ReinigungController extends Controller
                                 })
                             );
                         }
+                        Log::info($users_all->count() . ' Users left');
                     }
                 }
 
