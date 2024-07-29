@@ -107,13 +107,11 @@ class ReinigungController extends Controller
 
                         //Sorgeberechtigter 2 entfernen
                         if ($user->sorg2 != null) {
-                            Log::info('Sorgeberechtigter2 vorhanden:' . $user->sorg2);
                             $key = $users_all->search(function ($item) use ($user) {
                                 return $item->id == $user->sorg2;
                             });
 
                             if ($key !== false) {
-                                Log::info('Sorgeberechtigter2 entfernt.');
                                 $users_all->forget($key);
                             }
                         }
