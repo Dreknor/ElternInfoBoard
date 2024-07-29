@@ -14,6 +14,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
@@ -80,6 +81,8 @@ class ReinigungController extends Controller
             $query->whereBetween('datum', [$start, $ende])
                 ->where('bereich', '=', $bereich);
         }, '<', 1)->get();
+
+        Log::info('Users: ' . $users->count());
 
 
         $users->shuffle();
