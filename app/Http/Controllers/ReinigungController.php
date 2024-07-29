@@ -103,8 +103,8 @@ class ReinigungController extends Controller
                         $reinigung->save();
 
                         if ($user->sorg2 != null) {
-                            $users->forget(
-                                $users->search(function ($user) {
+                            $users_all->forget(
+                                $users_all->search(function ($user) {
                                     return $user->sorg2;
                                 })
                             );
