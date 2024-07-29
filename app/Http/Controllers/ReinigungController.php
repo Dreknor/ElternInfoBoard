@@ -82,10 +82,7 @@ class ReinigungController extends Controller
                 ->where('bereich', '=', $bereich);
         }, '<', 1)->get();
 
-        Log::info('Users: ' . $users->count());
-
-
-        $users_all = $users->shuffle();
+        $users_all = $users->unique('id')->shuffle();
 
 
 
@@ -94,8 +91,6 @@ class ReinigungController extends Controller
 
 
         while ($date->lte($ende)) {
-            Log::info('Date: ' . $date->format('Y-m-d') . ' Users: ' . $users->count() . ' Tasks: ' . $tasks->count());
-
             if ($users->count() > 0) {
                 foreach ($tasks as $task) {
                     $user = $users_all->shift();
@@ -114,7 +109,6 @@ class ReinigungController extends Controller
                                 })
                             );
                         }
-                        Log::info($users_all->count() . ' Users left');
                     }
                 }
 
