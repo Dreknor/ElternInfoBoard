@@ -116,11 +116,7 @@ class ReinigungController extends Controller
                             }
                         }
 
-                        //Wenn keine Nutzer mehr vorhanden sind, dann alle Nutzer neu mischen
-                        if ($users_all->count() < 1) {
-                            Log::info('Alle Nutzer neu gemischt');
-                            $users_all = $users->unique('id')->shuffle();
-                        }
+
                     }
                 }
 
