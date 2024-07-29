@@ -107,6 +107,17 @@ class ReinigungController extends Controller
                         }
                     }
                 }
+
+                return redirect()->to(url('reinigung'))->with([
+                    'type' => 'success',
+                    'Meldung' => 'Plan aktualisiert. Es wurden ' . $users->count() . ' Nutzer  berücksichtigt und ' . $tasks->count() . ' Aufgaben vergeben',
+                ]);
+
+            } else {
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Nicht genügend Nutzer für die Aufgaben vorhanden',
+                ]);
             }
 
         }
