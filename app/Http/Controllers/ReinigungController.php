@@ -75,14 +75,14 @@ class ReinigungController extends Controller
         } else {
             $excludeGroups = [];
         }
-        $users = User::whereHas('groups', function ($query) use ($excludeGroups, $bereich) {
+        $users = User::query()->whereHas('groups', function ($query) use ($excludeGroups, $bereich) {
             $query->where('bereich', '=', $bereich)->whereNotIn('groups.id', $excludeGroups);
         })->whereHas('reinigung', function ($query) use ($start, $ende, $bereich) {
             $query->whereBetween('datum', [$start, $ende])
                 ->where('bereich', '=', $bereich);
-        }, '<', 1)->unique()->get();
+        }, '<', 1)->get();
 
-        $users_all = $users->unique('id')->sortBy();
+        $users_all = $users->unique('id');
 
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
