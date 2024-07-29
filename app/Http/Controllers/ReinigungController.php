@@ -85,7 +85,6 @@ class ReinigungController extends Controller
         $users_all = $users->unique('id')->sortBy();
 
 
-
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
         $date = $start->copy();
 
@@ -104,17 +103,20 @@ class ReinigungController extends Controller
 
                         //Sorgeberechtigter 2 entfernen
                         if ($user->sorg2 != null) {
+                            Log::info('Sorgeberechtigter2 vorhanden:' . $user->sorg2);
                             $key = $users_all->search(function ($item) use ($user) {
                                 return $item->id == $user->sorg2;
                             });
 
                             if ($key !== false) {
+                                Log::info('Sorgeberechtigter2 entfernt.');
                                 $users_all->forget($key);
                             }
                         }
 
                         //Wenn keine Nutzer mehr vorhanden sind, dann alle Nutzer neu mischen
                         if ($users_all->count() < 1) {
+                            Log::info('Alle Nutzer neu gemischt');
                             $users_all = $users->unique('id')->shuffle();
                         }
                     }
