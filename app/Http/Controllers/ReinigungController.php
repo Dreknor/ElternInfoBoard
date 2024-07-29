@@ -82,7 +82,7 @@ class ReinigungController extends Controller
                 ->where('bereich', '=', $bereich);
         }, '<', 1)->get();
 
-        $users_all = $users->unique('id')->shuffle();
+        $users_all = $users->unique('id')->sortBy('familienname');
 
 
 
@@ -115,7 +115,7 @@ class ReinigungController extends Controller
 
                         //Wenn keine Nutzer mehr vorhanden sind, dann alle Nutzer neu mischen
                         if ($users_all->count() < 1) {
-                            $users_all = $users->unique('id')->shuffle();
+                            $users_all = $users->unique('id')->sortBy('familienname');
                         }
 
 
