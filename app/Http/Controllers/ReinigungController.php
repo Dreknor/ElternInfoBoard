@@ -84,7 +84,9 @@ class ReinigungController extends Controller
 
 
         $users_all = $users->shuffle();
+        Log::info('Nutzer:' . $users_all->count());
         $users_all = $users_all->unique('id');
+        Log::info('Nutzer unique:' . $users_all->count());
 
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
