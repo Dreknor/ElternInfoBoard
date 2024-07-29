@@ -91,7 +91,8 @@ class ReinigungController extends Controller
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
 
-        for ($date = $start; $date->lte($ende); $date->addWeek()) {
+        for ($date = $start->copy(); $date->lte($ende); $date->addWeek()) {
+            Log::info('Date: ' . $date->format('Y-m-d') . ' Users: ' . $users->count() . ' Tasks: ' . $tasks->count());
             if ($users->count() > 0) {
                 foreach ($tasks as $task) {
                     $user = $users_all->shift();
