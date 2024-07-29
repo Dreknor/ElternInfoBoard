@@ -82,7 +82,9 @@ class ReinigungController extends Controller
                 ->where('bereich', '=', $bereich);
         }, '<', 1)->get();
 
-        $users_all = $users->unique('id');
+
+        $users_all = $users->shuffle();
+        $users_all = $users_all->unique('id');
 
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
