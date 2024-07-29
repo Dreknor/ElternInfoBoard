@@ -118,6 +118,11 @@ class ReinigungController extends Controller
 
 
                     }
+
+                    $forget = $users_all->firstWhere('id', $user->id);
+                    if ($forget) {
+                        $users_all->forget($forget);
+                    }
                 }
 
             } else {
