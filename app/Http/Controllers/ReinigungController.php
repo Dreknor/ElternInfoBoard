@@ -91,7 +91,7 @@ class ReinigungController extends Controller
 
 
         while ($date->lte($ende)) {
-            if ($users->count() > 0) {
+            if ($users_all->count() > 0) {
                 foreach ($tasks as $task) {
                     $user = $users_all->shift();
                     if (!is_null($user)) {
@@ -102,13 +102,23 @@ class ReinigungController extends Controller
                         $reinigung->aufgabe = $task->task;
                         $reinigung->save();
 
+                        //Sorgeberechtigter 2 entfernen
                         if ($user->sorg2 != null) {
-                            $users_all->forget(
-                                $users_all->search(function ($user) {
-                                    return $user->sorg2;
-                                })
-                            );
+                            $key = $users_all->search(function ($item) use ($user) {
+                                return $item->id == $user->sorg2;
+                            });
+
+                            if ($key !== false) {
+                                $users_all->forget($key);
+                            }
                         }
+
+                        //Wenn keine Nutzer mehr vorhanden sind, dann alle Nutzer neu mischen
+                        if ($users_all->count() < 1) {
+                            $users_all = $users->unique('id')->shuffle();
+                        }
+
+
                     }
                 }
 
