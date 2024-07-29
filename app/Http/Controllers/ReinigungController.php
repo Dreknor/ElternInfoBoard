@@ -128,7 +128,7 @@ class ReinigungController extends Controller
                 }
 
             } else {
-                return redirect()->back()->with([
+                return redirect(url('reinigung'))->with([
                     'type' => 'danger',
                     'Meldung' => 'Nicht genügend Nutzer für die Aufgaben vorhanden',
                 ]);
