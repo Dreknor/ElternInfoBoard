@@ -90,9 +90,12 @@ class ReinigungController extends Controller
 
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
+        $date = $start->copy();
 
-        for ($date = $start->copy(); $date->lte($ende); $date->addWeek()) {
+
+        while ($date->lte($ende)) {
             Log::info('Date: ' . $date->format('Y-m-d') . ' Users: ' . $users->count() . ' Tasks: ' . $tasks->count());
+
             if ($users->count() > 0) {
                 foreach ($tasks as $task) {
                     $user = $users_all->shift();
@@ -115,17 +118,14 @@ class ReinigungController extends Controller
                     }
                 }
 
-                return redirect()->to(url('reinigung'))->with([
-                    'type' => 'success',
-                    'Meldung' => 'Plan aktualisiert. Es wurden ' . $users->count() . ' Nutzer  berücksichtigt und ' . $tasks->count() . ' Aufgaben vergeben',
-                ]);
-
             } else {
                 return redirect()->back()->with([
                     'type' => 'danger',
                     'Meldung' => 'Nicht genügend Nutzer für die Aufgaben vorhanden',
                 ]);
             }
+
+            $date->addWeek();
 
         }
 
