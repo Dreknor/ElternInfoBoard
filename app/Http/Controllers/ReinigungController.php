@@ -80,9 +80,9 @@ class ReinigungController extends Controller
         })->whereHas('reinigung', function ($query) use ($start, $ende, $bereich) {
             $query->whereBetween('datum', [$start, $ende])
                 ->where('bereich', '=', $bereich);
-        }, '<', 1)->get();
+        }, '<', 1)->unique()->get();
 
-        $users_all = $users->unique('id')->sortBy('familienname');
+        $users_all = $users->unique('id')->sortBy();
 
 
 
@@ -115,10 +115,8 @@ class ReinigungController extends Controller
 
                         //Wenn keine Nutzer mehr vorhanden sind, dann alle Nutzer neu mischen
                         if ($users_all->count() < 1) {
-                            $users_all = $users->unique('id')->sortBy('familienname');
+                            $users_all = $users->unique('id')->shuffle();
                         }
-
-
                     }
                 }
 
