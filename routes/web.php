@@ -88,15 +88,13 @@ Route::middleware('auth')->group(function () {
         //Datenschutz
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
 
-        //Push
-        Route::post('/push', [PushController::class, 'store']);
-        Route::get('/push/{user}', [PushController::class, 'push'])->name('push.test');
+
 
         //make a push notification.
-        Route::get('/push', [PushController::class, 'push'])->name('push');
         Route::post('/notification/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notification.read');
         Route::get('/notification/read/all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notification.readAll');
         Route::post('markNotificationAsRead',[ \App\Http\Controllers\NotificationController::class, 'readByType']);
+        Route::post('/push', [PushController::class, 'store']);
 
 
         //Schickzeiten

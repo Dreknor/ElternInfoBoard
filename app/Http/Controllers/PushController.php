@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Model\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\Push;
 
@@ -46,17 +47,16 @@ class PushController extends Controller
     {
 
         if (auth()->user()->can('testing')) {
-
-            Notification::send($user, new Push('test', 'test'));
+            Log::info('PushController:push: Benachrichtigung wird gesendet an ' . $user->name);
+            Notification::send($user, new Push('Testbenachrichtigung', 'Dies ist eine Testbenachrichtigung'));
             return redirect()->back()->with([
-                'Meldung' => 'Push wurde erfolgreich gesendet',
-                'type' => 'success',
-
+                'Meldung' => 'Benachrichtigung wurde gesendet',
+                'type' => 'success'
             ]);
         }
         return redirect()->back()->with([
             'Meldung' => 'Keine Berechtigung',
-            'type' => 'error'
+            'type' => 'danger'
         ]);
 
     }

@@ -14,6 +14,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
@@ -74,7 +75,7 @@ class ReinigungController extends Controller
         } else {
             $excludeGroups = [];
         }
-        $users = User::whereHas('groups', function ($query) use ($excludeGroups, $bereich) {
+        $users = User::query()->whereHas('groups', function ($query) use ($excludeGroups, $bereich) {
             $query->where('bereich', '=', $bereich)->whereNotIn('groups.id', $excludeGroups);
         })->whereHas('reinigung', function ($query) use ($start, $ende, $bereich) {
             $query->whereBetween('datum', [$start, $ende])
@@ -82,14 +83,20 @@ class ReinigungController extends Controller
         }, '<', 1)->get();
 
 
-        $users->shuffle();
+        $users_all = $users->shuffle();
+        Log::info('Nutzer:' . $users_all->count());
+        $users_all = $users_all->unique('id');
+        Log::info('Nutzer unique:' . $users_all->count());
+
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
+        $date = $start->copy();
 
-        for ($date = $start; $date->lte($ende); $date->addWeek()) {
-            if ($users->count() > 0) {
+
+        while ($date->lte($ende)) {
+            if ($users_all->count() > 0) {
                 foreach ($tasks as $task) {
-                    $user = $users->shift();
+                    $user = $users_all->shift();
                     if (!is_null($user)) {
                         $reinigung = new Reinigung();
                         $reinigung->bereich = $bereich;
@@ -98,16 +105,36 @@ class ReinigungController extends Controller
                         $reinigung->aufgabe = $task->task;
                         $reinigung->save();
 
+                        //Sorgeberechtigter 2 entfernen
                         if ($user->sorg2 != null) {
-                            $users->forget(
-                                $users->search(function ($user) {
-                                    return $user->sorg2;
-                                })
-                            );
+                            $key = $users_all->search(function ($item) use ($user) {
+                                return $item->id == $user->sorg2;
+                            });
+
+                            if ($key !== false) {
+                                $users_all->forget($key);
+                            }
+                        }
+
+                        $key = $users_all->search(function ($item) use ($user) {
+                            return $item->id == $user->sorg1;
+                        });
+
+                        if ($key !== false) {
+                            $users_all->forget($key);
                         }
                     }
+
                 }
+
+            } else {
+                return redirect(url('reinigung'))->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Nicht genügend Nutzer für die Aufgaben vorhanden',
+                ]);
             }
+
+            $date->addWeek();
 
         }
 

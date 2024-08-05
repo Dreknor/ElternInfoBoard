@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
@@ -42,6 +43,7 @@ class Push extends Notification
 
     public function toWebPush($notifiable, $notification)
     {
+        Log::info('Push:toWebPush: Benachrichtigung wird gesendet an ' . $notifiable->name);
         return (new WebPushMessage)
             ->title($this->title)
             ->icon(asset('img/'.config('app.favicon')))
