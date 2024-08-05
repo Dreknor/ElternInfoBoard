@@ -113,7 +113,7 @@ class UserRueckmeldungenController extends Controller
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
     {
-        if ($userRueckmeldungen->users_id != auth()->id()) {
+        if ($userRueckmeldungen->users_id != auth()->id() and $userRueckmeldungen->users_id != auth()->user()->sorg2) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
