@@ -33,8 +33,8 @@
                                         - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
                                     </li>
                                 @endforeach
-                                @if(!is_null($user->sorg2))
-                                    @foreach($user->sorgeberechtigter2?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                @if(!is_null($user->sorg2) and !is_null($user->sorgeberechtigter2))
+                                    @foreach($user?->sorgeberechtigter2?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
                                         <li class="list-group-item">
                                             Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
                                             - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
