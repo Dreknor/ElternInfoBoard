@@ -36,9 +36,11 @@
                 <div class="col-12">
                     <ul class="list-group">
                         @foreach($post->receipts as $receipt)
-                            <li class="list-group-item">
-                                {{ $receipt->user->name}} ({{ $receipt->created_at->format('d.m.Y H:i') }})
-                            </li>
+                            @if(!is_null($receipt->user))
+                                <li class="list-group-item">
+                                    {{ $receipt->user?->name}} ({{ $receipt->created_at->format('d.m.Y H:i') }})
+                                </li>
+                            @endif
                         @endforeach
                     </ul>
                 </div>
