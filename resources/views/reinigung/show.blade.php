@@ -107,7 +107,11 @@
                                                             class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
                                                             <div class="card-header">
                                                                 <h6>
-                                                                    Familie {{$reinigung->user->familie_name}}
+                                                                    @can('edit reinigung')
+                                                                        {{$reinigung->user->name}}
+                                                                    @else
+                                                                        Familie {{$reinigung->user->familie_name}}
+                                                                    @endcan
                                                                     @can('edit reinigung')
                                                                         <div class="pull-right">
                                                                             <a class="link text-danger"
@@ -160,7 +164,13 @@
                                                             class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
                                                             <div class="card-header">
                                                                 <h6>
-                                                                    Familie {{$reinigung->user->familie_name}}
+                                                                    @can('edit reinigung')
+                                                                        {{$reinigung->user}}
+                                                                    @else
+                                                                        Familie {{$reinigung->user->familie_name}}
+                                                                    @endcan
+
+
                                                                     @can('edit reinigung')
                                                                         <div class="pull-right">
                                                                             <a class="link text-danger"

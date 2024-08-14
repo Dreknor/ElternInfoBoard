@@ -47,7 +47,7 @@ class ReinigungExport implements FromCollection, WithMapping, WithHeadings
     {
         return [
             $reinigung->datum->format('d.m.').' - '.$reinigung->datum->endOfWeek()->format('d.m.Y'),
-            'Familie '.$reinigung->user->familie_name,
+            'Familie '.$reinigung->user->name,
             $reinigung->aufgabe,
             $reinigung->kommentar,
         ];
