@@ -31,6 +31,7 @@ class KrankmeldungRequest extends FormRequest
             'kommentar' => [
                 'required',
                 'string',
+                'max:10000'
             ],
             'start' => [
                 'required',
