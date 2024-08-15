@@ -53,12 +53,13 @@ function initPush() {
 }
 
 function subscribeUser() {
+
     navigator.serviceWorker.ready
         .then((registration) => {
             const subscribeOptions = {
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(
-                    'BKirEeZgt76KEePPiwB9LfMxF2GHXR_Mo6RZeYNkPk0-zj8hLF-06NrtexNKdiJXXDeyrkwB8XRwbMM9NzpStf0'
+                    vapid
                 )
             };
 

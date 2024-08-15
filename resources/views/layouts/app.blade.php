@@ -237,6 +237,9 @@
     @stack('js')
 
 @auth
+    <script>
+        var vapid = {{ config('webpush.vapid.public_key') }};
+    </script>
     <script src="{{asset('js/enable-push.js')}}" defer></script>
 @endauth
 </body>
