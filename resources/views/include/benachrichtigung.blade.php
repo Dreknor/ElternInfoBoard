@@ -65,8 +65,13 @@
                 </a>
             </li>
             @endforeach
-
-
+            @can('testing')
+                <li class="dropdown-item" onclick="event.stopPropagation()">
+                    <a href="{{route('push.test')}}">
+                       Push testen
+                    </a>
+                </li>
+            @endcan
         </ul>
     </div>
 @endif

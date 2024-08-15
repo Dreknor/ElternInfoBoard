@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\Push;
 
 use Illuminate\Http\JsonResponse;
+use Minishlink\WebPush\WebPush;
 
 class PushController extends Controller
 {
@@ -18,6 +19,27 @@ class PushController extends Controller
     }
 
 
+    /**
+     * Testen der Push-Benachrichtigung
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     */
+    public function testPush(){
+
+        if(auth()->user()->can('testing')){
+            Log::info('PushController:testPush: Benachrichtigung wird gesendet an ' . auth()->user()->name);
+            auth()->user()->notify(new Push('Testbenachrichtigung', 'Dies ist eine Testbenachrichtigung'));
+            return redirect()->back()->with([
+                'Meldung' => 'Benachrichtigung wurde gesendet',
+                'type' => 'success'
+            ]);
+        }
+        return redirect()->back()->with([
+            'Meldung' => 'Keine Berechtigung',
+            'type' => 'danger'
+        ]);
+
+    }
 
 
     /**

@@ -96,6 +96,8 @@ Route::middleware('auth')->group(function () {
         Route::post('markNotificationAsRead',[ \App\Http\Controllers\NotificationController::class, 'readByType']);
         Route::post('/push', [PushController::class, 'store']);
 
+        Route::get('/push/test', [PushController::class, 'testPush'])->name('push.test');
+
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
