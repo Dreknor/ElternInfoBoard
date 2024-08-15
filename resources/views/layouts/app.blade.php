@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="vapidPublicKey" content=" {{ config('webpush.vapid.public_key') }}">
 
     <link rel="shortcut icon" href="{{asset('img/'.config('app.favicon'))}}" type="image/x-icon">
     <title>{{config('app.name')}} @yield('title')</title>
@@ -237,9 +238,6 @@
     @stack('js')
 
 @auth
-    <script>
-        var vapid = {{ config('webpush.vapid.public_key') }};
-    </script>
     <script src="{{asset('js/enable-push.js')}}" defer></script>
 @endauth
 </body>

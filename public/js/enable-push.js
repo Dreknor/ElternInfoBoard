@@ -54,6 +54,8 @@ function initPush() {
 
 function subscribeUser() {
 
+    const vapid = document.querySelector('meta[name=vapidPublicKey]').getAttribute('content');
+
     navigator.serviceWorker.ready
         .then((registration) => {
             const subscribeOptions = {
