@@ -30,5 +30,14 @@ class Notification extends Model
         return $query->where('read', false);
     }
 
+    protected static function booted(): void
+    {
+        static::created(function (Notification $notification) {
+            $notification->user->notify(new \App\Notifications\Push($notification->title, $notification->message));
+        });
+    }
+
+
+
 
 }

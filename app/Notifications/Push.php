@@ -43,7 +43,6 @@ class Push extends Notification
 
     public function toWebPush($notifiable, $notification)
     {
-        Log::info('Push:toWebPush: Benachrichtigung wird gesendet an ' . $notifiable->name);
         return (new WebPushMessage)
             ->title($this->title)
             ->icon(asset('img/'.config('app.favicon')))

@@ -6,7 +6,6 @@ use App\Model\Notification;
 use App\Model\Vertretung;
 use App\Notifications\VertretungsplanNotification;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class VertretungObserver
 {

@@ -251,6 +251,7 @@ class NachrichtenController extends Controller
         $post->author = $user->id;
         ($post->news == '') ? $post->news = $post->header : null;
 
+
         $post->save();
 
         $gruppen = $request->input('gruppen');
@@ -813,16 +814,7 @@ class NachrichtenController extends Controller
         } else {
             $icon = (config('app.favicon')) ? url('img/'.config('app.favicon')) : '';
         }
-/*
 
-        $post->notify($User,
-            title: $header,
-            message: $post->header,
-            url: ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
-            icon: $icon,
-            type: ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
-        );
-*/
         $notifications= [];
 
         foreach ($User as $user) {
