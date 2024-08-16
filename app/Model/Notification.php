@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Notifications\Push;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,7 +34,8 @@ class Notification extends Model
     protected static function booted(): void
     {
         static::created(function (Notification $notification) {
-            $notification->user->notify(new \App\Notifications\Push($notification->title, $notification->message));
+            $notification->user->notify(new Push($notification->title, $notification->message));
+
         });
     }
 
