@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
         Route::get('diseases/{disease}/extend', [\App\Http\Controllers\ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
         Route::resource('termin', TerminController::class);
+        Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
         //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
         //Rückmeldungen
@@ -235,7 +236,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
         Route::post('/posts/', [NachrichtenController::class, 'store']);
         Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts']);
-        Route::get('posts/delete/{post}', [NachrichtenController::class, 'destroy'])->middleware(['permission:delete posts']);
+        Route::get('posts/delete/{post}', [NachrichtenController::class, 'destroy']);
 
         Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
         Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);

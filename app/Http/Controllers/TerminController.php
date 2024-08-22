@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTerminRequest;
 use App\Model\Group;
+use App\Model\Post;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
@@ -114,6 +115,58 @@ class TerminController extends Controller
             'gruppen' => Group::all(),
         ]);
     }
+
+    public function createFromPost(Post $post)
+    {
+        if (! $this->authorize('create', Termin::class)) {
+            return redirect()->to(url('home'))->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung Termine zu erstellen fehlt',
+            ]);
+        }
+
+        $pattern = '^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$^';
+        $matches = [];
+        $termin = preg_match($pattern, $post->header, $matches);
+
+        if (!$termin) {
+            $termin = preg_match($pattern, $post->news, $matches);
+        }
+
+        if (!$termin) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Kein Datum im Beitrag gefunden.',
+            ]);
+        }
+
+        $terminname = $post->header;
+        $terminname = str_replace($matches[0], '', $terminname);
+
+        $start = Carbon::parse($matches[0]);
+        $ende = Carbon::parse($matches[0]);
+
+
+        $termin = new Termin([
+            'terminname' => $terminname,
+            'start' => $start,
+            'ende' => $ende,
+            'fullDay' => false,
+            'public' => false,
+        ]);
+
+
+
+
+
+
+        return view('termine.createFromPost', [
+            'gruppen' => Group::all(),
+            'termin' => $termin,
+            'post' => $post
+        ]);
+    }
+
 
     /**
      * Store a newly created resource in storage.

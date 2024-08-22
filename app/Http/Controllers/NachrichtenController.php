@@ -388,6 +388,19 @@ class NachrichtenController extends Controller
                     ]);
                 break;
             default:
+
+
+                    $pattern = '^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$^';
+
+
+
+                    if (preg_match($pattern, $post->header) or preg_match($pattern, $post->news)){
+                       return redirect(url('termine/create/'.$post->id))->with([
+                           'type' => 'success',
+                           'Meldung' => 'Die Nachricht wurde erstellt. Es wurde im Text ein Datum gefunden. Soll dieses als Termin angelegt werden?',
+                       ]);
+                    }
+
                 return redirect(url('/home#'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht angelegt.',
@@ -726,7 +739,7 @@ class NachrichtenController extends Controller
     public function destroy(Post $post)
     {
 
-        if ($post->author == auth()->user()->id or auth()->user()->can('delete posts')) {
+        if ($post->author == auth()->id() or auth()->user()->can('delete posts')) {
             $post->groups()->detach();
             if (!is_null($post->rueckmeldung())) {
                 $post->rueckmeldung()->delete();
