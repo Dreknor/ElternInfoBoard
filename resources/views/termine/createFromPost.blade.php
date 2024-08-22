@@ -7,6 +7,9 @@
                 Termin erstellen
             </div>
             <div class="card-body">
+                <a href="{{url('/home')}}" class="btn btn-primary btn-block">Keinen Termin erstellen</a>
+            </div>
+            <div class="card-body">
                 <form action="{{url('/termin')}}" method="post" class="form form-horizontal" id="terminForm">
                     @csrf
                     <div class="row">
