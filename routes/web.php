@@ -75,9 +75,10 @@ Route::middleware('auth')->group(function () {
         Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
 
         //Routen für die Verwaltung der Rückmeldungen
+        Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
+
         Route::middleware('permission:manage rueckmeldungen')->group(function () {
             Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
-            Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
             Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
         });
         Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);

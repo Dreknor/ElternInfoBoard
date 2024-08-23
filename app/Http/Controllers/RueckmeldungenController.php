@@ -151,7 +151,7 @@ class RueckmeldungenController extends Controller
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
-        if (!auth()->user()->can('manage rueckmeldungen')) {
+        if (!auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',

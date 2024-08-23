@@ -141,15 +141,32 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-footer">
-                        @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
-                            <div class="pull-right">
-                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
-                                    <i class="fa fa-download"></i>
-                                </a>
+                        <div class="row">
+                            <div class="col-10">
+                                <h6>Auswertung:</h6>
                             </div>
-                        @endcan
-                        <h6>Auswertung:</h6>
-                        @foreach($nachricht->rueckmeldung->options()->where('type', 'check')->get() as $option)
+                            @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
+                                <div class="pull-right">
+                                    <div class="col-auto">
+                                        <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}">
+                                            <i class="fa fa-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endcan
+                            @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
+                                <div class="pull-right">
+                                    <div class="col-auto">
+                                        <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/show")}}">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endcan
+                        </div>
+
+
+                    @foreach($nachricht->rueckmeldung->options()->where('type', 'check')->get() as $option)
                             <div class="row border-bottom">
                                 <div class="col-2">
                                     {{$option->answers->count()}}
