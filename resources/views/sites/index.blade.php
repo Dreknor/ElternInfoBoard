@@ -25,6 +25,7 @@
             @else
                 <div class="card-body">
                     <ul class="list-group d-flex flex-row flex-wrap">
+
                         @foreach($sites as $site)
                                 <li class="list-group-item w-50  list-group-item-action @if(!$site->is_active) bg-blue-400 @endif ">
                                     <a href="{{ route('sites.show', $site->id) }}">
