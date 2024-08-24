@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "08c3b2bfddde55db133ea05aa9685f21",
+    "content-hash": "c3db6b34a706e163d3594de3183703d3",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -6739,16 +6739,16 @@
         },
         {
             "name": "ryangjchandler/blade-cache-directive",
-            "version": "v0.3.2",
+            "version": "v0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ryangjchandler/blade-cache-directive.git",
-                "reference": "bb426d962de7b9f12f3431ff30ad6322bd7a84b4"
+                "reference": "25749d740c1135efe2835e08501d6f73bfa7ab55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ryangjchandler/blade-cache-directive/zipball/bb426d962de7b9f12f3431ff30ad6322bd7a84b4",
-                "reference": "bb426d962de7b9f12f3431ff30ad6322bd7a84b4",
+                "url": "https://api.github.com/repos/ryangjchandler/blade-cache-directive/zipball/25749d740c1135efe2835e08501d6f73bfa7ab55",
+                "reference": "25749d740c1135efe2835e08501d6f73bfa7ab55",
                 "shasum": ""
             },
             "require": {
@@ -6801,7 +6801,7 @@
             ],
             "support": {
                 "issues": "https://github.com/ryangjchandler/blade-cache-directive/issues",
-                "source": "https://github.com/ryangjchandler/blade-cache-directive/tree/v0.3.2"
+                "source": "https://github.com/ryangjchandler/blade-cache-directive/tree/v0.4.0"
             },
             "funding": [
                 {
@@ -6809,7 +6809,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-02-19T12:19:35+00:00"
+            "time": "2023-05-01T22:59:42+00:00"
         },
         {
             "name": "sabberworm/php-css-parser",

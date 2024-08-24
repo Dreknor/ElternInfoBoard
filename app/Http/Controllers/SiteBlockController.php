@@ -11,6 +11,7 @@ use App\Model\SiteBlockFiles;
 use App\Model\SiteBlockImages;
 use App\Model\SiteBlockText;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SiteBlockController extends Controller
 {
@@ -21,6 +22,7 @@ class SiteBlockController extends Controller
 
     public function store(CreateSitesBlockRequest $request)
     {
+        Cache::delete('site' . $request->site_id);
         $site = Site::findOrFail($request->site_id);
 
         $lastBlock = $site->blocks()->orderBy('position')->first();
@@ -65,6 +67,7 @@ class SiteBlockController extends Controller
 
     public function destroy(SiteBlock $block): \Illuminate\Http\RedirectResponse
     {
+        Cache::delete('site' . $block->site_id);
 
         $block->block?->media()->each(function ($media) {
             $media->delete();
@@ -78,6 +81,8 @@ class SiteBlockController extends Controller
 
     public function update(UpdateSiteBlockTextRequest $request, SiteBlock $block): \Illuminate\Http\RedirectResponse
     {
+        Cache::delete('site' . $block->site_id);
+
         $block->update($request->validated());
 
         $block->block->update($request->validated());
@@ -87,6 +92,7 @@ class SiteBlockController extends Controller
 
     public function storeImage(UpdateSiteBlockImageRequest $request, SiteBlock $block): \Illuminate\Http\RedirectResponse
     {
+        Cache::delete('site' . $block->site_id);
 
         $block->update($request->validated());
         $block->block->addAllMediaFromRequest()->each(function ($fileAdder) {
@@ -98,6 +104,7 @@ class SiteBlockController extends Controller
 
     public function storeFile(UpdateSiteBlockImageRequest $request, SiteBlock $block): \Illuminate\Http\RedirectResponse
     {
+        Cache::delete('site' . $block->site_id);
 
         $block->update($request->validated());
         $block->block->addAllMediaFromRequest()->each(function ($fileAdder) {
@@ -110,6 +117,8 @@ class SiteBlockController extends Controller
     #TODO: Add this method to the SiteBlockController
     public function blockPostionUp(SiteBlock $block)
     {
+        Cache::delete('site' . $block->site_id);
+
         $site = $block->site;
         $block->position = $block->position - 1;
         $block->save();
@@ -120,6 +129,8 @@ class SiteBlockController extends Controller
     }
     public function blockPostionDown(SiteBlock $block)
     {
+        Cache::delete('site' . $block->site_id);
+
         $site = $block->site;
         $block->position = $block->position + 1;
         $block->save();
@@ -131,6 +142,8 @@ class SiteBlockController extends Controller
 
     public function removeMedia(SiteBlock $block, $mediaId)
     {
+        Cache::delete('site' . $block->site_id);
+
         $block->block->media()->where('id', $mediaId)->each(function ($media) {
             $media->delete();
         });

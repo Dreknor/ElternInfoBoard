@@ -24,37 +24,69 @@
                 </div>
             @else
                 <div class="card-body">
-                    <ul class="list-group d-flex flex-row flex-wrap">
+                    <div class="d-md-none">
+                        <ul class="list-group">
 
-                        @foreach($sites as $site)
-                                <li class="list-group-item w-50  list-group-item-action @if(!$site->is_active) bg-blue-400 @endif ">
+                            @foreach($sites as $site)
+                                <li class="list-group-item list-group-item-action @if(!$site->is_active) bg-blue-400 @endif ">
                                     <a href="{{ route('sites.show', $site->id) }}">
                                         <div class="row">
-                                        <div class="col-12">
-                                            <h6>
-                                                {{ $site->name }}
-                                            </h6>
-                                            <span class="pull-right
+                                            <div class="col-12">
+                                                <h6>
+                                                    {{ $site->name }}
+                                                </h6>
+                                                <span class="pull-right
                                                 @if(!$site->is_active)
                                                     text-danger
                                                 @endif
                                             ">
                                                 @if(!$site->is_active)
-                                                    unveröffentlicht
-                                                @endif
+                                                        unveröffentlicht
+                                                    @endif
                                             </span>
+                                            </div>
                                         </div>
-                                    </div>
                                     </a>
                                 </li>
-                        @endforeach
-                    </ul>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <div class="container-fluid d-none d-md-flex">
+                        <div class=" w-100">
+                            <ul class="list-group d-flex flex-row flex-wrap">
+
+                                @foreach($sites as $site)
+                                    <li class="list-group-item w-50  list-group-item-action @if(!$site->is_active) bg-blue-400 @endif ">
+                                        <a href="{{ route('sites.show', $site->id) }}">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <h6>
+                                                        {{ $site->name }}
+                                                    </h6>
+                                                    <span class="pull-right
+                                                @if(!$site->is_active)
+                                                    text-danger
+                                                @endif
+                                            ">
+                                                @if(!$site->is_active)
+                                                            unveröffentlicht
+                                                        @endif
+                                            </span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>
 
-        @can('create sites')
-            <div class="card bg-light" id="createSite">
+        @can('create sites',600)
+            @cache('createSite')
+                <div class="card bg-light" id="createSite">
                 <div class="card-header">
                     <h3>Neue Seite erstellen</h3>
                 </div>
@@ -88,6 +120,7 @@
                     </form>
                 </div>
             </div>
+            @endcache
         @endcan
 
     </div>

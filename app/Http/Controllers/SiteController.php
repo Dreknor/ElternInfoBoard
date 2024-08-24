@@ -135,6 +135,7 @@ class SiteController extends Controller
         if (!auth()->user()->can('create sites') && $site->author_id != auth()->id()) {
             return redirect()->back()->with('danger', 'Berechtigung fehlt für diese Aktion');
         }
+        Cache::delete('site' . $site->site_id);
 
         return view('sites.edit',[
                     'site' => $site,
@@ -150,7 +151,8 @@ class SiteController extends Controller
      */
     public function update(Request $request, Site $site)
     {
-        dd($request->all());
+        return redirect('sites');
+
     }
 
     /**
@@ -164,6 +166,8 @@ class SiteController extends Controller
         if (!auth()->user()->can('create sites') && $site->author_id != auth()->id()) {
             return redirect()->back()->with('danger', 'Berechtigung fehlt für diese Aktion');
         }
+
+        Cache::delete('site' . $site->site_id);
 
         foreach ($site->blocks as $block) {
             $block->delete();
