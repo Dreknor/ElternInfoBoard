@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiveDiseaseController;
 use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
@@ -15,11 +16,14 @@ use App\Http\Controllers\KrankmeldungenController;
 use App\Http\Controllers\ListenController;
 use App\Http\Controllers\ListenEintragungenController;
 use App\Http\Controllers\ListenTerminController;
+use App\Http\Controllers\LogController;
 use App\Http\Controllers\LosungController;
 use App\Http\Controllers\NachrichtenController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReactionController;
+use App\Http\Controllers\ReadReceiptsController;
 use App\Http\Controllers\ReinigungController;
 use App\Http\Controllers\ReinigungsTaskController;
 use App\Http\Controllers\RolesController;
@@ -27,6 +31,8 @@ use App\Http\Controllers\RueckmeldungenController;
 use App\Http\Controllers\SchickzeitenController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SiteBlockController;
+use App\Http\Controllers\SiteController;
 use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
@@ -92,9 +98,9 @@ Route::middleware('auth')->group(function () {
 
 
         //make a push notification.
-        Route::post('/notification/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notification.read');
-        Route::get('/notification/read/all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notification.readAll');
-        Route::post('markNotificationAsRead',[ \App\Http\Controllers\NotificationController::class, 'readByType']);
+        Route::post('/notification/read', [NotificationController::class, 'read'])->name('notification.read');
+        Route::get('/notification/read/all', [NotificationController::class, 'readAll'])->name('notification.readAll');
+        Route::post('markNotificationAsRead',[ NotificationController::class, 'readByType']);
         Route::post('/push', [PushController::class, 'store']);
 
         Route::get('/push/test', [PushController::class, 'testPush'])->name('push.test');
@@ -119,13 +125,13 @@ Route::middleware('auth')->group(function () {
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
         Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
-        Route::get('krankmeldung/disaese/activate/{disease}', [\App\Http\Controllers\ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
+        Route::get('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
 
-        Route::get('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases');
-        Route::post('diseases/create', [\App\Http\Controllers\ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
-        Route::put('diseases/{disease}/active', [\App\Http\Controllers\ActiveDiseaseController::class, 'update'])->middleware('permission:manage diseases');
-        Route::delete('diseases/{disease}/delete', [\App\Http\Controllers\ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
-        Route::get('diseases/{disease}/extend', [\App\Http\Controllers\ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
+        Route::get('diseases/create', [ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases');
+        Route::post('diseases/create', [ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
+        Route::put('diseases/{disease}/active', [ActiveDiseaseController::class, 'update'])->middleware('permission:manage diseases');
+        Route::delete('diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
+        Route::get('diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
         Route::resource('termin', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
@@ -170,7 +176,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('/', [NachrichtenController::class, 'index']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
-        Route::post('post/readReceipt', [\App\Http\Controllers\ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
+        Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
@@ -318,6 +324,20 @@ Route::middleware('auth')->group(function () {
             Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
+        //Seitenverwaltung und -anzeige
+        Route::group(['middlewareGroups' => ['can:view sites']], function () {
+            Route::resource('sites', SiteController::class);
+            Route::get('sites/{site}/active', [SiteController::class, 'activate'])->name('sites.activate');
+            Route::post('blocks', [SiteBlockController::class, 'store'])->name('blocks.store');
+            Route::put('blocks/{block}', [SiteBlockController::class, 'update'])->name('blocks.text.update');
+            Route::delete('blocks/{block}/delete', [SiteBlockController::class, 'destroy'])->name('blocks.delete');
+            Route::delete('blocks/{block}/{media}/delete', [SiteBlockController::class, 'removeMedia'])->name('blocks.media.delete');
+            Route::post('blocks/{block}/image', [SiteBlockController::class, 'storeImage'])->name('blocks.image.store');
+            Route::post('blocks/{block}/files', [SiteBlockController::class, 'storeFile'])->name('blocks.files.store');
+            Route::get('blocks/{block}/move/up', [SiteBlockController::class, 'blockPostionUp'])->name('blocks.move.up');
+            Route::get('blocks/{block}/move/down', [SiteBlockController::class, 'blockPostionDown'])->name('blocks.move.down');
+        });
+
         Route::get('logoutAsUser', function () {
             if (session()->has('ownID')) {
                 Auth::loginUsingId(Crypt::decryptString(session()->get('ownID')));
@@ -349,7 +369,7 @@ Route::middleware('auth')->group(function () {
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 
     Route::group(['middlewareGroups' => ['can:see logs']], function () {
-        Route::get('logs', [\App\Http\Controllers\LogController::class, 'index']);
+        Route::get('logs', [LogController::class, 'index']);
     });
 });
 
