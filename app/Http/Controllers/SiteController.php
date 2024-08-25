@@ -8,6 +8,7 @@ use App\Model\Site;
 use App\Repositories\GroupsRepository;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SiteController extends Controller
 {
