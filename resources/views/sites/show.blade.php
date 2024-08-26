@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
+    @cache('site'.$site->id, 10*60*60) )
+        <div class="container-fluid">
         <div class="row">
             <div class="col-auto">
                 <a href="{{ route('sites.index') }}" class="btn btn-primary">Zurück zur Übersicht</a>
@@ -49,7 +50,7 @@
                                         @foreach($block->block->getMedia() as $media)
                                            <div class="card">
                                                 <div class="card-body">
-                                                  {{ $media }}
+                                                    <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 480px" >
                                                 </div>
                                            </div>
 
@@ -111,4 +112,5 @@
     </div>
 
 
+    @endcache
 @endsection
