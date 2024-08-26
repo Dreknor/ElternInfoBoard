@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    @cache('site'.$site->id, 60*24*7 )
         <div class="container-fluid">
         <div class="row">
             <div class="col-auto">
@@ -111,4 +112,5 @@
                 </div>
         </div>
     </div>
+            @endcache
 @endsection
