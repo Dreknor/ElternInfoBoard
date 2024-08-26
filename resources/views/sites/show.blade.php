@@ -50,7 +50,9 @@
                                         @foreach($block->block->getMedia() as $media)
                                            <div class="card">
                                                 <div class="card-body">
-                                                    <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 480px" >
+                                                    <a href="{{url('/image/'.$media->id)}}" target="_blank">
+                                                        <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 480px" >
+                                                    </a>
                                                 </div>
                                            </div>
 
