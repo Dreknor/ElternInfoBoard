@@ -176,11 +176,11 @@ class ListenController extends Controller
      * @return RedirectResponse
      * @throws AuthorizationException
      */
-    public function update(Request $request, Liste $terminListe)
+    public function update(CreateListeRequest $request, Liste $terminListe)
     {
         $this->authorize('editListe', $terminListe);
 
-        $terminListe->update($request->all());
+        $terminListe->update($request->validated());
 
         $gruppen = $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);

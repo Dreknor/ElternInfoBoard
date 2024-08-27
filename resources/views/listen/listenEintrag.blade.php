@@ -19,31 +19,35 @@
                 @endif
             </div>
             <div class="card-body">
-                @if($liste->eintragungen->filter(function ($eintragung){
-                            return $eintragung->user_id == auth()->id();
-                        })->count() == null or $liste->multiple or $liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
-                    <div class="container-fluid">
-                        <form class="form-horizontal" action="{{url('/listen/'.$liste->id.'/eintragungen/')}}"
-                              method="post">
-                            @csrf
-                            <div class="row">
-                                <div class="col-9">
-                                    <input name="eintragung" type="text" maxlength="100" class="form-control mt-2 p-3"
-                                           placeholder="Eintrag">
+                @if($liste->make_new_entry or $liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
+                    @if($liste->eintragungen->filter(function ($eintragung){
+                           return $eintragung->user_id == auth()->id();
+                       })->count() == null or $liste->multiple )
+                        <div class="container-fluid">
+                            <form class="form-horizontal" action="{{url('/listen/'.$liste->id.'/eintragungen/')}}"
+                                  method="post">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-9">
+                                        <input name="eintragung" type="text" maxlength="100"
+                                               class="form-control mt-2 p-3"
+                                               placeholder="Eintrag">
+                                    </div>
+                                    <div class="col-3">
+                                        <button type="submit" class="btn btn-block btn-outline-success">
+                                            <i class="fa fa-save"></i>
+                                            <div class="d-none d-md-inline">
+                                                speichern
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-3">
-                                    <button type="submit" class="btn btn-block btn-outline-success">
-                                        <i class="fa fa-save"></i>
-                                        <div class="d-none d-md-inline">
-                                            speichern
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                            </form>
+                        </div>
 
+                    @endif
                 @endif
+
             </div>
             <div class="card-body" id="export">
                 @if($liste->eintragungen->count()> 0)
