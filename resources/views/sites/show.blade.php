@@ -39,7 +39,7 @@
                     @foreach($site->blocks as $block)
                         <div class="card-body">
                             @if($block->title)
-                                <h6>{{ $block->title }}</h6>
+                                <h3>{{ $block->title }}</h3>
                             @endif
                             @switch(class_basename($block->block))
                                 @case('SiteBlockText')
