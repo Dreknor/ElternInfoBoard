@@ -169,15 +169,15 @@
         @if(!is_null($nachricht->rueckmeldung))
                 <div class="container-fluid ">
                     <div class="row">
-                        <div class="col-12 bg-light-gray">
+                        <div class="col-12">
                             @if($nachricht->rueckmeldung->multiple)
-                                <p class="text-info">
+                                <p class="text-info font-weight-bold">
                                     <i class="fas fa-check-double"></i> Es können mehrere Rückmeldungen abgegeben
                                     werden.
                                 </p>
                             @endif
                             @if($nachricht->rueckmeldung->pflicht)
-                                <p class="text-danger">
+                                <p class="text-danger font-weight-bold">
                                     <i class="fas fa-exclamation-triangle"></i> Rückmeldung
                                     bis {{$nachricht->rueckmeldung->ende->format('d.m.Y')}} ist Pflicht.
                                 </p>
