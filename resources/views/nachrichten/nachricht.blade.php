@@ -167,6 +167,11 @@
         @include('nachrichten.footer.reactions')
         @include('nachrichten.footer.poll_anonym')
         @if(!is_null($nachricht->rueckmeldung))
+                @if($nachricht->rueckmeldung->multiple)
+                    <p class="text-info">
+                        <i class="fas fa-check-double"></i> Es können mehrere Rückmeldungen abgegeben werden.
+                    </p>
+                @endif
             @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
                 <div class="container-fluid">
                     <div class="row">
