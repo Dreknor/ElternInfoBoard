@@ -167,11 +167,20 @@
         @include('nachrichten.footer.reactions')
         @include('nachrichten.footer.poll_anonym')
         @if(!is_null($nachricht->rueckmeldung))
-                @if($nachricht->rueckmeldung->multiple)
-                    <p class="text-info">
-                        <i class="fas fa-check-double"></i> Es können mehrere Rückmeldungen abgegeben werden.
-                    </p>
-                @endif
+                <div class="container-fluid">
+                    @if($nachricht->rueckmeldung->multiple)
+                        <p class="text-info">
+                            <i class="fas fa-check-double"></i> Es können mehrere Rückmeldungen abgegeben werden.
+                        </p>
+                    @endif
+                    @if($nachricht->rueckmeldung->pflicht)
+                        <p class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Rückmeldung
+                            bis {{$nachricht->rueckmeldung->ende->format('d.m.Y')}} ist Pflicht.
+                        </p>
+                    @endif
+                </div>
+
             @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
                 <div class="container-fluid">
                     <div class="row">
