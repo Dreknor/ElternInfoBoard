@@ -7,7 +7,7 @@
         Dabei können Sie auch angeben, wann Ihr Kind spätestens den Hort verlassen soll. Die Zeit für "spätestens" wirkt somit nur in Verbindung mit der Angabe "ab".
     </p>
     <p>
-        Die Schickzeiten müssen zwischen {{config('schicken.ab')}} und {{config('schicken.max')}} Uhr liegen. <br>
+        Die Schickzeiten müssen zwischen <b>{{config('schicken.ab')}} Uhr und {{config('schicken.max')}} Uhr</b>  liegen. <br>
     </p>
     <p class="text-danger">
         Beachten Sie, dass wir die Kinder der 1. und 2. Klassenstufe zur vollen oder halben Stunde losschicken. Geben Sie andere Zeiten an, muss Ihr Kind selbstständig daran denken.
