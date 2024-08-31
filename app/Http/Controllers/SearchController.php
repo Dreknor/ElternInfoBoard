@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\searchRequest;
 use App\Model\Group;
 use App\Model\Post;
+use App\Model\Site;
 use App\Support\Collection;
+use http\Client\Curl\User;
 use Illuminate\View\View;
 
 class SearchController extends Controller
@@ -67,8 +69,24 @@ class SearchController extends Controller
 
         $Nachrichten = $Nachrichten->unique()->sortByDesc('updated_at')->all();
 
+        $searchString = $request->input('suche');
+        $sites = auth()->user()->sites()
+        ->where('sites.name', 'like', '%'.$searchString.'%')
+            ->with(['blocks' => function ($query) use ($searchString) {
+                $query->when($searchString, function ($query, $searchString) {
+                    $query
+                        ->where('site_blocks.title', 'like', '%'.$searchString.'%')
+                        ->with(['blocks' => function ($query) use ($searchString) {
+                            $query->when($searchString, function ($query, $searchString) {
+                                $query->orWhere('sites_blocks_text.content', 'like', '%'.$searchString.'%');
+                            });
+                        }]);
+                });
+        }])->get();
+
         return view('search.result', [
             'nachrichten' => $Nachrichten,
+            'sites' => $sites->unique()->sortByDesc('name')->all(),
             'archiv' => null,
             'user' => $request->user(),
             'gruppen' => Group::all(),
