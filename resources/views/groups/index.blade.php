@@ -101,7 +101,7 @@
                                                     <tr>
                                                         <td>
                                                             @can('edit user')
-                                                                    <a href="{{url('user/'.$user->id)}}" class="btn btn-sm btn-outline-primary">
+                                                                    <a href="{{url('users/'.$user->id)}}" class="btn btn-sm btn-outline-primary">
                                                                         <i class="fas fa-user-edit"></i>
                                                                     </a>
                                                             @endcan
