@@ -175,8 +175,10 @@ class UserController extends Controller
         $gruppen = $request->input('gruppen');
 
         if (!is_null($gruppen)) {
+            dump($gruppen);
             $gruppen = $this->groupsRepository->getGroups($gruppen);
             $user->groups()->sync($gruppen);
+            dd($user->groups);
         }
 
 
