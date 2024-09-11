@@ -101,13 +101,11 @@
                                                     <tr>
                                                         <td>
                                                             @can('edit user')
-                                                                <div class="col-1">
                                                                     <a href="{{url('user/'.$user->id)}}" class="btn btn-sm btn-outline-primary">
                                                                         <i class="fas fa-user-edit"></i>
                                                                     </a>
-                                                                </div>
                                                             @endcan
-                                                            {{$user->name}}:
+                                                             {{$user->name}}:
                                                         </td>
                                                         <td>
                                                             @if($user->publicMail !="")
