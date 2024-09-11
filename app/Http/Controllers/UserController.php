@@ -176,8 +176,7 @@ class UserController extends Controller
 
         if (!is_null($gruppen)) {
             $gruppen = $this->groupsRepository->getGroups($gruppen);
-            $user->groups()->detach();
-            $user->groups()->attach($gruppen);
+            $user->groups()->sync($gruppen);
         }
 
 
