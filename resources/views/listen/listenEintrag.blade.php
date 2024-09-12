@@ -76,7 +76,7 @@
                                         @endif
                                     </div>
                                     <div class="col-auto pull-right">
-                                        @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()))
+                                        @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste'))
                                             <form method="post" action="{{url("listen/eintragungen/".$eintrag->id)}}"
                                                   class="form-inline m-0 p-0">
                                                 @csrf
@@ -84,7 +84,7 @@
                                                 <button type="submit" class="btn-link text-danger">
                                                     @if($eintrag->user_id == auth()->id())
                                                         absagen
-                                                    @elseif($eintrag->created_by != auth()->id() and $eintrag->user_id != null)
+                                                    @elseif(($eintrag->created_by == auth()->id() and $eintrag->user_id != null) or auth()->user()->can('edit terminliste'))
                                                         freigeben
                                                     @else
                                                         löschen
