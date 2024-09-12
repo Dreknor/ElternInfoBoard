@@ -76,12 +76,20 @@
                                         @endif
                                     </div>
                                     <div class="col-auto pull-right">
-                                        @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id() and $eintrag->user_id == null))
+                                        @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()))
                                             <form method="post" action="{{url("listen/eintragungen/".$eintrag->id)}}"
                                                   class="form-inline m-0 p-0">
                                                 @csrf
                                                 @method('delete')
-                                                <button type="submit" class="btn-link text-danger">löschen</button>
+                                                <button type="submit" class="btn-link text-danger">
+                                                    @if($eintrag->user_id == auth()->id()) @endif
+                                                        absagen
+                                                    @elseif($eintrag->created_by != auth()->id() and $eintrag->user_id != null)
+                                                        freigeben
+                                                    @else
+                                                        löschen
+                                                    @endif
+                                                </button>
                                             </form>
                                         @endif
                                     </div>
