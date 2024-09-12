@@ -84,7 +84,7 @@
                                                 <button type="submit" class="btn-link text-danger">
                                                     @if($eintrag->user_id == auth()->id())
                                                         absagen
-                                                    @elseif(($eintrag->created_by == auth()->id() and $eintrag->user_id != null) or auth()->user()->can('edit terminliste'))
+                                                    @elseif($eintrag->user_id != null and ($eintrag->created_by == auth()->id() or  auth()->user()->can('edit terminliste')))
                                                         freigeben
                                                     @else
                                                         löschen
