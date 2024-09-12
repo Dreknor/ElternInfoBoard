@@ -82,7 +82,6 @@
                                                 @csrf
                                                 @method('delete')
                                                 <button type="submit" class="btn-link text-danger">
-                                                    @if($eintrag->user_id == auth()->id()) @endif
                                                         absagen
                                                     @elseif($eintrag->created_by != auth()->id() and $eintrag->user_id != null)
                                                         freigeben
