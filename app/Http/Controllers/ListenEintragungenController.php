@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createListenEintragungsRequest;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
+use App\Model\Notification;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
 
@@ -77,6 +78,17 @@ class ListenEintragungenController extends Controller
     public function destroy(Listen_Eintragungen $listen_eintragung)
     {
         if ($listen_eintragung->user_id != auth()->id()) {
+
+            $notification = new Notification([
+                'type' => 'Listen Eintragung',
+                'user_id' => $listen_eintragung->user_id,
+                'title' => 'Eintragung '.$listen_eintragung->eintragung.' wurde gelöscht',
+                'message' => 'Eintragung wurde von ' . auth()->user()->name . ' in der Liste ' . $listen_eintragung->liste->name . ' entfernt',
+                'icon' => 'https://eltern.esz-radebeul.de/img/favicon-esz.ico',
+                'url' => route('listen.show', $listen_eintragung->listen_id),
+            ]);
+            $notification->save();
+
             $listen_eintragung->updateOrFail([
                 'user_id' => null,
             ]);
