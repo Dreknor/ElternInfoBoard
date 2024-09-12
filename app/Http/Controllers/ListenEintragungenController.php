@@ -93,6 +93,7 @@ class ListenEintragungenController extends Controller
                 'title' => 'Eintragung '.$listen_eintragung->eintragung.' wurde gelöscht',
                 'message' => 'Eintragung wurde von ' . auth()->user()->name . ' in der Liste ' . $listen_eintragung->liste->listenname . ' entfernt',
                 'icon' => 'https://eltern.esz-radebeul.de/img/favicon-esz.ico',
+                'url' => url('listen/'.$listen_eintragung->listen_id),
             ]);
             $notification->save();
 
