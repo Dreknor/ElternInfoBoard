@@ -7,6 +7,7 @@ use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\Notification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ListenEintragungenController extends Controller
@@ -77,8 +78,16 @@ class ListenEintragungenController extends Controller
      */
     public function destroy(Listen_Eintragungen $listen_eintragung)
     {
+        if (!$listen_eintragung){
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Eintrag nicht gefunden',
+            ]);
+        }
+
         if ($listen_eintragung->user_id != auth()->id()) {
 
+            Log::info($listen_eintragung);
             $notification = new Notification([
                 'type' => 'Listen Eintragung',
                 'user_id' => $listen_eintragung->user_id,
