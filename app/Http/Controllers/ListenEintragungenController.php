@@ -87,9 +87,6 @@ class ListenEintragungenController extends Controller
 
         if ($listen_eintragung->user_id != auth()->id()) {
 
-            Log::info($listen_eintragung);
-            dump($listen_eintragung);
-            dd($listen_eintragung->liste);
             $notification = new Notification([
                 'type' => 'Listen Eintragung',
                 'user_id' => $listen_eintragung->user_id,
