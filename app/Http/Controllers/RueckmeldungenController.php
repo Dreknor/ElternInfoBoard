@@ -9,6 +9,7 @@ use App\Http\Requests\updateRueckmeldeDateRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
 use App\Model\AbfrageAntworten;
 use App\Model\AbfrageOptions;
+use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
@@ -17,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -498,8 +500,27 @@ class RueckmeldungenController extends Controller
                 foreach ($user as $User) {
                     $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)) {
-                        $email = $User->email;
-                        Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
+                        try {
+                            $notify = new Notification(
+                                [
+                                    'users_id' => $User->id,
+                                    'type' => 'Erinnerung',
+                                    'text' => 'Rückmeldung für ' . $Rueckmeldung->post->header . ' fehlt',
+                                    'link' => url('home#'.$Rueckmeldung->post->id),
+                                ]
+                            );
+                            $notify->save();
+                        } catch (\Exception $e) {
+                            // do nothing
+                        }
+
+                        try {
+                            $email = $User->email;
+                            Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
+
+                        } catch (\Exception $e) {
+                            Log::info('Mail konnte nicht gesendet werden: ' . $e->getMessage());
+                        }
                     }
                 }
             }

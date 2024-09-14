@@ -35,7 +35,6 @@ class Notification extends Model
     {
         static::created(function (Notification $notification) {
             $notification->user->notify(new Push($notification->title, $notification->message));
-
         });
     }
 
