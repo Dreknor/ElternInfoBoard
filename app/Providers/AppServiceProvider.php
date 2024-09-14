@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Model\Post;
+use App\Model\UserRueckmeldungen;
 use App\Model\Vertretung;
 use App\Observers\PostObserver;
+use App\Observers\UserRueckmeldungenObserver;
 use App\Observers\VertretungObserver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
         Post::observe(PostObserver::class);
         Vertretung::observe(VertretungObserver::class);
+        UserRueckmeldungen::observe(UserRueckmeldungenObserver::class);
 
         Schema::defaultStringLength(191);
 

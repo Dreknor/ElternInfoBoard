@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller
@@ -46,6 +47,7 @@ class UserRueckmeldungenController extends Controller
             'text' => '',
         ]);
         $userRueckmeldung->save();
+
 
         $this->generateAnswerModels($request, $userRueckmeldung);
 
