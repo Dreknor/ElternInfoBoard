@@ -84,10 +84,10 @@ class ListenEintragungenController extends Controller
                 'Meldung' => 'Eintrag nicht gefunden',
             ]);
         }
-
+        $benachrichtigung = "";
         if (!is_null($listen_eintragung->user_id) and $listen_eintragung->user_id != auth()->id()) {
 
-            $benachrichtigung = "";
+
             try {
                 $notification = new Notification([
                     'type' => 'Listen Eintragung',
