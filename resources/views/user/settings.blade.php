@@ -172,8 +172,9 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
                     @if($user->releaseCalendar == 1)
-                        <div class="row">
+
                             <div class="col-md-6 col-sm-12">
                                 <div class="card">
                                     <div class="card-header">
@@ -193,8 +194,77 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     @endif
+                    <div class="col-md-6 col-sm-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>
+                                    API-Token
+                                </h6>
+                                <i class="">
+                                    Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
+                                </i>
+                            </div>
+                            @if(session()->has('token'))
+                                <div class="card-body">
+                                    <div class="alert alert-success">
+                                        <p>
+                                            Das Token wurde erfolgreich erstellt. Bitte speichern Sie das Token an einem sicheren Ort. Er kann nicht noch einmal angezeigt werden.
+                                        </p>
+
+                                        <p>
+                                            {{session('token')}}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="card-body">
+                                <div class="">
+                                    <table class="table">
+                                        @foreach(auth()->user()->tokens as $token)
+                                            <tr>
+                                                <td>
+                                                    {{$token->name}}
+                                                </td>
+                                                <td>
+                                                    {{$token->created_at->format('d.m.Y')}}
+                                                </td>
+                                                <td>
+                                                    <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            löschen
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                            </div>
+                        </div>
+                        <div class="card-footer border-top">
+                            <b>
+                                Neues Token erstellen
+                            </b>
+                            <form action="{{url('/einstellungen/token')}}" method="post">
+                                @csrf
+                                <div class="form-group row">
+                                    <div class="col-md-12">
+                                        <label for="name" class="col-form-label text-danger">Name</label>
+                                        <input id="name" type="text" class="form-control" name="name" required>
+                                    </div>
+                                </div>
+                                <div class="form-group  row mb-0">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            Token erstellen
+                                        </button>
+                                    </div>  </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
             @if($user->sorg2 != null)
                 <div class="card-footer">
