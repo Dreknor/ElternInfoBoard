@@ -257,6 +257,8 @@ Route::middleware('auth')->group(function () {
         //user-Verwaltung
         Route::get('/einstellungen', [BenutzerController::class, 'show']);
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
+        Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
+        Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
 
         //Downloads
         Route::get('/files', [FileController::class, 'index']);
