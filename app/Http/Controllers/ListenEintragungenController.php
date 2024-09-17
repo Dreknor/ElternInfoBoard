@@ -87,15 +87,38 @@ class ListenEintragungenController extends Controller
 
         if ($listen_eintragung->user_id != auth()->id()) {
 
-            $notification = new Notification([
-                'type' => 'Listen Eintragung',
-                'user_id' => $listen_eintragung->user_id,
-                'title' => 'Eintragung '.$listen_eintragung->eintragung.' wurde gelöscht',
-                'message' => 'Eintragung wurde von ' . auth()->user()->name . ' in der Liste ' . $listen_eintragung->liste->listenname . ' entfernt',
-                'icon' => 'https://eltern.esz-radebeul.de/img/favicon-esz.ico',
-                'url' => url('listen/'.$listen_eintragung->listen_id),
-            ]);
-            $notification->save();
+            $benachrichtigung = "";
+            try {
+                $notification = new Notification([
+                    'type' => 'Listen Eintragung',
+                    'user_id' => $listen_eintragung->user->id,
+                    'title' => 'Eintragung '.$listen_eintragung->eintragung.' wurde gelöscht',
+                    'message' => 'Eintragung wurde von ' . auth()->user()->name . ' in der Liste ' . $listen_eintragung->liste->listenname . ' entfernt',
+                    'icon' => 'https://eltern.esz-radebeul.de/img/favicon-esz.ico',
+                    'url' => url('listen/'.$listen_eintragung->listen_id),
+                ]);
+                $notification->save();
+
+                $benachrichtigung = "Benutzer wurde benachrichtigt";
+
+            } catch (Throwable $e) {
+
+                $benachrichtigung = "Benutzer konnte nicht benachrichtigt werden";
+                Log::error($e->getMessage());
+            }
+
+
+            try {
+                $listen_eintragung->user_id = null;
+                $listen_eintragung->saveOrFail();
+            } catch (Throwable $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with([
+                    'type' => 'error',
+                    'Meldung' => 'Eintrag konnte nicht gelöscht werden',
+                ]);
+            }
+
 
             $listen_eintragung->updateOrFail([
                 'user_id' => null,
@@ -108,7 +131,7 @@ class ListenEintragungenController extends Controller
 
         return redirect()->back()->with([
             'type' => 'warning',
-            'Meldung' => 'Eintrag wurde gelöscht',
+            'Meldung' => 'Eintrag wurde gelöscht. '.$benachrichtigung,
         ]);
     }
 }
