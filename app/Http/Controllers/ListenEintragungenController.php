@@ -85,7 +85,7 @@ class ListenEintragungenController extends Controller
             ]);
         }
 
-        if ($listen_eintragung->user_id != auth()->id()) {
+        if (!is_null($listen_eintragung->user_id) and $listen_eintragung->user_id != auth()->id()) {
 
             $benachrichtigung = "";
             try {
