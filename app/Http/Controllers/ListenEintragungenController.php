@@ -123,15 +123,25 @@ class ListenEintragungenController extends Controller
             $listen_eintragung->updateOrFail([
                 'user_id' => null,
             ]);
+
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Eintrag wurde gelöscht. '.$benachrichtigung,
+            ]);
+
         }
 
-        if ($listen_eintragung->created_by == auth()->id()) {
+        if ($listen_eintragung->created_by == auth()->id() or auth()->user()->can('edit terminliste')) {
             $listen_eintragung->delete();
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Eintrag wurde gelöscht.',
+            ]);
         }
 
         return redirect()->back()->with([
-            'type' => 'warning',
-            'Meldung' => 'Eintrag wurde gelöscht. '.$benachrichtigung,
+            'type' => 'error',
+            'Meldung' => 'Eintrag konnte nicht gelöscht werden',
         ]);
     }
 }
