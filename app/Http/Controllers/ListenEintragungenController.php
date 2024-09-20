@@ -85,6 +85,41 @@ class ListenEintragungenController extends Controller
             ]);
         }
         $benachrichtigung = "";
+        if (!is_null($listen_eintragung->user_id) and ($listen_eintragung->user_id == auth()->id() or (auth()->user()->sorg2 != null and $listen_eintragung->user_id == auth()->user()->sorg2))) {
+            $listen_eintragung->user_id = null;
+
+            try {
+                $listen_eintragung->saveOrFail();
+            } catch (Throwable $e) {
+                Log::error($e->getMessage());
+                return redirect()->back()->with([
+                    'type' => 'error',
+                    'Meldung' => 'Eintrag konnte nicht gelöscht werden',
+                ]);
+            }
+
+            try {
+                $notification = new Notification([
+                    'type' => 'Listen Eintragung',
+                    'user_id' => $listen_eintragung->created_by,
+                    'title' => 'Eintragung '.$listen_eintragung->eintragung.' wurde gelöscht',
+                    'message' => 'Eintragung wurde von ' . auth()->user()->name . ' in der Liste ' . $listen_eintragung->liste->listenname . ' entfernt',
+                    'url' => url('listen/'.$listen_eintragung->listen_id),
+                ]);
+                $notification->save();
+
+                $benachrichtigung = "Benutzer wurde benachrichtigt";
+
+            } catch (Throwable $e) {
+                Log::error($e->getMessage());
+            }
+
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Eintrag wurde gelöscht',
+            ]);
+        }
+
         if (!is_null($listen_eintragung->user_id) and $listen_eintragung->user_id != auth()->id()) {
 
 

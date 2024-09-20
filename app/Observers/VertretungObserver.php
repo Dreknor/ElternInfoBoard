@@ -20,7 +20,7 @@ class VertretungObserver
         foreach ($users as $user) {
             $notifications[]= array(
                 'title' => 'Vertretung',
-                'url' => '/vertretungsplan/',
+                'url' => url('/vertretungsplan/'),
                 'type' => 'vertretung',
                 'message' => 'Änderung im Vertretungsplan für ' . $group->name . ' am ' . Carbon::createFromFormat('Y-m-d', $vertretung->date)->format('d.m.Y') . ' in der ' . $vertretung->stunde . ' Stunde.',
                 'user_id' => $user->id,
