@@ -15,6 +15,23 @@ class NotificationController extends Controller
         $this->middleware('auth:sanctum');
     }
 
+
+    public function readAll(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->notifications()->update(['read' => 1]);
+
+        return response()->json([
+            'message' => 'success',
+        ], 200);
+    }
+
+
     public function index(Request $request)
     {
         $user = $request->user();
