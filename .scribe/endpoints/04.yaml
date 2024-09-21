@@ -1,0 +1,75 @@
+name: Rückmeldungen
+description: ''
+endpoints:
+  -
+    httpMethods:
+      - POST
+    uri: api/rueckmeldung
+    metadata:
+      groupName: Rückmeldungen
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Store a newly created user feedback in storage.'
+      description: ''
+      authenticated: true
+      custom: []
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      post_id:
+        name: post_id
+        description: 'The ID of the post to which the feedback is related.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        custom: []
+      text:
+        name: text
+        description: 'The feedback text.'
+        required: true
+        example: blanditiis
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        custom: []
+    cleanBodyParameters:
+      post_id: 5
+      text: blanditiis
+    fileParameters: []
+    responses: []
+    responseFields:
+      success:
+        name: success
+        description: 'The success message.'
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        custom: []
+      userRueckmeldung:
+        name: userRueckmeldung
+        description: 'The user feedback object.'
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        custom: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer DP14ZE66fa8gavedb35Vhck'
+    controller: null
+    method: null
+    route: null
+    custom: []

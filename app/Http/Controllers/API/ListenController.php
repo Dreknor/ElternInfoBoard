@@ -14,12 +14,29 @@ use Illuminate\Http\Request;
 class ListenController extends Controller
 {
 
- public function __construct()
+    /**
+     *
+     */
+    public function __construct()
  {
        $this->middleware('auth:sanctum');
  }
 
- public function reserveEintrag(Request $request, $id)
+    /**
+     * bestehende Eintragung reservieren
+     *
+     * Reserviert eine bestehende Eintragung in einer Liste für den User.
+     *
+     *
+     * @group Listen
+     *
+     * @urlParam eintrag required ID des Eintrags
+     *
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag)
  {
      $user = $request->user();
 
@@ -27,35 +44,53 @@ class ListenController extends Controller
          return response()->json(['message' => 'User not found'], 404);
      }
 
-     $eintrag = Listen_Eintragungen::findOrFail($id);
-
      $liste = Liste::findOrFail($eintrag->listen_id);
 
-     $always_reserved = Listen_Eintragungen::query()
+        if ($liste->type != 'eintrag' or $liste->active == 0 or $liste->ende < now() or $eintrag->user_id != null) {
+            return response()->json(['message' => 'Not allowed'], 403);
+        }
+
+        if ($liste->multiple == false) {
+            $eintragungen = Listen_Eintragungen::query()
                 ->where('listen_id', $liste->id)
                 ->where('user_id', $user->id)
                 ->count();
 
-    if ($eintrag->user_id == null) {
-                $eintrag->user_id = $user->id;
-                $eintrag->save();
-            } else {
+            if ($eintragungen > 0) {
                 return response()->json(['message' => 'Not allowed'], 403);
             }
+        }
+
+
+                $eintrag->user_id = $user->id;
+                $eintrag->save();
+
 
             return response()->json([
                 'message' => 'Eintrag reserved'], 200);
     }
 
- public function removeEintrag(Request $request, $id)
+    /**
+     * Eintrag entfernen
+     *
+     * Entfernt einen Eintrag aus einer Liste.
+     *  * Wenn der Eintrag von dem User erstellt wurde, wird der Eintrag gelöscht.
+     *  * Wenn der Eintrag von einem anderen User erstellt wurde, wird der Eintrag freigegeben.
+     *
+     *  @group Listen
+     *
+     * @urlParam eintrag required ID des Eintrags
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function removeEintrag(Request $request, Listen_Eintragungen $eintrag)
  {
      $user = $request->user();
 
      if (!$user) {
          return response()->json(['message' => 'User not found'], 404);
      }
-
-     $eintrag = Listen_Eintragungen::findOrFail($id);
 
      if ($eintrag->user_id == $user->id) {
         if ($eintrag->created_by == $user->id) {
@@ -69,7 +104,23 @@ class ListenController extends Controller
      return response()->json([
          'message' => 'Eintrag removed'], 200);
  }
- public function addEintrag(Request $request, $liste){
+
+    /**
+     * Listeneintrag hinzufügen
+     *
+     * Fügt einen Eintrag zu einer Liste hinzu.
+     * Es wird geprüft, ob der User bereits einen Eintrag in der Liste hat.
+     * Wenn die Liste nur einen Eintrag pro User zulässt, wird geprüft, ob der User bereits einen Eintrag hat.
+     *
+     *
+     * @group Listen
+     *
+     * @bodyParam eintragung string required
+     * @param Request $request
+     * @param $liste
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function addEintrag(Request $request, $liste){
     $request->validate([
          'eintragung' => 'required| string',
      ]);
@@ -82,9 +133,21 @@ class ListenController extends Controller
 
     $liste = Liste::findOrFail($liste);
 
-    if ($liste->type != 'eintrag') {
+    if ($liste->type != 'eintrag' or $liste->active == 0 or $liste->ende < now()) {
         return response()->json(['message' => 'Not allowed'], 403);
     }
+
+    if ($liste->multiple == false) {
+        $eintragungen = Listen_Eintragungen::query()
+            ->where('listen_id', $liste->id)
+            ->where('user_id', $user->id)
+            ->count();
+
+        if ($eintragungen > 0) {
+            return response()->json(['message' => 'Not allowed'], 403);
+        }
+    }
+
      $eintrag = new Listen_Eintragungen();
      $eintrag->listen_id = $liste->id;
      $eintrag->user_id = $user->id;
@@ -92,13 +155,23 @@ class ListenController extends Controller
      $eintrag->eintragung = $request->eintragung;
      $eintrag->save();
 
-     return response()->json([
-         'message' => 'Eintrag added'], 200);
+     return response()->json(['message' => 'Eintrag added'], 200);
 
  }
 
 
- public function index(Request $request)
+    /**
+     * index
+     *
+     * Get all listen for the user
+     *
+     * @group Listen
+     *
+     * @responseField listen array Liste
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request)
  {
 
         $user = $request->user();
@@ -136,7 +209,29 @@ class ListenController extends Controller
  }
 
 
- public function getEintrag($user, $liste){
+    /**
+     * liefert die Eintragungen einer Liste
+     *
+     * Liefert die Eintragungen einer Liste.
+     * Wenn der User die Berechtigung hat, die Liste zu bearbeiten, werden die Namen der User angezeigt die die Eintragungen gemacht oder reserviert haben.
+     * Ansonsten wird nur angezeigt, ob die Eintragung vergeben ist oder nicht.
+     *
+     * @group Listen
+     *
+     * @urlParam liste required ID der Liste
+     *
+     *
+     * @param Request $request
+     * @param $liste
+     *
+     * @responseField eintragungen array Eintragungen
+     * @return \Illuminate\Http\JsonResponse
+     *
+     */
+    public function getEintrag(Request $request, $liste){
+
+        $user = $request->user();
+
      $eintragungen = Listen_Eintragungen::query()
          ->where('listen_id', $liste->id)
          ->get();
@@ -162,10 +257,15 @@ class ListenController extends Controller
         }
 
 
-     return $eintragungen;
+     return response()->json(['eintragungen' => $eintragungen], 200);
  }
 
- public function getTermine ($user, $liste){
+    /**
+     * @param $user
+     * @param $liste
+     * @return listen_termine[]|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\LaravelIdea\Helper\App\Model\_IH_listen_termine_C|\LaravelIdea\Helper\App\Model\_IH_listen_termine_QB[]
+     */
+    public function getTermine ($user, $liste){
      if ($user->hasPermissionTo('edit terminliste', 'web') or $liste->besitzer == $user->id or $liste->visible_for_all) {
          $termine = listen_termine::query()
              ->where('listen_id', $liste->id)
@@ -213,7 +313,28 @@ class ListenController extends Controller
 
         return $termine;
  }
- public function show(Request $request, $id)
+
+    /**
+     * Termine oder Eintragungen einer Liste anzeigen
+     *
+     * Liefert die Termine oder Eintragungen einer Liste.
+     * Wenn der User die Berechtigung hat, die Liste zu bearbeiten, werden die Namen der User angezeigt die die Eintragungen gemacht oder reserviert haben.
+     * Ansonsten wird nur angezeigt, ob die Eintragung vergeben ist oder nicht.
+     *
+     * @group Listen
+     *
+     * @urlParam id required ID der Liste
+     *
+     * @responseField termine array Termine
+     * @responseField eintragungen array Eintragungen
+     *
+     *
+     *
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(Request $request, $id)
  {
      $user = $request->user();
 
@@ -221,7 +342,17 @@ class ListenController extends Controller
          return response()->json(['message' => 'User not found'], 404);
      }
 
+
+
      $liste = Liste::findOrFail($id);
+
+     if ($liste->active == 0 or $liste->ende < now()) {
+         return response()->json(['message' => 'Not allowed'], 403);
+     }
+
+     if ($liste->users->contains($user->id) == false) {
+         return response()->json(['message' => 'Not allowed'], 403);
+     }
 
      if ($liste->type == 'termin') {
          $termine = $this->getTermine($user, $liste);
@@ -239,7 +370,12 @@ class ListenController extends Controller
          $key => $termine], 200);
  }
 
- public function cancelTermin(Request $request, $id)
+    /**
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cancelTermin(Request $request, $id)
  {
      $user = $request->user();
 
@@ -262,7 +398,12 @@ class ListenController extends Controller
          'message' => 'Termin canceled'], 200);
  }
 
- public function reserveTermin(Request $request, $id)
+    /**
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reserveTermin(Request $request, $id)
  {
      $user = $request->user();
 

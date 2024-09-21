@@ -11,12 +11,11 @@
 |
 */
 
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\FilesController;
 use App\Http\Controllers\API\ImageController;
-use App\Model\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Route;
 
 
 /*
@@ -39,29 +38,18 @@ Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });
 
-Route::post('/token/create', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-        'device_name' => 'required',
-    ]);
 
 
-    $user = User::where('email', $request->email)->first();
-
-    if (! $user || ! Hash::check($request->password, $user->password)) {
-        throw ValidationException::withMessages([
-            'email' => ['The provided credentials are incorrect.'],
-        ]);
-    }
-    return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
-});
+Route::post('/token/create', [AuthController::class, 'login']);
 
 
 
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('me',[AuthController::class, 'me']);
+    Route::post('/token/logout', [AuthController::class, 'logout']);
 
     /**
      * Notifications
@@ -71,25 +59,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('notification/readAllByType', [\App\Http\Controllers\API\NotificationController::class, 'readAllByType']);
     Route::post('notification/readAll', [\App\Http\Controllers\API\NotificationController::class, 'readAll']);
 
-    /**
-     * User
-     */
 
-    Route::post('/token/logout', function (Request $request) {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Tokens Revoked']);
-    });
+
+
 
     /**
      * Listen
      */
     Route::get('listen', [\App\Http\Controllers\API\ListenController::class, 'index']);
-    Route::get('liste/{id}', [\App\Http\Controllers\API\ListenController::class, 'show']);
-    Route::put('listen/termin/{id}/cancel', [\App\Http\Controllers\API\ListenController::class, 'cancelTermin']);
-    Route::put('listen/termin/{id}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveTermin']);
-    Route::post('/listen/{id}/eintrag/add', [\App\Http\Controllers\API\ListenController::class, 'addEintrag']);
-    Route::put('/listen/eintrag/{id}/stornieren', [\App\Http\Controllers\API\ListenController::class, 'removeEintrag']);
-    Route::put('/listen/eintrag/{id}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveEintrag']);
+    Route::get('liste/{liste}', [\App\Http\Controllers\API\ListenController::class, 'show']);
+    Route::put('listen/termin/{termin}/cancel', [\App\Http\Controllers\API\ListenController::class, 'cancelTermin']);
+    Route::put('listen/termin/{termin}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveTermin']);
+    Route::post('/listen/{liste}/eintrag/add', [\App\Http\Controllers\API\ListenController::class, 'addEintrag']);
+    Route::put('/listen/eintrag/{eintrag}/stornieren', [\App\Http\Controllers\API\ListenController::class, 'removeEintrag']);
+    Route::put('/listen/eintrag/{eintrag}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveEintrag']);
 
     /**
      * Krankmeldung
@@ -125,7 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
      * Nachrichten
      */
     Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
-    Route::post('posts/{postID}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
+    Route::post('posts/{post}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 
 

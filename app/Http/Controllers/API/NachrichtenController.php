@@ -10,11 +10,24 @@ use Illuminate\Http\Request;
 use App\Model\User;
 use Illuminate\Support\Facades\Log;
 
-
+/**
+ * Class NachrichtenController
+ *
+ * Controller for handling Nachrichten (messages) related API requests.
+ */
 class NachrichtenController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * index
+     *
+     * This method returns all Nachrichten (messages) that are not archived and have a release date in the future.
+     * The result is returned as a JSON response.
+     * The Nachrichten are ordered by the sticky attribute and the updated_at attribute.
+     * The Nachrichten are enriched with the author, media, reactions, receipts and userRueckmeldung attributes.
+     * The userRueckmeldung attribute is filtered by the current user.
+     *
+     * @group Nachrichten
+     *
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -79,6 +92,7 @@ class NachrichtenController extends Controller
                 }])
                 ->get();
 
+
             if ($user->hasPermissionTo('create posts', 'web')) {
                 $eigenePosts = Post::query()
                     ->where('author', $user->id)
@@ -138,16 +152,26 @@ class NachrichtenController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store or update
+     *
+     * This method creates a new Reaction for a Post or updates an existing Reaction.
+     * The result is returned as a JSON response.
+     *
+     * @group Nachrichten
+     *
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @urlParam post_id int required The ID of the post. Example: 1
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @bodyParam reaction string required The name of the reaction. Example: like
+     *
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function updateReaction(Request $request, $postID)
+    public function updateReaction(Request $request, Post $post)
     {
 
-
-        $post = Post::query()->find($postID);
         if (!$post) {
             return response()->json(['error' => 'Post not found'], 404);
         }
@@ -161,43 +185,44 @@ class NachrichtenController extends Controller
 
         $user->reactTo($post, $reaction);
 
-
-
         return response()->json(['success' => 'Reaction added'], 200);
 
     }
 
     /**
-     * Display the specified resource.
+     * Return the specified resource.
+     * This method returns a single Nachrichten (message) by its ID.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
+     * The result is returned as a JSON response.
+     *
+     * @group Nachrichten
+     *
+     * @urlParam post required The ID of the post. Example: 1
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     *
+     * @param  int  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function show(Request $request, Post $post)
     {
-        //
+        if (!$post) {
+            return response()->json(['error' => 'Post not found'], 404);
+        }
+
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+
+        if (!$post->users->contains($user)) {
+            return response()->json(['error' => 'User not allowed'], 403);
+        }
+
+        return response()->json($post);
+
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }

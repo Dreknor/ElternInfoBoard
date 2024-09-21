@@ -38,15 +38,16 @@
         "barryvdh/laravel-debugbar": "^3.6",
         "beyondcode/laravel-dump-server": "^1.8",
         "doctrine/dbal": "^3.0",
+        "fakerphp/faker": "^1.9.1",
         "filp/whoops": "^2.9",
+        "jasonmccreary/laravel-test-assertions": "^2.0",
+        "knuckleswtf/scribe": "^4.31",
+        "laravel-shift/factory-generator": "dev-master",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.3",
         "phpunit/phpunit": "^9.5.10",
         "samasend/laravel-make-scope": "dev-master",
-        "fakerphp/faker": "^1.9.1",
-        "spatie/laravel-ignition": "^1.4",
-        "jasonmccreary/laravel-test-assertions": "^2.0",
-        "laravel-shift/factory-generator": "dev-master"
+        "spatie/laravel-ignition": "^1.4"
     },
     "config": {
         "optimize-autoloader": true,
