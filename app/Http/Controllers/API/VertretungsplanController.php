@@ -69,19 +69,40 @@ class VertretungsplanController extends Controller
 
 
         if ($user->hasPermissionTo('view vertretungsplan all', 'web')) {
-            $vertretungen = Vertretung::orderBy('date', 'desc')->orderBy('stunde')->get();
+            $vertretungen = Vertretung::orderBy('date', 'desc')->orderBy('stunde')->get([
+                'date',
+                'klasse',
+                'stunde',
+                'altFach',
+                'neuFach',
+                'lehrer',
+                'comment'
+            ]);
         } else {
-            $vertretungen = $user->vertretungen()->orderBy('stunde', 'asc')->get();
+            $vertretungen = $user->vertretungen()->orderBy('stunde', 'asc')->get([
+                'date',
+                'klasse',
+                'stunde',
+                'altFach',
+                'neuFach',
+                'lehrer',
+                'comment'
+            ]);
         }
 
         $news = VertretungsplanNews::where('end', '>=', Carbon::now())->get(['start', 'end', 'news']);
 
-        $week = VertretungsplanWeek::where('week', Carbon::now()->startOfWeek()->format('Y-m-d'))->first();
+        $week = VertretungsplanWeek::where('week', Carbon::now()->startOfWeek()->format('Y-m-d'))->first(['type', 'week']);
 
         $absences = VertretungsplanAbsence::query()
             ->where('start_date', '>=', Carbon::now()->startOfWeek())
             ->where('end_date', '<=', Carbon::now()->endOfWeek())
-            ->get();
+            ->get([
+                'name',
+                'start_date',
+                'end_date',
+                'reason'
+            ]);
 
 
         return response()->json([
