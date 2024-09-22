@@ -74,7 +74,7 @@ class VertretungsplanController extends Controller
             $vertretungen = $user->vertretungen()->orderBy('stunde', 'asc')->get();
         }
 
-        $news = VertretungsplanNews::all();
+        $news = VertretungsplanNews::where('start', '>=', Carbon::now())->where('end', '>=', Carbon::now())->get();
 
         $week = VertretungsplanWeek::where('week', Carbon::now()->startOfWeek()->format('Y-m-d'))->first();
 
