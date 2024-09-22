@@ -118,20 +118,7 @@ class NachrichtenController extends Controller
                         'users_id' => $user->id,
                     ]);
                 }])
-                ->get([
-                    "id",
-                    "header",
-                    "news",
-                    "read_receipt",
-                    "sticky",
-                    "reactable",
-                    "updated_at",
-                    "author",
-                    "archiv_ab",
-                    "type",
-                    "external",
-                    "userReceipt"
-                ]);
+                ->get();
 
 
             if ($user->hasPermissionTo('create posts', 'web')) {
