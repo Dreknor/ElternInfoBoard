@@ -61,7 +61,15 @@ class AbfragenController extends Controller
         $rueckmeldung = Rueckmeldungen::query()
             ->where('post_id', $post_id)
             ->where('type', 'abfrage')
-            ->first();
+            ->first([
+                'post_id',
+                'type',
+                "ende",
+                "text",
+                "pflicht",
+                "multiple",
+                "max_answers"
+            ]);
 
         return response()->json([
             'success' => true,

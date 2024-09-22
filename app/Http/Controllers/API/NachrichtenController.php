@@ -49,7 +49,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk', 'uuid');
+                    return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -62,7 +62,21 @@ class NachrichtenController extends Controller
                         'users_id' => $user->id,
                     ]);
                 }])
-                ->get();
+                ->get([
+                    "id",
+                    "header",
+                    "news",
+                    "read_receipt",
+                    "sticky",
+                    "reactable",
+                    "updated_at",
+                    "author",
+                    "archiv_ab",
+                    "type",
+                    "external",
+                    "userReceipt"
+                ]);
+
 
         } else {
 
@@ -77,7 +91,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk', 'uuid');
+                    return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -90,7 +104,20 @@ class NachrichtenController extends Controller
                         'users_id' => $user->id,
                     ]);
                 }])
-                ->get();
+                ->get([
+                    "id",
+                    "header",
+                    "news",
+                    "read_receipt",
+                    "sticky",
+                    "reactable",
+                    "updated_at",
+                    "author",
+                    "archiv_ab",
+                    "type",
+                    "external",
+                    "userReceipt"
+                ]);
 
 
             if ($user->hasPermissionTo('create posts', 'web')) {
