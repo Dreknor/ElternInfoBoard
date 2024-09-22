@@ -20,10 +20,23 @@ class ImageController extends Controller
        // $this->middleware('auth:sanctum');
     }
 
+    /**
+     * Get file by uuid
+     *
+     * Get file by uuid
+     *
+     * @group Files
+     *
+     * @urlParam uuid required The uuid of the file
+     *
+     * @responseField file The file
+     *
+     * @param Request $request
+     * @param $uuid
+     * @return BinaryFileResponse
+     */
     public function getFileByUuid(Request $request, $uuid)
     {
-        Log::info($uuid);
-
         $media = Media::where('uuid', $uuid)->firstOrFail();
 
         return response()->file($media->getPath(), [
@@ -34,6 +47,15 @@ class ImageController extends Controller
     }
 
     /**
+     * Get file by id
+     *
+     * Get file by id
+     *
+     * @group Files
+     *
+     * @urlParam media_id required The id of the file
+     *
+     * @responseField file The file
      * @param Media $media_id
      * @return Media|BinaryFileResponse
      */

@@ -10,12 +10,23 @@ use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
+
+
     public function __construct()
     {
         $this->middleware('auth:sanctum');
     }
 
 
+    /**
+     * readAll
+     *
+     * Diese Methode markiert alle eigenen Benachrichtigungen als gelesen
+     *
+     * @group Benachrichtigungen
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function readAll(Request $request)
     {
         $user = $request->user();
@@ -32,6 +43,18 @@ class NotificationController extends Controller
     }
 
 
+    /**
+     * index
+     *
+     * Diese Methode gibt alle Benachrichtigungen des angemeldeten Benutzers zurück
+     *
+     * @group Benachrichtigungen
+     *
+     * @authenticated
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         $user = $request->user();
@@ -48,6 +71,18 @@ class NotificationController extends Controller
     }
 
 
+    /**
+     * Alle Benachrichtigungen eines bestimmten Typs als gelesen markieren
+     *
+     * Diese Methode markiert alle Benachrichtigungen eines bestimmten Typs als gelesen. <br>
+     * Es gibt verschiedene Typen von Benachrichtigungen, z.B. 'Admin, Ex. Angebot, Listen Eintragung, Nachricht, Termin, Vertretung'
+     *
+     * @group Benachrichtigungen
+     *
+     * @param Request $request
+     * @required type string Typ der Benachrichtigung
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function readAllByType (Request $request)
     {
         $user = $request->user();
@@ -66,6 +101,21 @@ class NotificationController extends Controller
             'message' => 'success',
         ], 200);
     }
+
+    /**
+     * Als gelesen markieren
+     *
+     * Diese Methode markiert eine bestimmte Benachrichtigung als gelesen
+     *
+     * @group Benachrichtigungen
+     *
+     * @param Request $request
+     * @required id integer ID der Benachrichtigung
+     *
+     * @authenticated
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function read(Request $request)
     {
         $user = $request->user();
@@ -81,6 +131,10 @@ class NotificationController extends Controller
 
 
         $notification = $user->notifications()->where('id', $request->id)->first();
+
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
 
         $user->notifications()->where('type', $notification->type)->where('user_id', $user->id)->update(['read' => 1]);
 
