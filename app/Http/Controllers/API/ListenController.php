@@ -190,7 +190,13 @@ class ListenController extends Controller
             $listen = $user->listen()
                 ->whereDate('ende', '>=', now())
                 ->where('active', 1)
-                ->get();
+                ->get([
+                    'id',
+                    'listenname',
+                    'type',
+                    'multiple',
+                    'ende',
+                ]);
         }
 
 
