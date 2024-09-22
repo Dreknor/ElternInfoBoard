@@ -42,19 +42,6 @@ class NachrichtenController extends Controller
 
         if ( $user->hasPermissionTo('view all', 'web')) {
             $nachrichten = Post::query()
-                ->select([
-                    "id",
-                    "header",
-                    "news",
-                    "read_receipt",
-                    "sticky",
-                    "reactable",
-                    "updated_at",
-                    "author",
-                    "archiv_ab",
-                    "type",
-                    "external",
-                ])
                 ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
@@ -84,19 +71,6 @@ class NachrichtenController extends Controller
 
             $nachrichten = $user->postsNotArchived()
                 ->distinct()
-                ->select([
-                    "id",
-                    "header",
-                    "news",
-                    "read_receipt",
-                    "sticky",
-                    "reactable",
-                    "updated_at",
-                    "author",
-                    "archiv_ab",
-                    "type",
-                    "external",
-                ])
                 ->where('released', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
