@@ -74,7 +74,6 @@ class NachrichtenController extends Controller
                     "archiv_ab",
                     "type",
                     "external",
-                    "userReceipt"
                 ]);
 
 
