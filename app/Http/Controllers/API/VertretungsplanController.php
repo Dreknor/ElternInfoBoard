@@ -79,8 +79,8 @@ class VertretungsplanController extends Controller
         $week = VertretungsplanWeek::where('week', Carbon::now()->startOfWeek()->format('Y-m-d'))->first();
 
         $absences = VertretungsplanAbsence::query()
-            ->where('date', '>=', Carbon::now()->startOfWeek())
-            ->where('date', '<=', Carbon::now()->endOfWeek())
+            ->where('start_date', '>=', Carbon::now()->startOfWeek())
+            ->where('end_date', '<=', Carbon::now()->endOfWeek())
             ->get();
 
 
