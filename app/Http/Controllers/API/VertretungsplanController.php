@@ -3,15 +3,23 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Model\User;
+use App\Model\Vertretung;
+use App\Model\VertretungsplanAbsence;
+use App\Model\VertretungsplanNews;
+use App\Model\VertretungsplanWeek;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
-
+    /** Class VertretungsplanController
+     *
+     * Controller for handling Vertretungsplan (substitution plan) related API requests.
+     **/
 class VertretungsplanController extends Controller
 {
     /**
+     * VertretungsplanController constructor.
      *
+     * Apply authentication middleware.
      */
     public function __construct()
     {
@@ -19,76 +27,68 @@ class VertretungsplanController extends Controller
     }
 
     /**
-     * @return Application|View
+     * Display the Vertretungsplan.
+     *
+     * This method returns the Vertretungsplan for the current user.
+     * The user must be authenticated and have the permission to view the Vertretungsplan.
+     * The user can only view the Vertretungsplan for their own classes unless they have the permission to view all Vertretungsplan entries.
+     * The method returns a JSON response with the Vertretungsplan entries, news, the current week, and absences for the current week.
+     * The Vertretungsplan entries are ordered by date and hour.
+     * The news are ordered by date.
+     * The absences are filtered by the current week.
+     *
+     * The method returns a 401 response if the user is not authenticated.
+     * The method returns a 403 response if the user does not have the permission to view the Vertretungsplan.
+     *
+     * @authenticated
+     * @group Vertretungsplan
+     *
+     * @responseField vertretungen array The Vertretungsplan entries.
+     * @responseField news array The news entries.
+     * @responseField week object The current week.
+     * @responseField absences array The absences for the current week.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
-        if (config('app.mitarbeiterboard') == ""){
-            return response()->json([
-                'message' => 'Der Vertretungsplan ist nicht verfügbar. Bitte wenden Sie sich an den Administrator.'
-            ], 404);
-        }
-
-        if (!$request->user()){
+        $user = $request->user();
+        if (!$user){
             return response()->json([
                 'message' => 'Sie sind nicht angemeldet.'
             ], 401);
 
-        } else {
-            $user = $request->user();
         }
 
-
-        $gruppen = '';
-
-
-
-        if ($user->can('view vertretungsplan all')) {
-            $gruppen = '';
-        } else {
-            foreach ($user->groups as $group) {
-                $gruppen .= '/'.$group->name;
-            }
-        }
-
-        $url = config('app.mitarbeiterboard').'/api/vertretungsplan/'. config('app.mitarbeiterboard_api_key').$gruppen;
-        $inhalt = file_get_contents($url);
-
-
-        if ($inhalt == "" || $inhalt == null){
+        if (!$user->hasPermissionTo('view vertretungsplan', 'web')) {
             return response()->json([
-                'message' => 'Der Vertretungsplan ist nicht verfügbar.'
-            ], 404);
+                'message' => 'Sie haben keine Berechtigung, den Vertretungsplan anzuzeigen.'
+            ], 403);
+        }
+
+
+        if ($user->hasPermissionTo('view vertretungsplan all', 'web')) {
+            $vertretungen = Vertretung::orderBy('date', 'desc')->orderBy('stunde')->get();
         } else {
+            $vertretungen = $user->vertretungen()->orderBy('stunde', 'asc')->get();
+        }
 
-            $json = json_decode($inhalt, true);
+        $news = VertretungsplanNews::all();
 
+        $week = VertretungsplanWeek::where('date', Carbon::now()->startOfWeek())->first();
 
-                $order = array('klasse' => 'asc', 'date' => 'asc', 'stunde' => 'asc');
-
-                if (is_array($json) and array_key_exists('vertretungen',$json)){
-                    usort($json['vertretungen'], function ($a, $b) use ($order) {
-                        $t = array(true => -1, false => 1);
-                        $r = true;
-                        $k = 1;
-                        foreach ($order as $key => $value) {
-                            $k = ($value === 'asc') ? 1 : -1;
-                            $r = ($a[$key] < $b[$key]);
-                            if ($a[$key] !== $b[$key]) {
-                                return $t[$r] * $k;
-                            }
-
-                        }
-                        return $t[$r] * $k;
-                    });
-                }
-
-            }
-
+        $absences = VertretungsplanAbsence::query()
+            ->where('date', '>=', Carbon::now()->startOfWeek())
+            ->where('date', '<=', Carbon::now()->endOfWeek())
+            ->get();
 
 
         return response()->json([
-            'data' => $json,
+            'vertretungen' => $vertretungen,
+            'news' => $news,
+            'week' => $week,
+            'absences' => $absences
         ], 200);
     }
 }

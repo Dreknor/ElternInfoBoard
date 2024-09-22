@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/listen/eintrag/{eintrag}/stornieren', [\App\Http\Controllers\API\ListenController::class, 'removeEintrag']);
     Route::put('/listen/eintrag/{eintrag}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveEintrag']);
 
+
     /**
      * Krankmeldung
      */

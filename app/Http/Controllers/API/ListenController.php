@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
+use App\Model\User;
 use Illuminate\Http\Request;
 
 /**
@@ -261,11 +262,18 @@ class ListenController extends Controller
  }
 
     /**
-     * @param $user
-     * @param $liste
-     * @return listen_termine[]|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\LaravelIdea\Helper\App\Model\_IH_listen_termine_C|\LaravelIdea\Helper\App\Model\_IH_listen_termine_QB[]
+     * Get the appointments of a list.
+     *
+     * Retrieves the appointments of a list.
+     * If the user has permission to edit the list, the names of the users who made or reserved the appointments are displayed.
+     * Otherwise, it only shows whether the appointment is taken or not.
+     *
+     * @param User $user
+     * @param Liste $liste
+     * @return mixed
      */
-    public function getTermine ($user, $liste){
+    private function getTermine ($user, $liste){
+
      if ($user->hasPermissionTo('edit terminliste', 'web') or $liste->besitzer == $user->id or $liste->visible_for_all) {
          $termine = listen_termine::query()
              ->where('listen_id', $liste->id)
@@ -371,6 +379,15 @@ class ListenController extends Controller
  }
 
     /**
+     * Termin absagen
+     *
+     * Sagt einen Termin in einer Liste ab.
+     *
+     * @group Listen
+     *
+     * @urlParam id required ID des Termins
+     *
+     *
      * @param Request $request
      * @param $id
      * @return \Illuminate\Http\JsonResponse
@@ -399,6 +416,15 @@ class ListenController extends Controller
  }
 
     /**
+     *  Termin reservieren
+     *
+     * Reserviert einen Termin in einer Liste für den User.
+     * Wenn die Liste nur eine Reservierung pro User zulässt, wird geprüft, ob der User bereits einen Termin reserviert hat.
+     *
+     * @group Listen
+     *
+     *
+     *
      * @param Request $request
      * @param $id
      * @return \Illuminate\Http\JsonResponse
