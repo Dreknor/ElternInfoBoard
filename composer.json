@@ -42,7 +42,6 @@
         "filp/whoops": "^2.9",
         "jasonmccreary/laravel-test-assertions": "^2.0",
         "knuckleswtf/scribe": "^4.31",
-        "laravel-shift/factory-generator": "dev-master",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.3",
         "phpunit/phpunit": "^9.5.10",
