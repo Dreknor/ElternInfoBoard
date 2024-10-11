@@ -373,6 +373,14 @@ class RueckmeldungenController extends Controller
      */
     public function storeAbfrage(createAbfrageRequest $request, $posts_id)
     {
+
+        if ($request->options == null or count($request->options) < 1) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Keine Optionen angegeben',
+            ]);
+        }
+
         $rueckmeldung = new Rueckmeldungen($request->validated());
         $rueckmeldung->type = 'abfrage';
         $rueckmeldung->text = $request->description;
@@ -381,6 +389,9 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->save();
 
         $options = [];
+
+
+
         foreach ($request->options as $key => $value) {
             if ($value != "") {
                 $options[] = [
