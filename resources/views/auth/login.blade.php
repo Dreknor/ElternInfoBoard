@@ -102,7 +102,7 @@
                 </div>
             </div>
         </div>
-        @if(config('keycloak.enabled') == true)
+        @if(config('app.keycloak.enabled') == true)
             <div class="col-auto">
             <div class="card">
                 <div class="card-body">

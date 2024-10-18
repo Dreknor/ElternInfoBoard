@@ -106,7 +106,7 @@ class LoginController extends Controller
             return redirect()->route('home');
         }
 
-        if (config('keycloak.enabled') == false) {
+        if (config('app.keycloak.enabled') == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
                 'Meldung' => 'Keycloak ist nicht aktiviert.'
@@ -119,7 +119,7 @@ class LoginController extends Controller
     public function handleKeycloakCallback()
     {
 
-        if (config('keycloak.enabled') == false) {
+        if (config('app.keycloak.enabled') == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
                 'Meldung' => 'Keycloak ist nicht aktiviert.'
