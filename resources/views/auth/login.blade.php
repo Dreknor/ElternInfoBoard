@@ -19,7 +19,16 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">{{ __('Login') }}</div>
+
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-auto ml-auto mr-auto">
+                            <h3>
+                                {{ __('Login') }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('login') }}">
@@ -93,6 +102,21 @@
                 </div>
             </div>
         </div>
+        @if(config('keycloak.enabled') == true)
+            <div class="col-auto">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <a  href="{{route('login.keycloak')}}" class="btn btn-success" value="password-less">
+                                Login mit SSO
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection

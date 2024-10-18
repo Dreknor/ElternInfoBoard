@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActiveDiseaseController;
 use App\Http\Controllers\Auth\ExpiredPasswordController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\DatenschutzController;
@@ -53,6 +54,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('login/keycloak', [LoginController::class, 'redirectToKeycloak'])->name('login.keycloak');
+Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCallback']);
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);

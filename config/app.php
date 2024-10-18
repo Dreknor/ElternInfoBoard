@@ -201,6 +201,7 @@ return [
 
         //eigene
         App\Providers\ComposerServiceProvider::class,
+        App\Providers\KeycloakProvider::class,
 
     ],
 
@@ -244,4 +245,14 @@ return [
 
     //Reactions
     'enable_reactions' => env('ENABLE_REACTIONS', true),
+
+    //KeyCloak
+    'keycloak' => [
+        'enabled' => env('KEYCLOAK_ENABLED', false),
+        'url' => env('KEYCLOAK_URL'),
+        'realm' => env('KEYCLOAK_REALM'),
+        'client_id' => env('KEYCLOAK_CLIENT_ID'),
+        'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
+        'mail_domain' => explode('|', env('KEYCLOAK_MAIL_DOMAIN', explode('@', env('MAIL_FROM_ADDRESS'))[1])),
+    ]
 ];

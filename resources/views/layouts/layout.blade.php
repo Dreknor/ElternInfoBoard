@@ -10,12 +10,15 @@
 
 
     <!-- CSS Files -->
-    <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet" />
-    <link href="{{asset('css/paper-dashboard.css?v=2.0.0')}}" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
+    <!-- CSS Files -->
+    <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet"/>
+    <link href="{{asset('css/paper-dashboard.css')}}" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet"/>
 
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
-
+    <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
+    <link href="{{asset('/css/all.css')}}?v=1" rel="stylesheet"> <!--load all styles -->
+    <link href="{{asset('/css/app.css')}}?v=2" rel="stylesheet"> <!--load all styles -->
+    <link href="{{asset('/css/mobile.css')}}?v=1" rel="stylesheet">
     <script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>
 
     @stack('head')
@@ -29,7 +32,10 @@
         <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent">
             <div class="container-fluid">
                 <div class="navbar-wrapper">
-                    <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
+                    <a class="navbar-brand" href="{{url('/')}}">
+
+                        {{config('app.name')}}
+                    </a>
                 </div>
             </div>
         </nav>

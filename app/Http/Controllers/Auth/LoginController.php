@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Model\User;
 use App\Notifications\SendPasswordLessLinkNotification;
+use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends Controller
 {
@@ -95,5 +96,77 @@ class LoginController extends Controller
         }
 
         return $user;
+    }
+
+    /**
+     *
+     */
+    public function redirectToKeycloak() {
+        if (auth()->check()) {
+            return redirect()->route('home');
+        }
+
+        if (config('keycloak.enabled') == false) {
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => 'Keycloak ist nicht aktiviert.'
+            ]);
+        }
+
+        return Socialite::driver('keycloak')->redirect();
+    }
+
+    public function handleKeycloakCallback()
+    {
+
+        if (config('keycloak.enabled') == false) {
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => 'Keycloak ist nicht aktiviert.'
+            ]);
+        }
+
+        $user = Socialite::driver('keycloak')->user();
+
+        if (!$user->email) {
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => 'E-Mail-Adresse konnte nicht abgerufen werden.'
+            ]);
+        }
+
+        $existingUser = User::where('email', $user->email)->first();
+
+        if ($existingUser) {
+            auth()->login($existingUser);
+        } else {
+
+
+            $domain = explode('@', $user->email)[1];
+
+            if (!in_array($domain, config('keycloak.mail_domain'))) {
+                return redirect()->route('login')->with([
+                    'type' => 'danger',
+                    'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.'
+                ]);
+            }
+
+            $newUser = User::create([
+                'name' => $user->givenName.' '.$user->sn ?? $user->nickname,
+                'email' => $user->email,
+                'password' => bcrypt('password'),
+                'created_at' => now(),
+                'updated_at' => now(),
+                'changePassword' => 0,
+                'lastEmail' => now(),
+            ]);
+
+            $newUser->assignRole('Mitarbeiter');
+
+            auth()->login($newUser);
+        }
+
+
+        return redirect()->intended('/home');
     }
 }
