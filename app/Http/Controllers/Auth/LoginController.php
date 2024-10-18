@@ -126,7 +126,15 @@ class LoginController extends Controller
             ]);
         }
 
-        $user = Socialite::driver('keycloak')->user();
+        try {
+            $user = Socialite::driver('keycloak')->user();
+        } catch (\Exception $e) {
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => 'Login fehlgeschlagen.'
+            ]);
+        }
+
 
         if (!$user->email) {
             return redirect()->route('login')->with([
