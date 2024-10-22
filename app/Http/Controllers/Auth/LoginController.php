@@ -8,8 +8,12 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Model\User;
 use App\Notifications\SendPasswordLessLinkNotification;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
+/**
+ *
+ */
 class LoginController extends Controller
 {
     /*
@@ -42,6 +46,11 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\Response
+     * @throws \Illuminate\Validation\ValidationException
+     */
     public function login(Request $request)
     {
 
@@ -82,12 +91,12 @@ class LoginController extends Controller
         return $this->sendFailedLoginResponse($request);
     }
 
+
     /**
-     * Write code on Method
-     *
-     * @return response()
+     * @param Request $request
+     * @return User
      */
-    public function loginViaPasswordLessLink(Request $request)
+    public function loginViaPasswordLessLink(Request $request): User
     {
         $user = User::where('email', $request->input('email'))->first();
 
@@ -99,6 +108,8 @@ class LoginController extends Controller
     }
 
     /**
+     *
+     * @return \Illuminate\Http\RedirectResponse
      *
      */
     public function redirectToKeycloak() {
@@ -116,6 +127,10 @@ class LoginController extends Controller
         return Socialite::driver('keycloak')->redirect();
     }
 
+    /**
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     */
     public function handleKeycloakCallback()
     {
 
@@ -145,8 +160,11 @@ class LoginController extends Controller
 
         $existingUser = User::where('email', $user->email)->first();
 
+
         if ($existingUser) {
             auth()->login($existingUser);
+            Log::info('User logged in via Keycloak: '.$existingUser->email);
+            Log::info($existingUser);
         } else {
 
 
