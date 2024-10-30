@@ -170,12 +170,18 @@ class LoginController extends Controller
 
             $domain = explode('@', $user->email)[1];
 
-            if (!in_array($domain, config('keycloak.mail_domain'))) {
-                return redirect()->route('login')->with([
-                    'type' => 'danger',
-                    'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.'
-                ]);
+            if (!is_array(config('keycloak.mail_domain'))) {
+                Log::info('Mail Domain is not an array');
+                Log::info(config('keycloak.mail_domain'));
+            } else {
+                if (!in_array($domain, config('keycloak.mail_domain'))) {
+                    return redirect()->route('login')->with([
+                        'type' => 'danger',
+                        'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.'
+                    ]);
+                }
             }
+
 
             $newUser = User::create([
                 'name' => $user->givenName.' '.$user->sn ?? $user->nickname,
