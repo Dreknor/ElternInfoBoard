@@ -631,6 +631,23 @@ class NachrichtenController extends Controller
             $newPost->send_at = null;
             $newPost->author = auth()->id();
             $newPost->save();
+
+            if ($posts->rueckmeldung != null) {
+                $rueckmeldung = $posts->rueckmeldung->duplicate();
+                $rueckmeldung->post_id = $newPost->id;
+                $rueckmeldung->ende = $newPost->archiv_ab;
+                $rueckmeldung->save();
+
+                if ($posts->rueckmeldung->type == 'abfrage') {
+                    foreach ($posts->rueckmeldung->options as $option) {
+                        $newOption = $option->duplicate();
+                        $newOption->rueckmeldung_id = $rueckmeldung->id;
+                        $newOption->save();
+                    }
+                }
+            }
+
+
         } else {
             $posts->updated_at = Carbon::now();
             $posts->archiv_ab = Carbon::now()->addWeek();
