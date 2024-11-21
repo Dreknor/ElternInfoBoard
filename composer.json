@@ -11,7 +11,6 @@
         "php": "^8.2",
         "ext-curl": "*",
         "barryvdh/laravel-dompdf": "^2.0",
-        "benjivm/commentable": "^6.0",
         "bkwld/cloner": "^3.10",
         "coliving/commentable": "^5.6",
         "danielme85/laravel-log-to-db": "^3.0",
@@ -35,7 +34,6 @@
         "spatie/icalendar-generator": "^2.3",
         "spatie/laravel-medialibrary": "^10.0",
         "spatie/laravel-permission": "^5.5",
-        "stancl/tenancy": "^3.8",
         "staudenmeir/eloquent-has-many-deep": "^1.15"
     },
     "require-dev": {
