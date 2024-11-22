@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        \App\Model\Settings::insert([
+        \App\Model\Module::insert([
             'setting' => 'meldepfl. Erkrankungen',
             'description' => 'Ermöglicht die Erfassung meldepflichtiger Erkrankungen direkt bei der Krankmeldung. Diese werden dann Im Nachrichtenbereich angezeigt.',
             'category' => 'module',

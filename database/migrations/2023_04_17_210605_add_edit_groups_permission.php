@@ -19,7 +19,7 @@ return new class extends Migration {
         ]);
 
 
-        \App\Model\Settings::where('setting', 'Gruppen')->update([
+        \App\Model\Module::where('setting', 'Gruppen')->update([
             'options' => '{"active":"1","rights":["view groups"],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends","bottom-nav":"true"}}'
         ]);
 

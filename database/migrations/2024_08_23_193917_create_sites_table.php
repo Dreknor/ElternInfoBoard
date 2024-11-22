@@ -35,7 +35,7 @@ return new class extends Migration
         \Spatie\Permission\Models\Permission::create(['name' => 'view sites']);
         \Spatie\Permission\Models\Permission::create(['name' => 'create sites']);
 
-        \App\Model\Settings::create([
+        \App\Model\Module::create([
             'setting' => 'Seiten',
             'description' => 'Erlaubt das Anlegen und Verwalten von Seiten',
             'category' => 'module',
@@ -72,6 +72,6 @@ return new class extends Migration
         Schema::dropIfExists('sites');
         \Spatie\Permission\Models\Permission::where('name','view sites')->delete();
         \Spatie\Permission\Models\Permission::where('name','create sites')->delete();
-        \App\Model\Settings::where('setting','Seiten')->delete();
+        \App\Model\Module::where('setting', 'Seiten')->delete();
     }
 };

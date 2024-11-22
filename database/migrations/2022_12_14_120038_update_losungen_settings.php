@@ -1,6 +1,6 @@
 <?php
 
-use App\Model\Settings;
+use App\Model\Module;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        $setting = Settings::where('setting', 'Losung')->first();
+        $setting = Module::where('setting', 'Losung')->first();
 
         $settings = [
             'id' => $setting->id,

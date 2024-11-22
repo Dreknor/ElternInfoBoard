@@ -8,7 +8,7 @@ use App\Mail\krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
 use App\Model\krankmeldungen;
-use App\Model\Settings;
+use App\Model\Module;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +29,7 @@ class KrankmeldungenController extends Controller
     {
         $krankmeldungen = $request->user()->krankmeldungen->load('user')->paginate(15);
 
-        if (Settings::where('setting', 'meldepfl. Erkrankungen')->first()?->options['active'] == 1) {
+        if (Module::where('setting', 'meldepfl. Erkrankungen')->first()?->options['active'] == 1) {
             $diseases = Cache::remember('diseases', 60 * 60 * 24, function () {
                 return Disease::all('id', 'name');
             });

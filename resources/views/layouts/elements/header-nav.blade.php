@@ -17,7 +17,7 @@
                 </a>
             </span>
                     <span class="d-none d-md-block">
-                <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
+                <a class="navbar-brand" href="{{url('/')}}">{{$settings->app_name}}</a>
             </span>
 
                 </div>

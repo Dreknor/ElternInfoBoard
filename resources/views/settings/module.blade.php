@@ -98,13 +98,13 @@
     <script>
         $('input.activButton').on('click', function (e) {
             var Id = this.id;
-            location.href = '{{url("/settings/modul")}}' + '/' + Id
+            location.href = '{{url("/modules/modul")}}' + '/' + Id
 
         });
 
         $('input.bottomMenuButton').on('click', function (e) {
             var Id = this.id;
-            location.href = '{{url("/settings/modul/bottomnav")}}' + '/' + Id
+            location.href = '{{url("/modules/modul/bottomnav")}}' + '/' + Id
 
         });
 

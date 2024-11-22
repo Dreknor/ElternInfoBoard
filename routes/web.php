@@ -319,11 +319,14 @@ Route::middleware('auth')->group(function () {
 
         //Routen zur Rechteverwaltung
         Route::middleware('permission:edit settings')->group(function () {
-            Route::get('settings', [SettingsController::class, 'module']);
-            Route::get('settings/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
-            Route::get('settings/modul/{modul}', [SettingsController::class, 'change_status']);
+            Route::get('modules', [SettingsController::class, 'module']);
+            Route::get('modules/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
+            Route::get('modules/modul/{modul}', [SettingsController::class, 'change_status']);
             Route::get('settings/losungen/import', [LosungController::class, 'importView']);
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
+            Route::get('settings', [SettingsController::class, 'index']);
+            Route::put('settings/{group}', [SettingsController::class, 'update']);
+
         });
 
         Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {

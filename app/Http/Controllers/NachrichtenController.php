@@ -14,7 +14,7 @@ use App\Model\Group;
 use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
-use App\Model\Settings;
+use App\Model\Module;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Repositories\WordpressRepository;
@@ -107,7 +107,7 @@ class NachrichtenController extends Controller
 
     public function postsExternal()
     {
-        if (!auth()->user()->can('view external offer') or Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'] !=1){
+        if (!auth()->user()->can('view external offer') or Module::firstWhere(['setting' => 'externe Angebote'])->options['active'] != 1) {
             return redirect()->back()->with([
                'type' => 'warning',
                'Medldung' => 'Aufruf nicht möglich'
@@ -165,11 +165,11 @@ class NachrichtenController extends Controller
 
         $gruppen = Group::all();
         $external = Cache::remember('external_offers', 120, function (){
-           return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
+            return Module::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
 
         $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
-            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+            if (Module::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')) {
                 return true;
             }
            return false;
@@ -205,10 +205,10 @@ class NachrichtenController extends Controller
         }
 
         $external = Cache::remember('external_offers', 120, function (){
-            return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
+            return Module::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
         $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
-            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+            if (Module::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')) {
                 return true;
             }
             return false;

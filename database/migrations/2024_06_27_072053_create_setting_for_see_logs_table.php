@@ -23,7 +23,7 @@ return new class extends Migration
 
         $permission->save();
 
-        \App\Model\Settings::insert([
+        \App\Model\Module::insert([
             'setting' => 'Logs',
             'description' => 'Zeigt die geloggten Ereignisse.',
             'category' => 'module',

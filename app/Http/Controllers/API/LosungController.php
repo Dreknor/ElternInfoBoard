@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportLosungenRequest;
 use App\Imports\LosungenImport;
 use App\Model\Losung;
-use App\Model\Settings;
+use App\Model\Module;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;

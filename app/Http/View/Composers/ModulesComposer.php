@@ -2,7 +2,7 @@
 
 namespace App\Http\View\Composers;
 
-use App\Model\Settings;
+use App\Model\Module;
 use Illuminate\Support\Facades\Cache;
 
 class ModulesComposer
@@ -10,7 +10,7 @@ class ModulesComposer
     public function compose($view): void
     {
         $modules = Cache::remember('modules', 30, function () {
-            return Settings::where('category', 'module')
+            return Module::where('category', 'module')
                 ->where('options', 'like', '%"active":"1"%')
                 ->get();
         });

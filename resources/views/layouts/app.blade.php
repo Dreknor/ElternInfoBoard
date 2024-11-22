@@ -8,8 +8,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapidPublicKey" content=" {{ config('webpush.vapid.public_key') }}">
 
-    <link rel="shortcut icon" href="{{asset('img/'.config('app.favicon'))}}" type="image/x-icon">
-    <title>{{config('app.name')}} @yield('title')</title>
+    <link rel="shortcut icon" href="{{asset('img/'.$settings->favicon)}}" type="image/x-icon">
+    <title>{{$settings->app_name}} @yield('title')</title>
 
 
     <!-- CSS Files -->
@@ -45,7 +45,7 @@
     <div class="logo" style="word-wrap: normal;">
         <a href="{{config('app.url')}}" class="simple-text">
             <div class="logo-image-small">
-                <img src="{{asset('img/'.config('app.logo'))}}" class="p-0">
+                <img src="{{asset('img/'.$settings->logo)}}" class="p-0">
             </div>
         </a>
     </div>
@@ -83,7 +83,7 @@
                         <span class="navbar-toggler-bar bar3"></span>
                     </button>
                 </div>
-                <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
+                <a class="navbar-brand" href="{{url('/')}}">{{$settings->app_name}}</a>
             </div>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-bar navbar-kebab"></span>
