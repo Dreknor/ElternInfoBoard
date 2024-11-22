@@ -21,6 +21,15 @@ class SiteController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
+
+    public function deleteCache(Site $site)
+    {
+        Cache::delete('site' . $site->site_id);
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Cache gelöscht.',
+        ]);
+    }
     public function activate(Site $site)
     {
         if (!auth()->user()->can('create sites') && $site->author_id != auth()->id()) {
