@@ -105,7 +105,7 @@ class SettingsController extends Controller
                 $validated = $request->validate([
                     'app_name' => 'required|max:255',
                     'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                    'favicon' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'favicon' => 'sometimes|nullable|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
                 ]);
 
                 $settings = new GeneralSetting();

@@ -74,7 +74,7 @@
                                                 <label class="label-control w-100 ">
                                                     Favicon
                                                     <input type="file" class="form-control" name="favicon"
-                                                           accept="image/*" max="">
+                                                           accept="image/*, .ico" max="">
                                                 </label>
                                             </div>
                                             <div class="col-md-6 col-sm-12 m-auto">
