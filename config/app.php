@@ -202,6 +202,7 @@ return [
         //eigene
         App\Providers\ComposerServiceProvider::class,
         //App\Providers\KeycloakProvider::class,
+        App\Providers\SettingsServiceProvider::class,
 
     ],
 

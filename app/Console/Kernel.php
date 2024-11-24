@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Http\Controllers\GroupsController;
+use App\Settings\NotifySetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Spatie\Permission\Models\Role;
@@ -20,30 +21,28 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $AdminRole = Role::where('name', 'Administrator')->orWhere('name', 'Admin')->first();
-        $admin = $AdminRole->users()->first();
-        if (isset($admin) and $admin->email != '') {
-            $email = $admin->email;
-        } else {
-            $email = config('mail.from.address');
-        }
+        $notifySetting = new NotifySetting();
 
         $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
         $schedule->call('App\Http\Controllers\CleanupController@clean_up')->weeklyOn([1],'00:00');
-        $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt('17:00');
 
-        $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at('08:30');
-        $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt('17:00');
 
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:00');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:05');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:10');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:15');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:20');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:50');
-        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn(5, '17:55');
+        $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt($notifySetting->hour_send_information_mail.':00');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':00');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':05');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':10');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':15');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':20');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':50');
+        $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':55');
 
-        $schedule->call('App\Http\Controllers\SchickzeitenController@sendReminder')->weeklyOn(5, '18:00');
+        $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
+
+        $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at($notifySetting->krankmeldungen_report_hour.':'.$notifySetting->krankmeldungen_report_minute);
+
+        $schedule->call('App\Http\Controllers\SchickzeitenController@sendReminder')->weeklyOn($notifySetting->schickzeiten_report_weekday, $notifySetting->schickzeiten_report_hour.':00');
+
+
 
         $schedule->call('App\Http\Controllers\GroupsController@deletePrivateGroups')->yearlyOn(7, 31, '00:00');
     }

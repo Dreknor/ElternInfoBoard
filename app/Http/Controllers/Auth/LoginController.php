@@ -117,7 +117,9 @@ class LoginController extends Controller
             return redirect()->route('home');
         }
 
-        if (config('app.keycloak.enabled') == false) {
+        $keycloakSetting = new \App\Settings\KeyCloakSetting();
+
+        if ($keycloakSetting->enabled == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
                 'Meldung' => 'Keycloak ist nicht aktiviert.'
@@ -134,7 +136,9 @@ class LoginController extends Controller
     public function handleKeycloakCallback()
     {
 
-        if (config('app.keycloak.enabled') == false) {
+        $keycloakSetting = new \App\Settings\KeyCloakSetting();
+
+        if ($keycloakSetting->enabled == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
                 'Meldung' => 'Keycloak ist nicht aktiviert.'
@@ -163,18 +167,24 @@ class LoginController extends Controller
 
         if ($existingUser) {
             auth()->login($existingUser);
-            Log::info('User logged in via Keycloak: '.$existingUser->email);
-            Log::info($existingUser);
+
         } else {
 
 
             $domain = explode('@', $user->email)[1];
 
-            if (!is_array(config('keycloak.mail_domain'))) {
-                Log::info('Mail Domain is not an array');
-                Log::info(config('keycloak.mail_domain'));
+            $mailDomains = $keycloakSetting->mail_domain;
+            $mailDomains = explode(',', $mailDomains);
+
+
+            if (!is_array($mailDomains) || count($mailDomains) == 0) {
+                return redirect()->route('login')->with([
+                    'type' => 'danger',
+                    'Meldung' => 'E-Mail-Domain ist nicht gestattet.'
+                ]);
+
             } else {
-                if (!in_array($domain, config('keycloak.mail_domain'))) {
+                if (!in_array($domain, $mailDomains)) {
                     return redirect()->route('login')->with([
                         'type' => 'danger',
                         'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.'
@@ -182,11 +192,12 @@ class LoginController extends Controller
                 }
             }
 
+            $name = ($user->givenName ?? '').' '.($user->sn ?? $user->nickname);
 
             $newUser = User::create([
-                'name' => $user->givenName.' '.$user->sn ?? $user->nickname,
+                'name' => $name,
                 'email' => $user->email,
-                'password' => bcrypt('password'),
+                'password' => bcrypt(now()->format('YmdHis')),
                 'created_at' => now(),
                 'updated_at' => now(),
                 'changePassword' => 0,

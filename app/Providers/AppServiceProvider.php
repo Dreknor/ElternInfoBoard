@@ -49,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
 
         View::share('settings', $settings);
 
+
         Schema::defaultStringLength(191);
 
         setlocale(LC_TIME, 'de_DE');

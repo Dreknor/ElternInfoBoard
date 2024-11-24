@@ -18,6 +18,7 @@ use App\Model\Module;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Repositories\WordpressRepository;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
@@ -44,6 +45,8 @@ class NachrichtenController extends Controller
 {
     private GroupsRepository $groupsRepository;
 
+    private $settings;
+
     /**
      * Create a new controller instance.
      *
@@ -53,6 +56,8 @@ class NachrichtenController extends Controller
     {
         $this->groupsRepository = $groupsRepository;
         $this->middleware('auth');
+
+        $this->settings = new GeneralSetting();
     }
 
     /**
@@ -842,7 +847,11 @@ class NachrichtenController extends Controller
 
             $icon = url('/image/'.$post->getMedia('header')->first()->id);
         } else {
-            $icon = (config('app.favicon')) ? url('img/'.config('app.favicon')) : '';
+            if($this->settings->favicon == 'app_logo.png'){
+                $icon = asset('img/'.$this->settings->favicon);
+            } else {
+                $icon = url('storage/img/'.$this->settings->favicon);
+            }
         }
 
         $notifications= [];
