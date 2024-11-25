@@ -10,6 +10,7 @@ return [
      */
     'settings' => [
         GeneralSetting::class,
+        \App\Settings\EmailSetting::class
     ],
 
     /*

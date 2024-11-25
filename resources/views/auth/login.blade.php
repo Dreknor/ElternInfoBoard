@@ -102,13 +102,13 @@
                 </div>
             </div>
         </div>
-        @if(config('app.keycloak.enabled') == true)
+        @if($keycloak == true)
             <div class="col-auto">
             <div class="card">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-12">
-                            <a  href="{{route('login.keycloak')}}" class="btn btn-success" value="password-less">
+                            <a  href="{{route('login.keycloak')}}" class="btn btn-success">
                                 Login mit SSO
                             </a>
                         </div>

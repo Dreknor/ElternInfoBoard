@@ -39,6 +39,8 @@ class SiteController extends Controller
         $site->is_active = true;
         $site->save();
 
+        Cache::delete('site' . $site->id);
+
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Seite aktiviert.',

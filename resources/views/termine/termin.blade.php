@@ -39,11 +39,14 @@
                 </i>
             </a>
         </div>
-        <div class="col-auto">
-            <a href="{{url("termin/$termin->id/edit")}}" class="text-black-50">
-                <i class="fa fa-edit"></i>
-                <div class="d-none d-lg-inline ">bearbeiten</div>
-            </a>
-        </div>
+        @if($termin->id != null)
+            <div class="col-auto">
+                <a href="{{url("termin/$termin->id/edit")}}" class="text-black-50">
+                    <i class="fa fa-edit"></i>
+                    <div class="d-none d-lg-inline ">bearbeiten</div>
+                </a>
+            </div>
+        @endif
+
     @endif
 </div>

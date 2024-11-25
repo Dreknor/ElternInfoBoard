@@ -8,7 +8,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapidPublicKey" content=" {{ config('webpush.vapid.public_key') }}">
 
-    <link rel="shortcut icon" href="{{asset('img/'.$settings->favicon)}}" type="image/x-icon">
+    @if($settings->favicon == 'app_logo.png')
+        <link rel="shortcut icon" href="{{asset('img/'.$settings->favicon)}}" type="image/x-icon">
+    @else
+        <link rel="shortcut icon" href="{{url('storage/img/'.$settings->favicon)}}" type="image/x-icon">
+    @endif
     <title>{{$settings->app_name}} @yield('title')</title>
 
 
@@ -28,6 +32,7 @@
 </head>
 
 <body id="app-layout">
+
 <div class="d-lg-none">
     <nav class="mobile-bottom-nav">
         @stack('bottom-nav')
@@ -45,7 +50,11 @@
     <div class="logo" style="word-wrap: normal;">
         <a href="{{config('app.url')}}" class="simple-text">
             <div class="logo-image-small">
-                <img src="{{asset('img/'.$settings->logo)}}" class="p-0">
+                @if($settings->logo == 'logo.png')
+                    <img src="{{asset('img/'.$settings->logo)}}" class="p-0">
+                @else
+                    <img src="{{url('storage/img/'.$settings->logo)}}" class="p-0">
+                @endif
             </div>
         </a>
     </div>

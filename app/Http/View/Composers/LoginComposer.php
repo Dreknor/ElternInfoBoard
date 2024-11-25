@@ -8,11 +8,11 @@ use App\Settings\KeyCloakSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
-class LayoutComposer
+class LoginComposer
 {
-    public function compose($view, GeneralSetting $settings): void
+    public function compose($view): void
     {
-
-        $view->with('layout', (new KeyCloakSetting())->enabled);
+        $keycloak = (new KeyCloakSetting())->enabled;
+        $view->with('keycloak', $keycloak);
     }
 }

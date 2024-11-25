@@ -13,7 +13,6 @@ class GeneralSetting extends Settings
 
     public string $favicon;
 
-
     public static function group(): string
     {
         return 'general';

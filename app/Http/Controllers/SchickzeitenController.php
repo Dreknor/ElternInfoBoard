@@ -8,6 +8,7 @@ use App\Http\Requests\SchickzeitRequest;
 use App\Mail\SchickzeitenReminder;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -22,12 +23,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class SchickzeitenController extends Controller
 {
+
+    protected SchickzeitenSetting $schickenzeitenSetting;
+
     /**
      *
      */
     public function __construct()
     {
         $this->middleware('auth');
+        $this->schickenzeitenSetting = new SchickzeitenSetting();
     }
 
     /**
@@ -52,6 +57,7 @@ class SchickzeitenController extends Controller
             'schickzeiten' => $zeiten,
             'childs' => $childs,
             'weekdays' => $weekdays,
+            'vorgaben' => new SchickzeitenSetting(),
         ]);
     }
 
@@ -185,6 +191,16 @@ class SchickzeitenController extends Controller
      */
     public function store(SchickzeitRequest $request)
     {
+        if (Carbon::createFromFormat('H:i',$request->time)->lt(Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_ab)) or
+            Carbon::createFromFormat('H:i',$request->time)->gt(Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_bis))) {
+
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Die Zeit liegt außerhalb der Schickzeiten',
+            ]);
+        }
+
+
         $weekdays = [
             'Montag' => '1',
             'Dienstag' => '2',
@@ -235,8 +251,8 @@ class SchickzeitenController extends Controller
             $neueSchickzeit2->save();
         }
 
-        if ($neueSchickzeit->type == 'genau' and isset($neueSchickzeit->time) and $neueSchickzeit->time->format('i') != '30' and $neueSchickzeit->time->format('i') != '00') {
-            $text = ' Bitte beachten Sie, dass Kinder nur zur vollen oder halben Stunde geschickt werden.';
+        if ($neueSchickzeit->type == 'genau' and isset($neueSchickzeit->time) and !is_int($neueSchickzeit->time % $this->schickenzeitenSetting->schicken_intervall)) {
+            $text = 'Bitte beachten Sie, dass Kinder zu dieser Zeit nicht geschickt werden.';
             $type = 'warning';
         } else {
             $text = '';
@@ -270,6 +286,7 @@ class SchickzeitenController extends Controller
             'day_number' => $day,
             'schickzeit' => $schickzeit->first(),
             'schickzeit_spaet' => $schickzeit->where('type', '=', 'spät.')->first(),
+            'vorgaben' => new SchickzeitenSetting(),
 
         ]);
     }
