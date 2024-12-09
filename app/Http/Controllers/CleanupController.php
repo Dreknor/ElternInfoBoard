@@ -13,12 +13,14 @@ use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
 
 class CleanupController extends Controller
 {
     public function clean_up()
     {
         $admins = Role::query()->where('name', 'Administrator')->first()->users()->get();
+
 
         try {
             // Delete notifications older than 10 days
