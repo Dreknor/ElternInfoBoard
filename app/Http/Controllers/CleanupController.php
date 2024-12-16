@@ -8,6 +8,7 @@ use App\Model\Losung;
 use App\Model\Mail;
 use App\Model\Notification;
 use App\Model\Schickzeiten;
+use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
