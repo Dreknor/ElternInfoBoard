@@ -29,19 +29,6 @@ class NotifySetting extends Settings
     }
 
 
-    protected function KrankmeldungenReportHour(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value < 10 ? '0' . $value : $value,
-        );
-    }
-
-    protected function KrankmeldungenReportMinute(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value < 10 ? '0' . $value : $value,
-        );
-    }
 
 
 }
