@@ -27,4 +27,14 @@ class NotifySetting extends Settings
         return 'notify_setting';
     }
 
+    public function getKrankmeldungenReportHour(): string
+    {
+        return ($this->krankmeldungen_report_hour < 10 ? '0' : '') . $this->krankmeldungen_report_hour;
+    }
+
+    public function getKrankmeldungenReportMinute(): string
+    {
+        return ($this->krankmeldungen_report_minute < 10 ? '0' : '') . $this->krankmeldungen_report_minute;
+    }
+
 }

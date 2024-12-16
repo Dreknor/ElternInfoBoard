@@ -267,7 +267,7 @@
                                                 Uhrzeit für Krankmeldungen senden
                                             </label>
                                             <input type="time" class="form-control" name="krankmeldungen_report_time"
-                                                   value="@if($notifySettings->krankmeldungen_report_hour < 10)0@endif{{$notifySettings->krankmeldungen_report_hour}}:@if($notifySettings->krankmeldungen_report_minute < 10)0@endif{{$notifySettings->krankmeldungen_report_minute}}">
+                                                   value="{{$notifySettings->krankmeldungen_report_hour}}:{{$notifySettings->krankmeldungen_report_minute}}">
                                         </div>
                                         <div class="col-md-6 col-sm-12 m-auto">
                                             <div class="small">
