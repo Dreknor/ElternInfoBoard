@@ -2,6 +2,7 @@
 
 namespace App\Settings;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\LaravelSettings\Settings;
 
 class NotifySetting extends Settings
@@ -27,14 +28,20 @@ class NotifySetting extends Settings
         return 'notify_setting';
     }
 
-    public function getKrankmeldungenReportHour(): string
+
+    protected function KrankmeldungenReportHour(): Attribute
     {
-        return ($this->krankmeldungen_report_hour < 10 ? '0' : '') . $this->krankmeldungen_report_hour;
+        return Attribute::make(
+            get: fn($value) => $value < 10 ? '0' . $value : $value,
+        );
     }
 
-    public function getKrankmeldungenReportMinute(): string
+    protected function KrankmeldungenReportMinute(): Attribute
     {
-        return ($this->krankmeldungen_report_minute < 10 ? '0' : '') . $this->krankmeldungen_report_minute;
+        return Attribute::make(
+            get: fn($value) => $value < 10 ? '0' . $value : $value,
+        );
     }
+
 
 }
