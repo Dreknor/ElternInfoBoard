@@ -77,6 +77,27 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 col-sm-12">
+                                            <div class="form-group w-100">
+                                                <label class="w-100">neues Passwort
+                                                    <input class="form-control" name="password" type="password"
+                                                           minlength="8">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="form-group w-100">
+                                                <label class="w-100">Passwort bestätigen
+                                                    <input id="password-confirm" type="password" class="form-control"
+                                                           name="password_confirmation" required
+                                                           autocomplete="new-password">
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
                                                 <label>Benachrichtigung per E-Mail (zuletzt: {{$user->lastEmail?->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
@@ -100,7 +121,7 @@
                                     <div class="row">
                                         <div class="col-md-3 col-sm-12">
                                             <div class="form-group">
-                                                <label>Login aufzeichnen um Benachrichtigungen zu erhalten</label>
+                                                <label>Login aufzeichnen</label>
                                                 <select class="custom-select" name="track_login">
                                                     <option value="1" @if($user->track_login == true) selected @endif >
                                                         letzten Login aufzeichnen

@@ -9,6 +9,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 /**
  *
@@ -52,6 +53,12 @@ class BenutzerController extends Controller
     {
         $user = auth()->user();
         $user->update($request->validated());
+
+        if ($request->input('password') != '' && $request->password == $request->password_confirmation) {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+        }
 
         return redirect()->back()->with([
             'type' => 'success',
