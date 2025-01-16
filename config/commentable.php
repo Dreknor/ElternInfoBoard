@@ -11,6 +11,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
+
+use Artisanry\Commentable\Models\Comment;
+
 return [
 
     /*
@@ -21,6 +24,6 @@ return [
     | This option allows for the extension of the commentable model, by pointing it to a model
     |
     */
-    'model' => \Benjivm\Commentable\Models\Comment::class,
+    'model' => Comment::class,
 
 ];
