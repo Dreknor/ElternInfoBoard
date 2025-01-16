@@ -251,7 +251,7 @@ class SchickzeitenController extends Controller
             $neueSchickzeit2->save();
         }
 
-        if ($neueSchickzeit->type == 'genau' and isset($neueSchickzeit->time) and !is_int($neueSchickzeit->time % $this->schickenzeitenSetting->schicken_intervall)) {
+        if ($neueSchickzeit->type == 'genau' and isset($neueSchickzeit->time) and !is_int($neueSchickzeit->time->minutes % $this->schickenzeitenSetting->schicken_intervall)) {
             $text = 'Bitte beachten Sie, dass Kinder zu dieser Zeit nicht geschickt werden.';
             $type = 'warning';
         } else {

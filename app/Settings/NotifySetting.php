@@ -2,6 +2,7 @@
 
 namespace App\Settings;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\LaravelSettings\Settings;
 
 class NotifySetting extends Settings
@@ -26,5 +27,8 @@ class NotifySetting extends Settings
     {
         return 'notify_setting';
     }
+
+
+
 
 }

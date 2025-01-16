@@ -33,12 +33,30 @@
         </div>
         <div class="collapse" id="{{$post->id}}_receipts">
             <div class="row ">
-                <div class="col-12">
+                <div class="col-lg-6 col-sm-12">
                     <ul class="list-group">
+                        <li class="list-group-item  list-group-item-info">
+                            {{ __('Lesebestätigungen') }}
+                        </li>
                         @foreach($post->receipts as $receipt)
                             @if(!is_null($receipt->user))
                                 <li class="list-group-item">
                                     {{ $receipt->user?->name}} ({{ $receipt->created_at->format('d.m.Y H:i') }})
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </div>
+
+                <div class="col-lg-6 col-sm-12">
+                    <ul class="list-group">
+                        <li class="list-group-item list-group-item-warning">
+                            {{ __('Nicht bestätigt') }}
+                        </li>
+                        @foreach($post->users as $user)
+                            @if(!is_null($user) and $post->receipts->where('user_id', $user->id)->first() == null)
+                                <li class="list-group-item">
+                                    {{ $user?->name}}
                                 </li>
                             @endif
                         @endforeach
