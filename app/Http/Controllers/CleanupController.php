@@ -44,7 +44,7 @@ class CleanupController extends Controller
 
         try {
             //Delete Mail Logs older than 14 days
-            Mail::query()->where('created_at', '<', now()->subDays(14))->get();
+            Mail::query()->where('created_at', '<', now()->subDays(14))->withoutGlobalScopes()->delete();
         } catch (\Exception $e) {
             Log::error('Error while cleaning up Mail: ' . $e->getMessage());
             foreach ($admins as $admin) {

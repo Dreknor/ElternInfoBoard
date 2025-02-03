@@ -13,18 +13,22 @@ return new class extends Migration {
      */
     public function up()
     {
-        $modul = \App\Model\Module::query()->where('setting', 'Settings')->first();
-        $modul->setting = 'Modules';
-        $options = $modul->options;
-        if (array_key_exists('adm-nav', $modul->options)) {
-            if (array_key_exists('link', $options['adm-nav'])) {
-                $options['adm-nav']['link'] = 'modules';
+        try {
+            $modul = \App\Model\Module::query()->where('setting', 'Settings')->first();
+            $modul->setting = 'Modules';
+            $options = $modul->options;
+            if (array_key_exists('adm-nav', $modul->options)) {
+                if (array_key_exists('link', $options['adm-nav'])) {
+                    $options['adm-nav']['link'] = 'modules';
+                }
+                $modul->options = $options;
             }
-            $modul->options = $options;
+
+            $modul->save();
+            Cache::forget('modules');
+        } catch (Exception $e) {
         }
 
-        $modul->save();
-        Cache::forget('modules');
 
     }
 

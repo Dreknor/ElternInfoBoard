@@ -12,32 +12,36 @@ return new class extends Migration {
      */
     public function up()
     {
-
-        $options = [
-            'active' => '1',
-            'rights' => [],
-            'adm-nav' => [
-                'adm-rights' => [
-                    '0' => 'edit settings',
+        try {
+            $options = [
+                'active' => '1',
+                'rights' => [],
+                'adm-nav' => [
+                    'adm-rights' => [
+                        '0' => 'edit settings',
+                    ],
+                    'name' => 'Einstellungen',
+                    'link' => 'settings',
+                    'icon' => 'fas fa-cogs',
+                    'permission' => 'edit settings',
                 ],
-                'name' => 'Einstellungen',
-                'link' => 'settings',
-                'icon' => 'fas fa-cogs',
-                'permission' => 'edit settings',
-            ],
-        ];
-
-        $setting =
-            [
-                'setting' => 'Settings',
-                'description' => 'Einstellungen für die Anwendung',
-                'category' => 'module',
-                'options' => $options,
             ];
 
-        $module = \App\Model\Module::query()->create($setting);
+            $setting =
+                [
+                    'setting' => 'Settings',
+                    'description' => 'Einstellungen für die Anwendung',
+                    'category' => 'module',
+                    'options' => $options,
+                ];
 
+            $module = \App\Model\Module::query()->create($setting);
+
+
+        } catch (Exception $e) {
+        }
     }
+
 
     /**
      * Reverse the migrations.
