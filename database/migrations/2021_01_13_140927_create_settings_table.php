@@ -14,7 +14,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
+
+        Schema::create('settings_modules', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('setting');
             $table->text('description')->nullable();
