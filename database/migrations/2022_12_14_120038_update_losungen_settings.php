@@ -24,7 +24,7 @@ return new class extends Migration {
 
         $setting->delete();
 
-        DB::table('settings')->insert($settings);
+        DB::table('settings_modules')->insert($settings);
 
     }
 
