@@ -15,7 +15,7 @@ return new class extends Migration {
         $setting = Module::where('setting', 'Losung')->first();
 
         $settings = [
-            'id' => $setting->id,
+            'id' => ($setting ? $setting->id : rand(100000, 999999)),
             'setting' => 'Losung',
             'description' => 'Zeigt im Nachrichtenbereich die Tageslosung an. Die Losungen müssen jedes Jahr aus der aktuellen csv-Datei importiert werden.',
             'category' => 'module',
