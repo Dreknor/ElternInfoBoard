@@ -22,7 +22,9 @@ return new class extends Migration {
             'options' => '{"active":"1","rights":[],"home-view-top":"include.losung","adm-nav":{"adm-rights":["edit settings"],"name":"Losung importieren","link":"settings\/losungen\/import","icon":"fas fa-file-import"}}'
         ];
 
-        $setting->delete();
+        if ($setting) {
+            $setting->delete();
+        }
 
         DB::table('settings_modules')->insert($settings);
 
