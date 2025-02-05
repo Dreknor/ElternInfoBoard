@@ -208,7 +208,7 @@ return new class extends Migration
                 'options' => '{"active":"0","rights":{},"nav-user":{"name":"Datenschutz","link":"datenschutz"}}',
             ],
         ];
-        DB::table('settings')->insert($settings);
+        DB::table('settings_modules')->insert($settings);
     }
 
     /**
