@@ -37,7 +37,7 @@ return new class extends Migration
                 }',
         ];
 
-        DB::table('settings')->insert($settings);
+        DB::table('settings_modules')->insert($settings);
 
 
         exec('php artisan cache:clear');

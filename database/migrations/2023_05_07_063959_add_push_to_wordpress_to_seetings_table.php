@@ -21,7 +21,7 @@ return new class extends Migration
             'options' => '{"active":"0"}',
         ];
 
-        DB::table('settings')->insert($settings);
+        DB::table('settings_modules')->insert($settings);
         \Spatie\Permission\Models\Permission::firstOrCreate([
             'name' => "push to wordpress",
             'guard_name' => 'web'

@@ -24,7 +24,7 @@ return new class extends Migration
             'guard_name' => 'web',
         ]);
 
-        DB::table('settings')->insert([
+        DB::table('settings_modules')->insert([
             'setting' => 'Vertretungsplan',
             'category' => 'module',
             'options' => '
