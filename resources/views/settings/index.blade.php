@@ -33,6 +33,11 @@
                                         type="button" role="tab" aria-controls="schicken" aria-selected="false">Schickzeiten
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="care-tab" data-toggle="tab" data-target="#care"
+                                        type="button" role="tab" aria-controls="care" aria-selected="false">Care
+                                </button>
+                            </li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab">
@@ -384,6 +389,45 @@
                                                 Einstellungen speichern
                                             </button>
                                         </div>
+                                </form>
+                            </div>
+                            <div class="tab-pane" id="care" role="tabpanel" aria-labelledby="care-tab">
+                                <form action="{{url('settings/care')}}" method="post" class="form-horizontal">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="form-row mt-1 p-2 border">
+                                        <div class="col-md-6 col-sm-12">
+                                            <label class="label-control w-100">
+                                                ausführliche Ansicht der Anwesenheit
+                                                <input type="checkbox" class="form-control" name="view_detailed_care"
+                                                       value="1" @if($careSettings->view_detailed_care) checked @endif>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 m-auto">
+                                            <div class="small">
+                                                Wenn diese Option aktiviert ist, wird die Anwesenheit in der Betreuungsansicht detailliert angezeigt. Dies umfasst das Bild des Kindes und auch die nächste Schickzeit.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row mt-1 p-2 border">
+                                        <div class="col-md-6 col-sm-12">
+                                            <label class="label-control w-100">
+                                                Nicht anwesende Kinder ausblenden
+                                                <input type="checkbox" class="form-control" name="hide_childs_when_absent"
+                                                       value="1" @if($careSettings->hide_childs_when_absent) checked @endif>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 m-auto">
+                                            <div class="small">
+                                                Wenn ein Kind nicht anwesend ist, wird es in der Betreuungsansicht ausgeblendet. So können nur die Kinder angezeigt werden, die tatsächlich anwesend sind.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <button type="submit" class="btn btn-success btn-block">
+                                            Save Settings
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>

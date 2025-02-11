@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\CareComposer;
 use App\Http\View\Composers\DiseaseComposer;
 use App\Http\View\Composers\LoginComposer;
 use App\Http\View\Composers\LosungComposer;
@@ -67,6 +68,10 @@ class ComposerServiceProvider extends ServiceProvider
 
         View::composer(
             'auth.login', LoginComposer::class
+        );
+
+        View::composer(
+            'anwesenheit.index', CareComposer::class
         );
     }
 }

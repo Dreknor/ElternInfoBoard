@@ -38,7 +38,6 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
-use App\Repositories\WordpressRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
@@ -379,6 +378,10 @@ Route::middleware('auth')->group(function () {
 
     Route::group(['middlewareGroups' => ['can:see logs']], function () {
         Route::get('logs', [LogController::class, 'index']);
+    });
+
+    Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
+        Route::get('/anwesenheit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index']);
     });
 });
 
