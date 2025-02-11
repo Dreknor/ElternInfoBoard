@@ -99,6 +99,9 @@ Route::middleware('auth')->group(function () {
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
 
 
+        //Kinderverwaltung
+        Route::post('child', [\App\Http\Controllers\ChildController::class, 'store']);
+
 
         //make a push notification.
         Route::post('/notification/read', [NotificationController::class, 'read'])->name('notification.read');

@@ -3,53 +3,71 @@
 namespace App\Http\Controllers\Anwesenheit;
 
 use App\Http\Controllers\Controller;
+use App\Model\Child;
+use App\Model\ChildCheckIn;
+use App\Settings\CareSetting;
 use Illuminate\Support\Facades\Cache;
 
 class CareController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
+        $careSettings = new CareSetting();
+
         $groups = ['Frühling', 'Sommer', 'Herbst', 'Winter'];
         $classes = ['Klasse 1', 'Klasse 2', 'Klasse 3', 'Klasse 4'];
+        dump($careSettings->hide_childs_when_absent);
+        if ($careSettings->hide_childs_when_absent) {
+            $childs = Child::query()
+                ->whereHas('checkIns', function ($query) {
+                    $query->where('checked_in', true)
+                        ->where('checked_out', false)
+                        ->whereDate('date', now()->toDateString());
+                })
+                ->get();
 
-        $students = Cache::remember('childs', 600, function ()  use ($groups, $classes) {
+            dump($childs);
+        } else {
 
-            $students = collect();
+            $childs = Child::query()
+                ->get();
+            dump($childs);
 
-            $groupClassCount = [
-                'Frühling' => ['Klasse 1' => 0, 'Klasse 2' => 0, 'Klasse 3' => 0, 'Klasse 4' => 0],
-                'Sommer' => ['Klasse 1' => 0, 'Klasse 2' => 0, 'Klasse 3' => 0, 'Klasse 4' => 0],
-                'Herbst' => ['Klasse 1' => 0, 'Klasse 2' => 0, 'Klasse 3' => 0, 'Klasse 4' => 0],
-                'Winter' => ['Klasse 1' => 0, 'Klasse 2' => 0, 'Klasse 3' => 0, 'Klasse 4' => 0],
-            ];
+        }
 
-            for ($i = 1; $i <= 100; $i++) {
-                $group = $groups[array_rand($groups)];
-                $class = $classes[array_rand($classes)];
-
-                while ($groupClassCount[$group][$class] >= 8 || array_sum($groupClassCount[$group]) >= 27) {
-                    $group = $groups[array_rand($groups)];
-                    $class = $classes[array_rand($classes)];
-                }
-
-                $groupClassCount[$group][$class]++;
-
-                $students->push([
-                    'first_name' => 'Vorname' . $i,
-                    'last_name' => 'Nachname' . $i,
-                    'group' => $group,
-                    'class' => $class,
-                ]);
-            }
-
-            return $students;
-        });
 
 
         return view('anwesenheit.index', [
-            'children' => $students,
+            'children' => $childs,
             'groups' => $groups,
             'classes' => $classes,
         ]);
+    }
+
+    /**
+     * beim Aufruf wird für alle Kinder ein CheckIn erstellt
+     * @return void
+     */
+    public function dailyCheckIn()
+    {
+        $children = Child::query()
+            ->get();
+        $checkIn = [];
+        foreach ($children as $child) {
+            $checkIn[] = [
+                'child_id' => $child->id,
+                'checked_in' => true,
+                'checked_out' => false,
+                'date' => now()->toDateString(),
+            ];
+        }
+
+        ChildCheckIn::query()->insert($checkIn);
+
     }
 }
