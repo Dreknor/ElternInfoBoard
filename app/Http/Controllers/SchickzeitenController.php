@@ -6,6 +6,7 @@ use App\Exports\SchickzeitenExport;
 use App\Http\Requests\CreateChildRequest;
 use App\Http\Requests\SchickzeitRequest;
 use App\Mail\SchickzeitenReminder;
+use App\Model\Child;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use App\Settings\SchickzeitenSetting;
@@ -42,8 +43,7 @@ class SchickzeitenController extends Controller
      */
     public function index()
     {
-        $zeiten = auth()->user()->schickzeiten;
-        $childs = $zeiten->pluck('child_name')->unique();
+        $children = auth()->user()->children;
 
         $weekdays = [
             '1' => 'Montag',
@@ -54,8 +54,7 @@ class SchickzeitenController extends Controller
         ];
 
         return view('schickzeiten.index', [
-            'schickzeiten' => $zeiten,
-            'childs' => $childs,
+            'children' => $children,
             'weekdays' => $weekdays,
             'vorgaben' => new SchickzeitenSetting(),
         ]);
@@ -268,10 +267,15 @@ class SchickzeitenController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Request $request, $day, $child)
+    public function edit(Request $request, $day, Child $child)
     {
-        $schickzeit = $request->user()->schickzeiten->where('weekday', '=', $day)->where('child_name', '=', $child)->sortBy('type');
-
+        if (auth()->user()->children->contains($child) == false) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten',
+            ]);
+        }
+        $schickzeit = $child->schickzeiten()->where('weekday', '=', $day)->orderBy('type')->get();
         $weekdays = [
             '1' => 'Montag',
             '2' => 'Dienstag',
@@ -284,7 +288,7 @@ class SchickzeitenController extends Controller
             'child' => $child,
             'day' => $weekdays[$day],
             'day_number' => $day,
-            'schickzeit' => $schickzeit->first(),
+            'schickzeit' => $schickzeit,
             'schickzeit_spaet' => $schickzeit->where('type', '=', 'spät.')->first(),
             'vorgaben' => new SchickzeitenSetting(),
 

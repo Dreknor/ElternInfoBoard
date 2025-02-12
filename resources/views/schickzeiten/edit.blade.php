@@ -9,7 +9,7 @@
             @enderror
             <div class="card-header">
                 <h6>
-                    Schickzeit für {{$day}} für {{$child}}
+                    Schickzeit für {{$day}} für {{$child->frist_name}} {{$child->last_name}}
                 </h6>
             </div>
             <div class="body">
@@ -22,7 +22,7 @@
                         @csrf
                         <div class="form-row">
                             <label for="child">Name des Kindes</label>
-                            <input name="child" value="{{$child}}" readonly class="form-control" id="child">
+                            <input name="child" value="{{$child->frist_name}}" readonly class="form-control" id="child">
                         </div>
                         <div class="form-row mt-2">
                             <label for="weekday">Wochentag</label>
@@ -32,7 +32,9 @@
                             <label for="type">Typ</label>
                             <select name="type" class="custom-select" id="type">
                                 <option value="genau">genau</option>
-                                <option value="ab" @if($schickzeit and $schickzeit->type == "ab") selected @endif>ab ... Uhr</option>
+                                <option value="ab"
+                                        @if(isset($schickzeit) and $schickzeit->type == "ab") selected @endif>ab ... Uhr
+                                </option>
                             </select>
                         </div>
                         <div class="form-row mt-2">

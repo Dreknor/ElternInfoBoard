@@ -18,12 +18,12 @@
     </div>
     <div class="container-fluid">
         <div class="row">
-            @foreach($childs as $child)
+            @foreach($children as $child)
                 <div class="col-lg-6 col-md-6 col-sm-12">
                     <div class="card">
                         <div class="card-header">
                             <h6 class="card-title">
-                                {{$child}}
+                                {{$child->first_name}} {{$child->last_name}}
                             </h6>
                         </div>
                         <div class="card-body">
@@ -44,11 +44,11 @@
                                                             <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                                                         </a>
                                                         <div class="dropdown-menu">
-                                                            <a href="{{url("schickzeiten/edit/$x/".$child)}}"
+                                                            <a href="{{url("schickzeiten/edit/$x/".$child->id)}}"
                                                                class="dropdown-item">
                                                                 <i class="fa fa-edit"></i> bearbeiten
                                                             </a>
-                                                            @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->first())
+                                                            @if($child->schickzeiten->where('weekday', $x)->first())
                                                                 <form action="{{url("schickzeiten/$x/".$child)}}"
                                                                       method="post" class="form-inline">
                                                                     @csrf
@@ -65,18 +65,18 @@
                                             </div>
                                             <div class="row">
                                                 <div class="col-12">
-                                                    @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->where('type','ab')->first())
+                                                    @if($child->schickzeiten->where('weekday', $x)->where('type','ab')->first())
                                                         ab <span
-                                                            class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
+                                                            class="text-info font-weight-bold">{{substr($child->schickzeiten->where('weekday', $x)->where('type','=','ab')->first()->time->format('H:i'), 0 ,5)}}</span>
                                                         Uhr
-                                                        @if($schickzeiten->where('weekday', $x)->where('type','spät.')->where('child_name',$child)->first())
+                                                        @if($child->schickzeiten->where('weekday', $x)->where('type','spät.')->first())
                                                             bis spät. <span
-                                                                class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','=','spät.')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
+                                                                class="text-info font-weight-bold">{{substr($child->schickzeiten->where('weekday', $x)->where('type','=','spät.')->first()->time->format('H:i'), 0 ,5)}}</span>
                                                             Uhr
                                                         @endif
-                                                    @elseif($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first())
+                                                    @elseif($child->schickzeiten->where('weekday', $x)->where('type','genau')->first())
                                                         <span
-                                                            class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
+                                                            class="text-info font-weight-bold">{{substr($child->schickzeiten->where('weekday', $x)->where('type','genau')->first()->time->format('H:i'), 0 ,5)}}</span>
                                                         Uhr
                                                     @else
                                                         <span class="text-danger">Keine Zeit eingetragen</span>
@@ -106,21 +106,7 @@
 
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header">
-                <h6 class="card-title">
-                    Neues Kind anlegen
-                </h6>
-            </div>
-            <div class="card-body">
-                <form method="post" class="form form-horizontal" action="{{url('schickzeiten/child/create')}}">
-                    @csrf
-                    @error('child')
-                        <span>{{ $message }}</span>
-                    @enderror
-                    <input name="child" class="form-control @error('child') has-error @enderror" placeholder="Name des neuen Kindes" required>
-                    <button class="btn btn-success btn-block">Neues Kind speichern</button>
-                </form>
-            </div>
+            <a href="{{url(('einstellungen'))}}" class="btn btn-primary">Neues Kind anlegen</a>
         </div>
 
     </div>
