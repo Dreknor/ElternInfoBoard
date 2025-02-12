@@ -8,7 +8,7 @@
         <div class="card">
             <div class="card-header">
                 <h6 class="card-title">
-                    Create Child
+                    Kind erstellen
                 </h6>
             </div>
             <div class="card-body">
@@ -57,3 +57,15 @@
         </div>
     </div>
 @endsection
+@push('js')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#parent_id').select2({
+                placeholder: 'Wähle einen Elternteil',
+                allowClear: true
+            });
+        });
+    </script>
+@endpush
