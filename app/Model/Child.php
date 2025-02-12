@@ -32,8 +32,9 @@ class Child extends Model implements HasMedia
 
     public function parents()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class, 'child_user');
     }
+
 
     public function getSchickzeiten()
     {

@@ -16,6 +16,20 @@ class ChildController extends Controller
 
     }
 
+    public function index()
+    {
+        $this->middleware('auth');
+        $this->middleware('can:edit Schickzeiten');
+
+        $childs = Child::query()
+            ->with(['group', 'class', 'parents'])
+            ->get();
+
+        return view('child.index', [
+            'children' => $childs,
+        ]);
+    }
+
     public function store(CreateChildRequest $request)
     {
         $this->middleware('auth');
@@ -60,8 +74,8 @@ class ChildController extends Controller
         $this->middleware('can:edit Schickzeiten');
 
         $parents = User::query()
-            ->whereHas('role', function ($query) {
-                $query->where('name', 'Eltern');
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'Eltern')->where('guard_name', 'web');
             })
             ->get();
 
@@ -106,6 +120,43 @@ class ChildController extends Controller
             'child' => $child,
             'groups' => $groups,
             'parents' => $parents
+        ]);
+    }
+
+    public function edit(Child $child)
+    {
+        $this->middleware('auth');
+        $this->middleware('can:edit Schickzeiten');
+
+        $parents = User::query()
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'Eltern')->where('guard_name', 'web');
+            })
+            ->get();
+
+        return view('child.edit', [
+            'child' => $child,
+            'groups' => Group::all(),
+            'parents' => $parents,
+        ]);
+    }
+
+    public function update(CreateChildRequest $request, Child $child)
+    {
+        $this->middleware('auth');
+        $this->middleware('can:edit Schickzeiten');
+
+        $child->update($request->validated());
+        if (!$child->parents->contains($request->parent_id)) {
+            $child->parents()->sync($request->parent_id);
+        }
+
+        $child->update($request->validated());
+
+
+        return redirect()->back()->with([
+            'Meldung' => 'Kind wurde erfolgreich bearbeitet',
+            'type' => 'success',
         ]);
     }
 

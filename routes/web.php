@@ -100,8 +100,11 @@ Route::middleware('auth')->group(function () {
 
 
         //Kinderverwaltung
+        Route::get('care/children', [\App\Http\Controllers\ChildController::class, 'index'])->name('child.index');
         Route::post('child', [\App\Http\Controllers\ChildController::class, 'store'])->name('child.store');
-        Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create']);
+        Route::get('child/{child}/edit', [\App\Http\Controllers\ChildController::class, 'edit'])->name('child.edit');
+        Route::put('child/{child}', [\App\Http\Controllers\ChildController::class, 'update'])->name('child.update');
+        Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
 
 
