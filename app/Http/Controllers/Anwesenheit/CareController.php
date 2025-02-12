@@ -33,7 +33,7 @@ class CareController extends Controller
                 ->whereHas('checkIns', function ($query) {
                     $query
                         ->CheckedIn()
-                        ->whereDate('date', today()());
+                        ->whereDate('date', now()->toDateString());
                 })
                 ->get();
 

@@ -28,6 +28,7 @@ class CreateChildRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'group_id' => ['sometimes', 'integer', 'exists:groups,id'],
             'class_id' => ['sometimes', 'integer', 'exists:groups,id'],
+            'parent_id' => ['sometimes', 'integer', 'exists:users,id'],
         ];
     }
 }

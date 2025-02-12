@@ -100,7 +100,9 @@ Route::middleware('auth')->group(function () {
 
 
         //Kinderverwaltung
-        Route::post('child', [\App\Http\Controllers\ChildController::class, 'store']);
+        Route::post('child', [\App\Http\Controllers\ChildController::class, 'store'])->name('child.store');
+        Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create']);
+        Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
 
 
         //make a push notification.

@@ -25,6 +25,17 @@
                         @foreach($childs->sortBy('child_name') as $child)
                             <li class="list-group-item"  data-toggle="collapse" href="#collapse{{$child->id}}_{{$child->users_id}}" role="button" >
                                 {{$child->child_name}} ( {{$child->user->name}} )
+                                @php
+                                    $schickzeit = $schickzeiten->where('child_name',$child->child_name)->first();
+                                @endphp
+                                @if(!$schickzeit->child_id)
+                                    <div class="pull-right">
+                                        <a href="{{route('child.createFromSchickzeit', [$schickzeit->id])}}"
+                                           class="card-link">
+                                            <i class="fa fa-plus"></i>
+                                        </a>
+                                    </div>
+                                @endif
                             </li>
                             <div class="collapse card mt-2" id="collapse{{$child->id}}_{{$child->users_id}}">
                                 <div class="card-body">

@@ -15,9 +15,9 @@ class Schickzeiten extends Model
 
     protected $table = 'schickzeiten';
 
-    protected $fillable = ['users_id', 'child_name', 'weekday', 'time', 'type', 'changedBy'];
+    protected $fillable = ['users_id', 'child_name', 'weekday', 'time', 'type', 'changedBy', 'child_id'];
 
-    protected $visible = ['child_name', 'weekday', 'time', 'type', 'users_id', 'changedBy'];
+    protected $visible = ['child_name', 'weekday', 'time', 'type', 'users_id', 'changedBy', 'child_id'];
 
     public function user(): BelongsTo
     {
