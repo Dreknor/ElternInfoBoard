@@ -25,7 +25,12 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
 
     <script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>
+    <script src="{{asset('js/core/jquery.min.js')}}"></script>
+    <script src="{{asset('js/core/popper.min.js')}}"></script>
+    <script src="{{asset('js/core/bootstrap.min.js')}}"></script>
+    <script src="{{asset('js/plugins/perfect-scrollbar.jquery.min.js')}}"></script>
 
+    @stack('js')
     @stack('head')
 
 </head>

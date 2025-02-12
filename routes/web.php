@@ -385,6 +385,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
         Route::get('/anwesenheit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index']);
+        Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
+        Route::get('/anwesenheit/dailyCheckIn', [\App\Http\Controllers\Anwesenheit\CareController::class, 'dailyCheckIn']);
     });
 });
 

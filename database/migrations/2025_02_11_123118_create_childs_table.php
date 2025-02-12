@@ -32,7 +32,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
 
-            $table->foreign('child_id')->references('id')->on('childs')->onDelete('cascade');
+            $table->foreign('child_id')->references('id')->on('children')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
@@ -44,14 +44,14 @@ return new class extends Migration {
             $table->date('date');
             $table->timestamps();
 
-            $table->foreign('child_id')->references('id')->on('childs')->onDelete('cascade');
+            $table->foreign('child_id')->references('id')->on('children')->onDelete('cascade');
         });
 
         Schema::table('schickzeiten', function (Blueprint $table) {
             $table->string('child_name')->nullable()->change();
             $table->unsignedBigInteger('child_id')->nullable();
 
-            $table->foreign('child_id')->references('id')->on('childs')->onDelete('set null');
+            $table->foreign('child_id')->references('id')->on('children')->onDelete('set null');
         });
 
 

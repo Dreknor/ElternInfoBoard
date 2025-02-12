@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Anwesenheit;
 use App\Http\Controllers\Controller;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
+use App\Model\Groups;
 use App\Settings\CareSetting;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
 class CareController extends Controller
@@ -15,32 +17,30 @@ class CareController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * Anwesenheitsübersicht
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
     public function index()
     {
         $careSettings = new CareSetting();
 
-        $groups = ['Frühling', 'Sommer', 'Herbst', 'Winter'];
-        $classes = ['Klasse 1', 'Klasse 2', 'Klasse 3', 'Klasse 4'];
-        dump($careSettings->hide_childs_when_absent);
+       $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
+       $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
+
         if ($careSettings->hide_childs_when_absent) {
             $childs = Child::query()
                 ->whereHas('checkIns', function ($query) {
-                    $query->where('checked_in', true)
-                        ->where('checked_out', false)
-                        ->whereDate('date', now()->toDateString());
+                    $query
+                        ->CheckedIn()
+                        ->whereDate('date', today()());
                 })
                 ->get();
 
-            dump($childs);
         } else {
-
             $childs = Child::query()
                 ->get();
-            dump($childs);
-
         }
-
-
 
         return view('anwesenheit.index', [
             'children' => $childs,
@@ -48,6 +48,31 @@ class CareController extends Controller
             'classes' => $classes,
         ]);
     }
+
+
+    /**
+     * abmelden eines Kindes
+     *
+     * @param Child $child
+     * @return JsonResponse
+     */
+    public function abmelden(Child $child)
+    {
+        $child->checkIns()
+            ->where('checked_in', true)
+            ->where('checked_out', false)
+            ->whereDate('date', now()->toDateString())
+            ->update([
+                'checked_out' => true,
+            ]);
+
+        Cache::forget('checkedIn' . $child->id);
+        return response()->json([
+            'success' => true,
+        ]);
+
+    }
+
 
     /**
      * beim Aufruf wird für alle Kinder ein CheckIn erstellt

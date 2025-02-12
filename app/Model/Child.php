@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -34,20 +35,27 @@ class Child extends Model implements HasMedia
         return $this->belongsToMany(User::class);
     }
 
-    public function Schickzeiten()
+    public function getSchickzeiten()
     {
         return $this->hasMany(Schickzeiten::class, 'child_id');
     }
 
     public function checkedIn()
     {
-        $checkIn = $this->checkIns()
-            ->where('checked_in', true)
-            ->where('checked_out', false)
-            ->whreDate('date', now()->toDateString())
-            ->first();
 
-        return $checkIn ? true : false;
+        $checkIn = Cache::remember('checkedIn' . $this->id, 300, function () {
+            return $this->checkIns()
+                ->where('checked_in', true)
+                ->where('checked_out', false)
+                ->whereDate('date', now()->toDateString())
+                ->first();
+        });
+
+        if (is_null($checkIn) or $checkIn->checked_in == false or $checkIn->checked_out == true) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public function checkIns()
@@ -55,5 +63,15 @@ class Child extends Model implements HasMedia
         return $this->hasMany(ChildCheckIn::class, 'child_id');
     }
 
+    public function schickzeiten(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Schickzeiten::class, 'child_id');
+    }
 
+    public function getSchickzeitenForToday()
+    {
+        return $this->schickzeiten()
+            ->where('weekday', now()->dayOfWeek)
+            ->get();
+    }
 }

@@ -16,8 +16,20 @@ class ChildCheckIn extends Model
         'date',
     ];
 
+
+    protected $casts = [
+        'checked_in' => 'boolean',
+        'checked_out' => 'boolean',
+        'date' => 'date',
+    ];
+
     public function child()
     {
         return $this->belongsTo(Child::class);
+    }
+
+    public function scopeCheckedIn($query)
+    {
+        return $query->where('checked_in', true)->where('checked_out', false);
     }
 }
