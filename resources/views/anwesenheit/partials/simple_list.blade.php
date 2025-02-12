@@ -14,7 +14,7 @@
                                 {{ $class->name }}
                             </h4>
                             @php
-                                $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('lastname');
+                                $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('last_name');
                             @endphp
                             <ul class="list-group" style="margin: 0;">
                                 @foreach($sortedChildren as $child)
