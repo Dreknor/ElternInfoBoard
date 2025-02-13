@@ -92,10 +92,11 @@
                         </div>
 
                         <div class="card-footer">
-                            <a class="text-danger"
-                               href="{{url('schickzeiten/'.auth()->id().'/trash/'.\Illuminate\Support\Str::replace(' ', '_',$child))}}">
-                                <i class="fa fa-trash"></i> alles löschen
-                            </a>
+                            <form action="{{url("schickzeiten/$child->id")}}" method="post">
+                                @csrf
+                                @method('delete')
+                                <button type="submit" class="btn btn-danger btn-block">Alle Schickzeiten löschen</button>
+                            </form>
                         </div>
                     </div>
                 </div>

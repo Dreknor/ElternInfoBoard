@@ -72,7 +72,11 @@ class Child extends Model implements HasMedia
     public function getSchickzeitenForToday()
     {
         return $this->schickzeiten()
-            ->where('weekday', now()->dayOfWeek)
+            ->where(function ($query) {
+                $query->where('weekday', now()->format('l'))
+                    ->orWhere('specific_date', now()->toDateString());
+
+            })
             ->get();
     }
 }

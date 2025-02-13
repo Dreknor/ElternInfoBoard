@@ -31,7 +31,7 @@
                     </div>
                     <hr>
                     <h5>Schickzeit für heute erfassen</h5>
-                    <form id="schickzeitForm">
+                    <form id="schickzeitForm" method="post" action="">
                         @csrf
                         <div class="form-group">
                             <label for="type">Typ</label>
@@ -53,7 +53,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="spät.">bis ... Uhr</label>
-                                    <input type="time" class="form-control" id="spät." name="spät.">
+                                    <input type="time" class="form-control" id="spät." name="spaet">
                                 </div>
                             </div>
                         </div>
@@ -102,12 +102,15 @@
                         logoutButton.style.display = 'inline-block';
                     }
 
+                    //Action for the form
+                    schickzeitForm.action = `anwesenheit/${childData.id}/schickzeit`;
+
                     const schickzeitenContainer = document.getElementById('schickzeitenContainer');
                     schickzeitenContainer.innerHTML = '';
                     if (childData.schickzeiten.length > 0) {
                         childData.schickzeiten.forEach(schickzeit => {
                             const schickzeitElement = document.createElement('p');
-                            schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString()}`;
+                            schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
                             schickzeitenContainer.appendChild(schickzeitElement);
                         });
                     }
@@ -137,21 +140,6 @@
                 });
             });
 
-            schickzeitForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const childId = logoutButton.dataset.childId;
-                const formData = $(this).serialize();
-                console.log(formData);
-
-                $.ajax({
-                    url: `anwesenheit/${childId}/schickzeit`,
-                    method: 'POST',
-                    data: formData
-                }).done(function () {
-                    childModal.modal('hide');
-                    window.location.reload();
-                });
-            });
         });
     </script>
 @endpush

@@ -119,7 +119,10 @@ Route::middleware('auth')->group(function () {
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
-        Route::get('schickzeiten/{user}/trash/{child}', [SchickzeitenController::class, 'deleteChild']);
+        Route::delete('schickzeiten/{child}', [SchickzeitenController::class, 'deleteChild']);
+
+
+
         Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
@@ -127,7 +130,7 @@ Route::middleware('auth')->group(function () {
         Route::post('verwaltung/schickzeiten/child/create', [SchickzeitenController::class, 'createChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit']);
         Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::post('schickzeiten', [SchickzeitenController::class, 'store']);
+        Route::post('schickzeiten/{child}/{weekday}', [SchickzeitenController::class, 'store']);
         Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
         Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
         Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
@@ -392,6 +395,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/anwesenheit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index']);
         Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
         Route::get('/anwesenheit/dailyCheckIn', [\App\Http\Controllers\Anwesenheit\CareController::class, 'dailyCheckIn']);
+        Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
     });
 });
 
