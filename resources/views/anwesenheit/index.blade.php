@@ -12,7 +12,6 @@
     </div>
 
     <!-- Modal -->
-    <!-- Modal -->
     <div class="modal fade" id="childModal" tabindex="-1" role="dialog" aria-labelledby="childModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -30,6 +29,37 @@
                             <!-- Schickzeiten will be displayed here -->
                         </div>
                     </div>
+                    <hr>
+                    <h5>Schickzeit für heute erfassen</h5>
+                    <form id="schickzeitForm">
+                        @csrf
+                        <div class="form-group">
+                            <label for="type">Typ</label>
+                            <select class="form-control" id="type" name="type" required>
+                                <option value="ab">von ... bis ... Uhr</option>
+                                <option value="genau">genau</option>
+                            </select>
+                        </div>
+                        <div class="form-group collapse" id="genau_row">
+                            <label for="schickzeitTime">Zeit</label>
+                            <input type="time" class="form-control" id="schickzeitTime" name="time">
+                        </div>
+
+                        <div class="form-group" id="spaet_row">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="ab">ab ... Uhr</label>
+                                    <input type="time" class="form-control" id="ab" name="ab">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="spät.">bis ... Uhr</label>
+                                    <input type="time" class="form-control" id="spät." name="spät.">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Schickzeit erfassen</button>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -42,17 +72,26 @@
         </div>
     </div>
 @endsection
-
 @push('js')
     <script>
+        $(document).ready(function () {
+            $("#type").change(function () {
+                $('#spaet_row').toggle();
+                $('#genau_row').toggle();
+            });
+        });
+
+
         document.addEventListener('DOMContentLoaded', function () {
             const childModal = $('#childModal');
             const childName = document.getElementById('childName');
             const logoutButton = document.getElementById('logoutButton');
             const spinner = document.getElementById('spinner');
+            const schickzeitForm = document.getElementById('schickzeitForm');
 
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
+
                     const childData = JSON.parse(this.dataset.child);
                     childName.textContent = `${childData.first_name} ${childData.last_name}`;
                     logoutButton.dataset.childId = childData.id;
@@ -63,19 +102,14 @@
                         logoutButton.style.display = 'inline-block';
                     }
 
-                    /**
-                     * Clear schickzeiten container
-                     */
                     const schickzeitenContainer = document.getElementById('schickzeitenContainer');
                     schickzeitenContainer.innerHTML = '';
                     if (childData.schickzeiten.length > 0) {
-
                         childData.schickzeiten.forEach(schickzeit => {
                             const schickzeitElement = document.createElement('p');
                             schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString()}`;
                             schickzeitenContainer.appendChild(schickzeitElement);
                         });
-
                     }
 
                     childModal.modal('show');
@@ -85,7 +119,6 @@
             logoutButton.addEventListener('click', function () {
                 const childId = this.dataset.childId;
 
-                // Show spinner and hide logout button
                 logoutButton.style.display = 'none';
                 spinner.style.display = 'inline-block';
 
@@ -99,9 +132,24 @@
                     childModal.modal('hide');
                     window.location.reload();
                 }).always(function () {
-                    // Hide spinner and show logout button
                     spinner.style.display = 'none';
                     logoutButton.style.display = 'inline-block';
+                });
+            });
+
+            schickzeitForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const childId = logoutButton.dataset.childId;
+                const formData = $(this).serialize();
+                console.log(formData);
+
+                $.ajax({
+                    url: `anwesenheit/${childId}/schickzeit`,
+                    method: 'POST',
+                    data: formData
+                }).done(function () {
+                    childModal.modal('hide');
+                    window.location.reload();
                 });
             });
         });
