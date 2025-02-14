@@ -35,7 +35,7 @@
                                                                 if ($timeDifference <= 15 && $timeDifference >= 0 && ($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')) {
                                                                     $backgroundClass = 'badge badge-warning pull-right ml-2 text-great';
                                                                 } elseif ($timeDifference < 0 && ($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')) {
-                                                                    $backgroundClass = 'badge badge-danger pull-right ml-2 text-greater';
+                                                                    $backgroundClass = 'badge badge-danger pull-right ml-2 text-great';
                                                                 } elseif ($schickzeit->type == 'ab' && $timeDifference > 15) {
                                                                     $backgroundClass = 'badge badge-success ml-2';
                                                                 } else {
