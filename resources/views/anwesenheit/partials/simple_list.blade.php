@@ -50,7 +50,7 @@
 
                                                             @else
                                                             <span class="{{ $backgroundClass }}">
-                                                                    {{ $schickzeit->time->format('H:i') }}
+                                                                    {{ $schickzeit->time->format('H:i') }} {{ $schickzeit->type == 'spät.' ? '(spät.)' : '' }}
                                                                 </span>
                                                             @endif
                                                         @endforeach
