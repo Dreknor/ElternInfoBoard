@@ -49,7 +49,7 @@
                                                                 </span>
                                                             @elseif($schickzeit->type == 'ab' && $timeDifference > 15)
                                                                 <span class="{{ $backgroundClass }}">
-                                                                    &#10003;
+                                                                    {{ $schickzeit->time->format('H:i') }}
                                                                 </span>
                                                             @endif
                                                         @endforeach
