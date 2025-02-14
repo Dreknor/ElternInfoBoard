@@ -74,6 +74,8 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-danger" id="logoutButton" style="display: none;">Abmelden</button>
+                    <button type="button" class="btn btn-success" id="checkinButton" style="display: none;">Check-in
+                    </button>
                     <div id="spinner" class="spinner-border text-danger" role="status" style="display: none;">
                         <span class="sr-only">Loading...</span>
                     </div>
@@ -105,11 +107,14 @@
                     const childData = JSON.parse(this.dataset.child);
                     childName.textContent = `${childData.first_name} ${childData.last_name}`;
                     logoutButton.dataset.childId = childData.id;
+                    checkinButton.dataset.childId = childData.id;
 
                     if (childData.checked_in === 'false') {
                         logoutButton.style.display = 'none';
+                        checkinButton.style.display = 'inline-block';
                     } else {
                         logoutButton.style.display = 'inline-block';
+                        checkinButton.style.display = 'none';
                     }
 
                     //Action for the form
@@ -149,6 +154,29 @@
                     logoutButton.style.display = 'inline-block';
                 });
             });
+
+
+            checkinButton.addEventListener('click', function () {
+                const childId = this.dataset.childId;
+
+                checkinButton.style.display = 'none';
+                spinner.style.display = 'inline-block';
+
+                $.ajax({
+                    url: `anwesenheit/${childId}/anmelden`,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    }
+                }).done(function () {
+                    childModal.modal('hide');
+                    window.location.reload();
+                }).always(function () {
+                    spinner.style.display = 'none';
+                    checkinButton.style.display = 'inline-block';
+                });
+            });
+        });
 
         });
     </script>
