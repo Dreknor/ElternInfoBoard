@@ -43,12 +43,13 @@
                                                                 }
 
                                                             @endphp
-                                                            @if($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')
-                                                                <span class="{{ $backgroundClass }}">
+                                                            @if($schickzeit->type == 'ab' && $schickzeit->time->lt(now()))
+                                                                <span class="badge badge-success ml-2">
                                                                     {{ $schickzeit->time->format('H:i') }}
                                                                 </span>
-                                                            @elseif($schickzeit->type == 'ab' && $timeDifference > 15)
-                                                                <span class="{{ $backgroundClass }}">
+
+                                                            @else
+                                                            <span class="{{ $backgroundClass }}">
                                                                     {{ $schickzeit->time->format('H:i') }}
                                                                 </span>
                                                             @endif
