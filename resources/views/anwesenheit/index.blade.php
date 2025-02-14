@@ -9,6 +9,16 @@
                 @include('anwesenheit.partials.detailed_view')
             @endif
         </div>
+        <div class="row">
+            <div class="col-md-12">
+                @if($careSettings->hide_childs_when_absent && !request()->cookie('showAll'))
+                    <a href="{{ route('anwesenheit.index', ['showAll' => 1]) }}" class="btn btn-primary">Alle Kinder
+                        anzeigen</a>
+                @elseif(request()->cookie('showAll'))
+                    <a href="{{ route('anwesenheit.index', ['showAll' => 'off']) }}" class="btn btn-primary"
+                       id="removeCookie">Nur anwesende Kinder anzeigen</a>
+                @endif
+            </div>
     </div>
 
     <!-- Modal -->

@@ -392,7 +392,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
-        Route::get('/anwesenheit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index']);
+        Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
         Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
         Route::get('/anwesenheit/dailyCheckIn', [\App\Http\Controllers\Anwesenheit\CareController::class, 'dailyCheckIn']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);

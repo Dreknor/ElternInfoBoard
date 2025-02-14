@@ -21,14 +21,20 @@ class CareController extends Controller
      * Anwesenheitsübersicht
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index()
+    public function index($showAll = false)
     {
         $careSettings = new CareSetting();
+
+        if ($showAll == 1) {
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
+        } elseif ($showAll == 'off') {
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', false));
+        }
 
        $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
        $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
 
-        if ($careSettings->hide_childs_when_absent) {
+        if ($careSettings->hide_childs_when_absent == true && !request()->cookie('showAll')) {
             $childs = Child::query()
                 ->whereHas('checkIns', function ($query) {
                     $query
@@ -46,6 +52,7 @@ class CareController extends Controller
             'children' => $childs,
             'groups' => $groups,
             'classes' => $classes,
+            'careSettings' => $careSettings,
         ]);
     }
 
