@@ -24,6 +24,11 @@ class Schickzeiten extends Model
         return $this->belongsTo(User::class, 'users_id');
     }
 
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class, 'child_id');
+    }
+
     public function getTimeAttribute()
     {
         if ($this->attributes['time']) {

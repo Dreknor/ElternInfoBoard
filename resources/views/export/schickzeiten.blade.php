@@ -18,7 +18,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 1)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':00'), \Carbon\Carbon::parse($stunde.':29'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '00') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -27,7 +27,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 2)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':00'), \Carbon\Carbon::parse($stunde.':29'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '00') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -36,7 +36,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 3)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':00'), \Carbon\Carbon::parse($stunde.':29'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '00') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -45,7 +45,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 4)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':00'), \Carbon\Carbon::parse($stunde.':29'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '00') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -54,7 +54,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 5)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':00'), \Carbon\Carbon::parse($stunde.':29'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '00') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -68,7 +68,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 1)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':30'), \Carbon\Carbon::parse($stunde+1 .':00'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '30') ({{$schickzeit->time->format('i')}}) @endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -77,7 +77,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 2)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':30'), \Carbon\Carbon::parse($stunde+1 .':00'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '30') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -86,7 +86,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 3)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':30'), \Carbon\Carbon::parse($stunde+1 .':00'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '30') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -95,7 +95,7 @@
                 @foreach($schickzeiten->where('weekday', '=', 4)->filter(function ($item) use ($stunde){
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':30'), \Carbon\Carbon::parse($stunde+1 .':00'));
                         }) as $schickzeit)
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '30') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
@@ -105,7 +105,7 @@
                         return $item->time->between(\Carbon\Carbon::parse($stunde.':30'), \Carbon\Carbon::parse($stunde+1 .':00'));
                         }) as $schickzeit)
 
-                    {{$schickzeit->child_name}}
+                    @if(!is_null($schickzeit->child)) {{$schickzeit->child->first_name}}, {{$schickzeit->child->last_name}} @else {{$schickzeit->child_name}} @endif
                     @if($schickzeit->time->format('i') != '30') ({{$schickzeit->time->format('i')}})@endif
                     @if($schickzeit->type == 'ab') (ab) @elseif ($schickzeit->type == 'spät.') (spät.) @endif <br>
                 @endforeach
