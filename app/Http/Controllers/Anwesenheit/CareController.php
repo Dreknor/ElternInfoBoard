@@ -83,7 +83,6 @@ class CareController extends Controller
     public function anmelden(Child $child)
     {
         $child->checkIns()
-            ->where('checked_in', false)
             ->whereDate('date', now()->toDateString())
             ->update([
                 'checked_in' => true,
