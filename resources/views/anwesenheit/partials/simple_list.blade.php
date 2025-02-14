@@ -11,7 +11,7 @@
                         @foreach($classes as $class)
                             <h4 class="text-secondary"
                                 style="position: sticky; top: 40px; z-index: 1; background-color: white; margin: 0.5rem 0;">
-                                {{ $class->name }} <div class="badge badge-primary">{{ $class->children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</div>
+                                {{ $class->name }} <div class="badge badge-primary">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</div>
                             </h4>
                             @php
                                 $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('last_name');
