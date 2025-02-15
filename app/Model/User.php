@@ -99,10 +99,27 @@ class User extends Authenticatable
      * @return BelongsToMany
      */
 
+    public function children_rel()
+    {
+        return $this->belongsToMany(Child::class, 'child_user');
+
+    }
+
     public function children()
     {
-        return $this->belongsToMany(Child::class, 'child_user')->orWhere('user_id', $this->sorg2);
+        $children = $this->children_rel;
+        if (!is_null($this->sorg2)) {
+            $children2 = $this->sorgeberechtigter2?->children_rel;
+            if (!is_null($children2) and !is_null($children)) {
+                return $children->merge($children2);
+            } elseif (is_null($children)) {
+                return $children2;
+            }
+        }
+
+        return $children;
     }
+
 
     /**
      * Verknüpfte Gruppen

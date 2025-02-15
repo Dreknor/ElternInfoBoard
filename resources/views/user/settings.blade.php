@@ -182,7 +182,7 @@
                                         </div>
                                         <div class="card-body">
                                             <ul class="list-group">
-                                                @foreach($user->children as $child)
+                                                @foreach($user->children() as $child)
                                                     <li class="list-group-item">
                                                         {{$child->first_name}}
                                                         {{$child->last_name}}

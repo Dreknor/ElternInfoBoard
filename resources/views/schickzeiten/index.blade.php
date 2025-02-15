@@ -3,60 +3,55 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="card-title">
-                            aktuelle Anwesenheit
-                        </h6>
-                    </div>
                     <div class="card-body">
-                        <ul class="list-group">
+                        <div class="row">
                             @foreach($children as $child)
-                                <li class="list-group-item @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
-                                    <div class="row">
-                                        <div class="col-md-6">
+                                <div class="col-auto">
+                                    <div class="card @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
+                                        <div class="card-header">
+                                            <h6 class="card-title">
                                                 {{$child->first_name}} {{$child->last_name}}
+                                            </h6>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="card-body">
                                             @if(!$child->checkedIn() and $child->checkIns()->where('date', today())->first())
-                                                {{$child->checkIns()->where('date', today())->first()?->updated_at?->format('H:i')}} Uhr abgemeldet
+                                                <p>
+                                                    {{$child->checkIns()->where('date', today())->first()?->updated_at?->format('H:i')}} Uhr abgemeldet
+                                                </p>
                                             @elseif($child->checkedIn())
-                                                derzeit angemeldet
+                                                <p>
+                                                    derzeit angemeldet
+                                                @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
+                                                    @foreach($child->getSchickzeitenForToday() as $schickzeit)
+                                                        <br>Schickzeit:
+                                                        @if($schickzeit->type == 'genau')
+                                                            {{$schickzeit->time?->format('H:i')}} Uhr
+                                                        @else
+                                                            @if(!is_null($schickzeit->time_ab)) ab @endif
+                                                            {{$schickzeit->time_ab?->format('H:i')}}
+                                                            @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet)) - @endif
+                                                            @if(!is_null($schickzeit->time_spaet)) spät. @endif
+                                                            {{$schickzeit->time_spaet?->format('H:i')}} Uhr
+                                                        @endif
+                                                    @endforeach
+                                                @elseif($child->getSchickzeitenForToday()->count() == 0 and $child->checkedIn())
+                                                    keine Schickzeiten
+                                                @else
+
+                                                @endif
+                                                </p>
                                             @else
                                                 heute nicht angemeldet
                                             @endif
                                         </div>
-                                        <div class="col-md-3">
-                                            @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
-                                                @foreach($child->getSchickzeitenForToday() as $schickzeit)
-                                                    Schickzeit:
-                                                    @if($schickzeit->type == 'genau')
-                                                        {{$schickzeit->time?->format('H:i')}} Uhr
-                                                    @else
-                                                        @if(!is_null($schickzeit->time_ab)) ab @endif
-                                                            {{$schickzeit->time_ab?->format('H:i')}}
-                                                        @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet)) - @endif
-                                                            @if(!is_null($schickzeit->time_spaet)) spät. @endif
-                                                            {{$schickzeit->time_spaet?->format('H:i')}} Uhr
-                                                    @endif
-                                                @endforeach
-                                            @elseif($child->getSchickzeitenForToday()->count() == 0 and $child->checkedIn())
-                                                keine Schickzeiten
-                                            @else
-
-                                            @endif
-                                        </div>
                                     </div>
-                                </li>
+                                </div>
+
                             @endforeach
-                        </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        </div>
 
         <div class="row">
             <div class="card">

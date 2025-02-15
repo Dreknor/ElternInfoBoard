@@ -9,6 +9,7 @@ use App\Mail\SchickzeitenReminder;
 use App\Model\Child;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Settings\CareSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
@@ -27,6 +28,7 @@ class SchickzeitenController extends Controller
 {
 
     protected SchickzeitenSetting $schickenzeitenSetting;
+    protected CareSetting $careSettings;
 
     /**
      *
@@ -35,6 +37,8 @@ class SchickzeitenController extends Controller
     {
         $this->middleware('auth');
         $this->schickenzeitenSetting = new SchickzeitenSetting();
+        $this->careSettings = new CareSetting();
+
     }
 
     /**
@@ -44,7 +48,7 @@ class SchickzeitenController extends Controller
      */
     public function index()
     {
-        $children = auth()->user()->children;
+        $children = auth()->user()->children();
 
         $weekdays = [
             '1' => 'Montag',
@@ -192,7 +196,7 @@ class SchickzeitenController extends Controller
      */
     public function store(SchickzeitRequest $request, Child $child, $weekday = null)
     {
-        if (!auth()->user()->children()->where('children.id', $child->id)->exists()) {
+        if (!auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -306,7 +310,7 @@ class SchickzeitenController extends Controller
      */
     public function edit(Request $request, $day, Child $child)
     {
-        if (!auth()->user()->children()->where('children.id', $child->id)->exists()) {
+        if (!auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -427,7 +431,7 @@ class SchickzeitenController extends Controller
     public function deleteChild(Child $child)
     {
 
-        if (!auth()->user()->children()->where('children.id', $child->id)->exists()) {
+        if (!auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -520,7 +524,7 @@ class SchickzeitenController extends Controller
 
     public function destroySchickzeit(Schickzeiten $schickzeit)
     {
-       if(auth()->user()->children()->where('children.id', $schickzeit->child_id)->exists() == false && !auth()->user()->can('edit schickzeiten')) {
+       if (!auth()->user()->children()->contains($schickzeit->child) && !auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
