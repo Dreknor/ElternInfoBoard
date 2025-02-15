@@ -5,13 +5,14 @@
                 <div class="card">
                     <div class="card-header bg-primary text-white"
                          style="position: sticky; top: 0; z-index: 1; padding: 0.5rem;">
+                        <span class="badge badge-warning pull-right">{{ $children->where('group_id', $group->id)->count() }}</span>
+
                         <h3 style="margin: 0;">{{ $group->name }}</h3>
                     </div>
                     <div class="card-body" style="padding: 0.5rem;">
                         @foreach($classes as $class)
-                            <h4 class="text-secondary"
-                                style="position: sticky; top: 40px; z-index: 1; background-color: white; margin: 0.5rem 0;">
-                                {{ $class->name }} <div class="badge badge-primary">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</div>
+                            <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 40px; z-index: 1; margin: 0.5rem 0;">
+                                {{ $class->name }}  <span class="badge badge-primary pull-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
                             </h4>
                             @php
                                 $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('last_name');
