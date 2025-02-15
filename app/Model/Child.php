@@ -91,4 +91,25 @@ class Child extends Model implements HasMedia
                 ->orWhereIn('class_id', (new CareSetting())->class_list);
         });
     }
+
+    public function krankmeldungen()
+    {
+        return $this->hasMany(krankmeldungen::class, 'child_id')->orderByDesc('created_at');
+    }
+
+    public function krankmeldungToday()
+    {
+         $meldung = $this->krankmeldungen()
+            ->where(function ($query) {
+                $query->whereDate('start', '<=', today())
+                    ->whereDate('ende', '>=', today());
+            })
+            ->get();
+
+         if ($meldung->count() > 0) {
+             return true;
+            } else {
+                return false;
+            }
+    }
 }

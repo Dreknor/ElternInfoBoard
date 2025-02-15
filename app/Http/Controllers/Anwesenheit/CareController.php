@@ -114,10 +114,17 @@ class CareController extends Controller
      */
     public function dailyCheckIn()
     {
+
         $children = Child::query()
             ->get();
+
         $checkIn = [];
         foreach ($children as $child) {
+
+            if ($child->krankmeldungToday()) {
+                continue;
+            }
+
             $checkIn[] = [
                 'child_id' => $child->id,
                 'checked_in' => true,
@@ -127,6 +134,7 @@ class CareController extends Controller
         }
 
         ChildCheckIn::query()->insert($checkIn);
+
 
     }
 }
