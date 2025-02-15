@@ -82,12 +82,23 @@ class CareController extends Controller
 
     public function anmelden(Child $child)
     {
-        $child->checkIns()
+        $checkIn = $child->checkIns()
             ->whereDate('date', now()->toDateString())
-            ->update([
+            ->first();
+
+        if ($checkIn) {
+            $checkIn->update([
                 'checked_in' => true,
                 'checked_out' => false,
             ]);
+        } else {
+            $child->checkIns()->create([
+                'checked_in' => true,
+                'checked_out' => false,
+                'date' => now()->toDateString(),
+            ]);
+        }
+
 
         Cache::forget('checkedIn' . $child->id);
         return response()->json([

@@ -46,7 +46,7 @@
                                                             @endphp
                                                             @if($schickzeit->type == 'ab' && $schickzeit->time->lt(now()))
                                                                 <span class="badge badge-success ml-2">
-                                                                    {{ $schickzeit->time->format('H:i') }}
+                                                                    {{ $schickzeit->time_ab->format('H:i') }}
                                                                 </span>
 
                                                             @else

@@ -44,7 +44,7 @@ class Child extends Model implements HasMedia
             return $this->checkIns()
                 ->where('checked_in', true)
                 ->where('checked_out', false)
-                ->whereDate('date', now()->toDateString())
+                ->whereDate('date', today())
                 ->first();
         });
 
@@ -71,12 +71,13 @@ class Child extends Model implements HasMedia
         $schickzeiten = $this->schickzeiten()
             ->where(function ($query) {
                 $query->where('weekday', now()->dayOfWeek)
-                    ->orWhere('specific_date', now()->toDateString());
+                    ->orWhere('specific_date', today());
             })
             ->get();
 
-        if ($schickzeiten->where('specific_date', now()->toDateString())->count() > 0) {
-            return $schickzeiten->where('specific_date', now()->toDateString());
+        if ($schickzeiten->where('specific_date',  today())->count() > 0) {
+
+            return $schickzeiten->where('specific_date',  today());
         } else {
             return $schickzeiten->where('weekday', now()->dayOfWeek);
         }
