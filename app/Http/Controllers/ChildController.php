@@ -38,7 +38,7 @@ class ChildController extends Controller
             auth()->user()->children()->create($request->validated());
         } else {
             $parent = User::find($request->parent_id);
-            $child = $parent->children()->create($request->validated());
+            $child = $parent->children_rel()->create($request->validated());
 
 
             if (session()->has('schickzeiten')) {
