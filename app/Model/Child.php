@@ -36,10 +36,6 @@ class Child extends Model implements HasMedia
     }
 
 
-    public function getSchickzeiten()
-    {
-        return $this->hasMany(Schickzeiten::class, 'child_id');
-    }
 
     public function checkedIn()
     {

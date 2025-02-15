@@ -66,13 +66,16 @@ class SchickzeitenController extends Controller
      */
     public function indexVerwaltung()
     {
-        $zeiten = Schickzeiten::all();
-        $childs = $zeiten->unique(fn($item) => $item['users_id'].$item['child_name']);
 
-        $parents = User::whereHas('groups', function (Builder $query) {
-            $query->where('bereich', 'Grundschule');
-        })->get();
-        $parents = $parents->sortBy('Familiename');
+        if (\auth()->user()->can('edit schickzeiten') == false) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berrechtigung fehlt',
+            ]);
+        }
+
+        $children = Child::query()->orderBy('last_name')->get();
+        $children->load('schickzeiten');
 
         $weekdays = [
             '1' => 'Montag',
@@ -83,10 +86,8 @@ class SchickzeitenController extends Controller
         ];
 
         return view('schickzeiten.index_verwaltung', [
-            'schickzeiten' => $zeiten,
-            'childs' => $childs,
+            'children' => $children,
             'weekdays' => $weekdays,
-            'parents' => $parents,
         ]);
     }
 
@@ -189,9 +190,9 @@ class SchickzeitenController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return RedirectResponse
      */
-    public function store(SchickzeitRequest $request, Child $child, $weekday )
+    public function store(SchickzeitRequest $request, Child $child, $weekday = null)
     {
-        if (!auth()->user()->children()->where('id', $child->id)->exists()) {
+        if (!auth()->user()->children()->where('children.id', $child->id)->exists()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -200,7 +201,6 @@ class SchickzeitenController extends Controller
 
         // Prüfen, ob für spezifischen Tag oder Wochentag erstellt werden soll
         $specificDate = $request->input('specific_date');
-        $weekday = $request->input('weekday');
 
         if (!$specificDate && !$weekday) {
             return redirect()->back()->with([
@@ -208,103 +208,89 @@ class SchickzeitenController extends Controller
                 'Meldung' => 'Sie müssen entweder einen Wochentag oder ein spezifisches Datum angeben.',
             ]);
         }
-        switch ($weekday) {
-            case 'Montag':
-                $weekday = 1;
-                break;
-            case 'Dienstag':
-                $weekday = 2;
-                break;
-            case 'Mittwoch':
-                $weekday = 3;
-                break;
-            case 'Donnerstag':
-                $weekday = 4;
-                break;
-            case 'Freitag':
-                $weekday = 5;
-                break;
-            default:
-                return redirect()->back()->with([
-                    'type' => 'warning',
-                    'Meldung' => 'Wochentag nicht gefunden',
-                ]);
-                break;
+
+        if ($weekday){
+            switch ($weekday) {
+                case 'Montag':
+                    $weekday = 1;
+                    break;
+                case 'Dienstag':
+                    $weekday = 2;
+                    break;
+                case 'Mittwoch':
+                    $weekday = 3;
+                    break;
+                case 'Donnerstag':
+                    $weekday = 4;
+                    break;
+                case 'Freitag':
+                    $weekday = 5;
+                    break;
+                default:
+                    return redirect()->back()->with([
+                        'type' => 'warning',
+                        'Meldung' => 'Wochentag nicht gefunden',
+                    ]);
+                    break;
+            }
         }
 
         $settings_ab = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_ab);
         $settings_bis = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_bis);
 
+        if ($request->type == 'genau'){
+            $time = Carbon::createFromFormat('H:i', $request->time);
 
-        switch ($request->type) {
-            case 'genau':
-                $time = Carbon::createFromFormat('H:i', $request->time);
+            if ($time->lt($settings_ab) || $time->gt($settings_bis)) {
+                return redirect()->back()->with([
+                    'type' => 'warning',
+                    'Meldung' => 'Ungültige Zeit',
+                ]);
+            }
 
-                if ($time->lt($settings_ab) or $time->gt($settings_bis)) {
-                    return redirect()->back()->with([
-                        'type' => 'warning',
-                        'Meldung' => 'Die Zeit muss zwischen '.$this->schickenzeitenSetting->schicken_ab.' und '.$this->schickenzeitenSetting->schicken_bis.' liegen',
-                    ]);
-                }
-
-
+            if ($weekday){
                 $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
-                $child->schickzeiten()->create([
-                    'weekday' => $weekday,
-                    'specific_date' => $specificDate,
-                    'type' => 'genau',
-                    'time' => $time->format('H:i'),
-                    'changedBy' => Auth::id(),
-                    'users_id' => Auth::id(),
+            } else {
+                $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
+            }
+
+            $child->schickzeiten()->create([
+                'weekday' => $weekday,
+                'specific_date' => $specificDate,
+                'type' => $request->type,
+                'time' => $request->time,
+                'changedBy' => Auth::id(),
+                'users_id' => $child->parents()->first()->id
+            ]);
+
+        } else {
+
+            $time_ab = Carbon::createFromFormat('H:i', $request->time_ab);
+            $time_spaet = Carbon::createFromFormat('H:i', $request->time_spaet);
+
+            if ($time_ab->lt($settings_ab) || $time_ab->gt($settings_bis) || $time_spaet->lt($settings_ab) || $time_spaet->gt($settings_bis)) {
+                return redirect()->back()->with([
+                    'type' => 'warning',
+                    'Meldung' => 'Ungültige Zeit',
                 ]);
-                break;
-            case 'ab':
-                $ab = Carbon::createFromFormat('H:i', $request->time_ab);
-                $spaet = Carbon::createFromFormat('H:i', $request->time_spaet);
+            }
 
-
-
-                if ($ab->gt($spaet)) {
-                    return redirect()->back()->with([
-                        'type' => 'warning',
-                        'Meldung' => 'Die Zeit für "ab" muss vor der Zeit für "spät." liegen',
-                    ]);
-                }
-
-                if ($ab->lt($settings_ab) or $ab->gt($settings_bis)) {
-                    return redirect()->back()->with([
-                        'type' => 'warning',
-                        'Meldung' => 'Die Zeit für "ab" muss zwischen '.$this->schickenzeitenSetting->schicken_ab.' und '.$this->schickenzeitenSetting->schicken_bis.' liegen',
-                    ]);
-                }
-
-                if ($spaet->lt($settings_ab) or $spaet->gt($settings_bis)) {
-                    return redirect()->back()->with([
-                        'type' => 'warning',
-                        'Meldung' => 'Die Zeit für "spät." muss zwischen '.$this->schickenzeitenSetting->schicken_ab.' und '.$this->schickenzeitenSetting->schicken_bis.' liegen',
-                    ]);
-                }
-
-
+            if ($weekday){
                 $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
-                $child->schickzeiten()->create([
-                    'weekday' => $weekday,
-                    'specific_date' => $specificDate,
-                    'type' => 'ab',
-                    'time' => $ab->format('H:i'),
-                    'changedBy' => Auth::id(),
-                    'users_id' => Auth::id(),
-                ]);
+            } else {
+                $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
+            }
 
-                $child->schickzeiten()->create([
-                    'weekday' => $weekday,
-                    'type' => 'spät.',
-                    'time' => $spaet->format('H:i'),
-                    'changedBy' => Auth::id(),
-                    'users_id' => Auth::id(),
-                ]);
+            $child->schickzeiten()->create([
+                'weekday' => $weekday,
+                'specific_date' => $specificDate,
+                'type' => 'ab',
+                'time_ab' => $request->time_ab,
+                'time_spaet' => $request->time_spaet,
+                'changedBy' => Auth::id(),
+                'users_id' => $child->parents()->first()->id
+            ]);
 
-                break;
         }
 
         return redirect(url('schickzeiten'))->with([
@@ -320,14 +306,14 @@ class SchickzeitenController extends Controller
      */
     public function edit(Request $request, $day, Child $child)
     {
-        if (!auth()->user()->children()->where('id', $child->id)->exists()) {
+        if (!auth()->user()->children()->where('children.id', $child->id)->exists()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
             ]);
         }
 
-        $schickzeit = $child->schickzeiten()->where('weekday', '=', $day)->orderBy('type')->get();
+        $schickzeit = $child->schickzeiten()->where('weekday', '=', $day)->first();
         $weekdays = [
             '1' => 'Montag',
             '2' => 'Dienstag',
@@ -340,9 +326,7 @@ class SchickzeitenController extends Controller
             'child' => $child,
             'day' => $weekdays[$day],
             'day_number' => $day,
-            'schickzeiten' => $child->schickzeiten()->where('weekday', '=', $day)->get(),
             'schickzeit' => $schickzeit,
-            'schickzeit_spaet' => $schickzeit->where('type', '=', 'spät.')->first(),
             'vorgaben' => new SchickzeitenSetting(),
 
         ]);
@@ -351,9 +335,10 @@ class SchickzeitenController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function editVerwaltung($day, $child, $parent)
+    public function editVerwaltung($day, Child $child)
     {
-        $schickzeit = Schickzeiten::query()->where('users_id', $parent)->where('weekday', '=', $day)->where('child_name', '=', $child)->orderBy('type')->get();
+
+        $schickzeiten = Schickzeiten::query()->where('child_id', '=', $child->id)->where('weekday', '=', $day)->get();
 
         $weekdays = [
             '1' => 'Montag',
@@ -365,11 +350,9 @@ class SchickzeitenController extends Controller
 
         return view('schickzeiten.edit_verwaltung', [
             'child' => $child,
-            'parent' => $parent,
             'day' => $weekdays[$day],
             'day_number' => $day,
-            'schickzeit' => $schickzeit->first(),
-            'schickzeit_spaet' => $schickzeit->where('type', '=', 'spät.')->first(),
+            'schickzeiten' => $schickzeiten,
 
         ]);
     }
@@ -444,7 +427,7 @@ class SchickzeitenController extends Controller
     public function deleteChild(Child $child)
     {
 
-        if (!auth()->user()->children()->where('id', $child->id)->exists()) {
+        if (!auth()->user()->children()->where('children.id', $child->id)->exists()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -533,6 +516,23 @@ class SchickzeitenController extends Controller
             'Meldung' => 'Zeiten gespeichert',
         ]);
 
+    }
+
+    public function destroySchickzeit(Schickzeiten $schickzeit)
+    {
+       if(auth()->user()->children()->where('children.id', $schickzeit->child_id)->exists() == false && !auth()->user()->can('edit schickzeiten')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
+            ]);
+        }
+
+        $schickzeit->delete();
+
+        return redirect()->back()->with([
+            'type' => 'warning',
+            'Meldung' => 'Schickzeit wurde gelöscht',
+        ]);
     }
 
 }

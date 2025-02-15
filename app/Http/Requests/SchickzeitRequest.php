@@ -44,6 +44,14 @@ class SchickzeitRequest extends FormRequest
                 'date',
                 'after_or_equal:' . now()->toDateString(),
             ],
+            'time_ab' => [
+                'nullable',
+                'date_format:H:i',
+            ],
+            'time_spaet' => [
+                'nullable',
+                'date_format:H:i',
+            ],
         ];
     }
 }

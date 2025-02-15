@@ -122,18 +122,22 @@ Route::middleware('auth')->group(function () {
         Route::delete('schickzeiten/{child}', [SchickzeitenController::class, 'deleteChild']);
 
 
+        Route::delete('schickzeiten/{schickzeit}/delete', [SchickzeitenController::class, 'destroySchickzeit'])->name('schickzeiten.destroy');
+
+       Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
+        Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
+        Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit'])->name('schickzeiten.edit');
+        Route::post('schickzeiten/{child}/{weekday?}', [SchickzeitenController::class, 'store'])->name('schickzeiten.store');
+        Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
+
+        //Schickzeiten Verwaltung
+        Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
 
         Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
-        Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
-        Route::post('verwaltung/schickzeiten/child/create', [SchickzeitenController::class, 'createChildVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit']);
-        Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::post('schickzeiten/{child}/{weekday}', [SchickzeitenController::class, 'store']);
-        Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
         Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
+
 
         //Krankmeldung
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
