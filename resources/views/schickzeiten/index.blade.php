@@ -35,7 +35,7 @@
                                                         @endif
                                                     @endforeach
                                                 @elseif($child->getSchickzeitenForToday()->count() == 0 and $child->checkedIn())
-                                                    keine Schickzeiten
+                                                    <br>keine Schickzeiten
                                                 @else
 
                                                 @endif

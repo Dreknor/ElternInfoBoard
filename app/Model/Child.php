@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Settings\CareSetting;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -81,5 +82,13 @@ class Child extends Model implements HasMedia
         } else {
             return $schickzeiten->where('weekday', now()->dayOfWeek);
         }
+    }
+
+    public function scopeCare($query)
+    {
+        return $query->where(function ($query) {
+           $query->whereIn('group_id', (new CareSetting())->groups_list)
+                ->orWhereIn('class_id', (new CareSetting())->class_list);
+        });
     }
 }

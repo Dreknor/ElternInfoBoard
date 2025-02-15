@@ -77,12 +77,21 @@ body {
 }
 
 .text-great{
-    font-size: 1.25rem;
+    font-size: 1.0rem;
 }
 
 .text-medium {
     font-size: 0.75rem;
 }
+
+.badge {
+
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    letter-spacing: 0.5px;
+}
+
 
 .schickzeit_liste--red {
     background-color: #721c24;

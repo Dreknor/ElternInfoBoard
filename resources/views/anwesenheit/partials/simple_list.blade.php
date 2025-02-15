@@ -29,30 +29,37 @@
                                                     @foreach($child->getSchickzeitenForToday()->sortBy('type') as $schickzeit)
                                                             @php
                                                                 $currentTime = now();
-                                                                $schickzeitTime = $schickzeit->time;
-                                                                $timeDifference = $currentTime->diffInMinutes($schickzeitTime, false);
-                                                                $backgroundClass = '';
+                                                                $backgroundClass = 'badge badge-';
 
-                                                                if ($timeDifference <= 15 && $timeDifference >= 0 && ($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')) {
-                                                                    $backgroundClass = 'badge badge-warning pull-right ml-2 text-great';
-                                                                } elseif ($timeDifference < 0 && ($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')) {
-                                                                    $backgroundClass = 'badge badge-danger pull-right ml-2 text-great';
-                                                                } elseif ($schickzeit->type == 'ab' && $timeDifference > 15) {
-                                                                    $backgroundClass = 'badge badge-success ml-2';
-                                                                } else {
-                                                                    $backgroundClass = 'badge badge-info ml-2 pull-right text-medium';
+                                                                if($schickzeit->type == 'ab' and $currentTime->isBefore($schickzeit->time_ab)) {
+                                                                    $backgroundClass .= 'success';
+                                                                    $text_size = 'text-smaller';
+                                                                } elseif($schickzeit->type == 'ab' and $currentTime->isAfter($schickzeit->time_ab) and $currentTime->isBefore($schickzeit->time_spaet)) {
+                                                                    $backgroundClass .= 'warning';
+                                                                    $text_size = 'text-great';
+                                                                } elseif($schickzeit->type == 'ab' and $currentTime->isAfter($schickzeit->time_spaet)) {
+                                                                    $backgroundClass .= 'danger';
+                                                                    $text_size = 'text-medium';
+                                                                } elseif($schickzeit->type == 'genau' and $currentTime->isBefore($schickzeit->time)) {
+                                                                    $backgroundClass .= 'success';
+                                                                    $text_size = 'text-smaller';
+                                                                } elseif($schickzeit->type == 'genau' and $currentTime->isAfter($schickzeit->time)) {
+                                                                    $backgroundClass .= 'danger';
+                                                                    $text_size = 'text-great';
                                                                 }
 
                                                             @endphp
-                                                            @if($schickzeit->type == 'ab' && $schickzeit->time->lt(now()))
-                                                                <span class="badge badge-success ml-2">
-                                                                    {{ $schickzeit->time_ab->format('H:i') }}
+                                                            @if($schickzeit->type == 'ab')
+                                                                <span class="{{ $backgroundClass }}">
+                                                                    @if($schickzeit->time_ab) ab {{ $schickzeit->time_ab?->format('H:i') }}@endif
                                                                 </span>
-
+                                                            @if($schickzeit->time_spaet)
+                                                                <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                    {{ $schickzeit->time_spaet?->format('H:i') }} (spät.)
+                                                                </span>
+                                                            @endif
                                                             @else
-                                                            <span class="{{ $backgroundClass }}">
-                                                                    {{ $schickzeit->time->format('H:i') }} {{ $schickzeit->type == 'spät.' ? '(spät.)' : '' }}
-                                                                </span>
+                                                                <span class="{{ $backgroundClass }} {{$text_size}}">{{ $schickzeit->time }}</span>
                                                             @endif
                                                         @endforeach
                                                 @endif
