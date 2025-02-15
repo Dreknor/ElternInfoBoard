@@ -35,7 +35,7 @@ class ChildController extends Controller
         $this->middleware('auth');
 
         if (!$request->has('parent_id')) {
-            auth()->user()->children()->create($request->validated());
+            auth()->user()->children_rel()->create($request->validated());
         } else {
             $parent = User::find($request->parent_id);
             $child = $parent->children_rel()->create($request->validated());
