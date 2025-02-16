@@ -44,6 +44,36 @@
                                                 heute nicht angemeldet
                                             @endif
                                         </div>
+                                        <div class="card-footer border-top">
+                                            <b>Nachricht hinterlegen</b>
+                                            <form class="form-horizontal noticeForm" id="noticeForm_{{$child->id}}">
+                                                @csrf
+                                                <input type="hidden" name="child_id" value="{{$child->id}}">
+                                                <input type="date" name="date" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" min="{{\Carbon\Carbon::now()->format('Y-m-d')}}" class="form-control">
+                                                <div class="form-group">
+                                                   <textarea name="notice" id="notice" class="form-control" placeholder="Notiz hinzufügen">{{$child->notice->first()?->notice}}</textarea>
+                                                </div>
+                                                <div class="btn btn-primary form_submit">Notiz speichern</div>
+                                            </form>
+                                        </div>
+                                        <div class="card-footer">
+                                            <b>Notizen</b>
+                                            @if($child->notice()->Future()->count() > 0)
+                                                <ul class="list-group">
+                                                    @foreach($child->notice()->future()->get() as $notice)
+                                                        <li class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col-12">
+                                                                    <b>{{$notice->date->format('d.m.Y')}}:</b> {{$notice->notice}}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p>Keine Notizen hinterlegt</p>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
 
@@ -252,12 +282,55 @@
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <script>
         $(document).ready(function () {
             $("#type").change(function () {
                 $('#spaet_row').toggle();
                 $('#genauZeit').toggle();
             });
+
+            $(".form_submit").click(function () {
+                console.log('click');
+                var form = $(this).closest('form');
+                let notice = form.find('textarea[name="notice"]').val();
+                let child_id = form.find('input[name="child_id"]').val();
+
+                var url = "{{route('child.notice.store',['child' => 'child_id'])}}".replace('child_id', child_id);
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "date": form.find('input[name="date"]').val(),
+                        "notice": notice
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            title: 'Notiz gespeichert',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(function () {
+                            location.reload();
+                        });
+                    },
+                    error: function (data) {
+                        Swal.fire({
+                            title: 'Fehler',
+                            text: 'Es ist ein Fehler aufgetreten.' + data.responseJSON.message,
+                        icon: 'error',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    }
+                });
+            });
+
         });
+
+
     </script>
 @endpush

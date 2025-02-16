@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActiveDiseaseController;
+use App\Http\Controllers\Anwesenheit\ChildNoticeController;
 use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BenutzerController;
@@ -401,7 +402,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
         Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
-
     });
+
+    //Notizen für Kinder
+    Route::post('child/{child}/notice', [ChildNoticeController::class, 'store'])->name('child.notice.store');
+    Route::delete('child/notice/{childNotice}', [ChildNoticeController::class, 'destroy'])->name('child.notice.destroy');
+    Route::get('child/{child}/notice', [ChildNoticeController::class, 'show'])->name('child.notice.show');
+
 });
 

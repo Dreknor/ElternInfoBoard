@@ -475,7 +475,7 @@ class SchickzeitenController extends Controller
         if (!auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berrechtigung fehlt',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -492,26 +492,14 @@ class SchickzeitenController extends Controller
 
             ]);
         } else {
-            if (!is_null($request->ab)){
-                $child->schickzeiten()->create([
-                    'specific_date' => Carbon::now(),
-                    'type' => 'ab',
-                    'time' => $request->ab,
-                    'changedBy' => Auth::id(),
-                    'users_id' => $child->parents()->first()->id
-
-                ]);
-            }
-
-            if (!is_null($request->spaet)){
-                $child->schickzeiten()->create([
-                    'specific_date' => Carbon::now(),
-                    'type' => 'spät.',
-                    'time' => $request->spaet,
-                    'changedBy' => Auth::id(),
-                    'users_id' => $child->parents()->first()->id
-                ]);
-            }
+            $child->schickzeiten()->create([
+                'specific_date' => Carbon::now(),
+                'type' => 'ab',
+                'time_ab' => $request->ab,
+                'time_spaet' => $request->spaet,
+                'changedBy' => Auth::id(),
+                'users_id' => $child->parents()->first()->id
+            ]);
 
         }
 

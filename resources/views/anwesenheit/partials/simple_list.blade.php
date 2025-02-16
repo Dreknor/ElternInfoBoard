@@ -20,16 +20,28 @@
                             <ul class="list-group" style="margin: 0;">
                                 @foreach($sortedChildren as $child)
                                     <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
-                                        data-child='@json(array_merge($child->toArray(), ['checked_in' => $child->checkedIn() ? 'true' : 'false', 'schickzeiten' => $child->getSchickzeitenForToday()]))'
+                                        data-child='@json(array_merge($child->toArray(), ['checked_in' => $child->checkedIn() ? 'true' : 'false','schickzeiten' => $child->getSchickzeitenForToday()->toArray()]))'
+                                        data-notices='@json($child->hasNotice())'
                                         style="padding: 0.5rem;">
-                                        <div>
-                                            <p class="mb-0">
-                                                {{ $child->last_name }}, {{ $child->first_name }}
-                                                @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
-                                                    @foreach($child->getSchickzeitenForToday()->sortBy('type') as $schickzeit)
+                                        <div class="container-fluid">
+                                            <div class="row">
+                                                <div class="col-2 d-flex justify-content-center align-items-center">
+                                                    @if($child->hasNotice())
+                                                        <div class="bg-info text-white rounded-circle" style="width: 25px; height: 25px; display: flex; justify-content: center; align-items: center;">
+                                                            <i class="fas fa-envelope"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="col-auto d-flex justify-content-center align-items-center">
+                                                        {{ $child->last_name }}, {{ $child->first_name }}
+                                                </div>
+                                                <div class="col">
+                                                    @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
+                                                        @foreach($child->getSchickzeitenForToday()->sortBy('type') as $schickzeit)
                                                             @php
                                                                 $currentTime = now();
                                                                 $backgroundClass = 'badge badge-';
+                                                                $text_size = 'text-smaller';
 
                                                                 if($schickzeit->type == 'ab' and $currentTime->isBefore($schickzeit->time_ab)) {
                                                                     $backgroundClass .= 'success';
@@ -46,25 +58,34 @@
                                                                 } elseif($schickzeit->type == 'genau' and $currentTime->isAfter($schickzeit->time)) {
                                                                     $backgroundClass .= 'danger';
                                                                     $text_size = 'text-great';
+                                                                } else {
+                                                                    $backgroundClass .= 'primary';
+                                                                    $text_size = 'text-medium';
                                                                 }
 
                                                             @endphp
                                                             @if($schickzeit->type == 'ab')
-                                                                <span class="{{ $backgroundClass }}">
-                                                                    @if($schickzeit->time_ab) ab {{ $schickzeit->time_ab?->format('H:i') }}@endif
-                                                                </span>
-                                                            @if($schickzeit->time_spaet)
                                                                 <span class="{{ $backgroundClass }} {{$text_size}}">
-                                                                    {{ $schickzeit->time_spaet?->format('H:i') }} (spät.)
-                                                                </span>
-                                                            @endif
+                                                                        @if($schickzeit->time_ab) ab {{ $schickzeit->time_ab?->format('H:i') }}@endif
+                                                                    </span>
+                                                                @if($schickzeit->time_spaet)
+                                                                    <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                             {{ $schickzeit->time_spaet?->format('H:i') }} (spät.)
+                                                                        </span>
+                                                                @endif
                                                             @else
-                                                                <span class="{{ $backgroundClass }} {{$text_size}}">{{ $schickzeit->time }}</span>
+                                                                <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                        {{ $schickzeit->time->format('H:i') }}
+                                                                    </span>
                                                             @endif
                                                         @endforeach
-                                                @endif
-                                            </p>
+                                                    @endif
+                                                </div>
+
+                                            </div>
+
                                         </div>
+
                                     </li>
                                 @endforeach
                             </ul>

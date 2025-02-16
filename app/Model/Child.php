@@ -112,4 +112,21 @@ class Child extends Model implements HasMedia
                 return false;
             }
     }
+
+    public function notice()
+    {
+        return $this->hasMany(ChildNotice::class, 'child_id')->orderByDesc('created_at');
+    }
+
+
+    public function hasNotice()
+    {
+        $notice = Cache::remember('notice' . $this->id, 300, function () {
+            return $this->notice()
+                ->whereDate('date', today())
+                ->first();
+        });
+
+        return $notice;
+    }
 }
