@@ -2,7 +2,8 @@
 @section('title') - Schickzeiten @endsection
 
 @section('content')
-    <div class="container-fluid">
+    @can('testing')
+        <div class="container-fluid">
                     <div class="card-body">
                         <div class="row">
                             @foreach($children as $child)
@@ -81,7 +82,7 @@
                         </div>
                     </div>
                 </div>
-
+    @endcan
 
         <div class="row">
             <div class="card">

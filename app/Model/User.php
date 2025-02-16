@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
@@ -34,7 +35,7 @@ class User extends Authenticatable
     use SoftDeletes;
 
     //fill uuid column
-    protected static function booted()
+    protected static function booted(): void
     {
         parent::boot();
         static::creating(fn ($foo) => $foo->uuid = Str::uuid());
@@ -75,7 +76,7 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function notifications()
+    public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class, 'user_id');
     }
@@ -88,7 +89,10 @@ class User extends Authenticatable
         );
     }
 
-    public function files()
+    /**
+     * @return Collection
+     */
+    public function files(): Collection
     {
         return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
     }
@@ -99,12 +103,15 @@ class User extends Authenticatable
      * @return BelongsToMany
      */
 
-    public function children_rel()
+    public function children_rel(): BelongsToMany
     {
         return $this->belongsToMany(Child::class, 'child_user');
 
     }
 
+    /**
+     * @return mixed
+     */
     public function children()
     {
         $children = $this->children_rel;
@@ -126,7 +133,7 @@ class User extends Authenticatable
      *
      * @return BelongsToMany
      */
-    public function groups()
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)->withTimestamps();
     }
@@ -145,17 +152,17 @@ class User extends Authenticatable
      *
      * @return HasManyDeep
      */
-    public function posts()
+    public function posts(): HasManyDeep
     {
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post']);
     }
 
-    public function sites()
+    public function sites(): HasManyDeep
     {
         return $this->hasManyDeep(Site::class, ['group_user', Group::class, 'site_group']);
     }
 
-    public function vertretungen()
+    public function vertretungen(): HasManyDeep
     {
         return $this->hasManyDeep(Vertretung::class, ['group_user', Group::class], ['user_id', 'id', 'klasse']);
     }
@@ -165,7 +172,7 @@ class User extends Authenticatable
      *
      * @return HasManyDeep
      */
-    public function postsNotArchived()
+    public function postsNotArchived(): HasManyDeep
     {
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])->NotArchived();
     }
@@ -175,7 +182,7 @@ class User extends Authenticatable
      *
      * @return HasMany
      */
-    public function own_posts()
+    public function own_posts(): HasMany
     {
         return $this->hasMany(Post::class, 'author');
     }
@@ -185,7 +192,7 @@ class User extends Authenticatable
      *
      * @return HasManyDeep
      */
-    public function termine()
+    public function termine(): HasManyDeep
     {
         return $this->hasManyDeep(Termin::class, ['group_user', Group::class, 'group_termine']);
     }
@@ -193,7 +200,7 @@ class User extends Authenticatable
     /**
      * @return HasManyDeep
      */
-    public function listen()
+    public function listen(): HasManyDeep
     {
         return $this->hasManyDeep(Liste::class, ['group_user', Group::class, 'group_listen']);
     }
@@ -201,7 +208,7 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function listen_termine()
+    public function listen_termine(): HasMany
     {
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
     }
@@ -228,7 +235,7 @@ class User extends Authenticatable
     /**
      * @return HasOne
      */
-    public function sorgeberechtigter2()
+    public function sorgeberechtigter2(): HasOne
     {
         return $this->hasOne(self::class, 'sorg2');
     }
@@ -238,7 +245,7 @@ class User extends Authenticatable
      *
      * @return bool
      */
-    public function hasOldPassword()
+    public function hasOldPassword(): bool
     {
         return $this->changePassword;
     }
@@ -246,7 +253,7 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function userRueckmeldung()
+    public function userRueckmeldung(): HasMany
     {
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
     }
@@ -254,7 +261,7 @@ class User extends Authenticatable
     /**
      * @return mixed
      */
-    public function getRueckmeldung()
+    public function getRueckmeldung(): mixed
     {
         $eigeneRueckmeldung = $this->userRueckmeldung;
 
@@ -274,7 +281,7 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function Reinigung()
+    public function Reinigung(): HasMany
     {
         return $this->hasMany(Reinigung::class, 'users_id', 'id');
     }
@@ -282,7 +289,7 @@ class User extends Authenticatable
     /**
      * @return mixed|string
      */
-    public function getFamilieNameAttribute()
+    public function getFamilieNameAttribute(): mixed
     {
         $Name = explode(' ', $this->name);
 
@@ -328,22 +335,22 @@ class User extends Authenticatable
         return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
     }
 
-    public function comments()
+    public function comments(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
-        return $this->morphMany(\Benjivm\Commentable\Models\Comment::class, 'creator');
+        return $this->morphMany(Comment::class, 'creator');
     }
 
-    public function discussions()
+    public function discussions(): HasMany
     {
         return $this->hasMany(Discussion::class, 'owner');
     }
 
-    public function mails()
+    public function mails(): HasMany
     {
         return $this->hasMany(Mail::class, 'senders_id')->orderByDesc('created_at');
     }
 
-    public function read_receipts()
+    public function read_receipts(): HasMany
     {
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
