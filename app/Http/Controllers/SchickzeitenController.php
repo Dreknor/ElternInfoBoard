@@ -49,6 +49,15 @@ class SchickzeitenController extends Controller
     public function index()
     {
         $children = auth()->user()->children();
+        $allowedClasses = $this->careSettings->class_list;
+        $allowedGroups = $this->careSettings->groups_list;
+
+        $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
+
+            return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
+
+        });
+
 
         $weekdays = [
             '1' => 'Montag',
