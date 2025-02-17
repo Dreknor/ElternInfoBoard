@@ -62,7 +62,7 @@
                                             @if($child->notice()->Future()->count() > 0)
                                                 <ul class="list-group">
                                                     @foreach($child->notice()->future()->get() as $notice)
-                                                        <li class="list-group-item">
+                                                        <li class="list-group-item text-black-50">
                                                             <div class="row">
                                                                 <div class="col-12">
                                                                     <b>{{$notice->date->format('d.m.Y')}}:</b> {{$notice->notice}}
