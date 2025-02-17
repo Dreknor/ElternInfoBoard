@@ -93,7 +93,7 @@
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    @foreach($children_old as $child)
+                    @foreach($childs->sortBy('child_name') as $child)
                         <li class="list-group-item" data-toggle="collapse"
                             href="#collapse{{$child->id}}_{{$child->users_id}}" role="button">
                             {{$child->child_name}} ( {{$child->user->name}} )
