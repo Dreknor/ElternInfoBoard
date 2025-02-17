@@ -81,6 +81,8 @@ class SchickzeitenController extends Controller
         $children = Child::query()->orderBy('last_name')->get();
         $children->load('schickzeiten');
 
+        $children_old = Schickzeiten::all();
+
         $weekdays = [
             '1' => 'Montag',
             '2' => 'Dienstag',
@@ -89,9 +91,20 @@ class SchickzeitenController extends Controller
             '5' => 'Freitag',
         ];
 
+        $zeiten = Schickzeiten::all();
+        $childs = $zeiten->unique(fn($item) => $item['users_id'] . $item['child_name']);
+
+        $parents = User::whereHas('groups', function (Builder $query) {
+            $query->where('bereich', 'Grundschule');
+        })->get();
+        $parents = $parents->sortBy('Familiename');
+
         return view('schickzeiten.index_verwaltung', [
             'children' => $children,
             'weekdays' => $weekdays,
+            'schickzeiten' => $zeiten,
+            'childs' => $childs,
+            'parents' => $parents,
         ]);
     }
 
