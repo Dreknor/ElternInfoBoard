@@ -24,26 +24,33 @@ class SchickzeitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'child' => [
+            'time' => [
+                'sometimes',
+                'date_format:H:i',
+                'nullable',
+            ],
+            'type' => [
                 'required',
                 'string',
+                'in:genau,ab,spät.',
             ],
             'weekday' => [
-                'required',
+                'nullable',
+                'string',
                 'in:Montag,Dienstag,Mittwoch,Donnerstag,Freitag',
             ],
-            'time' => [
-                'required',
-                'date_format:H:i',
+            'specific_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:' . now()->toDateString(),
             ],
-            'time_spaet' => [
-                'sometimes',
+            'time_ab' => [
                 'nullable',
                 'date_format:H:i',
             ],
-            'type' => [
-                'sometimes',
-                'string',
+            'time_spaet' => [
+                'nullable',
+                'date_format:H:i',
             ],
         ];
     }

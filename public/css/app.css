@@ -213,6 +213,8 @@ input:checked + .slider-sm:before {
     background-color: #c2c1c1;
 }
 
+
+
 @media only screen and (max-width: 600px) {
     .navbar .dropdown-menu {
         position: fixed;

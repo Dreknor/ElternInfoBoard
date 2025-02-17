@@ -171,26 +171,98 @@
 
                     </div>
                     <div class="col-md-4 col-sm-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title">
-                                    Gruppen
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                @foreach($user->groups as $gruppe)
-                                    <div class="btn btn-outline-info">
-                                        {{$gruppe->name}}
+                        <div class="row">
+                            @if(auth()->user()->groups->count() > 0)
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title">
+                                                Kinder
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                @foreach($user->children() as $child)
+                                                    <li class="list-group-item">
+                                                        {{$child->first_name}}
+                                                        {{$child->last_name}}
+                                                        <span class="badge badge-info ml-1 p-2 pull-right">
+                                                        {{$child->group->name}}
+                                                    </span>
+                                                        <span class="badge badge-info ml-1 p-2 pull-right">
+                                                        {{$child->class->name}}
+                                                    </span>
+                                                    </li>
+                                            @endforeach
+                                        </div>
+                                        <div class="card-footer">
+                                            <form action="{{url('/child')}}" method="post">
+                                                @csrf
+                                                <div class="form-group row">
+                                                    <label for="first_name"
+                                                           class="col-form-label text-danger">Vorname</label>
+                                                    <input id="first_name" type="text" class="form-control"
+                                                           name="first_name" required>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="last_name"
+                                                           class="col-form-label text-danger">Nachname</label>
+                                                    <input id="last_name" type="text" class="form-control"
+                                                           name="last_name" required>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="group" class="col-form-label text-danger">Gruppe</label>
+                                                    <select id="group" class="form-control" name="group_id" required>
+                                                        @foreach(auth()->user()->groups as $group)
+                                                            <option value="{{$group->id}}">{{$group->name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="class"
+                                                           class="col-form-label text-danger">Klassenstufe</label>
+                                                    <select id="class" class="form-control" name="class_id" required>
+                                                        @foreach(auth()->user()->groups as $group)
+                                                            <option value="{{$group->id}}">{{$group->name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-block btn-primary">
+                                                    Kind hinzufügen
+                                                </button>
+
+                                            </form>
+                                        </div>
                                     </div>
-                                @endforeach
-                            </div>
-                            <div class="card-footer">
-                                <p class="footer-default small">
-                                    Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den
-                                    Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
-                                </p>
+                                </div>
+                            @endif
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title">
+                                            Gruppen
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @foreach($user->groups as $gruppe)
+                                            <div class="btn btn-outline-info">
+                                                {{$gruppe->name}}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="card-footer">
+                                        <p class="footer-default small">
+                                            Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in
+                                            den
+                                            Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="col-md-4 col-sm-12">
+
                     </div>
                 </div>
                 <div class="row">

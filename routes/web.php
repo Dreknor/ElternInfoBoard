@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActiveDiseaseController;
+use App\Http\Controllers\Anwesenheit\ChildNoticeController;
 use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BenutzerController;
@@ -38,7 +39,6 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
-use App\Repositories\WordpressRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
@@ -100,6 +100,14 @@ Route::middleware('auth')->group(function () {
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
 
 
+        //Kinderverwaltung
+        Route::get('care/children', [\App\Http\Controllers\ChildController::class, 'index'])->name('child.index');
+        Route::post('child', [\App\Http\Controllers\ChildController::class, 'store'])->name('child.store');
+        Route::get('child/{child}/edit', [\App\Http\Controllers\ChildController::class, 'edit'])->name('child.edit');
+        Route::put('child/{child}', [\App\Http\Controllers\ChildController::class, 'update'])->name('child.update');
+        Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
+        Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
+
 
         //make a push notification.
         Route::post('/notification/read', [NotificationController::class, 'read'])->name('notification.read');
@@ -112,18 +120,25 @@ Route::middleware('auth')->group(function () {
 
         //Schickzeiten
         Route::get('schickzeiten', [SchickzeitenController::class, 'index']);
-        Route::get('schickzeiten/{user}/trash/{child}', [SchickzeitenController::class, 'deleteChild']);
-        Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
+        Route::delete('schickzeiten/{child}', [SchickzeitenController::class, 'deleteChild']);
+
+
+        Route::delete('schickzeiten/{schickzeit}/delete', [SchickzeitenController::class, 'destroySchickzeit'])->name('schickzeiten.destroy');
+
+       Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
         Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
-        Route::post('verwaltung/schickzeiten/child/create', [SchickzeitenController::class, 'createChildVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit']);
-        Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
-        Route::post('schickzeiten', [SchickzeitenController::class, 'store']);
-        Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit'])->name('schickzeiten.edit');
+        Route::post('schickzeiten/{child}/{weekday?}', [SchickzeitenController::class, 'store'])->name('schickzeiten.store');
         Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
+
+        //Schickzeiten Verwaltung
+        Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
+
+        Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
+
 
         //Krankmeldung
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
@@ -380,5 +395,19 @@ Route::middleware('auth')->group(function () {
     Route::group(['middlewareGroups' => ['can:see logs']], function () {
         Route::get('logs', [LogController::class, 'index']);
     });
+
+    Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
+        Route::get('/anwesenheit/dailyCheckIn', [\App\Http\Controllers\Anwesenheit\CareController::class, 'dailyCheckIn']);
+        Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
+        Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
+        Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
+        Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
+    });
+
+    //Notizen für Kinder
+    Route::post('child/{child}/notice', [ChildNoticeController::class, 'store'])->name('child.notice.store');
+    Route::delete('child/notice/{childNotice}', [ChildNoticeController::class, 'destroy'])->name('child.notice.destroy');
+    Route::get('child/{child}/notice', [ChildNoticeController::class, 'show'])->name('child.notice.show');
+
 });
 

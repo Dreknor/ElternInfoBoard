@@ -24,6 +24,7 @@
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}?v=1" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/app.css')}}?v=2" rel="stylesheet"> <!--load all styles -->
+    <link href="{{asset('/css/palette-gradient.css')}}?v=1" rel="stylesheet">
     <link href="{{asset('/css/mobile.css')}}?v=1" rel="stylesheet">
 
     <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->

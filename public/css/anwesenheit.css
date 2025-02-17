@@ -1,0 +1,167 @@
+body {
+    font-family: 'Quicksand', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.card-body h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.p-2 {
+    padding: 0.5rem;
+}
+.avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+.card {
+    margin-bottom: 0.2rem; /* Reduce the bottom margin */
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+.col-lg-3, .col-md-3, .col-sm-6 {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+}
+
+
+.list-item-odd {
+    background-color: #e4e4e4;
+}
+
+.child-checkedOut {
+    text-decoration: line-through;
+    color: #214a71;
+    background-color: #97ff89;
+}
+.schickzeit_liste {
+    display: inline-block;
+    font-size: 100%;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem;
+}
+
+.schickzeit_liste--green {
+    color: #155724;
+    background-color: #d4edda;
+}
+
+.text-greater {
+    font-size: 1.5rem;
+}
+
+.text-great{
+    font-size: 1.0rem;
+}
+
+.text-medium {
+    font-size: 0.75rem;
+}
+
+.badge {
+
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    letter-spacing: 0.5px;
+}
+
+
+.schickzeit_liste--red {
+    background-color: #721c24;
+    color: #f8d7da;
+}
+
+.schickzeit_liste--yellow {
+    background-color: #f8d7da;
+    color: #856404;
+}
+
+.schickzeit_liste--blue {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+#schickzeitenContainer {
+    justify-content: center;
+}
+
+/* Modal Styles */
+.modal-header {
+    background-color: #007bff;
+    color: white;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.modal-body {
+    padding: 2rem;
+    background-color: #f8f9fa;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+}
+
+#childName {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+#schickzeitenContainer > p {
+    font-size: 1rem;
+    color: #0c2646;
+    margin: 0.5rem 0;
+}
+
+#logoutButton {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.25rem;
+}
+
+#logoutButton:hover {
+    background-color: #c82333;
+}
+
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+

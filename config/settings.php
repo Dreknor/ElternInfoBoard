@@ -10,7 +10,8 @@ return [
      */
     'settings' => [
         GeneralSetting::class,
-        \App\Settings\EmailSetting::class
+        \App\Settings\EmailSetting::class,
+        \App\Settings\CareSetting::class
     ],
 
     /*

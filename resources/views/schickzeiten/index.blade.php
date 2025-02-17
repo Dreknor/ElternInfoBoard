@@ -2,126 +2,336 @@
 @section('title') - Schickzeiten @endsection
 
 @section('content')
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="card-title">
-                    Schickzeiten
-                </h6>
-
-            </div>
-            <div class="card-body">
-                @include('schickzeiten.infos')
-            </div>
-        </div>
-
-    </div>
-    <div class="container-fluid">
-        <div class="row">
-            @foreach($childs as $child)
-                <div class="col-lg-6 col-md-6 col-sm-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h6 class="card-title">
-                                {{$child}}
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="container-fluid">
-                                <ul class="list-group">
-                                    @for($x=1;$x<6;$x++)
-                                        <li class="list-group-item">
-                                            <div class="row">
-                                                <div class="col-10">
-                                                    <b>
-                                                        {{$weekdays[$x]}}
-                                                    </b>
-                                                </div>
-                                                <div class="col-1 ml-auto">
-                                                    <div class="btn-group">
-                                                        <a href="#" class="card-link " data-toggle="dropdown"
-                                                           aria-haspopup="true" aria-expanded="false">
-                                                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                                                        </a>
-                                                        <div class="dropdown-menu">
-                                                            <a href="{{url("schickzeiten/edit/$x/".$child)}}"
-                                                               class="dropdown-item">
-                                                                <i class="fa fa-edit"></i> bearbeiten
-                                                            </a>
-                                                            @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->first())
-                                                                <form action="{{url("schickzeiten/$x/".$child)}}"
-                                                                      method="post" class="form-inline">
-                                                                    @csrf
-                                                                    @method('delete')
-                                                                    <button type="submit"
-                                                                            class="dropdown-item btn-danger">
-                                                                        <i class="fa fa-trash"></i> löschen
-                                                                    </button>
-                                                                </form>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->where('type','ab')->first())
-                                                        ab <span
-                                                            class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
-                                                        Uhr
-                                                        @if($schickzeiten->where('weekday', $x)->where('type','spät.')->where('child_name',$child)->first())
-                                                            bis spät. <span
-                                                                class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','=','spät.')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
-                                                            Uhr
+    @can('testing')
+        <div class="container-fluid">
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($children as $child)
+                                <div class="col-auto">
+                                    <div class="card @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
+                                        <div class="card-header">
+                                            <h6 class="card-title">
+                                                {{$child->first_name}} {{$child->last_name}}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            @if(!$child->checkedIn() and $child->checkIns()->where('date', today())->first())
+                                                <p>
+                                                    {{$child->checkIns()->where('date', today())->first()?->updated_at?->format('H:i')}} Uhr abgemeldet
+                                                </p>
+                                            @elseif($child->checkedIn())
+                                                <p>
+                                                    derzeit angemeldet
+                                                @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
+                                                    @foreach($child->getSchickzeitenForToday() as $schickzeit)
+                                                        <br>Schickzeit:
+                                                        @if($schickzeit->type == 'genau')
+                                                            {{$schickzeit->time?->format('H:i')}} Uhr
+                                                        @else
+                                                            @if(!is_null($schickzeit->time_ab)) ab @endif
+                                                            {{$schickzeit->time_ab?->format('H:i')}}
+                                                            @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet)) - @endif
+                                                            @if(!is_null($schickzeit->time_spaet)) spät. @endif
+                                                            {{$schickzeit->time_spaet?->format('H:i')}} Uhr
                                                         @endif
-                                                    @elseif($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first())
-                                                        <span
-                                                            class="text-info font-weight-bold">{{substr($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}}</span>
-                                                        Uhr
-                                                    @else
-                                                        <span class="text-danger">Keine Zeit eingetragen</span>
-                                                    @endif
+                                                    @endforeach
+                                                @elseif($child->getSchickzeitenForToday()->count() == 0 and $child->checkedIn())
+                                                    <br>keine Schickzeiten
+                                                @else
 
+                                                @endif
+                                                </p>
+                                            @else
+                                                heute nicht angemeldet
+                                            @endif
+                                        </div>
+                                        <div class="card-footer border-top">
+                                            <b>Nachricht hinterlegen</b>
+                                            <form class="form-horizontal noticeForm" id="noticeForm_{{$child->id}}">
+                                                @csrf
+                                                <input type="hidden" name="child_id" value="{{$child->id}}">
+                                                <input type="date" name="date" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" min="{{\Carbon\Carbon::now()->format('Y-m-d')}}" class="form-control">
+                                                <div class="form-group">
+                                                   <textarea name="notice" id="notice" class="form-control" placeholder="Notiz hinzufügen">{{$child->notice->first()?->notice}}</textarea>
                                                 </div>
-                                            </div>
+                                                <div class="btn btn-primary form_submit">Notiz speichern</div>
+                                            </form>
+                                        </div>
+                                        <div class="card-footer">
+                                            <b>Notizen</b>
+                                            @if($child->notice()->Future()->count() > 0)
+                                                <ul class="list-group">
+                                                    @foreach($child->notice()->future()->get() as $notice)
+                                                        <li class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col-12">
+                                                                    <b>{{$notice->date->format('d.m.Y')}}:</b> {{$notice->notice}}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p>Keine Notizen hinterlegt</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
 
-                                        </li>
-                                    @endfor
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="card-footer">
-                            <a class="text-danger"
-                               href="{{url('schickzeiten/'.auth()->id().'/trash/'.\Illuminate\Support\Str::replace(' ', '_',$child))}}">
-                                <i class="fa fa-trash"></i> alles löschen
-                            </a>
+                            @endforeach
                         </div>
                     </div>
                 </div>
-            @endforeach
+    @endcan
+
+        <div class="row">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title">
+                        Schickzeiten
+                    </h6>
+                </div>
+                <div class="card-body border-top">
+                    @include('schickzeiten.infos')
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach($children as $child)
+                            <div class="col-lg-6 col-md-6 col-sm-12">
+                                <div class="card">
+                                    <div class="card-header bg-gradient-x2-info">
+                                        <h5 class="card-title">
+                                            {{$child->first_name}} {{$child->last_name}}
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 class="card-title">regelmäßige Schickzeiten</h6>
+                                        <div class="container-fluid">
+                                            <ul class="list-group">
+                                                @for($x=1;$x<6;$x++)
+                                                    <li class="list-group-item">
+                                                        <div class="row">
+                                                            <div class="col-10">
+                                                                <b>
+                                                                    {{$weekdays[$x]}}
+                                                                </b>
+                                                            </div>
+                                                            <div class="col-1 ml-auto">
+                                                                <div class="btn-group">
+                                                                    <a href="#" class="card-link " data-toggle="dropdown"
+                                                                       aria-haspopup="true" aria-expanded="false">
+                                                                        <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                                                    </a>
+                                                                    <div class="dropdown-menu">
+                                                                        <a href="{{url("schickzeiten/edit/$x/".$child->id)}}"
+                                                                           class="dropdown-item">
+                                                                            <i class="fa fa-edit"></i> bearbeiten
+                                                                        </a>
+                                                                        @if($child->schickzeiten->where('weekday', $x)->first())
+                                                                            <form action="{{route('schickzeiten.destroy', ['schickzeit' => $child->schickzeiten->where('weekday', $x)->first()->id])}}"
+                                                                                  method="post" class="form-inline">
+                                                                                @csrf
+                                                                                @method('delete')
+                                                                                <button type="submit"
+                                                                                        class="dropdown-item btn-danger">
+                                                                                    <i class="fa fa-trash"></i> löschen
+                                                                                </button>
+                                                                            </form>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-12">
+                                                                @if($child->schickzeiten->where('weekday', $x)->first())
+                                                                    @if($child->schickzeiten->where('weekday', $x)->first()->type == 'genau')
+                                                                        {{$child->schickzeiten->where('weekday', $x)->first()->time?->format('H:i')}} Uhr
+                                                                    @else
+                                                                        {{$child->schickzeiten->where('weekday', $x)->first()->time_ab?->format('H:i')}} @if(!is_null($child->schickzeiten->where('weekday', $x)->first()->time_ab) && $child->schickzeiten->where('weekday', $x)->first()->time_spaet) - @endif {{$child->schickzeiten->where('weekday', $x)->first()->time_spaet?->format('H:i')}} Uhr
+                                                                    @endif
+
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                    </li>
+                                                @endfor
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <h6 class="card-title">individuelle Schickzeiten</h6>
+                                        <div class="container-fluid">
+                                            <ul class="list-group">
+                                                @foreach($child->schickzeiten->where('specific_date', '!=', NULL) as $schickzeit)
+                                                    <li class="list-group-item">
+                                                        <div class="row">
+                                                            <div class="col-12">
+                                                                <b>
+                                                                    {{$schickzeit->specific_date->format('d.m.Y')}}:
+                                                                </b>
+                                                                @if($schickzeit->type =="genau")
+                                                                    genau {{$schickzeit->time?->format('H:i')}} Uhr
+                                                                @else
+                                                                    ab {{$schickzeit->time_ab?->format('H:i')}} Uhr @if(!is_null($schickzeit->time_ab) && $schickzeit->time_spaet) - @endif {{$schickzeit->time_spaet?->format('H:i')}} Uhr
+                                                                @endif
+
+                                                                <div class="pull-right">
+                                                                    <form action="{{route('schickzeiten.destroy', ['schickzeit' => $schickzeit->id])}}" method="post">
+                                                                        @csrf
+                                                                        @method('delete')
+                                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                                            <i class="fa fa-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            <div class="row mt-2">
+                                                <div class="col-12">
+                                                    <div class="card bg-gradient-directional-grey-blue">
+                                                        <div class="card-header">
+                                                            <h6>
+                                                                Neue individuelle Schickzeit anlegen
+                                                            </h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="container-fluid">
+                                                                <form action="{{route('schickzeiten.store', ['child' => $child->id])}}" method="post">
+                                                                    @csrf
+                                                                    <div class="form-group">
+                                                                        <label for="specific_date">Datum</label>
+                                                                        <input type="date" name="specific_date" id="specific_date" value="{{old('specific_date', \Carbon\Carbon::now()->format('Y-m-d'))}}"
+                                                                               class="form-control">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="type">Typ</label>
+                                                                        <select name="type" class="custom-select" id="type">
+                                                                            <option value="genau">genau</option>
+                                                                            <option value="ab">ab ... bis ... Uhr</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group" id="genauZeit">
+                                                                        <label for="time">Zeit</label>
+                                                                        <input name="time" id="time" type="time" class="form-control"
+                                                                               min="{{$vorgaben->schicken_ab}}" max="{{$vorgaben->schicken_bis}}"
+                                                                               value="{{old('time')}}">
+                                                                    </div>
+                                                                    <div class="form-group collapse" id="spaet_row">
+                                                                        <div class="container-fluid">
+                                                                            <div class="row">
+                                                                                <div class="col-md-6">
+                                                                                    <label for="ab">ab ... Uhr</label>
+                                                                                    <input name="time_ab" type="time" class="form-control"
+                                                                                           min="{{$vorgaben->schicken_ab}}"
+                                                                                           max="{{$vorgaben->schicken_bis}}" id="spät."
+                                                                                           value="{{old('time_ab')}}">
+                                                                                </div>
+                                                                                <div class="col-md-6 ">
+                                                                                    <label for="spät.">spätestens (optional)</label>
+                                                                                    <input name="time_spaet" type="time" class="form-control"
+                                                                                           min="{{$vorgaben->schicken_ab}}"
+                                                                                           max="{{$vorgaben->schicken_bis}}" id="spät."
+                                                                                           value="{{old('time_spaet')}}">
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <button type="submit" class="btn btn-primary btn-block">Neue individuelle Schickzeit
+                                                                        anlegen
+                                                                    </button>
+                                                                </form>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <form action="{{url("schickzeiten/$child->id")}}" method="post">
+                                            @csrf
+                                            @method('delete')
+                                            <button type="submit" class="btn btn-danger btn-block">Alle Schickzeiten löschen</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+
+                    </div>
+                </div>
+            </div>
         </div>
+
 
     </div>
 
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header">
-                <h6 class="card-title">
-                    Neues Kind anlegen
-                </h6>
-            </div>
-            <div class="card-body">
-                <form method="post" class="form form-horizontal" action="{{url('schickzeiten/child/create')}}">
-                    @csrf
-                    @error('child')
-                        <span>{{ $message }}</span>
-                    @enderror
-                    <input name="child" class="form-control @error('child') has-error @enderror" placeholder="Name des neuen Kindes" required>
-                    <button class="btn btn-success btn-block">Neues Kind speichern</button>
-                </form>
-            </div>
+            <a href="{{url(('einstellungen'))}}" class="btn btn-primary">Neues Kind anlegen</a>
         </div>
 
     </div>
 @endsection
+
+@push('js')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            $("#type").change(function () {
+                $('#spaet_row').toggle();
+                $('#genauZeit').toggle();
+            });
+
+            $(".form_submit").click(function () {
+                console.log('click');
+                var form = $(this).closest('form');
+                let notice = form.find('textarea[name="notice"]').val();
+                let child_id = form.find('input[name="child_id"]').val();
+
+                var url = "{{route('child.notice.store',['child' => 'child_id'])}}".replace('child_id', child_id);
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        "date": form.find('input[name="date"]').val(),
+                        "notice": notice
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            title: 'Notiz gespeichert',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(function () {
+                            location.reload();
+                        });
+                    },
+                    error: function (data) {
+                        Swal.fire({
+                            title: 'Fehler',
+                            text: 'Es ist ein Fehler aufgetreten.' + data.responseJSON.message,
+                        icon: 'error',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    }
+                });
+            });
+
+        });
+
+
+    </script>
+@endpush

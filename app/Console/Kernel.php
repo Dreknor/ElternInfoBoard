@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Http\Controllers\GroupsController;
+use App\Model\Module;
 use App\Settings\NotifySetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -23,6 +24,13 @@ class Kernel extends ConsoleKernel
     {
         $notifySetting = new NotifySetting();
 
+        //Kinder einchecken
+        $careModule = Module::where('setting', 'Anwesenheitsliste')->first();
+        if ($careModule->options['active'] == 1) {
+            $schedule->call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at('08:00');
+            $schedule->call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at('15:42');
+        }
+
         $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
         $schedule->call('App\Http\Controllers\CleanupController@clean_up')->weeklyOn([1],'00:00');
 
@@ -42,8 +50,6 @@ class Kernel extends ConsoleKernel
         $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at($notifySetting->krankmeldungen_report_hour.':'.$notifySetting->krankmeldungen_report_minute);
 
         $schedule->call('App\Http\Controllers\SchickzeitenController@sendReminder')->weeklyOn($notifySetting->schickzeiten_report_weekday, $notifySetting->schickzeiten_report_hour.':00');
-
-
 
         $schedule->call('App\Http\Controllers\GroupsController@deletePrivateGroups')->yearlyOn(7, 31, '00:00');
     }

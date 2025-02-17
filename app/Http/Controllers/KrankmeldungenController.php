@@ -6,6 +6,7 @@ use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\krankmeldung;
 use App\Model\ActiveDisease;
+use App\Model\Child;
 use App\Model\Disease;
 use App\Model\krankmeldungen;
 use App\Model\Module;
@@ -49,9 +50,22 @@ class KrankmeldungenController extends Controller
      */
     public function store(KrankmeldungRequest $request)
     {
+        if (!$request->name && !$request->child_id) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Bitte geben Sie einen Namen oder ein Kind an',
+            ]);
+        }
+
         try {
             $krankmeldung = new krankmeldungen();
             $krankmeldung->fill($request->validated());
+
+            if ($request->child_id) {
+                $child = Child::find($request->child_id);
+                $krankmeldung->name = $child->first_name . ' ' . $child->last_name;
+            }
+
             $krankmeldung->users_id = auth()->id();
             $krankmeldung->save();
 
@@ -77,7 +91,7 @@ class KrankmeldungenController extends Controller
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
+                ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name ?? $child->first_name.' '.$child->last_name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
 
             return redirect()->back()->with([
                 'type' => 'success',

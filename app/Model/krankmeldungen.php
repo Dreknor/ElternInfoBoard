@@ -14,9 +14,9 @@ class krankmeldungen extends Model
 
     protected $table = 'krankmeldungen';
 
-    protected $fillable = ['name', 'kommentar', 'start', 'ende', 'users_id'];
+    protected $fillable = ['name', 'kommentar', 'start', 'ende', 'users_id', 'child_id'];
 
-    protected $visible = ['name', 'kommentar', 'start', 'ende'];
+    protected $visible = ['name', 'kommentar', 'start', 'ende', 'users_id', 'child_id'];
 
     public function user(): BelongsTo
     {
