@@ -70,6 +70,14 @@
                     </a>
                 </li>
             @endif
+            @if( auth()->user()->can('link schulsoftware'))
+                <li class="">
+                    <a href="https://schulsoftware.schule" target="_blank">
+                        <i class="fa fa-external-link-alt"></i>
+                        <p>Schulsoftware</p>
+                    </a>
+                </li>
+            @endif
             @stack('nav')
 
             <li class="border-bottom"></li>
