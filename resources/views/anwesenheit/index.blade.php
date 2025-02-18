@@ -62,6 +62,10 @@
                             <button type="button" class="btn btn-danger" id="logoutButton" style="display: none;">
                                 <i class="fa-solid fa-shoe-prints"></i> Abmelden
                             </button>
+                            <button type="button" class="btn btn-success" id="checkinButton" style="display: none;">
+                                <i class="fa-solid fa-child-reaching"></i>
+                                Anmelden
+                            </button>
                         </div>
                     </div>
 
@@ -82,18 +86,18 @@
                                 </div>
                                 <div class="form-group collapse" id="genau_row">
                                     <label for="schickzeitTime">Zeit</label>
-                                    <input type="time" class="form-control" id="schickzeitTime" name="time">
+                                    <input type="time" class="form-control w-100" id="schickzeitTime" name="time">
                                 </div>
 
                                 <div class="form-group" id="spaet_row">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <label for="ab">ab ... Uhr</label>
-                                            <input type="time" class="form-control" id="ab" name="ab">
+                                            <input type="time" class="form-control w-100" id="ab" name="ab">
                                         </div>
                                         <div class="col-md-6">
                                             <label for="spät.">bis ... Uhr</label>
-                                            <input type="time" class="form-control" id="spät." name="spaet">
+                                            <input type="time" class="form-control w-100" id="spät." name="spaet">
                                         </div>
                                     </div>
                                 </div>
@@ -106,8 +110,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">schließen</button>
-                    <button type="button" class="btn btn-success" id="checkinButton" style="display: none;">Check-in
-                    </button>
+
                     <div id="spinner" class="spinner-border text-danger" role="status" style="display: none;">
                         <span class="sr-only">Loading...</span>
                     </div>
