@@ -38,7 +38,15 @@ class SchickzeitenStundenExport implements FromView, WithTitle, WithEvents
         $stunde = $this->stunde + 1 .':00:00';
 
         return view('export.schickzeiten', [
-            'schickzeiten' => Schickzeiten::query()->where('time', '<', $stunde)->orderBy('time')->orderBy('type')->with('child')->get(),
+            'schickzeiten' => Schickzeiten::query()
+                ->where(function ($query) use ($stunde) {
+                    $query->where('time', '<', $stunde)
+                        ->orWhere('time_ab', '<', $stunde)
+                        ->orWhere('time_spaet', '<', $stunde);
+                })
+                ->orderBy('time')
+                ->orderBy('type')
+                ->with('child')->get(),
             'stunde' => $this->stunde,
         ]);
     }

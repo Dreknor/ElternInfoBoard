@@ -123,19 +123,19 @@
                                             </th>
                                             <td>
                                                 @if($schickzeiten->where('weekday', $x)->where('child_name',$child->child_name)->where('users_id',$child->users_id)->where('type','ab')->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child->child_name)->where('users_id',$child->users_id)->first()->time->format('H:i'), 0 ,5)}}
+                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child->child_name)->where('users_id',$child->users_id)->first()->time_ab?->format('H:i'), 0 ,5)}}
                                                     Uhr
                                                 @endif
                                             </td>
                                             <td>
                                                 @if($schickzeiten->where('weekday', $x)->where('child_name',$child->child_name)->where('users_id',$child->users_id)->where('type','genau')->first())
-                                                    {{$schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child->child_name)->where('users_id',$child->users_id)->first()->time->format('H:i')}}
+                                                    {{$schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child->child_name)->where('users_id',$child->users_id)->first()->time?->format('H:i')}}
                                                     Uhr
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('child_name',$child->child_name)->where('users_id',$child->users_id)->where('type','spät.')->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('child_name',$child->child_name)->where('users_id',$child->users_id)->where('type','=','spät.')->first()->time->format('H:i'), 0 ,5)}}
+                                                @if($schickzeiten->where('weekday', $x)->where('child_name',$child->child_name)->where('users_id',$child->users_id)->where('type','ab')->first())
+                                                    {{substr($schickzeiten->where('weekday', $x)->where('child_name',$child->child_name)->where('users_id',$child->users_id)->where('type','=','ab')->first()->time_spaet?->format('H:i'), 0 ,5)}}
                                                     Uhr
                                                 @endif
                                             </td>
