@@ -162,7 +162,7 @@ class ChildController extends Controller
 
     public function destroy(Child $child)
     {
-        if (auth()->user()->cannot('edit Schickzeiten')) {
+        if (auth()->user()->cannot('edit schickzeiten')) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung',
                 'type' => 'danger',
