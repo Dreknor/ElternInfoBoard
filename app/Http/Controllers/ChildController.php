@@ -160,4 +160,17 @@ class ChildController extends Controller
         ]);
     }
 
+    public function destroy(Child $child)
+    {
+        $this->middleware('auth');
+        $this->middleware('can:edit Schickzeiten');
+
+        $child->delete();
+
+        return redirect()->back()->with([
+            'Meldung' => 'Kind wurde erfolgreich gelöscht',
+            'type' => 'success',
+        ]);
+    }
+
 }
