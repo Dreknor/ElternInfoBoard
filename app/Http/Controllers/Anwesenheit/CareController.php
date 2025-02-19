@@ -77,7 +77,24 @@ class CareController extends Controller
         $parent = $child->parents()->first();
 
         if ($parent->can('testing')) {
-            $parent->notify(new Push('Abmeldung','Ihr Kind ' . $child->first_name . ' wurde abgemeldet.'));
+            $parent->notifications()->create([
+                'title' => 'Anmeldung',
+                'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
+                'url' => url('schickzeiten'),
+
+            ]);
+
+
+
+            if ($parent->sorgorgeberechtigter2){
+                $parent->sorgorgeberechtigter2->notifications()->create([
+                    'title' => 'Anmeldung',
+                    'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
+                    'url' => url('schickzeiten'),
+
+                ]);
+
+            }
         }
 
 
@@ -110,7 +127,24 @@ class CareController extends Controller
         $parent = $child->parents()->first();
 
         if ($parent->can('testing')) {
-            $parent->notify(new Push('Anmeldung im Hort','Ihr Kind ' . $child->first_name . ' wurde im Hort angemeldet.'));
+            $parent->notifications()->create([
+                'title' => 'Anmeldung',
+                'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
+                'url' => url('schickzeiten'),
+
+            ]);
+
+
+
+            if ($parent->sorgorgeberechtigter2){
+                $parent->sorgorgeberechtigter2->notifications()->create([
+                    'title' => 'Anmeldung',
+                    'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
+                    'url' => url('schickzeiten'),
+
+                ]);
+
+            }
         }
 
 
