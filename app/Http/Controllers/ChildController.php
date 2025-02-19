@@ -162,8 +162,12 @@ class ChildController extends Controller
 
     public function destroy(Child $child)
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
+        if (auth()->user()->cannot('edit Schickzeiten')) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung',
+                'type' => 'danger',
+            ]);
+        }
 
         $child->delete();
 
