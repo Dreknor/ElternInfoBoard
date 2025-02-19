@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\Groups;
+use App\Notifications\Push;
 use App\Settings\CareSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -73,6 +74,13 @@ class CareController extends Controller
                 'checked_out' => true,
             ]);
 
+        $parent = $child->parents()->first();
+
+        if ($parent->can('testing')) {
+            $parent->notify(new Push('Abmeldung','Ihr Kind ' . $child->first_name . ' wurde abgemeldet.'));
+        }
+
+
         Cache::forget('checkedIn' . $child->id);
         return response()->json([
             'success' => true,
@@ -98,6 +106,13 @@ class CareController extends Controller
                 'date' => now()->toDateString(),
             ]);
         }
+
+        $parent = $child->parents()->first();
+
+        if ($parent->can('testing')) {
+            $parent->notify(new Push('Anmeldung im Hort','Ihr Kind ' . $child->first_name . ' wurde im Hort angemeldet.'));
+        }
+
 
 
         Cache::forget('checkedIn' . $child->id);
