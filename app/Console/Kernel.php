@@ -29,6 +29,8 @@ class Kernel extends ConsoleKernel
         if (config('queue.use_cronjob')){
             Log::info('start queue:work');
             $schedule->command('queue:work')->everyMinute()->withoutOverlapping();
+        } else {
+            Log::info('queue:work is not started because use_cronjob is false');
         }
 
         $notifySetting = new NotifySetting();
