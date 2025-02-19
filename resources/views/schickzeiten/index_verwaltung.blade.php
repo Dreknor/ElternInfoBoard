@@ -82,11 +82,11 @@
                                         @foreach($child->schickzeiten->where('weekday', null) as $schickzeit)
                                             <tr>
                                                 <th>
-                                                    {{$schickzeit->specific_date->format('d.m.Y')}}
+                                                    {{$schickzeit->specific_date?->format('d.m.Y')}}
                                                 </th>
                                                 <td>
                                                     @if($schickzeit->type == 'genau')
-                                                        {{$schickzeit->time->format('H:i')}}
+                                                        {{$schickzeit->time?->format('H:i')}}
                                                     @else
                                                         ab {{$schickzeit->time_ab?->format('H:i')}} Uhr @if($schickzeit->time_spaet) bis  {{$schickzeit->time_spaet?->format('H:i')}} Uhr @endif
                                                     @endif
