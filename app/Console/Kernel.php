@@ -22,6 +22,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+
+        //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
+        //Default ist die Queue über Supervisor zu starten
+        if (config('queue.use_cronjob')){
+            $schedule->command('queue:work')->everyMinute()->withoutOverlapping();
+        }
+
         $notifySetting = new NotifySetting();
 
         //Kinder einchecken

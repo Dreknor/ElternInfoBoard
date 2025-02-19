@@ -90,4 +90,6 @@ return [
         'table' => 'failed_jobs',
     ],
 
+    'use_cronjob' => env('USE_CRONJOB', false),
+
 ];
