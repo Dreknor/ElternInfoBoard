@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function () {
         Route::put('child/{child}', [\App\Http\Controllers\ChildController::class, 'update'])->name('child.update');
         Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
+        Route::get('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
 
 
         //make a push notification.
@@ -402,7 +403,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
         Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
-        Route::delete('/anwesenheit/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('anwesenheit.destroy');
     });
 
     //Notizen für Kinder
