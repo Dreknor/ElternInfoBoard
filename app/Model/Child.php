@@ -63,7 +63,11 @@ class Child extends Model implements HasMedia
 
     public function schickzeiten(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(Schickzeiten::class, 'child_id');
+        return $this->hasMany(Schickzeiten::class, 'child_id')
+            ->where(function($q) {
+                $q->where('specific_date', '>=', today())
+                    ->orWhereNull('specific_date');
+            });
     }
 
     public function getSchickzeitenForToday()

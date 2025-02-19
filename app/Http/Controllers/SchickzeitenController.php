@@ -291,10 +291,20 @@ class SchickzeitenController extends Controller
 
         } else {
 
+            if ($request->time_ab == '' ) {
+                return redirect()->back()->with([
+                    'type' => 'warning',
+                    'Meldung' => 'Bitte geben Sie an, ab wann das Kind gehen darf',
+                ]);
+            }
             $time_ab = Carbon::createFromFormat('H:i', $request->time_ab);
-            $time_spaet = Carbon::createFromFormat('H:i', $request->time_spaet);
 
-            if ($time_ab->lt($settings_ab) || $time_ab->gt($settings_bis) || $time_spaet->lt($settings_ab) || $time_spaet->gt($settings_bis)) {
+            if ($request->time_spaet != '') {
+                $time_spaet = Carbon::createFromFormat('H:i', $request->time_spaet);
+            }
+
+
+            if ($time_ab->lt($settings_ab) || $time_ab->gt($settings_bis) || (isset($time_spaet) && ($time_spaet->lt($settings_ab) || $time_spaet->gt($settings_bis)))) {
                 return redirect()->back()->with([
                     'type' => 'warning',
                     'Meldung' => 'Ungültige Zeit',
@@ -312,7 +322,7 @@ class SchickzeitenController extends Controller
                 'specific_date' => $specificDate,
                 'type' => 'ab',
                 'time_ab' => $request->time_ab,
-                'time_spaet' => $request->time_spaet,
+                'time_spaet' => $time_spaet ?? null,
                 'changedBy' => Auth::id(),
                 'users_id' => $child->parents()->first()->id
             ]);

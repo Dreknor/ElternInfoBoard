@@ -78,6 +78,39 @@
                                                 </td>
                                             </tr>
                                         @endfor
+                                        <tfoot>
+                                        @foreach($child->schickzeiten->where('weekday', null) as $schickzeit)
+                                            <tr>
+                                                <th>
+                                                    {{$schickzeit->specific_date->format('d.m.Y')}}
+                                                </th>
+                                                <td>
+                                                    @if($schickzeit->type == 'genau')
+                                                        {{$schickzeit->time->format('H:i')}}
+                                                    @else
+                                                        ab {{$schickzeit->time_ab?->format('H:i')}} Uhr @if($schickzeit->time_spaet) bis  {{$schickzeit->time_spaet?->format('H:i')}} Uhr @endif
+                                                    @endif
+                                                </td>
+                                                <td colspan="2">
+
+                                                </td>
+                                                <td>
+                                                    <div class="row">
+                                                        <div class="col">
+
+                                                        </div>
+                                                        <div class="col">
+                                                            <form action="{{route('schickzeiten.destroy', ['schickzeit' => $schickzeit->id])}}" method="post">
+                                                                @csrf
+                                                                @method('delete')
+                                                                <button type="submit" class="btn btn-link btn-danger text-danger"><i class="fa fa-trash"></i></button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -164,6 +197,7 @@
                                             </td>
                                         </tr>
                                     @endfor
+
                                 </table>
                             </div>
                             <div class="card-footer">
