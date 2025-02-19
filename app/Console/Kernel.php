@@ -7,6 +7,7 @@ use App\Model\Module;
 use App\Settings\NotifySetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -26,6 +27,7 @@ class Kernel extends ConsoleKernel
         //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
         //Default ist die Queue über Supervisor zu starten
         if (config('queue.use_cronjob')){
+            Log::info('start queue:work');
             $schedule->command('queue:work')->everyMinute()->withoutOverlapping();
         }
 
