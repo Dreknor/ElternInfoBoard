@@ -24,14 +24,6 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
-        //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
-        //Default ist die Queue über Supervisor zu starten
-        if (config('queue.use_cronjob')){
-            Log::info('start queue:work');
-            $schedule->command('queue:work')->everyMinute()->withoutOverlapping();
-        } else {
-            Log::info('queue:work is not started because use_cronjob is false');
-        }
 
         $notifySetting = new NotifySetting();
 
@@ -62,6 +54,13 @@ class Kernel extends ConsoleKernel
         $schedule->call('App\Http\Controllers\SchickzeitenController@sendReminder')->weeklyOn($notifySetting->schickzeiten_report_weekday, $notifySetting->schickzeiten_report_hour.':00');
 
         $schedule->call('App\Http\Controllers\GroupsController@deletePrivateGroups')->yearlyOn(7, 31, '00:00');
+
+
+        //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
+        //Default ist die Queue über Supervisor zu starten
+        if (config('queue.use_cronjob')) {
+            $schedule->command('queue:work')->everyMinute()->withoutOverlapping();
+        }
     }
 
     /**
