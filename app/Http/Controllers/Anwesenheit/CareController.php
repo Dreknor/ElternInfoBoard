@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Anwesenheit;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\AnwesenheitNotificationJob;
+use App\Jobs\NotifyJob;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\Groups;
+use App\Model\Notification;
 use App\Notifications\Push;
 use App\Settings\CareSetting;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -77,23 +81,10 @@ class CareController extends Controller
         $parent = $child->parents()->first();
 
         if ($parent->can('testing')) {
-            $parent->notifications()->create([
-                'title' => 'Anmeldung',
-                'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
-                'url' => url('schickzeiten'),
-
-            ]);
-
-
+            dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkOut'));
 
             if ($parent->sorgorgeberechtigter2){
-                $parent->sorgorgeberechtigter2->notifications()->create([
-                    'title' => 'Anmeldung',
-                    'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
-                    'url' => url('schickzeiten'),
-
-                ]);
-
+                dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkOut'));
             }
         }
 
@@ -127,23 +118,12 @@ class CareController extends Controller
         $parent = $child->parents()->first();
 
         if ($parent->can('testing')) {
-            $parent->notifications()->create([
-                'title' => 'Anmeldung',
-                'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
-                'url' => url('schickzeiten'),
 
-            ]);
-
-
+           dispatch(new AnwesenheitNotificationJob($parent, $child->first_name , 'checkIn'));
 
             if ($parent->sorgorgeberechtigter2){
-                $parent->sorgorgeberechtigter2->notifications()->create([
-                    'title' => 'Anmeldung',
-                    'message' => 'Ihr Kind ' . $child->first_name . ' wurde angemeldet.',
-                    'url' => url('schickzeiten'),
 
-                ]);
-
+                dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
             }
         }
 
