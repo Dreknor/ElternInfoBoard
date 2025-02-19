@@ -107,7 +107,7 @@ Route::middleware('auth')->group(function () {
         Route::put('child/{child}', [\App\Http\Controllers\ChildController::class, 'update'])->name('child.update');
         Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
-        Route::get('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
+        Route::delete('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
 
 
         //make a push notification.
