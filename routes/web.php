@@ -403,6 +403,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
         Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
+        Route::post('child/{child}/notice', [ChildNoticeController::class, 'noticeVerwaltung'])->name('child.notice.verwaltung');
+
     });
 
     //Notizen für Kinder

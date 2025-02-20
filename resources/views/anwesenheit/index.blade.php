@@ -107,6 +107,32 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h6>Notiz hinzufügen</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="" id="noticeForm">
+                                @csrf
+                                <div class="form-group">
+                                    <label for="date">Datum</label>
+                                    <div class="">
+                                        <input id="date" type="date" class="form-control" name="date"
+                                               value="{{now()->format('Y-m-d')}}" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notice">Notiz</label>
+                                    <div class="">
+                                        <textarea id="notice" class="form-control" name="notice"></textarea>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="child_id" id="child_id">
+                                <button type="submit" class="btn btn-primary">Notiz hinzufügen</button>
+                            </form>
+                        </div>
+
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">schließen</button>
@@ -144,16 +170,15 @@
             const logoutButton = document.getElementById('logoutButton');
             const spinner = document.getElementById('spinner');
             const schickzeitForm = document.getElementById('schickzeitForm');
+            const noticeForm = document.getElementById('noticeForm');
 
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
-
                     const childData = JSON.parse(this.dataset.child);
                     const notices = JSON.parse(this.dataset.notices);
                     childName.textContent = `${childData.first_name} ${childData.last_name}`;
                     logoutButton.dataset.childId = childData.id;
                     checkinButton.dataset.childId = childData.id;
-
 
 
                     if (childData.checked_in === 'false') {
@@ -166,6 +191,7 @@
 
                     //Action for the form
                     schickzeitForm.action = `anwesenheit/${childData.id}/schickzeit`;
+                    noticeForm.action = `child/${childData.id}/notice`;
 
                     const schickzeitenContainer = document.getElementById('schickzeitenContainer');
                     schickzeitenContainer.innerHTML = '';
@@ -191,6 +217,7 @@
                             noticesContainer.appendChild(noticeElement);
 
                     }
+
 
                     childModal.modal('show');
                 });
