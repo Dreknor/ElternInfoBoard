@@ -8,8 +8,9 @@
                 @foreach($children as $child)
                     <div class="col-auto">
                         <div
-                            class="card @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
-                            <div class="card-header">
+                            class="card ">
+                            <div
+                                class="card-header @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
                                 <h6 class="card-title">
                                     {{$child->first_name}} {{$child->last_name}}
                                 </h6>
@@ -22,7 +23,7 @@
                                     </p>
                                 @elseif($child->checkedIn())
                                     <p>
-                                        derzeit angemeldet
+                                        <i class="fas fa-user-check text-success"></i> derzeit angemeldet
                                         @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
                                             @foreach($child->getSchickzeitenForToday() as $schickzeit)
                                                 <br>Schickzeit:
@@ -52,22 +53,9 @@
                                     heute nicht angemeldet
                                 @endif
                             </div>
+
                             <div class="card-footer border-top">
-                                <b>Nachricht hinterlegen</b>
-                                <form class="form-horizontal noticeForm" id="noticeForm_{{$child->id}}">
-                                    @csrf
-                                    <input type="hidden" name="child_id" value="{{$child->id}}">
-                                    <input type="date" name="date" value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
-                                           min="{{\Carbon\Carbon::now()->format('Y-m-d')}}" class="form-control">
-                                    <div class="form-group">
-                                        <textarea name="notice" id="notice" class="form-control"
-                                                  placeholder="Notiz hinzufügen">{{$child->notice->first()?->notice}}</textarea>
-                                    </div>
-                                    <div class="btn btn-primary form_submit">Notiz speichern</div>
-                                </form>
-                            </div>
-                            <div class="card-footer">
-                                <b>Notizen</b>
+                                <b>Nachrichten</b>
                                 @if($child->notice()->Future()->count() > 0)
                                     <ul class="list-group">
                                         @foreach($child->notice()->future()->get() as $notice)
@@ -83,6 +71,32 @@
                                 @else
                                     <p>Keine Notizen hinterlegt</p>
                                 @endif
+                            </div>
+
+                            <div class="card-footer border-top">
+                                <div class="pull-right">
+                                    <button class="round-button" data-toggle="collapse"
+                                            href="#noticeCollapse_{{$child->id}}" role="button"
+                                            aria-expanded="false" aria-controls="noticeCollapse_{{$child->id}}">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+
+                                <div class="collapse" id="noticeCollapse_{{$child->id}}">
+                                    <b>Nachricht hinterlegen</b>
+                                    <form class="form-horizontal noticeForm" id="noticeForm_{{$child->id}}">
+                                        @csrf
+                                        <input type="hidden" name="child_id" value="{{$child->id}}">
+                                        <input type="date" name="date"
+                                               value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
+                                               min="{{\Carbon\Carbon::now()->format('Y-m-d')}}" class="form-control">
+                                        <div class="form-group">
+                                            <textarea name="notice" id="notice" class="form-control"
+                                                      placeholder="Notiz hinzufügen">{{$child->notice->first()?->notice}}</textarea>
+                                        </div>
+                                        <div class="btn btn-primary form_submit">Notiz speichern</div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -324,6 +338,53 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Button to open the modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#noticeModal_{{ $child->id }}">
+        Leave a message
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="noticeModal_{{ $child->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nachricht hinterlegen</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">\&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal noticeForm" id="noticeForm_{{ $child->id }}">
+                        @csrf
+                        <input type="hidden" name="child_id" value="{{ $child->id }}">
+                        <input type="date" name="date" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"
+                               min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" class="form-control mb-2">
+                        <div class="form-group">
+            <textarea name="notice" id="notice" class="form-control"
+                      placeholder="Notiz hinzufügen">{{ $child->notice->first()?->notice }}</textarea>
+                        </div>
+                        <div class="btn btn-primary form_submit">Notiz speichern</div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <b>Notizen</b>
+                    @if($child->notice()->future()->count() > 0)
+                        <ul class="list-group w-100">
+                            @foreach($child->notice()->future()->get() as $notice)
+                                <li class="list-group-item text-black-50">
+                                    <b>{{ $notice->date->format('d.m.Y') }}:</b> {{ $notice->notice }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p>Keine Notizen hinterlegt</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
@@ -377,5 +438,12 @@
         });
 
 
+    </script>
+    <script>
+        document.querySelectorAll('.round-button').forEach(button => {
+            button.addEventListener('click', function () {
+                this.style.display = 'none';
+            });
+        });
     </script>
 @endpush
