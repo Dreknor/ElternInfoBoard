@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
         //Kinder einchecken
         $careModule = Module::where('setting', 'Anwesenheitsliste')->first();
         if ($careModule->options['active'] == 1) {
-            //$schedule->call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at('08:00');
+            $schedule->call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at('08:30');
         }
 
         $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
