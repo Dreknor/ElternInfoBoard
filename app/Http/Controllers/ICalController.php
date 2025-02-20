@@ -18,7 +18,12 @@ class ICalController extends Controller
     public function createICal($uuid)
     {
         try {
-            $user = User::where('uuid', $uuid)->firstOrFail();
+            $user = User::where('uuid', $uuid)->first();
+
+            if (is_null($user)) {
+                return response('Kalender nicht gefunden', 404);
+            }
+
             $prefix = ($user->calendar_prefix != null) ? '(' . $user->calendar_prefix . ') ' : '';
 
             if ($user->releaseCalendar) {
@@ -83,10 +88,10 @@ class ICalController extends Controller
                     'Content-Disposition' => 'attachment; filename="'.config('app.name').'.ics"',
                 ]);
             } else {
-                abort(404);
+                return response('Kalender nicht freigegeben', 403);
             }
         } catch (\Exception $e) {
-            abort(404);
+            return response('Kalender nicht gefunden', 404);
         }
 
     }
