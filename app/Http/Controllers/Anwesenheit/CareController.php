@@ -4,15 +4,11 @@ namespace App\Http\Controllers\Anwesenheit;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
-use App\Jobs\NotifyJob;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\Groups;
-use App\Model\Notification;
-use App\Notifications\Push;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
 class CareController extends Controller
@@ -23,8 +19,10 @@ class CareController extends Controller
     }
 
     /**
-     * Anwesenheitsübersicht
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * Displays the attendance overview.
+     *
+     * @param bool \$showAll Decides whether to show all children or only those checked in.
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View Renders the attendance view.
      */
     public function index($showAll = false)
     {
@@ -63,10 +61,10 @@ class CareController extends Controller
 
 
     /**
-     * abmelden eines Kindes
+     * Marks a child as checked out and clears its cache entry.
      *
-     * @param Child $child
-     * @return JsonResponse
+     * @param Child \$child Child model whose attendance is updated.
+     * @return \Illuminate\Http\JsonResponse JSON response confirming success.
      */
     public function abmelden(Child $child)
     {
@@ -96,6 +94,13 @@ class CareController extends Controller
 
     }
 
+
+    /**
+     * Marks a child as checked in and dispatches relevant notifications.
+     *
+     * @param Child \$child Child model whose attendance is updated.
+     * @return \Illuminate\Http\JsonResponse JSON response confirming success.
+     */
     public function anmelden(Child $child)
     {
         $checkIn = $child->checkIns()
@@ -143,6 +148,36 @@ class CareController extends Controller
      */
     public function dailyCheckIn()
     {
+
+        if (now()->isWeekend()) {
+            return;
+        }
+
+        $ferien = Cache::remember('ferien_' . Carbon::now()->year, now()->diff(Carbon::now()->endOfYear()), function () {
+            $url = 'https://ferien-api.de/api/v1/holidays/SN/' . Carbon::now()->year;
+            return json_decode(file_get_contents($url), true);
+        });
+
+        foreach ($ferien as $ferienTage) {
+            if (now()->between($ferienTage['start'], $ferienTage['end'])) {
+                $ferien = true;
+            }
+        }
+
+        if ($ferien) {
+            return;
+        }
+
+        $feiertage = Cache::remember('feiertage_' . Carbon::now()->year, now()->diff(Carbon::now()->endOfYear()), function () {
+            $url = 'https://get.api-feiertage.de?years=' . now()->year . '&states=sn';
+            return json_decode(file_get_contents($url), true);
+        });
+
+        foreach ($feiertage as $feiertag) {
+            if (now()->isSameDay($feiertag['date'])) {
+                return;
+            }
+        }
 
         $children = Child::query()
             ->get();
