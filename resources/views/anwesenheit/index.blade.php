@@ -198,9 +198,11 @@
                     if (childData.schickzeiten.length > 0) {
                         childData.schickzeiten.forEach(schickzeit => {
                             const schickzeitElement = document.createElement('p');
+                            console.log(schickzeit);
+                            console.log(schickzeit.time_ab);
+                            console.log(schickzeit.time_spaet);
                             if (schickzeit.type === 'ab') {
-                                console.log(schickzeit.time_ab);
-                                console.log(schickzeit.time_spaet);
+
                                 schickzeitElement.textContent = `${schickzeit.type}: `;
                                 if(schickzeit.time_ab) {
                                     schickzeitElement.textContent += `ab ${toDateWithOutTimeZone(schickzeit.time_ab).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
