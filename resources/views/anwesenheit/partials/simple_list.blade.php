@@ -20,7 +20,7 @@
                             <ul class="list-group" style="margin: 0;">
                                 @foreach($sortedChildren as $child)
                                     <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
-                                        data-child='@json(array_merge($child->toArray(), ['checked_in' => $child->checkedIn() ? 'true' : 'false','schickzeiten' => $child->getSchickzeitenForToday()->toJson()]))'
+                                        data-child='@json(array_merge($child->toArray(), ['checked_in' => $child->checkedIn() ? 'true' : 'false','schickzeiten' => $child->getSchickzeitenForToday()?->toJson()]))'
                                         data-notices='@json($child->hasNotice())'
                                         style="padding: 0.5rem;">
                                         <div class="container-fluid">
