@@ -211,6 +211,8 @@
                                     schickzeitElement.textContent += ` bis ${toDateWithOutTimeZone(schickzeit.time_spaet).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                                 }
                             } else {
+                                console.log(schickzeit.time);
+                                console.log(schickzeit);
                                 schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
                             }
                             schickzeitenContainer.appendChild(schickzeitElement);
