@@ -66,7 +66,7 @@
                                                             @endphp
                                                             @if($schickzeit->type == 'ab')
                                                                 <span class="{{ $backgroundClass }} {{$text_size}}">
-                                                                        @if($schickzeit->time_ab) ab {{ $schickzeit->time_ab?->format('H:i') }}@endif
+                                                                        @if($schickzeit->time_ab != '') ab {{ $schickzeit->time_ab?->format('H:i') }}@endif
                                                                     </span>
                                                                 @if($schickzeit->time_spaet)
                                                                     <span class="{{ $backgroundClass }} {{$text_size}}">
