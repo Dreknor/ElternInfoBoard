@@ -202,6 +202,9 @@
                         childData.schickzeiten.forEach(schickzeit => {
                             const schickzeitElement = document.createElement('p');
                             if (schickzeit.type == 'genau') {
+                                console.log(schickzeit.type);
+
+                                console.log(schickzeit);
                                 schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
                             } else {
                                 schickzeitElement.textContent = `${schickzeit.type}: `;
