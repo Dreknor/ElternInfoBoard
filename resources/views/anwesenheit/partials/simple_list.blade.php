@@ -36,7 +36,7 @@
                                                         {{ $child->last_name }}, {{ $child->first_name }}
                                                 </div>
                                                 <div class="col">
-                                                    @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
+                                                    @if($child->getSchickzeitenForToday()?->count() > 0 and $child->checkedIn())
                                                         @foreach($child->getSchickzeitenForToday()->sortBy('type') as $schickzeit)
                                                             @php
                                                                 $currentTime = now();
