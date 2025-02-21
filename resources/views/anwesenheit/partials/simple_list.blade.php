@@ -15,7 +15,7 @@
                                 {{ $class->name }}  <span class="badge badge-primary pull-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
                             </h4>
                             @php
-                                $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('last_name');
+                                $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)?->sortBy('last_name');
                             @endphp
                             <ul class="list-group" style="margin: 0;">
                                 @foreach($sortedChildren as $child)
@@ -37,7 +37,7 @@
                                                 </div>
                                                 <div class="col">
                                                     @if($child->getSchickzeitenForToday()?->count() > 0 and $child->checkedIn())
-                                                        @foreach($child->getSchickzeitenForToday()->sortBy('type') as $schickzeit)
+                                                        @foreach($child->getSchickzeitenForToday()?->sortBy('type') as $schickzeit)
                                                             @php
                                                                 $currentTime = now();
                                                                 $backgroundClass = 'badge badge-';
