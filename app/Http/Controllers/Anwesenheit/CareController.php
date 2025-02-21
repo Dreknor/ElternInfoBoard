@@ -78,14 +78,13 @@ class CareController extends Controller
 
         $parent = $child->parents()->first();
 
-        if ($parent->can('testing')) {
+        if ($child->notification) {
             dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkOut'));
 
             if ($parent->sorgorgeberechtigter2){
                 dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkOut'));
             }
         }
-
 
         Cache::forget('checkedIn' . $child->id);
         return response()->json([
