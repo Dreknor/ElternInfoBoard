@@ -198,9 +198,14 @@
                     if (childData.schickzeiten.length > 0) {
                         childData.schickzeiten.forEach(schickzeit => {
                             const schickzeitElement = document.createElement('p');
-                            if (schickzeit.type === 'ab' && schickzeit.time_ab && schickzeit.time_spaet) {
-                                schickzeitElement.textContent = `${schickzeit.type}: ${toDateWithOutTimeZone(schickzeit.time_ab).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr - ${toDateWithOutTimeZone(schickzeit.time_spaet).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
-
+                            if (schickzeit.type === 'ab') {
+                                schickzeitElement.textContent = `${schickzeit.type}: `;
+                                if(schickzeit.time_ab) {
+                                    schickzeitElement.textContent += `ab ${toDateWithOutTimeZone(schickzeit.time_ab).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                                }
+                                if(schickzeit.time_spaet) {
+                                    schickzeitElement.textContent += ` bis ${toDateWithOutTimeZone(schickzeit.time_spaet).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                                }
                             } else {
                                 schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
                             }
