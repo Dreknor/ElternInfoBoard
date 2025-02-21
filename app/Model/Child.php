@@ -78,19 +78,20 @@ class Child extends Model implements HasMedia
     public function getSchickzeitenForToday()
     {
 
-        return $this->schickzeiten()
+        $schickzeiten = $this->schickzeiten()
             ->where(function ($query) {
                 $query->where('weekday', now()->dayOfWeek)
                     ->orWhere('specific_date', today());
             })
             ->orderBy('specific_date', 'desc')
-            ->first();
-/*
+            ->get();
+
         if ($schickzeiten->where('specific_date',  today())->count() > 0) {
-            return $schickzeiten->where('specific_date',  today())->collect();
+            return $schickzeiten->where('specific_date',  today());
         } else {
             return $schickzeiten->where('weekday', now()->dayOfWeek);
-        }*/
+        }
+
     }
 
     public function scopeCare($query)
