@@ -341,51 +341,6 @@
     </div>
 
 
-    <!-- Button to open the modal -->
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#noticeModal_{{ $child->id }}">
-        Leave a message
-    </button>
-
-    <!-- Modal -->
-    <div class="modal fade" id="noticeModal_{{ $child->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Nachricht hinterlegen</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">\&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form class="form-horizontal noticeForm" id="noticeForm_{{ $child->id }}">
-                        @csrf
-                        <input type="hidden" name="child_id" value="{{ $child->id }}">
-                        <input type="date" name="date" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}"
-                               min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" class="form-control mb-2">
-                        <div class="form-group">
-            <textarea name="notice" id="notice" class="form-control"
-                      placeholder="Notiz hinzufügen">{{ $child->notice->first()?->notice }}</textarea>
-                        </div>
-                        <div class="btn btn-primary form_submit">Notiz speichern</div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <b>Notizen</b>
-                    @if($child->notice()->future()->count() > 0)
-                        <ul class="list-group w-100">
-                            @foreach($child->notice()->future()->get() as $notice)
-                                <li class="list-group-item text-black-50">
-                                    <b>{{ $notice->date->format('d.m.Y') }}:</b> {{ $notice->notice }}
-                                </li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <p>Keine Notizen hinterlegt</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('js')
