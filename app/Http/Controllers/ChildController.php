@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChildNotificationRequest;
 use App\Http\Requests\CreateChildRequest;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use Illuminate\Support\Facades\Log;
 
 class ChildController extends Controller
 {
@@ -175,6 +177,25 @@ class ChildController extends Controller
             'Meldung' => 'Kind wurde erfolgreich gelöscht',
             'type' => 'success',
         ]);
+    }
+
+    public function setNotification(ChildNotificationRequest $request, Child $child)
+    {
+        if (auth()->user()->children()->contains($child)) {
+
+            $child->notification = $request->notification;
+            $child->save();
+
+            return response()->json([
+                'message' => 'Benachrichtigung wurde erfolgreich geändert',
+                'notification' => $child->notification,
+            ], 201);
+        }
+
+        return response()->json([
+            'message' => 'Sie haben keine Berechtigung',
+        ], 403);
+
     }
 
 }

@@ -2,15 +2,17 @@
 @section('title') - Schickzeiten @endsection
 
 @section('content')
-    @can('testing')
         <div class="container-fluid">
+            <p class="alert alert-info">
+                <b>Im Test:</b> Das System zur Anmeldung und Abmeldung von Kindern im Hort, die Erfassung der tagesaktuellen Schickzeiten und Nachrichten befinden sich derzeit in der Testphase. <br>
+                 Ob diese Funktionen dauerhaft eingeführt werden, steht noch nicht fest.<br><br>
+                Bitte beachten Sie, dass es zu Fehlern kommen kann. Sollten Sie Fehler entdecken, so melden Sie uns dies bitte.
+            </p>
             <div class="row">
                 @foreach($children as $child)
                     <div class="col-auto">
-                        <div
-                            class="card ">
-                            <div
-                                class="card-header @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
+                        <div class="card ">
+                            <div class="card-header @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
                                 <h6 class="card-title">
                                     {{$child->first_name}} {{$child->last_name}}
                                 </h6>
@@ -103,7 +105,6 @@
                 @endforeach
             </div>
         </div>
-    @endcan
     <div class="container-fluid">
         <div class="row">
             <div class="card">

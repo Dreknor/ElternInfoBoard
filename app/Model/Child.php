@@ -19,6 +19,11 @@ class Child extends Model implements HasMedia
         'last_name',
         'group_id',
         'class_id',
+        'notification',
+    ];
+
+    protected $casts = [
+        'notification' => 'boolean',
     ];
 
     public function group()

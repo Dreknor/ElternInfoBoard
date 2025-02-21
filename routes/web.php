@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
+use App\Http\Controllers\ChildController;
 use App\Http\Controllers\DatenschutzController;
 use App\Http\Controllers\ElternratController;
 use App\Http\Controllers\FeedbackController;
@@ -108,6 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
         Route::delete('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
+        Route::post('child/{child}/notification', [ChildController::class, 'setNotification'])->name('child.notification');
 
 
         //make a push notification.

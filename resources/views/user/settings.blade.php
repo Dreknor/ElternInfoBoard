@@ -179,6 +179,10 @@
                                             <h5 class="card-title">
                                                 Kinder
                                             </h5>
+                                            <p class="card-subtitle text-muted small">
+                                                Hier werden die Kinder angezeigt, die mit ihrem Konto verknüpft sind. Sie können hier auch weitere Kinder hinzufügen. Geben Sie dazu bitte Lerngruppe und Klassenstufe an. Sollte keine Lerngruppe vorhanden sein, tragen Sie bitte in beiden Feldern die Klassenstufe ein.<br>
+                                                Sollte Ihr Kind im Hort betreut werden, können Sie mittel der Glocke die Benachrichtigung aktivieren, wenn es sich im Hort an- bzw. abmeldet.
+                                            </p>
                                         </div>
                                         <div class="card-body">
                                             <ul class="list-group">
@@ -186,16 +190,28 @@
                                                     <li class="list-group-item">
                                                         {{$child->first_name}}
                                                         {{$child->last_name}}
+
+
+                                                        @if($child->notification)
+                                                            <span class="badge bg-gradient-directional-teal p-2 ml-1 pull-right child-notification text-white" title="Benachrichtigung aktiv" data-child_id="{{$child->id}}" data-notification="1">
+                                                                <i class="fas fa-bell"></i>
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-gradient-radial-amber p-2 ml-1 pull-right child-notification" title="Benachrichtigung deaktiviert"  data-child_id="{{$child->id}}" data-notification="0">
+                                                                <i class="fas fa-bell-slash"></i>
+                                                            </span>
+                                                        @endif
+
                                                         <span class="badge badge-info ml-1 p-2 pull-right">
-                                                        {{$child->group->name}}
-                                                    </span>
+                                                            {{$child->group->name}}
+                                                        </span>
                                                         <span class="badge badge-info ml-1 p-2 pull-right">
-                                                        {{$child->class->name}}
-                                                    </span>
+                                                            {{$child->class->name}}
+                                                        </span>
                                                     </li>
                                             @endforeach
                                         </div>
-                                        <div class="card-footer">
+                                        <div class="card-footer border-top">
                                             <form action="{{url('/child')}}" method="post">
                                                 @csrf
                                                 <div class="form-group row">
@@ -261,9 +277,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 col-sm-12">
 
-                    </div>
                 </div>
                 <div class="row">
                     @if($user->releaseCalendar == 1)
@@ -391,6 +405,34 @@
                     $("#btn-save").show();
             }
             }
+        });
+
+
+        $('.child-notification').click(function () {
+            let child_id = $(this).data('child_id');
+            let notification = $(this).data('notification');
+
+            $.ajax({
+                url: '/child/' + child_id + '/notification',
+                type: 'POST',
+                data: {
+                    _token: '{{csrf_token()}}',
+                    'child_id': child_id,
+                    'notification': notification == 1 ? 0 : 1
+                },
+                success: function (data) {
+                    if (data.notification == 1) {
+                        $('.child-notification[data-child_id=' + child_id + ']').removeClass('bg-gradient-radial-amber').addClass('bg-gradient-directional-teal text-white').html('<i class="fas fa-bell"></i>');
+                        $('.child-notification[data-child_id=' + child_id + ']').data('notification', 1);
+                    } else {
+                        $('.child-notification[data-child_id=' + child_id + ']').removeClass('bg-gradient-directional-teal text-white').addClass('bg-gradient-radial-amber').html('<i class="fas fa-bell-slash"></i>');
+                        $('.child-notification[data-child_id=' + child_id + ']').data('notification', 0);
+                    }
+                },
+                error: function (data) {
+                    alert('Fehler beim Speichern');
+                }
+            });
         });
 
     </script>
