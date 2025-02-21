@@ -12,10 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::table('permissions')->insert([
-            'name' => 'scan files',
-            'guard_name' => 'web',
-        ]);
+
     }
 
     /**

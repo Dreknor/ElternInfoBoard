@@ -26,12 +26,7 @@ return new class extends Migration
 
             $table->foreign('senders_id')->references('id')->on('users')->cascadeOnDelete();
 
-            DB::table('permissions')->insert([
-                'name' => 'see mails',
-                'guard_name' => 'web',
-            ]);
 
-            Artisan::call('cache:clear');
         });
     }
 

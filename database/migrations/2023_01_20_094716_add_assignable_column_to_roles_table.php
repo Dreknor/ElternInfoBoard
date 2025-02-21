@@ -12,20 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        $permission = new Spatie\Permission\Models\Permission([
-            'name' => 'role is assignable',
-            'guard_name' => 'web'
-        ]);
-        $permission->save();
 
-        $permission = new Spatie\Permission\Models\Permission([
-            'name' => 'assign roles to users',
-            'guard_name' => 'web'
-        ]);
-        $permission->save();
-
-
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
     }
 
     /**

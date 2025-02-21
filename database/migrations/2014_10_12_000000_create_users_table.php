@@ -25,14 +25,6 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
-
-        DB::table('users')->insert([
-            'name' => config('mail.from.name'),
-            'email' => config('mail.from.address'),
-            'password' => Hash::make(Carbon::now()->format('dmY')),
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ]);
     }
 
     /**

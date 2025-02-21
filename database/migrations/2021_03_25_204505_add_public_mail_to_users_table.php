@@ -18,9 +18,7 @@ return new class extends Migration
             $table->string('publicMail')->after('email')->nullable();
         });
 
-        DB::table('settings_modules')->where('setting', 'Gruppen')->update([
-            'options' => '{"active":"0","rights":[],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends"}}',
-        ]);
+
     }
 
     /**

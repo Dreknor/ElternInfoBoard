@@ -16,29 +16,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::table('permissions')->insert([
-            'name' => 'manage rueckmeldungen',
-            'guard_name' => 'web',
-        ]);
 
-        DB::table('settings_modules')->insert([
-            'setting' => 'bearbeite Rueckmeldungen',
-            'category' => 'module',
-            'options' => '
-            {
-                "active":"0",
-                "rights":{},
-                "adm-nav":
-                    {"adm-rights":
-                        ["manage rueckmeldungen"],
-                        "name":"Rückmeldungen",
-                        "link":"rueckmeldungen",
-                        "icon":"fas fa-comment-dots"
-                    }
-            }',
-            'created_at' => Carbon::now(),
-        ]);
-        Artisan::call('cache:clear');
+
     }
 
     /**

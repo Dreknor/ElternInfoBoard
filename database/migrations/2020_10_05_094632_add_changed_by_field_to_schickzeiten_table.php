@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('schickzeiten', function (Blueprint $table) {
-            //
+            $table->removeColumn('changedBy');
         });
     }
 };

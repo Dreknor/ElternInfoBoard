@@ -48,10 +48,6 @@ return new class extends Migration
             $table->foreign('author_id')->references('id')->on('users');
         });
 
-        DB::table('permissions')->insert([
-            'name' => 'create polls',
-            'guard_name' => 'web',
-        ]);
     }
 
     /**

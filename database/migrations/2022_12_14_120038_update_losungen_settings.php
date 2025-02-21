@@ -12,21 +12,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        $setting = Module::where('setting', 'Losung')->first();
 
-        $settings = [
-            'id' => ($setting ? $setting->id : rand(100000, 999999)),
-            'setting' => 'Losung',
-            'description' => 'Zeigt im Nachrichtenbereich die Tageslosung an. Die Losungen müssen jedes Jahr aus der aktuellen csv-Datei importiert werden.',
-            'category' => 'module',
-            'options' => '{"active":"1","rights":[],"home-view-top":"include.losung","adm-nav":{"adm-rights":["edit settings"],"name":"Losung importieren","link":"settings\/losungen\/import","icon":"fas fa-file-import"}}'
-        ];
-
-        if ($setting) {
-            $setting->delete();
-        }
-
-        DB::table('settings_modules')->insert($settings);
 
     }
 
