@@ -86,10 +86,9 @@ class Child extends Model implements HasMedia
             ->get();
 
         if ($schickzeiten->where('specific_date',  today())->count() > 0) {
-
-            return $schickzeiten->where('specific_date',  today());
+            return collect($schickzeiten->where('specific_date',  today()));
         } else {
-            return $schickzeiten->where('weekday', now()->dayOfWeek);
+            return collect($schickzeiten->where('weekday', now()->dayOfWeek));
         }
     }
 
