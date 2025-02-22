@@ -12,25 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        $module = new \App\Model\Module([
-            'setting' => 'Kinderverwaltung',
-            'description' => "Verwaltung der angelegten Kinder",
-            'category' => 'module',
-            'options' =>
-                [
-                    "active" => "0",
-                    'rights' => [],
-                    "adm-nav" => [
-                        "adm-rights" => ["edit schickzeiten"],
-                        "name" => "Kinder",
-                        "link" => "care/children",
-                        "icon" => "fa-solid fa-children"
-                    ]
-                ],
-            'created_at' => now(),
-        ]);
 
-        $module->save();
     }
 
     /**
@@ -40,6 +22,5 @@ return new class extends Migration {
      */
     public function down()
     {
-        \App\Model\Module::where('setting', 'Kinderverwaltung')->delete();
     }
 };

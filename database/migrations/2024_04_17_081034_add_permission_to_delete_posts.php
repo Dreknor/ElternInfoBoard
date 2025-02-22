@@ -13,11 +13,7 @@ return new class extends Migration {
     public function up()
     {
         $permission = new Spatie\Permission\Models\Permission(
-            ['name' => 'delete posts',
-                'guard_name' => 'web',
-                'created_at' => Carbon\Carbon::now(),
-                'updated_at' => Carbon\Carbon::now(),
-            ]);
+            );
 
         $permission->save();
 

@@ -14,15 +14,7 @@ return new class extends Migration
      */
     public function up()
     {
-        \Spatie\Permission\Models\Permission::firstOrCreate([
-           'name' => "view external offer",
-            'guard_name' => 'web'
-        ]);
 
-        $settings =
-
-
-            exec('php artisan cache:clear');
     }
 
     /**

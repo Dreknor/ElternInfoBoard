@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             UpdatePermissionSeeder::class,
             UpdateModuleSettingsSeeder::class,
             UpdateGroupsPermission::class,
+            DiseasesSeeder::class,
+            UpdateSeetingsModuleNameSeeder::class,
 
 
         ]);

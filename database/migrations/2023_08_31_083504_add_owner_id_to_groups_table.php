@@ -18,12 +18,6 @@ return new class extends Migration {
             $table->unsignedBigInteger("owner_id")->after('protected')->nullable();
         });
 
-        DB::table('permissions')->insert([
-            'name' => 'create own group',
-            'guard_name' => 'web',
-        ]);
-
-        Artisan::call('cache:clear');
     }
 
     /**

@@ -13,25 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        $module = new \App\Model\Module([
-           'setting' => 'Anwesenheitsliste',
-            'description' => "digitale Anwesenheitsliste der Kinder",
-            'category' => 'module',
-            'options' =>
-            [
-                "active" => "0",
-                'rights' => [   ],
-                "adm-nav" => [
-                    "adm-rights" => ["edit schickzeiten"],
-                    "name" => "Anwesenheit",
-                    "link" => "care/anwesenheit",
-                    "icon" => "fa-solid fa-children"
-                ]
-            ],
-            'created_at' => now(),
-        ]);
 
-        $module->save();
     }
 
     /**
@@ -41,6 +23,5 @@ return new class extends Migration
      */
     public function down()
     {
-        \App\Model\Module::where('setting', 'Anwesenheitsliste')->delete();
     }
 };

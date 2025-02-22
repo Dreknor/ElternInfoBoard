@@ -32,32 +32,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        \Spatie\Permission\Models\Permission::create(['name' => 'view sites']);
-        \Spatie\Permission\Models\Permission::create(['name' => 'create sites']);
 
-        \App\Model\Module::create([
-            'setting' => 'Seiten',
-            'description' => 'Erlaubt das Anlegen und Verwalten von Seiten',
-            'category' => 'module',
-            'options' => [
-                "active"=>"0",
-                "rights" => ["view sites"],
-                "nav"=>[
-                    "name"=>"Seiten",
-                    "link"=>"sites",
-                    "icon"=>"fa fa-file",
-                    "bottom-nav"=>"false"
-                ],
-                "adm-nav"=>[
-                    "adm-rights"=>["create sites"],
-                    "name"=>"neue Seite",
-                    "link"=>"sites/create",
-                    "icon"=>"fa fa-file-pen"
-                ]
-            ],
-            ]);
 
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
     }
 
     /**
@@ -70,8 +46,6 @@ return new class extends Migration
 
         Schema::dropIfExists('site_group');
         Schema::dropIfExists('sites');
-        \Spatie\Permission\Models\Permission::where('name','view sites')->delete();
-        \Spatie\Permission\Models\Permission::where('name','create sites')->delete();
-        \App\Model\Module::where('setting', 'Seiten')->delete();
+
     }
 };

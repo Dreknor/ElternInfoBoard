@@ -22,7 +22,13 @@ return new class extends Migration {
                 $table->unique(['group', 'name']);
             });
         } catch (Exception $e) {
+
         }
 
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('settings');
     }
 };

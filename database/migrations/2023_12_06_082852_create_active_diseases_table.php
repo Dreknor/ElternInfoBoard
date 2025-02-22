@@ -23,27 +23,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained();
         });
 
-        $permission = new Spatie\Permission\Models\Permission(
-            ['name' => 'manage diseases',
-                'guard_name' => 'web',
-                'created_at' => Carbon\Carbon::now(),
-                'updated_at' => Carbon\Carbon::now(),
-            ]
-        );
-        $permission->save();
 
-
-        $permission = new Spatie\Permission\Models\Permission(
-            ['name' => 'see diseases',
-                'guard_name' => 'web',
-                'created_at' => Carbon\Carbon::now(),
-                'updated_at' => Carbon\Carbon::now(),
-            ]
-        );
-        $permission->save();
-
-
-        \Illuminate\Support\Facades\Cache::clear();
     }
 
     /**

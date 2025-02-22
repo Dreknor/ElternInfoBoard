@@ -25,7 +25,7 @@ return new class extends Migration {
     public function down()
     {
         Schema::table('listen', function (Blueprint $table) {
-            //
+            $table->dropColumn('make_new_entry');
         });
     }
 };
