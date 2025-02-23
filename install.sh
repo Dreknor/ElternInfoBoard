@@ -34,7 +34,7 @@ ask_and_replace "App-Url" APP_URL
 ask_and_replace "Datenbank-Host" DB_HOST
 ask_and_replace "Datenbank-Port" DB_PORT
 ask_and_replace "Datenbank-Name" DB_DATABASE
-ask_and_replace "Datenbank-Benutzer" DB_USER
+ask_and_replace "Datenbank-Benutzer" DB_USERNAME
 ask_and_replace "Datenbank-Passwort" DB_PASSWORD
 
 ask_and_replace "Mail-Host" MAIL_HOST
