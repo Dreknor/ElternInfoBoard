@@ -56,8 +56,23 @@ return new class extends Migration
      */
     public function down(): void
     {
+
+        Schema::table('listen_termine', function (Blueprint $table) {
+            $table->dropForeign(['reserviert_fuer']);
+            $table->dropForeign(['listen_id']);
+        });
+
+        Schema::table('group_listen', function (Blueprint $table) {
+            $table->dropForeign(['group_id']);
+            $table->dropForeign(['liste_id']);
+        });
+
+
+
+
         Schema::dropIfExists('listen_termine');
-        Schema::dropIfExists('groups_listen');
+
+        Schema::dropIfExists('group_listen');
         Schema::dropIfExists('listen');
     }
 };

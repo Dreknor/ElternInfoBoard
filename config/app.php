@@ -250,10 +250,10 @@ return [
     //KeyCloak
     'keycloak' => [
         'enabled' => env('KEYCLOAK_ENABLED', false),
-        'url' => env('KEYCLOAK_URL'),
-        'realm' => env('KEYCLOAK_REALM'),
-        'client_id' => env('KEYCLOAK_CLIENT_ID'),
-        'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
+        'url' => env('KEYCLOAK_URL', 'http://localhost:8080/auth'),
+        'realm' => env('KEYCLOAK_REALM', 'elterninfoboard'),
+        'client_id' => env('KEYCLOAK_CLIENT_ID', 'elterninfoboard'),
+        'client_secret' => env('KEYCLOAK_CLIENT_SECRET', now()->timestamp),
         'mail_domain' => explode('|', env('KEYCLOAK_MAIL_DOMAIN', explode('@', env('MAIL_FROM_ADDRESS'))[1])),
     ]
 ];

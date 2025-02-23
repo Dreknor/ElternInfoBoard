@@ -33,6 +33,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+
+        Schema::table('rueckmeldungen', function (Blueprint $table) {
+            $table->dropForeign(['post_id']);
+        });
+
         Schema::dropIfExists('rueckmeldungen');
     }
 };

@@ -31,6 +31,12 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('groups_posts');
+
+        Schema::table('group_post', function (Blueprint $table) {
+            $table->dropForeign(['group_id']);
+            $table->dropForeign(['post_id']);
+        });
+
+        Schema::dropIfExists('group_post');
     }
 };

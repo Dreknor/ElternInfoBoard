@@ -54,8 +54,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('abfrage_options');
+
         Schema::dropIfExists('abfrage_answers');
+
+
         Schema::table('rueckmeldungen', function (Blueprint $table) {
             $table->dropColumn('max_answers');
             $table->dropColumn('multiple');
@@ -63,5 +65,8 @@ return new class extends Migration
         Schema::table('users_rueckmeldungen', function (Blueprint $table) {
             $table->dropColumn('rueckmeldung_number');
         });
+
+
+        Schema::dropIfExists('abfrage_options');
     }
 };

@@ -70,33 +70,21 @@ class UpdatePermissionSeeder extends Seeder
                 'guard_name' => 'web',
             ], ['name' => 'show in contact form',
                 'guard_name' => 'web',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
             ], ['name' => 'manage diseases',
                 'guard_name' => 'web',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
             ], ['name' => 'see diseases',
                 'guard_name' => 'web',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
             ], ['name' => 'delete posts',
                 'guard_name' => 'web',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
             ], ['name' => 'see logs',
                 'guard_name' => 'web',
 
             ], [
                 'name' => 'view sites',
                 'guard_name' => 'web',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
             ], [
                 'name' => 'create sites',
                 'guard_name' => 'web',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
             ],
         ];
 

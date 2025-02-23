@@ -16,6 +16,9 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     public function run()
     {
+
+        $tableNames = config('permission.table_names');
+
         DB::table($tableNames['permissions'])->insert([
             [
                 'name' => 'edit permission',

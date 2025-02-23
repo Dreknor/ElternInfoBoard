@@ -27,8 +27,11 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::table('failed_jobs', function (Blueprint $table) {
-            $table->dropColumn('uuid');
-        });
+        if (Schema::hasTable('failed_jobs') and !Schema::hasColumn('failed_jobs', 'uuid')) {
+            Schema::table('failed_jobs', function (Blueprint $table) {
+                $table->dropColumn('uuid');
+            });
+        }
+
     }
 };
