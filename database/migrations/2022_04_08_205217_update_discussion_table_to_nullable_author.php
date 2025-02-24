@@ -25,5 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('discussions', function (Blueprint $table) {
+            $table->unsignedBigInteger('owner')->change();
+        });
     }
 };

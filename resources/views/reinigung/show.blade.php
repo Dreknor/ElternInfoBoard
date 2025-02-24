@@ -16,7 +16,7 @@
                 </div>
             </div>
         @endif
-        @if($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0 or (!is_null($user->sorgeberechtigter2) and $user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0))
+        @if($user?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0 or (!is_null($user->sorgeberechtigter2) and $user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0))
             <div class="row justify-content-center">
                 <div class="col-12">
                     <div class="card">
@@ -27,14 +27,14 @@
                         </div>
                         <div class="card-body">
                             <ul class="list-group">
-                                @foreach($user->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                @foreach($user?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
                                     <li class="list-group-item">
                                         Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
                                         - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
                                     </li>
                                 @endforeach
-                                @if(!is_null($user->sorg2))
-                                    @foreach($user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                                @if(!is_null($user->sorg2) and !is_null($user->sorgeberechtigter2))
+                                    @foreach($user?->sorgeberechtigter2?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
                                         <li class="list-group-item">
                                             Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}}
                                             - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
@@ -56,6 +56,11 @@
                                 <div class="pull-right small">
                                     <a href="{{url('reinigung/'.$Bereich.'/export')}}" class="btn btn-sm">
                                         Export
+                                    </a>
+                                </div>
+                                <div class="pull-right small">
+                                    <a href="{{url('reinigung/'.$Bereich.'/auto')}}" class="btn btn-sm">
+                                        füllen
                                     </a>
                                 </div>
                             @endcan
@@ -102,7 +107,11 @@
                                                             class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
                                                             <div class="card-header">
                                                                 <h6>
-                                                                    Familie {{$reinigung->user->familie_name}}
+                                                                    @can('edit reinigung')
+                                                                        {{$reinigung->user->name}}
+                                                                    @else
+                                                                        Familie {{$reinigung->user->familie_name}}
+                                                                    @endcan
                                                                     @can('edit reinigung')
                                                                         <div class="pull-right">
                                                                             <a class="link text-danger"
@@ -155,7 +164,13 @@
                                                             class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
                                                             <div class="card-header">
                                                                 <h6>
-                                                                    Familie {{$reinigung->user->familie_name}}
+                                                                    @can('edit reinigung')
+                                                                        {{$reinigung->user}}
+                                                                    @else
+                                                                        Familie {{$reinigung->user->familie_name}}
+                                                                    @endcan
+
+
                                                                     @can('edit reinigung')
                                                                         <div class="pull-right">
                                                                             <a class="link text-danger"
@@ -191,7 +206,32 @@
     </div>
     @if($user->can('edit reinigung'))
         <div class="container-fluid">
-                <div class="card">
+            <div class="row justify-content-center">
+                <div class="col-sm-12 col-md-6">
+                    <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            Aufgaben
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            @foreach($aufgaben as $task)
+                                <li class="list-group-item">
+                                    {{$task->task}}
+                                    <div class="d-inline float-right">
+                                        <a href="{{url('reinigung/task/'.$task->id.'/trash')}}" class="text-danger">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">
                             Neue Aufgabe erstellen
@@ -214,6 +254,8 @@
                         </form>
                     </div>
                 </div>
+                </div>
+            </div>
         </div>
     @endif
 

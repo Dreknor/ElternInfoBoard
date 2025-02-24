@@ -28,9 +28,18 @@
                                     <label for="name">
                                         Name des Schülers / der Schülerin*:
                                     </label>
-                                    <input type="text" class="form-control" name="name" id="name" required
-                                           @if($krankmeldungen->count() > 0) value="{{$krankmeldungen->first()->name}}"
-                                           @else autofocus @endif>
+                                    @if(auth()->user()->children()->count() > 0)
+                                        <select name="child_id" id="child" class="form-control" >
+                                            @foreach(auth()->user()->children() as $child)
+                                                <option value="{{$child->id}}">{{$child->first_name}}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input type="text" class="form-control" name="name" id="name"
+                                               @if($krankmeldungen->count() > 0) value="{{$krankmeldungen->first()->name}}"
+                                               @else autofocus @endif>
+                                    @endif
+
                                 </div>
                             </div>
                         </div>

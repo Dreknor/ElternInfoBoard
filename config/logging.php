@@ -63,7 +63,6 @@ return [
             'name' => 'DB-Logging',
             'detailed' => true,
             'queue' => true,
-            'queue_name' => 'logToDBQueue',
         ],
 
         'single' => [

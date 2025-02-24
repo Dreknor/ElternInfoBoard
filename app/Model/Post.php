@@ -3,8 +3,8 @@
 namespace App\Model;
 
 use App\Traits\NotificationTrait;
+use Artisanry\Commentable\Traits\HasComments;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Benjivm\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Contracts\ReactableInterface;

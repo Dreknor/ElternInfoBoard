@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 use App\Model\Post;
+use App\Model\UserRueckmeldungen;
 use App\Model\Vertretung;
 use App\Observers\PostObserver;
+use App\Observers\UserRueckmeldungenObserver;
 use App\Observers\VertretungObserver;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +18,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\View;
 
 /**
  *
@@ -36,11 +40,15 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(): void
+    public function boot(GeneralSetting $settings): void
     {
         Paginator::useBootstrap();
         Post::observe(PostObserver::class);
         Vertretung::observe(VertretungObserver::class);
+        UserRueckmeldungen::observe(UserRueckmeldungenObserver::class);
+
+        View::share('settings', $settings);
+
 
         Schema::defaultStringLength(191);
 

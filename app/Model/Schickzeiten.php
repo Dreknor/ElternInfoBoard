@@ -15,14 +15,32 @@ class Schickzeiten extends Model
 
     protected $table = 'schickzeiten';
 
-    protected $fillable = ['users_id', 'child_name', 'weekday', 'time', 'type', 'changedBy'];
+    protected $fillable = ['users_id', 'child_name', 'weekday', 'specific_date', 'time', 'time_ab','time_spaet','type', 'changedBy', 'child_id',];
 
-    protected $visible = ['child_name', 'weekday', 'time', 'type', 'users_id', 'changedBy'];
+    protected $visible = ['child_name', 'weekday', 'specific_date', 'time', 'time_ab','time_spaet', 'type', 'users_id', 'changedBy', 'child_id'];
+
+
+
+    protected $casts = [
+        'time' => 'datetime:H:i:s',
+        'time_ab' => 'datetime:H:i:s',
+        'time_spaet' => 'datetime:H:i:s',
+        'specific_date' => 'date',
+    ];
+
+
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'users_id');
     }
+
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class, 'child_id');
+    }
+
+
 
     public function getTimeAttribute()
     {

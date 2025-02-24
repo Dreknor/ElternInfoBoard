@@ -13,7 +13,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
+ * Class TerminController
  *
+ * @group Termine
  */
 class TerminController extends Controller
 {
@@ -23,7 +25,18 @@ class TerminController extends Controller
        $this->middleware('auth:sanctum');
  }
 
- public function index(Request $request)
+    /**
+     * index
+     *
+     * gibt alle Termine zurück
+     *
+     * @responseField anzahl integer Anzahl der Termine
+     * @responseField termine json Liste aller Termine
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request)
  {
 
         $user = $request->user();
@@ -45,6 +58,7 @@ class TerminController extends Controller
 
 
         return response()->json([
+            'anzahl' => $termine->count(),
             'termine' => $termine], 200);
  }
 

@@ -31,9 +31,9 @@ class ReinigungsTaskController extends Controller
      * @param ReinigungsTask $reinigungsTask
      * @return RedirectResponse
      */
-    public function destroy(ReinigungsTask $reinigungsTask)
+    public function destroy(ReinigungsTask $task)
     {
-        $reinigungsTask->delete();
+        $task->delete();
 
         return redirect()->back()->with([
             'Meldung' => 'Aufgabe gelöscht.',

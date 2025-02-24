@@ -19,6 +19,77 @@
     word-wrap: break-word;
 }
 
+
+.progress {
+    vertical-align: baseline;
+}
+
+.child-notification:hover {
+    cursor: pointer;
+    color: white;
+    font-size: 1.1rem;
+}
+
+@-webkit-keyframes progress-bar-stripes {
+    from {
+        background-position: 1rem 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
+
+@keyframes progress-bar-stripes {
+    from {
+        background-position: 1rem 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
+.progress {
+    position: relative;
+    height: 15px;
+    background: rgb(255,0,0);
+    background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,222,0,1) 64%, rgba(0,255,38,1) 100%);
+    filter: progid: DXImageTransform.Microsoft.gradient(startColorstr='#00ff00', endColorstr='#ff0000', GradientType=1);
+}
+.amount {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    transition: all 0.8s;
+    background: rgb(201, 203, 195);
+    width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar {
+        transition: none;
+    }
+}
+
+.progress-bar-striped {
+    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+    background-size: 1rem 1rem;
+}
+
+.progress-bar-animated {
+    -webkit-animation: progress-bar-stripes 1s linear infinite;
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar-animated {
+        -webkit-animation: none;
+        animation: none;
+    }
+}
+
+
 .reaction > i {
     font-size: 1.6rem;
 }
@@ -148,6 +219,8 @@ input:checked + .slider-sm:before {
     background-color: #c2c1c1;
 }
 
+
+
 @media only screen and (max-width: 600px) {
     .navbar .dropdown-menu {
         position: fixed;
@@ -171,4 +244,17 @@ input:checked + .slider-sm:before {
     }
 
 
+}
+
+.round-button {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
 }

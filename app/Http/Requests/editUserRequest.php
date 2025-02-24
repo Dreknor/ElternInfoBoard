@@ -73,7 +73,15 @@ class editUserRequest extends FormRequest
                 'integer',
                 'min:0',
                 'max:1',
-            ]
+            ],
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
+
+
 
         ];
     }

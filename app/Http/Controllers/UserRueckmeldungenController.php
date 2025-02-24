@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller
@@ -46,6 +47,7 @@ class UserRueckmeldungenController extends Controller
             'text' => '',
         ]);
         $userRueckmeldung->save();
+
 
         $this->generateAnswerModels($request, $userRueckmeldung);
 
@@ -113,7 +115,7 @@ class UserRueckmeldungenController extends Controller
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
     {
-        if ($userRueckmeldungen->users_id != auth()->id()) {
+        if ($userRueckmeldungen->users_id != auth()->id() and $userRueckmeldungen->users_id != auth()->user()->sorg2) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',

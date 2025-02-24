@@ -110,7 +110,7 @@
                 let button = $(this);
 
                 swal.fire({
-                    title: Hedwig - Fröhlich - Haus"Datei wirklich entfernen?",
+                    title: "Datei wirklich entfernen?",
                     type: "warning",
                     showCancelButton: true,
                     cancelButtonText: "Datei behalten",

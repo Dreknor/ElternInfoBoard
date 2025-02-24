@@ -33,12 +33,21 @@
                                         </option>
                                     </select>
                                 </div>
-                                <div class="col-md-4 col-sm-4">
+                                <div class="col-md-4 col-sm-12" id="inputDurationTime">
                                     <label for="duration">
                                         Dauer (in Minuten) für Terminlisten
                                     </label>
                                     <input type="number" min="0" name="duration" id="duration" class="form-control"
                                            value="30">
+                                </div>
+                                <div class="col-md-4 col-sm-12" id="selectmakeEntry">
+                                    <label for="make_new_entry">
+                                        neue Einträge erlauben
+                                    </label>
+                                    <select name="make_new_entry" class="custom-select" id="make_new_entry">
+                                        <option value="0" selected>nein</option>
+                                        <option value="1">ja</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -110,15 +119,24 @@
 @endsection
 
 @push('js')
-    <!--
-    <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
-    <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
-    <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
-    <script>tinymce.init({
-            selector: 'textarea',
-            lang:'de',
-            height: 300,
+    <script>
+        $(document).ready(function () {
 
-        });</script>
-        -->
+            $('#selectmakeEntry').hide();
+            $('#inputDurationTime').show();
+
+            $('#type').on('change', function () {
+                if ($(this).val() === 'termin') {
+                    $('#duration').prop('required', true);
+                    $('#selectmakeEntry').hide();
+                    $('#inputDurationTime').show();
+                } else {
+                    $('#duration').prop('required', false);
+                    $('#selectmakeEntry').show();
+                    $('#inputDurationTime').hide();
+
+                }
+            });
+        });
+    </script>
 @endpush

@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('listen_termine', function (Blueprint $table) {
-            //
+            $table->dropColumn('duration');
         });
     }
 };

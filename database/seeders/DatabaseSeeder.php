@@ -13,6 +13,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(UsersTableSeeder::class);
+        $this->call([
+            FirstUserSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            CreateElternratGroupSeeder::class,
+            CreateSettingsSeeder::class,
+            AddPermissionScanFilesSeeder::class,
+            AddVertretungsplanSettingsSeeder::class,
+            UpdateUsersPublicMailPermissionSeeder::class,
+            ReactionsSeeder::class,
+            UpdatePermissionSeeder::class,
+            UpdateModuleSettingsSeeder::class,
+            UpdateGroupsPermission::class,
+            DiseasesSeeder::class,
+            UpdateSeetingsModuleNameSeeder::class,
+
+
+        ]);
     }
 }

@@ -10,15 +10,40 @@ use Illuminate\Http\JsonResponse;
 
 use Illuminate\Http\Request;
 
+/**
+ * Class FilesController
+ * Controller for handling file related API requests.
+ */
 class FilesController extends Controller
 {
+    /**
+     * Files constructor.
+     *
+     *
+     * Apply authentication middleware.
+     */
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
 
     /**
+     * Get all files.
      *
+     * Get all files from the database.
+     *
+     * @group Files
+     * @responseField files array The files.
+     *
+     *
+     * @param Request $request
      * @return JsonResponse
      */
+
     public function index(Request $request)
     {
+
 
         $user = $request->user();
 
@@ -28,7 +53,7 @@ class FilesController extends Controller
 
 
         return response()->json(
-            $files, 200
+            ['files' => $files], 200
         );
     }
 

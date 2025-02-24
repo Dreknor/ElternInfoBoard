@@ -12,13 +12,37 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 
+/**
+ * Class AbfragenController
+ * Controller for handling abfragen related API requests.
+ */
 class AbfragenController extends Controller
 {
+    /**
+     * AbfragenController constructor.
+     * Apply authentication middleware.
+     */
     public function __construct()
     {
         $this->middleware('auth:sanctum');
     }
 
+    /**
+     * Get fields for a post
+     *
+     * Get the fields for the post with the given id
+     *
+     *  @group Rückmeldungen
+     *
+     * @responseField fields array The fields
+     * @responseField rueckmeldung object The rueckmeldung
+     *
+     * @urlParam post_id required The id of the post
+     *
+     *
+     * @param $post_id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getFields($post_id){
 
         $post = Post::query()->where('id', $post_id)->firstOrFail();
@@ -37,7 +61,15 @@ class AbfragenController extends Controller
         $rueckmeldung = Rueckmeldungen::query()
             ->where('post_id', $post_id)
             ->where('type', 'abfrage')
-            ->first();
+            ->first([
+                'post_id',
+                'type',
+                "ende",
+                "text",
+                "pflicht",
+                "multiple",
+                "max_answers"
+            ]);
 
         return response()->json([
             'success' => true,
@@ -47,6 +79,23 @@ class AbfragenController extends Controller
 
     }
 
+    /**
+     * Store answer
+     *
+     * Store the answer for the post with the given id
+     *
+     * @group Rückmeldungen
+     *
+     * bodyParam data array required the data to store. The data must be an array of objects with the following structure of getFields response.
+     *
+     *
+     *
+     * @urlParam post required The id of the post
+     *
+     * @param Request $request
+     * @param $post
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function storeAnswer(Request $request, $post)
     {
 
@@ -75,9 +124,17 @@ class AbfragenController extends Controller
             return response()->json(['success' => false, 'message' => 'No abfrage found']);
         }
 
-        Log::info($rueckmeldung);
+        if ($rueckmeldung->type != 'abfrage')
+        {
+            return response()->json(['success' => false, 'message' => 'Invalid abfrage type']);
+        }
 
-        if ($rueckmeldung->multiple == 1)
+        $userRueckmeldung = UserRueckmeldungen::query()
+            ->where('post_id', $post->id)
+            ->where('users_id', request()->user()->id)
+            ->first();
+
+        if ($rueckmeldung->multiple == 1 or $userRueckmeldung == null)
         {
             $userRueckmeldung = UserRueckmeldungen::create([
                 'post_id' => $post->id,
@@ -87,7 +144,6 @@ class AbfragenController extends Controller
                 'updated_at' => now(),
             ]);
 
-            Log::info($userRueckmeldung);
             $data = [];
 
 
@@ -164,18 +220,18 @@ class AbfragenController extends Controller
 
         }
 
-
-
-
-
         if (count($data) == 0)
         {
             $rueckmeldung->delete();
             return response()->json(['success' => false, 'message' => 'Invalid data']);
         }
 
-
-        AbfrageAntworten::insert($data);
+        try {
+            AbfrageAntworten::insert($data);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return response()->json(['success' => false, 'message' => 'Error saving data']);
+        }
 
 
 

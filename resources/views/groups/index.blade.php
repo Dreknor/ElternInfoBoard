@@ -100,7 +100,12 @@
                                                 @foreach($group->users as $user)
                                                     <tr>
                                                         <td>
-                                                            {{$user->name}}:
+                                                            @can('edit user')
+                                                                    <a href="{{url('users/'.$user->id)}}" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-user-edit"></i>
+                                                                    </a>
+                                                            @endcan
+                                                             {{$user->name}}:
                                                         </td>
                                                         <td>
                                                             @if($user->publicMail !="")
@@ -139,7 +144,14 @@
                                                         }) as $user)
 
                                             <div class="row">
-                                                                {{$user->name}}:
+                                                @can('edit user')
+                                                    <div class="col-1">
+                                                        <a href="{{url('user/'.$user->id)}}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-user-edit"></i>
+                                                        </a>
+                                                    </div>
+                                                @endcan
+                                                {{$user->name}}:
                                             </div>
                                             @if($user->publicMail !="")
                                                 <div class="row mt-2">

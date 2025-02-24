@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ReinigungExport;
+use App\Http\Requests\CreateAutoReinigungRequest;
 use App\Http\Requests\ReinigungsRequest;
 use App\Model\Group;
 use App\Model\Reinigung;
@@ -13,12 +14,137 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReinigungController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    public function autoCreateStart($bereich)
+    {
+        $task = ReinigungsTask::all();
+
+        $bereich = Group::where('bereich', $bereich)->get();
+
+        if (!auth()->user()->can('edit reinigung')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        if ($bereich->count() < 1) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Bereich enthält keine Gruppen',
+            ]);
+        }
+
+        return view('reinigung.autoCreate', [
+            'bereich' => $bereich,
+            'aufgaben' => $task,
+            'roles' => Role::all(),
+        ]);
+    }
+
+
+    public function autoCreate(CreateAutoReinigungRequest $request, $bereich)
+    {
+
+        if (!auth()->user()->can('edit reinigung')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $start = Carbon::createFromFormat('Y-m-d', $request->start)->startOfWeek();
+        $ende = Carbon::createFromFormat('Y-m-d', $request->end)->endOfWeek();
+
+
+        if (!is_null($request->exclude) and count($request->exclude) > 0 and $request->exclude[0] != 0) {
+            $excludeGroups = $request->exclude;
+        } else {
+            $excludeGroups = [];
+        }
+        $users = User::query()->whereHas('groups', function ($query) use ($excludeGroups, $bereich) {
+            $query->where('bereich', '=', $bereich)->whereNotIn('groups.id', $excludeGroups);
+        })->whereHas('reinigung', function ($query) use ($start, $ende, $bereich) {
+            $query->whereBetween('datum', [$start, $ende])
+                ->where('bereich', '=', $bereich);
+        }, '<', 1)->get();
+
+
+        $users_all = $users->shuffle();
+        Log::info('Nutzer:' . $users_all->count());
+        $users_all = $users_all->unique('id');
+        Log::info('Nutzer unique:' . $users_all->count());
+
+
+        $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
+        $date = $start->copy();
+
+
+        while ($date->lte($ende)) {
+            if ($users_all->count() > 0) {
+                foreach ($tasks as $task) {
+                    $user = $users_all->shift();
+                    if (!is_null($user)) {
+                        $reinigung = new Reinigung();
+                        $reinigung->bereich = $bereich;
+                        $reinigung->datum = $date;
+                        $reinigung->users_id = $user->id;
+                        $reinigung->aufgabe = $task->task;
+                        $reinigung->save();
+
+                        //Sorgeberechtigter 2 entfernen
+                        if ($user->sorg2 != null) {
+                            $key = $users_all->search(function ($item) use ($user) {
+                                return $item->id == $user->sorg2;
+                            });
+
+                            if ($key !== false) {
+                                $users_all->forget($key);
+                            }
+                        }
+
+                        $key = $users_all->search(function ($item) use ($user) {
+                            return $item->id == $user->sorg1;
+                        });
+
+                        if ($key !== false) {
+                            $users_all->forget($key);
+                        }
+                    }
+
+                }
+
+            } else {
+                return redirect(url('reinigung'))->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Nicht genügend Nutzer für die Aufgaben vorhanden',
+                ]);
+            }
+
+            $date->addWeek();
+
+        }
+
+
+                return redirect()->to(url('reinigung'))->with([
+                    'type' => 'success',
+                    'Meldung' => 'Plan aktualisiert',
+                ]);
+    }
+
     /**
      * @param $bereich
      * @return RedirectResponse|BinaryFileResponse
@@ -61,11 +187,14 @@ class ReinigungController extends Controller
     {
         $user = $request->user();
         $datum = Carbon::now()->startOfWeek()->startOfDay();
-        $ende = Carbon::createFromFormat('d.m', '30.8');
 
-        if ($datum->month > 6) {
+        if ($datum->month < 6) {
+            $ende = Carbon::createFromFormat('d.m', '30.8');
+        } else {
+            $ende = Carbon::createFromFormat('d.m', '30.8');
             $ende->addYear();
         }
+
 
         if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
@@ -76,7 +205,11 @@ class ReinigungController extends Controller
                 }
             });
         } else {
-            $Bereiche = Group::query()->whereNotNull('bereich')->where('bereich', '!=', 'Aufnahme')->pluck('bereich')->unique();
+            $Bereiche = Group::query()
+                ->whereNotNull('bereich')
+                ->where('bereich', '!=', 'Aufnahme')
+                ->pluck('bereich')
+                ->unique();
         }
 
         $Reinigung = [];
@@ -95,6 +228,7 @@ class ReinigungController extends Controller
             'datum' => $datum,
             'user' => $user,
             'ende' => $ende,
+            'aufgaben' => ReinigungsTask::all(),
         ]);
     }
 

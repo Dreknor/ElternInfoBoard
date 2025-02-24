@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateListeRequest;
+use App\Http\Requests\UpdateListenRequest;
 use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
@@ -176,11 +177,11 @@ class ListenController extends Controller
      * @return RedirectResponse
      * @throws AuthorizationException
      */
-    public function update(Request $request, Liste $terminListe)
+    public function update(UpdateListenRequest $request, Liste $terminListe)
     {
         $this->authorize('editListe', $terminListe);
 
-        $terminListe->update($request->all());
+        $terminListe->update($request->validated());
 
         $gruppen = $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);

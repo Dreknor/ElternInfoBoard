@@ -3,7 +3,7 @@
 namespace App\Repositories;
 
 use App\Model\Post;
-use App\Model\Settings;
+use App\Model\Module;
 use CURLFile;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -61,7 +61,7 @@ class WordpressRepository
     }
 
     public function should_post($post){
-        $wp_push_is_enabled = Settings::firstWhere('setting', 'Push to WordPress')->options['active'];
+        $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
         if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')){
             $repository = new WordpressRepository();

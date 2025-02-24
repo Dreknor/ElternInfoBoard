@@ -61,6 +61,11 @@ class verwaltungEditUserRequest extends FormRequest
                 'min:0',
                 'max:1'
             ],
+            'changePassword' => [
+                'nullable',
+                'min:0',
+                'max:1'
+            ],
         ];
     }
 }

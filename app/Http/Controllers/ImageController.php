@@ -26,7 +26,9 @@ class ImageController extends Controller
     {
 
 
-        if ($media_id->collection_name != "images" and $media_id->collection_name != "header") {
+        if ($media_id->collection_name != "images" and $media_id->collection_name != "header"
+            and $media_id->mime_type != "image/png" and $media_id->collection_name != "image/jpeg"
+            and $media_id->collection_name != "image/jpg" and $media_id->collection_name != "image/gif") {
             return $media_id;
         }
 

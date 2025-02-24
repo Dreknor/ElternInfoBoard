@@ -25,12 +25,18 @@ class KrankmeldungRequest extends FormRequest
     {
         return [
             'name' => [
-                'required',
+                'sometimes',
+                'nullable',
                 'string',
+            ],
+            'child_id' => [
+                'nullable',
+                'exists:children,id',
             ],
             'kommentar' => [
                 'required',
                 'string',
+                'max:10000'
             ],
             'start' => [
                 'required',

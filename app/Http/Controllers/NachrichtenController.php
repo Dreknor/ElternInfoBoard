@@ -14,10 +14,11 @@ use App\Model\Group;
 use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
-use App\Model\Settings;
+use App\Model\Module;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Repositories\WordpressRepository;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
@@ -44,6 +45,8 @@ class NachrichtenController extends Controller
 {
     private GroupsRepository $groupsRepository;
 
+    private $settings;
+
     /**
      * Create a new controller instance.
      *
@@ -53,6 +56,8 @@ class NachrichtenController extends Controller
     {
         $this->groupsRepository = $groupsRepository;
         $this->middleware('auth');
+
+        $this->settings = new GeneralSetting();
     }
 
     /**
@@ -107,7 +112,7 @@ class NachrichtenController extends Controller
 
     public function postsExternal()
     {
-        if (!auth()->user()->can('view external offer') or Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'] !=1){
+        if (!auth()->user()->can('view external offer') or Module::firstWhere(['setting' => 'externe Angebote'])->options['active'] != 1) {
             return redirect()->back()->with([
                'type' => 'warning',
                'Medldung' => 'Aufruf nicht möglich'
@@ -165,11 +170,11 @@ class NachrichtenController extends Controller
 
         $gruppen = Group::all();
         $external = Cache::remember('external_offers', 120, function (){
-           return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
+            return Module::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
 
         $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
-            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+            if (Module::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')) {
                 return true;
             }
            return false;
@@ -205,10 +210,10 @@ class NachrichtenController extends Controller
         }
 
         $external = Cache::remember('external_offers', 120, function (){
-            return Settings::firstWhere(['setting' => 'externe Angebote'])->options['active'];
+            return Module::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
         $wp_push = Cache::remember('wp_push_'.auth()->id(), 120, function (){
-            if (Settings::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')){
+            if (Module::firstWhere(['setting' => 'Push to WordPress'])->options['active'] == 1 and auth()->user()->can('push to wordpress')) {
                 return true;
             }
             return false;
@@ -250,6 +255,7 @@ class NachrichtenController extends Controller
 
         $post->author = $user->id;
         ($post->news == '') ? $post->news = $post->header : null;
+
 
         $post->save();
 
@@ -387,6 +393,19 @@ class NachrichtenController extends Controller
                     ]);
                 break;
             default:
+
+
+                    $pattern = '^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$^';
+
+
+
+                    if (preg_match($pattern, $post->header) or preg_match($pattern, $post->news)){
+                       return redirect(url('termine/create/'.$post->id))->with([
+                           'type' => 'success',
+                           'Meldung' => 'Die Nachricht wurde erstellt. Es wurde im Text ein Datum gefunden. Soll dieses als Termin angelegt werden?',
+                       ]);
+                    }
+
                 return redirect(url('/home#'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht angelegt.',
@@ -617,6 +636,23 @@ class NachrichtenController extends Controller
             $newPost->send_at = null;
             $newPost->author = auth()->id();
             $newPost->save();
+
+            if ($posts->rueckmeldung != null) {
+                $rueckmeldung = $posts->rueckmeldung->duplicate();
+                $rueckmeldung->post_id = $newPost->id;
+                $rueckmeldung->ende = $newPost->archiv_ab;
+                $rueckmeldung->save();
+
+                if ($posts->rueckmeldung->type == 'abfrage') {
+                    foreach ($posts->rueckmeldung->options as $option) {
+                        $newOption = $option->duplicate();
+                        $newOption->rueckmeldung_id = $rueckmeldung->id;
+                        $newOption->save();
+                    }
+                }
+            }
+
+
         } else {
             $posts->updated_at = Carbon::now();
             $posts->archiv_ab = Carbon::now()->addWeek();
@@ -725,7 +761,7 @@ class NachrichtenController extends Controller
     public function destroy(Post $post)
     {
 
-        if ($post->author == auth()->user()->id or auth()->user()->can('delete posts')) {
+        if ($post->author == auth()->id() or auth()->user()->can('delete posts')) {
             $post->groups()->detach();
             if (!is_null($post->rueckmeldung())) {
                 $post->rueckmeldung()->delete();
@@ -811,18 +847,13 @@ class NachrichtenController extends Controller
 
             $icon = url('/image/'.$post->getMedia('header')->first()->id);
         } else {
-            $icon = (config('app.favicon')) ? url('img/'.config('app.favicon')) : '';
+            if($this->settings->favicon == 'app_logo.png'){
+                $icon = asset('img/'.$this->settings->favicon);
+            } else {
+                $icon = url('storage/img/'.$this->settings->favicon);
+            }
         }
-/*
 
-        $post->notify($User,
-            title: $header,
-            message: $post->header,
-            url: ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
-            icon: $icon,
-            type: ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
-        );
-*/
         $notifications= [];
 
         foreach ($User as $user) {
@@ -833,6 +864,7 @@ class NachrichtenController extends Controller
                 'url' => ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
                 'icon' => $icon,
                 'type' => ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
+                'created_at' => Carbon::now(),
             ];
         }
 

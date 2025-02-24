@@ -48,10 +48,6 @@ return new class extends Migration
             $table->foreign('author_id')->references('id')->on('users');
         });
 
-        DB::table('permissions')->insert([
-            'name' => 'create polls',
-            'guard_name' => 'web',
-        ]);
     }
 
     /**
@@ -61,6 +57,23 @@ return new class extends Migration
      */
     public function down(): void
     {
+
+        Schema::table('polls', function (Blueprint $table) {
+            $table->dropForeign(['author_id']);
+            $table->dropForeign(['post_id']);
+        });
+
+        Schema::table('poll_options', function (Blueprint $table) {
+            $table->dropForeign(['poll_id']);
+        });
+
+        Schema::table('votes', function (Blueprint $table) {
+            $table->dropForeign(['poll_id']);
+            $table->dropForeign(['author_id']);
+        });
+
+        Schema::dropIfExists('votes');
+        Schema::dropIfExists('poll_options');
         Schema::dropIfExists('polls');
     }
 };

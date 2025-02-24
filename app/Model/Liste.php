@@ -17,15 +17,16 @@ class Liste extends Model
 
     protected $table = 'listen';
 
-    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
+    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry'];
 
-    protected $visible = ['id','listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple'];
+    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry'];
 
     protected $casts = [
         'ende' => 'datetime',
         'visible_for_all' => 'boolean',
         'active' => 'boolean',
         'multiple' => 'boolean',
+        'make_new_entry' => 'boolean',
     ];
 
     public function ersteller(): BelongsTo

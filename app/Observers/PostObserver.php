@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Model\Settings;
+use App\Model\Module;
 use App\Model\Post;
 use App\Repositories\WordpressRepository;
 use Illuminate\Support\Facades\Cache;
@@ -30,7 +30,7 @@ class PostObserver
      */
     public function updated(Post $post)
     {
-        $wp_push_is_enabled = Settings::firstWhere('setting', 'Push to WordPress')->options['active'];
+        $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
         if ($wp_push_is_enabled == 1 and $post->published_wp_id != NULL and auth()->user()->can('push to wordpress')){
             $repository = new WordpressRepository();

@@ -17,13 +17,14 @@
                 </a>
             </span>
                     <span class="d-none d-md-block">
-                <a class="navbar-brand" href="{{url('/')}}">{{config('app.name')}}</a>
+                <a class="navbar-brand" href="{{url('/')}}">{{$settings->app_name}}</a>
             </span>
 
                 </div>
             </div>
             <div class="col-auto my-auto ml-auto ">
-                <div class="nav-item">
+
+            <div class="nav-item">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-search" style="font-size: 1.4rem"></i>
                     </a>

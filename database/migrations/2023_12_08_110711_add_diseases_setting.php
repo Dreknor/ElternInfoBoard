@@ -12,18 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        \App\Model\Settings::insert([
-            'setting' => 'meldepfl. Erkrankungen',
-            'description' => 'Ermöglicht die Erfassung meldepflichtiger Erkrankungen direkt bei der Krankmeldung. Diese werden dann Im Nachrichtenbereich angezeigt.',
-            'category' => 'module',
-            'options' => '{
-            "active":"1",
-            "rights":[],
-            "home-view-top":"krankmeldung.diseases",
-            "adm-nav":
-                {"adm-rights":["manage diseases"],"name":"neue Erkrankung","link":"diseases\/create","icon":"fas fa-pills"}
-            }',
-        ]);
+
     }
 
     /**

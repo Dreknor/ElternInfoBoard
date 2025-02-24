@@ -114,21 +114,38 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <form action="{{url('users').'/'.$user->id}}" method="post" class="form-inline">
-                                        @csrf
-                                        @method('delete')
-                                        <button type="submit" class="btn btn-sm btn-danger user_ajax-delete"
-                                                data-id="{{$user->id}}">
-                                            <i class="fas fa-user-slash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="row">
+                                        <div class="col-auto">
+                                            <form action="{{url('users').'/'.$user->id}}" method="post"
+                                                  class="form-inline">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit" class="btn btn-sm btn-danger user_ajax-delete"
+                                                        data-id="{{$user->id}}">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div class="col-auto mt-2">
+                                            @can('loginAsUser')
+                                                <a href="{{url("showUser/$user->id")}}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            @endcan
+                                        </div>
+                                        <div class="col-auto mt-2">
+                                            @can('testing')
+                                                <a href="{{url("push/$user->id")}}" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
+                                            @endcan
+                                        </div>
+                                    </div>
 
-                                    @can('loginAsUser')
-                                        <a href="{{url("showUser/$user->id")}}" class="btn btn-sm btn-warning">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    @endcan
+
                                 </td>
+
+
                             </tr>
                         @endforeach
                     </tbody>

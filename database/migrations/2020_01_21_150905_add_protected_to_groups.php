@@ -18,12 +18,7 @@ return new class extends Migration
             $table->addColumn('boolean', 'protected')->default(0)->after('name');
         });
 
-        DB::table('groups')->insert([
-            [
-                'name' => 'Elternrat',
-                'protected' => 1,
-            ],
-        ]);
+
     }
 
     /**

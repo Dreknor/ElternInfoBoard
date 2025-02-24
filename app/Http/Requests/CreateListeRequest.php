@@ -52,6 +52,11 @@ class CreateListeRequest extends FormRequest
                 'sometimes',
                 'nullable',
             ],
+            'make_new_entry' => [
+                'sometimes',
+                'nullable',
+                'boolean',
+            ],
             'gruppen' => [
                 'array',
                 'min:1'

@@ -9,6 +9,7 @@ use App\Http\Requests\updateRueckmeldeDateRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
 use App\Model\AbfrageAntworten;
 use App\Model\AbfrageOptions;
+use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
@@ -17,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -151,7 +153,7 @@ class RueckmeldungenController extends Controller
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
-        if (!auth()->user()->can('manage rueckmeldungen')) {
+        if (!auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -371,6 +373,14 @@ class RueckmeldungenController extends Controller
      */
     public function storeAbfrage(createAbfrageRequest $request, $posts_id)
     {
+
+        if ($request->options == null or count($request->options) < 1) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Keine Optionen angegeben',
+            ]);
+        }
+
         $rueckmeldung = new Rueckmeldungen($request->validated());
         $rueckmeldung->type = 'abfrage';
         $rueckmeldung->text = $request->description;
@@ -379,6 +389,9 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->save();
 
         $options = [];
+
+
+
         foreach ($request->options as $key => $value) {
             if ($value != "") {
                 $options[] = [
@@ -498,8 +511,27 @@ class RueckmeldungenController extends Controller
                 foreach ($user as $User) {
                     $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
                     if (is_null($RueckmeldungUser)) {
-                        $email = $User->email;
-                        Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
+                        try {
+                            $notify = new Notification(
+                                [
+                                    'users_id' => $User->id,
+                                    'type' => 'Erinnerung',
+                                    'text' => 'Rückmeldung für ' . $Rueckmeldung->post->header . ' fehlt',
+                                    'link' => url('home#'.$Rueckmeldung->post->id),
+                                ]
+                            );
+                            $notify->save();
+                        } catch (\Exception $e) {
+                            // do nothing
+                        }
+
+                        try {
+                            $email = $User->email;
+                            Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
+
+                        } catch (\Exception $e) {
+                            Log::info('Mail konnte nicht gesendet werden: ' . $e->getMessage());
+                        }
                     }
                 }
             }

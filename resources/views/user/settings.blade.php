@@ -77,6 +77,27 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6 col-sm-12">
+                                            <div class="form-group w-100">
+                                                <label class="w-100">neues Passwort
+                                                    <input class="form-control" name="password" type="password"
+                                                           minlength="8">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12">
+                                            <div class="form-group w-100">
+                                                <label class="w-100">Passwort bestätigen
+                                                    <input id="password-confirm" type="password" class="form-control"
+                                                           name="password_confirmation" required
+                                                           autocomplete="new-password">
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 col-sm-12">
                                             <div class="form-group">
                                                 <label>Benachrichtigung per E-Mail (zuletzt: {{$user->lastEmail?->format('d.m.Y H:i')}})</label>
                                                 <select class="custom-select" name="benachrichtigung">
@@ -100,7 +121,7 @@
                                     <div class="row">
                                         <div class="col-md-3 col-sm-12">
                                             <div class="form-group">
-                                                <label>Login aufzeichnen um Benachrichtigungen zu erhalten</label>
+                                                <label>Login aufzeichnen</label>
                                                 <select class="custom-select" name="track_login">
                                                     <option value="1" @if($user->track_login == true) selected @endif >
                                                         letzten Login aufzeichnen
@@ -150,30 +171,117 @@
 
                     </div>
                     <div class="col-md-4 col-sm-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title">
-                                    Gruppen
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                @foreach($user->groups as $gruppe)
-                                    <div class="btn btn-outline-info">
-                                        {{$gruppe->name}}
+                        <div class="row">
+                            @if(auth()->user()->groups->count() > 0)
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title">
+                                                Kinder
+                                            </h5>
+                                            <p class="card-subtitle text-muted small">
+                                                Hier werden die Kinder angezeigt, die mit ihrem Konto verknüpft sind. Sie können hier auch weitere Kinder hinzufügen. Geben Sie dazu bitte Lerngruppe und Klassenstufe an. Sollte keine Lerngruppe vorhanden sein, tragen Sie bitte in beiden Feldern die Klassenstufe ein.<br>
+                                                Sollte Ihr Kind im Hort betreut werden, können Sie mittel der Glocke die Benachrichtigung aktivieren, wenn es sich im Hort an- bzw. abmeldet.
+                                            </p>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                @foreach($user->children() as $child)
+                                                    <li class="list-group-item">
+                                                        {{$child->first_name}}
+                                                        {{$child->last_name}}
+
+
+                                                        @if($child->notification)
+                                                            <span class="badge bg-gradient-directional-teal p-2 ml-1 pull-right child-notification text-white" title="Benachrichtigung aktiv" data-child_id="{{$child->id}}" data-notification="1">
+                                                                <i class="fas fa-bell"></i>
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-gradient-radial-amber p-2 ml-1 pull-right child-notification" title="Benachrichtigung deaktiviert"  data-child_id="{{$child->id}}" data-notification="0">
+                                                                <i class="fas fa-bell-slash"></i>
+                                                            </span>
+                                                        @endif
+
+                                                        <span class="badge badge-info ml-1 p-2 pull-right">
+                                                            {{$child->group->name}}
+                                                        </span>
+                                                        <span class="badge badge-info ml-1 p-2 pull-right">
+                                                            {{$child->class->name}}
+                                                        </span>
+                                                    </li>
+                                            @endforeach
+                                        </div>
+                                        <div class="card-footer border-top">
+                                            <form action="{{url('/child')}}" method="post">
+                                                @csrf
+                                                <div class="form-group row">
+                                                    <label for="first_name"
+                                                           class="col-form-label text-danger">Vorname</label>
+                                                    <input id="first_name" type="text" class="form-control"
+                                                           name="first_name" required>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="last_name"
+                                                           class="col-form-label text-danger">Nachname</label>
+                                                    <input id="last_name" type="text" class="form-control"
+                                                           name="last_name" required>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="group" class="col-form-label text-danger">Gruppe</label>
+                                                    <select id="group" class="form-control" name="group_id" required>
+                                                        @foreach(auth()->user()->groups as $group)
+                                                            <option value="{{$group->id}}">{{$group->name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="class"
+                                                           class="col-form-label text-danger">Klassenstufe</label>
+                                                    <select id="class" class="form-control" name="class_id" required>
+                                                        @foreach(auth()->user()->groups as $group)
+                                                            <option value="{{$group->id}}">{{$group->name}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-block btn-primary">
+                                                    Kind hinzufügen
+                                                </button>
+
+                                            </form>
+                                        </div>
                                     </div>
-                                @endforeach
-                            </div>
-                            <div class="card-footer">
-                                <p class="footer-default small">
-                                    Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in den
-                                    Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
-                                </p>
+                                </div>
+                            @endif
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title">
+                                            Gruppen
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @foreach($user->groups as $gruppe)
+                                            <div class="btn btn-outline-info">
+                                                {{$gruppe->name}}
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="card-footer">
+                                        <p class="footer-default small">
+                                            Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in
+                                            den
+                                            Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
+                <div class="row">
                     @if($user->releaseCalendar == 1)
-                        <div class="row">
+
                             <div class="col-md-6 col-sm-12">
                                 <div class="card">
                                     <div class="card-header">
@@ -193,8 +301,77 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     @endif
+                    <div class="col-md-6 col-sm-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>
+                                    API-Token
+                                </h6>
+                                <i class="">
+                                    Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
+                                </i>
+                            </div>
+                            @if(session()->has('token'))
+                                <div class="card-body">
+                                    <div class="alert alert-success">
+                                        <p>
+                                            Das Token wurde erfolgreich erstellt. Bitte speichern Sie das Token an einem sicheren Ort. Er kann nicht noch einmal angezeigt werden.
+                                        </p>
+
+                                        <p>
+                                            {{session('token')}}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="card-body">
+                                <div class="">
+                                    <table class="table">
+                                        @foreach(auth()->user()->tokens as $token)
+                                            <tr>
+                                                <td>
+                                                    {{$token->name}}
+                                                </td>
+                                                <td>
+                                                    {{$token->created_at->format('d.m.Y')}}
+                                                </td>
+                                                <td>
+                                                    <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            löschen
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                            </div>
+                        </div>
+                        <div class="card-footer border-top">
+                            <b>
+                                Neues Token erstellen
+                            </b>
+                            <form action="{{url('/einstellungen/token')}}" method="post">
+                                @csrf
+                                <div class="form-group row">
+                                    <div class="col-md-12">
+                                        <label for="name" class="col-form-label text-danger">Name</label>
+                                        <input id="name" type="text" class="form-control" name="name" required>
+                                    </div>
+                                </div>
+                                <div class="form-group  row mb-0">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            Token erstellen
+                                        </button>
+                                    </div>  </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
             @if($user->sorg2 != null)
                 <div class="card-footer">
@@ -228,6 +405,34 @@
                     $("#btn-save").show();
             }
             }
+        });
+
+
+        $('.child-notification').click(function () {
+            let child_id = $(this).data('child_id');
+            let notification = $(this).data('notification');
+
+            $.ajax({
+                url: '/child/' + child_id + '/notification',
+                type: 'POST',
+                data: {
+                    _token: '{{csrf_token()}}',
+                    'child_id': child_id,
+                    'notification': notification == 1 ? 0 : 1
+                },
+                success: function (data) {
+                    if (data.notification == 1) {
+                        $('.child-notification[data-child_id=' + child_id + ']').removeClass('bg-gradient-radial-amber').addClass('bg-gradient-directional-teal text-white').html('<i class="fas fa-bell"></i>');
+                        $('.child-notification[data-child_id=' + child_id + ']').data('notification', 1);
+                    } else {
+                        $('.child-notification[data-child_id=' + child_id + ']').removeClass('bg-gradient-directional-teal text-white').addClass('bg-gradient-radial-amber').html('<i class="fas fa-bell-slash"></i>');
+                        $('.child-notification[data-child_id=' + child_id + ']').data('notification', 0);
+                    }
+                },
+                error: function (data) {
+                    alert('Fehler beim Speichern');
+                }
+            });
         });
 
     </script>

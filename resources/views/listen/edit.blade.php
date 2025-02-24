@@ -30,6 +30,16 @@
                                         <input type="number" min="0" name="duration" id="duration" class="form-control"
                                                value="{{$liste->duration}}">
                                     </div>
+                                @else
+                                    <div class="col-md-4 col-sm-12" id="selectmakeEntry">
+                                        <label for="make_new_entry">
+                                            neue Einträge erlauben
+                                        </label>
+                                        <select name="make_new_entry" class="custom-select" id="make_new_entry">
+                                            <option value="0" selected>nein</option>
+                                            <option value="1">ja</option>
+                                        </select>
+                                    </div>
                                 @endif
                             </div>
                             <div class="form-row">

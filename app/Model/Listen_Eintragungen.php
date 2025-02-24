@@ -17,7 +17,7 @@ class Listen_Eintragungen extends Model
 
     public function liste(): BelongsTo
     {
-        return $this->belongsTo(Liste::class, 'liste_id');
+        return $this->belongsTo(Liste::class, 'listen_id');
     }
 
     public function user(): BelongsTo

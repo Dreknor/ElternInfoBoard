@@ -43,8 +43,8 @@
                     <div class="container-fluid">
                         <div class="row h-100">
                             @if($item['icon'])
-                                <div class="col-md-2 p-0 my-auto d-none d-md-block">
-                                    <img src="{{$item['icon']}}" alt="Circle Image" class="rounded-circle img-fluid">
+                                <div class="col-auto p-0 my-auto d-none d-md-block">
+                                    <img src="{{$item['icon']}}" alt="Circle Image" class="rounded-circle img-fluid" style="max-height: 50px;">
                                 </div>
                             @endif
                             <div class="col-md-9">
@@ -65,8 +65,13 @@
                 </a>
             </li>
             @endforeach
-
-
+            @can('testing')
+                <li class="dropdown-item" onclick="event.stopPropagation()">
+                    <a href="{{route('push.test')}}">
+                       Push testen
+                    </a>
+                </li>
+            @endcan
         </ul>
     </div>
 @endif

@@ -18,16 +18,7 @@ return new class extends Migration
             $table->addColumn('boolean', 'reactable')->after('sticky');
         });
 
-        DB::table('reactions')->insert(
-            [
-                ['name' => 'like'],
-                ['name' => 'happy'],
-                ['name' => 'sad'],
-                ['name' => 'love'],
-                ['name' => 'haha'],
-                ['name' => 'wow'],
-            ]
-        );
+
     }
 
     /**
@@ -40,5 +31,7 @@ return new class extends Migration
         Schema::table('posts', function (Blueprint $table) {
             $table->removeColumn('reactable');
         });
+
+
     }
 };

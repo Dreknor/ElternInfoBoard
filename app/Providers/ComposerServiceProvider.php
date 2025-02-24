@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\CareComposer;
 use App\Http\View\Composers\DiseaseComposer;
+use App\Http\View\Composers\LoginComposer;
 use App\Http\View\Composers\LosungComposer;
 use App\Http\View\Composers\ModulesComposer;
 use App\Http\View\Composers\NachrichtenComposer;
@@ -61,6 +63,15 @@ class ComposerServiceProvider extends ServiceProvider
 
         View::composer(
             'termine.nachricht', TermineComposer::class
+        );
+
+
+        View::composer(
+            'auth.login', LoginComposer::class
+        );
+
+        View::composer(
+            'anwesenheit.index', CareComposer::class
         );
     }
 }
