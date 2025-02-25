@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
+use Grosv\LaravelPasswordlessLogin\LoginUrl;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Model\User;
 use App\Notifications\SendPasswordLessLinkNotification;
-use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -100,8 +99,14 @@ class LoginController extends Controller
     {
         $user = User::where('email', $request->input('email'))->first();
 
-        if ($user) {
-            $user->notify(new SendPasswordLessLinkNotification());
+        if ($user and $user->can('allow password-less-login')) {
+            $generator = new LoginUrl($user);
+            $generator->setRedirectUrl('/home');
+            $url = $generator->generate();
+
+            dd($url);
+
+            $user->notify(new SendPasswordLessLinkNotification($url));
         }
 
         return $user;
