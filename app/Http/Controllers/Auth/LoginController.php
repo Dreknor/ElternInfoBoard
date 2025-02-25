@@ -199,6 +199,10 @@ class LoginController extends Controller
 
             $name = ($user->givenName ?? '').' '.($user->sn ?? $user->nickname);
 
+            if (empty($name)) {
+                $name = explode('@', $user->email)[0];
+            }
+
             $newUser = User::create([
                 'name' => $name,
                 'email' => $user->email,
