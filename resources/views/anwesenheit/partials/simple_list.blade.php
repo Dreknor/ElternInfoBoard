@@ -31,6 +31,13 @@
                                                             <i class="fas fa-envelope"></i>
                                                         </div>
                                                     @endif
+
+                                                    @if($child->krankmeldungToday())
+                                                        <div class="badge badge-danger">
+                                                            <i class="fas fa-ban"></i> Krank
+                                                        </div>
+                                                    @endif
+
                                                 </div>
                                                 <div class="col-auto d-flex justify-content-center align-items-center">
                                                         {{ $child->last_name }}, {{ $child->first_name }}

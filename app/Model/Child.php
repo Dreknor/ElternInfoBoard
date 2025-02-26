@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use App\Settings\CareSetting;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -109,12 +110,15 @@ class Child extends Model implements HasMedia
 
     public function krankmeldungToday()
     {
-         $meldung = $this->krankmeldungen()
+
+         $meldung = Cache::remember('krankmeldung_'.$this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function(){
+             return $this->krankmeldungen()
             ->where(function ($query) {
                 $query->whereDate('start', '<=', today())
                     ->whereDate('ende', '>=', today());
             })
             ->get();
+            });
 
          if ($meldung->count() > 0) {
              return true;

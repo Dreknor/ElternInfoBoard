@@ -171,6 +171,8 @@
             const spinner = document.getElementById('spinner');
             const schickzeitForm = document.getElementById('schickzeitForm');
             const noticeForm = document.getElementById('noticeForm');
+            var url_anmelden = "{{url('care/anwesenheit/:childId/anmelden')}}";
+            var url_abmelden = "{{url('care/anwesenheit/:childId/abmelden')}}";
 
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
@@ -240,7 +242,7 @@
                 spinner.style.display = 'inline-block';
 
                 $.ajax({
-                    url: `anwesenheit/${childId}/abmelden`,
+                    url: url_abmelden.replace(':childId', childId),
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'
@@ -262,7 +264,7 @@
                 spinner.style.display = 'inline-block';
 
                 $.ajax({
-                    url: `anwesenheit/${childId}/anmelden`,
+                    url: url_anmelden.replace(':childId', childId),
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'
