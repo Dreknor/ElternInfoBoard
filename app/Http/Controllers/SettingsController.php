@@ -69,6 +69,8 @@ class SettingsController extends Controller
                     'hide_childs_when_absent' => 'nullable|boolean',
                     'groups_list' => 'nullable|array',
                     'class_list' => 'nullable|array',
+                    'hide_groups_when_empty' => 'nullable|boolean',
+                    'show_message_on_empty_group' => 'nullable|boolean',
                 ]);
 
 
@@ -77,6 +79,8 @@ class SettingsController extends Controller
                 $careSettings->hide_childs_when_absent = $validated['hide_childs_when_absent'] ?? false;
                 $careSettings->groups_list = $validated['groups_list'] ?? [];
                 $careSettings->class_list = $validated['class_list'] ?? [];
+                $careSettings->hide_groups_when_empty = $validated['hide_groups_when_empty'] ?? false;
+                $careSettings->show_message_on_empty_group = $validated['show_message_on_empty_group'] ?? false;
                 $careSettings->save();
 
                 break;

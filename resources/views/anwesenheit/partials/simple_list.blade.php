@@ -1,6 +1,9 @@
 <div class="container-fluid">
     <div class="row">
         @foreach($groups as $group)
+            @if((new \App\Settings\CareSetting())->hide_groups_when_empty and $children->where('group_id', $group->id)->count() == 0)
+                @continue
+            @endif
             <div class="col-lg-3 col-md-6 mb-1">
                 <div class="card">
                     <div class="card-header bg-primary text-white"
@@ -11,6 +14,9 @@
                     </div>
                     <div class="card-body" style="padding: 0.5rem;">
                         @foreach($classes as $class)
+                            @if((new \App\Settings\CareSetting())->hide_groups_when_empty and $children->where('group_id', $group->id)->where('class_id', $class->id)->count() == 0)
+                                @continue
+                            @endif
                             <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 60px; z-index: 1; margin: 0.5rem 0;">
                                 {{ $class->name }}  <span class="badge badge-primary pull-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
                             </h4>
@@ -97,10 +103,11 @@
 
                                     </li>
                                     @empty
-                                        <li class="list-group-item bg-gradient-directional-light-yellow" style="padding: 0.5rem;">
-                                            Keine Kinder in dieser Klassenstufe
-                                        </li>
-
+                                        @if((new \App\Settings\CareSetting())->show_message_on_empty_group)
+                                            <li class="list-group-item bg-gradient-directional-light-yellow" style="padding: 0.5rem;">
+                                                Keine Kinder in dieser Klassenstufe
+                                            </li>
+                                        @endif
                                 @endforelse
                             </ul>
                         @endforeach
