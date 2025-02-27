@@ -11,14 +11,14 @@
                     </div>
                     <div class="card-body" style="padding: 0.5rem;">
                         @foreach($classes as $class)
-                            <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 40px; z-index: 1; margin: 0.5rem 0;">
+                            <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 60px; z-index: 1; margin: 0.5rem 0;">
                                 {{ $class->name }}  <span class="badge badge-primary pull-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
                             </h4>
                             @php
                                 $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)?->sortBy('last_name');
                             @endphp
                             <ul class="list-group" style="margin: 0;">
-                                @foreach($sortedChildren as $child)
+                                @forelse($sortedChildren as $child)
                                     <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
                                         data-child='@json(array_merge($child->toArray(), ['checked_in' => $child->checkedIn() ? 'true' : 'false','schickzeiten' => $child->getSchickzeitenForToday()?->toArray()]))'
                                         data-notices='@json($child->hasNotice())'
@@ -96,7 +96,12 @@
                                         </div>
 
                                     </li>
-                                @endforeach
+                                    @empty
+                                        <li class="list-group-item bg-gradient-directional-light-yellow" style="padding: 0.5rem;">
+                                            Keine Kinder in dieser Klassenstufe
+                                        </li>
+
+                                @endforelse
                             </ul>
                         @endforeach
                     </div>
