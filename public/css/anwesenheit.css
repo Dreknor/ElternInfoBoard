@@ -50,10 +50,14 @@ body {
 }
 
 .child-checkedOut {
-    text-decoration: line-through;
     color: #214a71;
     background-color: #97ff89;
 }
+
+.child-checkedOut .name {
+    text-decoration: line-through;
+}
+
 .schickzeit_liste {
     display: inline-block;
     font-size: 100%;

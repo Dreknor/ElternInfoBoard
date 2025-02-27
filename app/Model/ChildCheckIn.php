@@ -13,6 +13,7 @@ class ChildCheckIn extends Model
         'child_id',
         'checked_in',
         'checked_out',
+        'should_be',
         'date',
     ];
 
@@ -20,6 +21,7 @@ class ChildCheckIn extends Model
     protected $casts = [
         'checked_in' => 'boolean',
         'checked_out' => 'boolean',
+        'should_be' => 'boolean',
         'date' => 'date',
     ];
 
@@ -32,4 +34,5 @@ class ChildCheckIn extends Model
     {
         return $query->where('checked_in', true)->where('checked_out', false);
     }
+
 }

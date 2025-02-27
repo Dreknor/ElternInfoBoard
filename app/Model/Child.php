@@ -62,6 +62,36 @@ class Child extends Model implements HasMedia
         }
     }
 
+    /**
+     * Determine if the record should be marked as "today".
+     *
+     * This method checks if there is a relevant "check-in" record for the current
+     * instance that matches specific conditions, including not being checked in,
+     * not being checked out, being marked as "should be," and having a date of today.
+     * The result is cached for 300 seconds to optimize repeated queries.
+     *
+     * @return bool Returns true if the conditions are met, false otherwise.
+     */
+    public function should_be_today()
+    {
+        $checkIn = Cache::remember('should_be_today' . $this->id, 300, function () {
+            return $this->checkIns()
+                ->where('checked_in', false)
+                ->where('checked_out', false)
+                ->where('should_be', true)
+                ->whereDate('date', today())
+                ->first();
+        });
+
+
+        if (is_null($checkIn)) {
+            return false;
+
+        } else {
+            return true;
+        }
+    }
+
     public function checkIns()
     {
         return $this->hasMany(ChildCheckIn::class, 'child_id');

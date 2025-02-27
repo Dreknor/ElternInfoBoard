@@ -134,6 +134,7 @@ class CareController extends Controller
 
 
         Cache::forget('checkedIn' . $child->id);
+        Cache::forget('should_be_today' . $child->id);
         return response()->json([
             'success' => true,
         ]);
@@ -194,6 +195,7 @@ class CareController extends Controller
                 'checked_out' => false,
                 'date' => now()->toDateString(),
             ];
+
         }
 
         ChildCheckIn::query()->insert($checkIn);
