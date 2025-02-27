@@ -72,13 +72,13 @@
                                                                 } elseif($schickzeit->type == 'ab' and ($schickzeit->time_ab && $currentTime->isAfter($schickzeit->time_ab)) and ($schickzeit->time_spaet && $currentTime->isBefore($schickzeit->time_spaet))) {
                                                                     $backgroundClass .= 'warning';
                                                                     $text_size = 'text-great';
-                                                                } elseif($schickzeit->type == 'ab' and $currentTime->isAfter($schickzeit->time_spaet)) {
+                                                                } elseif($schickzeit->type == 'ab' and $schickzeit->time_spaet and $currentTime->isAfter($schickzeit->time_spaet)) {
                                                                     $backgroundClass .= 'danger';
                                                                     $text_size = 'text-medium';
-                                                                } elseif($schickzeit->type == 'genau' and $currentTime->isBefore($schickzeit->time)) {
+                                                                } elseif($schickzeit->type == 'genau' and $schickzeit->time and $currentTime->isBefore($schickzeit->time)) {
                                                                     $backgroundClass .= 'success';
                                                                     $text_size = 'text-smaller';
-                                                                } elseif($schickzeit->type == 'genau' and $currentTime->isAfter($schickzeit->time)) {
+                                                                } elseif($schickzeit->type == 'genau' and $schickzeit->time and $currentTime->isAfter($schickzeit->time)) {
                                                                     $backgroundClass .= 'danger';
                                                                     $text_size = 'text-great';
                                                                 } else {
