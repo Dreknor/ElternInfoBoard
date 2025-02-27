@@ -207,8 +207,6 @@
                             if (schickzeit.type == 'genau') {
                                 schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
                             } else {
-                                schickzeitElement.textContent = `${schickzeit.type}: `;
-
                                 if(schickzeit.time_ab) {
                                     schickzeitElement.textContent += `ab ${toDateWithOutTimeZone(schickzeit.time_ab).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                                 }
