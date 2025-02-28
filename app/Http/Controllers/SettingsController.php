@@ -71,6 +71,7 @@ class SettingsController extends Controller
                     'class_list' => 'nullable|array',
                     'hide_groups_when_empty' => 'nullable|boolean',
                     'show_message_on_empty_group' => 'nullable|boolean',
+                    'days_before_lock' => 'integer|min:1',
                 ]);
 
 
@@ -81,6 +82,7 @@ class SettingsController extends Controller
                 $careSettings->class_list = $validated['class_list'] ?? [];
                 $careSettings->hide_groups_when_empty = $validated['hide_groups_when_empty'] ?? false;
                 $careSettings->show_message_on_empty_group = $validated['show_message_on_empty_group'] ?? false;
+
                 $careSettings->save();
 
                 break;

@@ -15,6 +15,7 @@ class ChildCheckIn extends Model
         'checked_out',
         'should_be',
         'date',
+        'lock_at'
     ];
 
 
@@ -23,6 +24,7 @@ class ChildCheckIn extends Model
         'checked_out' => 'boolean',
         'should_be' => 'boolean',
         'date' => 'date',
+        'lock_at' => 'date',
     ];
 
     public function child()

@@ -423,6 +423,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="form-row mt-1 p-2 border">
                                         <div class="col-md-6 col-sm-12">
                                             <label class="label-control w-100">
@@ -451,6 +452,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="form-row mt-1 p-2 border">
                                         <div class="col-md-6 col-sm-12">
                                             <label class="label-control w-100">
