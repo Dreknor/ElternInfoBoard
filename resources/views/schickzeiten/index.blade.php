@@ -363,6 +363,7 @@
                                                     <th>Datum</th>
                                                     <th>angemeldet?</th>
                                                     <th></th>
+                                                    <th></th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
@@ -397,6 +398,11 @@
                                                                         <i class="fa fa-times"></i> abmelden
                                                                     </button>
                                                                 </form>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($checkIn->lock_at != null)
+                                                                Frist: {{$checkIn->lock_at?->format('d.m.Y')}}
                                                             @endif
                                                         </td>
                                                     </tr>
