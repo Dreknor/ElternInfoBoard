@@ -374,7 +374,7 @@
                                                     <td>{{$checkIn->should_be ? 'Ja' : 'Nein'}}</td>
                                                     <td>
                                                         @if(!$checkIn->should_be)
-                                                            @if(($checkIn->lock_at && $checkIn->lock_at?->lessThan(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
+                                                            @if(($checkIn->lock_at && $checkIn->lock_at?->gte(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
                                                                 <form
                                                                     action="{{route('checkIn.anmelden', ['childCheckIn' => $checkIn->id])}}"
                                                                     method="post">
