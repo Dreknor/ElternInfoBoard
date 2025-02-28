@@ -199,9 +199,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    @can('testing')
-
-                                        <div class="card-footer">
+                                    <div class="card-footer">
                                             <h6 class="card-title">individuelle Schickzeiten</h6>
                                             <div class="container-fluid">
                                                 <ul class="list-group">
@@ -330,7 +328,6 @@
                                                 </button>
                                             </form>
                                         </div>
-                                    @endcan
                                 </div>
                             </div>
                         @endforeach
