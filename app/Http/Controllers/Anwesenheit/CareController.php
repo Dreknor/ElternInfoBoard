@@ -126,7 +126,7 @@ class CareController extends Controller
 
         $parent = $child->parents()->first();
 
-        if ($parent->can('testing')) {
+        if ($child->notification) {
 
             dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkIn'));
 
