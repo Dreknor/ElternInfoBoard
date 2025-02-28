@@ -21,7 +21,7 @@ class ChildNoticeController extends Controller
      */
     public function store(ChildNoticeRequest $request, Child $child)
     {
-        if ($child->parents->contains(auth()->id()) or $child->parents->contains(auth()->user()?->sorg2)) {
+        if (auth()->user()->children->contains($child->id)  ) {
             if ($request->notice == null) {
                $childNotice = ChildNotice::where('child_id', $child->id)->where('date', $request->date)->first();
                 if ($childNotice) {
