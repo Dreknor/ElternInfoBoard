@@ -179,20 +179,6 @@ class CareController extends Controller
             return;
         }
 
-        Log::info('Suche Feiertage');
-        $feiertage = Cache::remember('feiertage_' . Carbon::now()->year, now()->diff(Carbon::now()->endOfYear()), function () {
-            $url = 'https://get.api-feiertage.de?years=' . now()->year . '&states=sn';
-            return json_decode(file_get_contents($url), true);
-        });
-
-        foreach ($feiertage as $feiertag) {
-            if (now()->isSameDay($feiertag['date'])) {
-                Log::info('Heute ist ein Feiertag');
-                return;
-            }
-        }
-
-        Log::info('Kein Feiertag gefunden');
 
         $children = Child::query()
             ->get();
