@@ -16,7 +16,7 @@
 <div class="d-md-block collapse" id="info_{{$nachricht->id}}">
     <div class="row mt-1">
         @foreach($nachricht->groups as $group)
-            <div class="col-auto">
+            <div class="col-auto m-1">
                 <span class="badge badge-green p-2">
                 {{ $group->name }}
                 </span>
@@ -26,7 +26,7 @@
     <div class="row mt-1">
         <div class="col-auto">
         <span class="p-2">
-            {{ $nachricht->updated_at->format('d.m.Y H:i') }}
+            aktualisiert: {{ $nachricht->updated_at->format('d.m.Y H:i') }} (Archiv {{$nachricht->archiv_ab->format('d.m.Y')}})
         </span>
         </div>
 
