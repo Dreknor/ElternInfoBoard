@@ -165,14 +165,16 @@ class CareController extends Controller
             return json_decode(file_get_contents($url), true);
         });
 
+        $ferien_tag = false;
         foreach ($ferien as $ferienTage) {
             if (now()->between($ferienTage['start'], $ferienTage['end'])) {
                 Log::info('Heute ist ein Ferientag');
-                $ferien = true;
+                Log::info($ferienTage);
+                $ferien_tag = "Ja";
             }
         }
 
-        if ($ferien) {
+        if ($ferien_tag == "Ja") {
             Log::info('Kein Login wegen Ferien');
             return;
         }
