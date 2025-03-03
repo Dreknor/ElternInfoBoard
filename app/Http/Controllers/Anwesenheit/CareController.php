@@ -173,9 +173,11 @@ class CareController extends Controller
         }
 
         if ($ferien) {
+            Log::info('Kein Login wegen Ferien');
             return;
         }
 
+        Log::info('Suche Feiertage');
         $feiertage = Cache::remember('feiertage_' . Carbon::now()->year, now()->diff(Carbon::now()->endOfYear()), function () {
             $url = 'https://get.api-feiertage.de?years=' . now()->year . '&states=sn';
             return json_decode(file_get_contents($url), true);
@@ -188,8 +190,12 @@ class CareController extends Controller
             }
         }
 
+        Log::info('Kein Feiertag gefunden');
+
         $children = Child::query()
             ->get();
+
+        Log::info($children->count(). ' Kinder geladen');
 
         $checkIn = [];
         foreach ($children as $child) {
