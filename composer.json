@@ -34,7 +34,7 @@
         "spatie/laravel-medialibrary": "^11.0",
         "spatie/laravel-permission": "^6.0",
         "spatie/laravel-settings": "^3.4",
-        "staudenmeir/eloquent-has-many-deep": "^1.15"
+        "staudenmeir/eloquent-has-many-deep": "^1.20"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.6",
