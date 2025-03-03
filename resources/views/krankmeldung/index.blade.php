@@ -29,11 +29,27 @@
                                         Name des Schülers / der Schülerin*:
                                     </label>
                                     @if(auth()->user()->children()->count() > 0)
-                                        <select name="child_id" id="child" class="form-control" >
-                                            @foreach(auth()->user()->children() as $child)
-                                                <option value="{{$child->id}}">{{$child->first_name}}</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="child">
+                                                    Kind auswählen:
+                                                </label>
+                                                <select name="child_id" id="child" class="form-control" >
+                                                    <option value="">Bitte wählen</option>
+                                                    @foreach(auth()->user()->children() as $child)
+                                                        <option value="{{$child->id}}">{{$child->first_name}}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="name">
+                                                    oder Name eingeben:
+                                                </label>
+                                                <input type="text" class="form-control" name="name" id="name"
+                                                       autofocus>
+                                            </div>
+                                        </div>
+
                                     @else
                                         <input type="text" class="form-control" name="name" id="name"
                                                @if($krankmeldungen->count() > 0) value="{{$krankmeldungen->first()->name}}"
