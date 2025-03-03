@@ -21,7 +21,9 @@ class ChildNoticeController extends Controller
      */
     public function store(ChildNoticeRequest $request, Child $child)
     {
-        if ($child->parents->contains(auth()->id()) or $child->parents->contains(auth()->user()?->sorg2)) {
+
+
+        if (auth()->user()->children()->contains($child)) {
             if ($request->notice == null) {
                $childNotice = ChildNotice::where('child_id', $child->id)->where('date', $request->date)->first();
                 if ($childNotice) {
@@ -51,7 +53,7 @@ class ChildNoticeController extends Controller
 
     public function show(Child $child)
     {
-        if ($child->parents->contains(auth()->id()) or auth()->user()->sorg2 == $child->user_id) {
+        if (auth()->user()->children()->contains($child)) {
             $childNotices = ChildNotice::where('child_id', $child->id)->where('date', today())->first();
             return response()->json($childNotices);
         }
@@ -67,7 +69,7 @@ class ChildNoticeController extends Controller
      */
     public function destroy(ChildNotice $childNotice)
     {
-        if (auth()->id == $childNotice->user_id or auth()->user()->sorg2 == $childNotice->user_id) {
+        if (auth()->user()->children()->contains($childNotice->child)) {
             $childNotice->delete();
             return response()->json(['message' => 'success'], 200);
         }
