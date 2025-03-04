@@ -33,7 +33,7 @@
             <span class="p-2">
                 Archiv ab: {{$nachricht->archiv_ab->format('d.m.Y')}}
             </span>
-
+        </div>
     </div>
 </div>
 
