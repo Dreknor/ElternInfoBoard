@@ -25,10 +25,14 @@
     </div>
     <div class="row mt-1">
         <div class="col-auto">
-        <span class="p-2">
-            aktualisiert: {{ $nachricht->updated_at->format('d.m.Y H:i') }} (Archiv {{$nachricht->archiv_ab->format('d.m.Y')}})
-        </span>
+            <span class="p-2">
+                aktualisiert: {{ $nachricht->updated_at->format('d.m.Y H:i') }}
+            </span>
         </div>
+        <div class="col-auto ml-auto">
+            <span class="p-2">
+                Archiv ab: {{$nachricht->archiv_ab->format('d.m.Y')}}
+            </span>
 
     </div>
 </div>
