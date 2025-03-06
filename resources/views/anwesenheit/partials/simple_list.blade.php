@@ -66,7 +66,7 @@
                                                                 $backgroundClass = 'badge badge-';
                                                                 $text_size = 'text-smaller';
 
-                                                                if($schickzeit->type == 'ab' and $currentTime->isBefore($schickzeit->time_ab)) {
+                                                                if($schickzeit->type == 'ab' and (isset($schickzeit->time_ab) && $currentTime->isBefore($schickzeit?->time_ab))) {
                                                                     $backgroundClass .= 'success';
                                                                     $text_size = 'text-smaller';
                                                                 } elseif($schickzeit->type == 'ab' and ($schickzeit->time_ab && $currentTime->isAfter($schickzeit->time_ab)) and ($schickzeit->time_spaet && $currentTime->isBefore($schickzeit->time_spaet))) {
