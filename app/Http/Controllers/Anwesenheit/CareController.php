@@ -111,11 +111,26 @@ class CareController extends Controller
             ->whereDate('date', now()->toDateString())
             ->first();
 
+
+        if ($child->krankmeldungToday()) {
+            $krankmeldung = $child->krankmeldungen()
+                ->where(function ($query) {
+                    $query->whereDate('start', '<=', today())
+                        ->whereDate('ende', '>=', today());
+                })
+                ->first();
+            $krankmeldung->update([
+                'ende' => Carbon::now()->subDay(),
+            ]);
+
+        }
+
         if ($checkIn) {
             $checkIn->update([
                 'checked_in' => true,
                 'checked_out' => false,
             ]);
+
         } else {
             $child->checkIns()->create([
                 'checked_in' => true,
