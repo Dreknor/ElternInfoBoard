@@ -60,7 +60,12 @@ class CreateListeRequest extends FormRequest
             'gruppen' => [
                 'array',
                 'min:1'
-            ]
+            ],
+            'comment' => [
+                'sometimes',
+                'nullable',
+                'string',
+            ],
         ];
     }
 }

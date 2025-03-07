@@ -15,7 +15,7 @@
     </div>
     <div class="row">
         <div class="col-sm-6 col-md-3 m-auto">
-            {{	$eintrag->termin->formatLocalized('%A')}}, <br>
+            {{	$eintrag->termin->dayName}}, <br>
             <b>{{	$eintrag->termin->format('d.m.Y')}}
         </div>
         <div class="col-sm-6 col-md-3 m-auto h-100">

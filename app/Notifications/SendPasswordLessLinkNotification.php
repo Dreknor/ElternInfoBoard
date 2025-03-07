@@ -12,14 +12,16 @@ class SendPasswordLessLinkNotification extends Notification
 {
     use Queueable;
 
+    protected $url;
+
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(String $url)
     {
-        //
+        $this->url = $url;
     }
 
     /**
@@ -39,16 +41,13 @@ class SendPasswordLessLinkNotification extends Notification
      * @param mixed $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail()
     {
-        $generator = new LoginUrl($notifiable);
-        $generator->setRedirectUrl('/home');
-        $url = $generator->generate();
 
         return (new MailMessage)
             ->subject('Login-Link für ' . config('app.name'))
             ->line('Um sich anzumelden, klicken Sie bitte auf den folgenden Link.')
-            ->action('Login', $url)
+            ->action('Login', $this->url)
             ->line('Wenn Sie sich nicht anmelden wollten, können Sie diese E-Mail ignorieren.');
     }
 

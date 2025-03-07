@@ -133,6 +133,8 @@ Route::middleware('auth')->group(function () {
         Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit'])->name('schickzeiten.edit');
         Route::post('schickzeiten/{child}/{weekday?}', [SchickzeitenController::class, 'store'])->name('schickzeiten.store');
         Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
+        Route::put('anwesenheit/{childCheckIn}/anmelden', [SchickzeitenController::class, 'anwesenheitTrue'])->name('checkIn.anmelden');
+        Route::put('anwesenheit/{childCheckIn}/abmelden', [SchickzeitenController::class, 'anwesenheitFalse'])->name('checkIn.abmelden');
 
         //Schickzeiten Verwaltung
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
@@ -406,6 +408,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
         Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
         Route::post('child/{child}/notice', [ChildNoticeController::class, 'noticeVerwaltung'])->name('child.notice.verwaltung');
+
+        Route::delete('abfrage/{date}/destroy', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyAbfrage'])->name('care.abfrage.destroy');
+        Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
+        Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
+        Route::post('care/abfrage/anwesenheit/download', [\App\Http\Controllers\Anwesenheit\CareController::class, 'downloadAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.download');
 
     });
 

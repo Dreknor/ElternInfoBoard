@@ -105,6 +105,7 @@
                 @endforeach
             </div>
         </div>
+
     <div class="container-fluid">
         <div class="row">
             <div class="card">
@@ -198,9 +199,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    @can('testing')
-
-                                        <div class="card-footer">
+                                    <div class="card-footer">
                                             <h6 class="card-title">individuelle Schickzeiten</h6>
                                             <div class="container-fluid">
                                                 <ul class="list-group">
@@ -329,7 +328,6 @@
                                                 </button>
                                             </form>
                                         </div>
-                                    @endcan
                                 </div>
                             </div>
                         @endforeach
@@ -338,6 +336,92 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="container-fluid">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title">
+                        Anwesenheitsabfragen
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach($children as $child)
+                            <div class="col-lg-6 col-md-6 col-sm-12">
+                                <div class="card">
+                                    <div class="card-header bg-gradient-x2-info">
+                                        <h5 class="card-title">
+                                            {{$child->first_name}} {{$child->last_name}}
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive-md">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                <tr>
+                                                    <th>Datum</th>
+                                                    <th>angemeldet?</th>
+                                                    <th></th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                @forelse($child->checkIns->sortBy('date') as $checkIn)
+                                                    <tr>
+                                                        <td>{{$checkIn->date->dayName}}, {{$checkIn->date->format('d.m.Y')}}</td>
+                                                        <td>{{$checkIn->should_be ? 'Ja' : 'Nein'}}</td>
+                                                        <td>
+                                                            @if(!$checkIn->should_be)
+                                                                @if(($checkIn->lock_at && $checkIn->lock_at?->gte(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
+                                                                    <form
+                                                                        action="{{route('checkIn.anmelden', ['childCheckIn' => $checkIn->id])}}"
+                                                                        method="post">
+                                                                        @csrf
+                                                                        @method('put')
+                                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                                            <i class="fa fa-check"></i> anmelden
+                                                                        </button>
+                                                                    </form>
+                                                                @else
+                                                                    <span class="text-danger">
+                                                                    Zeitraum abgelaufen
+                                                                </span>
+                                                                @endif
+                                                            @else
+                                                                <form
+                                                                    action="{{route('checkIn.abmelden', ['childCheckIn' => $checkIn->id])}}"
+                                                                    method="post">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                                        <i class="fa fa-times"></i> abmelden
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if($checkIn->lock_at != null)
+                                                                Frist: {{$checkIn->lock_at?->format('d.m.Y')}}
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3">Keine Anwesenheitsabfragen vorhanden</td>
+                                                    </tr>
+                                                @endforelse
+                                                </tbody>
+                                            </table>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
     </div>
 
 
