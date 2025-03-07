@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class krankmeldungen extends Model
 {
@@ -27,4 +28,21 @@ class krankmeldungen extends Model
         'start' => 'datetime',
         'ende' => 'datetime',
     ];
+
+
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class, 'child_id');
+    }
+
+
+    protected static function booted()
+    {
+        static::saved(function ($krankmeldung) {
+            if (!is_null($krankmeldung->child_id)) {
+                Cache::forget('krankmeldung_' . $krankmeldung->child_id);
+            }
+        });
+    }
+
 }

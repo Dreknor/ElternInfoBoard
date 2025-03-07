@@ -27,13 +27,13 @@ class WordpressRepository
         $process = curl_init('https://'.$this->url.'/wp-json/wp/v2/posts/'.$post_id);
 
         // create an array of data to use, this is basic - see other examples for more complex inserts
-        $data = array(
+        $data = [
             'slug' => $slug ,
             'title' => $title ,
             'content' => $content,
             'status' => ($status == 1)? 'publish' : 'draft',
             'featured_media' => ($media_id != null)? $media_id : null
-            );
+            ];
         $data_string = json_encode($data);
 
         // create the options starting with basic authentication
@@ -47,9 +47,9 @@ class WordpressRepository
         // allow us to use the returned data from the request
         curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
         // we are sending json
-        curl_setopt($process, CURLOPT_HTTPHEADER, array(
+        curl_setopt($process, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string))
+                'Content-Length: ' . strlen($data_string)]
         );
 
         // process the request

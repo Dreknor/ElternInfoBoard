@@ -34,6 +34,7 @@ class User extends Authenticatable
     use HasApiTokens;
     use SoftDeletes;
 
+
     //fill uuid column
     protected static function booted(): void
     {

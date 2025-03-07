@@ -171,6 +171,8 @@
             const spinner = document.getElementById('spinner');
             const schickzeitForm = document.getElementById('schickzeitForm');
             const noticeForm = document.getElementById('noticeForm');
+            var url_anmelden = "{{url('care/anwesenheit/:childId/anmelden')}}";
+            var url_abmelden = "{{url('care/anwesenheit/:childId/abmelden')}}";
 
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
@@ -205,8 +207,6 @@
                             if (schickzeit.type == 'genau') {
                                 schickzeitElement.textContent = `${schickzeit.type}: ${new Date(schickzeit.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
                             } else {
-                                schickzeitElement.textContent = `${schickzeit.type}: `;
-
                                 if(schickzeit.time_ab) {
                                     schickzeitElement.textContent += `ab ${toDateWithOutTimeZone(schickzeit.time_ab).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                                 }
@@ -240,7 +240,7 @@
                 spinner.style.display = 'inline-block';
 
                 $.ajax({
-                    url: `anwesenheit/${childId}/abmelden`,
+                    url: url_abmelden.replace(':childId', childId),
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'
@@ -262,7 +262,7 @@
                 spinner.style.display = 'inline-block';
 
                 $.ajax({
-                    url: `anwesenheit/${childId}/anmelden`,
+                    url: url_anmelden.replace(':childId', childId),
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}'

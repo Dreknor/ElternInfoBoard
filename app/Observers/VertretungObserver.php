@@ -18,7 +18,7 @@ class VertretungObserver
         $notifications = [];
 
         foreach ($users as $user) {
-            $notifications[]= array(
+            $notifications[]= [
                 'title' => 'Vertretung',
                 'url' => url('/vertretungsplan/'),
                 'type' => 'vertretung',
@@ -26,7 +26,7 @@ class VertretungObserver
                 'user_id' => $user->id,
                 'created_at' => now(),
                 'updated_at' => now()
-            );
+            ];
 
 
         }

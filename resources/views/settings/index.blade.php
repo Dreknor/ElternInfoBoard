@@ -423,6 +423,36 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div class="form-row mt-1 p-2 border">
+                                        <div class="col-md-6 col-sm-12">
+                                            <label class="label-control w-100">
+                                                Gruppen und Klassen ausblenden wenn keine Kinder vorhanden
+                                                <input type="checkbox" class="form-control" name="hide_groups_when_empty"
+                                                       value="1" @if($careSettings->hide_groups_when_empty) checked @endif>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 m-auto">
+                                            <div class="small">
+                                                Wenn keine Kinder in einer Gruppe oder Klasse vorhanden sind, wird die Gruppe oder Klasse in der Betreuungsansicht ausgeblendet. So können nur die Gruppen und Klassen angezeigt werden, in denen tatsächlich Kinder anwesend sind.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row mt-1 p-2 border">
+                                        <div class="col-md-6 col-sm-12">
+                                            <label class="label-control w-100">
+                                                Info, wenn keine Kinder anwesend sind
+                                                <input type="checkbox" class="form-control" name="show_message_on_empty_group"
+                                                       value="1" @if($careSettings->show_message_on_empty_group) checked @endif>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6 col-sm-12 m-auto">
+                                            <div class="small">
+                                                Wenn leere Gruppen oder Klassen nicht ausgeblendet werden, wird eine Nachricht angezeigt, dass keine Kinder anwesend sind.
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="form-row mt-1 p-2 border">
                                         <div class="col-md-6 col-sm-12">
                                             <label class="label-control w-100">

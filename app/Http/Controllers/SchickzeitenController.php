@@ -7,6 +7,7 @@ use App\Http\Requests\CreateChildRequest;
 use App\Http\Requests\SchickzeitRequest;
 use App\Mail\SchickzeitenReminder;
 use App\Model\Child;
+use App\Model\ChildCheckIn;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use App\Settings\CareSetting;
@@ -53,10 +54,10 @@ class SchickzeitenController extends Controller
         $allowedGroups = $this->careSettings->groups_list;
 
         $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
-
             return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
-
         });
+
+        $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>', today())]);
 
 
         $weekdays = [
@@ -71,11 +72,58 @@ class SchickzeitenController extends Controller
             'children' => $children,
             'weekdays' => $weekdays,
             'vorgaben' => new SchickzeitenSetting(),
+            'careSettings' => $this->careSettings,
+        ]);
+    }
+
+    public function anwesenheitTrue(ChildCheckIn $childCheckIn)
+    {
+        if (!auth()->user()->children()->contains($childCheckIn->child)) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
+            ]);
+        }
+
+        if ($childCheckIn->lock_at && $childCheckIn->lock_at->lt(now())) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Anwesenheit kann nicht mehr geändert werden.',
+            ]);
+        }
+
+        $childCheckIn->update([
+            'should_be' => true,
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Anwesenheit wurde bestätigt',
+        ]);
+    }
+
+    public function anwesenheitFalse(ChildCheckIn $childCheckIn)
+    {
+
+        if (!auth()->user()->children()->contains($childCheckIn->child)) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
+            ]);
+        }
+
+        $childCheckIn->update([
+            'should_be' => false,
+        ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Anwesenheit wurde bestätigt',
         ]);
     }
 
     /**
-     * @return Application|Factory|View
+     * @return Application|Factory|View|RedirectResponse
      */
     public function indexVerwaltung()
     {
@@ -87,10 +135,31 @@ class SchickzeitenController extends Controller
             ]);
         }
 
-        $children = Child::query()->orderBy('last_name')->get();
-        $children->load('schickzeiten');
+        $careSettings = new CareSetting();
 
-        $children_old = Schickzeiten::all();
+
+
+        $children = Child::query()
+            ->whereIn('group_id', $careSettings->groups_list)
+            ->whereIn('class_id', $careSettings->class_list)
+            ->with('schickzeiten')->get();
+
+
+        $abfragen = ChildCheckIn::query()
+            ->where('date', '>', today())
+            ->get(['date', 'should_be', 'child_id']);
+
+
+        $abfragen_daten = [];
+
+        foreach ($abfragen->groupBy('date') as $datum) {
+            $date = $datum->first()->date->format('Y-m-d');
+
+            $abfragen_daten[$date] = count($datum->where('should_be', true));
+
+
+        }
+
 
         $weekdays = [
             '1' => 'Montag',
@@ -100,20 +169,11 @@ class SchickzeitenController extends Controller
             '5' => 'Freitag',
         ];
 
-        $zeiten = Schickzeiten::all();
-        $childs = $zeiten->unique(fn($item) => $item['users_id'] . $item['child_name']);
-
-        $parents = User::whereHas('groups', function (Builder $query) {
-            $query->where('bereich', 'Grundschule');
-        })->get();
-        $parents = $parents->sortBy('Familiename');
 
         return view('schickzeiten.index_verwaltung', [
             'children' => $children,
             'weekdays' => $weekdays,
-            'schickzeiten' => $zeiten,
-            'childs' => $childs,
-            'parents' => $parents,
+            'abfragen' => $abfragen_daten,
         ]);
     }
 
@@ -559,4 +619,48 @@ class SchickzeitenController extends Controller
         ]);
     }
 
+    public function storeAbfrageAnwesenheit(Request $request)
+    {
+        if (!auth()->user()->can('edit schickzeiten')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Sie haben keine Berechtigung für diese Aktion.',
+            ]);
+        }
+
+        $request->validate([
+            'date_start' => 'required|date',
+            'date_end' => 'nullable|date',
+            'child_id' => 'required|exists:children,id',
+        ]);
+
+        $date_start = Carbon::parse($request->date_start);
+        $date_end = Carbon::parse($request->date_end);
+
+        $child = Child::find($request->child_id);
+
+        $child->load(['checkIns' => fn ($query) => $query->where('date', '>=', $date_start)->where('date', '<=', $date_end)]);
+
+        $checkIn = [];
+
+        for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
+            if ($date->isWeekend()) {
+                continue;
+            }
+           $child->checkIns()->updateOrCreate([
+                'date' => $date->toDateString(),
+            ], [
+                'checked_in' => false,
+                'checked_out' => false,
+                'should_be' => true,
+            ]);
+        }
+
+        ChildCheckIn::query()->insert($checkIn);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Gespeichert',
+        ]);
+    }
 }

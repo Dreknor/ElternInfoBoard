@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 
@@ -33,4 +34,15 @@ class Site extends Model
     {
         return $this->hasMany(SiteBlock::class)->orderBy('position');
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope('activeOrOwn', function (Builder $builder) {
+            $builder->where('is_active', true)
+                ->orWhere('author_id', auth()->id());
+        });
+    }
+
 }

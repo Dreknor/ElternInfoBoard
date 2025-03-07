@@ -56,7 +56,12 @@ class UpdateListenRequest extends FormRequest
             'gruppen' => [
                 'array',
                 'min:1'
-            ]
+            ],
+            'comment' => [
+                'sometimes',
+                'nullable',
+                'string',
+            ],
         ];
     }
 }
