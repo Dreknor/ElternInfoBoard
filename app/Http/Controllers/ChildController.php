@@ -36,6 +36,19 @@ class ChildController extends Controller
     {
         $this->middleware('auth');
 
+        $child = Child::query()
+            ->whereLike('first_name', '%'.$request->first_name.'%')
+            ->whereLike('last_name', '%'.$request->last_name.'%')
+            ->where('group_id', $request->group_id)
+            ->first();
+
+        if ($child) {
+            return redirect()->back()->with([
+                'Meldung' => 'Kind existiert bereits',
+                'type' => 'danger',
+            ]);
+        }
+
         if (!$request->has('parent_id')) {
             auth()->user()->children_rel()->create($request->validated());
         } else {
