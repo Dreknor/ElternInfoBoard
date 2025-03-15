@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Model\User;
 use App\Notifications\SendPasswordLessLinkNotification;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -84,6 +85,9 @@ class LoginController extends Controller
             }
             return $this->sendLoginResponse($request);
         }
+
+        Log::info('Login fehlgeschlagen: ');
+        Log::info($request->input('email'));
 
         $this->incrementLoginAttempts($request);
 
