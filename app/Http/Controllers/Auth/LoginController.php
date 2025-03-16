@@ -55,13 +55,24 @@ class LoginController extends Controller
     {
 
         if ($request->input('submit') == 'password-less') {
+
+            Log::info('password-less-login: ');
+            Log::info($request->input('email'));
+
             $user = $this->loginViaPasswordLessLink($request);
 
             if (!$user or !$user->can('allow password-less-login')) {
+
+                Log::info('password-less-login: ');
+                Log::info('Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.');
+
                 return redirect()->route('login')
                     ->withErrors(['email' => 'Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.'])
                     ->withInput();
             }
+
+            Log::info('password-less-login: ');
+            Log::info('Login-Link wurde an die angegebene E-Mail-Adresse gesendet.');
 
             return redirect()->route('login')
                 ->with([
@@ -101,14 +112,24 @@ class LoginController extends Controller
      */
     public function loginViaPasswordLessLink(Request $request): User
     {
+        Log::info('password-less-login: ');
+        Log::info($request->input('email'));
+
+
         $user = User::where('email', $request->input('email'))->first();
 
+        Log::info('user: ');
+        Log::info($user);
+
         if ($user and $user->can('allow password-less-login')) {
+
+            Log::info('password-less-login: ');
+            Log::info('Benutzer existiert und hat Berechtigung für den Passwortlosen Login.');
+
             $generator = new LoginUrl($user);
             $generator->setRedirectUrl('/home');
             $url = $generator->generate();
 
-            dd($url);
 
             $user->notify(new SendPasswordLessLinkNotification($url));
         }
