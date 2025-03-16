@@ -112,19 +112,14 @@ class LoginController extends Controller
      */
     public function loginViaPasswordLessLink(Request $request): User
     {
-        Log::info('password-less-login: ');
-        Log::info($request->input('email'));
 
 
         $user = User::where('email', $request->input('email'))->first();
 
-        Log::info('user: ');
-        Log::info($user);
+
 
         if ($user and $user->can('allow password-less-login')) {
 
-            Log::info('password-less-login: ');
-            Log::info('Benutzer existiert und hat Berechtigung für den Passwortlosen Login.');
 
             $generator = new LoginUrl($user);
             $generator->setRedirectUrl('/home');
