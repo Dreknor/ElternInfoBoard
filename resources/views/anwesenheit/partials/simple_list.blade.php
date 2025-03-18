@@ -100,7 +100,7 @@
                                                                 @endif
                                                             @else
                                                                 <span class="{{ $backgroundClass }} {{$text_size}}">
-                                                                       <i class="fa-regular fa-clock"></i>  {{ $schickzeit->time->format('H:i') }}
+                                                                       <i class="fa-regular fa-clock ml-1"></i>  {{ $schickzeit->time->format('H:i') }}
                                                                     </span>
                                                             @endif
                                                         @endforeach
