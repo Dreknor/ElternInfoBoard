@@ -14,6 +14,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Spatie\IcalendarGenerator\Components\Calendar;
+use Spatie\IcalendarGenerator\Components\Event;
 
 class ListenController extends Controller
 {
@@ -293,5 +295,48 @@ class ListenController extends Controller
             'type' => 'success',
             'Meldung' => 'Liste beendet',
         ]);
+    }
+
+    public function icalExport(Liste $liste)
+    {
+        if (!auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        if ($liste->type != 'termin') {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Nur Terminlisten können exportiert werden',
+            ]);
+        }
+
+        $termine = $liste->termine;
+
+        $icalObject = Calendar::create(config('app.name'));
+
+        // loop over events
+        foreach ($termine as $termin) {
+
+            if ($termin->reserviert_fuer != null){
+                $name = $liste->listenname.'-'.$termin->eingetragenePerson?->name;
+            } else {
+                $name = $liste->listenname;
+            }
+
+            $icalObject->event(
+                Event::create()
+                    ->name($name)
+                    ->uniqueIdentifier(($termin->id) ?: uuid_create())
+                    ->startsAt($termin->termin->timezone('Europe/Berlin'))
+                    ->endsAt($termin->termin->copy()->addMinutes($termin->duration))
+            );
+        }
+
+        return response($icalObject->get())->header('Content-Type', 'text/calendar');
+
+
     }
 }
