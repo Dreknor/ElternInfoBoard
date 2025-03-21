@@ -6,6 +6,11 @@
                     <a href="{{url("listen/$liste->id/edit")}}" class="card-link">
                         <i class="fas fa-pencil-alt @if($liste->active == 0) text-gray @endif" title="bearbeiten"></i>
                     </a>
+
+                    <a href="{{url("listen/$liste->id/ical/export")}}" class="card-link @if($liste->active == 0) text-white @endif">
+                        <i class="fas fa-file-export" title="exportieren"></i>
+                    </a>
+
                     @if($liste->active == 0)
                         <a href="{{url("listen/$liste->id/activate")}}"
                            class="card-link">

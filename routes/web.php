@@ -227,7 +227,8 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
         Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
         Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
-        Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
+        Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
+        Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
 
         //TerminListe
