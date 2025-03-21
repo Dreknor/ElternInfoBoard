@@ -30,7 +30,7 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
 
     public function headings(): array
     {
-        $options = ['Benutzer', 'Zeitpunkt'];
+        $options = ['Benutzer', 'Email','Zeitpunkt'];
 
         foreach ($this->options as $option) {
             $options[] = "$option->option";
@@ -45,6 +45,7 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
         $answers = $userrueckmeldung->answers;
         $row = [];
         $row[] = $userrueckmeldung->user->name;
+        $row[] = $userrueckmeldung->user->email;
         $row[] = $userrueckmeldung->created_at;
         foreach ($this->options as $option) {
             $answer = $answers->where('option_id', $option->id)->first()?->answer;
