@@ -20,7 +20,7 @@ class Handler extends ExceptionHandler
      * @var array
      */
     protected $dontReport = [
-        //
+
     ];
 
     /**
@@ -43,11 +43,8 @@ class Handler extends ExceptionHandler
     public function report(Throwable $exception)
     {
         if (app()->bound('sentry') && $this->shouldReport($exception) && app()->environment('production')) {
-            //app('sentry')->captureException($exception);
+            app('sentry')->captureException($exception);
         }
-
-        Log::info($exception->getMessage());
-        Log::info(Request::fullUrl());
 
         parent::report($exception);
     }

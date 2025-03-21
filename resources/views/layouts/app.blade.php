@@ -158,6 +158,7 @@
     </nav>
     <!-- End Navbar -->
     <div class="content">
+
         @if(session()->has('ownID'))
             <div class="container-fluid">
                 <div class="row">
