@@ -52,7 +52,19 @@ class BenutzerController extends Controller
     public function update(editUserRequest $request)
     {
         $user = auth()->user();
-        $user->update($request->validated());
+        $user->update(
+            $request->only([
+                'name',
+                'email',
+                'benachrichtigung',
+                'sendCopy',
+                'track_login',
+                'publicMail',
+                'publicPhone',
+                'calendar_prefix',
+                'releaseCalendar',
+            ])
+        );
 
         if ($request->input('password') != '' && $request->password == $request->password_confirmation) {
             $user->update([
