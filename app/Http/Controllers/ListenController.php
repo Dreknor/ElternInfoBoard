@@ -27,6 +27,31 @@ class ListenController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
+
+    public function search(Request $request)
+    {
+
+        if (!$request->user()->can('edit terminliste')){
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $query = $request->input('query');
+        $archiv = Liste::where('ende', '<', now())
+            ->where('listenname', 'LIKE', "%{$query}%")
+            ->paginate(10);
+
+
+
+
+
+        return view('listen.search', [
+            'archiv' => $archiv,
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      *
