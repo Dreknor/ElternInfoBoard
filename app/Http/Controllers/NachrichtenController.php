@@ -239,6 +239,7 @@ class NachrichtenController extends Controller
     {
         $user = $request->user();
 
+
         if (! auth()->user()->can('create posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
