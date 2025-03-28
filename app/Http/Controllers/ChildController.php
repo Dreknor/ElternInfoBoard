@@ -159,14 +159,22 @@ class ChildController extends Controller
     public function update(CreateChildRequest $request, Child $child)
     {
         $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
-        $child->update($request->validated());
-        if (!$child->parents->contains($request->parent_id)) {
-            $child->parents()->sync($request->parent_id);
+        if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
+            if (!$child->parents->contains($request->parent_id)) {
+                $child->parents()->sync($request->parent_id);
+            }
         }
 
-        $child->update($request->validated());
+
+        $child->update(
+            $request->only([
+                'first_name',
+                'last_name',
+                'group_id',
+                'class_id',
+            ])
+        );
 
 
         return redirect()->back()->with([

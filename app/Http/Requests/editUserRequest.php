@@ -76,9 +76,9 @@ class editUserRequest extends FormRequest
             ],
             'password' => [
                 'nullable',
+                'sometimes',
                 'string',
                 'min:8',
-                'confirmed',
             ],
 
 

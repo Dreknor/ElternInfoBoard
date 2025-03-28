@@ -39,15 +39,18 @@ class ReadReceiptsController extends Controller
         foreach ($posts as $post) {
             $users = $post->users;
             $receipts = $post->receipts;
-            $users = $users->diff($receipts->pluck('user_id'));
+            $user_ids = $users->pluck('id');
+            $user_ids = $users->diff($receipts->pluck('user_id'));
             foreach ($users as $user) {
-                $mail = new RemindReadReceiptMail($user->email, $user->name, $post->header, $post->archiv_ab->format('d.m.Y'), $post->id);
-                $mail->subject('Lesebestätigung fehlt: ' . $post->thema);
-                try {
-                    Mail::to($user->email)->queue($mail);
+                if ($user_ids->contains($user->id)) {
+                    $mail = new RemindReadReceiptMail($user->email, $user->name, $post->header, $post->archiv_ab->format('d.m.Y'), $post->id);
+                    $mail->subject('Lesebestätigung fehlt: ' . $post->thema);
+                    try {
+                        Mail::to($user->email)->queue($mail);
 
-                } catch (\Exception $e) {
-                    Log::error('Mail konnte nicht versendet werden: ' . $e->getMessage());
+                    } catch (\Exception $e) {
+                        Log::error('Mail konnte nicht versendet werden: ' . $e->getMessage());
+                    }
                 }
             }
         }

@@ -34,7 +34,7 @@ class SchickzeitenReminder extends Mailable
     {
         $this->schickzeiten = $schickzeiten;
         $this->name = $name;
-        $this->kinder = $schickzeiten->pluck('child_name')->unique();
+        $this->kinder = $schickzeiten->pluck('child_id')->unique();
     }
 
     /**

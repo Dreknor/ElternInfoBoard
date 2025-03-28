@@ -188,6 +188,11 @@
                                             <ul class="list-group">
                                                 @foreach($user->children() as $child)
                                                     <li class="list-group-item">
+                                                        <a href="#"
+                                                           class="pull-left mr-2 edit-child-btn" data-child-id="{{ $child->id }}" data-child="{{ json_encode($child) }}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+
                                                         {{$child->first_name}}
                                                         {{$child->last_name}}
 
@@ -382,6 +387,50 @@
             @endif
         </div>
     </div>
+</div>
+        <div class="modal fade" id="editChildModal" tabindex="-1" role="dialog" aria-labelledby="editChildModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editChildModalLabel">Kind bearbeiten</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editChildForm" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="form-group">
+                                <label for="editFirstName">Vorname</label>
+                                <input type="text" class="form-control" id="editFirstName" name="first_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editLastName">Nachname</label>
+                                <input type="text" class="form-control" id="editLastName" name="last_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editGroup">Gruppe</label>
+                                <select class="form-control" id="editGroup" name="group_id" required>
+                                    @foreach(auth()->user()->groups as $group)
+                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="editClass">Klassenstufe</label>
+                                <select class="form-control" id="editClass" name="class_id" required>
+                                    @foreach(auth()->user()->groups as $group)
+                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 @endsection
 
 @push('js')
@@ -437,4 +486,21 @@
 
     </script>
 
+            <script>
+                $(document).ready(function() {
+                    // Open the modal and populate the form with the child's data
+                    $('.edit-child-btn').click(function() {
+                        var childId = $(this).data('child-id');
+                        var child = $(this).data('child');
+
+                        $('#editChildForm').attr('action', '/child/' + childId);
+                        $('#editFirstName').val(child.first_name);
+                        $('#editLastName').val(child.last_name);
+                        $('#editGroup').val(child.group_id);
+                        $('#editClass').val(child.class_id);
+
+                        $('#editChildModal').modal('show');
+                    });
+                });
+            </script>
 @endpush
