@@ -62,6 +62,29 @@ class SettingsController extends Controller
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
+            case 'keycloak':
+                $validated = $request->validate([
+                    'enabled' => 'nullable|boolean',
+                    'client_id' => 'required|string',
+                    'client_secret' => 'required|string',
+                    'realm' => 'required|string',
+                    'base_url' => 'required|string',
+                    'maildomain' => 'required|string',
+
+                ]);
+
+                $keyCloakSetting = new KeyCloakSetting();
+                $keyCloakSetting->enabled = $validated['enabled'] ?? false;
+                $keyCloakSetting->client_id = $validated['client_id'];
+                $keyCloakSetting->client_secret = $validated['client_secret'];
+                $keyCloakSetting->realm = $validated['realm'];
+                $keyCloakSetting->redirect_uri = url('/login/keycloak/callback');
+                $keyCloakSetting->base_url = $validated['base_url'];
+                $keyCloakSetting->maildomain = $validated['maildomain'];
+                $keyCloakSetting->save();
+
+
+                break;
 
             case 'care':
                 $validated = $request->validate([
