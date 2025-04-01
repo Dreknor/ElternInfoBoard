@@ -97,7 +97,7 @@
             </div>
             <div class="col-md-6 col-sm-12 m-auto">
                 <div class="small">
-                    Bitte geben Sie die E-Mail-Domainen an, die sich anmelden dürfen. Trennen Sie die Domainen mit einem | .
+                    Bitte geben Sie die E-Mail-Domainen an, die sich anmelden dürfen. Trennen Sie die Domainen mit einem Komma.
                     <br>Nur Nutzer mit einer E-Mail-Adresse, die zu einer der angegebenen Domainen gehört, können sich anmelden.
                 </div>
             </div>
