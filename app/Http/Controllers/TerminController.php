@@ -130,7 +130,6 @@ class TerminController extends Controller
         $matches = [];
         $termin = preg_match($pattern, $post->header, $matches);
 
-        dd($matches);
 
         if (!$termin) {
             $termin = preg_match($pattern, $post->news, $matches);
@@ -146,7 +145,6 @@ class TerminController extends Controller
         $terminname = $post->header;
         $terminname = str_replace($matches[0], '', $terminname);
 
-        dd($matches);
 
         $start = Carbon::parse($matches[0]);
         $ende = Carbon::parse($matches[0]);
