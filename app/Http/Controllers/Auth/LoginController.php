@@ -192,7 +192,7 @@ class LoginController extends Controller
 
             $domain = explode('@', $user->email)[1];
 
-            $mailDomains = $keycloakSetting->mail_domain;
+            $mailDomains = $keycloakSetting->maildomain;
             $mailDomains = explode(',', $mailDomains);
 
 
