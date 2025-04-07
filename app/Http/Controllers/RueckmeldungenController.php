@@ -419,13 +419,13 @@ class RueckmeldungenController extends Controller
      * @param  Rueckmeldungen  $rueckmeldungen
      * @return RedirectResponse
      */
-    public function update(Request $request, $post_id)
+    public function update(createRueckmeldungRequest $request, $post_id)
     {
         $rueckmeldung = Rueckmeldungen::firstOrNew([
             'post_id' => $post_id,
         ]);
 
-        $rueckmeldung->fill($request->all());
+        $rueckmeldung->fill($request->validated());
         $rueckmeldung->save();
 
         $post = Post::find($post_id);
