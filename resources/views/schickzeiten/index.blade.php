@@ -10,7 +10,7 @@
             </p>
             <div class="row">
                 @foreach($children as $child)
-                    <div class="col-auto">
+                    <div class="col-lg-4 col-md-6 col-sm-12">
                         <div class="card ">
                             <div class="card-header @if($child->checkedIn()) bg-gradient-directional-teal text-white @else bg-gradient-directional-warning @endif">
                                 <h6 class="card-title">
@@ -100,15 +100,31 @@
                                 <b>Nachrichten</b>
                                 @if($child->notice()->Future()->count() > 0)
                                     <ul class="list-group">
-                                        @foreach($child->notice()->future()->get() as $notice)
-                                            <li class="list-group-item text-black-50">
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <b>{{$notice->date->format('d.m.Y')}}:</b> {{$notice->notice}}
+                                        @forelse($child->notice()->future()->get() as $notice)
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <b>{{$notice->date->format('d.m.Y')}}:</b>
+                                                    <div class="pull-right">
+                                                        <form action="{{route('child.notice.destroy', ['childNotice' => $notice->id])}}" method="post">
+                                                            @csrf
+                                                            @method('delete')
+                                                            <button  class="btn btn-link btn-danger delete-notice-btn">
+                                                                <i class="fa fa-trash"></i>
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 </div>
-                                            </li>
-                                        @endforeach
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-12">
+                                                            {{$notice->notice}}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <p>Keine Notizen hinterlegt</p>
+                                        @endforelse
                                     </ul>
                                 @else
                                     <p>Keine Notizen hinterlegt</p>
@@ -486,6 +502,51 @@
         document.querySelectorAll('.round-button').forEach(button => {
             button.addEventListener('click', function () {
                 this.style.display = 'none';
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            // Event-Listener für den Lösch-Button
+            $('.delete-notice-btn').click(function (e) {
+                e.preventDefault();
+                var form = $(this).closest('form');
+                var url = form.attr('action');
+
+                Swal.fire({
+                    title: 'Bist du sicher?',
+                    text: 'Diese Notiz wird dauerhaft gelöscht!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ja, löschen!',
+                    cancelButtonText: 'Abbrechen'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            data: form.serialize(),
+                            success: function (response) {
+                                Swal.fire(
+                                    'Gelöscht!',
+                                    'Die Notiz wurde erfolgreich gelöscht.',
+                                    'success'
+                                );
+                                form.closest('.card').remove();
+                            },
+                            error: function (response) {
+                                Swal.fire(
+                                    'Fehler!',
+                                    'Es gab ein Problem beim Löschen der Notiz.',
+                                    'error'
+                                );
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>

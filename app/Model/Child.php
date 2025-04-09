@@ -173,4 +173,16 @@ class Child extends Model implements HasMedia
 
         return $notice;
     }
+
+    public function noticeToday()
+    {
+        $notice = Cache::remember('notice' . $this->id, 300, function () {
+            return $this->notice()
+                ->whereDate('date', today())
+                ->first();
+        });
+        return $notice;
+    }
+
+
 }

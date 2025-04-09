@@ -9,6 +9,7 @@ use App\Model\ReadReceipts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use function PHPUnit\Framework\isFalse;
 
 class ReadReceiptsController extends Controller
 {
@@ -39,10 +40,9 @@ class ReadReceiptsController extends Controller
         foreach ($posts as $post) {
             $users = $post->users;
             $receipts = $post->receipts;
-            $user_ids = $users->pluck('id');
-            $user_ids = $users->diff($receipts->pluck('user_id'));
+
             foreach ($users as $user) {
-                if ($user_ids->contains($user->id)) {
+                if ($receipts->where('user_id', $user->id)->isEmpty()) {
                     $mail = new RemindReadReceiptMail($user->email, $user->name, $post->header, $post->archiv_ab->format('d.m.Y'), $post->id);
                     $mail->subject('Lesebestätigung fehlt: ' . $post->thema);
                     try {

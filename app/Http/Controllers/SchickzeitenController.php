@@ -325,6 +325,14 @@ class SchickzeitenController extends Controller
         $settings_bis = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_bis);
 
         if ($request->type == 'genau'){
+
+            if ($request->time == '' ) {
+                return redirect()->back()->with([
+                    'type' => 'warning',
+                    'Meldung' => 'Bitte geben Sie eine Zeit an',
+                ]);
+            }
+
             $time = Carbon::createFromFormat('H:i', $request->time);
 
             if ($time->lt($settings_ab) || $time->gt($settings_bis)) {
@@ -513,7 +521,7 @@ class SchickzeitenController extends Controller
         $users = User::has('schickzeiten')->get();
 
         foreach ($users as $user) {
-            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten));
+            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children ));
         }
     }
 

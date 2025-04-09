@@ -168,4 +168,23 @@ body {
     height: 1.5rem;
 }
 
+.blink {
+    animation: blinker 3s linear infinite;
 
+}
+
+@keyframes blinker {
+    0% { background-color: #fda449;} /* Blau */
+    25% { background-color: #f13917;  } /* Gelb */
+    50% { background-color: #5e5efd; } /* Orange */
+    75% { background-color: #f13917; } /* Gelb */
+    100% { background-color: #fda449; } /* Zurück zu Blau */
+}
+
+.notice{
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

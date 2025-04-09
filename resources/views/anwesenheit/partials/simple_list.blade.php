@@ -42,7 +42,7 @@
 
 
                                                     @if($child->hasNotice())
-                                                        <div class="bg-info text-white rounded-circle" style="width: 25px; height: 25px; display: flex; justify-content: center; align-items: center;">
+                                                        <div class=" text-white notice rounded-circle @if($child->noticeToday()->isNew()) blink @else bg-info @endif" >
                                                             <i class="fas fa-envelope"></i>
                                                         </div>
                                                     @endif

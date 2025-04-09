@@ -396,7 +396,7 @@ class NachrichtenController extends Controller
             default:
 
 
-                    $pattern = '^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$^';
+                    $pattern = '/^(0?[1-9]|[12]\d|3[01]).(0?[1-9]|1[0-2]).([12]\d{3})$/';
 
 
 

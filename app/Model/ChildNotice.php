@@ -38,4 +38,9 @@ class ChildNotice extends Model
     {
         return $query->whereDate('date', '>=', today());
     }
+
+    public function isNew()
+    {
+        return $this->updated_at->greaterThanOrEqualTo(now()->subMinutes(20));
+    }
 }
