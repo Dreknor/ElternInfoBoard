@@ -3,11 +3,7 @@
 
 @section('content')
         <div class="container-fluid">
-            <p class="alert alert-info">
-                <b>Im Test:</b> Das System zur Anmeldung und Abmeldung von Kindern im Hort, die Erfassung der tagesaktuellen Schickzeiten und Nachrichten befinden sich derzeit in der Testphase. <br>
-                 Ob diese Funktionen dauerhaft eingeführt werden, steht noch nicht fest.<br><br>
-                Bitte beachten Sie, dass es zu Fehlern kommen kann. Sollten Sie Fehler entdecken, so melden Sie uns dies bitte.
-            </p>
+
             <div class="row">
                 @foreach($children as $child)
                     <div class="col-lg-4 col-md-6 col-sm-12">
