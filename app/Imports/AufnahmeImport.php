@@ -59,7 +59,10 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changePassword' => 1,
                         'password' => Hash::make(config('app.import_aufnahme')),
                         'lastEmail' => Carbon::now(),
-                    ]);
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                        'deleted_at' => null,
+                    ])->withTrashed();
 
                 if (! $user1->wasRecentlyCreated) {
                     $user1->update([
@@ -83,7 +86,10 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changePassword' => 1,
                         'password' => Hash::make(config('app.import_aufnahme')),
                         'lastEmail' => Carbon::now(),
-                    ]);
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                        'deleted_at' => null,
+                    ])->withTrashed();
 
                 if (! $user2->wasRecentlyCreated) {
                     $user2->update([
