@@ -15,7 +15,8 @@ class ChildCheckIn extends Model
         'checked_out',
         'should_be',
         'date',
-        'lock_at'
+        'lock_at',
+        'comment',
     ];
 
 

@@ -415,6 +415,8 @@ Route::middleware('auth')->group(function () {
         Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
         Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
         Route::post('care/abfrage/anwesenheit/download', [\App\Http\Controllers\Anwesenheit\CareController::class, 'downloadAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.download');
+        Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
+        Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
 
     });
 

@@ -16,14 +16,12 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-use function _PHPStan_9488d3497\RingCentral\Psr7\_caseless_remove;
 
 class SchickzeitenController extends Controller
 {
@@ -76,7 +74,7 @@ class SchickzeitenController extends Controller
         ]);
     }
 
-    public function anwesenheitTrue(ChildCheckIn $childCheckIn)
+    public function anwesenheitTrue(ChilChildCheckIn $childCheckIn)
     {
         if (!auth()->user()->children()->contains($childCheckIn->child)) {
             return redirect()->back()->with([
@@ -147,7 +145,7 @@ class SchickzeitenController extends Controller
 
         $abfragen = ChildCheckIn::query()
             ->where('date', '>', today())
-            ->get(['date', 'should_be', 'child_id']);
+            ->get(['date', 'should_be', 'child_id', 'comment']);
 
 
         $abfragen_daten = [];
@@ -155,7 +153,9 @@ class SchickzeitenController extends Controller
         foreach ($abfragen->groupBy('date') as $datum) {
             $date = $datum->first()->date->format('Y-m-d');
 
-            $abfragen_daten[$date] = count($datum->where('should_be', true));
+
+            $abfragen_daten[$date]['count'] = count($datum->where('should_be', true));
+            $abfragen_daten[$date] ['comment'] = $datum->first()->comment;
 
 
         }
@@ -670,5 +670,40 @@ class SchickzeitenController extends Controller
             'type' => 'success',
             'Meldung' => 'Gespeichert',
         ]);
+    }
+
+    public function updateAnwesenheitComment(Request $request)
+    {
+        $request->validate([
+            'comment' => 'required|string',
+            'date' => 'required|date',
+        ]);
+
+        $childCheckIn = ChildCheckIn::where('date', $request->date)
+            ->update([
+                'comment' => $request->comment,
+            ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Kommentar gespeichert',
+        ]);
+    }
+
+    public function removeAnwesenheitComment(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $childCheckIn = ChildCheckIn::where('date', $request->date)
+            ->update([
+                'comment' => null,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kommentar entfernt',
+        ], 200);
     }
 }

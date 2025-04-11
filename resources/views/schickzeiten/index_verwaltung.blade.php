@@ -167,26 +167,50 @@
                                 Anzahl
                             </th>
                             <th>
-
+                                Kommentar
+                            </th>
+                            <th>
+                                Aktionen
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($abfragen as $date => $abfrage)
+
                             <tr>
                                 <td class="border-right">
                                     {{$date}}
                                 </td>
                                 <td>
-                                    {{$abfrage}}
+                                    {{$abfrage['count']}}
                                 </td>
                                 <td>
+                                    {{$abfrage['comment']}}
+                                </td>
+
+                                <td>
+                                    <div class="row">
+
                                     @if(\Carbon\Carbon::parse($date)->isFuture())
-                                        <form action="{{route('care.abfrage.destroy', ['date' => $date])}}" method="post" class="delete-form">
-                                            @csrf
-                                            @method('delete')
-                                            <button type="button" class="btn btn-link btn-danger text-danger delete-button"><i class="fa fa-trash"></i></button>
-                                        </form>
+                                            <div class="col">
+                                                <button type="button" class="btn btn-link edit-comment-button"
+                                                        data-date="{{ $date }}"
+                                                        data-comment="{{$abfragen['comment'] ?? ''}}">
+                                                    <i class="fa fa-edit"></i> Kommentar bearbeiten
+                                                </button>
+                                            </div>
+                                    @endif
+
+                                    @if(\Carbon\Carbon::parse($date)->isFuture())
+                                        <div class="col pull-right">
+                                            <form action="{{route('care.abfrage.destroy', ['date' => $date])}}" method="post" class="delete-form">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="button" class="btn btn-link btn-danger text-danger delete-button">
+                                                    <i class="fa fa-trash"></i> Abfrage für alle löschen
+                                                </button>
+                                            </form>
+                                        </div>
                                     @endif
                                 </td>
                             </tr>
@@ -247,6 +271,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="commentModalLabel">Kommentar bearbeiten</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="commentForm" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="comment">Kommentar</label>
+                            <textarea name="comment" id="comment" class="form-control" rows="3" required maxlength="256"></textarea>
+                        </div>
+                        <input type="hidden" name="date" id="commentDate">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+                        <button type="submit" class="btn btn-primary">Speichern</button>
+                        <button type="button" id="deleteComment" class="btn btn-danger">Löschen</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
@@ -274,6 +327,63 @@
                 });
             });
         });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const commentModal = document.getElementById('commentModal');
+            const commentForm = document.getElementById('commentForm');
+            const deleteButton = document.getElementById('deleteComment');
+
+            // Öffnen des Modals mit den entsprechenden Daten
+            document.querySelectorAll('.edit-comment-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const date = this.dataset.date;
+                    const comment = this.dataset.comment || '';
+
+                    document.getElementById('commentDate').value = date;
+                    document.getElementById('comment').value = comment;
+
+                    commentForm.action = `{{route('anwesenheit.comment.update')}}`;
+                    deleteButton.dataset.date = date;
+
+                    $(commentModal).modal('show');
+                });
+            });
+
+            // Löschen des Kommentars
+            deleteButton.addEventListener('click', function () {
+                const date = this.dataset.date;
+
+                Swal.fire({
+                    title: 'Sind Sie sicher?',
+                    text: 'Der Kommentar wird gelöscht!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ja, löschen!',
+                    cancelButtonText: 'Abbrechen'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`{{route('anwesenheit.comment.remove')}}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ date })
+                        }).then(response => {
+                            if (response.ok) {
+                                Swal.fire('Gelöscht!', 'Der Kommentar wurde gelöscht.', 'success');
+                                $(commentModal).modal('hide');
+                                location.reload();
+                            }
+                        });
+                    }
+                });
+            });
+        });
     </script>
+
 
 @endpush
