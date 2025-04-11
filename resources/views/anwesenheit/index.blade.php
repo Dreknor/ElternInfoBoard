@@ -91,11 +91,11 @@
 
                                 <div class="form-group" id="spaet_row">
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-6">
                                             <label for="ab">ab ... Uhr</label>
                                             <input type="time" class="form-control w-100" id="ab" name="ab">
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-6 ">
                                             <label for="spät.">bis ... Uhr</label>
                                             <input type="time" class="form-control w-100" id="spät." name="spaet">
                                         </div>
