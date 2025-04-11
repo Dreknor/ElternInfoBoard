@@ -377,7 +377,7 @@
                                                 <tr>
                                                     <th>Datum</th>
                                                     <th>angemeldet?</th>
-                                                    <th></th>
+                                                    <th>Hinweis</th>
                                                     <th></th>
                                                 </tr>
                                                 </thead>
