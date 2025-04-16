@@ -89,7 +89,7 @@
                                                             @endphp
                                                             @if($schickzeit->type == 'ab')
                                                                 @if($schickzeit->time_ab != '')
-                                                                    <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                    <span class="{{ $backgroundClass }} text-smaller">
                                                                          ab {{ $schickzeit->time_ab?->format('H:i') }}
                                                                     </span>
                                                                 @endif
