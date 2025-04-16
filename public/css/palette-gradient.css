@@ -1558,6 +1558,39 @@ body.horizontal-layout[data-color=bg-gradient-x-blue-purple-3] .content-wrapper-
   background-image: linear-gradient(to right, #00cef9, #00e6af);
   background-repeat: repeat-x; }
 
+.bg-gradient-directional-blue-grey-light {
+  background-image: -webkit-gradient(linear, left top, right top, from(#c0eeff), to(#e6e6e6));
+    background-image: -webkit-linear-gradient(left, #c0eeff, #e6e6e6);
+    background-image: -moz-linear-gradient(left, #c0eeff, #e6e6e6);
+    background-image: -o-linear-gradient(left, #c0eeff, #e6e6e6);
+    background-image: linear-gradient(to right, #c0eeff, #e6e6e6);
+  background-repeat: repeat-x; }
+
+.opacity-0 {
+  opacity: 0 !important; }
+
+.opacity-1 {
+    opacity: 1 !important; }
+
+.opacity-2 {
+    opacity: 0.2 !important; }
+.opacity-3 {
+    opacity: 0.3 !important; }
+.opacity-4 {
+    opacity: 0.4 !important;}
+.opacity-5 {
+    opacity: 0.5 !important; }
+.opacity-6 {
+    opacity: 0.6 !important; }
+.opacity-7 {
+    opacity: 0.7 !important; }
+.opacity-8 {
+    opacity: 0.8 !important; }
+.opacity-9 {
+    opacity: 0.9 !important; }
+
+
+
 
 @media (max-width: 767.98px) {
   body.horizontal-layout .main-menu-content {
