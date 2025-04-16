@@ -140,7 +140,9 @@ class SchickzeitenController extends Controller
         $children = Child::query()
             ->whereIn('group_id', $careSettings->groups_list)
             ->whereIn('class_id', $careSettings->class_list)
-            ->with('schickzeiten')->get();
+            ->with('schickzeiten')
+            ->orderBy('last_name')
+            ->get();
 
 
         $abfragen = ChildCheckIn::query()
