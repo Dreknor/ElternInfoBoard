@@ -32,7 +32,6 @@ class CareController extends Controller
     public function index($showAll = false)
     {
         $careSettings = new CareSetting();
-
         if ($showAll == 1) {
             return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
         } elseif ($showAll == 'off') {
@@ -55,6 +54,7 @@ class CareController extends Controller
             $childs = Child::query()
                 ->get();
         }
+
 
         return view('anwesenheit.index', [
             'children' => $childs,
@@ -324,5 +324,21 @@ class CareController extends Controller
 
 
 
+    }
+
+    public function getCheckIns(Request $request, $childId = null)
+    {
+        if ($childId) {
+            $checkIns = ChildCheckIn::with('child')
+                ->where('child_id', $childId)
+                ->whereDate('date', '>', today()->toDateString())
+                ->get();
+        } else {
+            return  response()->json([
+                'error' => 'Child ID is required.',
+            ], 400);
+        }
+
+        return response()->json($checkIns);
     }
 }
