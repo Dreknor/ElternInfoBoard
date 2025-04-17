@@ -405,7 +405,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
         Route::get('/anwesenheit/dailyCheckIn', [\App\Http\Controllers\Anwesenheit\CareController::class, 'dailyCheckIn']);
-        Route::get('/anwesenheit/checkins/liste', [\App\Http\Controllers\Anwesenheit\CareController::class, 'getCheckIns'])->name('checkins.api');
+        Route::get('/anwesenheit/checkins/{child}/liste', [\App\Http\Controllers\Anwesenheit\CareController::class, 'getCheckIns'])->name('checkins.api');
+        Route::post('/anwesenheit/should_be/{checkin}/toogle', [\App\Http\Controllers\Anwesenheit\CareController::class, 'toogleShouldBe'])->name('checkIn.shouldBe');
 
         Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);

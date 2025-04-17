@@ -326,19 +326,53 @@ class CareController extends Controller
 
     }
 
-    public function getCheckIns(Request $request, $childId = null)
+    public function getCheckIns(Child $child)
     {
-        if ($childId) {
-            $checkIns = ChildCheckIn::with('child')
-                ->where('child_id', $childId)
-                ->whereDate('date', '>', today()->toDateString())
-                ->get();
+        $checkIns = $child->checkIns()
+            ->whereDate('date', '>=', now()->toDateString())
+            ->get();
+
+        if ($checkIns) {
+            return response()->json([
+                'success' => true,
+                'data' => $checkIns,
+            ]);
         } else {
-            return  response()->json([
-                'error' => 'Child ID is required.',
-            ], 400);
+            return response()->json([
+                'success' => false,
+                'data' => null,
+            ]);
+        }
+    }
+
+    public function toogleShouldBe( $checkIn)
+    {
+
+        if (!auth()->user()->can('edit schickzeiten')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sie haben keine Berechtigung für diese Aktion.',
+            ]);
         }
 
-        return response()->json($checkIns);
+        $checkIn = ChildCheckIn::query()
+            ->where('id', $checkIn)
+            ->first();
+
+        if (!$checkIn) {
+            return response()->json([
+                'success' => false,
+                'message' => 'CheckIn nicht gefunden.',
+            ]);
+        }
+
+        $checkIn->update([
+            'should_be' => !$checkIn->should_be,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $checkIn,
+        ]);
     }
 }

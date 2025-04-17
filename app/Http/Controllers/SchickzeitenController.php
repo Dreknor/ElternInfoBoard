@@ -74,7 +74,7 @@ class SchickzeitenController extends Controller
         ]);
     }
 
-    public function anwesenheitTrue(ChilChildCheckIn $childCheckIn)
+    public function anwesenheitTrue(ChildCheckIn $childCheckIn)
     {
         if (!auth()->user()->children()->contains($childCheckIn->child)) {
             return redirect()->back()->with([

@@ -164,8 +164,6 @@
                                         <tr>
                                             <th>Datum</th>
                                             <th>angemeldet?</th>
-                                            <th>Hinweis</th>
-                                            <th></th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -321,40 +319,34 @@
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
                     const childData = JSON.parse(this.dataset.child);
-                    const childId = childData.id; // ChildID aus den Daten des Kindes
+                    const childId = childData.id;
 
-                    // API-Call, um die Check-Ins für das spezifische Kind zu laden
-                    fetch(`{{ route('checkins.api') }}?child_id=${childId}`)
+
+                    const url = `{{ route('checkins.api',['child' => 'childID']) }}`.replace('childID', childId);
+
+                    fetch(url)
                         .then(response => response.json())
                         .then(data => {
                             tableBody.innerHTML = ''; // Tabelle leeren
-
-                            data.forEach(checkIn => {
+                            if (data.length === 0) {
                                 const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td colspan="2">Keine Check-Ins gefunden</td>
+                                `;
+                                tableBody.appendChild(row);
+                                return;
+                            }
 
-                                // Datum
-                                const dateCell = document.createElement('td');
-                                dateCell.textContent = checkIn.date;
-                                row.appendChild(dateCell);
-
-                                // Angemeldet
-                                const checkedInCell = document.createElement('td');
-                                checkedInCell.textContent = checkIn.checked_in ? 'Ja' : 'Nein';
-                                row.appendChild(checkedInCell);
-
-                                // Hinweis
-                                const noticeCell = document.createElement('td');
-                                noticeCell.textContent = checkIn.notice || 'Keine Hinweise';
-                                row.appendChild(noticeCell);
-
-                                // Aktionen
-                                const actionCell = document.createElement('td');
-                                const editButton = document.createElement('button');
-                                editButton.textContent = 'Bearbeiten';
-                                editButton.classList.add('btn', 'btn-primary');
-                                actionCell.appendChild(editButton);
-                                row.appendChild(actionCell);
-
+                            data =data.data;
+                            data.forEach(checkin => {
+                                $toogleUrl = "{{ route('checkIn.shouldBe', ['checkin' => ':checkin']) }}";
+                                $toogleUrl.replace(':checkin', checkin.id)
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${new Date(checkin.date).toLocaleDateString('de-DE')}</td>
+                                    <td>${checkin.should_be ? 'Ja' : 'Nein'}</td>
+                                    <td><button class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id})"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
+                                `;
                                 tableBody.appendChild(row);
                             });
                         })
@@ -364,5 +356,19 @@
                 });
             });
         });
+
+        function toogle_should_be(checkinId) {
+            const url = "{{ route('checkIn.shouldBe', ['checkin' => ':checkin']) }}".replace(':checkin', checkinId);
+            console.log('click');
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                }
+            }).done(function () {
+                window.location.reload();
+            });
+        }
     </script>
 @endpush
