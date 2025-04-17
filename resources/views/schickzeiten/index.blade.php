@@ -316,74 +316,73 @@
                                                         </form>
                                                     </div>
                                                     <div class="card-body">
-                                                            <div class="container-fluid">
-                                                                <h6>
-                                                                    Neue tagesaktuelle Schickzeit anlegen
-                                                                </h6>
-                                                                <form
-                                                                    action="{{route('schickzeiten.store', ['child' => $child->id])}}"
-                                                                    method="post">
-                                                                    @csrf
-                                                                    <div class="form-group">
-                                                                        <label for="specific_date">Datum</label>
-                                                                        <input type="date" name="specific_date"
-                                                                               id="specific_date"
-                                                                               value="{{old('specific_date', \Carbon\Carbon::now()->format('Y-m-d'))}}"
-                                                                               class="form-control">
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label for="type">Typ</label>
-                                                                        <select name="type" class="custom-select"
-                                                                                id="type">
-                                                                            <option value="genau">genau</option>
-                                                                            <option value="ab">ab ... bis ... Uhr
-                                                                            </option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <div class="form-group" id="genauZeit">
-                                                                        <label for="time">Zeit</label>
-                                                                        <input name="time" id="time" type="time"
-                                                                               class="form-control"
-                                                                               min="{{$vorgaben->schicken_ab}}"
-                                                                               max="{{$vorgaben->schicken_bis}}"
-                                                                               value="{{old('time')}}">
-                                                                    </div>
-                                                                    <div class="form-group collapse" id="spaet_row">
-                                                                        <div class="container-fluid">
-                                                                            <div class="row">
-                                                                                <div class="col-md-6">
-                                                                                    <label for="ab">ab ...
-                                                                                        Uhr</label>
-                                                                                    <input name="time_ab"
-                                                                                           type="time"
-                                                                                           class="form-control"
-                                                                                           min="{{$vorgaben->schicken_ab}}"
-                                                                                           max="{{$vorgaben->schicken_bis}}"
-                                                                                           id="spät."
-                                                                                           value="{{old('time_ab')}}">
-                                                                                </div>
-                                                                                <div class="col-md-6 ">
-                                                                                    <label for="spät.">spätestens
-                                                                                        (optional)</label>
-                                                                                    <input name="time_spaet"
-                                                                                           type="time"
-                                                                                           class="form-control"
-                                                                                           min="{{$vorgaben->schicken_ab}}"
-                                                                                           max="{{$vorgaben->schicken_bis}}"
-                                                                                           id="spät."
-                                                                                           value="{{old('time_spaet')}}">
-                                                                                </div>
+                                                        <div class="container-fluid">
+                                                            <h6>
+                                                                Neue tagesaktuelle Schickzeit anlegen
+                                                            </h6>
+                                                            <form
+                                                                action="{{route('schickzeiten.store', ['child' => $child->id])}}"
+                                                                method="post">
+                                                                @csrf
+                                                                <div class="form-group">
+                                                                    <label for="specific_date">Datum</label>
+                                                                    <input type="date" name="specific_date"
+                                                                           id="specific_date"
+                                                                           value="{{old('specific_date', \Carbon\Carbon::now()->format('Y-m-d'))}}"
+                                                                           class="form-control">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="type">Typ</label>
+                                                                    <select name="type" class="custom-select"
+                                                                            id="type">
+                                                                        <option value="genau">genau</option>
+                                                                        <option value="ab">ab ... bis ... Uhr
+                                                                        </option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group" id="genauZeit">
+                                                                    <label for="time">Zeit</label>
+                                                                    <input name="time" id="time" type="time"
+                                                                           class="form-control"
+                                                                           min="{{$vorgaben->schicken_ab}}"
+                                                                           max="{{$vorgaben->schicken_bis}}"
+                                                                           value="{{old('time')}}">
+                                                                </div>
+                                                                <div class="form-group collapse" id="spaet_row">
+                                                                    <div class="container-fluid">
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <label for="ab">ab ...
+                                                                                    Uhr</label>
+                                                                                <input name="time_ab"
+                                                                                       type="time"
+                                                                                       class="form-control"
+                                                                                       min="{{$vorgaben->schicken_ab}}"
+                                                                                       max="{{$vorgaben->schicken_bis}}"
+                                                                                       id="spät."
+                                                                                       value="{{old('time_ab')}}">
+                                                                            </div>
+                                                                            <div class="col-md-6 ">
+                                                                                <label for="spät.">spätestens
+                                                                                    (optional)</label>
+                                                                                <input name="time_spaet"
+                                                                                       type="time"
+                                                                                       class="form-control"
+                                                                                       min="{{$vorgaben->schicken_ab}}"
+                                                                                       max="{{$vorgaben->schicken_bis}}"
+                                                                                       id="spät."
+                                                                                       value="{{old('time_spaet')}}">
                                                                             </div>
                                                                         </div>
                                                                     </div>
+                                                                </div>
 
-                                                                    <button type="submit"
-                                                                            class="btn btn-primary btn-block">Neue
-                                                                        individuelle Schickzeit
-                                                                        anlegen
-                                                                    </button>
-                                                                </form>
-                                                            </div>
+                                                                <button type="submit"
+                                                                        class="btn btn-primary btn-block">Neue
+                                                                    individuelle Schickzeit
+                                                                    anlegen
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -391,8 +390,8 @@
                                         @endforeach
                                     </div>
                                 </div>
-
-                    </div>
+                            </div>
+                        </div>
                     <div class="tab-pane fade" id="Anwesenheitsabfrage" role="tabpanel" aria-labelledby="Anwesenheitsabfrage-tab">
                         <div class="container-fluid">
                             <div class="card">
