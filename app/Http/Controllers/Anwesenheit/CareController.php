@@ -374,6 +374,8 @@ class CareController extends Controller
             'should_be' => !$checkIn->should_be,
         ]);
 
+        Cache::forget('should_be_today' . $checkIn->child_id);
+
         return response()->json([
             'success' => true,
             'data' => $checkIn,
