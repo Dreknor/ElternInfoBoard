@@ -330,6 +330,10 @@ class CareController extends Controller
     {
         $checkIns = $child->checkIns()
             ->whereDate('date', '>=', now()->toDateString())
+            ->where(function ($query) {
+                $query->where('checked_in', false)
+                    ->orWhere('checked_out', false);
+            })
             ->get();
 
         if ($checkIns) {
