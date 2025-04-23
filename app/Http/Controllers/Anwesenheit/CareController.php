@@ -330,7 +330,6 @@ class CareController extends Controller
     {
         $checkIns = $child->checkIns()
             ->whereDate('date', '>=', now()->toDateString())
-            ->whereDate('created_at', '<', today()->toDateString())
             ->get();
 
         if ($checkIns) {
