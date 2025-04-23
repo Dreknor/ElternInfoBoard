@@ -329,7 +329,8 @@ class CareController extends Controller
     public function getCheckIns(Child $child)
     {
         $checkIns = $child->checkIns()
-            ->whereDate('date', '>', now()->toDateString())
+            ->whereDate('date', '>=', now()->toDateString())
+            ->whereDate('created_at', '<', today()->toDateString())
             ->get();
 
         if ($checkIns) {
