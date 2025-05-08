@@ -42,6 +42,31 @@ class Child extends Model implements HasMedia
         return $this->belongsToMany(User::class, 'child_user');
     }
 
+    public function arbeitsgemeinschaften()
+    {
+        return $this->belongsToMany(Arbeitsgemeinschaft::class, 'arbeitsgemeinschaften_participants', 'participant_id', 'ag_id')
+            ->where('end_date', '>', now());
+    }
+
+    public function arbeitsgemeinschaften_today()
+    {
+        return Cache::remember('arbeitsgemeinschaften_today_' . $this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function () {
+            return $this->arbeitsgemeinschaften()
+                ->where('weekday', (now()->dayOfWeek))
+                ->where('end_date', '>', now())
+                ->where(function ($query) {
+                    $query->whereDate('start_date', '<=', today())
+                        ->orWhereNull('start_date');
+                })
+                ->where(function ($query) {
+                    $query->whereDate('end_date', '>=', today())
+                        ->orWhereNull('end_date');
+                })
+                ->get();
+        });
+
+
+    }
 
 
     public function checkedIn()

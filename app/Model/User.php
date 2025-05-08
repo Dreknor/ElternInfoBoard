@@ -355,4 +355,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
+
+
 }

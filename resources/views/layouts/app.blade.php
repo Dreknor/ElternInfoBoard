@@ -20,7 +20,7 @@
     <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet"/>
     <link href="{{asset('css/paper-dashboard.css')}}" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet"/>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.12.1/font/bootstrap-icons.min.css">
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}?v=1" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/app.css')}}?v=2" rel="stylesheet"> <!--load all styles -->

@@ -9,6 +9,7 @@ use App\Mail\AktuelleInformationen;
 use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
 use App\Mail\newUnveroeffentlichterBeitrag;
+use App\Model\Arbeitsgemeinschaft;
 use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Notification;
@@ -29,6 +30,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use PDF;
@@ -577,6 +579,10 @@ class NachrichtenController extends Controller
                     }
             })->unique()->sortByDesc('updated_at')->all();
 
+            if (!count($Nachrichten) > 0) {
+                $Nachrichten = [];
+            }
+
             //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')) {
                 $diskussionen = Discussion::whereDate('updated_at', '>=', $user->lastEmail)->get();
@@ -590,11 +596,27 @@ class NachrichtenController extends Controller
             //neue Termine
             $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
             $termine = $termine->unique();
+
+            //Neue Arbeitsgemeinschaften
+            if ($user->can('view GTA')) {
+               $arbeitsgemeinschaften = Arbeitsgemeinschaft::query()
+                    ->where('created_at', '>', $user->lastEmail)
+                    ->whereHas('groups', function ($query) use ($user) {
+                       $query->whereIn('groups.id', $user->groups->pluck('id'));
+                        })
+                    ->get();
+                $gta = $arbeitsgemeinschaften->unique();
+            } else {
+                $gta = [];
+            }
+
+
             //@ToDo neue Dateien
 
-            if (count($Nachrichten) > 0) {
+            if (count($Nachrichten) > 0 or count($termine) > 0 or count($listen) > 0 or count($diskussionen) > 0 or count($gta) > 0) {
                 try {
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine));
+
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine, $gta));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
@@ -605,6 +627,14 @@ class NachrichtenController extends Controller
                         ]);
                     }
                 } catch (Exception $exception) {
+
+                    Log::error('Fehler beim Mailversand', [
+                        'user' => $user->id,
+                        'email' => $user->email,
+                        'Nachrichten' => $Nachrichten,
+                        'exception' => $exception,
+                    ]);
+
                     $admin = Role::findByName('Administrator');
                     $admin = $admin->users()->first();
 

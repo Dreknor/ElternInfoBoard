@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ActiveDiseaseController;
 use App\Http\Controllers\Anwesenheit\ChildNoticeController;
+use App\Http\Controllers\Arbeitsgemeinschaften\ArbeitsgemeinschaftController;
+use App\Http\Controllers\Arbeitsgemeinschaften\GTAController;
 use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BenutzerController;
@@ -427,6 +429,41 @@ Route::middleware('auth')->group(function () {
     Route::post('child/{child}/notice', [ChildNoticeController::class, 'store'])->name('child.notice.store');
     Route::delete('child/notice/{childNotice}', [ChildNoticeController::class, 'destroy'])->name('child.notice.destroy');
     Route::get('child/{child}/notice', [ChildNoticeController::class, 'show'])->name('child.notice.show');
+
+    Route::middleware(['can:edit GTA'])->group(function () {
+        Route::get('verwaltung/arbeitsgemeinschaften', [GTAController::class, 'index'])
+            ->name('verwaltung.arbeitsgemeinschaften.index');
+        Route::get('verwaltung/arbeitsgemeinschaften/create', [GTAController::class, 'create'])
+            ->name('verwaltung.arbeitsgemeinschaften.create');
+        Route::post('verwaltung/arbeitsgemeinschaften', [GTAController::class, 'store'])
+            ->name('verwaltung.arbeitsgemeinschaften.store');
+        Route::get('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/edit', [GTAController::class, 'edit'])
+            ->name('verwaltung.arbeitsgemeinschaften.edit');
+        Route::put('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}', [GTAController::class, 'update'])
+            ->name('verwaltung.arbeitsgemeinschaften.update');
+        Route::delete('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}', [GTAController::class, 'destroy'])
+            ->name('verwaltung.arbeitsgemeinschaften.destroy');
+
+        // Teilnehmerverwaltung
+        Route::get('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer', [GTAController::class, 'showParticipants'])
+            ->name('verwaltung.arbeitsgemeinschaften.teilnehmer');
+        Route::post('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer', [GTAController::class, 'addParticipant'])
+            ->name('verwaltung.arbeitsgemeinschaften.teilnehmer.add');
+        Route::delete('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer/{child}', [GTAController::class, 'removeParticipant'])
+            ->name('verwaltung.arbeitsgemeinschaften.teilnehmer.remove');
+
+    });
+
+    Route::middleware(['can:view GTA'])->group(function () {
+        Route::get('/arbeitsgemeinschaften', [ArbeitsgemeinschaftController::class, 'index'])
+            ->name('arbeitsgemeinschaften.index');
+        Route::get('/arbeitsgemeinschaften/show/{arbeitsgemeinschaft}', [ArbeitsgemeinschaftController::class, 'index'])
+            ->name('arbeitsgemeinschaften.show');
+        Route::post('/arbeitsgemeinschaften/{arbeitsgemeinschaft}/anmelden', [ArbeitsgemeinschaftController::class, 'anmelden'])
+            ->name('arbeitsgemeinschaften.anmelden');
+    });
+
+
 
 });
 

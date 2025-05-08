@@ -100,12 +100,32 @@
                                 {{$termin->start->format('d.m. ')}} - {{$termin->ende->format('d.m.Y')}}
                             @else
                                 {{$termin->start->format('d.m.Y')}}
-                            @endif )
+                            @endif
                         </li>
                     @endforeach
                 </ul>
             </div>
             @endif
+
+            @if(isset($gta))
+                <div class="card">
+                    <div class="card-header">
+                        <p>
+                            Folgende GTA wurden veröffentlicht:
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            @foreach($gta as $g)
+                                <li class="list-group-item">
+                                    {{$g->name}}
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <p>
                 Für genauere Inhalte loggen Sie sich bitte ein.
             </p>
@@ -114,5 +134,7 @@
                 <a href="{{config('app.url')}}">{{config('app.name')}}</a>
             </p>
         </div>
+</div>
+
 </body>
 </html>
