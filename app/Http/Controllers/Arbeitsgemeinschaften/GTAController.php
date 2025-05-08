@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Arbeitsgemeinschaften;
 
+use App\Exports\ParticipantsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Arbeitsgemeinschaften\CreateGTARequest;
 use App\Http\Requests\Arbeitsgemeinschaften\EditGTARequest;
 use App\Model\Arbeitsgemeinschaft;
 use App\Model\Child;
 use App\Model\Group;
-use App\Model\GTA;
 use App\Model\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class GTAController extends Controller
 {
@@ -201,5 +203,12 @@ class GTAController extends Controller
             ->with('success', 'Teilnehmer wurde entfernt.');
     }
 
+
+    public function exportParticipants(Arbeitsgemeinschaft $arbeitsgemeinschaft)
+    {
+        $fileName = 'teilnehmer_' . Str::slug($arbeitsgemeinschaft->name) . '_' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(new ParticipantsExport($arbeitsgemeinschaft), $fileName);
+    }
 
 }

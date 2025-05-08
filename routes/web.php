@@ -451,6 +451,9 @@ Route::middleware('auth')->group(function () {
             ->name('verwaltung.arbeitsgemeinschaften.teilnehmer.add');
         Route::delete('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer/{child}', [GTAController::class, 'removeParticipant'])
             ->name('verwaltung.arbeitsgemeinschaften.teilnehmer.remove');
+        Route::get('/verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/export',
+            [GTAController::class, 'exportParticipants'])
+            ->name('verwaltung.arbeitsgemeinschaften.export');
 
     });
 

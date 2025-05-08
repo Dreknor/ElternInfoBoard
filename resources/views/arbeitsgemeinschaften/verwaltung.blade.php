@@ -76,6 +76,17 @@
 
                                        </div>
                                        <div class="col">
+                                           <a href="{{ route('verwaltung.arbeitsgemeinschaften.export', $ag) }}"
+                                              class="btn btn-success btn-sm"
+                                              data-bs-toggle="tooltip"
+                                              data-bs-placement="top"
+                                              title="Teilnehmerliste exportieren">
+                                               <i class="bi bi-download"></i>
+                                               <span class="button-text">Exportieren</span>
+                                           </a>
+                                       </div>
+
+                                       <div class="col">
                                            <a href="{{ route('verwaltung.arbeitsgemeinschaften.edit', $ag) }}"
                                               class="btn btn-sm btn-primary"
                                               data-bs-toggle="tooltip"
