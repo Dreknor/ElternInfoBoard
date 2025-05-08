@@ -49,7 +49,7 @@ class GTAController extends Controller
      */
     public function create()
     {
-        $managers = User::role('Mitarbeiter')->get();
+        $managers = User::role('Mitarbeiter')->orderBy('name')->get();
         $groups = Group::all();
 
 
@@ -95,7 +95,7 @@ class GTAController extends Controller
      */
     public function edit(Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
-        $managers = User::role('Mitarbeiter')->get();
+        $managers = User::role('Mitarbeiter')->orderBy('name')->get();
         $groups = Group::all();
 
 
