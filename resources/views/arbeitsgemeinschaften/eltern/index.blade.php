@@ -63,9 +63,6 @@
                                                     Abmeldungen können nur über die Schule vorgenommen werden.
                                                 </p>
                                             </div>
-
-                                        @else
-
                                         @endif
 
                                     </div>
