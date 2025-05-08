@@ -157,14 +157,20 @@ class GTAController extends Controller
     public function showParticipants(Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
         $participants = $arbeitsgemeinschaft->participants()
-            ->with('group')
+            ->with(['group', 'class'])
             ->orderBy('last_name')
             ->get();
 
         // Hole alle Kinder, die in den erlaubten Gruppen sind
-        $availableChildren = Child::whereHas('group', function ($query) use ($arbeitsgemeinschaft) {
-            $query->whereIn('groups.id', $arbeitsgemeinschaft->groups->pluck('id'));
-        })
+        $availableChildren = Child::query()
+            ->where(function ($query) use ($arbeitsgemeinschaft) {
+                $query->whereHas('group', function ($q) use ($arbeitsgemeinschaft) {
+                    $q->whereIn('groups.id', $arbeitsgemeinschaft->groups->pluck('id'));
+                })->orWhereHas('class', function ($q) use ($arbeitsgemeinschaft) {
+                    $q->whereIn('groups.id', $arbeitsgemeinschaft->groups->pluck('id'));
+                });
+            })
+
             ->whereDoesntHave('arbeitsgemeinschaften', function ($query) use ($arbeitsgemeinschaft) {
                 $query->where('arbeitsgemeinschaften.id', $arbeitsgemeinschaft->id);
             })
