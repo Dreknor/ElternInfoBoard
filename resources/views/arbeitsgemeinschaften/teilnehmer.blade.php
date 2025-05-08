@@ -43,7 +43,7 @@
                                     <label for="child_id" class="form-label">Kind auswählen</label>
                                     <select name="child_id" id="child_id" class="custom-select" required>
                                         <option value="">Bitte wählen...</option>
-                                        @foreach($availableChildren as $child)
+                                        @foreach($availableChildren->sortBy('last_name') as $child)
                                             <option value="{{ $child->id }}">
                                                 {{ $child->last_name }}, {{ $child->first_name }}
                                             </option>
