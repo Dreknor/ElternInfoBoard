@@ -10,7 +10,7 @@
         <div class="card-body">
             <div class="row row-cols-1 row-cols-md-2 g-4">
                 @forelse($arbeitsgemeinschaften as $ag)
-                    <div class="col">
+                    <div class="col-lg-4 mb-4">
                         <div class="card h-100 bg-light border">
                             <div class="card-body">
                                 <div class="row">
