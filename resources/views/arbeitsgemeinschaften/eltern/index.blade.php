@@ -65,9 +65,7 @@
                                             </div>
 
                                         @else
-                                            <div class="alert alert-warning mt-2">
-                                                <p class="mb-1"><strong>Keine eigenen Kinder angemeldet.</strong></p>
-                                            </div>
+
                                         @endif
 
                                     </div>
@@ -76,7 +74,7 @@
                             </div>
                             <div class="card-footer">
                                 @if($ag->participants->count() >= $ag->max_participants)
-                                    <span class="badge bg-danger">Ausgebucht</span>
+                                    <span class="badge bg-danger p-3">Ausgebucht</span>
                                 @elseif($availableChildrenByAg[$ag->id]->isNotEmpty())
                                     <form action="{{ route('arbeitsgemeinschaften.anmelden', $ag) }}" method="POST">
                                         @csrf
@@ -95,7 +93,7 @@
                                         </div>
                                     </form>
                                 @else
-                                    <span class="badge bg-secondary">Keine Anmeldung möglich</span>
+                                    <span class="badge bg-secondary p-3">Keine Anmeldung möglich</span>
                                 @endif
 
                             </div>
