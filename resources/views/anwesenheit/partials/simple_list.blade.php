@@ -106,7 +106,7 @@
                                                     @endif
                                                         @if($child->arbeitsgemeinschaften_today()->isNotEmpty())
                                                                 @foreach($child->arbeitsgemeinschaften_today() as $ag)
-                                                                    <span class="badge badge-primary">
+                                                                    <span class="badge badge-primary mr-1">
                                                                 <i class="fas fa-users"></i> AG
                                                                 {{ $ag->name }}, <br> {{ $ag->start_time->format('H:i') }} - {{ $ag->end_time->format('H:i') }}
                                                             </span>
