@@ -31,7 +31,7 @@
                                         style="padding: 0.5rem;">
                                         <div class="container-fluid">
                                             <div class="row">
-                                                <div class="col-2 d-flex justify-content-center align-items-center">
+                                                <div class="col-auto d-flex justify-content-center align-items-center">
                                                     @if($child->should_be_today() and !$child->checkedIn())
                                                         <div class="bg-info text-white rounded-circle" style="width: 25px; height: 25px; display: flex; justify-content: center; align-items: center;">
                                                             <i class="fas fa-question"></i>
@@ -57,7 +57,7 @@
                                                 <div class="col-auto d-flex justify-content-center align-items-center name">
                                                         {{ $child->last_name }}, {{ $child->first_name }}
                                                 </div>
-                                                <div class="col-2">
+                                                <div class="col-auto d-flex justify-content-center align-items-center ">
                                                     @if($child->getSchickzeitenForToday()?->count() > 0 and $child->checkedIn())
                                                         @foreach($child->getSchickzeitenForToday()?->sortBy('type') as $schickzeit)
                                                             @php
