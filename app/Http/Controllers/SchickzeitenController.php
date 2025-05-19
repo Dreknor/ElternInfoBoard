@@ -626,6 +626,7 @@ class SchickzeitenController extends Controller
         }
 
         $schickzeit->delete();
+        Cache::forget('schickzeiten_'.$child->id);
 
         return redirect()->back()->with([
             'type' => 'warning',
