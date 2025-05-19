@@ -19,6 +19,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -591,7 +592,6 @@ class SchickzeitenController extends Controller
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
                 'users_id' => $child->parents()->first()->id
-
             ]);
         } else {
             $child->schickzeiten()->create([
@@ -604,6 +604,10 @@ class SchickzeitenController extends Controller
             ]);
 
         }
+
+        Cache::forget('schickzeiten_'.$child->id);
+
+
 
         return redirect()->back()->with([
             'type' => 'success',
