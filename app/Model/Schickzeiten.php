@@ -2,12 +2,15 @@
 
 namespace App\Model;
 
+use App\Observers\SchickzeitenObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy([SchickzeitenObserver::class])]
 class Schickzeiten extends Model
 {
     use SoftDeletes;
