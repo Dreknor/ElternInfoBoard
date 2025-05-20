@@ -98,6 +98,43 @@
                 </div>
             </div>
         </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Ende der Betreuungszeit
+                    <input type="time" class="form-control" name="end_time"
+                           value="{{$careSettings->end_time}}" >
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Geben Sie die Uhrzeit an, zu der die Betreuungszeit endet. Wird ein Kind nach dieser Uhrzeit abgemeldet, wird eine Nachricht an den unten angegebenen Mitarbeiter gesendet.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Mitarbeiter auswählen
+                    <select name="info_to" class="form-control">
+                        <option value="">Bitte auswählen...</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" @if($user->id == $careSettings->info_to) selected @endif>
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wählen Sie den Mitarbeiter aus, der die Nachricht erhalten soll.
+                </div>
+            </div>
+        </div>
+
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">
                 Save Settings

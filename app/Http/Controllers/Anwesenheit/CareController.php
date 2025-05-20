@@ -8,6 +8,9 @@ use App\Jobs\AnwesenheitNotificationJob;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\Groups;
+use App\Model\Notification;
+use App\Model\User;
+use App\Notifications\Push;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -81,6 +84,31 @@ class CareController extends Controller
                 'checked_out' => true,
             ]);
 
+
+        $careSettings = new CareSetting();
+
+        if ($careSettings->end_time != null and
+            Carbon::parse($careSettings->end_time)->lt(now()) and
+            $careSettings->info_to != null
+        ) {
+            try {
+                $user = User::find($careSettings->info_to);
+                if ($user) {
+                    Log::info($user);
+                    $notification = new Notification([
+                        'user_id' => $user->id,
+                        'type' => 'info',
+                        'title' => 'Verspätete Abmeldung',
+                        'message' => 'Das Kind ' . $child->first_name .' '. $child->last_name . ' wurde nicht rechtzeitig abgemeldet.',
+                    ]);
+                    $notification->save();
+                }
+            } catch (\Exception $e) {
+                Log::error('Error sending notification: ' . $e->getMessage());
+            }
+
+        }
+
         $parent = $child->parents()->first();
 
         if ($child->notification) {
@@ -143,12 +171,17 @@ class CareController extends Controller
 
         if ($child->notification) {
 
-            dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkIn'));
+            try {
+                dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkIn'));
 
-            if ($parent->sorgorgeberechtigter2) {
+                if ($parent->sorgorgeberechtigter2) {
 
-                dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
+                    dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
+                }
+            } catch (\Exception $e) {
+                Log::error('Error sending notification: ' . $e->getMessage());
             }
+
         }
 
 
