@@ -16,6 +16,8 @@ class SchickzeitenSetting extends Settings
     public int $schicken_intervall;
 
 
+
+
     public static function group(): string
     {
         return 'schicken';

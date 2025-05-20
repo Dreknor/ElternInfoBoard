@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\TestEmail;
 use App\Model\Groups;
 use App\Model\Module;
+use App\Model\User;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
@@ -43,6 +44,13 @@ class SettingsController extends Controller
         $schickzeitenSetting = new SchickzeitenSetting();
         $careSettings = new CareSetting();
 
+        $users = User::query()
+            ->whereHas('roles', function ($query) {
+                $query->where('name', '=', 'Mitarbeiter');
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('settings.index', [
             'settings' => $settings,
             'mailSettings' => $mailSettings,
@@ -51,6 +59,7 @@ class SettingsController extends Controller
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
+            'users' => $users,
         ]);
     }
 
@@ -95,6 +104,8 @@ class SettingsController extends Controller
                     'hide_groups_when_empty' => 'nullable|boolean',
                     'show_message_on_empty_group' => 'nullable|boolean',
                     'days_before_lock' => 'integer|min:1',
+                    'info_to' => 'nullable|exists:users,id',
+                    'end_time' => 'nullable|date_format:H:i',
                 ]);
 
                 $careSettings = new CareSetting();
@@ -104,6 +115,9 @@ class SettingsController extends Controller
                 $careSettings->class_list = $validated['class_list'] ?? [];
                 $careSettings->hide_groups_when_empty = $validated['hide_groups_when_empty'] ?? false;
                 $careSettings->show_message_on_empty_group = $validated['show_message_on_empty_group'] ?? false;
+                $careSettings->days_before_lock = $validated['days_before_lock'] ?? 7;
+                $careSettings->info_to = $validated['info_to'] ?? null;
+                $careSettings->end_time = $validated['end_time'] ?? null;
 
                 $careSettings->save();
 
