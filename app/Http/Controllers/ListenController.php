@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ListenExport;
 use App\Http\Requests\CreateListeRequest;
 use App\Http\Requests\UpdateListenRequest;
 use App\Model\Group;
@@ -14,6 +15,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
 
@@ -364,4 +366,16 @@ class ListenController extends Controller
 
 
     }
+
+    public function exportExcelTermine($id)
+    {
+        $liste = Liste::findOrFail($id);
+        $listentermine = $liste->termine;
+
+        return Excel::download(
+            new ListenExport($listentermine, $liste),
+            $liste->listenname . '.xlsx'
+        );
+    }
+
 }

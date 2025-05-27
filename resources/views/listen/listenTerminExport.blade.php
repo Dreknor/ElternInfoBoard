@@ -21,6 +21,7 @@
 </head>
 <body>
 <button onclick="generatePDF()"class="btn btn-info pull-right">Download as PDF</button>
+<a href="{{route('listen.export-excel.termine', ['id' => $Liste->id])}}" class="btn btn-info pull-right">Download as XLS</a>
 
 <div id="export">
     <h2>

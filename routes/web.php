@@ -240,6 +240,10 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/termine/{listen_termine}/copy', [ListenTerminController::class, 'copy']);
         Route::delete('listen/termine/{listen_termine}', [ListenTerminController::class, 'destroy']);
         Route::delete('listen/termine/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
+
+        //Export
+        Route::get('/listen/{id}/export-excel/termine', [ListenController::class, 'exportExcelTermine'])->name('listen.export-excel.termine');
+
         //EintragListe
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
