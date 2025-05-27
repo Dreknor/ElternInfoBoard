@@ -370,7 +370,12 @@ class ListenController extends Controller
     public function exportExcelTermine($id)
     {
         $liste = Liste::findOrFail($id);
-        $listentermine = $liste->termine;
+
+        if ($liste->type == 'termin'){
+            $listentermine = $liste->termine;
+        } else {
+            $listentermine = $liste->eintragungen;
+        }
 
         return Excel::download(
             new ListenExport($listentermine, $liste),
