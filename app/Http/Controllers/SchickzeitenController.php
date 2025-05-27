@@ -591,7 +591,6 @@ class SchickzeitenController extends Controller
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
                 'users_id' => $child->parents()->first()->id
-
             ]);
         } else {
             $child->schickzeiten()->create([
@@ -604,6 +603,7 @@ class SchickzeitenController extends Controller
             ]);
 
         }
+
 
         return redirect()->back()->with([
             'type' => 'success',

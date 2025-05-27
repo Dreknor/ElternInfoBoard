@@ -666,6 +666,7 @@ class NachrichtenController extends Controller
             $newPost->released = 0;
             $newPost->send_at = null;
             $newPost->author = auth()->id();
+            $newPost->published_wp_id = null;
             $newPost->save();
 
             if ($posts->rueckmeldung != null) {

@@ -57,7 +57,7 @@
                                                 <div class="col-auto d-flex justify-content-center align-items-center name">
                                                         {{ $child->last_name }}, {{ $child->first_name }}
                                                 </div>
-                                                <div class="col-2">
+                                                <div class="col-auto d-flex justify-content-center align-items-center ">
                                                     @if($child->getSchickzeitenForToday()?->count() > 0 and $child->checkedIn())
                                                         @foreach($child->getSchickzeitenForToday()?->sortBy('type') as $schickzeit)
                                                             @php
@@ -106,7 +106,7 @@
                                                     @endif
                                                         @if($child->arbeitsgemeinschaften_today()->isNotEmpty())
                                                                 @foreach($child->arbeitsgemeinschaften_today() as $ag)
-                                                                    <span class="badge badge-primary">
+                                                                    <span class="badge badge-primary ml-1">
                                                                 <i class="fas fa-users"></i> AG
                                                                 {{ $ag->name }}, <br> {{ $ag->start_time->format('H:i') }} - {{ $ag->end_time->format('H:i') }}
                                                             </span>
