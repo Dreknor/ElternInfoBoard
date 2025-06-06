@@ -1,6 +1,12 @@
 <div class="row mb-2">
     <div class="col-auto">
-        {{ $nachricht->autor?->name }}
+        @if($show_link && $nachricht->author != null)
+            <a href="{{ url('feedback'.'/'.$nachricht->author->id) }}" class="text-decoration-none">
+                <i class="fa fa-user"></i>  {{ $nachricht->autor?->name }}
+        @else
+            {{ $nachricht->autor?->name }}
+
+        @endif
     </div>
     <div class="col-auto ml-auto">
         <div class="d-md-none">

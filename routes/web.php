@@ -396,7 +396,7 @@ Route::middleware('auth')->group(function () {
     });
 
     //Feedback
-    Route::get('feedback', [FeedbackController::class, 'show']);
+    Route::get('feedback/{user?}', [FeedbackController::class, 'show']);
     Route::post('feedback', [FeedbackController::class, 'send']);
     Route::delete('feedback/{mail}', [FeedbackController::class, 'deleteMail'])->middleware('can:see mails');
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
