@@ -16,6 +16,7 @@
 
                 @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
                     <button onclick="generatePDF()"class="btn btn-info pull-right">Download as PDF</button>
+                    <a href="{{route('listen.export-excel.termine', ['id' => $liste->id])}}" class="btn btn-info pull-right">Download as XLS</a>
                 @endif
             </div>
             <div class="card-body">
