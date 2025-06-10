@@ -70,11 +70,20 @@ class NachrichtenController extends Controller
     public function index($archiv = null)
     {
 
-        $module = Cache::remember('module_contact', 3600, function () {
-            return Module::firstWhere(['setting' => 'Kontakt']);
-        });
+        try {
+            $module = Cache::remember('module_contact', 3600, function () {
 
-        $show_link = $module->options['active'] == 1;
+                return Module::query()->where(['setting' => 'Kontakt'])->first();
+            });
+
+            $show_link = $module->options['active'] ?? false;
+        } catch (Exception $exception) {
+            Log::error($exception->getMessage());
+            $show_link = false;
+        }
+
+
+
 
         return view('home', [
             'datum' => Carbon::now(),
