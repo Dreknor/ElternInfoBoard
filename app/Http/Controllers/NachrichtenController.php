@@ -76,6 +76,7 @@ class NachrichtenController extends Controller
                 return Module::query()->where(['setting' => 'Kontakt'])->first();
             });
 
+            Log::info($module);
             $show_link = $module->options['active'] ?? false;
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
