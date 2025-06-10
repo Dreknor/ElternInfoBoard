@@ -22,7 +22,7 @@
                                     <select name="mitarbeiter" class="custom-select">
                                         <option value="">Sekretariat</option>
                                         @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
-                                            <option value="{{$Mitarbeiter->id}}" @if(isset($user) and $user == $Mitarbeiter->id) selected @endif>
+                                            <option value="{{$Mitarbeiter->id}}" @if($Mitarbeiter->id == $id) selected @endif>
                                                 {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
                                             </option>
                                         @endforeach
