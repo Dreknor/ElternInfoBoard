@@ -40,7 +40,7 @@ class FeedbackController extends Controller
     /**
      * @return View
      */
-    public function show()
+    public function show($id = null)
     {
 
         if (auth()->user()->can('see mails')) {
@@ -63,6 +63,7 @@ class FeedbackController extends Controller
                 $q->where('name', 'show in contact form');
             })->orderBy('name')->get(),
             'mails' => $mails,
+            'id' => $id,
         ]);
     }
 

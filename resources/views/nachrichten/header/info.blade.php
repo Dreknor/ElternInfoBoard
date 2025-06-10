@@ -1,7 +1,8 @@
 <div class="row mb-2">
     <div class="col-auto">
-        @if(isset($show_link) && $nachricht->author != null)
-            <a href="{{ url('feedback'.'/'.$nachricht->author->id) }}" class="text-decoration-none">
+
+        @if(\Illuminate\Support\Facades\Cache::get('module_contact')->options['active'] == 1 && $nachricht->autor != null)
+            <a href="{{ url('feedback'.'/'.$nachricht->autor->id) }}" class="text-decoration-none">
                 <i class="fa fa-user"></i>  {{ $nachricht->autor?->name }}
         @else
             {{ $nachricht->autor?->name }}

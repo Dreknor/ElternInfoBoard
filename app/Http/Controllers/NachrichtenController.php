@@ -79,6 +79,7 @@ class NachrichtenController extends Controller
             Log::info($module->options['active']);
             $show_link = $module->options['active'] == 1 ?? false;
 
+
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
             $show_link = false;
@@ -90,7 +91,6 @@ class NachrichtenController extends Controller
         return view('home', [
             'datum' => Carbon::now(),
             'archiv' => $archiv,
-            'show_link' => $show_link,
         ]);
     }
 
