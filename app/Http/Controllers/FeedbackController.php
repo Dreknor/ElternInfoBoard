@@ -40,7 +40,7 @@ class FeedbackController extends Controller
     /**
      * @return View
      */
-    public function show()
+    public function show($user = null)
     {
 
         if (auth()->user()->can('see mails')) {
@@ -56,6 +56,8 @@ class FeedbackController extends Controller
                 ->orderBy('created_at', 'desc')->paginate(25);
         }
 
+
+
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
@@ -63,6 +65,7 @@ class FeedbackController extends Controller
                 $q->where('name', 'show in contact form');
             })->orderBy('name')->get(),
             'mails' => $mails,
+            'user' => $user,
         ]);
     }
 

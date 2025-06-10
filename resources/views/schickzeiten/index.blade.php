@@ -279,30 +279,43 @@
                                                         <h6 class="card-title">tagesaktuelle Schickzeiten</h6>
                                                         <div class="container-fluid">
                                                             <ul class="list-group">
-                                                               @forelse($child->schickzeiten as $schickzeit)
-                                                                   <li class="list-group-item">
-                                                                       <div class="row">
-                                                                            <div class="col-auto">
-                                                                                {{$schickzeit->specific_date?->format('d.m.Y')}}
+                                                                @forelse($child->schickzeiten->where('specific_date', '!=', NULL) as $schickzeit)
+                                                                    <li class="list-group-item">
+                                                                        <div class="row">
+                                                                            <div class="col-10">
+                                                                                <b>
+                                                                                    {{$schickzeit->specific_date->format('d.m.Y')}}:
+                                                                                </b>
+                                                                                @if($schickzeit->type =="genau")
+                                                                                    genau {{$schickzeit->time?->format('H:i')}} Uhr
+                                                                                @else
+                                                                                    ab {{$schickzeit->time_ab?->format('H:i')}}
+                                                                                    Uhr @if(!is_null($schickzeit->time_ab) && $schickzeit->time_spaet)
+                                                                                        -
+                                                                                    @endif {{$schickzeit->time_spaet?->format('H:i')}}
+                                                                                    Uhr
+                                                                                @endif
                                                                             </div>
-                                                                           <div class="col-auto">
-                                                                               @if($schickzeit->time != null)
-                                                                                      {{$schickzeit->time?->format('H:i')}}
-                                                                                  @else
-                                                                                        ab {{$schickzeit->time_ab?->format('H:i')}}
-                                                                                        Uhr @if(!is_null($schickzeit->time_ab) && $schickzeit->time_spaet)
-                                                                                         -
-                                                                                        @endif {{$schickzeit->time_spaet?->format('H:i')}}
-                                                                                        Uhr
-                                                                               @endif
-                                                                           </div>
-                                                                       </div>
-                                                                   </li>
+                                                                            <div class="col-1 pull-right">
+                                                                                <form
+                                                                                    action="{{route('schickzeiten.destroy', ['schickzeit' => $schickzeit->id])}}"
+                                                                                    method="post"
+                                                                                    class="form-inline">
+                                                                                    @csrf
+                                                                                    @method('delete')
+                                                                                    <button type="submit"
+                                                                                            class="btn btn-link btn-danger">
+                                                                                        <i class="fa fa-trash"></i>
+                                                                                    </button>
+                                                                                </form>
+
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
                                                                 @empty
-                                                                    <div class="list-group-item">
-                                                                        Keine tagesaktuelle Schickzeiten
-                                                                    </div>
-                                                              @endforelse
+                                                                    <b>tagesaktuelle Schickzeit</b>
+                                                                    Keine Zeit hinterlegt
+                                                                @endforelse
                                                             </ul>
                                                         </div>
                                                     </div>
