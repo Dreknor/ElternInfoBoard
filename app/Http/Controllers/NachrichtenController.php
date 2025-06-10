@@ -77,7 +77,7 @@ class NachrichtenController extends Controller
             });
 
             Log::info($module);
-            $show_link = $module->options['active'] ?? false;
+            $show_link = $module->options['active'] == 1 ?? false;
         } catch (Exception $exception) {
             Log::error($exception->getMessage());
             $show_link = false;
