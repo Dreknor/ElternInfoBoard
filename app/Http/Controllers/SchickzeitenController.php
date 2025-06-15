@@ -83,7 +83,7 @@ class SchickzeitenController extends Controller
             ]);
         }
 
-        if ($childCheckIn->lock_at && $childCheckIn->lock_at->lessThanOrEqualTo(now()->startOfDay())) {
+        if ($childCheckIn->lock_at && $childCheckIn->lock_at->isPast()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Anwesenheit kann nicht mehr geändert werden.',
