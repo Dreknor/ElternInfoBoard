@@ -508,24 +508,6 @@ class NachrichtenController extends Controller
                         ->withResponsiveImages()
                         ->toMediaCollection('images'));
             }
-
-
-            /*
-                        $files = $request->files->all();
-                        foreach ($files['files'] as $file) {
-                            if (substr($file->getMimeType(), 0, 5) == 'image')
-                                $collection = 'images';
-                            if ($request->input('collection') == 'header') {
-                                $collection = 'header';
-                            } else {
-                                $collection = 'files';
-                            }
-
-                            $posts
-                                ->addMedia($file)
-                                ->toMediaCollection($collection);
-                        }
-            */
         }
 
         if ($posts->released and $push == 1) {
@@ -678,7 +660,15 @@ class NachrichtenController extends Controller
     public function touch(Post $posts)
     {
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
-            $newPost = $posts->duplicate();
+            $newPost = $posts->replicate([
+                'id',
+                'created_at',
+                'updated_at',
+                'archiv_ab',
+                'released',
+                'send_at',
+                'published_wp_id',
+            ]);
             $newPost->archiv_ab = Carbon::now()->addWeeks(2);
             $newPost->updated_at = Carbon::now();
             $newPost->released = 0;
@@ -688,14 +678,20 @@ class NachrichtenController extends Controller
             $newPost->save();
 
             if ($posts->rueckmeldung != null) {
-                $rueckmeldung = $posts->rueckmeldung->duplicate();
+                $rueckmeldung = $posts->rueckmeldung->replicate([
+                    'id',
+                    'created_at',
+                    'updated_at',
+                    'post_id',
+                ]);
                 $rueckmeldung->post_id = $newPost->id;
                 $rueckmeldung->ende = $newPost->archiv_ab;
                 $rueckmeldung->save();
 
                 if ($posts->rueckmeldung->type == 'abfrage') {
                     foreach ($posts->rueckmeldung->options as $option) {
-                        $newOption = $option->duplicate();
+
+                        $newOption = $option->replicate();
                         $newOption->rueckmeldung_id = $rueckmeldung->id;
                         $newOption->save();
                     }
@@ -708,7 +704,6 @@ class NachrichtenController extends Controller
             $posts->archiv_ab = Carbon::now()->addWeek();
             $posts->save();
         }
-
         return redirect()->to(url('/'));
     }
 
