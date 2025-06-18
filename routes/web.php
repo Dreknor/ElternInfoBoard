@@ -42,6 +42,7 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
+use App\Http\Controllers\SchoolYearController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
@@ -474,3 +475,6 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// Schuljahreswechsel im Settings-Bereich
+Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
+Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
