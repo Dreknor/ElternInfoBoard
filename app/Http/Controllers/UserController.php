@@ -349,11 +349,12 @@ class UserController extends Controller
 
     public function showMassDelete()
     {
-
-
-        $users = User::query()->whereHas('roles', function ($query) {
-            return $query->where('name', 'Eltern');
-        })->doesntHave('groups')->get();
+        $users = User::query()
+            ->whereHas('roles', function ($query) {
+                return $query->where('name', 'Eltern');
+            })
+            ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+            ->get();
 
         return view('user.showMassDelete')->with([
             'users' => $users
@@ -362,30 +363,30 @@ class UserController extends Controller
 
     public function massDelete(Request $request)
     {
+        // Die geschützten Rollen sind fest im Code definiert und NICHT über die Settings änderbar
+        $protectedRoles = ['Mitarbeiter', 'Vereinsmitglieder', 'Administrator'];
+        $userIds = $request->input('user_ids', []);
+        $fehler = "";
+        $deleted = 0;
 
-        if ($request->users) {
-            $fehler = "";
-
-            foreach ($request->users as $user) {
-                $ergebnis = $this->destroy($user, false);
-                if ($ergebnis != "") {
-                    if ($fehler) {
-                        $fehler .= ', ' . $user;
-                    } else {
-                        $fehler = 'Fehler bei folgenden Benutzern: ' . $user;
-                    }
-                }
+        foreach ($userIds as $userId) {
+            $user = User::find($userId);
+            if (!$user) continue;
+            if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
+                $fehler .= ($fehler ? ', ' : 'Nicht gelöscht: ') . $user->name;
+                continue;
             }
-
-            return redirect()->back()->with([
-                'type' => ($fehler == "") ? 'success' : 'danger',
-                'Meldung' => ($fehler != "") ? $fehler : 'Benutzer gelöscht',
-            ]);
+            $ergebnis = $this->destroy($userId, false);
+            if ($ergebnis != "") {
+                $fehler .= ($fehler ? ', ' : 'Fehler bei: ') . $user->name;
+            } else {
+                $deleted++;
+            }
         }
 
-        return redirect(url('users'))->with([
-            'type' => 'warning',
-            'Meldung' => "Keine Benutzer zum Löschen ausgewählt"
+        return redirect()->back()->with([
+            'type' => ($fehler == "") ? 'success' : 'danger',
+            'Meldung' => ($deleted ? "$deleted Benutzer gelöscht. " : '') . $fehler,
         ]);
     }
 
