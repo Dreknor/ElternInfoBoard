@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TestEmail;
+use App\Model\Group;
 use App\Model\Groups;
 use App\Model\Module;
 use App\Model\User;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\LaravelSettings\Settings;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 
 class SettingsController extends Controller
@@ -44,6 +46,10 @@ class SettingsController extends Controller
         $schickzeitenSetting = new SchickzeitenSetting();
         $careSettings = new CareSetting();
 
+
+        $groups = Group::all();
+        $roles = Role::all();
+
         $users = User::query()
             ->whereHas('roles', function ($query) {
                 $query->where('name', '=', 'Mitarbeiter');
@@ -60,6 +66,7 @@ class SettingsController extends Controller
             'careSettings' => $careSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
+            'roles' => $roles,
         ]);
     }
 

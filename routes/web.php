@@ -42,6 +42,7 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
+use App\Http\Controllers\SchoolYearController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
@@ -319,7 +320,7 @@ Route::middleware('auth')->group(function () {
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
             Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
-            Route::delete('users/mass/delete', [UserController::class, 'massDelete']);
+            Route::delete('users/mass/delete', [UserController::class, 'massDelete'])->name('users.massDelete');
 
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
@@ -474,3 +475,7 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// Schuljahreswechsel im Settings-Bereich
+Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
+Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
+Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');

@@ -43,6 +43,11 @@
                                         type="button" role="tab" aria-controls="care" aria-selected="false">OIDC
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="schoolyear-tab" data-toggle="tab" data-target="#schoolyear"
+                                        type="button" role="tab" aria-controls="schoolyear" aria-selected="false">Schuljahreswechsel
+                                </button>
+                            </li>
                         </ul>
                         <div class="tab-content">
                             @include('settings.tabs.home-tab')
@@ -51,6 +56,7 @@
                             @include('settings.tabs.schickzeiten-tab')
                             @include('settings.tabs.care-tab')
                             @include('settings.tabs.keycloak-tab')
+                            @include('settings.tabs.schoolyear-tab')
                         </div>
                     </div>
                 </div>

@@ -70,7 +70,14 @@ class GTAController extends Controller
         $gta = new Arbeitsgemeinschaft($request->validated());
         $gta->save();
 
-        $gta->groups()->attach($request->groups);
+        // Gleichnamige Gruppe erstellen und verknüpfen
+        $group = Group::create([
+            'name' => $gta->name,
+        ]);
+
+        if ($request->groups) {
+            $gta->groups()->attach($request->groups);
+        }
 
         return redirect()
             ->route('verwaltung.arbeitsgemeinschaften.index')
@@ -144,6 +151,16 @@ class GTAController extends Controller
                 ]);
         }
 
+
+        $group = Group::query()
+            ->where('name', $arbeitsgemeinschaft->name)
+            ->first();
+        if ($group) {
+            // Lösche die Gruppe, die mit der Arbeitsgemeinschaft verknüpft ist
+            $group->users()->detach(); // Entferne alle Nutzer aus der Gruppe
+            $group->delete(); // Lösche die Gruppe selbst
+        }
+
         $arbeitsgemeinschaft->delete();
 
         return redirect()
@@ -181,6 +198,7 @@ class GTAController extends Controller
 
     public function addParticipant(Request $request, Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
+
         $validated = $request->validate([
             'child_id' => 'required|exists:children,id'
         ]);
@@ -191,9 +209,41 @@ class GTAController extends Controller
                 ->with('error', 'Die maximale Teilnehmerzahl ist bereits erreicht.');
         }
 
-        $arbeitsgemeinschaft->participants()->attach($validated['child_id'], [
-            'user_id' => auth()->id()
-        ]);
+        if ($arbeitsgemeinschaft->participants->where('id', $validated['child_id'])->isNotEmpty()) {
+            return redirect()
+                ->route('verwaltung.arbeitsgemeinschaften.teilnehmer', $arbeitsgemeinschaft)
+                ->with([
+                    'type' => 'error',
+                    'Meldung' => 'Das Kind ist bereits Teilnehmer dieser Arbeitsgemeinschaft.'
+                ]);
+        } else {
+            $arbeitsgemeinschaft->participants()->attach($validated['child_id'], [
+                'user_id' => auth()->id()
+            ]);
+        }
+
+        // Sorgeberechtigte der Gruppe hinzufügen
+        $child = Child::find($validated['child_id']);
+        $parents = $child->parents;
+
+        // Nur die automatisch erstellte AG-Gruppe verwenden
+        $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
+
+
+        if ($agGroup) {
+            foreach ($parents as $parent) {
+                // Prüfen, ob der Elternteil bereits in der Gruppe ist
+                if (!$agGroup->users()->where('users.id', $parent->id)->exists()) {
+                    $agGroup->users()->attach($parent->id);
+                }
+
+                if ($parent->sorg2 != null && !$agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
+                    // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
+                    $agGroup->users()->attach($parent->sorg2);
+                }
+            }
+
+        }
 
         return redirect()
             ->route('verwaltung.arbeitsgemeinschaften.teilnehmer', $arbeitsgemeinschaft)
@@ -203,6 +253,19 @@ class GTAController extends Controller
     public function removeParticipant(Arbeitsgemeinschaft $arbeitsgemeinschaft, Child $child)
     {
         $arbeitsgemeinschaft->participants()->detach($child->id);
+
+        // Sorgeberechtigte aus der Gruppe entfernen
+        $parents = $child->parents;
+        $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
+        if ($agGroup) {
+            foreach ($parents as $parent) {
+                $agGroup->users()->detach($parent->id);
+                if ($parent->sorg2 != null) {
+                    // Entferne den zweiten Sorgeberechtigten, falls vorhanden
+                    $agGroup->users()->detach($parent->sorg2);
+                }
+            }
+        }
 
         return redirect()
             ->route('verwaltung.arbeitsgemeinschaften.teilnehmer', $arbeitsgemeinschaft)
