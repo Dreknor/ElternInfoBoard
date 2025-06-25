@@ -415,12 +415,9 @@
                                             </form>
                                         </div>
                                     </div>
-
-                                </div>
-                            </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="Anwesenheitsabfrage" role="tabpanel" aria-labelledby="Anwesenheitsabfrage-tab">
+<div class="tab-pane fade" id="Anwesenheitsabfrage" role="tabpanel" aria-labelledby="Anwesenheitsabfrage-tab">
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">
