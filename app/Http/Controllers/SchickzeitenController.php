@@ -278,8 +278,20 @@ class SchickzeitenController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return RedirectResponse
      */
-    public function store(SchickzeitRequest $request, Child $child, $weekday = null)
+    public function store(SchickzeitRequest $request, Child $child = null, $weekday = null)
     {
+
+        if (!$child and ! $request->input('child_id') ) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Kein Kind ausgewählt',
+            ]);
+        }
+
+        if (!$child) {
+            $child = Child::find($request->input('child_id'));
+        }
+
         if (!auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',

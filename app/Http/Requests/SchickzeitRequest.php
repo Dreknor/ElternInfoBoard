@@ -52,6 +52,7 @@ class SchickzeitRequest extends FormRequest
                 'nullable',
                 'date_format:H:i',
             ],
+            'child_id' => 'sometimes|exists:children,id'
         ];
     }
 }
