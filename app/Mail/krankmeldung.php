@@ -7,7 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class krankmeldung extends Mailable
+class Krankmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 

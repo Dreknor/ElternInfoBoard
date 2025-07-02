@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
-use App\Mail\krankmeldung;
+use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Disease;
@@ -91,7 +91,7 @@ class KrankmeldungenController extends Controller
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name ?? $child->first_name.' '.$child->last_name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name ?? $child->first_name.' '.$child->last_name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
 
             return redirect()->back()->with([
                 'type' => 'success',
