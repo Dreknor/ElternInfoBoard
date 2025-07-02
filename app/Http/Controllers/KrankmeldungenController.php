@@ -8,7 +8,7 @@ use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Disease;
-use App\Model\krankmeldungen;
+use App\Model\Krankmeldungen;
 use App\Model\Module;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -58,7 +58,7 @@ class KrankmeldungenController extends Controller
         }
 
         try {
-            $krankmeldung = new krankmeldungen();
+            $krankmeldung = new Krankmeldungen();
             $krankmeldung->fill($request->validated());
 
             if ($request->child_id) {
@@ -117,7 +117,7 @@ class KrankmeldungenController extends Controller
      */
     public function dailyReport()
     {
-        $krankmeldungen = krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
+        $krankmeldungen = Krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
             ->where('ende', '>=', Carbon::now()->format('Y-m-d'))
             ->get();
 
@@ -129,7 +129,7 @@ class KrankmeldungenController extends Controller
     {
         if (auth()->user()->can('download krankmeldungen')) {
             $pdf = PDF::loadView('pdf.krankmeldungen', [
-                'meldungen' => krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
+                'meldungen' => Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
             ]);
 
             return $pdf->download(Carbon::now()->format('Y-m-d') . '_Krankmeldungen.pdf');
