@@ -3,12 +3,9 @@
 namespace App\Services;
 
 use App\Model\Arbeitsgemeinschaft;
-use App\Model\Krankmeldungen;
+use App\Model\krankmeldungen;
 use App\Model\Schickzeiten;
 use App\Model\User;
-use App\Model\Child;
-use App\Model\Group;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -40,7 +37,7 @@ class SchoolYearService
 
             try {
                 // 4. Krankmeldungen älter als 3 Wochen löschen
-                $deletedKrankmeldungen = Krankmeldungen::where('created_at', '<', now()->subWeeks(3))->delete();
+                $deletedKrankmeldungen = Krankmeldungen::query()->where('created_at', '<', now()->subWeeks(3))->delete();
                 Log::info('Krankmeldungen gelöscht', ['count' => $deletedKrankmeldungen]);
 
             } catch (\Exception $e) {
