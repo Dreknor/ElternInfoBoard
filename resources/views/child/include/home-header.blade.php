@@ -21,7 +21,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    @if(!$child->checkedIn() and ($child->checkIns()->where('date', today())->first()->checked_out))
+                                    @if(!$child->checkedIn() and ($child->checkIns()->where('date', today())->first()?->checked_out))
                                         <p>
                                             Abgemeldet um
                                             {{$child->checkIns()->where('date', today())->first()?->updated_at?->format('H:i')}}
