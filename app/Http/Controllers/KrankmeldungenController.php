@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
-use App\Mail\krankmeldung;
+use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Disease;
-use App\Model\krankmeldungen;
+use App\Model\Krankmeldungen;
 use App\Model\Module;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -58,7 +58,7 @@ class KrankmeldungenController extends Controller
         }
 
         try {
-            $krankmeldung = new krankmeldungen();
+            $krankmeldung = new Krankmeldungen();
             $krankmeldung->fill($request->validated());
 
             if ($request->child_id) {
@@ -91,7 +91,7 @@ class KrankmeldungenController extends Controller
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name ?? $child->first_name.' '.$child->last_name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name ?? $child->first_name.' '.$child->last_name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
 
             return redirect()->back()->with([
                 'type' => 'success',
@@ -117,7 +117,7 @@ class KrankmeldungenController extends Controller
      */
     public function dailyReport()
     {
-        $krankmeldungen = krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
+        $krankmeldungen = Krankmeldungen::where('start', '<=', Carbon::now()->format('Y-m-d'))
             ->where('ende', '>=', Carbon::now()->format('Y-m-d'))
             ->get();
 
@@ -129,7 +129,7 @@ class KrankmeldungenController extends Controller
     {
         if (auth()->user()->can('download krankmeldungen')) {
             $pdf = PDF::loadView('pdf.krankmeldungen', [
-                'meldungen' => krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
+                'meldungen' => Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
             ]);
 
             return $pdf->download(Carbon::now()->format('Y-m-d') . '_Krankmeldungen.pdf');

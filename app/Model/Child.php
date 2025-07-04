@@ -162,7 +162,7 @@ class Child extends Model implements HasMedia
 
     public function krankmeldungen()
     {
-        return $this->hasMany(krankmeldungen::class, 'child_id')->orderByDesc('created_at');
+        return $this->hasMany(Krankmeldungen::class, 'child_id')->orderByDesc('created_at');
     }
 
     public function krankmeldungToday()

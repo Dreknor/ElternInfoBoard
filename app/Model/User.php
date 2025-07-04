@@ -333,7 +333,7 @@ class User extends Authenticatable
 
     public function krankmeldungen()
     {
-        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
+        return $this->hasMany(Krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
     }
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\MorphMany

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Mail\krankmeldung;
+use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
 use App\Model\krankmeldungen;
@@ -122,7 +122,7 @@ class KrankmeldungenController extends Controller
         try {
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null));
 
             return response()->json('Krankmeldung gesendet.',200);
         } catch (\Exception $e) {

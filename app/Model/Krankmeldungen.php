@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 
-class krankmeldungen extends Model
+class Krankmeldungen extends Model
 {
     use SoftDeletes;
     use HasFactory;

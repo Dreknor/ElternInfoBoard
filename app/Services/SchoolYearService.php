@@ -3,12 +3,9 @@
 namespace App\Services;
 
 use App\Model\Arbeitsgemeinschaft;
-use App\Model\Krankmeldungen;
+use App\Model\krankmeldungen;
 use App\Model\Schickzeiten;
 use App\Model\User;
-use App\Model\Child;
-use App\Model\Group;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -26,16 +23,39 @@ class SchoolYearService
             $this->updateGroups($groupMapping);
             // 2. Rollen anpassen
             $this->updateRoles($roleMapping);
-            // 3. Arbeitsgemeinschaften löschen
-            Log::info('Alle Arbeitsgemeinschaften werden gelöscht');
 
-            Arbeitsgemeinschaft::query()->delete();
-            // 4. Krankmeldungen älter als 3 Wochen löschen
-            $deletedKrankmeldungen = Krankmeldungen::where('created_at', '<', now()->subWeeks(3))->delete();
-            Log::info('Krankmeldungen gelöscht', ['count' => $deletedKrankmeldungen]);
-            // 5. Schickzeiten mit deleted_at löschen
-            $deletedSchickzeiten = Schickzeiten::whereNotNull('deleted_at')->delete();
-            Log::info('Schickzeiten gelöscht', ['count' => $deletedSchickzeiten]);
+
+            try {
+                // 3. Arbeitsgemeinschaften löschen
+                Log::info('Alle Arbeitsgemeinschaften werden gelöscht');
+                Arbeitsgemeinschaft::query()->delete();
+            } catch (\Exception $e) {
+                Log::error('Fehler beim Löschen der Arbeitsgemeinschaften', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            try {
+                // 4. Krankmeldungen älter als 3 Wochen löschen
+                $deletedKrankmeldungen = Krankmeldungen::query()->where('created_at', '<', now()->subWeeks(3))->delete();
+                Log::info('Krankmeldungen gelöscht', ['count' => $deletedKrankmeldungen]);
+
+            } catch (\Exception $e) {
+                Log::error('Fehler beim Löschen der Krankmeldungen', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            try {
+                // 5. Schickzeiten mit deleted_at löschen
+                $deletedSchickzeiten = Schickzeiten::whereNotNull('deleted_at')->delete();
+                Log::info('Schickzeiten gelöscht', ['count' => $deletedSchickzeiten]);
+            } catch (\Exception $e) {
+                Log::error('Fehler beim Löschen der Schickzeiten', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
         });
         Log::info('Schuljahreswechsel abgeschlossen', [
             'user_id' => auth()->id()
