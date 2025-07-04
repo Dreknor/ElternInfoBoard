@@ -72,10 +72,9 @@
                                             </tr>
                                         @endforelse
                                     </p>
-
                                 </div>
                             </div>
-
+                        </div>
                     </div>
                 </div>
             @endforeach
