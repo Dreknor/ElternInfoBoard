@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\ActiveDisease;
-use App\Model\krankmeldungen;
+use App\Model\Krankmeldungen;
 use App\Model\Losung;
 use App\Model\Mail;
 use App\Model\Notification;
@@ -12,7 +12,6 @@ use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
@@ -25,7 +24,7 @@ class CleanupController extends Controller
 
         try {
             // Delete notifications older than 10 days
-            Notification::query()->where('created_at', '<', now()->subDays(10))->delete();#
+            Notification::query()->where('created_at', '<', now()->subDays(10))->delete();
             // Delete read notifications older than 3 days
             Notification::query()->where('created_at', '<', now()->subDays(3))->where('read', 1)->delete();
             Notification::query()->whereNull('created_at')->update(['created_at' => now()]);
@@ -156,7 +155,7 @@ class CleanupController extends Controller
                 $date = now()->month(8)->day(1)->hour(0)->minute(0)->second(0);
             }
 
-            krankmeldungen::withTrashed()->where('created_at', '<', $date)->forceDelete();
+            Krankmeldungen::withTrashed()->where('created_at', '<', $date)->forceDelete();
 
         } catch (\Exception $e) {
             Log::error('Error while cleaning up Krankmeldungen: ' . $e->getMessage());
