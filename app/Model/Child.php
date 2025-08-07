@@ -21,10 +21,12 @@ class Child extends Model implements HasMedia
         'group_id',
         'class_id',
         'notification',
+        'auto_checkIn',
     ];
 
     protected $casts = [
         'notification' => 'boolean',
+        'auto_checkIn' => 'boolean',
     ];
 
     public function group()

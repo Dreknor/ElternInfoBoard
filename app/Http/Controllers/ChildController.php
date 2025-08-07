@@ -173,6 +173,7 @@ class ChildController extends Controller
                 'last_name',
                 'group_id',
                 'class_id',
+                'auto_checkIn',
             ])
         );
 

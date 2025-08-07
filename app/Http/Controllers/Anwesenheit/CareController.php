@@ -206,8 +206,6 @@ class CareController extends Controller
             return;
         }
 
-        Log::info('Starte täglichen CheckIn');
-
         $ferien = Cache::remember('ferien_' . Carbon::now()->year, now()->diff(Carbon::now()->endOfYear()), function () {
             $url = 'https://ferien-api.de/api/v1/holidays/SN/' . Carbon::now()->year;
             return json_decode(file_get_contents($url), true);
@@ -216,14 +214,12 @@ class CareController extends Controller
         $ferien_tag = false;
         foreach ($ferien as $ferienTage) {
             if (now()->between($ferienTage['start'], $ferienTage['end'])) {
-                Log::info('Heute ist ein Ferientag');
-                Log::info($ferienTage);
+
                 $ferien_tag = "Ja";
             }
         }
 
         if ($ferien_tag == "Ja") {
-            Log::info('Kein Login wegen Ferien');
             return;
         }
 
@@ -231,12 +227,11 @@ class CareController extends Controller
         $children = Child::query()
             ->get();
 
-        Log::info($children->count(). ' Kinder geladen');
 
         $checkIn = [];
         foreach ($children as $child) {
 
-            if ($child->krankmeldungToday()) {
+            if ($child->krankmeldungToday() || !$child->auto_checkIn) {
                 continue;
             }
 
@@ -250,9 +245,6 @@ class CareController extends Controller
         }
 
         ChildCheckIn::query()->insert($checkIn);
-        Log::info(count($checkIn) . ' abgeschlossen');
-
-
     }
 
 

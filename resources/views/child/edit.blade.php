@@ -61,6 +61,14 @@
                         </select>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="auto_checkIn" class="form-label">Automatisches Anmelden an Schultagen</label>
+                        <select class="custom-select" id="auto_checkIn" name="auto_checkIn" required>
+                                <option value="1" {{ $child->auto_checkIn ? 'selected' : '' }}>ja</option>
+                                <option value="0" {{ !$child->auto_checkIn ? 'selected' : '' }}>nein</option>
+                        </select>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">Speichern</button>
                 </form>
             </div>
