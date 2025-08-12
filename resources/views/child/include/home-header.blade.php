@@ -64,7 +64,7 @@
                                 <div class="col-md-6">
                                     <b>Anwesenheit:</b>
                                     <p>
-                                        @forelse($child->checkIns->sortBy('date') as $checkIn)
+                                        @forelse($child->checkIns->where('date', ">", \Carbon\Carbon::today())->sortBy('date') as $checkIn)
                                                 {{ $checkIn->date->format('d.m.Y') }} @if($checkIn->should_be) <i class="text-success">angemeldet </i> @else <i class="text-danger">nicht angemeldet </i>  @endif <br>
                                         @empty
                                             <tr>
