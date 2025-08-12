@@ -55,7 +55,7 @@ class SchickzeitenController extends Controller
             return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
         });
 
-        $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>', today())]);
+        $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>=', today())]);
 
 
         $weekdays = [
