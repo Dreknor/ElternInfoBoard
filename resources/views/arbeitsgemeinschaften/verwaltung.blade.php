@@ -6,14 +6,15 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4>Aktive Arbeitsgemeinschaften</h4>
-                        <a href="{{ route('verwaltung.arbeitsgemeinschaften.create') }}"
-                           class="btn btn-primary"
-                           data-bs-toggle="tooltip"
-                           data-bs-placement="top"
-                           title="Neue AG erstellen">
-                            <span class="button-text">Neue AG erstellen</span>
-                        </a>
+                            <h4>Aktive Arbeitsgemeinschaften</h4>
+                            <a href="{{ route('verwaltung.arbeitsgemeinschaften.create') }}"
+                               class="btn btn-primary"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               title="Neue AG erstellen">
+                                <i class="fas fa-plus"></i>
+                                <span class="button-text">Neue AG erstellen</span>
+                            </a>
                     </div>
                     <div class="card-body">
                         <div class="d-none d-md-flex row fw-bold py-2 border-bottom">
@@ -28,7 +29,7 @@
                         </div>
 
                         @forelse($arbeitsgemeinschaften as $ag)
-                            <div class="row py-2 border-bottom align-items-center">
+                            <div class="row py-2 border-bottom align-items-center @if($loop->iteration % 2 == 0) bg-light @endif">
                                 <div class="col-md-2 py-1">
                                     <span class="d-inline d-md-none fw-bold">Name: </span>
                                     {{ $ag->name }}

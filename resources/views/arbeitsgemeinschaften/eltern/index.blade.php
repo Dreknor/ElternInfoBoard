@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="card">
         <div class="card-header bg-primary">
-            <h3>Arbeitsgemeinschaften</h3>
+            <h4>Arbeitsgemeinschaften</h4>
         </div>
 
         <div class="card-body">
