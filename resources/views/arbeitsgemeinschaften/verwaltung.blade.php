@@ -17,18 +17,19 @@
                     </div>
                     <div class="card-body">
                         <div class="d-none d-md-flex row fw-bold py-2 border-bottom">
-                            <div class="col-md-3 font-weight-bold">Name</div>
+                            <div class="col-md-2 font-weight-bold">Name</div>
                             <div class="col-md-1 font-weight-bold">Wochentag</div>
                             <div class="col-md-1 font-weight-bold">Zeit</div>
                             <div class="col-md-1 font-weight-bold">Teilnehmer</div>
                             <div class="col-md-2 font-weight-bold">Gruppen</div>
                             <div class="col-md-2 font-weight-bold">Verantwortlich</div>
+                            <div class="col-md-1 font-weight-bold">Zeitraum</div>
                             <div class="col-md-2 font-weight-bold">Aktionen</div>
                         </div>
 
                         @forelse($arbeitsgemeinschaften as $ag)
                             <div class="row py-2 border-bottom align-items-center">
-                                <div class="col-md-3 py-1">
+                                <div class="col-md-2 py-1">
                                     <span class="d-inline d-md-none fw-bold">Name: </span>
                                     {{ $ag->name }}
                                 </div>
@@ -59,6 +60,10 @@
                                 <div class="col-md-2 py-1">
                                     <span class="d-inline d-md-none fw-bold">Verantwortlich: </span>
                                     {{ $ag->manager->name }}
+                                </div>
+                                <div class="col-md-1 py-1">
+                                    <span class="d-inline d-md-none fw-bold">Zeitraum: </span>
+                                    {{ $ag->start_date->format('d.m.Y') }} - {{ $ag->end_date->format('d.m.Y') }}
                                 </div>
 
                                 <div class="col-md-2 py-1">

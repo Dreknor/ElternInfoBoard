@@ -23,7 +23,7 @@
                                             </p>
                                             <p class="mb-1">
                                                 <i class="bi bi-calendar-date"></i>
-                                                {{ $weekdays[$ag->weekday] }}
+                                                {{ $weekdays[$ag->weekday] }} ( {{ $ag->start_date->format('d.m.Y') }} - {{ $ag->end_date->format('d.m.Y') }} )
                                             </p>
                                             <p class="mb-1">
                                                 <i class="bi bi-clock"></i>
