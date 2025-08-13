@@ -64,6 +64,29 @@ class KrankmeldungenController extends Controller
             if ($request->child_id) {
                 $child = Child::find($request->child_id);
                 $krankmeldung->name = $child->first_name . ' ' . $child->last_name;
+
+                $group = $child->group?->name;
+                $class = $child->class?->name;
+
+                if ($group == $class){
+                    $class = null;
+                }
+
+                if ($group || $class) {
+                    $krankmeldung->name .= ' (' . $group . ' ' . $class . ')';
+                }
+            } else {
+
+                $gruppen = auth()->user()->groups;
+
+                $krankmeldung->name .= ' (';
+
+                foreach ($gruppen as $gruppe) {
+                    $krankmeldung->name .= $gruppe->name . ' ';
+                }
+
+                $krankmeldung->name .= ')';
+
             }
 
             $krankmeldung->users_id = auth()->id();
