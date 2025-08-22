@@ -135,6 +135,8 @@ class CareController extends Controller
      */
     public function anmelden(Child $child)
     {
+
+
         $checkIn = $child->checkIns()
             ->whereDate('date', now()->toDateString())
             ->first();
@@ -225,6 +227,7 @@ class CareController extends Controller
 
 
         $children = Child::query()
+            ->where('auto_checkIn', true)
             ->get();
 
 

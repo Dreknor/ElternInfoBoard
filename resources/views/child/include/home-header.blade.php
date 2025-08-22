@@ -61,18 +61,21 @@
                                         heute nicht angemeldet
                                     @endif
                                 </div>
-                                <div class="col-md-6">
-                                    <b>Anwesenheit:</b>
-                                    <p>
-                                        @forelse($child->checkIns->sortBy('date') as $checkIn)
+                                @if($child->checkIns->where('date', ">", \Carbon\Carbon::today())->count() > 0)
+                                    <div class="col-md-6">
+                                        <b>Anwesenheit:</b>
+                                        <p>
+                                            @forelse($child->checkIns->where('date', ">", \Carbon\Carbon::today())->sortBy('date') as $checkIn)
                                                 {{ $checkIn->date->format('d.m.Y') }} @if($checkIn->should_be) <i class="text-success">angemeldet </i> @else <i class="text-danger">nicht angemeldet </i>  @endif <br>
-                                        @empty
-                                            <tr>
-                                                <td colspan="5">Keine Anwesenheitsabfragen vorhanden</td>
-                                            </tr>
-                                        @endforelse
-                                    </p>
-                                </div>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5">Keine Anwesenheitsabfragen vorhanden</td>
+                                                </tr>
+                                            @endforelse
+                                        </p>
+                                    </div>
+                                @endif
+
                             </div>
                         </div>
                     </div>

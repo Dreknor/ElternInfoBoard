@@ -64,6 +64,29 @@ class KrankmeldungenController extends Controller
             if ($request->child_id) {
                 $child = Child::find($request->child_id);
                 $krankmeldung->name = $child->first_name . ' ' . $child->last_name;
+
+                $group = $child->group?->name;
+                $class = $child->class?->name;
+
+                if ($group == $class){
+                    $class = null;
+                }
+
+                if ($group || $class) {
+                    $krankmeldung->name .= ' (' . $group . ' ' . $class . ')';
+                }
+            } else {
+
+                $gruppen = auth()->user()->groups;
+
+                $krankmeldung->name .= ' (';
+
+                foreach ($gruppen as $gruppe) {
+                    $krankmeldung->name .= $gruppe->name . ' ';
+                }
+
+                $krankmeldung->name .= ')';
+
             }
 
             $krankmeldung->users_id = auth()->id();
@@ -91,7 +114,7 @@ class KrankmeldungenController extends Controller
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name ?? $child->first_name.' '.$child->last_name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $krankmeldung->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
 
             return redirect()->back()->with([
                 'type' => 'success',
