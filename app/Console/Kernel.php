@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Http\Controllers\GroupsController;
+use App\Http\Controllers\SchickzeitenController;
 use App\Model\Module;
 use App\Settings\NotifySetting;
 use Illuminate\Console\Scheduling\Schedule;
@@ -55,6 +56,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->call('App\Http\Controllers\GroupsController@deletePrivateGroups')->yearlyOn(7, 31, '00:00');
 
+        $schedule->call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->weeklyOn(6, '00:00');
+        $schedule->call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->everyMinute();
         //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
         //Default ist die Queue über Supervisor zu starten
         if (config('queue.use_cronjob')) {

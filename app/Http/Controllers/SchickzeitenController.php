@@ -19,6 +19,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -411,6 +412,26 @@ class SchickzeitenController extends Controller
 
         }
 
+        if ($weekday) {
+            $nextDate = Carbon::now()->next($weekday);
+
+            // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
+            $exists = $child->schickzeiten()
+                ->where('specific_date', $nextDate->toDateString())
+                ->delete();
+            $child->schickzeiten()->create([
+                'specific_date' => $nextDate->toDateString(),
+                'type' => $request->type,
+                'time' => $request->time ?? null,
+                'time_ab' => $request->time_ab ?? null,
+                'time_spaet' => $request->time_spaet ?? null,
+                'changedBy' => Auth::id(),
+                'users_id' => $child->parents()->first()->id
+            ]);
+
+
+        }
+
         return redirect(url('schickzeiten'))->with([
             'type' => 'success',
             'Meldung' => 'Zeiten gespeichert',
@@ -720,4 +741,43 @@ class SchickzeitenController extends Controller
             'message' => 'Kommentar entfernt',
         ], 200);
     }
+
+    public function copyWeeklySchickzeitenToNextWeek()
+    {
+        // Hole alle Schickzeiten mit Wochentag, aber ohne spezifisches Datum
+        $weeklySchickzeiten = Schickzeiten::whereNotNull('weekday')
+            ->whereNull('specific_date')
+            ->whereNotNull('child_id')
+            ->get();
+
+
+        foreach ($weeklySchickzeiten as $schickzeit) {
+            // Berechne das Datum des nächsten Wochentags
+            $nextDate = Carbon::now()->next($schickzeit->weekday);
+
+            // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
+            $exists = Schickzeiten::where('child_id', $schickzeit->child_id)
+                ->where('specific_date', $nextDate->toDateString())
+                ->exists();
+
+            if (!$exists) {
+                // Erstelle neue Schickzeit mit spezifischem Datum
+                if ($schickzeit->child()->exists()) {
+                    Schickzeiten::create([
+                        'users_id' => $schickzeit->users_id,
+                        'child_name' => $schickzeit->child_name,
+                        'weekday' => null, // Setze Wochentag auf null, da es sich um ein spezifisches Datum handelt
+                        'specific_date' => $nextDate->toDateString(),
+                        'time' => $schickzeit->time,
+                        'time_ab' => $schickzeit->time_ab,
+                        'time_spaet' => $schickzeit->time_spaet,
+                        'type' => $schickzeit->type,
+                        'child_id' => $schickzeit->child_id,
+                    ]);
+                }
+
+            }
+        }
+    }
+
 }

@@ -139,19 +139,26 @@ class Child extends Model implements HasMedia
         $schickzeiten = Cache::remember('schickzeiten_'.$this->id, 300, function() {
              return $this->schickzeiten()
                 ->where(function ($query) {
+                    /*
+                     * alt: Es werden alle Schickzeiten geladen, die entweder heute sind oder für den aktuellen Wochentag gelten.
                     $query->where('weekday', now()->dayOfWeek)
                         ->orWhere('specific_date', today());
+                    */
+                    // Neu: Es werden alle Schickzeiten geladen, die für heute sind.
+                    $query->where('specific_date', today());
                 })
                 ->orderBy('specific_date', 'desc')
                 ->get();
             });
 
-        if ($schickzeiten->where('specific_date',  today())->count() > 0) {
-            return $schickzeiten->where('specific_date',  today());
-        } else {
-            return $schickzeiten->where('weekday', now()->dayOfWeek);
-        }
-
+        return $schickzeiten;
+        /*
+            if ($schickzeiten->where('specific_date',  today())->count() > 0) {
+                return $schickzeiten->where('specific_date',  today());
+            } else {
+                return $schickzeiten->where('weekday', now()->dayOfWeek);
+            }
+        */
     }
 
     public function scopeCare($query)
