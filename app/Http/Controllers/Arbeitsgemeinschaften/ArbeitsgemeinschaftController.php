@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Arbeitsgemeinschaften;
 use App\Http\Controllers\Controller;
 use App\Mail\NeuerTeilnehmerMail;
 use App\Model\Arbeitsgemeinschaft;
+use App\Model\Group;
 use App\Notifications\PushNews;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -101,6 +102,25 @@ class ArbeitsgemeinschaftController extends Controller
         $arbeitsgemeinschaft->participants()->attach($request->child_id, [
             'user_id' => auth()->id()
         ]);
+
+
+
+        if ($arbeitsgemeinschaft) {
+            $parents = $child->parents;
+            foreach ($parents as $parent) {
+                // Prüfen, ob der Elternteil bereits in der Gruppe ist
+                if (!$arbeitsgemeinschaft->users()->where('users.id', $parent->id)->exists()) {
+                    $arbeitsgemeinschaft->users()->attach($parent->id);
+                }
+
+                if ($parent->sorg2 != null && !$arbeitsgemeinschaft->users()->where('users.id', $parent->sorg2)->exists()) {
+                    // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
+                    $arbeitsgemeinschaft->users()->attach($parent->sorg2);
+                }
+            }
+
+        }
+
 
         // E-Mail an den AG-Leiter senden
         try {
