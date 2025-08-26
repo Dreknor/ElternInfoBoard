@@ -104,18 +104,27 @@ class ArbeitsgemeinschaftController extends Controller
         ]);
 
 
+        /*
+         * Die Eltern der gruppe hinzufügen
+         *
+         */
+        $parents = $child->parents;
 
-        if ($arbeitsgemeinschaft) {
-            $parents = $child->parents;
+        // Nur die automatisch erstellte AG-Gruppe verwenden
+        $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
+
+
+
+        if ($agGroup) {
             foreach ($parents as $parent) {
                 // Prüfen, ob der Elternteil bereits in der Gruppe ist
-                if (!$arbeitsgemeinschaft->users()->where('users.id', $parent->id)->exists()) {
-                    $arbeitsgemeinschaft->users()->attach($parent->id);
+                if (!$agGroup->users()->where('users.id', $parent->id)->exists()) {
+                    $agGroup->users()->attach($parent->id);
                 }
 
-                if ($parent->sorg2 != null && !$arbeitsgemeinschaft->users()->where('users.id', $parent->sorg2)->exists()) {
+                if ($parent->sorg2 != null && !$agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
                     // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
-                    $arbeitsgemeinschaft->users()->attach($parent->sorg2);
+                    $agGroup->users()->attach($parent->sorg2);
                 }
             }
 
