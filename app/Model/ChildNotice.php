@@ -21,6 +21,7 @@ class ChildNotice extends Model
 
     protected $casts = [
         'date' => 'datetime',
+        'created_at' => 'datetime',
     ];
 
     public function child()
