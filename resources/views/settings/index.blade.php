@@ -44,6 +44,11 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pflichtstunden-tab" data-toggle="tab" data-target="#pflichtstunden"
+                                        type="button" role="tab" aria-controls="pflichtstunden" aria-selected="false">Pflichtstunden
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="schoolyear-tab" data-toggle="tab" data-target="#schoolyear"
                                         type="button" role="tab" aria-controls="schoolyear" aria-selected="false">Schuljahreswechsel
                                 </button>
@@ -57,6 +62,7 @@
                             @include('settings.tabs.care-tab')
                             @include('settings.tabs.keycloak-tab')
                             @include('settings.tabs.schoolyear-tab')
+                            @include('settings.tabs.pflichtstunden-tab')
                         </div>
                     </div>
                 </div>

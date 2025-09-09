@@ -19,9 +19,9 @@ class Liste extends Model
 
     protected $table = 'listen';
 
-    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry'];
+    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'pflichtstunden_erstellt', 'pflichtstunden_start_at', 'pflichtstunden_ende_at'];
 
-    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry'];
+    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'pflichtstunden_erstellt', 'pflichtstunden_start_at', 'pflichtstunden_ende_at'];
 
     protected $casts = [
         'ende' => 'datetime',
@@ -29,6 +29,9 @@ class Liste extends Model
         'active' => 'boolean',
         'multiple' => 'boolean',
         'make_new_entry' => 'boolean',
+        'pflichtstunden_erstellt' => 'boolean',
+        'pflichtstunden_start_at' => 'datetime',
+        'pflichtstunden_ende_at' => 'datetime',
     ];
 
     public function ersteller(): BelongsTo

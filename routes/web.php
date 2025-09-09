@@ -100,6 +100,16 @@ Route::middleware('auth')->group(function () {
         //Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
 
+        Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
+        Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
+
+        Route::middleware('permission:edit Pflichtstunden')->group(function () {
+            Route::get('verwaltung/pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'verwaltungIndex'])->name('pflichtstunden.indexVerwaltung');
+            Route::put('pflichtstunden/{pflichtstunde}/approve', [\App\Http\Controllers\PflichtstundeController::class, 'approve'])->name('pflichtstunden.approve');
+            Route::put('pflichtstunden/{pflichtstunde}/reject', [\App\Http\Controllers\PflichtstundeController::class, 'reject'])->name('pflichtstunden.reject');
+            Route::delete('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'destroy']);
+        });
+
         //Datenschutz
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
 
@@ -288,7 +298,7 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldungen/{rueckmeldungen}/commentable', [RueckmeldungenController::class, 'updateCommentable']);
 
         //user-Verwaltung
-        Route::get('/einstellungen', [BenutzerController::class, 'show']);
+        Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);

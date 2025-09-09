@@ -356,5 +356,13 @@ class User extends Authenticatable
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
 
+    public function pflichtstunden()
+    {
+        if ($this->sorg2 !=   null) {
+            return $this->hasMany(Pflichtstunde::class, 'user_id')->orWhere('user_id', $this->sorg2);
+        }
+
+        return $this->hasMany(Pflichtstunde::class, 'user_id');
+    }
 
 }

@@ -172,7 +172,7 @@
                     </div>
                     <div class="col-md-4 col-sm-12">
                         <div class="row">
-                            @if(auth()->user()->groups->count() > 0)
+                            @if(auth()->user()->groups->count() > 0 || auth()->user()->children()?->count() > 0)
                                 <div class="col-12">
                                     <div class="card">
                                         <div class="card-header">
@@ -208,10 +208,10 @@
                                                         @endif
 
                                                         <span class="badge badge-info ml-1 p-2 pull-right">
-                                                            {{$child->group->name}}
+                                                            {{$child->group->name ?? ''}}
                                                         </span>
                                                         <span class="badge badge-info ml-1 p-2 pull-right">
-                                                            {{$child->class->name}}
+                                                            {{$child->class->name ?? ''}}
                                                         </span>
                                                     </li>
                                             @endforeach
