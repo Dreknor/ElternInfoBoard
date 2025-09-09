@@ -26,7 +26,7 @@ class ChildNewsComposer
             $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
                 return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
             });
-            $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>=', today())->where('date', '<=', Carbon::now()->addDays(7))])
+            $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>=', today())->where('date', '<=', Carbon::now()->addDays(40))])
                 ->sortBy(function ($child) {
                     return $child->checkIns->count() > 0 ? $child->checkIns->first()->date : now();
                 });

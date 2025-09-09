@@ -73,6 +73,11 @@
                                                 </tr>
                                             @endforelse
                                         </p>
+                                        <p>
+                                            <a href="{{ url('schickzeiten') }}"  class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i> ansehen
+                                            </a>
+                                        </p>
                                     </div>
                                 @endif
 
