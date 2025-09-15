@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
+use App\Model\User;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
 
@@ -53,10 +54,21 @@ class PflichtstundeController extends Controller
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
-        $pflichtstunden = Pflichtstunde::with('user')->get();
+        $pflichtstunden = Pflichtstunde::query()
+            ->where('approved', false)
+            ->where('rejected', false)
+            ->with('user')->get();
+
+        $users = User::query()
+            ->permission('view Pflichtstunden')
+            ->with('pflichtstunden')
+            ->get();
+
+
         return view('pflichtstunden.indexVerwaltung', [
             'pflichtstunden' => $pflichtstunden,
-            'pflichtstunden_settings' => $this->pflichtstunden_settings
+            'pflichtstunden_settings' => $this->pflichtstunden_settings,
+            'users' => $users,
         ]);
     }
 

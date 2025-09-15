@@ -4,10 +4,10 @@
     <div class="container-fluid">
         <div class=" card shadow-lg">
             <div class="card-header  bg-light d-flex justify-content-between align-items-center">
-                <h3 class="card-title mb-0">Pflichtstunden</h3>
+                <h3 class="card-title mb-0">unbestätigte Pflichtstunden</h3>
             </div>
             <div class="card-body">
-                {!! $pflichtstunden_settings->pflichtstunden_text !!}
+
             </div>
             <div class="card-body">
                 <div class="table-responsive-md">
@@ -71,6 +71,51 @@
                                                 <i class="fas fa-times-circle"></i> Ablehnen
                                             </button>
                                         </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-lg mt-3">
+            <div class="card-header  bg-light d-flex justify-content-between align-items-center">
+                Übersicht der Pflichtstunden
+            </div>
+            <div class="card-body">
+                <div class="table-responsive-md">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Stundenanzahl</th>
+                            <th>Prozent erfüllt</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($users as $user)
+                            <tr>
+                                <td>{{ $user->name }}</td>
+                                <td>
+                                    @php
+                                        $totalMinutes = $user->pflichtstunden->where('approved', true)->sum('duration');
+                                    @endphp
+                                    @if($totalMinutes > 60)
+                                        {{ floor($totalMinutes / 60) }} Std. {{ $totalMinutes % 60 }} Min.
+                                    @else
+                                        {{ $totalMinutes }} Min.
+                                    @endif
+                                </td>
+                                <td >
+                                    @php
+                                        $totalMinutes = $user->pflichtstunden->where('approved', true)->sum('duration');
+                                        $requiredMinutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
+                                    @endphp
+
+                                    @if($requiredMinutes > 0)
+                                        {{ min(100, round(($totalMinutes / $requiredMinutes) * 100)) }}%
                                     @endif
                                 </td>
                             </tr>
