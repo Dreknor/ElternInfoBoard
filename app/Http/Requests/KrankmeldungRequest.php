@@ -28,6 +28,7 @@ class KrankmeldungRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'string',
+                'max:400',
             ],
             'child_id' => [
                 'nullable',
