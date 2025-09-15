@@ -33,6 +33,7 @@ class ReadReceiptsController extends Controller
             ->where('read_receipt', '1')
             ->where('archiv_ab', '<', now()->addDays(3))
             ->where('archiv_ab', '>', now())
+            ->where('released', '1')
             ->with('users')
             ->with('receipts')
             ->get();
