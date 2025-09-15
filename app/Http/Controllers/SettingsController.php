@@ -12,6 +12,7 @@ use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
 use App\Settings\KeyCloakSetting;
 use App\Settings\NotifySetting;
+use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -45,6 +46,7 @@ class SettingsController extends Controller
         $KeyCloakSetting = new KeyCloakSetting();
         $schickzeitenSetting = new SchickzeitenSetting();
         $careSettings = new CareSetting();
+        $pflichtstundenSetting = new PflichtstundenSetting();
 
 
         $groups = Group::all();
@@ -64,6 +66,7 @@ class SettingsController extends Controller
             'KeyCloakSetting' => $KeyCloakSetting,
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
+            'pflichtstundenSettings' => $pflichtstundenSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,

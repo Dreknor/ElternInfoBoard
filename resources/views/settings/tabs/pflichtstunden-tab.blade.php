@@ -2,7 +2,6 @@
     <form action="{{url('settings/pflichtstunden')}}" method="post" class="form-horizontal">
         @csrf
         @method('PUT')
-
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
