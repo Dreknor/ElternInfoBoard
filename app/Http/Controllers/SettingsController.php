@@ -254,8 +254,8 @@ class SettingsController extends Controller
                 break;
             case 'pflichtstunden':
                 $validated = $request->validate([
-                    'pflichtstunden_start' => 'required|date_format:H:i',
-                    'pflichtstunden_end' => 'required|date_format:H:i',
+                    'pflichtstunden_start' => 'required|date|date_format:m-d',
+                    'pflichtstunden_end' => 'required|date|date_format:m-d',
                     'pflichtstunden_text' => 'required|string',
                     'pflichtstunden_anzahl' => 'required|integer|min:1',
                     'listen_autocreate' => 'required|boolean',
