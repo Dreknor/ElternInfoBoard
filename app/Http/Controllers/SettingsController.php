@@ -252,7 +252,22 @@ class SettingsController extends Controller
                     ]);
                 }
                 break;
-
+            case 'pflichtstunden':
+                $validated = $request->validate([
+                    'pflichtstunden_start' => 'required|date_format:H:i',
+                    'pflichtstunden_end' => 'required|date_format:H:i',
+                    'pflichtstunden_text' => 'required|string',
+                    'pflichtstunden_anzahl' => 'required|integer|min:1',
+                    'listen_autocreate' => 'required|boolean',
+                ]);
+                $pflichtstundenSetting = new PflichtstundenSetting();
+                $pflichtstundenSetting->pflichtstunden_start = $validated['pflichtstunden_start'];
+                $pflichtstundenSetting->pflichtstunden_ende = $validated['pflichtstunden_end'];
+                $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
+                $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
+                $pflichtstundenSetting->listen_autocreate = $validated['listen_autocreate'];
+                $pflichtstundenSetting->save();
+                break;
 
             default:
                 return redirect()->back()->with([
