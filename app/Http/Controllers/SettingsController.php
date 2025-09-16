@@ -254,15 +254,34 @@ class SettingsController extends Controller
                 break;
             case 'pflichtstunden':
                 $validated = $request->validate([
-                    'pflichtstunden_start' => 'required|date|date_format:m-d',
-                    'pflichtstunden_ende' => 'required|date|date_format:m-d',
+                    'pflichtstunden_start' => 'required|string',
+                    'pflichtstunden_ende' => 'required|string',
                     'pflichtstunden_text' => 'required|string',
                     'pflichtstunden_anzahl' => 'required|integer|min:1',
                     'listen_autocreate' => 'required|boolean',
                 ]);
                 $pflichtstundenSetting = new PflichtstundenSetting();
-                $pflichtstundenSetting->pflichtstunden_start = $validated['pflichtstunden_start'];
-                $pflichtstundenSetting->pflichtstunden_ende = $validated['pflichtstunden_end'];
+                try {
+                    $start = Carbon::createFromFormat('m-d', $validated['pflichtstunden_start']);
+                } catch (\Exception $e) {
+                    return redirect()->back()->with([
+                        'type' => 'danger',
+                        'Meldung' => "Falsches Datumsformat beim Startdatum"
+                    ]);
+                }
+
+                try {
+                    $end = Carbon::createFromFormat('m-d', $validated['pflichtstunden_ende']);
+                } catch (\Exception $e) {
+                    return redirect()->back()->with([
+                        'type' => 'danger',
+                        'Meldung' => "Falsches Datumsformat beim Enddatum"
+                    ]);
+                }
+
+
+                $pflichtstundenSetting->pflichtstunden_start = $start->format('m-d');
+                $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
                 $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
                 $pflichtstundenSetting->listen_autocreate = $validated['listen_autocreate'];
