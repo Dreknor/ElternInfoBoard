@@ -255,7 +255,7 @@ class SettingsController extends Controller
             case 'pflichtstunden':
                 $validated = $request->validate([
                     'pflichtstunden_start' => 'required|date|date_format:m-d',
-                    'pflichtstunden_end' => 'required|date|date_format:m-d',
+                    'pflichtstunden_ende' => 'required|date|date_format:m-d',
                     'pflichtstunden_text' => 'required|string',
                     'pflichtstunden_anzahl' => 'required|integer|min:1',
                     'listen_autocreate' => 'required|boolean',
