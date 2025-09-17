@@ -126,7 +126,7 @@ class KrankmeldungenController extends Controller
 
             return redirect()->back()->with([
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Erstellen der Krankmeldung. Bitte versuchen Sie es erneut',
+                'Meldung' => 'Fehler beim Erstellen der Krankmeldung. Bitte versuchen Sie es erneut.',
             ]);
         }
 

@@ -12,6 +12,7 @@ use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
 use App\Settings\KeyCloakSetting;
 use App\Settings\NotifySetting;
+use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -45,6 +46,7 @@ class SettingsController extends Controller
         $KeyCloakSetting = new KeyCloakSetting();
         $schickzeitenSetting = new SchickzeitenSetting();
         $careSettings = new CareSetting();
+        $pflichtstundenSetting = new PflichtstundenSetting();
 
 
         $groups = Group::all();
@@ -64,6 +66,7 @@ class SettingsController extends Controller
             'KeyCloakSetting' => $KeyCloakSetting,
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
+            'pflichtstundenSettings' => $pflichtstundenSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -249,7 +252,41 @@ class SettingsController extends Controller
                     ]);
                 }
                 break;
+            case 'pflichtstunden':
+                $validated = $request->validate([
+                    'pflichtstunden_start' => 'required|string',
+                    'pflichtstunden_ende' => 'required|string',
+                    'pflichtstunden_text' => 'required|string',
+                    'pflichtstunden_anzahl' => 'required|integer|min:1',
+                    'listen_autocreate' => 'required|boolean',
+                ]);
+                $pflichtstundenSetting = new PflichtstundenSetting();
+                try {
+                    $start = Carbon::createFromFormat('m-d', $validated['pflichtstunden_start']);
+                } catch (\Exception $e) {
+                    return redirect()->back()->with([
+                        'type' => 'danger',
+                        'Meldung' => "Falsches Datumsformat beim Startdatum"
+                    ]);
+                }
 
+                try {
+                    $end = Carbon::createFromFormat('m-d', $validated['pflichtstunden_ende']);
+                } catch (\Exception $e) {
+                    return redirect()->back()->with([
+                        'type' => 'danger',
+                        'Meldung' => "Falsches Datumsformat beim Enddatum"
+                    ]);
+                }
+
+
+                $pflichtstundenSetting->pflichtstunden_start = $start->format('m-d');
+                $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
+                $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
+                $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
+                $pflichtstundenSetting->listen_autocreate = $validated['listen_autocreate'];
+                $pflichtstundenSetting->save();
+                break;
 
             default:
                 return redirect()->back()->with([
