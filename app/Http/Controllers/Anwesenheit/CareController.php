@@ -55,8 +55,11 @@ class CareController extends Controller
 
         } else {
             $childs = Child::query()
+
                 ->get();
         }
+
+        $childs->load('mandates');
 
 
         return view('anwesenheit.index', [

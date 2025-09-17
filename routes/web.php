@@ -124,6 +124,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
         Route::post('child/{child}/notification', [ChildController::class, 'setNotification'])->name('child.notification');
 
+        /*
+         * Abholberechtigte
+         */
+        Route::post('child/{child}/mandate', [ChildController::class, 'storeMandate'])->name('child.mandate.store');
+        Route::delete('child/{child}/mandate/{mandate}/delete', [ChildController::class, 'destroyMandate'])->name('child.mandate.destroy');
+
 
         //make a push notification.
         Route::post('/notification/read', [NotificationController::class, 'read'])->name('notification.read');
