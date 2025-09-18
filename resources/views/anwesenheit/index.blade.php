@@ -49,6 +49,11 @@
                         <li class="nav-item bg-gradient-directional-blue-grey-light">
                             <a class="nav-link text-dark" id="abfrage-tab" data-toggle="tab" href="#Abfrage" role="tab" aria-controls="Abfrage" aria-selected="false">Ferien</a>
                         </li>
+
+                        <li class="nav-item bg-gradient-directional-grey-blue">
+                            <a class="nav-link text-dark" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false">Abholvollmacht</a>
+                        </li>
+
                     </ul>
                 </div>
                 <div class="tab-content" id="myTabContent">
@@ -175,6 +180,14 @@
                             </div>
                         </div>
                     </div>
+                    <div class="tab-pane fade" id="vollmacht" role="tabpanel" aria-labelledby="vollmacht-tab">
+                        <div class="modal-body">
+                            <b>Abholvollmachten:</b>
+                           <ul class="list-group">
+
+                           </ul>
+                        </div>
+                    </div>
 
         </div>
     </div>
@@ -202,6 +215,7 @@
             const childModal = $('#childModal');
             const childName = document.getElementById('childName');
             const logoutButton = document.getElementById('logoutButton');
+            const checkinButton = document.getElementById('checkinButton');
             const spinner = document.getElementById('spinner');
             const schickzeitForm = document.getElementById('schickzeitForm');
             const noticeForm = document.getElementById('noticeForm');
@@ -370,5 +384,33 @@
                 window.location.reload();
             });
         }
+
+        // Neue Logik: Vollmachten im Modal füllen
+        document.querySelectorAll('.child-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const childData = JSON.parse(this.dataset.child);
+
+                // Fülle die Vollmachts-Liste
+                const vollmachtList = document.querySelector('#vollmacht .list-group');
+                if (vollmachtList) {
+                    vollmachtList.innerHTML = '';
+                    if (childData.mandates && childData.mandates.length > 0) {
+                        childData.mandates.forEach(function(m) {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            const desc = m.mandate_description ? '<br>' + m.mandate_description : '';
+                            li.innerHTML = '<div><b>' + (m.mandate_name || '') + '</b>' + desc + '</div>';
+                            vollmachtList.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = 'Keine Abholvollmachten hinterlegt';
+                        vollmachtList.appendChild(li);
+                    }
+                }
+
+            });
+        });
     </script>
 @endpush

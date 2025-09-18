@@ -15,6 +15,9 @@
                     <li class="nav-item bg-gradient-directional-blue-grey-light">
                         <a class="nav-link  text-dark" id="Anwesenheitsabfrage-tab" data-toggle="tab" href="#Anwesenheitsabfrage" role="tab" aria-controls="Anwesenheitsabfrage" aria-selected="false">Anwesenheitsabfrage</a>
                     </li>
+                    <li class="nav-item bg-gradient-directional-blue-grey-light">
+                        <a class="nav-link  text-dark" id="Vollmacht-tab" data-toggle="tab" href="#Vollmacht" role="tab" aria-controls="Vollmacht" aria-selected="false">Abholvollmacht</a>
+                    </li>
                 </ul>
             </div>
 
@@ -263,7 +266,7 @@
                                     </div>
                         </div>
                     </div>
-<div class="tab-pane fade" id="Anwesenheitsabfrage" role="tabpanel" aria-labelledby="Anwesenheitsabfrage-tab">
+                    <div class="tab-pane fade" id="Anwesenheitsabfrage" role="tabpanel" aria-labelledby="Anwesenheitsabfrage-tab">
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">
@@ -400,6 +403,72 @@
         </div>
     </div>
 </div>
+                    <div class="tab-pane fade" id="Vollmacht" role="tabpanel" aria-labelledby="Vollmacht-tab">
+                        <div class="container-fluid">
+                            <div class="row">
+                                @foreach($children as $child)
+                                    <div class="col-lg-4 col-md-6 col-sm-12 mt-2">
+                                        <div class="card">
+                                            <div class="card-header bg-gradient-x2-info">
+                                                <h5 class="card-title">
+                                                    {{$child->first_name}} {{$child->last_name}}
+                                                </h5>
+                                            </div>
+                                            <div class="card-body">
+                                                @if($child->mandates->isEmpty())
+                                                    <div class="alert alert-info">
+                                                        Keine Abholvollmachten hinterlegt
+                                                    </div>
+                                                @else
+                                                    <ul class="list-group">
+                                                        @foreach($child->mandates as $mandate)
+                                                            <li class="list-group-item">
+                                                                <div class="row">
+                                                                    <div class="col-10">
+                                                                        <b>
+                                                                            {{$mandate->mandate_name}}
+                                                                        </b>
+                                                                        <br>
+                                                                        {{$mandate?->mandate_description}}
+                                                                    </div>
+                                                                    <div class="col-1 pull-right">
+                                                                        <form
+                                                                            action="{{route('child.mandate.destroy', ['mandate' => $mandate->id, 'child' => $child->id])}}"
+                                                                            method="post"
+                                                                            class="form-inline">
+                                                                            @csrf
+                                                                            @method('delete')
+                                                                            <button type="submit"
+                                                                                    class="btn btn-link btn-danger">
+                                                                                <i class="fa fa-trash"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @endif
+                                            </div>
+                                            <div class="card-footer">
+                                                <form action="{{route('child.mandate.store', ['child' => $child->id])}}"  method="post">
+                                                    @csrf
+                                                    <div class="form-group">
+                                                        <label for="mandate_name">Name der bevollmächtigten Person</label>
+                                                        <input type="text" name="mandate_name" id="mandate_name" class="form-control" value="{{old('mandate_name')}}" required>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="mandate_description">Beschreibung (z.B. Verwandtschaftsverhältnis, Telefonnummer)</label>
+                                                        <textarea name="mandate_description" id="mandate_description" class="form-control" rows="2" required>{{old('mandate_description')}}</textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary btn-block">Neue Abholvollmacht anlegen</button>
+                                                </form>
+                                            </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
