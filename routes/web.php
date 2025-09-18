@@ -444,6 +444,10 @@ Route::middleware('auth')->group(function () {
         Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
         Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
 
+        Route::get('/child/{child}/mandates/edit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'editMandates'])->name('child.mandates.edit');
+        Route::put('/child/{child}/mandates', [\App\Http\Controllers\Anwesenheit\CareController::class, 'updateMandates'])->name('child.mandates.store');
+        Route::delete('child/{child}/mandates/{mandate}/delete', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyMandate'])->name('child.mandates.destroy');
+
     });
 
     //Notizen für Kinder

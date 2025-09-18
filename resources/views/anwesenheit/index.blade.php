@@ -276,6 +276,26 @@
 
                     }
 
+                    const vollmachtList = document.querySelector('#vollmacht .list-group');
+
+                    if (vollmachtList) {
+                        vollmachtList.innerHTML = '';
+                        if (childData.mandates && childData.mandates.length > 0) {
+                            childData.mandates.forEach(function(m) {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item';
+                                const desc = m.mandate_description ? '<br>' + m.mandate_description : '';
+                                li.innerHTML = '<div><b>' + (m.mandate_name || '') + '</b>' + desc + '</div>';
+                                vollmachtList.appendChild(li);
+                            });
+                        } else {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            li.textContent = 'Keine Abholvollmachten hinterlegt';
+                            vollmachtList.appendChild(li);
+                        }
+                    }
+
 
                     childModal.modal('show');
                 });
@@ -385,32 +405,5 @@
             });
         }
 
-        // Neue Logik: Vollmachten im Modal füllen
-        document.querySelectorAll('.child-item').forEach(item => {
-            item.addEventListener('click', function () {
-                const childData = JSON.parse(this.dataset.child);
-
-                // Fülle die Vollmachts-Liste
-                const vollmachtList = document.querySelector('#vollmacht .list-group');
-                if (vollmachtList) {
-                    vollmachtList.innerHTML = '';
-                    if (childData.mandates && childData.mandates.length > 0) {
-                        childData.mandates.forEach(function(m) {
-                            const li = document.createElement('li');
-                            li.className = 'list-group-item';
-                            const desc = m.mandate_description ? '<br>' + m.mandate_description : '';
-                            li.innerHTML = '<div><b>' + (m.mandate_name || '') + '</b>' + desc + '</div>';
-                            vollmachtList.appendChild(li);
-                        });
-                    } else {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.textContent = 'Keine Abholvollmachten hinterlegt';
-                        vollmachtList.appendChild(li);
-                    }
-                }
-
-            });
-        });
     </script>
 @endpush
