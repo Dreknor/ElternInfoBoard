@@ -6,16 +6,16 @@
         <div class="card ">
             <div class="card-header">
                 <ul class="nav nav-pills card-header-tabs  nav-fill"  id="myTab" role="tablist">
-                    <li class="nav-item  bg-gradient-directional-blue-grey-light ">
+                    <li class="nav-item  bg-gradient-x-blue-green ">
                         <a class="nav-link text-dark active" id="Anwesenheit-tab" data-toggle="tab" href="#Anwesenheit" role="tab" aria-controls="Anwesenheit" aria-selected="true">Anwesenheit</a>
                     </li>
-                    <li class="nav-item bg-gradient-directional-blue-grey-light">
+                    <li class="nav-item bg-gradient-directional-success">
                         <a class="nav-link text-dark" id="Schickzeiten-tab" data-toggle="tab" href="#Schickzeiten" role="tab" aria-controls="Schickzeiten" aria-selected="false">Schickzeiten</a>
                     </li>
-                    <li class="nav-item bg-gradient-directional-blue-grey-light">
+                    <li class="nav-item bg-gradient-x-blue-purple-1">
                         <a class="nav-link  text-dark" id="Anwesenheitsabfrage-tab" data-toggle="tab" href="#Anwesenheitsabfrage" role="tab" aria-controls="Anwesenheitsabfrage" aria-selected="false">Anwesenheitsabfrage</a>
                     </li>
-                    <li class="nav-item bg-gradient-directional-blue-grey-light">
+                    <li class="nav-item bg-gradient-x-orange-yellow">
                         <a class="nav-link  text-dark" id="Vollmacht-tab" data-toggle="tab" href="#Vollmacht" role="tab" aria-controls="Vollmacht" aria-selected="false">Abholvollmacht</a>
                     </li>
                 </ul>
