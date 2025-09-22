@@ -47,6 +47,21 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
+                    <input type="number" class="form-control" name="pflichtstunden_anzahl" step="0.01"
+                           value="{{$pflichtstundenSettings->pflichtstunden_betrag ?? 0}}">
+                    Betrag je Pflichtstunden
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Der Betrag, der je nicht geleisteter Pflichtstunde berechnet wird. Dieser Wert wird verwendet, um die finanziellen Konsequenzen für nicht erfüllte Pflichtstunden zu bestimmen.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
                     <input type="checkbox" name="listen_autocreate" value="1"
                            class="form-control" @if($pflichtstundenSettings->listen_autocreate) checked @endif>
                     Pflichtstunden aus Listen automatisch erstellen

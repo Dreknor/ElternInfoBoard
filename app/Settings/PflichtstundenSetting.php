@@ -14,6 +14,8 @@ class PflichtstundenSetting extends Settings
 
     public int $pflichtstunden_anzahl;
 
+    public float $pflichtstunden_betrag;
+
     public bool $listen_autocreate;
 
     public static function group(): string

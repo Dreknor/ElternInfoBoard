@@ -259,6 +259,7 @@ class SettingsController extends Controller
                     'pflichtstunden_text' => 'required|string',
                     'pflichtstunden_anzahl' => 'required|integer|min:1',
                     'listen_autocreate' => 'required|boolean',
+                    'pflichtstunden_betrag' => 'required|numeric|min:0',
                 ]);
                 $pflichtstundenSetting = new PflichtstundenSetting();
                 try {
@@ -285,6 +286,7 @@ class SettingsController extends Controller
                 $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
                 $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
                 $pflichtstundenSetting->listen_autocreate = $validated['listen_autocreate'];
+                $pflichtstundenSetting->pflichtstunden_betrag = $validated['pflichtstunden_betrag'];
                 $pflichtstundenSetting->save();
                 break;
 
