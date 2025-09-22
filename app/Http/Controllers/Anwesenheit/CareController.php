@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
+use App\Model\ChildMandate;
 use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
@@ -55,8 +56,11 @@ class CareController extends Controller
 
         } else {
             $childs = Child::query()
+
                 ->get();
         }
+
+        $childs->load('mandates');
 
 
         return view('anwesenheit.index', [
@@ -408,5 +412,80 @@ class CareController extends Controller
             'success' => true,
             'data' => $checkIn,
         ]);
+    }
+
+    public function editMandates(Child $child)
+    {
+        $this->authorize('edit schickzeiten');
+
+        return view('child.editMandates', [
+            'child' => $child,
+            'mandates' => $child->mandates,
+        ]);
+
+    }
+
+    public function updateMandates(Request $request, Child $child)
+    {
+
+        $this->authorize('edit schickzeiten');
+
+        $request->validate([
+            'mandates' => 'nullable|string',
+        ]);
+
+       $Zeilen = preg_split('/\r\n|\r|\n/', $request->mandates);
+       $mandates = array_filter(array_map('trim', $Zeilen));
+
+
+       foreach ($mandates as $mandate) {
+           $teile = explode(',', $mandate, 2);
+           try {
+               $child->mandates()->updateOrCreate([
+                     'mandate_name' => trim($teile[0]),
+                     'mandate_description' => isset($teile[1]) ? trim($teile[1]) : null,
+                        'created_by' => auth()->id(),
+               ]);
+           } catch (\Exception $e) {
+               Log::error('Error updating/creating mandate: ' . $e->getMessage());
+               return redirect()->back()->with([
+                   'type' => 'danger',
+                   'Meldung' => 'Fehler beim Speichern der Vollmacht.' . $e->getMessage()
+               ]);
+           }
+       }
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Die Vollmachten wurden aktualisiert.',
+        ]);
+    }
+
+    public function deleteMandates(Child $child, ChildMandate $childMandate)
+    {
+        $this->authorize('edit schickzeiten');
+
+        if ($child->id !== $childMandate->child_id) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Die Vollmacht gehört nicht zu diesem Kind.',
+            ]);
+        }
+
+        try {
+            $childMandate->delete();
+        } catch (\Exception $e) {
+            Log::error('Error deleting mandate: ' . $e->getMessage());
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Fehler beim Löschen der Vollmacht.' . $e->getMessage()
+            ]);
+        }
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Die Vollmacht wurde gelöscht.',
+        ]);
+
     }
 }

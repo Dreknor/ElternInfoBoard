@@ -53,6 +53,9 @@
                             </td>
                             <td>
                                 <a href="{{ route('child.edit', $child->id) }}" class="btn btn-primary">Edit</a>
+                                <a href="{{ route('child.mandates.edit', $child->id) }}" class="btn btn-info">Vollmachten</a>
+
+
                                 <form action="{{ route('child.destroy', $child->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')

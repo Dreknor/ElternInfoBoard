@@ -9,6 +9,7 @@ use App\Model\ChildCheckIn;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ChildController extends Controller
@@ -218,6 +219,62 @@ class ChildController extends Controller
             'message' => 'Sie haben keine Berechtigung',
         ], 403);
 
+    }
+
+    public function storeMandate(Request $request, Child $child)
+    {
+        $this->middleware('auth');
+
+        if (!auth()->user()->children()->contains($child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung',
+                'type' => 'danger',
+            ]);
+        }
+
+        $request->validate([
+            'mandate_name' => 'required|string|max:255',
+            'mandate_description' => 'nullable|string',
+        ]);
+
+        $child->mandates()->create([
+            'mandate_name' => $request->mandate_name,
+            'mandate_description' => $request->mandate_description,
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with([
+            'Meldung' => 'Mandat wurde erfolgreich erstellt',
+            'type' => 'success',
+        ]);
+    }
+
+    public function destroyMandate(Request $request, Child $child, $mandateId)
+    {
+        $this->middleware('auth');
+
+        if (!auth()->user()->children()->contains($child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
+                'type' => 'danger',
+            ]);
+        }
+
+        $mandate = $child->mandates()->where('id', $mandateId)->first();
+
+        if (!$mandate) {
+            return redirect()->back()->with([
+                'Meldung' => 'Vollmacht nicht gefunden',
+                'type' => 'danger',
+            ]);
+        }
+
+        $mandate->delete();
+
+        return redirect()->back()->with([
+            'Meldung' => 'Vollmacht wurde erfolgreich gelöscht',
+            'type' => 'success',
+        ]);
     }
 
 }

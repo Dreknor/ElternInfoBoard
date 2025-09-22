@@ -34,6 +34,10 @@ class Child extends Model implements HasMedia
         return $this->belongsTo(Group::class);
     }
 
+    public function mandates()
+    {
+        return     $this->hasMany(ChildMandate::class, 'child_id');
+    }
     public function class()
     {
         return $this->belongsTo(Group::class);
