@@ -47,7 +47,7 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
-                    <input type="number" class="form-control" name="pflichtstunden_anzahl" step="0.01"
+                    <input type="number" class="form-control" name="pflichtstunden_betrag" step="0.01"
                            value="{{$pflichtstundenSettings->pflichtstunden_betrag ?? 0}}">
                     Betrag je Pflichtstunden
                 </label>
