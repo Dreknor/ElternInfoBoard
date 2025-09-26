@@ -86,6 +86,20 @@
                                 @endif
                             </th>
                         </tr>
+                        <tr>
+                            <th colspan="3">
+                                Offener Betrag ({{$pflichtstunden_settings->pflichtstunden_betrag}} € je Pflichtstunde):
+                            </th>
+                            <th>
+                               @php
+                                   $remaining_hours = ($pflichtstunden_settings->pflichtstunden_anzahl * 60 - $pflichtstunden->where('approved', true)->sum('duration')) / 60;
+                                   $betrag_gesamt = $pflichtstunden_settings->pflichtstunden_anzahl * $pflichtstunden_settings->pflichtstunden_betrag;
+                                   $offener_betrag = $remaining_hours * $pflichtstunden_settings->pflichtstunden_betrag;
+
+                                @endphp
+                                {{number_format($offener_betrag, 2)}} € von {{$betrag_gesamt}} €
+                            </th>
+                        </tr>
                         </tfoot>
                     </table>
                 </div>
