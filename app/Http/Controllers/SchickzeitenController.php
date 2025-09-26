@@ -413,21 +413,50 @@ class SchickzeitenController extends Controller
         }
 
         if ($weekday) {
-            $nextDate = Carbon::now()->next($weekday);
 
+            if (Carbon::now()->dayOfWeek == $weekday) {
+                // Wenn heute der gleiche Wochentag ist, verwende heute als nächstes Datum
+                $nextDate = Carbon::now();
+            } else {
+                // Berechne das Datum des nächsten Wochentags
+                $nextDate = Carbon::now()->next($weekday);
+            }
+
+
+            Log::debug('Schickzeit Änderung für Kind '.$child->first_name.' '.$child->last_name,[
+                'child_id' => $child->id,
+                'next_date' => $nextDate->toDateString(),
+                'type' => $request->type,
+                'time' => $request->time ?? null,
+                'time_ab' => $request->time_ab ?? null,
+                'time_spaet' => $request->time_spaet ?? null,
+                'changedBy' => \auth()->user()->name,
+                'users_id' => $child->parents()->first()->id
+            ]);
             // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
             $exists = $child->schickzeiten()
                 ->where('specific_date', $nextDate->toDateString())
                 ->delete();
-            $child->schickzeiten()->create([
+
+
+            $schickzeit = new Schickzeiten([
                 'specific_date' => $nextDate->toDateString(),
                 'type' => $request->type,
                 'time' => $request->time ?? null,
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id
+                'users_id' => $child->parents()->first()->id,
+                'child_id' => $child->id,
             ]);
+
+            $schickzeit->save();
+
+            Log::debug('Schickzeit für Kind '.$child->first_name.' '.$child->last_name.' für den '. $nextDate->toDateString().' erstellt',[
+               'schickzeit' => $schickzeit,
+            ]);
+
+
 
 
         }
