@@ -83,7 +83,7 @@ class FeedbackController extends Controller
 
         $data = [];
 
-        /*
+
         if ($request->hasFile('files')) {
             $files = $request->files->all();
             foreach ($files['files'] as $document) {
@@ -101,7 +101,7 @@ class FeedbackController extends Controller
                 $data[] = $document;
             }
         }
-*/
+
 
         //create Mail Model for logging Mail in Database
         $mail = new MailModel([
@@ -112,7 +112,7 @@ class FeedbackController extends Controller
         ]);
         $mail->save();
         $data = [];
-        /*
+
         $mail->addAllMediaFromRequest(['files'])
             ->each(function ($fileAdder) {
                 $fileAdder->toMediaCollection('files');
@@ -120,14 +120,14 @@ class FeedbackController extends Controller
         foreach ($mail->getMedia('files') as $media) {
             $data['document'][] = $media;
         }
-*/
-        Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
-        $feedback = [
-            'type' => 'success',
-            'Meldung' => 'Nachricht wurde versandt',
-        ];
+
 
         try {
+            Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
+            $feedback = [
+                'type' => 'success',
+                'Meldung' => 'Nachricht wurde versandt',
+            ];
 
         } catch (Exception $e) {
 

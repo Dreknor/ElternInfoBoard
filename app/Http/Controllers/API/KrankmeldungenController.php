@@ -120,9 +120,20 @@ class KrankmeldungenController extends Controller
         }
 
         try {
+            // If API caller uploaded files via multipart/form-data with key 'files', store them
+            $attachments = [];
+            if ($request->hasFile('files')) {
+                $krankmeldung->addAllMediaFromRequest(['files'])
+                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
+
+                foreach ($krankmeldung->getMedia('files') as $media) {
+                    $attachments[] = $media;
+                }
+            }
+
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null, $attachments));
 
             return response()->json('Krankmeldung gesendet.',200);
         } catch (\Exception $e) {

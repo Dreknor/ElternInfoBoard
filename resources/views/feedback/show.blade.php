@@ -47,16 +47,15 @@
                                 </div>
                             </div>
                         </div>
-<!--
+
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="customFile">Datei anfügen</label>
-                                    <input type="file"  name="files[]" id="customFile" multiple>
+                                    <input type="file"  name="files[]" id="customFile" multiple class="form-control">
                                 </div>
                             </div>
                         </div>
-                        -->
                         <div class="row">
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary btn-block">

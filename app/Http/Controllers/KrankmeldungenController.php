@@ -77,7 +77,7 @@ class KrankmeldungenController extends Controller
                 }
             } else {
 
-                $gruppen = auth()->user()->groups;
+                $gruppen = auth()->user()?->groups ?? collect();
 
                 $krankmeldung->name .= ' (';
 
@@ -91,6 +91,18 @@ class KrankmeldungenController extends Controller
 
             $krankmeldung->users_id = auth()->id();
             $krankmeldung->save();
+
+            // If files were uploaded, store them with Spatie MediaLibrary on this model
+            if ($request->hasFile('files')) {
+                $krankmeldung->addAllMediaFromRequest(['files'])
+                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
+            }
+
+            // collect attachments (Spatie media models) to pass to the Mailable
+            $attachments = [];
+            foreach ($krankmeldung->getMedia('files') as $media) {
+                $attachments[] = $media;
+            }
 
             $meldung = "Krankmeldung wurde erfolgreich eingetragen";
 
@@ -114,7 +126,7 @@ class KrankmeldungenController extends Controller
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $krankmeldung->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $krankmeldung->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null, $attachments));
 
             return redirect()->back()->with([
                 'type' => 'success',

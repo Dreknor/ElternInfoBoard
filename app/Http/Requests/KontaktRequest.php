@@ -37,6 +37,16 @@ class KontaktRequest extends FormRequest
             'mitarbeiter' => [
                 'present',
             ],
+            'files' =>[
+                'nullable',
+                'array',
+                'max:3',
+            ],
+            'files.*' => [
+                'file',
+                'max:8000'
+            ]
+
         ];
     }
 }
