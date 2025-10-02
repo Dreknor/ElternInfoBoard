@@ -26,11 +26,6 @@ class Krankmeldung extends Mailable
 
     public ?string $disease;
 
-    /**
-     * media attachments (array of Spatie\MediaLibrary\Models\Media)
-     * @var array
-     */
-    public array $attachments = [];
 
     /**
      * Create a new message instance.
@@ -46,7 +41,6 @@ class Krankmeldung extends Mailable
         $this->krankBis = $krankBis;
         $this->bemerkung = $bemerkung;
         $this->disease = $disease;
-        $this->attachments = $attachments;
     }
 
     /**
@@ -59,31 +53,5 @@ class Krankmeldung extends Mailable
         return $this
             ->subject('Krankmeldung '.$this->NameDesKindes.': '.$this->krankVon.' - '.$this->krankBis)
             ->view('emails.krankmeldung');
-    }
-
-    /**
-     * Attachments for the message.
-     * This will be called by the mailer to get attachments for this mailable.
-     *
-     * @return \Illuminate\Mail\Mailables\Attachment[]
-     */
-    public function attachments(): array
-    {
-        $files = [];
-
-        if (count($this->attachments) > 0) {
-            foreach ($this->attachments as $media) {
-                // $media expected to be a Spatie Media model
-                if (method_exists($media, 'getPathRelativeToRoot') && isset($media->disk)) {
-                    $files[] = Attachment::fromStorageDisk($media->disk, $media->getPathRelativeToRoot())
-                        ->as($media->file_name);
-                } elseif (method_exists($media, 'getPath')) {
-                    $files[] = Attachment::fromPath($media->getPath())
-                        ->as($media->file_name);
-                }
-            }
-        }
-
-        return $files;
     }
 }
