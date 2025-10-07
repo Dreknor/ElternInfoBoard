@@ -584,8 +584,10 @@ class SchickzeitenController extends Controller
     {
         $users = User::has('schickzeiten')->get();
 
+        Log::debug('Sende Schickzeiten Reminder an '.count($users).' Nutzer');
+
         foreach ($users as $user) {
-            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children ));
+            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children() ));
         }
     }
 
