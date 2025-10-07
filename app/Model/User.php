@@ -16,6 +16,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use OwenIt\Auditing\Auditable;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
@@ -33,6 +34,7 @@ class User extends Authenticatable
     use Reacts;
     use HasApiTokens;
     use SoftDeletes;
+    use Auditable;
 
 
     //fill uuid column
