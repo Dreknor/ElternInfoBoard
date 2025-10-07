@@ -9,14 +9,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable;
 
 #[ObservedBy([SchickzeitenObserver::class])]
-class Schickzeiten extends Model
+class Schickzeiten extends Model implements Auditable
 {
     use SoftDeletes;
     use HasFactory;
-    use Auditable;
+    use \OwenIt\Auditing\Auditable;
 
 
     protected $table = 'schickzeiten';

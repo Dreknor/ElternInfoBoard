@@ -4,12 +4,13 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class ChildCheckIn extends Model
+class ChildCheckIn extends Model implements Auditable
 {
     use HasFactory;
-    use Auditable;
+    use \OwenIt\Auditing\Auditable;
+
 
     protected $fillable = [
         'child_id',

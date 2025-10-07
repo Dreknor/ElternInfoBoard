@@ -10,18 +10,18 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
-use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\CalendarLinks\Link;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 
-class Termin extends Model
+class Termin extends Model implements Auditable
 {
     use HasFactory;
     use NotificationTrait;
     use HasRelationships;
-    use Auditable;
+    use \OwenIt\Auditing\Auditable;
 
     protected $table = 'termine';
 
