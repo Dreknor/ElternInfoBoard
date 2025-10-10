@@ -76,12 +76,11 @@
                                     </div>
                                 </div>
                                 <div class="card-footer border-top">
-                                    <button type="button" class="btn btn-danger" id="logoutButton" style="display: none;">
-                                        <i class="fa-solid fa-shoe-prints"></i> Abmelden
+                                    <button type="button" class="btn btn-danger  btn-block" id="logoutButton" style="display: none;">
+                                        <i class="fa-solid fa-shoe-prints"></i> <div id="checkoutButtonChildName" class="d-inline"></div> <div class="d-inline text-medium">Abmelden</div>
                                     </button>
-                                    <button type="button" class="btn btn-success" id="checkinButton" style="display: none;">
-                                        <i class="fa-solid fa-child-reaching"></i>
-                                        Anmelden
+                                    <button type="button" class="btn btn-success btn-block text-greater" id="checkinButton" style="display: none;">
+                                        <i class="fa-solid fa-child-reaching"></i> <div id="checkinButtonChildName" class="d-inline"></div> <div class="d-inline text-medium"> Anmelden </div>
                                     </button>
                                 </div>
                             </div>
@@ -215,12 +214,16 @@
             const childModal = $('#childModal');
             const childName = document.getElementById('childName');
             const logoutButton = document.getElementById('logoutButton');
+            const checkoutButtonChildName = document.getElementById('checkoutButtonChildName');
             const checkinButton = document.getElementById('checkinButton');
+            const checkinButtonChildName = document.getElementById('checkinButtonChildName');
             const spinner = document.getElementById('spinner');
             const schickzeitForm = document.getElementById('schickzeitForm');
             const noticeForm = document.getElementById('noticeForm');
             var url_anmelden = "{{url('care/anwesenheit/:childId/anmelden')}}";
             var url_abmelden = "{{url('care/anwesenheit/:childId/abmelden')}}";
+
+
 
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
@@ -228,7 +231,9 @@
                     const notices = JSON.parse(this.dataset.notices);
                     childName.textContent = `${childData.first_name} ${childData.last_name}`;
                     logoutButton.dataset.childId = childData.id;
+                    checkoutButtonChildName.textContent = childData.first_name;
                     checkinButton.dataset.childId = childData.id;
+                    checkinButtonChildName.textContent = childData.first_name;
 
 
                     if (childData.checked_in === 'false') {
@@ -303,6 +308,7 @@
 
             logoutButton.addEventListener('click', function () {
                 const childId = this.dataset.childId;
+
 
                 logoutButton.style.display = 'none';
                 spinner.style.display = 'inline-block';
