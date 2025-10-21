@@ -37,33 +37,17 @@
                                             <div class="form-group">
                                                 <label>E-Mail</label>
                                                 <input type="email" class="form-control border-input" placeholder="E-Mail" name="email" required autocomplete="off"  value="{{old('email')}}">
+                                                <small class="form-text text-muted">
+                                                    <i class="fas fa-info-circle"></i> Der Benutzer erhält ein automatisch generiertes Startkennwort per E-Mail.
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="form-group">
-                                                <label>Passwort</label>
-                                                <input type="password" name="password"  class="form-control border-input" required  autocomplete="new-password" >
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="form-group">
-                                                    <label>Passwort wiederholen</label>
-                                                    <input type="password" name="password_confirmation"  class="form-control border-input" required>
-                                                </div>
-
-                                            </div>
-                                        </div>
 
                                         <div class="row">
                                             <div class="col-12">
                                                 <button type="submit" class="btn btn-success btn-block" id="btn-save">
-                                                    speichern
+                                                    <i class="fas fa-save"></i> Benutzer anlegen und Startkennwort versenden
                                                 </button>
                                             </div>
                                         </div>

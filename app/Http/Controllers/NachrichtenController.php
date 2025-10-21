@@ -956,9 +956,7 @@ class NachrichtenController extends Controller
 
         $sendTo = [];
         foreach ($users as $mailUser) {
-            $header = $post->header;
-            $news = $post->news;
-            @Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));
+            @Mail::to($mailUser->email)->queue(new DringendeInformationen($post));
             $sendTo[] = [
                 'name' => $mailUser->name,
                 'email' => $mailUser->email,

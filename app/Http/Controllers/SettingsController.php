@@ -212,6 +212,7 @@ class SettingsController extends Controller
                     'mail_encryption' => 'required|max:255',
                     'mail_from_address' => 'required|max:255',
                     'mail_from_name' => 'required|max:255',
+                    'new_user_welcome_text' => 'required|string|max:1000',
                 ]);
 
                 $mailSettings = new EmailSetting();
@@ -222,6 +223,7 @@ class SettingsController extends Controller
                 $mailSettings->mail_encryption = $validated['mail_encryption'];
                 $mailSettings->mail_from_address = $validated['mail_from_address'];
                 $mailSettings->mail_from_name = $validated['mail_from_name'];
+                $mailSettings->new_user_welcome_text = $validated['new_user_welcome_text'];
                 $mailSettings->save();
 
                 config([
