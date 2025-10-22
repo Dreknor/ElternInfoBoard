@@ -25,16 +25,17 @@ class CommentAndDiscussionTest extends TestCase
         $post = Post::factory()->create();
 
         $comment = Comment::factory()->create([
-            'user_id' => $user->id,
+            'creator_id' => $user->id,
+            'creator_type' => User::class,
             'commentable_id' => $post->id,
             'commentable_type' => Post::class,
-            'comment' => 'Dies ist ein Testkommentar',
+            'body' => 'Dies ist ein Testkommentar',
         ]);
 
         $this->assertDatabaseHas('comments', [
             'id' => $comment->id,
-            'user_id' => $user->id,
-            'comment' => 'Dies ist ein Testkommentar',
+            'creator_id' => $user->id,
+            'body' => 'Dies ist ein Testkommentar',
         ]);
     }
 
@@ -44,10 +45,13 @@ class CommentAndDiscussionTest extends TestCase
     public function comment_belongs_to_user()
     {
         $user = User::factory()->create();
-        $comment = Comment::factory()->create(['user_id' => $user->id]);
+        $comment = Comment::factory()->create([
+            'creator_id' => $user->id,
+            'creator_type' => User::class,
+        ]);
 
-        $this->assertInstanceOf(User::class, $comment->user);
-        $this->assertEquals($user->id, $comment->user->id);
+        $this->assertInstanceOf(User::class, $comment->creator);
+        $this->assertEquals($user->id, $comment->creator->id);
     }
 
     /**
@@ -72,14 +76,14 @@ class CommentAndDiscussionTest extends TestCase
         $user = User::factory()->create();
 
         $discussion = Discussion::factory()->create([
-            'author_id' => $user->id,
-            'title' => 'Wichtige Diskussion',
+            'owner' => $user->id,
+            'header' => 'Wichtige Diskussion',
         ]);
 
         $this->assertDatabaseHas('discussions', [
             'id' => $discussion->id,
-            'author_id' => $user->id,
-            'title' => 'Wichtige Diskussion',
+            'owner' => $user->id,
+            'header' => 'Wichtige Diskussion',
         ]);
     }
 
@@ -103,7 +107,10 @@ class CommentAndDiscussionTest extends TestCase
     public function user_can_delete_own_comment()
     {
         $user = User::factory()->create();
-        $comment = Comment::factory()->create(['user_id' => $user->id]);
+        $comment = Comment::factory()->create([
+            'creator_id' => $user->id,
+            'creator_type' => User::class,
+        ]);
 
         $comment->delete();
 

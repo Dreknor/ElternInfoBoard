@@ -22,8 +22,9 @@ class DiscussionFactory extends Factory
     public function definition()
     {
         return [
-            'header' => $this->faker->word(),
+            'header' => $this->faker->sentence(),
             'text' => $this->faker->text(),
+            'owner' => \App\Model\User::factory(),
             'sticky' => $this->faker->boolean(),
         ];
     }

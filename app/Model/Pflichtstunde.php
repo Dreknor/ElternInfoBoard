@@ -6,13 +6,14 @@ use App\Observers\PflichtstundenObserver;
 use App\Settings\PflichtstundenSetting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([PflichtstundenObserver::class])]
 class Pflichtstunde extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFactory;
 
     protected $table = 'pflichtstunden';
 

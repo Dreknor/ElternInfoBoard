@@ -20,12 +20,12 @@ class LosungTest extends TestCase
     {
         $losung = Losung::factory()->create([
             'date' => now()->format('Y-m-d'),
-            'text' => 'Siehe, ich bin bei euch alle Tage',
+            'Losungstext' => 'Siehe, ich bin bei euch alle Tage',
         ]);
 
-        $this->assertDatabaseHas('losungs', [
+        $this->assertDatabaseHas('losungen', [
             'id' => $losung->id,
-            'text' => 'Siehe, ich bin bei euch alle Tage',
+            'Losungstext' => 'Siehe, ich bin bei euch alle Tage',
         ]);
     }
 
@@ -36,18 +36,18 @@ class LosungTest extends TestCase
     {
         $todayLosung = Losung::factory()->create([
             'date' => now()->format('Y-m-d'),
-            'text' => 'Heutiger Vers',
+            'Losungstext' => 'Heutiger Vers',
         ]);
 
         $yesterdayLosung = Losung::factory()->create([
             'date' => now()->subDay()->format('Y-m-d'),
-            'text' => 'Gestriger Vers',
+            'Losungstext' => 'Gestriger Vers',
         ]);
 
         $today = Losung::whereDate('date', now())->first();
 
         $this->assertNotNull($today);
-        $this->assertEquals('Heutiger Vers', $today->text);
+        $this->assertEquals('Heutiger Vers', $today->Losungstext);
     }
 
     /**
@@ -59,8 +59,6 @@ class LosungTest extends TestCase
 
         Losung::factory()->create(['date' => $date]);
 
-        // Bei Versuch, eine weitere Losung für das gleiche Datum zu erstellen,
-        // sollte entweder ein Fehler auftreten oder die existierende aktualisiert werden
         $existingLosung = Losung::whereDate('date', $date)->first();
         $this->assertNotNull($existingLosung);
     }

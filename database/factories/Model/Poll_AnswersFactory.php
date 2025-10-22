@@ -22,7 +22,7 @@ class Poll_AnswersFactory extends Factory
     public function definition()
     {
         return [
-            'poll_id' => \App\REPLACE_THIS::factory(),
+            'poll_id' => \App\Model\Poll::factory(),
             'option_id' => \App\Model\Poll_Option::factory(),
         ];
     }

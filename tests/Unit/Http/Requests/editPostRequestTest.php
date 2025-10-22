@@ -3,7 +3,9 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\editPostRequest;
-
+use App\Model\User;
+use App\Model\Post;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -24,19 +26,32 @@ class editPostRequestTest extends TestCase
     /**
      * @test
      */
-        /**
-     * @test
-     */
     public function authorize()
     {
-        $actual = $this->subject->authorize();
+        $user = User::factory()->create();
+        $post = Post::factory()->create(['author' => $user->id]);
+
+        $this->actingAs($user);
+
+        // Erstelle einen partiellen Mock für die authorize-Methode
+        $request = $this->getMockBuilder(editPostRequest::class)
+            ->onlyMethods(['route'])
+            ->getMock();
+
+        $request->expects($this->any())
+            ->method('route')
+            ->with($this->equalTo('posts'))
+            ->willReturn($post);
+
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
+
+        $actual = $request->authorize();
         $this->assertTrue($actual);
     }
 
     /**
-     * @test
-     */
-        /**
      * @test
      */
     public function rules()
@@ -46,6 +61,5 @@ class editPostRequestTest extends TestCase
         $this->assertIsArray($actual);
         // Validierungsregeln werden durch die Request-Klasse definiert
     }
-
-    // test cases...
 }
+

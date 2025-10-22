@@ -77,8 +77,12 @@ class PflichtstundeManagementTest extends TestCase
      */
     public function pflichtstunde_belongs_to_user()
     {
-        $user = User::factory()->create();
-        $pflichtstunde = Pflichtstunde::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        $pflichtstunde = Pflichtstunde::factory()->create([
+            'user_id' => $user->id,
+            'start' => now(),
+            'end' => now()->addHours(3),
+        ]);
 
         $this->assertInstanceOf(User::class, $pflichtstunde->user);
         $this->assertEquals($user->id, $pflichtstunde->user->id);
@@ -89,9 +93,11 @@ class PflichtstundeManagementTest extends TestCase
      */
     public function pflichtstunde_has_approver_relation()
     {
-        $approver = User::factory()->create();
+        $approver = User::factory()->create(['password_changed_at' => now()]);
         $pflichtstunde = Pflichtstunde::factory()->approved()->create([
             'approved_by' => $approver->id,
+            'start' => now(),
+            'end' => now()->addHours(3),
         ]);
 
         $this->assertInstanceOf(User::class, $pflichtstunde->approver);

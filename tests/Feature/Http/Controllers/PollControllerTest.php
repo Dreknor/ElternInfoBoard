@@ -21,8 +21,8 @@ class PollControllerTest extends TestCase
      */
     public function store_creates_new_poll()
     {
-        $user = User::factory()->create();
-        $post = Post::factory()->create(['author_id' => $user->id]);
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        $post = Post::factory()->create(['author' => $user->id]);
 
         $response = $this->actingAs($user)->post("poll/{$post->id}/create", [
             'question' => 'Was ist deine Lieblingsfarbe?',
@@ -61,7 +61,7 @@ class PollControllerTest extends TestCase
      */
     public function vote_allows_user_to_vote_on_poll()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['password_changed_at' => now()]);
         $post = Post::factory()->create();
         $poll = Poll::factory()->create([
             'post_id' => $post->id,

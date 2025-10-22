@@ -3,7 +3,8 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\UpdatePollRequest;
-
+use App\Model\User;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -24,11 +25,13 @@ class UpdatePollRequestTest extends TestCase
     /**
      * @test
      */
-        /**
-     * @test
-     */
     public function authorize()
     {
+        $user = User::factory()->create();
+        Permission::findOrCreate('create polls');
+        $user->givePermissionTo('create polls');
+        $this->actingAs($user);
+
         $actual = $this->subject->authorize();
         $this->assertTrue($actual);
     }

@@ -3,7 +3,8 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\ImportLosungenRequest;
-
+use App\Model\User;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -24,11 +25,13 @@ class ImportLosungenRequestTest extends TestCase
     /**
      * @test
      */
-        /**
-     * @test
-     */
     public function authorize()
     {
+        $user = User::factory()->create();
+        Permission::findOrCreate('edit settings');
+        $user->givePermissionTo('edit settings');
+        $this->actingAs($user);
+
         $actual = $this->subject->authorize();
         $this->assertTrue($actual);
     }

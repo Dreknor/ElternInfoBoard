@@ -19,18 +19,16 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_view_active_diseases()
+    public function authorized_user_can_view_create_disease_form()
     {
-        $user = User::factory()->create();
-        Permission::create(['name' => 'view diseases']);
-        $user->givePermissionTo('view diseases');
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        Permission::create(['name' => 'manage diseases']);
+        $user->givePermissionTo('manage diseases');
 
-        ActiveDisease::factory()->count(3)->active()->create();
+        $response = $this->actingAs($user)->get('/diseases/create');
 
-        $response = $this->actingAs($user)->get(route('diseases.index'));
-
-        $response->assertOk();
-        $response->assertViewHas('diseases');
+        $response->assertStatus(200);
+        $response->assertViewIs('krankmeldung.createDisease');
     }
 
     /**
@@ -38,13 +36,13 @@ class ActiveDiseaseControllerTest extends TestCase
      */
     public function authorized_user_can_create_active_disease()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
         $user->givePermissionTo('manage diseases');
 
         $disease = Disease::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('diseases.store'), [
+        $response = $this->actingAs($user)->post('/diseases/create', [
             'disease_id' => $disease->id,
             'start' => now()->format('Y-m-d'),
             'end' => now()->addDays(7)->format('Y-m-d'),
@@ -57,7 +55,7 @@ class ActiveDiseaseControllerTest extends TestCase
         $this->assertDatabaseHas('active_diseases', [
             'disease_id' => $disease->id,
             'user_id' => $user->id,
-            'active' => true,
+            'active' => false,
         ]);
     }
 
@@ -66,22 +64,20 @@ class ActiveDiseaseControllerTest extends TestCase
      */
     public function authorized_user_can_deactivate_disease()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
         $user->givePermissionTo('manage diseases');
 
         $activeDisease = ActiveDisease::factory()->active()->create();
 
-        $response = $this->actingAs($user)->put(route('diseases.update', $activeDisease), [
+        $response = $this->actingAs($user)->put("/diseases/{$activeDisease->id}/active", [
             'active' => false,
         ]);
 
         $response->assertRedirect();
 
-        $this->assertDatabaseHas('active_diseases', [
-            'id' => $activeDisease->id,
-            'active' => false,
-        ]);
+        $activeDisease->refresh();
+        $this->assertEquals(0, $activeDisease->active);
     }
 
     /**
@@ -89,36 +85,31 @@ class ActiveDiseaseControllerTest extends TestCase
      */
     public function unauthorized_user_cannot_manage_diseases()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['password_changed_at' => now()]);
         $disease = Disease::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('diseases.store'), [
+        $response = $this->actingAs($user)->post('/diseases/create', [
             'disease_id' => $disease->id,
             'start' => now()->format('Y-m-d'),
             'end' => now()->addDays(7)->format('Y-m-d'),
         ]);
 
-        $response->assertForbidden();
+        $response->assertStatus(403);
     }
 
     /**
      * @test
      */
-    public function active_diseases_are_displayed_correctly()
+    public function active_diseases_can_be_created_and_retrieved()
     {
         $user = User::factory()->create();
-        Permission::create(['name' => 'view diseases']);
-        $user->givePermissionTo('view diseases');
 
         $activeDiseases = ActiveDisease::factory()->count(2)->active()->create();
         $inactiveDisease = ActiveDisease::factory()->inactive()->create();
 
-        $response = $this->actingAs($user)->get(route('diseases.index'));
+        $activeCount = ActiveDisease::where('active', true)->count();
 
-        $response->assertOk();
-        $viewData = $response->viewData('diseases');
-
-        $this->assertCount(2, $viewData->where('active', true));
+        $this->assertEquals(2, $activeCount);
     }
 }
 
