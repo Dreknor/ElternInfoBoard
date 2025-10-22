@@ -102,6 +102,20 @@
                 </div>
             </div>
         </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-12 col-sm-12">
+                <label class="label-control w-100 ">
+                    <strong>Begrüßungstext für neue Benutzer</strong>
+                    <textarea class="form-control" name="new_user_welcome_text" rows="4">{{$mailSettings->new_user_welcome_text}}</textarea>
+                </label>
+            </div>
+            <div class="col-md-12 col-sm-12 m-auto mt-2">
+                <div class="small">
+                    <i class="fas fa-info-circle text-info"></i> Dieser Text wird in der Willkommens-E-Mail angezeigt, die neue Benutzer mit ihrem Startkennwort erhalten.
+                    <br><strong>Hinweis:</strong> Der Text erscheint nach der Begrüßung "Hallo [Name]," und vor den Zugangsdaten.
+                </div>
+            </div>
+        </div>
 
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">

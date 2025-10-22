@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Model\Post;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -10,19 +11,16 @@ class DringendeInformationen extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public string $header;
-
-    public string $text;
+    public Post $post;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $header, string $text)
+    public function __construct(Post $post)
     {
-        $this->header = $header;
-        $this->text = $text;
+        $this->post = $post;
     }
 
     /**
@@ -32,10 +30,21 @@ class DringendeInformationen extends Mailable
      */
     public function build(): static
     {
-        return $this->subject($this->header)
+        $mail = $this->subject($this->post->header)
             ->view('emails.dringendeNachricht', [
-                'nachricht' => $this->text,
-                'header' => $this->header,
+                'post' => $this->post,
+                'header' => $this->post->header,
+                'nachricht' => $this->post->news,
             ]);
+
+        // Anhänge hinzufügen
+        foreach ($this->post->getMedia('images') as $media) {
+            $mail->attach($media->getPath(), [
+                'as' => $media->file_name,
+                'mime' => $media->mime_type,
+            ]);
+        }
+
+        return $mail;
     }
 }

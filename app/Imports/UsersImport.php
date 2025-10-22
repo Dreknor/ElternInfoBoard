@@ -2,12 +2,16 @@
 
 namespace App\Imports;
 
+use App\Mail\NewUserPasswordMail;
 use App\Model\Group;
 use App\Model\User;
+use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -59,13 +63,19 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $email1 = $email1[0];
 
                 try {
+                    // Prüfe ob Benutzer bereits existiert
+                    $isNewUser1 = !User::where('email', $email1)->exists();
+
+                    // Generiere Zufallspasswort für neuen Benutzer
+                    $password1 = Str::password(12, true, true, true, false);
+
                     $user1 = User::firstOrCreate([
                         'email' => $email1,
                     ],
                         [
                             'name' => $row[$this->header['S1Vorname']] . ' ' . $row[$this->header['S1Nachname']],
                             'changePassword' => 1,
-                            'password' => Hash::make(config('import_eltern')),
+                            'password' => Hash::make($password1),
                             'lastEmail' => Carbon::now(),
                         ]);
 
@@ -75,9 +85,26 @@ class UsersImport implements ToCollection, WithHeadingRow
 
                     $user1->groups()->attach($gruppen);
 
+                    // Sende Willkommens-E-Mail an neuen Benutzer
+                    if ($isNewUser1) {
+                        try {
+                            $emailSettings = app(EmailSetting::class);
+                            Mail::to($user1->email)->queue(new NewUserPasswordMail($user1, $password1, $emailSettings->new_user_welcome_text));
+                            Log::info('Willkommens-E-Mail an ' . $user1->email . ' versendet');
+                        } catch (\Exception $mailException) {
+                            Log::error('Fehler beim Versenden der Willkommens-E-Mail an ' . $user1->email . ': ' . $mailException->getMessage());
+                        }
+                    }
+
                     if (!is_null($row[$this->header['S2Email']])) {
                         $email2 = explode(';', $row[$this->header['S2Email']]);
                         $email2 = $email2[0];
+
+                        // Prüfe ob zweiter Benutzer bereits existiert
+                        $isNewUser2 = !User::where('email', $email2)->exists();
+
+                        // Generiere Zufallspasswort für neuen zweiten Benutzer
+                        $password2 = Str::password(12, true, true, true, false);
 
                         $user2 = User::firstOrCreate([
                             'email' => $email2,
@@ -85,7 +112,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                             [
                                 'name' => $row[$this->header['S2Vorname']] . ' ' . $row[$this->header['S2Nachname']],
                                 'changePassword' => 1,
-                                'password' => Hash::make(config('import_eltern')),
+                                'password' => Hash::make($password2),
                                 'lastEmail' => Carbon::now(),
                             ]);
 
@@ -93,6 +120,17 @@ class UsersImport implements ToCollection, WithHeadingRow
                         $user2->assignRole('Eltern');
                         $user2->removeRole('Aufnahme');
                         $user2->groups()->attach($gruppen);
+
+                        // Sende Willkommens-E-Mail an neuen zweiten Benutzer
+                        if ($isNewUser2) {
+                            try {
+                                $emailSettings = app(EmailSetting::class);
+                                Mail::to($user2->email)->queue(new NewUserPasswordMail($user2, $password2, $emailSettings->new_user_welcome_text));
+                                Log::info('Willkommens-E-Mail an ' . $user2->email . ' versendet');
+                            } catch (\Exception $mailException) {
+                                Log::error('Fehler beim Versenden der Willkommens-E-Mail an ' . $user2->email . ': ' . $mailException->getMessage());
+                            }
+                        }
 
                     }
 

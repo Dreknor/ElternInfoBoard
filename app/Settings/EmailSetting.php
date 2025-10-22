@@ -21,6 +21,8 @@ class EmailSetting extends Settings
 
     public string $mail_from_name;
 
+    public string $new_user_welcome_text;
+
 
     public static function group(): string
     {
