@@ -13,6 +13,7 @@ use App\Model\Notification;
 use App\Model\User;
 use App\Notifications\Push;
 use App\Settings\CareSetting;
+use App\Model\Holiday;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
@@ -208,27 +209,64 @@ class CareController extends Controller
     {
 
         if (now()->isWeekend()) {
-
             return;
         }
 
-        $ferien = Cache::remember('ferien_' . Carbon::now()->year, now()->diff(Carbon::now()->endOfYear()), function () {
-            $url = 'https://ferien-api.de/api/v1/holidays/SN/' . Carbon::now()->year;
-            return json_decode(file_get_contents($url), true);
-        });
-
+        $currentYear = Carbon::now()->year;
         $ferien_tag = false;
-        foreach ($ferien as $ferienTage) {
-            if (now()->between($ferienTage['start'], $ferienTage['end'])) {
 
-                $ferien_tag = "Ja";
+        // Versuche, Ferientage aus der Datenbank zu laden
+        $holidays = Holiday::query()
+            ->where('year', $currentYear)
+            ->get();
+
+        // Wenn keine Ferientage in der Datenbank vorhanden sind, von der API fetchern
+        if ($holidays->isEmpty()) {
+            try {
+                $ferien = Cache::remember('ferien_' . $currentYear, now()->diff(Carbon::now()->endOfYear()), function () use ($currentYear) {
+                    $url = 'https://ferien-api.de/api/v1/holidays/SN/' . $currentYear;
+                    return json_decode(file_get_contents($url), true);
+                });
+
+                // Speichere die Ferientage in der Datenbank
+                if (is_array($ferien) && !empty($ferien)) {
+                    foreach ($ferien as $ferieTage) {
+                        Holiday::query()->updateOrCreate(
+                            [
+                                'year' => $currentYear,
+                                'name' => $ferieTage['name'] ?? 'Ferien',
+                                'start' => $ferieTage['start'],
+                                'end' => $ferieTage['end'],
+                            ],
+                            [
+                                'year' => $currentYear,
+                                'name' => $ferieTage['name'] ?? 'Ferien',
+                                'start' => $ferieTage['start'],
+                                'end' => $ferieTage['end'],
+                            ]
+                        );
+                    }
+                    $holidays = Holiday::query()
+                        ->where('year', $currentYear)
+                        ->get();
+                }
+            } catch (\Exception $e) {
+                Log::error('Error fetching holidays from API: ' . $e->getMessage());
+                return;
             }
         }
 
-        if ($ferien_tag == "Ja") {
-            return;
+        // Prüfe, ob heute ein Ferientag ist
+        foreach ($holidays as $holiday) {
+            if (now()->between($holiday->start, $holiday->end)) {
+                $ferien_tag = true;
+                break;
+            }
         }
 
+        if ($ferien_tag) {
+            return;
+        }
 
         $children = Child::query()
             ->where('auto_checkIn', true)
