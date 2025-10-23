@@ -3,7 +3,7 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\editUserRequest;
-
+use App\Model\User;
 use Tests\TestCase;
 
 /**
@@ -24,11 +24,16 @@ class editUserRequestTest extends TestCase
     /**
      * @test
      */
-        /**
-     * @test
-     */
     public function authorize()
     {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Set user resolver for the subject
+        $this->subject->setUserResolver(function () use ($user) {
+            return $user;
+        });
+
         $actual = $this->subject->authorize();
         $this->assertTrue($actual);
     }
@@ -36,14 +41,15 @@ class editUserRequestTest extends TestCase
     /**
      * @test
      */
-        /**
-     * @test
-     */
     public function rules()
     {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
         $actual = $this->subject->rules();
 
         $this->assertIsArray($actual);
+        $this->assertArrayHasKey('name', $actual);
         // Validierungsregeln werden durch die Request-Klasse definiert
     }
 

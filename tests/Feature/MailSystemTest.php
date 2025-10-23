@@ -23,14 +23,14 @@ class MailSystemTest extends TestCase
         $user = User::factory()->create();
 
         $mail = Mail::factory()->create([
-            'author_id' => $user->id,
+            'senders_id' => $user->id,
             'subject' => 'Test E-Mail',
-            'body' => 'Dies ist der E-Mail-Inhalt',
+            'text' => 'Dies ist der E-Mail-Inhalt',
         ]);
 
         $this->assertDatabaseHas('mails', [
             'id' => $mail->id,
-            'author_id' => $user->id,
+            'senders_id' => $user->id,
             'subject' => 'Test E-Mail',
         ]);
     }
@@ -41,10 +41,10 @@ class MailSystemTest extends TestCase
     public function mail_belongs_to_author()
     {
         $user = User::factory()->create();
-        $mail = Mail::factory()->create(['author_id' => $user->id]);
+        $mail = Mail::factory()->create(['senders_id' => $user->id]);
 
-        $this->assertInstanceOf(User::class, $mail->author);
-        $this->assertEquals($user->id, $mail->author->id);
+        $this->assertInstanceOf(User::class, $mail->sender);
+        $this->assertEquals($user->id, $mail->sender->id);
     }
 
     /**

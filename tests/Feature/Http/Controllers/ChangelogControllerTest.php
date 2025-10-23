@@ -20,7 +20,7 @@ class ChangelogControllerTest extends TestCase
      */
     public function index_returns_an_ok_response()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['changePassword' => false]);
         Changelog::factory()->count(3)->create();
 
         $response = $this->actingAs($user)->get(route('changelog.index'));
@@ -35,7 +35,7 @@ class ChangelogControllerTest extends TestCase
      */
     public function index_displays_paginated_changelogs()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['changePassword' => false]);
         Changelog::factory()->count(10)->create();
 
         $response = $this->actingAs($user)->get(route('changelog.index'));
@@ -50,7 +50,7 @@ class ChangelogControllerTest extends TestCase
      */
     public function create_returns_an_ok_response_for_authorized_user()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['changePassword' => false]);
         Permission::create(['name' => 'add changelog']);
         $user->givePermissionTo('add changelog');
 
@@ -65,13 +65,11 @@ class ChangelogControllerTest extends TestCase
      */
     public function create_redirects_for_unauthorized_user()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['changePassword' => false]);
 
         $response = $this->actingAs($user)->get(route('changelog.create'));
 
-        $response->assertRedirect();
-        $response->assertSessionHas('type', 'danger');
-        $response->assertSessionHas('Meldung', 'Berechtigung fehlt');
+        $response->assertStatus(403);
     }
 
     /**
@@ -79,7 +77,7 @@ class ChangelogControllerTest extends TestCase
      */
     public function store_creates_new_changelog()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['changePassword' => false]);
         Permission::create(['name' => 'add changelog']);
         $user->givePermissionTo('add changelog');
 

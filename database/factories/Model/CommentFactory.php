@@ -23,13 +23,14 @@ class CommentFactory extends Factory
     {
         return [
             'body' => $this->faker->text(),
-            'commentable_type' => $this->faker->word(),
-            'commentable_id' => $this->faker->randomDigitNotNull(),
-            'creator_type' => $this->faker->word(),
-            'creator_id' => $this->faker->randomDigitNotNull(),
-            '_lft' => $this->faker->randomNumber(),
-            '_rgt' => $this->faker->randomNumber(),
-            'parent_id' => \App\Model\Comment::factory(),
+            'title' => $this->faker->sentence(),
+            'commentable_type' => \App\Model\Post::class,
+            'commentable_id' => \App\Model\Post::factory(),
+            'creator_type' => \App\Model\User::class,
+            'creator_id' => \App\Model\User::factory(),
+            '_lft' => $this->faker->numberBetween(1, 100),
+            '_rgt' => $this->faker->numberBetween(1, 100),
+            'parent_id' => null,
         ];
     }
 }

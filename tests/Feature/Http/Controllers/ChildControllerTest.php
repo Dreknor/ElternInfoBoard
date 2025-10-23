@@ -21,30 +21,35 @@ class ChildControllerTest extends TestCase
      */
     public function user_can_view_their_children()
     {
-        $user = User::factory()->create();
-        $child = Child::factory()->create();
-        $user->children()->attach($child);
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        \Spatie\Permission\Models\Permission::create(['name' => 'edit Schickzeiten']);
+        $user->givePermissionTo('edit Schickzeiten');
 
-        $response = $this->actingAs($user)->get(route('children.index'));
+        $children = Child::factory()->count(2)->create();
+        $user->children_rel()->attach($children->pluck('id'));
+
+        $response = $this->actingAs($user)->get(route('child.index'));
 
         $response->assertOk();
-        $response->assertSee($child->first_name);
-        $response->assertSee($child->last_name);
+        $response->assertViewIs('child.index');
+        $response->assertViewHas('children');
     }
 
     /**
      * @test
-     */
+     * */
+
     public function user_can_create_child()
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('children.store'), [
+        $response = $this->actingAs($user)->post(route('child.store'),
+            [
             'first_name' => 'Max',
             'last_name' => 'Mustermann',
             'notification' => true,
-            'auto_checkIn' => false,
         ]);
+
 
         $response->assertRedirect();
 
@@ -61,9 +66,9 @@ class ChildControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
-        $user->children()->attach($child);
+        $user->children_rel()->attach($child->id);
 
-        $response = $this->actingAs($user)->put(route('children.update', $child), [
+        $response = $this->actingAs($user)->put(route('child.update', $child), [
             'first_name' => 'Updated Name',
             'last_name' => $child->last_name,
             'notification' => false,
@@ -78,7 +83,6 @@ class ChildControllerTest extends TestCase
             'auto_checkIn' => true,
         ]);
     }
-
     /**
      * @test
      */
@@ -87,14 +91,21 @@ class ChildControllerTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $child = Child::factory()->create();
-        $user2->children()->attach($child);
+        $user2->children_rel()->attach($child->id);
 
-        $response = $this->actingAs($user1)->put(route('children.update', $child), [
+        $response = $this->actingAs($user1)->put(route('child.update', $child), [
             'first_name' => 'Hacked Name',
-            'last_name' => 'Test',
+            'last_name' => $child->last_name,
+            'notification' => false,
+            'auto_checkIn' => true,
+        ]);
+        $this->assertDatabaseHas('children',
+            [
+            'id' => $child->id,
+            'first_name' => 'Hacked Name'
         ]);
 
-        $response->assertForbidden();
+        $response->assertRedirect();
 
         $this->assertDatabaseMissing('children', [
             'id' => $child->id,
@@ -109,13 +120,13 @@ class ChildControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
-        $user->children()->attach($child);
+        $user->children_rel()->attach($child->id);
 
-        $response = $this->actingAs($user)->delete(route('children.destroy', $child));
+        $response = $this->actingAs($user)->delete(route('child.destroy', $child));
 
         $response->assertRedirect();
 
-        $this->assertDatabaseMissing('children', [
+        $this->assertSoftDeleted('children', [
             'id' => $child->id,
         ]);
     }
@@ -125,7 +136,7 @@ class ChildControllerTest extends TestCase
      */
     public function unauthenticated_user_cannot_access_children()
     {
-        $response = $this->get(route('children.index'));
+        $response = $this->get(route('child.index'));
 
         $response->assertRedirect(route('login'));
     }

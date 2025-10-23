@@ -22,8 +22,8 @@ class group_userFactory extends Factory
     public function definition()
     {
         return [
-            'group_id' => \App\REPLACE_THIS::factory(),
-            'user_id' => \App\REPLACE_THIS::factory(),
+            'group_id' => \App\Model\Group::factory(),
+            'user_id' => \App\Model\User::factory(),
         ];
     }
 }

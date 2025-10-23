@@ -20,17 +20,17 @@ class ListenManagementTest extends TestCase
      */
     public function user_can_create_liste()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['password_changed_at' => now()]);
 
         $liste = Liste::factory()->create([
-            'author_id' => $user->id,
-            'name' => 'Testliste',
+            'besitzer' => $user->id,
+            'listenname' => 'Testliste',
         ]);
 
-        $this->assertDatabaseHas('listes', [
+        $this->assertDatabaseHas('listen', [
             'id' => $liste->id,
-            'author_id' => $user->id,
-            'name' => 'Testliste',
+            'besitzer' => $user->id,
+            'listenname' => 'Testliste',
         ]);
     }
 
@@ -41,7 +41,7 @@ class ListenManagementTest extends TestCase
     {
         $liste = Liste::factory()->create();
         $eintragungen = Listen_Eintragungen::factory()->count(5)->create([
-            'liste_id' => $liste->id,
+            'listen_id' => $liste->id,
         ]);
 
         $this->assertCount(5, $liste->eintragungen);
@@ -52,18 +52,18 @@ class ListenManagementTest extends TestCase
      */
     public function user_can_add_eintragung_to_liste()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['password_changed_at' => now()]);
         $liste = Liste::factory()->create();
 
         $eintragung = Listen_Eintragungen::factory()->create([
-            'liste_id' => $liste->id,
+            'listen_id' => $liste->id,
             'user_id' => $user->id,
             'text' => 'Meine Eintragung',
         ]);
 
-        $this->assertDatabaseHas('listen__eintragungen', [
+        $this->assertDatabaseHas('listen_eintragungen', [
             'id' => $eintragung->id,
-            'liste_id' => $liste->id,
+            'listen_id' => $liste->id,
             'user_id' => $user->id,
         ]);
     }
@@ -73,11 +73,11 @@ class ListenManagementTest extends TestCase
      */
     public function liste_belongs_to_author()
     {
-        $user = User::factory()->create();
-        $liste = Liste::factory()->create(['author_id' => $user->id]);
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        $liste = Liste::factory()->create(['besitzer' => $user->id]);
 
-        $this->assertInstanceOf(User::class, $liste->author);
-        $this->assertEquals($user->id, $liste->author->id);
+        $this->assertInstanceOf(User::class, $liste->ersteller);
+        $this->assertEquals($user->id, $liste->ersteller->id);
     }
 }
 

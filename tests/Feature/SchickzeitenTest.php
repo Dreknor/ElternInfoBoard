@@ -22,12 +22,12 @@ class SchickzeitenTest extends TestCase
         $user = User::factory()->create();
 
         $schickzeit = Schickzeiten::factory()->create([
-            'user_id' => $user->id,
+            'users_id' => $user->id,
         ]);
 
-        $this->assertDatabaseHas('schickzeitens', [
+        $this->assertDatabaseHas('schickzeiten', [
             'id' => $schickzeit->id,
-            'user_id' => $user->id,
+            'users_id' => $user->id,
         ]);
     }
 
@@ -37,7 +37,7 @@ class SchickzeitenTest extends TestCase
     public function schickzeit_belongs_to_user()
     {
         $user = User::factory()->create();
-        $schickzeit = Schickzeiten::factory()->create(['user_id' => $user->id]);
+        $schickzeit = Schickzeiten::factory()->create(['users_id' => $user->id]);
 
         $this->assertInstanceOf(User::class, $schickzeit->user);
         $this->assertEquals($user->id, $schickzeit->user->id);
@@ -50,13 +50,13 @@ class SchickzeitenTest extends TestCase
     {
         $user = User::factory()->create();
         $schickzeit = Schickzeiten::factory()->create([
-            'user_id' => $user->id,
+            'users_id' => $user->id,
             'time' => '08:00',
         ]);
 
         $schickzeit->update(['time' => '09:00']);
 
-        $this->assertDatabaseHas('schickzeitens', [
+        $this->assertDatabaseHas('schickzeiten', [
             'id' => $schickzeit->id,
             'time' => '09:00',
         ]);

@@ -23,14 +23,15 @@ class PostAndGroupTest extends TestCase
         $user = User::factory()->create();
 
         $post = Post::factory()->create([
-            'author_id' => $user->id,
-            'text' => 'Dies ist ein Testbeitrag',
+            'author' => $user->id,
+            'header' => 'Test Header',
+            'news' => 'Dies ist ein Testbeitrag',
         ]);
 
         $this->assertDatabaseHas('posts', [
             'id' => $post->id,
-            'author_id' => $user->id,
-            'text' => 'Dies ist ein Testbeitrag',
+            'author' => $user->id,
+            'news' => 'Dies ist ein Testbeitrag',
         ]);
     }
 
@@ -39,11 +40,11 @@ class PostAndGroupTest extends TestCase
      */
     public function post_belongs_to_author()
     {
-        $user = User::factory()->create();
-        $post = Post::factory()->create(['author_id' => $user->id]);
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        $post = Post::factory()->create(['author' => $user->id]);
 
-        $this->assertInstanceOf(User::class, $post->author);
-        $this->assertEquals($user->id, $post->author->id);
+        $this->assertInstanceOf(User::class, $post->author_user);
+        $this->assertEquals($user->id, $post->author_user->id);
     }
 
     /**
@@ -78,10 +79,13 @@ class PostAndGroupTest extends TestCase
     public function post_can_belong_to_group()
     {
         $group = Group::factory()->create();
-        $post = Post::factory()->create(['group_id' => $group->id]);
+        $post = Post::factory()->create();
 
-        $this->assertInstanceOf(Group::class, $post->group);
-        $this->assertEquals($group->id, $post->group->id);
+        // Posts und Groups haben eine viele-zu-viele Beziehung über group_posts
+        $post->groups()->attach($group->id);
+
+        $this->assertTrue($post->groups->contains($group));
+        $this->assertEquals($group->id, $post->groups->first()->id);
     }
 }
 
