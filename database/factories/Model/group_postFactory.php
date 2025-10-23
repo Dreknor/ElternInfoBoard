@@ -22,8 +22,8 @@ class group_postFactory extends Factory
     public function definition()
     {
         return [
-            'group_id' => \App\REPLACE_THIS::factory(),
-            'post_id' => \App\REPLACE_THIS::factory(),
+            'group_id' => \App\Model\Group::factory(),
+            'post_id' => \App\Model\Post::factory(),
         ];
     }
 }

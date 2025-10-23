@@ -30,7 +30,7 @@ class createRueckmeldungRequest extends FormRequest
             ],
             'empfaenger' => [
                 'required',
-                'email',
+                'email:rfc,dns,strict',
             ],
             'text' => [
                 'required',

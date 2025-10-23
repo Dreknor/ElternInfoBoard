@@ -54,8 +54,7 @@
     </div>
 </div>
 
-
-
+@stack('modals')
     <!-- JavaScripts -->
 
     <script src="{{asset('js/core/jquery.min.js')}}"></script>

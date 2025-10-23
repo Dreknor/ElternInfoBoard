@@ -29,6 +29,8 @@ class CreateChildRequest extends FormRequest
             'group_id' => ['sometimes', 'integer', 'exists:groups,id'],
             'class_id' => ['sometimes', 'integer', 'exists:groups,id'],
             'parent_id' => ['sometimes', 'integer', 'exists:users,id'],
+            'auto_checkIn' => ['sometimes', 'boolean'],
+            'notification' => ['sometimes', 'boolean'],
         ];
     }
 }

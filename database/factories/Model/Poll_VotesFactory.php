@@ -22,8 +22,8 @@ class Poll_VotesFactory extends Factory
     public function definition()
     {
         return [
-            'poll_id' => \App\REPLACE_THIS::factory(),
-            'author_id' => \App\REPLACE_THIS::factory(),
+            'poll_id' => \App\Model\Poll::factory(),
+            'author_id' => \App\Model\User::factory(),
         ];
     }
 }

@@ -27,14 +27,26 @@ class KontaktRequest extends FormRequest
             'text' => [
                 'required',
                 'string',
+                'max:15000',
             ],
             'betreff' => [
                 'required',
                 'string',
+                'max:255',
             ],
             'mitarbeiter' => [
                 'present',
             ],
+            'files' =>[
+                'nullable',
+                'array',
+                'max:3',
+            ],
+            'files.*' => [
+                'file',
+                'max:8000'
+            ]
+
         ];
     }
 }

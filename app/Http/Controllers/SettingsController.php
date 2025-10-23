@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TestEmail;
+use App\Model\Group;
 use App\Model\Groups;
 use App\Model\Module;
+use App\Model\User;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
 use App\Settings\KeyCloakSetting;
 use App\Settings\NotifySetting;
+use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -20,6 +23,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\LaravelSettings\Settings;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 
 class SettingsController extends Controller
@@ -42,6 +46,18 @@ class SettingsController extends Controller
         $KeyCloakSetting = new KeyCloakSetting();
         $schickzeitenSetting = new SchickzeitenSetting();
         $careSettings = new CareSetting();
+        $pflichtstundenSetting = new PflichtstundenSetting();
+
+
+        $groups = Group::all();
+        $roles = Role::all();
+
+        $users = User::query()
+            ->whereHas('roles', function ($query) {
+                $query->where('name', '=', 'Mitarbeiter');
+            })
+            ->orderBy('name')
+            ->get();
 
         return view('settings.index', [
             'settings' => $settings,
@@ -50,7 +66,10 @@ class SettingsController extends Controller
             'KeyCloakSetting' => $KeyCloakSetting,
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
+            'pflichtstundenSettings' => $pflichtstundenSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
+            'users' => $users,
+            'roles' => $roles,
         ]);
     }
 
@@ -62,6 +81,29 @@ class SettingsController extends Controller
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
+            case 'keycloak':
+                $validated = $request->validate([
+                    'enabled' => 'nullable|boolean',
+                    'client_id' => 'required|string',
+                    'client_secret' => 'required|string',
+                    'realm' => 'required|string',
+                    'base_url' => 'required|string',
+                    'maildomain' => 'required|string',
+
+                ]);
+
+                $keyCloakSetting = new KeyCloakSetting();
+                $keyCloakSetting->enabled = $validated['enabled'] ?? false;
+                $keyCloakSetting->client_id = $validated['client_id'];
+                $keyCloakSetting->client_secret = $validated['client_secret'];
+                $keyCloakSetting->realm = $validated['realm'];
+                $keyCloakSetting->redirect_uri = url('/login/keycloak/callback');
+                $keyCloakSetting->base_url = $validated['base_url'];
+                $keyCloakSetting->maildomain = $validated['maildomain'];
+                $keyCloakSetting->save();
+
+
+                break;
 
             case 'care':
                 $validated = $request->validate([
@@ -72,6 +114,8 @@ class SettingsController extends Controller
                     'hide_groups_when_empty' => 'nullable|boolean',
                     'show_message_on_empty_group' => 'nullable|boolean',
                     'days_before_lock' => 'integer|min:1',
+                    'info_to' => 'nullable|exists:users,id',
+                    'end_time' => 'nullable|date_format:H:i',
                 ]);
 
                 $careSettings = new CareSetting();
@@ -81,6 +125,9 @@ class SettingsController extends Controller
                 $careSettings->class_list = $validated['class_list'] ?? [];
                 $careSettings->hide_groups_when_empty = $validated['hide_groups_when_empty'] ?? false;
                 $careSettings->show_message_on_empty_group = $validated['show_message_on_empty_group'] ?? false;
+                $careSettings->days_before_lock = $validated['days_before_lock'] ?? 7;
+                $careSettings->info_to = $validated['info_to'] ?? null;
+                $careSettings->end_time = $validated['end_time'] ?? null;
 
                 $careSettings->save();
 
@@ -165,6 +212,7 @@ class SettingsController extends Controller
                     'mail_encryption' => 'required|max:255',
                     'mail_from_address' => 'required|max:255',
                     'mail_from_name' => 'required|max:255',
+                    'new_user_welcome_text' => 'required|string|max:1000',
                 ]);
 
                 $mailSettings = new EmailSetting();
@@ -175,6 +223,7 @@ class SettingsController extends Controller
                 $mailSettings->mail_encryption = $validated['mail_encryption'];
                 $mailSettings->mail_from_address = $validated['mail_from_address'];
                 $mailSettings->mail_from_name = $validated['mail_from_name'];
+                $mailSettings->new_user_welcome_text = $validated['new_user_welcome_text'];
                 $mailSettings->save();
 
                 config([
@@ -205,7 +254,43 @@ class SettingsController extends Controller
                     ]);
                 }
                 break;
+            case 'pflichtstunden':
+                $validated = $request->validate([
+                    'pflichtstunden_start' => 'required|string',
+                    'pflichtstunden_ende' => 'required|string',
+                    'pflichtstunden_text' => 'required|string',
+                    'pflichtstunden_anzahl' => 'required|integer|min:1',
+                    'listen_autocreate' => 'required|boolean',
+                    'pflichtstunden_betrag' => 'required|numeric|min:0',
+                ]);
+                $pflichtstundenSetting = new PflichtstundenSetting();
+                try {
+                    $start = Carbon::createFromFormat('m-d', $validated['pflichtstunden_start']);
+                } catch (\Exception $e) {
+                    return redirect()->back()->with([
+                        'type' => 'danger',
+                        'Meldung' => "Falsches Datumsformat beim Startdatum"
+                    ]);
+                }
 
+                try {
+                    $end = Carbon::createFromFormat('m-d', $validated['pflichtstunden_ende']);
+                } catch (\Exception $e) {
+                    return redirect()->back()->with([
+                        'type' => 'danger',
+                        'Meldung' => "Falsches Datumsformat beim Enddatum"
+                    ]);
+                }
+
+
+                $pflichtstundenSetting->pflichtstunden_start = $start->format('m-d');
+                $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
+                $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
+                $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
+                $pflichtstundenSetting->listen_autocreate = $validated['listen_autocreate'];
+                $pflichtstundenSetting->pflichtstunden_betrag = $validated['pflichtstunden_betrag'];
+                $pflichtstundenSetting->save();
+                break;
 
             default:
                 return redirect()->back()->with([

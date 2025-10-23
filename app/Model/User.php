@@ -16,14 +16,16 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
+
 /**
  * Class User
  */
-class User extends Authenticatable
+class User extends Authenticatable implements Auditable
 {
     use Notifiable;
     use HasFactory;
@@ -33,6 +35,7 @@ class User extends Authenticatable
     use Reacts;
     use HasApiTokens;
     use SoftDeletes;
+    use \OwenIt\Auditing\Auditable;
 
 
     //fill uuid column
@@ -333,7 +336,7 @@ class User extends Authenticatable
 
     public function krankmeldungen()
     {
-        return $this->hasMany(krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
+        return $this->hasMany(Krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
     }
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\MorphMany
@@ -355,4 +358,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
+
+    public function pflichtstunden()
+    {
+        if ($this->sorg2 !=   null) {
+            return $this->hasMany(Pflichtstunde::class, 'user_id')->orWhere('user_id', $this->sorg2);
+        }
+
+        return $this->hasMany(Pflichtstunde::class, 'user_id');
+    }
+
 }

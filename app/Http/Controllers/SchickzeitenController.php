@@ -16,14 +16,13 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-use function _PHPStan_9488d3497\RingCentral\Psr7\_caseless_remove;
 
 class SchickzeitenController extends Controller
 {
@@ -57,7 +56,7 @@ class SchickzeitenController extends Controller
             return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
         });
 
-        $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>', today())]);
+        $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>=', today())]);
 
 
         $weekdays = [
@@ -85,7 +84,7 @@ class SchickzeitenController extends Controller
             ]);
         }
 
-        if ($childCheckIn->lock_at && $childCheckIn->lock_at->lt(now())) {
+        if ($childCheckIn->lock_at && $childCheckIn->lock_at->endOfDay() < now()) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Anwesenheit kann nicht mehr geändert werden.',
@@ -142,12 +141,14 @@ class SchickzeitenController extends Controller
         $children = Child::query()
             ->whereIn('group_id', $careSettings->groups_list)
             ->whereIn('class_id', $careSettings->class_list)
-            ->with('schickzeiten')->get();
+            ->with('schickzeiten')
+            ->orderBy('last_name')
+            ->get();
 
 
         $abfragen = ChildCheckIn::query()
             ->where('date', '>', today())
-            ->get(['date', 'should_be', 'child_id']);
+            ->get(['date', 'should_be', 'child_id', 'comment']);
 
 
         $abfragen_daten = [];
@@ -155,7 +156,9 @@ class SchickzeitenController extends Controller
         foreach ($abfragen->groupBy('date') as $datum) {
             $date = $datum->first()->date->format('Y-m-d');
 
-            $abfragen_daten[$date] = count($datum->where('should_be', true));
+
+            $abfragen_daten[$date]['count'] = count($datum->where('should_be', true));
+            $abfragen_daten[$date] ['comment'] = $datum->first()->comment;
 
 
         }
@@ -276,8 +279,20 @@ class SchickzeitenController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return RedirectResponse
      */
-    public function store(SchickzeitRequest $request, Child $child, $weekday = null)
+    public function store(SchickzeitRequest $request, Child $child = null, $weekday = null)
     {
+
+        if (!$child and ! $request->input('child_id') ) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Kein Kind ausgewählt',
+            ]);
+        }
+
+        if (!$child) {
+            $child = Child::find($request->input('child_id'));
+        }
+
         if (!auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -325,6 +340,14 @@ class SchickzeitenController extends Controller
         $settings_bis = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_bis);
 
         if ($request->type == 'genau'){
+
+            if ($request->time == '' ) {
+                return redirect()->back()->with([
+                    'type' => 'warning',
+                    'Meldung' => 'Bitte geben Sie eine Zeit an',
+                ]);
+            }
+
             $time = Carbon::createFromFormat('H:i', $request->time);
 
             if ($time->lt($settings_ab) || $time->gt($settings_bis)) {
@@ -386,6 +409,55 @@ class SchickzeitenController extends Controller
                 'changedBy' => Auth::id(),
                 'users_id' => $child->parents()->first()->id
             ]);
+
+        }
+
+        if ($weekday) {
+
+            if (Carbon::now()->dayOfWeek == $weekday) {
+                // Wenn heute der gleiche Wochentag ist, verwende heute als nächstes Datum
+                $nextDate = Carbon::now();
+            } else {
+                // Berechne das Datum des nächsten Wochentags
+                $nextDate = Carbon::now()->next($weekday);
+            }
+
+
+            Log::debug('Schickzeit Änderung für Kind '.$child->first_name.' '.$child->last_name,[
+                'child_id' => $child->id,
+                'next_date' => $nextDate->toDateString(),
+                'type' => $request->type,
+                'time' => $request->time ?? null,
+                'time_ab' => $request->time_ab ?? null,
+                'time_spaet' => $request->time_spaet ?? null,
+                'changedBy' => \auth()->user()->name,
+                'users_id' => $child->parents()->first()->id
+            ]);
+            // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
+            $exists = $child->schickzeiten()
+                ->where('specific_date', $nextDate->toDateString())
+                ->delete();
+
+
+            $schickzeit = new Schickzeiten([
+                'specific_date' => $nextDate->toDateString(),
+                'type' => $request->type,
+                'time' => $request->time ?? null,
+                'time_ab' => $request->time_ab ?? null,
+                'time_spaet' => $request->time_spaet ?? null,
+                'changedBy' => Auth::id(),
+                'users_id' => $child->parents()->first()->id,
+                'child_id' => $child->id,
+            ]);
+
+            $schickzeit->save();
+
+            Log::debug('Schickzeit für Kind '.$child->first_name.' '.$child->last_name.' für den '. $nextDate->toDateString().' erstellt',[
+               'schickzeit' => $schickzeit,
+            ]);
+
+
+
 
         }
 
@@ -512,8 +584,10 @@ class SchickzeitenController extends Controller
     {
         $users = User::has('schickzeiten')->get();
 
+        Log::debug('Sende Schickzeiten Reminder an '.count($users).' Nutzer');
+
         foreach ($users as $user) {
-            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten));
+            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children() ));
         }
     }
 
@@ -581,7 +655,6 @@ class SchickzeitenController extends Controller
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
                 'users_id' => $child->parents()->first()->id
-
             ]);
         } else {
             $child->schickzeiten()->create([
@@ -594,6 +667,7 @@ class SchickzeitenController extends Controller
             ]);
 
         }
+
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -663,4 +737,78 @@ class SchickzeitenController extends Controller
             'Meldung' => 'Gespeichert',
         ]);
     }
+
+    public function updateAnwesenheitComment(Request $request)
+    {
+        $request->validate([
+            'comment' => 'required|string',
+            'date' => 'required|date',
+        ]);
+
+        $childCheckIn = ChildCheckIn::where('date', $request->date)
+            ->update([
+                'comment' => $request->comment,
+            ]);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Kommentar gespeichert',
+        ]);
+    }
+
+    public function removeAnwesenheitComment(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $childCheckIn = ChildCheckIn::where('date', $request->date)
+            ->update([
+                'comment' => null,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kommentar entfernt',
+        ], 200);
+    }
+
+    public function copyWeeklySchickzeitenToNextWeek()
+    {
+        // Hole alle Schickzeiten mit Wochentag, aber ohne spezifisches Datum
+        $weeklySchickzeiten = Schickzeiten::whereNotNull('weekday')
+            ->whereNull('specific_date')
+            ->whereNotNull('child_id')
+            ->get();
+
+
+        foreach ($weeklySchickzeiten as $schickzeit) {
+            // Berechne das Datum des nächsten Wochentags
+            $nextDate = Carbon::now()->next($schickzeit->weekday);
+
+            // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
+            $exists = Schickzeiten::where('child_id', $schickzeit->child_id)
+                ->where('specific_date', $nextDate->toDateString())
+                ->exists();
+
+            if (!$exists) {
+                // Erstelle neue Schickzeit mit spezifischem Datum
+                if ($schickzeit->child()->exists()) {
+                    Schickzeiten::create([
+                        'users_id' => $schickzeit->users_id,
+                        'child_name' => $schickzeit->child_name,
+                        'weekday' => null, // Setze Wochentag auf null, da es sich um ein spezifisches Datum handelt
+                        'specific_date' => $nextDate->toDateString(),
+                        'time' => $schickzeit->time,
+                        'time_ab' => $schickzeit->time_ab,
+                        'time_spaet' => $schickzeit->time_spaet,
+                        'type' => $schickzeit->type,
+                        'child_id' => $schickzeit->child_id,
+                    ]);
+                }
+
+            }
+        }
+    }
+
 }

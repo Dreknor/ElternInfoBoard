@@ -22,12 +22,16 @@ class PostFactory extends Factory
     public function definition()
     {
         return [
-            'header' => $this->faker->word(),
+            'header' => $this->faker->sentence(),
             'news' => $this->faker->text(),
+            'author' => \App\Model\User::factory(),
             'released' => $this->faker->boolean(),
             'sticky' => $this->faker->boolean(),
             'reactable' => $this->faker->boolean(),
-            'type' => $this->faker->word(),
+            'type' => $this->faker->randomElement(['news', 'announcement', 'info']),
+            'external' => $this->faker->boolean(),
+            'read_receipt' => $this->faker->boolean(),
+            'no_header' => $this->faker->boolean(),
         ];
     }
 }

@@ -79,13 +79,20 @@ class ChildNoticeController extends Controller
     public function noticeVerwaltung(ChildNoticeRequest $request, Child $child)
     {
         if (auth()->user()->can('edit schickzeiten')) {
-            $childNotice = ChildNotice::where('child_id', $child->id)->where('date', $request->date)->updateOrCreate([
-                'child_id' => $child->id,
-                'date' => $request->date,
-            ], [
-                'notice' => $request->notice,
-                'user_id' => auth()->id()
-            ]);
+            $childNotice = ChildNotice::where('child_id', $child->id)->where('date', $request->date)->first();
+
+            if ($childNotice && $request->notice != null) {
+                $childNotice->fill($request->validated());
+                $childNotice->save();
+            } elseif ($childNotice && $request->notice == null) {
+                $childNotice->delete();
+            } elseif ($request->notice != null) {
+                $childNotice = new ChildNotice();
+                $childNotice->fill($request->validated());
+                $childNotice->child_id = $child->id;
+                $childNotice->user_id = auth()->id();
+                $childNotice->save();
+            }
 
             Cache::forget('notice' . $child->id);
 

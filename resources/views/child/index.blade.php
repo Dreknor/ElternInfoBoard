@@ -32,8 +32,17 @@
                             <td>{{ $child->first_name }}</td>
                             <td>{{ $child->last_name }}</td>
                             <td>
-                                <span class="badge badge-primary p-2">{{$child->group->name}}</span>
-                                <span class="badge badge-info p-2">{{$child->class->name}}</span>
+                                @if($child->group)
+                                    <span class="badge badge-success p-2">{{$child->group->name}}</span>
+                                @else
+                                    <span class="badge badge-danger p-2">Keine Gruppe zugeordnet</span>
+                                @endif
+
+                                @if($child->class)
+                                    <span class="badge badge-info p-2">{{$child->class->name}}</span>
+                                @else
+                                    <span class="badge badge-warning p-2">Keine Klasse zugeordnet</span>
+                                @endif
                             </td>
                             <td>
                                 @foreach($child->parents as $parent)
@@ -44,6 +53,9 @@
                             </td>
                             <td>
                                 <a href="{{ route('child.edit', $child->id) }}" class="btn btn-primary">Edit</a>
+                                <a href="{{ route('child.mandates.edit', $child->id) }}" class="btn btn-info">Vollmachten</a>
+
+
                                 <form action="{{ route('child.destroy', $child->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')

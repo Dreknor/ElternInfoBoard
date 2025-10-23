@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Mail\krankmeldung;
+use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
 use App\Model\krankmeldungen;
@@ -84,20 +84,25 @@ class KrankmeldungenController extends Controller
             'disease_id' => 'nullable',
         ]);
 
-        $krankmeldung = new krankmeldungen(
-            [
-                'name' => $request->name,
-                'kommentar' => $request->kommentar,
-                'start' => Carbon::createFromFormat('d.m.Y', $request->start),
-                'ende' => Carbon::createFromFormat('d.m.Y', $request->ende),
-                'users_id' => $request->user()->id,
-            ]
-        );
+        try {
+            $krankmeldung = new krankmeldungen(
+                [
+                    'name' => $request->name,
+                    'kommentar' => $request->kommentar,
+                    'start' => Carbon::createFromFormat('d.m.Y', $request->start),
+                    'ende' => Carbon::createFromFormat('d.m.Y', $request->ende),
+                    'users_id' => $request->user()->id,
+                ]
+            );
 
+            $krankmeldung->save();
+        } catch (\Exception $e) {
+            Log::error('Krankmeldung: Fehler beim Speichern der Krankmeldung: ' . $e->getMessage());
+            $text = 'Fehler beim Speichern der Krankmeldung. Bitte überprüfen Sie die Eingaben.';
+        }
 
         try {
-            $krankmeldung->save();
-            if ($request->disease_id != null &&  $request->disease_id != 0) {
+            if ($request->disease_id != null && $request->disease_id != 0) {
                 $disease = Disease::find($request->disease_id);
                 ActiveDisease::insert([
                     'user_id' => auth()->id(),
@@ -109,17 +114,36 @@ class KrankmeldungenController extends Controller
 
                 Cache::forget('active_diseases');
             }
+        } catch (\Exception $e) {
+            Log::error('Krankmeldung: Fehler beim Speichern der Krankheit: ' . $e->getMessage());
+            $text .= "Fehler beim Speichern der Krankheit. Bitte überprüfen Sie die Eingaben.";
+        }
+
+        try {
+            // If API caller uploaded files via multipart/form-data with key 'files', store them
+            $attachments = [];
+            if ($request->hasFile('files')) {
+                $krankmeldung->addAllMediaFromRequest(['files'])
+                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
+
+                foreach ($krankmeldung->getMedia('files') as $media) {
+                    $attachments[] = $media;
+                }
+            }
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $request->name, $request->start, $request->ende, $request->kommentar, $disease->name ?? null, $attachments));
 
             return response()->json('Krankmeldung gesendet.',200);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-            return response()->json('Fehler beim Speichern der Krankmeldung.', 500);
+            $text .= "Fehler beim Senden der Krankmeldung. Bitte überprüfen Sie die Eingaben.";
         }
 
+        return response()->json([
+            'message' => $text,
+        ], 400);
 
     }
 

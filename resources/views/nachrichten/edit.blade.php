@@ -65,7 +65,16 @@
                             <input type="datetime" class="form-control border-input date-input" name="updated_at" value="{{\Carbon\Carbon::now()->toDateTimeString()}}" >
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6">
+                    <div class="col-md-2 col-sm-12">
+                        <div class="form-group">
+                            <label>Infos und Überschrift ausblenden</label>
+                            <select class="custom-select" name="no_header">
+                                <option value="0" @if(!$post->no_header) selected @endif>Header anzeigen</option>
+                                <option value="1" @if($post->no_header) selected @endif>Header ausblenden</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-6">
                         <div class="form-group">
                             <div class="">
                                 <label>Autor</label>

@@ -62,4 +62,9 @@ class Group extends Model implements HasMedia
     {
         return $this->hasMany(Vertretung::class, 'klasse');
     }
+
+    public function arbeitsgemeinschaften(): BelongsToMany
+    {
+        return $this->belongsToMany(Arbeitsgemeinschaft::class, 'arbeitsgemeinschaften_groups', 'group_id', 'ag_id');
+    }
 }

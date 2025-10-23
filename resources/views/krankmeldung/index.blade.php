@@ -20,7 +20,7 @@
             </h6>
         </div>
         <div class="card-body">
-            <form action="{{url("/krankmeldung")}}" method="post" class="form form-horizontal">
+            <form action="{{url("/krankmeldung")}}" method="post" class="form form-horizontal" enctype="multipart/form-data">
                 @csrf
                         <div class="row">
                             <div class="col-md-12">
@@ -91,6 +91,14 @@
                                     </label>
                                     <input type="date" class="form-control" name="ende" id="ende"
                                            value="{{\Carbon\Carbon::now()->format('Y-m-d')}}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="files">Dateien (optional):</label>
+                                    <input type="file" name="files[]" id="files" class="form-control" multiple>
                                 </div>
                             </div>
                         </div>

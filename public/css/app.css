@@ -258,3 +258,36 @@ input:checked + .slider-sm:before {
     border: none;
     cursor: pointer;
 }
+
+.button-text {
+    display: inline;
+}
+
+/* Auf kleinen Bildschirmen */
+@media (max-width: 768px) {
+    .button-text {
+        display: none;
+    }
+
+    /* Optimierte Button-Größen für mobile Ansicht */
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Tabellen-Optimierungen für mobile Ansicht */
+    .table {
+        font-size: 0.875rem;
+    }
+
+    /* Icons etwas größer machen für bessere Touch-Bedienung */
+    .bi {
+        font-size: 1.2rem;
+    }
+}
+
+/* Tooltip für Icons auf kleinen Bildschirmen */
+@media (max-width: 768px) {
+    [data-bs-toggle="tooltip"] {
+        position: relative;
+    }
+}

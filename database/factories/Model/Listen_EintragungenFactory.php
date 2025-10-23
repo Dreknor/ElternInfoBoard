@@ -22,10 +22,9 @@ class Listen_EintragungenFactory extends Factory
     public function definition()
     {
         return [
-            'listen_id' => \App\REPLACE_THIS::factory(),
+            'listen_id' => \App\Model\Liste::factory(),
             'user_id' => \App\Model\User::factory(),
-            'created_by' => \App\REPLACE_THIS::factory(),
-            'liste_id' => \App\Model\Liste::factory(),
+            'created_by' => \App\Model\User::factory(),
         ];
     }
 }

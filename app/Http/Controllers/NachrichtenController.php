@@ -9,6 +9,7 @@ use App\Mail\AktuelleInformationen;
 use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
 use App\Mail\newUnveroeffentlichterBeitrag;
+use App\Model\Arbeitsgemeinschaft;
 use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Notification;
@@ -29,6 +30,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use PDF;
@@ -67,10 +69,28 @@ class NachrichtenController extends Controller
      */
     public function index($archiv = null)
     {
+
+        try {
+            $module = Cache::remember('module_contact', 3600, function () {
+
+                return Module::query()->where(['setting' => 'Kontakt'])->first();
+            });
+
+            Log::info($module->options['active']);
+            $show_link = $module->options['active'] == 1 ?? false;
+
+
+        } catch (Exception $exception) {
+            Log::error($exception->getMessage());
+            $show_link = false;
+        }
+
+
+
+
         return view('home', [
             'datum' => Carbon::now(),
             'archiv' => $archiv,
-
         ]);
     }
 
@@ -239,6 +259,7 @@ class NachrichtenController extends Controller
     {
         $user = $request->user();
 
+
         if (! auth()->user()->can('create posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -395,7 +416,7 @@ class NachrichtenController extends Controller
             default:
 
 
-                    $pattern = '^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$^';
+                    $pattern = '/^(0?[1-9]|[12]\d|3[01]).(0?[1-9]|1[0-2]).([12]\d{3})$/';
 
 
 
@@ -487,24 +508,6 @@ class NachrichtenController extends Controller
                         ->withResponsiveImages()
                         ->toMediaCollection('images'));
             }
-
-
-            /*
-                        $files = $request->files->all();
-                        foreach ($files['files'] as $file) {
-                            if (substr($file->getMimeType(), 0, 5) == 'image')
-                                $collection = 'images';
-                            if ($request->input('collection') == 'header') {
-                                $collection = 'header';
-                            } else {
-                                $collection = 'files';
-                            }
-
-                            $posts
-                                ->addMedia($file)
-                                ->toMediaCollection($collection);
-                        }
-            */
         }
 
         if ($posts->released and $push == 1) {
@@ -576,6 +579,10 @@ class NachrichtenController extends Controller
                     }
             })->unique()->sortByDesc('updated_at')->all();
 
+            if (!count($Nachrichten) > 0) {
+                $Nachrichten = [];
+            }
+
             //Elternrats-Diskussionen
             if ($user->hasRole('Elternrat')) {
                 $diskussionen = Discussion::whereDate('updated_at', '>=', $user->lastEmail)->get();
@@ -589,11 +596,27 @@ class NachrichtenController extends Controller
             //neue Termine
             $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
             $termine = $termine->unique();
+
+            //Neue Arbeitsgemeinschaften
+            if ($user->can('view GTA')) {
+               $arbeitsgemeinschaften = Arbeitsgemeinschaft::query()
+                    ->where('created_at', '>', $user->lastEmail)
+                    ->whereHas('groups', function ($query) use ($user) {
+                       $query->whereIn('groups.id', $user->groups->pluck('id'));
+                        })
+                    ->get();
+                $gta = $arbeitsgemeinschaften->unique();
+            } else {
+                $gta = [];
+            }
+
+
             //@ToDo neue Dateien
 
-            if (count($Nachrichten) > 0) {
+            if (count($Nachrichten) > 0 or count($termine) > 0 or count($listen) > 0 or count($diskussionen) > 0 or count($gta) > 0) {
                 try {
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine));
+
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine, $gta));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
@@ -604,6 +627,14 @@ class NachrichtenController extends Controller
                         ]);
                     }
                 } catch (Exception $exception) {
+
+                    Log::error('Fehler beim Mailversand', [
+                        'user' => $user->id,
+                        'email' => $user->email,
+                        'Nachrichten' => $Nachrichten,
+                        'exception' => $exception,
+                    ]);
+
                     $admin = Role::findByName('Administrator');
                     $admin = $admin->users()->first();
 
@@ -629,23 +660,38 @@ class NachrichtenController extends Controller
     public function touch(Post $posts)
     {
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
-            $newPost = $posts->duplicate();
+            $newPost = $posts->replicate([
+                'id',
+                'created_at',
+                'updated_at',
+                'archiv_ab',
+                'released',
+                'send_at',
+                'published_wp_id',
+            ]);
             $newPost->archiv_ab = Carbon::now()->addWeeks(2);
             $newPost->updated_at = Carbon::now();
             $newPost->released = 0;
             $newPost->send_at = null;
             $newPost->author = auth()->id();
+            $newPost->published_wp_id = null;
             $newPost->save();
 
             if ($posts->rueckmeldung != null) {
-                $rueckmeldung = $posts->rueckmeldung->duplicate();
+                $rueckmeldung = $posts->rueckmeldung->replicate([
+                    'id',
+                    'created_at',
+                    'updated_at',
+                    'post_id',
+                ]);
                 $rueckmeldung->post_id = $newPost->id;
                 $rueckmeldung->ende = $newPost->archiv_ab;
                 $rueckmeldung->save();
 
                 if ($posts->rueckmeldung->type == 'abfrage') {
                     foreach ($posts->rueckmeldung->options as $option) {
-                        $newOption = $option->duplicate();
+
+                        $newOption = $option->replicate();
                         $newOption->rueckmeldung_id = $rueckmeldung->id;
                         $newOption->save();
                     }
@@ -658,7 +704,6 @@ class NachrichtenController extends Controller
             $posts->archiv_ab = Carbon::now()->addWeek();
             $posts->save();
         }
-
         return redirect()->to(url('/'));
     }
 
@@ -911,9 +956,7 @@ class NachrichtenController extends Controller
 
         $sendTo = [];
         foreach ($users as $mailUser) {
-            $header = $post->header;
-            $news = $post->news;
-            @Mail::to($mailUser->email)->queue(new DringendeInformationen("$header", "$news"));
+            @Mail::to($mailUser->email)->queue(new DringendeInformationen($post));
             $sendTo[] = [
                 'name' => $mailUser->name,
                 'email' => $mailUser->email,

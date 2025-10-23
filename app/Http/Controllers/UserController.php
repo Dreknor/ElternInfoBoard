@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createUserRequest;
 use App\Http\Requests\PasswordlessUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
+use App\Mail\NewUserPasswordMail;
 use App\Model\Discussion;
+use App\Settings\EmailSetting;
 use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
@@ -23,6 +25,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
@@ -86,8 +91,11 @@ class UserController extends Controller
      */
     public function store(createUserRequest $request)
     {
+        // Generiere ein zufälliges Passwort (12 Zeichen: Buchstaben, Zahlen und Sonderzeichen)
+        $generatedPassword = Str::password(12, true, true, true, false);
+
         $user = new User($request->all());
-        $user->password = Hash::make($request->input('password'));
+        $user->password = Hash::make($generatedPassword);
         $user->changePassword = true;
         $user->lastEmail = Carbon::now();
         $user->save();
@@ -107,24 +115,32 @@ class UserController extends Controller
         }
 
         if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-            if (auth()->user()->can('edit permission')) {
+            if (auth()->user()->can('edit permission') && !is_null($request->roles)) {
                 $roles = Role::whereIn('name', $request->roles)->get();
-                $roles->unique();
-                $user->roles()->attach($roles);
+                $user->roles()->sync($roles);
             } elseif (auth()->user()->can('assign roles to users')) {
                 if (!is_null($request->roles)) {
                     $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
                         $query->where('name', 'role is assignable');
                     })->get();
-                    $roles->unique();
-                    $user->roles()->attach($roles);
+                    $user->roles()->sync($roles);
                 }
             }
         }
 
+        // Sende E-Mail mit dem Startkennwort
+        try {
+            $emailSettings = app(EmailSetting::class);
+            Mail::to($user->email)->send(new NewUserPasswordMail($user, $generatedPassword, $emailSettings->new_user_welcome_text));
+            $emailStatus = 'E-Mail mit Startkennwort wurde erfolgreich versendet.';
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            $emailStatus = 'Warnung: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
+        }
+
         return redirect(url("users/$user->id"))->with([
             'type' => 'success',
-            'Meldung' => 'Benutzer wurde angelegt',
+            'Meldung' => 'Benutzer wurde angelegt. ' . $emailStatus,
         ]);
     }
 
@@ -349,11 +365,12 @@ class UserController extends Controller
 
     public function showMassDelete()
     {
-
-
-        $users = User::query()->whereHas('roles', function ($query) {
-            return $query->where('name', 'Eltern');
-        })->doesntHave('groups')->get();
+        $users = User::query()
+            ->whereHas('roles', function ($query) {
+                return $query->where('name', 'Eltern');
+            })
+            ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+            ->get();
 
         return view('user.showMassDelete')->with([
             'users' => $users
@@ -362,30 +379,30 @@ class UserController extends Controller
 
     public function massDelete(Request $request)
     {
+        // Die geschützten Rollen sind fest im Code definiert und NICHT über die Settings änderbar
+        $protectedRoles = ['Mitarbeiter', 'Vereinsmitglieder', 'Administrator'];
+        $userIds = $request->input('user_ids', []);
+        $fehler = "";
+        $deleted = 0;
 
-        if ($request->users) {
-            $fehler = "";
-
-            foreach ($request->users as $user) {
-                $ergebnis = $this->destroy($user, false);
-                if ($ergebnis != "") {
-                    if ($fehler) {
-                        $fehler .= ', ' . $user;
-                    } else {
-                        $fehler = 'Fehler bei folgenden Benutzern: ' . $user;
-                    }
-                }
+        foreach ($userIds as $userId) {
+            $user = User::find($userId);
+            if (!$user) continue;
+            if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
+                $fehler .= ($fehler ? ', ' : 'Nicht gelöscht: ') . $user->name;
+                continue;
             }
-
-            return redirect()->back()->with([
-                'type' => ($fehler == "") ? 'success' : 'danger',
-                'Meldung' => ($fehler != "") ? $fehler : 'Benutzer gelöscht',
-            ]);
+            $ergebnis = $this->destroy($userId, false);
+            if ($ergebnis != "") {
+                $fehler .= ($fehler ? ', ' : 'Fehler bei: ') . $user->name;
+            } else {
+                $deleted++;
+            }
         }
 
-        return redirect(url('users'))->with([
-            'type' => 'warning',
-            'Meldung' => "Keine Benutzer zum Löschen ausgewählt"
+        return redirect()->back()->with([
+            'type' => ($fehler == "") ? 'success' : 'danger',
+            'Meldung' => ($deleted ? "$deleted Benutzer gelöscht. " : '') . $fehler,
         ]);
     }
 

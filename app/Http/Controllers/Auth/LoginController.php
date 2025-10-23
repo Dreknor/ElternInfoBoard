@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Model\User;
 use App\Notifications\SendPasswordLessLinkNotification;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -54,13 +55,19 @@ class LoginController extends Controller
     {
 
         if ($request->input('submit') == 'password-less') {
+
+
             $user = $this->loginViaPasswordLessLink($request);
 
             if (!$user or !$user->can('allow password-less-login')) {
+
+
+
                 return redirect()->route('login')
                     ->withErrors(['email' => 'Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.'])
                     ->withInput();
             }
+
 
             return redirect()->route('login')
                 ->with([
@@ -85,6 +92,7 @@ class LoginController extends Controller
             return $this->sendLoginResponse($request);
         }
 
+
         $this->incrementLoginAttempts($request);
 
         return $this->sendFailedLoginResponse($request);
@@ -95,21 +103,27 @@ class LoginController extends Controller
      * @param Request $request
      * @return User
      */
-    public function loginViaPasswordLessLink(Request $request): User
+    public function loginViaPasswordLessLink(Request $request): ?User
     {
+
+
         $user = User::where('email', $request->input('email'))->first();
 
+
         if ($user and $user->can('allow password-less-login')) {
+
+
             $generator = new LoginUrl($user);
             $generator->setRedirectUrl('/home');
             $url = $generator->generate();
 
-            dd($url);
 
             $user->notify(new SendPasswordLessLinkNotification($url));
+
+            return $user;
         }
 
-        return $user;
+        return null;
     }
 
     /**
@@ -178,7 +192,7 @@ class LoginController extends Controller
 
             $domain = explode('@', $user->email)[1];
 
-            $mailDomains = $keycloakSetting->mail_domain;
+            $mailDomains = $keycloakSetting->maildomain;
             $mailDomains = explode(',', $mailDomains);
 
 

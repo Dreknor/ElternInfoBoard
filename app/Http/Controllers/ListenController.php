@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ListenExport;
 use App\Http\Requests\CreateListeRequest;
 use App\Http\Requests\UpdateListenRequest;
 use App\Model\Group;
@@ -14,6 +15,9 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Spatie\IcalendarGenerator\Components\Calendar;
+use Spatie\IcalendarGenerator\Components\Event;
 
 class ListenController extends Controller
 {
@@ -23,6 +27,31 @@ class ListenController extends Controller
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->grousRepository = $groupsRepository;
+    }
+
+
+    public function search(Request $request)
+    {
+
+        if (!$request->user()->can('edit terminliste')){
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $query = $request->input('query');
+        $archiv = Liste::where('ende', '<', now())
+            ->where('listenname', 'LIKE', "%{$query}%")
+            ->paginate(10);
+
+
+
+
+
+        return view('listen.search', [
+            'archiv' => $archiv,
+        ]);
     }
 
     /**
@@ -294,4 +323,64 @@ class ListenController extends Controller
             'Meldung' => 'Liste beendet',
         ]);
     }
+
+    public function icalExport(Liste $liste)
+    {
+        if (!auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        if ($liste->type != 'termin') {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Nur Terminlisten können exportiert werden',
+            ]);
+        }
+
+        $termine = $liste->termine;
+
+        $icalObject = Calendar::create(config('app.name'));
+
+        // loop over events
+        foreach ($termine as $termin) {
+
+            if ($termin->reserviert_fuer != null){
+                $name = $liste->listenname.'-'.$termin->eingetragenePerson?->name;
+            } else {
+                $name = $liste->listenname;
+            }
+
+            $icalObject->event(
+                Event::create()
+                    ->name($name)
+                    ->uniqueIdentifier(($termin->id) ?: uuid_create())
+                    ->startsAt($termin->termin->timezone('Europe/Berlin'))
+                    ->endsAt($termin->termin->copy()->addMinutes($termin->duration))
+            );
+        }
+
+        return response($icalObject->get())->header('Content-Type', 'text/calendar');
+
+
+    }
+
+    public function exportExcelTermine($id)
+    {
+        $liste = Liste::findOrFail($id);
+
+        if ($liste->type == 'termin'){
+            $listentermine = $liste->termine;
+        } else {
+            $listentermine = $liste->eintragungen;
+        }
+
+        return Excel::download(
+            new ListenExport($listentermine, $liste),
+            $liste->listenname . '.xlsx'
+        );
+    }
+
 }

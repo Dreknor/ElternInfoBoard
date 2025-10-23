@@ -3,11 +3,14 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 
 class Site extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['name', 'author_id', 'is_active'];
 
     public function author()

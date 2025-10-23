@@ -22,8 +22,8 @@ class AbfrageAntwortenFactory extends Factory
     public function definition()
     {
         return [
-            'rueckmeldung_id' => \App\REPLACE_THIS::factory(),
-            'user_id' => \App\REPLACE_THIS::factory(),
+            'rueckmeldung_id' => \App\Model\Rueckmeldungen::factory(),
+            'user_id' => \App\Model\User::factory(),
             'option_id' => \App\Model\AbfrageOptions::factory(),
         ];
     }

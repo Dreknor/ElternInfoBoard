@@ -27,12 +27,12 @@ class SendFeedback extends Mailable
      *
      * @return void
      */
-    public function __construct(string $text, string $betreff, array $data = [])
+    public function __construct(string $text, string $betreff, array $data = [], ?string $von = null)
     {
         $this->text = $text;
         $this->betreff = $betreff;
         $this->data = $data;
-        $this->von = auth()->user()->name;
+        $this->von = $von ?? optional(auth()->user())->name ?? '';
     }
 
 
@@ -76,8 +76,16 @@ class SendFeedback extends Mailable
         if (count($this->data) > 0 and array_key_exists('document', $this->data)) {
             $return = [];
             foreach ($this->data['document'] as $file) {
-                $return[] = Attachment::fromPath($file->getPath())
-                    ->as($file->file_name);
+                // Use Storage-based attachment to avoid issues with absolute paths / permissions
+                // $file is expected to be a Spatie Media model
+                if (method_exists($file, 'getPathRelativeToRoot') && isset($file->disk)) {
+                    $return[] = Attachment::fromStorageDisk($file->disk, $file->getPathRelativeToRoot())
+                        ->as($file->file_name);
+                } elseif (method_exists($file, 'getPath')) {
+                    // Fallback to direct path if available
+                    $return[] = Attachment::fromPath($file->getPath())
+                        ->as($file->file_name ?? basename($file->getPath()));
+                }
             }
 
             return $return;

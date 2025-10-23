@@ -51,20 +51,30 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
             }
 
             if (! is_null($row[$this->header['S1Email']])) {
-                $user1 = User::firstOrCreate([
-                    'email' => $row[$this->header['S1Email']],
-                ],
-                    [
+
+                $user1 = User::where('email', $row[$this->header['S1Email']])->withTrashed()->first();
+
+                if ($user1) {
+                    $user1->update([
+                        'lastEmail' => Carbon::now(),
+                        'created_at' => ($user1->deleted_at != null) ? Carbon::now() : $user1->created_at,
+                        'updated_at' => Carbon::now(),
+                        'deleted_at' => null,
+                    ]);
+                } else {
+
+                    $user1 = User::create([
+                        'email' => $row[$this->header['S1Email']],
                         'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
                         'changePassword' => 1,
                         'password' => Hash::make(config('app.import_aufnahme')),
                         'lastEmail' => Carbon::now(),
-                    ]);
-
-                if (! $user1->wasRecentlyCreated) {
-                    $user1->update([
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                        'deleted_at' => null,
                         'changeSettings' => 1,
                     ]);
+
                 }
 
                 $user1->assignRole('Aufnahme');
@@ -75,20 +85,30 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
             }
 
             if (! is_null($row[$this->header['S2Email']])) {
-                $user2 = User::firstOrCreate([
-                    'email' => $row[$this->header['S2Email']],
-                ],
-                    [
+
+                $user2 = User::where('email', $row[$this->header['S2Email']])->withTrashed()->first();
+
+                if ($user2) {
+                    $user2->update([
+                        'lastEmail' => Carbon::now(),
+                        'created_at' => ($user2->deleted_at != null) ? Carbon::now() : $user2->created_at,
+                        'updated_at' => Carbon::now(),
+                        'deleted_at' => null,
+                    ]);
+                } else {
+
+                    $user2 = User::create([
+                        'email' => $row[$this->header['S2Email']],
                         'name' => $row[$this->header['S2Vorname']].' '.$row[$this->header['S2Nachname']],
                         'changePassword' => 1,
                         'password' => Hash::make(config('app.import_aufnahme')),
                         'lastEmail' => Carbon::now(),
-                    ]);
-
-                if (! $user2->wasRecentlyCreated) {
-                    $user2->update([
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                        'deleted_at' => null,
                         'changeSettings' => 1,
                     ]);
+
                 }
 
                 $user2->assignRole('Aufnahme');

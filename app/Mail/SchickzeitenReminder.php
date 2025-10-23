@@ -30,11 +30,11 @@ class SchickzeitenReminder extends Mailable
      *
      * @return void
      */
-    public function __construct(string $name, Collection $schickzeiten)
+    public function __construct(string $name, Collection $schickzeiten, Collection $kinder)
     {
         $this->schickzeiten = $schickzeiten;
         $this->name = $name;
-        $this->kinder = $schickzeiten->pluck('child_name')->unique();
+        $this->kinder = $kinder->unique();
     }
 
     /**

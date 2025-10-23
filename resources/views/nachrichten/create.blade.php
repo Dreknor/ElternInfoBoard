@@ -32,7 +32,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4 col-sm-12">
+                <div class="col-md-auto col-sm-12">
                     <div class="form-group">
                         <label>Typ</label>
                         <select class="custom-select" name="type">
@@ -43,7 +43,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-12">
+                <div class="col-md-auto col-sm-12">
                     <div class="form-group">
                         <label>Archiv ab</label>
                         <input type="date" class="form-control border-input" name="archiv_ab" value="{{\Carbon\Carbon::now()->addWeek()->toDateString()}}" >
@@ -71,6 +71,15 @@
                         </div>
                     </div>
                 @endif
+                <div class="col-md-auto col-sm-12">
+                    <div class="form-group">
+                        <label>Infos und Überschrift ausblenden</label>
+                        <select class="custom-select" name="no_header">
+                            <option value="0" >Header anzeigen</option>
+                            <option value="1" >Header ausblenden</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-12">

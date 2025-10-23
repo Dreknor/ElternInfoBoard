@@ -9,6 +9,7 @@ use App\Model\ChildCheckIn;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ChildController extends Controller
@@ -35,6 +36,19 @@ class ChildController extends Controller
     public function store(CreateChildRequest $request)
     {
         $this->middleware('auth');
+
+        $child = Child::query()
+            ->whereLike('first_name', '%'.$request->first_name.'%')
+            ->whereLike('last_name', '%'.$request->last_name.'%')
+            ->where('group_id', $request->group_id)
+            ->first();
+
+        if ($child) {
+            return redirect()->back()->with([
+                'Meldung' => 'Kind existiert bereits',
+                'type' => 'danger',
+            ]);
+        }
 
         if (!$request->has('parent_id')) {
             auth()->user()->children_rel()->create($request->validated());
@@ -146,14 +160,23 @@ class ChildController extends Controller
     public function update(CreateChildRequest $request, Child $child)
     {
         $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
-        $child->update($request->validated());
-        if (!$child->parents->contains($request->parent_id)) {
-            $child->parents()->sync($request->parent_id);
+        if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
+            if (!$child->parents->contains($request->parent_id)) {
+                $child->parents()->sync($request->parent_id);
+            }
         }
 
-        $child->update($request->validated());
+
+        $child->update(
+            $request->only([
+                'first_name',
+                'last_name',
+                'group_id',
+                'class_id',
+                'auto_checkIn',
+            ])
+        );
 
 
         return redirect()->back()->with([
@@ -196,6 +219,62 @@ class ChildController extends Controller
             'message' => 'Sie haben keine Berechtigung',
         ], 403);
 
+    }
+
+    public function storeMandate(Request $request, Child $child)
+    {
+        $this->middleware('auth');
+
+        if (!auth()->user()->children()->contains($child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung',
+                'type' => 'danger',
+            ]);
+        }
+
+        $request->validate([
+            'mandate_name' => 'required|string|max:255',
+            'mandate_description' => 'nullable|string',
+        ]);
+
+        $child->mandates()->create([
+            'mandate_name' => $request->mandate_name,
+            'mandate_description' => $request->mandate_description,
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with([
+            'Meldung' => 'Mandat wurde erfolgreich erstellt',
+            'type' => 'success',
+        ]);
+    }
+
+    public function destroyMandate(Request $request, Child $child, $mandateId)
+    {
+        $this->middleware('auth');
+
+        if (!auth()->user()->children()->contains($child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
+                'type' => 'danger',
+            ]);
+        }
+
+        $mandate = $child->mandates()->where('id', $mandateId)->first();
+
+        if (!$mandate) {
+            return redirect()->back()->with([
+                'Meldung' => 'Vollmacht nicht gefunden',
+                'type' => 'danger',
+            ]);
+        }
+
+        $mandate->delete();
+
+        return redirect()->back()->with([
+            'Meldung' => 'Vollmacht wurde erfolgreich gelöscht',
+            'type' => 'success',
+        ]);
     }
 
 }

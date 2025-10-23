@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ActiveDiseaseController;
 use App\Http\Controllers\Anwesenheit\ChildNoticeController;
+use App\Http\Controllers\Arbeitsgemeinschaften\ArbeitsgemeinschaftController;
+use App\Http\Controllers\Arbeitsgemeinschaften\GTAController;
 use App\Http\Controllers\Auth\ExpiredPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BenutzerController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\VertretungsplanController;
+use App\Http\Controllers\SchoolYearController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
@@ -97,6 +100,16 @@ Route::middleware('auth')->group(function () {
         //Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
 
+        Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
+        Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
+
+        Route::middleware('permission:edit Pflichtstunden')->group(function () {
+            Route::get('verwaltung/pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'verwaltungIndex'])->name('pflichtstunden.indexVerwaltung');
+            Route::put('pflichtstunden/{pflichtstunde}/approve', [\App\Http\Controllers\PflichtstundeController::class, 'approve'])->name('pflichtstunden.approve');
+            Route::put('pflichtstunden/{pflichtstunde}/reject', [\App\Http\Controllers\PflichtstundeController::class, 'reject'])->name('pflichtstunden.reject');
+            Route::delete('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'destroy']);
+        });
+
         //Datenschutz
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
 
@@ -110,6 +123,12 @@ Route::middleware('auth')->group(function () {
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
         Route::delete('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
         Route::post('child/{child}/notification', [ChildController::class, 'setNotification'])->name('child.notification');
+
+        /*
+         * Abholberechtigte
+         */
+        Route::post('child/{child}/mandate', [ChildController::class, 'storeMandate'])->name('child.mandate.store');
+        Route::delete('child/{child}/mandate/{mandate}/delete', [ChildController::class, 'destroyMandate'])->name('child.mandate.destroy');
 
 
         //make a push notification.
@@ -131,7 +150,7 @@ Route::middleware('auth')->group(function () {
        Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
         Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
         Route::get('schickzeiten/edit/{day}/{child}', [SchickzeitenController::class, 'edit'])->name('schickzeiten.edit');
-        Route::post('schickzeiten/{child}/{weekday?}', [SchickzeitenController::class, 'store'])->name('schickzeiten.store');
+        Route::post('schickzeiten/{child?}/{weekday?}', [SchickzeitenController::class, 'store'])->name('schickzeiten.store');
         Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
         Route::put('anwesenheit/{childCheckIn}/anmelden', [SchickzeitenController::class, 'anwesenheitTrue'])->name('checkIn.anmelden');
         Route::put('anwesenheit/{childCheckIn}/abmelden', [SchickzeitenController::class, 'anwesenheitFalse'])->name('checkIn.abmelden');
@@ -227,8 +246,10 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
         Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
         Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
-        Route::get('listen/{liste}/export', [ListenController::class, 'pdf']);
+        Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
+        Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
+        Route::post('listen/search', [ListenController::class, 'search'])->name('listen.search');
 
         //TerminListe
         Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
@@ -236,6 +257,10 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/termine/{listen_termine}/copy', [ListenTerminController::class, 'copy']);
         Route::delete('listen/termine/{listen_termine}', [ListenTerminController::class, 'destroy']);
         Route::delete('listen/termine/absagen/{listen_termine}', [ListenTerminController::class, 'absagen']);
+
+        //Export
+        Route::get('/listen/{id}/export-excel/termine', [ListenController::class, 'exportExcelTermine'])->name('listen.export-excel.termine');
+
         //EintragListe
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
@@ -279,7 +304,7 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldungen/{rueckmeldungen}/commentable', [RueckmeldungenController::class, 'updateCommentable']);
 
         //user-Verwaltung
-        Route::get('/einstellungen', [BenutzerController::class, 'show']);
+        Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
@@ -311,7 +336,7 @@ Route::middleware('auth')->group(function () {
 
             Route::delete('users/{id}', [UserController::class, 'destroy']);
             Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
-            Route::delete('users/mass/delete', [UserController::class, 'massDelete']);
+            Route::delete('users/mass/delete', [UserController::class, 'massDelete'])->name('users.massDelete');
 
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
@@ -392,7 +417,7 @@ Route::middleware('auth')->group(function () {
     });
 
     //Feedback
-    Route::get('feedback', [FeedbackController::class, 'show']);
+    Route::get('feedback/{user?}', [FeedbackController::class, 'show']);
     Route::post('feedback', [FeedbackController::class, 'send']);
     Route::delete('feedback/{mail}', [FeedbackController::class, 'deleteMail'])->middleware('can:see mails');
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
@@ -403,6 +428,9 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
         Route::get('/anwesenheit/dailyCheckIn', [\App\Http\Controllers\Anwesenheit\CareController::class, 'dailyCheckIn']);
+        Route::get('/anwesenheit/checkins/{child}/liste', [\App\Http\Controllers\Anwesenheit\CareController::class, 'getCheckIns'])->name('checkins.api');
+        Route::post('/anwesenheit/should_be/{checkin}/toogle', [\App\Http\Controllers\Anwesenheit\CareController::class, 'toogleShouldBe'])->name('checkIn.shouldBe');
+
         Route::post('/anwesenheit/{child}/abmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'abmelden']);
         Route::post('/anwesenheit/{child}/anmelden', [\App\Http\Controllers\Anwesenheit\CareController::class, 'anmelden']);
         Route::post('/anwesenheit/{child}/schickzeit/', [SchickzeitenController::class, 'storeDailyVerwaltung']);
@@ -413,6 +441,12 @@ Route::middleware('auth')->group(function () {
         Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
         Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
         Route::post('care/abfrage/anwesenheit/download', [\App\Http\Controllers\Anwesenheit\CareController::class, 'downloadAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.download');
+        Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
+        Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
+
+        Route::get('/child/{child}/mandates/edit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'editMandates'])->name('child.mandates.edit');
+        Route::put('/child/{child}/mandates', [\App\Http\Controllers\Anwesenheit\CareController::class, 'updateMandates'])->name('child.mandates.store');
+        Route::delete('child/{child}/mandates/{mandate}/delete', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyMandate'])->name('child.mandates.destroy');
 
     });
 
@@ -421,5 +455,47 @@ Route::middleware('auth')->group(function () {
     Route::delete('child/notice/{childNotice}', [ChildNoticeController::class, 'destroy'])->name('child.notice.destroy');
     Route::get('child/{child}/notice', [ChildNoticeController::class, 'show'])->name('child.notice.show');
 
+    Route::middleware(['can:edit GTA'])->group(function () {
+        Route::get('verwaltung/arbeitsgemeinschaften', [GTAController::class, 'index'])
+            ->name('verwaltung.arbeitsgemeinschaften.index');
+        Route::get('verwaltung/arbeitsgemeinschaften/create', [GTAController::class, 'create'])
+            ->name('verwaltung.arbeitsgemeinschaften.create');
+        Route::post('verwaltung/arbeitsgemeinschaften', [GTAController::class, 'store'])
+            ->name('verwaltung.arbeitsgemeinschaften.store');
+        Route::get('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/edit', [GTAController::class, 'edit'])
+            ->name('verwaltung.arbeitsgemeinschaften.edit');
+        Route::put('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}', [GTAController::class, 'update'])
+            ->name('verwaltung.arbeitsgemeinschaften.update');
+        Route::delete('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}', [GTAController::class, 'destroy'])
+            ->name('verwaltung.arbeitsgemeinschaften.destroy');
+
+        // Teilnehmerverwaltung
+        Route::get('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer', [GTAController::class, 'showParticipants'])
+            ->name('verwaltung.arbeitsgemeinschaften.teilnehmer');
+        Route::post('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer', [GTAController::class, 'addParticipant'])
+            ->name('verwaltung.arbeitsgemeinschaften.teilnehmer.add');
+        Route::delete('verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/teilnehmer/{child}', [GTAController::class, 'removeParticipant'])
+            ->name('verwaltung.arbeitsgemeinschaften.teilnehmer.remove');
+        Route::get('/verwaltung/arbeitsgemeinschaften/{arbeitsgemeinschaft}/export',
+            [GTAController::class, 'exportParticipants'])
+            ->name('verwaltung.arbeitsgemeinschaften.export');
+
+    });
+
+    Route::middleware(['can:view GTA'])->group(function () {
+        Route::get('/arbeitsgemeinschaften', [ArbeitsgemeinschaftController::class, 'index'])
+            ->name('arbeitsgemeinschaften.index');
+        Route::get('/arbeitsgemeinschaften/show/{arbeitsgemeinschaft}', [ArbeitsgemeinschaftController::class, 'index'])
+            ->name('arbeitsgemeinschaften.show');
+        Route::post('/arbeitsgemeinschaften/{arbeitsgemeinschaft}/anmelden', [ArbeitsgemeinschaftController::class, 'anmelden'])
+            ->name('arbeitsgemeinschaften.anmelden');
+    });
+
+
+
 });
 
+// Schuljahreswechsel im Settings-Bereich
+Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
+Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
+Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
