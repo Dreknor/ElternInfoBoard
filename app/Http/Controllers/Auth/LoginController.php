@@ -56,23 +56,18 @@ class LoginController extends Controller
 
         if ($request->input('submit') == 'password-less') {
 
-            Log::info('password-less-login: ');
-            Log::info($request->input('email'));
 
             $user = $this->loginViaPasswordLessLink($request);
 
             if (!$user or !$user->can('allow password-less-login')) {
 
-                Log::info('password-less-login: ');
-                Log::info('Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.');
+
 
                 return redirect()->route('login')
                     ->withErrors(['email' => 'Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.'])
                     ->withInput();
             }
 
-            Log::info('password-less-login: ');
-            Log::info('Login-Link wurde an die angegebene E-Mail-Adresse gesendet.');
 
             return redirect()->route('login')
                 ->with([
@@ -97,8 +92,6 @@ class LoginController extends Controller
             return $this->sendLoginResponse($request);
         }
 
-        Log::info('Login fehlgeschlagen: ');
-        Log::info($request->input('email'));
 
         $this->incrementLoginAttempts($request);
 
@@ -110,21 +103,15 @@ class LoginController extends Controller
      * @param Request $request
      * @return User
      */
-    public function loginViaPasswordLessLink(Request $request): User
+    public function loginViaPasswordLessLink(Request $request): ?User
     {
-        Log::info('password-less-login: ');
-        Log::info($request->input('email'));
 
 
         $user = User::where('email', $request->input('email'))->first();
 
-        Log::info('user: ');
-        Log::info($user);
 
         if ($user and $user->can('allow password-less-login')) {
 
-            Log::info('password-less-login: ');
-            Log::info('Benutzer existiert und hat Berechtigung für den Passwortlosen Login.');
 
             $generator = new LoginUrl($user);
             $generator->setRedirectUrl('/home');
@@ -132,9 +119,11 @@ class LoginController extends Controller
 
 
             $user->notify(new SendPasswordLessLinkNotification($url));
+
+            return $user;
         }
 
-        return $user;
+        return null;
     }
 
     /**
@@ -203,7 +192,7 @@ class LoginController extends Controller
 
             $domain = explode('@', $user->email)[1];
 
-            $mailDomains = $keycloakSetting->mail_domain;
+            $mailDomains = $keycloakSetting->maildomain;
             $mailDomains = explode(',', $mailDomains);
 
 

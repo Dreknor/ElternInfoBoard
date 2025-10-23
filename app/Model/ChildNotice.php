@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class ChildNotice extends Model
+class ChildNotice extends Model implements Auditable
 {
     use HasFactory;
     use SoftDeletes;
+    use \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'child_id',
@@ -21,6 +23,7 @@ class ChildNotice extends Model
 
     protected $casts = [
         'date' => 'datetime',
+        'created_at' => 'datetime',
     ];
 
     public function child()
@@ -37,5 +40,10 @@ class ChildNotice extends Model
     public function scopeFuture(Builder $query)
     {
         return $query->whereDate('date', '>=', today());
+    }
+
+    public function isNew()
+    {
+        return $this->updated_at->greaterThanOrEqualTo(now()->subMinutes(20));
     }
 }

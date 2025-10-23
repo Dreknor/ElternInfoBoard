@@ -22,7 +22,7 @@ class AbfrageOptionsFactory extends Factory
     public function definition()
     {
         return [
-            'rueckmeldung_id' => \App\REPLACE_THIS::factory(),
+            'rueckmeldung_id' => \App\Model\Rueckmeldungen::factory(),
             'type' => $this->faker->word(),
             'option' => $this->faker->text(),
         ];

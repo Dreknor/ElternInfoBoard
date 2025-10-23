@@ -34,10 +34,6 @@ class createUserRequest extends FormRequest
                 'email',
                 'unique:users',
             ],
-            'password' => [
-                'required',
-                'confirmed',
-            ],
             'gruppen' => [
                 'sometimes',
                 'array',

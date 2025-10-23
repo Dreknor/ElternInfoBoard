@@ -27,7 +27,7 @@
                     <div class="card">
                         <div class="card-header">
                             <h6 class="card-title">
-                                {{$child}}
+                                {{$child->first_name}} {{$child->last_name}}
                             </h6>
                         </div>
                         <div class="card-body">
@@ -38,15 +38,8 @@
 
                                         </th>
                                         <th width="23%">
-                                            ab
+                                            Zeitpunkt
                                         </th>
-                                        <th width="23%">
-                                            genau
-                                        </th>
-                                        <th width="23%">
-                                            spätestens
-                                        </th>
-
                                     </tr>
                                     @for($x=1;$x<6;$x++)
                                         <tr>
@@ -54,23 +47,25 @@
                                                 {{$weekdays[$x]}}
                                             </th>
                                             <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('child_name',$child)->where('type','ab')->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','=','ab')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','genau')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($schickzeiten->where('weekday', $x)->where('type','spät.')->where('child_name',$child)->first())
-                                                    {{substr($schickzeiten->where('weekday', $x)->where('type','=','spät.')->where('child_name',$child)->first()->time->format('H:i'), 0 ,5)}} Uhr
+                                                @if($child->schickzeiten->where('weekday',$x)->count() > 0)
+                                                    @if($child->schickzeiten->where('weekday',$x)->first()->type == "ab")
+                                                        @if($child->schickzeiten->where('weekday',$x)->first()->time_ab)
+                                                            ab {{$child->schickzeiten->where('weekday',$x)->first()->time_ab->format('H:i')}}
+                                                        @endif
+                                                        @if($child->schickzeiten->where('weekday',$x)->first()->time_spaet)
+                                                            bis {{$child->schickzeiten->where('weekday',$x)->first()->time_spaet->format('H:i')}}
+                                                        @endif
+                                                    @elseif($child->schickzeiten->where('weekday',$x)->first()->type == "genau")
+                                                        @if($child->schickzeiten->where('weekday',$x)->first()->time)
+                                                            genau {{$child->schickzeiten->where('weekday',$x)->first()->time->format('H:i')}}
+                                                        @endif
+                                                    @endif
+                                                @else
+                                                    -
                                                 @endif
                                             </td>
                                         </tr>
                                     @endfor
-
                                 </table>
                             </div>
 

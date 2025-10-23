@@ -125,9 +125,11 @@ class TerminController extends Controller
             ]);
         }
 
-        $pattern = '^[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2}$^';
+        $pattern = '/^(0?[1-9]|[12]\d|3[01]).(0?[1-9]|1[0-2]).([12]\d{3})$/';
+
         $matches = [];
         $termin = preg_match($pattern, $post->header, $matches);
+
 
         if (!$termin) {
             $termin = preg_match($pattern, $post->news, $matches);
@@ -142,6 +144,7 @@ class TerminController extends Controller
 
         $terminname = $post->header;
         $terminname = str_replace($matches[0], '', $terminname);
+
 
         $start = Carbon::parse($matches[0]);
         $ende = Carbon::parse($matches[0]);

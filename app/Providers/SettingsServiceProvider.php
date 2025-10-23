@@ -27,9 +27,15 @@ class SettingsServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(GeneralSetting $generalSetting, EmailSetting $emailSetting, NotifySetting $notifySetting, KeyCloakSetting $keyCloakSetting): void
+    public function boot(): void
     {
+        // Skip settings loading in testing environment
+        if (app()->environment('testing')) {
+            return;
+        }
+
         try {
+            $emailSetting = app(EmailSetting::class);
             app('config')->set([
                 'mail.mailers.smtp.host' => $emailSetting->mail_server,
                 'mail.mailers.smtp.port' => $emailSetting->mail_port,
@@ -44,6 +50,7 @@ class SettingsServiceProvider extends ServiceProvider
         }
 
         try {
+            $keyCloakSetting = app(KeyCloakSetting::class);
             app('config')->set([
                 'keycloak.client_id' => $keyCloakSetting->client_id,
                 'keycloak.client_secret' => $keyCloakSetting->client_secret,
@@ -55,9 +62,6 @@ class SettingsServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             Log::error("Setting Keycloak failed: ". $e->getMessage());
         }
-
-
-
 
     }
 }

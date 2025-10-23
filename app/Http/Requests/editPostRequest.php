@@ -66,6 +66,9 @@ class editPostRequest extends FormRequest
             'wp_push' => [
                 'nullable', 'sometimes','boolean',
             ],
+            'no_header' => [
+                'nullable', 'sometimes','boolean',
+            ],
 
         ];
     }

@@ -1,4 +1,3 @@
-
     @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
         <div
             class="container-fluid info  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
@@ -86,6 +85,64 @@
                 </div>
             </div>
         </div>
+    @elseif($nachricht->no_header)
+        <div
+            class="nachricht info w-100 mb-4 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
+            <div class="row ">
+                <div class="col mx-auto">
+                    @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
+                        <div class="pull-right">
+
+                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                                   title="Download" class="btn btn-sm btn-info">
+                                    <i class="fa fa-download"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                                <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
+                                   id="editTextBtn" data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                            @else
+                                <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
+                                    <i class="far fa-clone"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->released == 0)
+                                <a href="{{url('/posts/release/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
+                                    <i class="far fa-eye"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->released == 1 and !$nachricht->is_archived)
+                                <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                    <i class="fas fa-archive"></i>
+                                </a>
+                            @endif
+                            @if(auth()->user()->can('make sticky'))
+                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                                   class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                    <i class="fas fa-thumbtack"
+                                       @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+                        <div class="card card-body m-0">
+                            {!! $nachricht->news !!}
+                        </div>
+                    </div>
     @else
         <div
             class="card {{$nachricht->type}}  @if($nachricht->released == 0) border border-info @endif @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach"
@@ -116,7 +173,7 @@
                             </div>
                         @endif
                     </div>
-                    @if($nachricht->type != 'image')
+                    @if($nachricht->type != 'image' )
                         @include('nachrichten.header.info')
                     @endif
 

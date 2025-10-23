@@ -16,6 +16,9 @@ class CareSetting extends Settings
 
     public bool $show_message_on_empty_group;
 
+    public string|null  $end_time;
+    public int|null $info_to;
+
     public static function group(): string
     {
         return 'Care';

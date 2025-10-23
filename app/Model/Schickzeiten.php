@@ -2,16 +2,22 @@
 
 namespace App\Model;
 
+use App\Observers\SchickzeitenObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Schickzeiten extends Model
+#[ObservedBy([SchickzeitenObserver::class])]
+class Schickzeiten extends Model implements Auditable
 {
     use SoftDeletes;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
+
 
     protected $table = 'schickzeiten';
 

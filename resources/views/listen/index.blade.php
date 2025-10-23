@@ -89,7 +89,17 @@
                             abgelaufene Listen
                     </h5>
                 </div>
+
                 <div class="card-body">
+                    <form method="POST" action="{{ url('listen/search') }}">
+                        @csrf
+                        <div class="input-group mb-3">
+                            <input type="text" name="query" class="form-control" placeholder="Suche nach Listenname">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="submit">Suchen</button>
+                            </div>
+                        </div>
+                    </form>
                     <table class="table table-striped">
                         <thead>
                         <tr>

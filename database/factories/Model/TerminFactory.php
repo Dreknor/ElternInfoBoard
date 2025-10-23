@@ -25,6 +25,8 @@ class TerminFactory extends Factory
             'terminname' => $this->faker->word(),
             'start' => $this->faker->dateTime(),
             'ende' => $this->faker->dateTime(),
+            'author_id' => \App\Model\User::factory(),
+            'description' => $this->faker->optional()->sentence(),
         ];
     }
 }

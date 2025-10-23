@@ -15,12 +15,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
-class Post extends Model implements HasMedia, ReactableInterface
+class Post extends Model implements HasMedia, ReactableInterface, Auditable
 {
     use InteractsWithMedia;
     use HasFactory;
@@ -30,14 +31,17 @@ class Post extends Model implements HasMedia, ReactableInterface
     use HasRelationships;
     use Reactable;
     use NotificationTrait;
+    use \OwenIt\Auditing\Auditable;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt'];
+
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'no_header'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
         'reactable' => 'boolean',
         'external' => 'boolean',
         'read_receipt' => 'boolean',
+        'no_header' => 'boolean',
     ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];

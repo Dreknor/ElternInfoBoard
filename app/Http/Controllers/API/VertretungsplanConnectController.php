@@ -201,6 +201,18 @@ class VertretungsplanConnectController extends Controller
 
     public function updateAbsence(Request $request, $id)
     {
+        $vertretung = json_decode(
+            $this->getContent(),
+            true
+        );
+
+        if ($vertretung['key'] != config('app.api_key')) {
+           return response()->json([
+                'error' => 'API key ungültig'
+            ], 401);
+        }
+
+
         $request->validate([
             'start_date' => 'required|date',
             'end_date' => 'required|date',
@@ -208,10 +220,16 @@ class VertretungsplanConnectController extends Controller
             'reason' => 'nullable|string'
         ]);
 
-        $week = VertretungsplanAbsence::firstOrNew(['id' => $id]);
-        $week->fill($request->validated());
-        $week->id = $id;
-        $week->save();
+        $absence = VertretungsplanAbsence::firstOrNew(['id' => $id]);
+
+
+        $absence->start_date = $request->get('start_date');
+        $absence->end_date = $request->get('end_date');
+        $absence->name = $request->get('name');
+        $absence->reason = $request->get('reason');
+
+        $absence->id = $request->get('id');
+        $absence->save();
 
         return response()->json([
             'success' => 'Vertretungen erfolgreich aktualisiert'

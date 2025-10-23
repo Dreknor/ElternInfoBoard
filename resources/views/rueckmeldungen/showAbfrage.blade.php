@@ -34,6 +34,9 @@
                         <th>
                             Name
                         </th>
+                        <th>
+                            Email
+                        </th>
 
                         @foreach($rueckmeldung->options as $option)
                             <th>
@@ -52,6 +55,9 @@
                             </td>
                             <td>
                                 {{$userRueckmeldung->user->name}}
+                            </td>
+                            <td>
+                                {{$userRueckmeldung->user->email}}
                             </td>
                             @foreach($rueckmeldung->options as $option)
                                 <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type) bg-success @endif">

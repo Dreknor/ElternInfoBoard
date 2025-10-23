@@ -3,6 +3,7 @@
 namespace Database\Factories\Model;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 use App\Model\User;
 
 class UserFactory extends Factory
@@ -30,7 +31,6 @@ class UserFactory extends Factory
             'sendCopy' => $this->faker->boolean(),
             'last_online_at' => $this->faker->dateTime(),
             'track_login' => $this->faker->boolean(),
-            'user_id' => \App\Model\Group::factory(),
         ];
     }
 }

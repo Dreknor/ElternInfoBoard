@@ -5,9 +5,10 @@ namespace App\Mail;
 use App\Model\Disease;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
-class krankmeldung extends Mailable
+class Krankmeldung extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -25,12 +26,13 @@ class krankmeldung extends Mailable
 
     public ?string $disease;
 
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $Email, string $Name, string $NameDesKindes, string $krankVon, string $krankBis, string $bemerkung, ?string $disease)
+    public function __construct(string $Email, string $Name, string $NameDesKindes, string $krankVon, string $krankBis, string $bemerkung, ?string $disease, array $attachments = [])
     {
         $this->email = $Email;
         $this->name = $Name;
