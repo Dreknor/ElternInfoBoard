@@ -176,7 +176,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
         Route::get('diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
-        Route::resource('termin', TerminController::class);
+        Route::resource('termine', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
         //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
@@ -212,12 +212,16 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
 
 
+        //Dashboard
+        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);
+        Route::get('/nachrichten', [NachrichtenController::class, 'index'])->name('nachrichten.index');
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
-        Route::get('/', [NachrichtenController::class, 'index']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);

@@ -1,9 +1,14 @@
 <div class="row mb-2">
     <div class="col-auto">
+        @php
+            $moduleContact = \Illuminate\Support\Facades\Cache::get('module_contact');
+            $showContactLink = $moduleContact && isset($moduleContact->options['active']) && $moduleContact->options['active'] == 1 && $nachricht->autor != null;
+        @endphp
 
-        @if(\Illuminate\Support\Facades\Cache::get('module_contact')->options['active'] == 1 && $nachricht->autor != null)
+        @if($showContactLink)
             <a href="{{ url('feedback'.'/'.$nachricht->autor->id) }}" class="text-decoration-none">
                 <i class="fa fa-user"></i>  {{ $nachricht->autor?->name }}
+            </a>
         @else
             {{ $nachricht->autor?->name }}
 

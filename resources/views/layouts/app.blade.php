@@ -15,6 +15,11 @@
     @endif
     <title>{{$settings->app_name}} @yield('title')</title>
 
+    <!-- Vite Assets (Tailwind CSS) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Alpine.js for Dropdown functionality -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- CSS Files -->
     <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet"/>
@@ -23,7 +28,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.12.1/font/bootstrap-icons.min.css">
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}?v=1" rel="stylesheet"> <!--load all styles -->
-    <link href="{{asset('/css/app.css')}}?v=2" rel="stylesheet"> <!--load all styles -->
     <link href="{{asset('/css/palette-gradient.css')}}?v=1" rel="stylesheet">
     <link href="{{asset('/css/mobile.css')}}?v=1" rel="stylesheet">
 
@@ -62,14 +66,12 @@
 
     <div class="sidebar-wrapper " id="sidebar">
         <ul class="nav">
-            @if(config('app.mitarbeiterboard') != "" and auth()->user()->can('view Mitarbeiterboard'))
                 <li class="">
-                    <a href="{{config('app.mitarbeiterboard')}}">
-                        <i class="fa fa-external-link-alt"></i>
-                        <p>MitarbeiterBoard</p>
+                    <a href="{{url('/dashboard')}}">
+                        <i class="fas fa-home"></i>
+                        <p>Dashboard</p>
                     </a>
                 </li>
-            @endif
 
             @stack('nav')
 
@@ -196,8 +198,7 @@
                 </div>
             </div>
         @endif
-            @stack('home-view-top')
-            @stack('home-view')
+
             @yield('content')
     </div>
 

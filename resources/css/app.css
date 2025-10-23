@@ -1,0 +1,22 @@
+/* resources/css/app.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-bg: #ffffff;
+  --app-text: #111827;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--app-bg);
+  color: var(--app-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* small helper to confirm that the CSS file is loaded */
+.app-css-loaded { display: block; }

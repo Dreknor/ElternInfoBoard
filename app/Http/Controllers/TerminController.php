@@ -24,6 +24,26 @@ class TerminController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
+    /**
+     * Display a listing of all termine.
+     *
+     * @return View
+     */
+    public function index()
+    {
+        $termine = Termin::query()
+            ->with('groups')
+            ->where('start', '>=', Carbon::today())
+            ->whereHas('groups', function ($query) {
+                $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+            })
+            ->orderBy('start')
+            ->get();
+
+        return view('termine.index', [
+            'termine' => $termine,
+        ]);
+    }
 
     public function edit(Termin $termin)
     {
