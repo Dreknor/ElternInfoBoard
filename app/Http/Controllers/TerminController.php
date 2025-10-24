@@ -232,8 +232,12 @@ class TerminController extends Controller
 
             $termin->groups()->attach($gruppen);
 
+            $users = $termin->users;
+
+            $users->unique('id');
+
             $termin->notify(
-                users: $termin->users,
+                users: $users,
                 title: 'Neuer Termin',
                 message: 'Neuer Termin: ' . $termin->terminname,
                 type: 'Termine');

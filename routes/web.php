@@ -177,6 +177,7 @@ Route::middleware('auth')->group(function () {
         Route::get('diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
         Route::resource('termine', TerminController::class);
+        Route::resource('termin', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
         //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
