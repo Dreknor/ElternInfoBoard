@@ -1,10 +1,3 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <p>
-                {!! $vorgaben->schicken_text !!}
-            </p>
-        </div>
-    </div>
-
+<div class="prose prose-sm max-w-none">
+    {!! $vorgaben->schicken_text !!}
 </div>
