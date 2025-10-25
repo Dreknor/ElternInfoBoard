@@ -1,4 +1,4 @@
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden" id="table_of_contents">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-3" id="table_of_contents">
         <!-- Header mit Gradient -->
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 border-b border-blue-800">
             <h5 class="text-xl font-bold text-white flex items-center gap-2">
