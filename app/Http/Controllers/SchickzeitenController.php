@@ -234,19 +234,93 @@ class SchickzeitenController extends Controller
             'Freitag' => '5',
         ];
 
+        $weekday = $weekdays[$request->weekday];
+
+        // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
+        if (!$request->has('update_daily_times')) {
+            $dailyTimes = Schickzeiten::query()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $request->child)
+                ->where('users_id', $parent)
+                ->get()
+                ->filter(function ($schickzeit) use ($weekday) {
+                    return $schickzeit->specific_date->dayOfWeek == $weekday;
+                });
+
+            if ($dailyTimes->count() > 0) {
+                return redirect()->back()->with([
+                    'type' => 'confirm_verwaltung',
+                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
+                    'confirm_verwaltung_data' => [
+                        'parent' => $parent,
+                        'child' => $request->child,
+                        'weekday' => $request->weekday,
+                        'type' => $request->type,
+                        'time' => $request->time,
+                        'time_spaet' => $request->time_spaet,
+                    ]
+                ]);
+            }
+        }
+
        Schickzeiten::query()->where([
             'child_name' => $request->child,
-            'weekday' => $weekdays[$request->weekday],
+            'weekday' => $weekday,
             'users_id' => $parent,
         ])->update([
             'changedBy' => Auth::id(),
             'deleted_at' => Carbon::now(),
         ]);
 
+        // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag anpassen
+        if ($request->input('update_daily_times') === 'yes') {
+            Schickzeiten::query()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $request->child)
+                ->where('users_id', $parent)
+                ->get()
+                ->filter(function ($schickzeit) use ($weekday) {
+                    return $schickzeit->specific_date->dayOfWeek == $weekday;
+                })
+                ->each(function ($schickzeit) use ($request) {
+                    if ($request->type == 'genau') {
+                        $schickzeit->update([
+                            'type' => 'genau',
+                            'time' => $request->time,
+                            'changedBy' => Auth::id(),
+                        ]);
+                    } else {
+                        $schickzeit->update([
+                            'type' => 'ab',
+                            'time' => $request->time,
+                            'changedBy' => Auth::id(),
+                        ]);
+                    }
+                });
+        } elseif ($request->input('update_daily_times') === 'delete') {
+            Schickzeiten::query()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $request->child)
+                ->where('users_id', $parent)
+                ->get()
+                ->filter(function ($schickzeit) use ($weekday) {
+                    return $schickzeit->specific_date->dayOfWeek == $weekday;
+                })
+                ->each(function ($schickzeit) {
+                    $schickzeit->update([
+                        'changedBy' => Auth::id(),
+                        'deleted_at' => Carbon::now(),
+                    ]);
+                });
+        }
+
         $neueSchickzeit = new Schickzeiten([
             'users_id' => $parent,
             'child_name' => $request->child,
-            'weekday' => $weekdays[$request->weekday],
+            'weekday' => $weekday,
             'type' => $request->type,
             'time' => $request->time,
             'changedBy' => Auth::id(),
@@ -258,7 +332,7 @@ class SchickzeitenController extends Controller
             $neueSchickzeit2 = new Schickzeiten([
                 'users_id' => $parent,
                 'child_name' => $request->child,
-                'weekday' => $weekdays[$request->weekday],
+                'weekday' => $weekday,
                 'type' => 'spät.',
                 'time' => $request->time_spaet,
                 'changedBy' => Auth::id(),
@@ -358,7 +432,64 @@ class SchickzeitenController extends Controller
             }
 
             if ($weekday){
+                // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
+                if (!$request->has('update_daily_times')) {
+                    $dailyTimes = $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::now()->toDateString())
+                        ->get()
+                        ->filter(function ($schickzeit) use ($weekday) {
+                            return $schickzeit->specific_date->dayOfWeek == $weekday;
+                        });
+
+                    if ($dailyTimes->count() > 0) {
+                        return redirect()->back()->with([
+                            'type' => 'confirm',
+                            'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
+                            'confirm_data' => [
+                                'child_id' => $child->id,
+                                'weekday' => $weekday,
+                                'type' => $request->type,
+                                'time' => $request->time,
+                                'time_ab' => $request->time_ab,
+                                'time_spaet' => $request->time_spaet,
+                            ]
+                        ]);
+                    }
+                }
+
                 $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
+
+                // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag anpassen
+                if ($request->input('update_daily_times') === 'yes') {
+                    $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::now()->toDateString())
+                        ->get()
+                        ->filter(function ($schickzeit) use ($weekday) {
+                            return $schickzeit->specific_date->dayOfWeek == $weekday;
+                        })
+                        ->each(function ($schickzeit) use ($request) {
+                            $schickzeit->update([
+                                'type' => $request->type,
+                                'time' => $request->time,
+                                'time_ab' => null,
+                                'time_spaet' => null,
+                                'changedBy' => Auth::id(),
+                            ]);
+                        });
+                } elseif ($request->input('update_daily_times') === 'delete') {
+                    $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::now()->toDateString())
+                        ->get()
+                        ->filter(function ($schickzeit) use ($weekday) {
+                            return $schickzeit->specific_date->dayOfWeek == $weekday;
+                        })
+                        ->each(function ($schickzeit) {
+                            $schickzeit->delete();
+                        });
+                }
             } else {
                 $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
             }
@@ -395,7 +526,64 @@ class SchickzeitenController extends Controller
             }
 
             if ($weekday){
+                // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
+                if (!$request->has('update_daily_times')) {
+                    $dailyTimes = $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::now()->toDateString())
+                        ->get()
+                        ->filter(function ($schickzeit) use ($weekday) {
+                            return $schickzeit->specific_date->dayOfWeek == $weekday;
+                        });
+
+                    if ($dailyTimes->count() > 0) {
+                        return redirect()->back()->with([
+                            'type' => 'confirm',
+                            'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
+                            'confirm_data' => [
+                                'child_id' => $child->id,
+                                'weekday' => $weekday,
+                                'type' => $request->type,
+                                'time' => $request->time,
+                                'time_ab' => $request->time_ab,
+                                'time_spaet' => $request->time_spaet,
+                            ]
+                        ]);
+                    }
+                }
+
                 $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
+
+                // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag anpassen
+                if ($request->input('update_daily_times') === 'yes') {
+                    $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::now()->toDateString())
+                        ->get()
+                        ->filter(function ($schickzeit) use ($weekday) {
+                            return $schickzeit->specific_date->dayOfWeek == $weekday;
+                        })
+                        ->each(function ($schickzeit) use ($request, $time_spaet) {
+                            $schickzeit->update([
+                                'type' => 'ab',
+                                'time' => null,
+                                'time_ab' => $request->time_ab,
+                                'time_spaet' => $time_spaet ?? null,
+                                'changedBy' => Auth::id(),
+                            ]);
+                        });
+                } elseif ($request->input('update_daily_times') === 'delete') {
+                    $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::now()->toDateString())
+                        ->get()
+                        ->filter(function ($schickzeit) use ($weekday) {
+                            return $schickzeit->specific_date->dayOfWeek == $weekday;
+                        })
+                        ->each(function ($schickzeit) {
+                            $schickzeit->delete();
+                        });
+                }
             } else {
                 $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
             }
@@ -533,6 +721,29 @@ class SchickzeitenController extends Controller
      */
     public function destroy(Request $request, $day, $child)
     {
+        // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
+        if (!$request->has('delete_daily_times')) {
+            $dailyTimes = $request->user()->schickzeiten_own()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $child)
+                ->get()
+                ->filter(function ($schickzeit) use ($day) {
+                    return $schickzeit->specific_date->dayOfWeek == $day;
+                });
+
+            if ($dailyTimes->count() > 0) {
+                return redirect()->back()->with([
+                    'type' => 'confirm_delete',
+                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'confirm_delete_data' => [
+                        'day' => $day,
+                        'child' => $child,
+                    ]
+                ]);
+            }
+        }
+
         $schickzeit = $request->user()->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
             'changedBy' => Auth::id(),
             'deleted_at' => Carbon::now(),
@@ -542,6 +753,41 @@ class SchickzeitenController extends Controller
                 'changedBy' => Auth::id(),
                 'deleted_at' => Carbon::now(),
             ]);
+        }
+
+        // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag löschen
+        if ($request->input('delete_daily_times') === 'yes') {
+            $request->user()->schickzeiten_own()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $child)
+                ->get()
+                ->filter(function ($schickzeit) use ($day) {
+                    return $schickzeit->specific_date->dayOfWeek == $day;
+                })
+                ->each(function ($schickzeit) {
+                    $schickzeit->update([
+                        'changedBy' => Auth::id(),
+                        'deleted_at' => Carbon::now(),
+                    ]);
+                });
+
+            if ($request->user()->sorgeberechtigter2 != null) {
+                $request->user()->sorgeberechtigter2->schickzeiten_own()
+                    ->whereNotNull('specific_date')
+                    ->where('specific_date', '>=', Carbon::now()->toDateString())
+                    ->where('child_name', '=', $child)
+                    ->get()
+                    ->filter(function ($schickzeit) use ($day) {
+                        return $schickzeit->specific_date->dayOfWeek == $day;
+                    })
+                    ->each(function ($schickzeit) {
+                        $schickzeit->update([
+                            'changedBy' => Auth::id(),
+                            'deleted_at' => Carbon::now(),
+                        ]);
+                    });
+            }
         }
 
         return redirect()->back()->with([
@@ -556,12 +802,56 @@ class SchickzeitenController extends Controller
      * @param $parent
      * @return RedirectResponse
      */
-    public function destroyVerwaltung($day, $child, $parent)
+    public function destroyVerwaltung(Request $request, $day, $child, $parent)
     {
+        // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
+        if (!$request->has('delete_daily_times')) {
+            $dailyTimes = Schickzeiten::query()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $child)
+                ->where('users_id', $parent)
+                ->get()
+                ->filter(function ($schickzeit) use ($day) {
+                    return $schickzeit->specific_date->dayOfWeek == $day;
+                });
+
+            if ($dailyTimes->count() > 0) {
+                return redirect()->back()->with([
+                    'type' => 'confirm_delete_verwaltung',
+                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'confirm_delete_verwaltung_data' => [
+                        'day' => $day,
+                        'child' => $child,
+                        'parent' => $parent,
+                    ]
+                ]);
+            }
+        }
+
         $schickzeit = Schickzeiten::query()->where('weekday', '=', $day)->where('child_name', '=', $child)->where('users_id', $parent)->update([
             'changedBy' => Auth::id(),
             'deleted_at' => Carbon::now(),
         ]);
+
+        // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag löschen
+        if ($request->input('delete_daily_times') === 'yes') {
+            Schickzeiten::query()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->where('child_name', '=', $child)
+                ->where('users_id', $parent)
+                ->get()
+                ->filter(function ($schickzeit) use ($day) {
+                    return $schickzeit->specific_date->dayOfWeek == $day;
+                })
+                ->each(function ($schickzeit) {
+                    $schickzeit->update([
+                        'changedBy' => Auth::id(),
+                        'deleted_at' => Carbon::now(),
+                    ]);
+                });
+        }
 
         return redirect()->back()->with([
             'type' => 'warning',
@@ -676,13 +966,48 @@ class SchickzeitenController extends Controller
 
     }
 
-    public function destroySchickzeit(Schickzeiten $schickzeit)
+    public function destroySchickzeit(Request $request, Schickzeiten $schickzeit)
     {
        if (!auth()->user()->children()->contains($schickzeit->child) && !auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
             ]);
+        }
+
+        // Nur wenn es eine regelmäßige Schickzeit ist (mit weekday), prüfen
+        if ($schickzeit->weekday && !$request->has('delete_daily_times')) {
+            $dailyTimes = $schickzeit->child->schickzeiten()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->get()
+                ->filter(function ($s) use ($schickzeit) {
+                    return $s->specific_date->dayOfWeek == $schickzeit->weekday;
+                });
+
+            if ($dailyTimes->count() > 0) {
+                return redirect()->back()->with([
+                    'type' => 'confirm_delete_schickzeit',
+                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'confirm_delete_schickzeit_data' => [
+                        'schickzeit_id' => $schickzeit->id,
+                    ]
+                ]);
+            }
+        }
+
+        // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag löschen
+        if ($schickzeit->weekday && $request->input('delete_daily_times') === 'yes') {
+            $schickzeit->child->schickzeiten()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::now()->toDateString())
+                ->get()
+                ->filter(function ($s) use ($schickzeit) {
+                    return $s->specific_date->dayOfWeek == $schickzeit->weekday;
+                })
+                ->each(function ($s) {
+                    $s->delete();
+                });
         }
 
         $schickzeit->delete();
