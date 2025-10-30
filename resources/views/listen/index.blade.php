@@ -1,151 +1,83 @@
 @extends('layouts.app')
 @section('title') - Listen @endsection
 
-
-@section('css')
-
-    <style type="text/css">
-        @media (min-width: 576px) {
-            .card-columns {
-                column-count: 1;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .card-columns {
-                column-count: 2;
-            }
-        }
-
-        @media (min-width: 992px) {
-            .card-columns {
-                column-count: 3;
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .card-columns {
-                column-count: 3;
-            }
-        }
-    </style>
-
-@endsection
-
 @section('content')
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-md-12 col-sm-12">
-                <div class="card">
-                    <div class="card-header border-bottom">
-                        <h5>
-                            aktuelle Listen
-                        </h5>
-                    </div>
-                    <div class="card-body ">
-                        @if(count($listen)<1)
-                            <p>
-                                Es wurden keine aktuellen Listen gefunden
-                            </p>
-                        @endif
-                        <div class="card-columns">
-                            @can('create terminliste')
-                                <div class="card border">
-                                    <div class="card-header border-bottom">
-                                        <h5>
-                                            Neue Liste
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <a class="btn btn-block btn-outline-success text-success"
-                                           href="{{url('listen/create')}}">
-                                            <div class="m-4">
-                                                <i class="fa fa-plus"></i> neue Liste erstellen
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                            @endcan
-                            @if(count($listen)>=1)
-                                @foreach($listen as $liste)
-                                    @if($liste->type == 'termin')
-                                        @include('listen.cards.terminListe')
-                                    @else
-                                        @include('listen.cards.eintragListe')
-                                    @endif
-                                @endforeach
+    <div class="w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <!-- Aktuelle Listen Section -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 border-b border-blue-800">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3 mb-0">
+                    <i class="fas fa-list"></i>
+                    Aktuelle Listen
+                </h2>
+            </div>
 
-                            @endif
-                        </div>
+            <!-- Body -->
+            <div class="px-6 py-6">
+                @if(count($listen) < 1)
+                    <div class="bg-gray-50 rounded-lg p-6 text-center">
+                        <p class="text-gray-600 text-lg">Es wurden keine aktuellen Listen gefunden</p>
                     </div>
-                </div>
+                @else
+                    <!-- Grid Layout für Listen Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @can('create terminliste')
+                            <!-- Neue Liste Card -->
+                            <div class="border-2 border-dashed border-green-400 rounded-lg p-6 flex flex-col items-center justify-center hover:border-green-500 hover:bg-green-50 transition-all duration-200">
+                                <i class="fas fa-plus text-4xl text-green-500 mb-3"></i>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Neue Liste</h3>
+                                <a href="{{ url('listen/create') }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                    <i class="fas fa-plus"></i>
+                                    Erstellen
+                                </a>
+                            </div>
+                        @endcan
+
+                        <!-- Listen Cards -->
+                        @foreach($listen as $liste)
+                            @if($liste->type == 'termin')
+                                @include('listen.cards.terminListe')
+                            @else
+                                @include('listen.cards.eintragListe')
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
+
+        <!-- Abgelaufene Listen Section (für Admin) -->
         @if(auth()->user()->can('edit terminliste'))
-            <div class="container-fluid">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">
-                            abgelaufene Listen
-                    </h5>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-4 border-b border-orange-800">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-3 mb-0">
+                        <i class="fas fa-history"></i>
+                        Abgelaufene Listen
+                    </h2>
                 </div>
 
-                <div class="card-body">
-                    <form method="POST" action="{{ url('listen/search') }}">
+                <!-- Body -->
+                <div class="px-6 py-6">
+                    <!-- Search Form -->
+                    <form method="POST" action="{{ url('listen/search') }}" class="mb-6">
                         @csrf
-                        <div class="input-group mb-3">
-                            <input type="text" name="query" class="form-control" placeholder="Suche nach Listenname">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="submit">Suchen</button>
-                            </div>
+                        <div class="flex gap-3">
+                            <input type="text"
+                                   name="query"
+                                   class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                   placeholder="Suche nach Listenname...">
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                <i class="fas fa-search"></i>
+                                Suchen
+                            </button>
                         </div>
                     </form>
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>
-                                Titel
-                            </th>
-                            <th>
-                                abgelaufen am
-                            </th>
-                            <th>
-                                Aktionen
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($archiv as $liste)
-                            <tr>
-                                <td>
-                                    {{$liste->listenname}}
-                                </td>
-                                <td>
-                                    {{$liste->ende->format('d.m.Y')}}
-                                </td>
-                                <td>
-                                    <a href="{{url("listen/$liste->id")}}" class="card-link">
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-
-                                    <a href="{{url("listen/$liste->id/refresh")}}" class="card-link">
-                                        <i class="fas fa-redo"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                        <tfoot>
-                        <tr>
-                            <td colspan="3">
-                                {{$archiv->links()}}
-                            </td>
-                        </tr>
-                        </tfoot>
-                    </table>
                 </div>
             </div>
-        </div>
-
-    @endif
+        @endif
+    </div>
 @endsection

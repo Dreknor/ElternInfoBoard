@@ -1,205 +1,226 @@
     @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
-        <div
-            class="container-fluid info  @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
-            <div class="row ">
-                <div class="col mx-auto">
-                    @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
-                        <div class="pull-right">
-
-                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
-                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
-                                   title="Download" class="btn btn-sm btn-info">
-                                    <i class="fa fa-download"></i>
-                                </a>
-                            @endif
-                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
-                                <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
-                                   id="editTextBtn" data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
-                                    <i class="far fa-edit"></i>
-                                </a>
-                                <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
-                                    <i class="fas fa-redo"></i>
-                                </a>
-                            @else
-                                <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
-                                    <i class="far fa-clone"></i>
-                                </a>
-                            @endif
-                            @if($nachricht->released == 0)
-                                <a href="{{url('/posts/release/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
-                                    <i class="far fa-eye"></i>
-                                </a>
-                            @endif
-                            @if($nachricht->released == 1 and !$nachricht->is_archived)
-                                <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
-                                    <i class="fas fa-archive"></i>
-                                </a>
-                            @endif
-                            @if(auth()->user()->can('make sticky'))
-                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
-                                   class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
-                                    <i class="fas fa-thumbtack"
-                                       @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
-                                </a>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-12">
-                    <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel">
-                        <div class="carousel-inner">
-                            @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
-                                <div class="carousel-item text-center @if($loop->first) active @endif">
-                                    <a href="{{url('/image/'.$media->id)}}" target="_blank">
-                                        <img class="d-block mx-auto" src="{{url('/image/'.$media->id)}}">
-                                        @if($nachricht->rueckmeldung?->type == 'bild')
-                                            <h6 class="small">{{$media->name}}</h6>
-                                        @endif
-                                    </a>
-                                </div>
-                            @endforeach
-
-                        </div>
-
-                        @if(count($nachricht->getMedia('images'))>1)
-                            <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button"
-                               data-slide="prev">
-                                <span class="carousel-control-prev-icon bg-primary " aria-hidden="true"></span>
-                                <span class="sr-only">Previous</span>
+        <!-- Image Gallery Type -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
+            @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author))
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 border-b border-gray-200">
+                    <div class="flex justify-end gap-2">
+                        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                            <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                               title="Download"
+                               class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                <i class="fa fa-download mr-1"></i>
                             </a>
-                            <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button"
-                               data-slide="next">
-                                <span class="carousel-control-next-icon bg-primary" aria-hidden="true"></span>
-                                <span class="sr-only">Next</span>
+                        @endif
+                        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                            <a href="{{url('/posts/edit/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                <i class="far fa-edit"></i>
+                            </a>
+                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        @else
+                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
+                                <i class="far fa-clone"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 0)
+                            <a href="{{url('/posts/release/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
+                                <i class="far fa-eye"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 1 and !$nachricht->is_archived)
+                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                <i class="fas fa-archive"></i>
+                            </a>
+                        @endif
+                        @if(auth()->user()->can('make sticky'))
+                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 @if($nachricht->sticky) bg-green-100 text-green-700 hover:bg-green-200 @else bg-purple-600 hover:bg-purple-700 text-white @endif text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                <i class="fas fa-thumbtack" @if($nachricht->sticky) style="transform: rotate(45deg)" @endif></i>
                             </a>
                         @endif
                     </div>
+                </div>
+            @endif
 
+            <div class="p-4">
+                <div id="carousel_post_{{$nachricht->id}}" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner rounded-lg overflow-hidden">
+                        @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
+                            <div class="carousel-item @if($loop->first) active @endif">
+                                <a href="{{url('/image/'.$media->id)}}" target="_blank" class="block">
+                                    <img class="d-block w-full h-auto mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 600px; object-fit: contain;">
+                                    @if($nachricht->rueckmeldung?->type == 'bild')
+                                        <p class="text-center text-sm text-gray-600 mt-2">{{$media->name}}</p>
+                                    @endif
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if(count($nachricht->getMedia('images'))>1)
+                        <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="prev">
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 shadow-lg" aria-hidden="true">
+                                <i class="fas fa-chevron-left text-white"></i>
+                            </span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="next">
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 shadow-lg" aria-hidden="true">
+                                <i class="fas fa-chevron-right text-white"></i>
+                            </span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
     @elseif($nachricht->no_header)
-        <div
-            class="nachricht info w-100 mb-4 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
-            <div class="row ">
-                <div class="col mx-auto">
-                    @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
-                        <div class="pull-right">
+        <!-- No Header Type -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
+            @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author))
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 border-b border-gray-200">
+                    <div class="flex justify-end gap-2">
+                        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                            <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                               title="Download"
+                               class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                <i class="fa fa-download mr-1"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                            <a href="{{url('/posts/edit/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                <i class="far fa-edit"></i>
+                            </a>
+                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        @else
+                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
+                                <i class="far fa-clone"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 0)
+                            <a href="{{url('/posts/release/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
+                                <i class="far fa-eye"></i>
+                            </a>
+                        @endif
+                        @if($nachricht->released == 1 and !$nachricht->is_archived)
+                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                <i class="fas fa-archive"></i>
+                            </a>
+                        @endif
+                        @if(auth()->user()->can('make sticky'))
+                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                               class="inline-flex items-center px-3 py-1.5 @if($nachricht->sticky) bg-green-100 text-green-700 hover:bg-green-200 @else bg-purple-600 hover:bg-purple-700 text-white @endif text-sm font-medium rounded-lg transition-colors duration-200"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                <i class="fas fa-thumbtack" @if($nachricht->sticky) style="transform: rotate(45deg)" @endif></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
-                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
-                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
-                                   title="Download" class="btn btn-sm btn-info">
-                                    <i class="fa fa-download"></i>
-                                </a>
-                            @endif
-                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
-                                <a href="{{url('/posts/edit/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
-                                   id="editTextBtn" data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
-                                    <i class="far fa-edit"></i>
-                                </a>
-                                <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
-                                    <i class="fas fa-redo"></i>
-                                </a>
-                            @else
-                                <a href="{{url('/posts/touch/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
-                                    <i class="far fa-clone"></i>
-                                </a>
-                            @endif
-                            @if($nachricht->released == 0)
-                                <a href="{{url('/posts/release/'.$nachricht->id)}}" class="btn btn-sm btn-secondary"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
-                                    <i class="far fa-eye"></i>
-                                </a>
-                            @endif
-                            @if($nachricht->released == 1 and !$nachricht->is_archived)
-                                <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="btn btn-sm btn-warning"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
-                                    <i class="fas fa-archive"></i>
-                                </a>
-                            @endif
-                            @if(auth()->user()->can('make sticky'))
-                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
-                                   class="btn btn-sm @if($nachricht->sticky) btn-outline-success @else btn-primary @endif"
-                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
-                                    <i class="fas fa-thumbtack"
-                                       @if($nachricht->sticky)  style="transform: rotate(45deg)" @endif></i>
-                                </a>
-                            @endif
-                        </div>
-                    @endif
+            <div class="p-6">
+                <div class="prose max-w-none">
+                    {!! $nachricht->news !!}
                 </div>
             </div>
-
-                        <div class="card card-body m-0">
-                            {!! $nachricht->news !!}
-                        </div>
-                    </div>
+        </div>
     @else
-        <div
-            class="card {{$nachricht->type}}  @if($nachricht->released == 0) border border-info @endif @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach"
+        <!-- Standard Nachricht Type -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 transition-shadow duration-300 hover:shadow-xl
+            @if($nachricht->released == 0) ring-2 ring-blue-600 @endif
+            @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach"
              id="{{$nachricht->id}}">
+
+            <!-- Header Image -->
             @if(count($nachricht->getMedia('header'))>0)
-                <img class="card-img-top" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
-                     style="max-height: 250px;object-fit: cover; object-position: 0 40%;">
+                <div class="relative h-64 overflow-hidden">
+                    <img class="w-full h-full object-cover object-center"
+                         src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
+                         alt="{{$nachricht->header}}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                </div>
             @endif
-            <div class=" @if($nachricht->released == 0) bg-info @endif card-header border-bottom">
-                <div class="container-fluid blur"
-                     @if(count($nachricht->getMedia('header'))>0) style="margin-top: -90px;" @endif>
-                    <div class="row">
-                        <div class="col-10 ">
-                            <h5 class="card-title text-wrap ">
+
+            <!-- Header Section -->
+            <div class="relative @if(count($nachricht->getMedia('header'))>0) @if($nachricht->released == 0) backdrop-blur-sm bg-blue-600/95 @else backdrop-blur-sm bg-gradient-to-r from-gray-50 to-gray-100 @endif @else @if($nachricht->released == 0) bg-gradient-to-r from-blue-600 to-blue-700 @else bg-gradient-to-r from-gray-50 to-gray-100 @endif @endif px-6 py-3 border-b @if($nachricht->released == 0) border-blue-800 @else border-gray-200 @endif"
+                 @if(count($nachricht->getMedia('header'))>0) style="margin-top: -4rem;" @endif>
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <!-- Title Section -->
+                        <div class="flex-1 min-w-0">
+                            <h5 class="text-lg font-bold @if($nachricht->released == 0) text-white @else text-gray-900 @endif mb-1 flex items-center gap-2 flex-wrap">
                                 @if($nachricht->sticky)
-                                    <i class="fas fa-thumbtack fa-xs "></i>
+                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-yellow-400 text-yellow-900 rounded-full">
+                                        <i class="fas fa-thumbtack text-xs"></i>
+                                    </span>
                                 @endif
-                                {{$nachricht->header}}  @if($nachricht->released == 0)
-                                    (unveröffentlicht)
+                                <span class="break-words">{{$nachricht->header}}</span>
+                                @if($nachricht->released == 0)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">
+                                        Unveröffentlicht
+                                    </span>
                                 @endif
                             </h5>
+
+                            @if($nachricht->type != 'image')
+                                @include('nachrichten.header.info')
+                            @endif
                         </div>
-                        @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author ))
-                            <div class="col-1 ml-auto">
-                                <div class="pull-right">
-                                    @include('nachrichten.header.admin-post')
-                                </div>
+
+                        <!-- Admin Actions -->
+                        @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author))
+                            <div class="flex flex-wrap gap-2 md:flex-shrink-0">
+                                @include('nachrichten.header.admin-post')
                             </div>
                         @endif
                     </div>
-                    @if($nachricht->type != 'image' )
-                        @include('nachrichten.header.info')
-                    @endif
 
-
-
+                    <!-- Archive Button -->
                     @if($nachricht->is_archived)
-                        <button class="btn btn-outline-info btn-block btnShow" data-toggle="collapse"
+                        <button class="mt-3 w-full md:w-auto inline-flex items-center justify-center px-4 py-2 @if($nachricht->released == 0) bg-white/20 hover:bg-white/30 text-white @else bg-blue-500 hover:bg-blue-600 text-white @endif font-medium rounded-lg transition-colors duration-200 btnShow"
+                                data-toggle="collapse"
                                 data-target="#Collapse{{$nachricht->id}}">
-                            <i class="fa fa-eye"></i>
+                            <i class="fa fa-eye mr-2"></i>
                             Text anzeigen
                         </button>
                     @endif
-                </div>
-
             </div>
-            <div class="card-body  @if($nachricht->is_archived) collapse @endif" id="Collapse{{$nachricht->id}}">
-                <div class="container-fluid">
-                    @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type != 'image')
 
-                        <div class="row">
-                            <div class="col-md-8 col-sm-12 blur">
-                                <p>
+            <!-- Content Section -->
+            <div class="@if($nachricht->is_archived) collapse @endif" id="Collapse{{$nachricht->id}}">
+                <div class="p-6">
+                    @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type != 'image')
+                        <!-- Content with Media -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2">
+                                <div class="prose max-w-none text-gray-700 leading-relaxed">
                                     {!! $nachricht->news !!}
-                                </p>
+                                </div>
                             </div>
-                            <div class="col-md-4 col-sm-12">
+                            <div class="lg:col-span-1 space-y-4">
                                 @if(count($nachricht->getMedia('images'))>0)
                                     @include('nachrichten.footer.bilder')
                                 @endif
@@ -210,74 +231,94 @@
                             </div>
                         </div>
                     @else
-                        <div class="container-fluid">
-                            <p class="pl-2  blur">
-                                {!! $nachricht->news !!}
-                            </p>
+                        <!-- Content without Media -->
+                        <div class="prose max-w-none text-gray-700 leading-relaxed">
+                            {!! $nachricht->news !!}
                         </div>
-
                     @endif
                 </div>
-            </div>
+
+                <!-- Read Receipt -->
                 @if($nachricht->read_receipt == 1)
-                    @include('nachrichten.footer.read_receipt', ['post' => $nachricht])
-                @endif
-            @include('nachrichten.footer.reactions')
-            @include('nachrichten.footer.poll_anonym')
-            @if(!is_null($nachricht->rueckmeldung))
-                    <div class="container-fluid ">
-                        <div class="row">
-                            <div class="col-12">
-                                @if($nachricht->rueckmeldung->multiple)
-                                    <p class="text-info font-weight-bold">
-                                        <i class="fas fa-check-double"></i> Es können mehrere Rückmeldungen abgegeben
-                                        werden.
-                                    </p>
-                                @endif
-                                @if($nachricht->rueckmeldung->pflicht)
-                                    <p class="text-danger font-weight-bold">
-                                        <i class="fas fa-exclamation-triangle"></i> Rückmeldung
-                                        bis {{$nachricht->rueckmeldung->ende->format('d.m.Y')}} ist Pflicht.
-                                    </p>
-                                @endif
-                            </div>
-                        </div>
-
+                    <div class="border-t border-gray-200">
+                        @include('nachrichten.footer.read_receipt', ['post' => $nachricht])
                     </div>
-
-                @if($nachricht->rueckmeldung != null)
-                    @include('nachrichten.elements.progressbar')
                 @endif
-                @if($nachricht->rueckmeldung->type == 'email')
-                    @include('nachrichten.footer.rueckmeldung')
-                    @can('manage rueckmeldungen')
-                        <div class="card-footer">
-                            <a href="{{url('rueckmeldungen')}}" class="btn btn-block btn-outline-info">
-                                Rückmeldungen ansehen
-                            </a>
-                        </div>
 
-                    @elsecan('view rueckmeldungen')
-                        <button class="btn btn-outline-info btn-block btnShowRueckmeldungen" data-toggle="collapse"
-                                data-target="#{{$nachricht->id}}_rueckmeldungen">
-                            <i class="fa fa-eye"></i>
-                            {{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen
-                        </button>
-                        <div id='{{$nachricht->id."_rueckmeldungen"}}' class="collapse">
-                            @include('nachrichten.footer.eingegangeneRueckmeldung')
-                        </div>
-                    @endcan
-                @endif
-            @endif
-
-            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
-                @include('nachrichten.footer.abfrage')
-            @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
-                @include('nachrichten.footer.imageRueckmeldung')
-            @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'commentable' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
-                <div class="container-fluid">
-                    @include('nachrichten.footer.comments')
+                <!-- Reactions -->
+                <div class="border-t border-gray-200">
+                    @include('nachrichten.footer.reactions')
                 </div>
-            @endif
+
+                <!-- Anonymous Poll -->
+                @include('nachrichten.footer.poll_anonym')
+
+                <!-- Rueckmeldungen Section -->
+                @if(!is_null($nachricht->rueckmeldung))
+                    <div class="border-t border-gray-200 bg-gray-50 p-6">
+                        <div class="space-y-3">
+                            @if($nachricht->rueckmeldung->multiple)
+                                <div class="flex items-start gap-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                                    <i class="fas fa-check-double text-blue-600 mt-1"></i>
+                                    <p class="text-blue-800 font-medium text-sm">
+                                        Es können mehrere Rückmeldungen abgegeben werden.
+                                    </p>
+                                </div>
+                            @endif
+                            @if($nachricht->rueckmeldung->pflicht)
+                                <div class="flex items-start gap-3 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+                                    <i class="fas fa-exclamation-triangle text-red-600 mt-1"></i>
+                                    <p class="text-red-800 font-medium text-sm">
+                                        Rückmeldung bis {{$nachricht->rueckmeldung->ende->format('d.m.Y')}} ist Pflicht.
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if($nachricht->rueckmeldung != null)
+                            @include('nachrichten.elements.progressbar')
+                        @endif
+
+                        @if($nachricht->rueckmeldung->type == 'email')
+                            @include('nachrichten.footer.rueckmeldung')
+
+                            @can('manage rueckmeldungen')
+                                <div class="mt-4">
+                                    <a href="{{url('rueckmeldungen')}}"
+                                       class="block w-full text-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-list mr-2"></i>
+                                        Rückmeldungen ansehen
+                                    </a>
+                                </div>
+                            @elsecan('view rueckmeldungen')
+                                <button class="mt-4 w-full inline-flex items-center justify-center px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 btnShowRueckmeldungen"
+                                        data-toggle="collapse"
+                                        data-target="#{{$nachricht->id}}_rueckmeldungen">
+                                    <i class="fa fa-eye mr-2"></i>
+                                    {{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen
+                                </button>
+                                <div id='{{$nachricht->id."_rueckmeldungen"}}' class="collapse mt-4">
+                                    @include('nachrichten.footer.eingegangeneRueckmeldung')
+                                </div>
+                            @endcan
+                        @endif
+                    </div>
+                @endif
+
+                <!-- Abfrage Type -->
+                @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                    <div class="border-t border-gray-200">
+                        @include('nachrichten.footer.abfrage')
+                    </div>
+                @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+                    <div class="border-t border-gray-200">
+                        @include('nachrichten.footer.imageRueckmeldung')
+                    </div>
+                @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'commentable' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
+                    <div class="border-t border-gray-200 p-6">
+                        @include('nachrichten.footer.comments')
+                    </div>
+                @endif
+            </div>
         </div>
     @endif

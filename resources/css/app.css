@@ -1,0 +1,315 @@
+/* resources/css/app.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-bg: #ffffff;
+  --app-text: #111827;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--app-bg);
+  color: var(--app-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* small helper to confirm that the CSS file is loaded */
+.app-css-loaded { display: block; }
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth scrollbar for notifications and other dropdowns */
+.overflow-y-auto::-webkit-scrollbar,
+.sidebar-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track,
+.sidebar-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.sidebar-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.sidebar-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.sidebar-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Rotate animation for chevron */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Ensure navbar is above other content */
+.fixed-top {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1030;
+}
+
+/* Adjust main content to account for fixed navbar */
+.main-panel {
+  padding-top: 70px;
+}
+
+/* Sidebar styling */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 260px;
+  z-index: 1010;
+  overflow: hidden;
+}
+
+.sidebar .nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar .nav-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #3b82f6, #6366f1);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar .nav-link.bg-blue-600::before,
+.sidebar .nav-link.bg-purple-600::before {
+  transform: translateX(0);
+}
+
+/* Space utility for nav items */
+.space-y-1 > * + * {
+  margin-top: 0.25rem;
+}
+
+/* Mobile bottom navigation improvements */
+.mobile-bottom-nav {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-bottom-nav_item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 80px;
+}
+
+.mobile-bottom-nav_item-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-bottom-nav_item-content a {
+  width: 100%;
+  transition: all 0.2s ease;
+  text-align: center;
+  position: relative;
+  text-decoration: none;
+}
+
+.mobile-bottom-nav_item-content a:hover {
+  text-decoration: none;
+}
+
+/* Active state with indicator */
+.mobile-bottom-nav_item--active .mobile-bottom-nav_item-content a {
+  color: #3b82f6 !important;
+  position: relative;
+}
+
+.mobile-bottom-nav_item--active .mobile-bottom-nav_item-content a::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: linear-gradient(to right, #3b82f6, #6366f1);
+  border-radius: 0 0 3px 3px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Ripple effect on tap */
+.mobile-bottom-nav_item-content a:active {
+  transform: scale(0.95);
+}
+
+/* Safe area for devices with notch */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Add padding to main content for mobile bottom nav */
+@media (max-width: 991px) {
+  .main-panel .content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  /* Ensure mobile nav is above all content but below modals */
+  .mobile-bottom-nav {
+    z-index: 1040 !important;
+  }
+}
+
+/* Smooth transitions for icons */
+.mobile-bottom-nav_item-icon {
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+/* Badge pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Ensure proper z-index layering */
+.sidebar {
+  z-index: 1010 !important;
+}
+
+.fixed-top {
+  z-index: 1030 !important;
+}
+
+.mobile-bottom-nav {
+  z-index: 1040 !important;
+}
+
+/* Dropdown menus should be above navbar */
+[x-data] > div[x-show] {
+  z-index: 1050 !important;
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1005;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.nav-open .sidebar-overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Responsive sidebar adjustments */
+@media (max-width: 991px) {
+  .sidebar {
+    transform: translateX(-260px);
+    transition: transform 0.3s ease;
+  }
+
+  .nav-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .main-panel {
+    margin-left: 0;
+  }
+
+  .sidebar .sidebar-wrapper {
+    margin-top: 70px !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+
+  .main-panel {
+    margin-left: 260px;
+  }
+
+  .sidebar-overlay {
+    display: none;
+  }
+
+  /* Hide mobile toggle button on desktop */
+  .navbar-toggler {
+    display: none !important;
+  }
+}
+
