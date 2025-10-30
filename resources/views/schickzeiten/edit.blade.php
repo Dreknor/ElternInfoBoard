@@ -35,7 +35,7 @@
 
             <!-- Form -->
             <div class="p-6">
-                <form method="post" action="{{url('schickzeiten/'.$child->id.'/'.$day)}}">
+                <form method="post" action="{{url('schickzeiten/'.$child->id.'/'.$day)}}" id="editSchickzeitForm">
                     @csrf
 
                     <!-- Typ Auswahl -->
@@ -94,9 +94,12 @@
                         </p>
                     </div>
 
+                    <!-- Hidden input for update_daily_times -->
+                    <input type="hidden" name="update_daily_times" id="update_daily_times" value="0">
+
                     <!-- Submit Button -->
                     <div class="flex gap-3">
-                        <button type="submit"
+                        <button type="button" onclick="handleFormSubmit(event)"
                                 class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
                             <i class="fas fa-save"></i>
                             Speichern
@@ -113,3 +116,72 @@
     </div>
 @endsection
 
+@push('js')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            try {
+                // Prüfe, ob tagesaktuelle Schickzeiten für diesen Wochentag existieren
+                const response = await fetch('{{ route('schickzeiten.checkDailyTimes') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        child_id: {{ $child->id }},
+                        weekday: {{ $day_number }}
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.has_daily_times) {
+                    const result = await Swal.fire({
+                        title: 'Schickzeit ändern?',
+                        html: `
+                            <p class="mb-4">Die regelmäßige Schickzeit wird geändert.</p>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3">
+                                <p class="text-sm text-yellow-800 mb-2">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Es existieren ${data.count} tagesaktuelle Schickzeit(en) für diesen Wochentag:
+                                </p>
+                                <p class="text-xs text-yellow-700">${data.dates.join(', ')}</p>
+                            </div>
+                            <div class="text-left mt-3">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="updateDailyTimes" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="text-sm text-gray-700">Auch tagesaktuelle Schickzeiten anpassen</span>
+                                </label>
+                            </div>
+                        `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#16a34a',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Speichern',
+                        cancelButtonText: 'Abbrechen'
+                    });
+
+                    if (result.isConfirmed) {
+                        const updateDailyTimes = document.getElementById('updateDailyTimes')?.checked || false;
+                        document.getElementById('update_daily_times').value = updateDailyTimes ? '1' : '0';
+                        document.getElementById('editSchickzeitForm').submit();
+                    }
+                } else {
+                    // Keine tagesaktuellen Schickzeiten, direkt absenden
+                    document.getElementById('editSchickzeitForm').submit();
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                Swal.fire({
+                    title: 'Fehler',
+                    text: 'Es ist ein Fehler aufgetreten.',
+                    icon: 'error'
+                });
+            }
+        }
+    </script>
+@endpush

@@ -146,6 +146,7 @@ Route::middleware('auth')->group(function () {
 
 
         Route::delete('schickzeiten/{schickzeit}/delete', [SchickzeitenController::class, 'destroySchickzeit'])->name('schickzeiten.destroy');
+        Route::post('schickzeiten/check-daily-times', [SchickzeitenController::class, 'checkDailyTimesForWeekday'])->name('schickzeiten.checkDailyTimes');
 
        Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
         Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);

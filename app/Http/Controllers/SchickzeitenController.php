@@ -366,6 +366,31 @@ class SchickzeitenController extends Controller
 
             if ($weekday){
                 $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
+
+                // Prüfe, ob auch tagesaktuelle Schickzeiten angepasst werden sollen
+                $updateDailyTimes = $request->input('update_daily_times', false);
+
+                if ($updateDailyTimes) {
+                    // Aktualisiere alle zukünftigen tagesaktuellen Schickzeiten für diesen Wochentag
+                    // weekday: 1=Montag, 2=Dienstag, ... 5=Freitag
+                    // DAYOFWEEK: 1=Sonntag, 2=Montag, ... 7=Samstag
+                    // Konvertierung: weekday + 1 = DAYOFWEEK (1->2, 2->3, ..., 5->6)
+                    $dailyTimes = $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::today())
+                        ->whereRaw('DAYOFWEEK(specific_date) = ?', [$weekday + 1])
+                        ->get();
+
+                    foreach ($dailyTimes as $dailyTime) {
+                        $dailyTime->update([
+                            'type' => $request->type,
+                            'time' => $request->time,
+                            'time_ab' => null,
+                            'time_spaet' => null,
+                            'changedBy' => Auth::id(),
+                        ]);
+                    }
+                }
             } else {
                 $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
             }
@@ -403,6 +428,31 @@ class SchickzeitenController extends Controller
 
             if ($weekday){
                 $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
+
+                // Prüfe, ob auch tagesaktuelle Schickzeiten angepasst werden sollen
+                $updateDailyTimes = $request->input('update_daily_times', false);
+
+                if ($updateDailyTimes) {
+                    // Aktualisiere alle zukünftigen tagesaktuellen Schickzeiten für diesen Wochentag
+                    // weekday: 1=Montag, 2=Dienstag, ... 5=Freitag
+                    // DAYOFWEEK: 1=Sonntag, 2=Montag, ... 7=Samstag
+                    // Konvertierung: weekday + 1 = DAYOFWEEK (1->2, 2->3, ..., 5->6)
+                    $dailyTimes = $child->schickzeiten()
+                        ->whereNotNull('specific_date')
+                        ->where('specific_date', '>=', Carbon::today())
+                        ->whereRaw('DAYOFWEEK(specific_date) = ?', [$weekday + 1])
+                        ->get();
+
+                    foreach ($dailyTimes as $dailyTime) {
+                        $dailyTime->update([
+                            'type' => 'ab',
+                            'time' => null,
+                            'time_ab' => $request->time_ab,
+                            'time_spaet' => $time_spaet ?? null,
+                            'changedBy' => Auth::id(),
+                        ]);
+                    }
+                }
             } else {
                 $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
             }
@@ -683,13 +733,31 @@ class SchickzeitenController extends Controller
 
     }
 
-    public function destroySchickzeit(Schickzeiten $schickzeit)
+    public function destroySchickzeit(Schickzeiten $schickzeit, Request $request)
     {
        if (!auth()->user()->children()->contains($schickzeit->child) && !auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
             ]);
+        }
+
+        // Wenn es eine regelmäßige Schickzeit ist (weekday gesetzt)
+        if ($schickzeit->weekday) {
+            // Prüfe, ob auch tagesaktuelle Schickzeiten gelöscht werden sollen
+            $deleteDailyTimes = $request->input('delete_daily_times', false);
+
+            if ($deleteDailyTimes) {
+                // Lösche alle zukünftigen tagesaktuellen Schickzeiten für diesen Wochentag
+                // weekday: 1=Montag, 2=Dienstag, ... 5=Freitag
+                // DAYOFWEEK: 1=Sonntag, 2=Montag, ... 7=Samstag
+                // Konvertierung: weekday + 1 = DAYOFWEEK (1->2, 2->3, ..., 5->6)
+                $schickzeit->child->schickzeiten()
+                    ->whereNotNull('specific_date')
+                    ->where('specific_date', '>=', Carbon::today())
+                    ->whereRaw('DAYOFWEEK(specific_date) = ?', [$schickzeit->weekday + 1])
+                    ->delete();
+            }
         }
 
         $schickzeit->delete();
@@ -699,6 +767,39 @@ class SchickzeitenController extends Controller
             'Meldung' => 'Schickzeit wurde gelöscht',
         ]);
     }
+
+    /**
+     * Prüft, ob tagesaktuelle Schickzeiten für einen bestimmten Wochentag existieren
+     */
+    public function checkDailyTimesForWeekday(Request $request)
+    {
+        $childId = $request->input('child_id');
+        $weekday = $request->input('weekday');
+
+        $child = Child::find($childId);
+
+        if (!$child || (!auth()->user()->children()->contains($child) && !auth()->user()->can('edit schickzeiten'))) {
+            return response()->json(['error' => 'Nicht autorisiert'], 403);
+        }
+
+        // weekday: 1=Montag, 2=Dienstag, ... 5=Freitag
+        // DAYOFWEEK: 1=Sonntag, 2=Montag, ... 7=Samstag
+        // Konvertierung: weekday + 1 = DAYOFWEEK (1->2, 2->3, ..., 5->6)
+        $dailyTimes = $child->schickzeiten()
+            ->whereNotNull('specific_date')
+            ->where('specific_date', '>=', Carbon::today())
+            ->whereRaw('DAYOFWEEK(specific_date) = ?', [$weekday + 1])
+            ->get();
+
+        return response()->json([
+            'has_daily_times' => $dailyTimes->count() > 0,
+            'count' => $dailyTimes->count(),
+            'dates' => $dailyTimes->map(function($time) {
+                return $time->specific_date->format('d.m.Y');
+            })
+        ]);
+    }
+
 
     public function storeAbfrageAnwesenheit(Request $request)
     {

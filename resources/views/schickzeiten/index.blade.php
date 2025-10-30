@@ -83,6 +83,40 @@
                                         {{$child->first_name}} {{$child->last_name}}
                                     </h3>
                                 </div>
+                                <div class="p-4 border-b border-gray-200">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <i class="fas fa-calendar-day text-purple-600"></i>
+                                        Tagesaktuelle Schickzeiten
+                                    </h4>
+                                    @forelse($child->schickzeiten->where('specific_date', '!=', NULL) as $schickzeit)
+                                        <div class="flex items-start justify-between p-3 bg-purple-50 rounded-lg mb-2">
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{$schickzeit->specific_date->format('d.m.Y')}}</div>
+                                                <div class="text-sm text-gray-600">
+                                                    @if($schickzeit->type =="genau")
+                                                        <i class="fas fa-clock text-green-600"></i> Genau {{$schickzeit->time?->format('H:i')}} Uhr
+                                                    @else
+                                                        <i class="fas fa-hourglass-half text-amber-600"></i> Ab {{$schickzeit->time_ab?->format('H:i')}}
+                                                        @if(!is_null($schickzeit->time_ab) && $schickzeit->time_spaet)
+                                                            - {{$schickzeit->time_spaet?->format('H:i')}}
+                                                        @endif
+                                                        Uhr
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <form action="{{route('schickzeiten.destroy', ['schickzeit' => $schickzeit->id])}}" method="post">
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit"
+                                                        class="p-2 text-red-600 hover:bg-red-100 rounded transition-colors duration-150">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @empty
+                                        <p class="text-sm text-gray-400 italic">Keine tagesaktuellen Zeiten hinterlegt</p>
+                                    @endforelse
+                                </div>
 
                                 <!-- Regelmäßige Schickzeiten -->
                                 <div class="p-4 border-b border-gray-200">
@@ -133,15 +167,12 @@
                                                             <i class="fa fa-edit"></i> Bearbeiten
                                                         </a>
                                                         @if($child->schickzeiten->where('weekday', $x)->first())
-                                                            <form action="{{route('schickzeiten.destroy', ['schickzeit' => $child->schickzeiten->where('weekday', $x)->first()->id])}}"
-                                                                  method="post">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="submit"
-                                                                        class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-700 hover:bg-red-50 rounded-b-lg transition-colors duration-150">
-                                                                    <i class="fa fa-trash"></i> Löschen
-                                                                </button>
-                                                            </form>
+                                                            <button type="button"
+                                                                    @click="showMenu = false"
+                                                                    onclick="confirmDeleteSchickzeit({{$child->schickzeiten->where('weekday', $x)->first()->id}}, {{$child->id}}, {{$x}})"
+                                                                    class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-700 hover:bg-red-50 rounded-b-lg transition-colors duration-150 text-left">
+                                                                <i class="fa fa-trash"></i> Löschen
+                                                            </button>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -151,40 +182,6 @@
                                 </div>
 
                                 <!-- Tagesaktuelle Schickzeiten -->
-                                <div class="p-4 border-b border-gray-200">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-calendar-day text-purple-600"></i>
-                                        Tagesaktuelle Schickzeiten
-                                    </h4>
-                                    @forelse($child->schickzeiten->where('specific_date', '!=', NULL) as $schickzeit)
-                                        <div class="flex items-start justify-between p-3 bg-purple-50 rounded-lg mb-2">
-                                            <div>
-                                                <div class="font-medium text-gray-900">{{$schickzeit->specific_date->format('d.m.Y')}}</div>
-                                                <div class="text-sm text-gray-600">
-                                                    @if($schickzeit->type =="genau")
-                                                        <i class="fas fa-clock text-green-600"></i> Genau {{$schickzeit->time?->format('H:i')}} Uhr
-                                                    @else
-                                                        <i class="fas fa-hourglass-half text-amber-600"></i> Ab {{$schickzeit->time_ab?->format('H:i')}}
-                                                        @if(!is_null($schickzeit->time_ab) && $schickzeit->time_spaet)
-                                                            - {{$schickzeit->time_spaet?->format('H:i')}}
-                                                        @endif
-                                                        Uhr
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            <form action="{{route('schickzeiten.destroy', ['schickzeit' => $schickzeit->id])}}" method="post">
-                                                @csrf
-                                                @method('delete')
-                                                <button type="submit"
-                                                        class="p-2 text-red-600 hover:bg-red-100 rounded transition-colors duration-150">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @empty
-                                        <p class="text-sm text-gray-400 italic">Keine tagesaktuellen Zeiten hinterlegt</p>
-                                    @endforelse
-                                </div>
 
                                 <!-- Footer -->
                                 <div class="p-4 bg-gray-50">
@@ -503,6 +500,98 @@
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Bestätigungsdialog für das Löschen von Schickzeiten
+        async function confirmDeleteSchickzeit(schickzeitId, childId, weekday) {
+            try {
+                // Prüfe, ob tagesaktuelle Schickzeiten für diesen Wochentag existieren
+                const response = await fetch('{{ route('schickzeiten.checkDailyTimes') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        child_id: childId,
+                        weekday: weekday
+                    })
+                });
+
+                const data = await response.json();
+
+                let confirmOptions = {
+                    title: 'Schickzeit löschen?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ja, löschen',
+                    cancelButtonText: 'Abbrechen'
+                };
+
+                if (data.has_daily_times) {
+                    confirmOptions.html = `
+                        <p class="mb-4">Möchten Sie diese regelmäßige Schickzeit wirklich löschen?</p>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3">
+                            <p class="text-sm text-yellow-800 mb-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Es existieren ${data.count} tagesaktuelle Schickzeit(en) für diesen Wochentag:
+                            </p>
+                            <p class="text-xs text-yellow-700">${data.dates.join(', ')}</p>
+                        </div>
+                        <div class="text-left mt-3">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="deleteDailyTimes" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                <span class="text-sm text-gray-700">Auch tagesaktuelle Schickzeiten löschen</span>
+                            </label>
+                        </div>
+                    `;
+                } else {
+                    confirmOptions.text = 'Möchten Sie diese Schickzeit wirklich löschen?';
+                }
+
+                const result = await Swal.fire(confirmOptions);
+
+                if (result.isConfirmed) {
+                    const deleteDailyTimes = document.getElementById('deleteDailyTimes')?.checked || false;
+
+                    // Formular erstellen und absenden
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ url('schickzeiten') }}/' + schickzeitId + '/delete';
+
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfInput);
+
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+
+                    if (deleteDailyTimes) {
+                        const dailyInput = document.createElement('input');
+                        dailyInput.type = 'hidden';
+                        dailyInput.name = 'delete_daily_times';
+                        dailyInput.value = '1';
+                        form.appendChild(dailyInput);
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                Swal.fire({
+                    title: 'Fehler',
+                    text: 'Es ist ein Fehler aufgetreten.',
+                    icon: 'error'
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Form submit handler for notices
             document.querySelectorAll('.form_submit').forEach(button => {
@@ -582,4 +671,6 @@
         });
     </script>
 @endpush
+
+
 
