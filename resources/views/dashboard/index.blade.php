@@ -8,7 +8,7 @@
             <!-- Willkommensbereich -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-lg p-6 mb-4 text-white">
                 <h2 class="text-2xl font-bold mb-2">Willkommen, {{ auth()->user()->name }}!</h2>
-                <p class="text-blue-100">{{ $datum->format('l, d. F Y') }}</p>
+                <p class="text-blue-100">{{ $datum->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</p>
             </div>
 
             <!-- Losung des Tages -->

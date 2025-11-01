@@ -70,11 +70,18 @@
                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
                 </div>
 
-                <button type="submit"
-                        class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                    <i class="fas fa-paper-plane"></i>
-                    Feedback senden
-                </button>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit"
+                            class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Feedback senden</span>
+                    </button>
+                    <button type="reset"
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors duration-200">
+                        <i class="fas fa-redo"></i>
+                        <span class="hidden sm:inline">Zurücksetzen</span>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -156,27 +163,12 @@
 </div>
 @endsection
 
-@push('css')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/css/fileinput.min.css" media="all"
-          rel="stylesheet" type="text/css"/>
-@endpush
+
 
 @push('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/sortable.min.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/purify.min.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/fileinput.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/themes/fas/theme.min.js"></script>
 
-    <script>
-        $("#customFile").fileinput({
-            'showUpload':false,
-            'previewFileType':'any',
-            maxFileSize: 3000,
-            'theme': "fas",
-        });
-    </script>
+
 
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>

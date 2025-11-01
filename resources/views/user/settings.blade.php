@@ -3,442 +3,617 @@
 
 @section('content')
 
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header border-bottom">
-                <h5 class="card-title">
+    <div class="container-fluid px-4 py-3">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 border-b border-indigo-800">
+                <h5 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
+                    <i class="fas fa-user-cog"></i>
                     {{$user->name}}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="p-4">
                 @if(isset($changelog))
-                    <div class="card-body border border-info">
-                        <h6>
+                    <div class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                        <h6 class="text-lg font-semibold text-blue-800 mb-2">
+                            <i class="fas fa-info-circle mr-1"></i>
                             {{$changelog->header}}
                         </h6>
-                        <p>
+                        <div class="text-blue-700 text-sm">
                             {!! $changelog->text !!}
-                        </p>
+                        </div>
                     </div>
                 @endif
 
-                <div class="row">
-                    <div class="col-md-8 col-sm-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title">
-                                    Einstellungen
-                                </h5>
-                            </div>
+                <!-- Hauptbereich: Einstellungen -->
+                <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 border-b border-blue-800">
+                        <h5 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
+                            <i class="fas fa-cog"></i>
+                            Einstellungen
+                        </h5>
+                    </div>
 
-                            <div class="card-body">
+                    <div class="p-8">
                                 @if ($errors->any())
-                                    <div class="alert alert-danger">
-                                        <ul>
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
+                                    <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                                        <div class="flex items-start gap-2">
+                                            <i class="fas fa-exclamation-circle text-red-600 mt-1"></i>
+                                            <ul class="text-sm text-red-700 space-y-1">
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
                                     </div>
                                 @endif
-                                <form action="{{url('/einstellungen/')}}" method="post" class="form form-horizontal">
+                                <form action="{{url('/einstellungen/')}}" method="post" class="space-y-8">
                                     @csrf
                                     @method('PUT')
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label>Name</label>
-                                                <input type="text" class="form-control border-input" placeholder="Name" name="name" value="{{$user->name}}" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label>E-Mail</label>
-                                                <input type="text" class="form-control border-input" placeholder="E-Mail" name="email" value="{{$user->email}}" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label>öffentliche E-Mail</label>
-                                                <input type="text" class="form-control border-input" placeholder="öffentliche E-Mail" name="publicMail" value="{{$user->publicMail}}" >
-                                            </div>
-                                        </div>
 
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label>öffentliche Telefonnummer (für andere Eltern in den gleichen Gruppen sichtbar)</label>
-                                                <input type="text" class="form-control border-input" placeholder="öffentliche Telefonnummer" name="publicPhone" value="{{$user->publicPhone}}"  autocomplete="off" >
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 col-sm-12">
-                                            <div class="form-group w-100">
-                                                <label class="w-100">neues Passwort
-                                                    <input class="form-control" name="password" type="password"
-                                                           minlength="8">
+                                    <!-- Persönliche Daten -->
+                                    <div>
+                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                                            <i class="fas fa-user-circle text-blue-600 mr-2"></i>
+                                            Persönliche Daten
+                                        </h6>
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-user text-blue-600 mr-1"></i>
+                                                    Name
                                                 </label>
+                                                <input type="text"
+                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       placeholder="Ihr vollständiger Name"
+                                                       name="name"
+                                                       value="{{$user->name}}"
+                                                       required>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6 col-sm-12">
-                                            <div class="form-group w-100">
-                                                <label class="w-100">Passwort bestätigen
-                                                    <input id="password-confirm" type="password" class="form-control"
-                                                           name="password_confirmation" required
-                                                           autocomplete="new-password">
-                                                </label>
-                                            </div>
-                                        </div>
 
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-envelope text-blue-600 mr-1"></i>
+                                                    E-Mail
+                                                </label>
+                                                <input type="email"
+                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       placeholder="ihre.email@beispiel.de"
+                                                       name="email"
+                                                       value="{{$user->email}}"
+                                                       required>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-envelope-open text-blue-600 mr-1"></i>
+                                                    Öffentliche E-Mail
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Für andere Eltern sichtbar</span>
+                                                </label>
+                                                <input type="email"
+                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       placeholder="öffentliche.email@beispiel.de"
+                                                       name="publicMail"
+                                                       value="{{$user->publicMail}}">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-phone text-blue-600 mr-1"></i>
+                                                    Öffentliche Telefonnummer
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Für andere Eltern in gleichen Gruppen sichtbar</span>
+                                                </label>
+                                                <input type="tel"
+                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       placeholder="+49 123 456789"
+                                                       name="publicPhone"
+                                                       value="{{$user->publicPhone}}"
+                                                       autocomplete="off">
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6 col-sm-12">
-                                            <div class="form-group">
-                                                <label>Benachrichtigung per E-Mail (zuletzt: {{$user->lastEmail?->format('d.m.Y H:i')}})</label>
-                                                <select class="custom-select" name="benachrichtigung">
+                                    <!-- Sicherheit -->
+                                    <div>
+                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 mt-4">
+                                            <i class="fas fa-lock text-blue-600 mr-2"></i>
+                                            Sicherheit & Passwort
+                                        </h6>
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-key text-blue-600 mr-1"></i>
+                                                    Neues Passwort
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Mindestens 8 Zeichen</span>
+                                                </label>
+                                                <input class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       name="password"
+                                                       type="password"
+                                                       minlength="8"
+                                                       placeholder="••••••••">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-check-double text-blue-600 mr-1"></i>
+                                                    Passwort bestätigen
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Passwort wiederholen</span>
+                                                </label>
+                                                <input id="password-confirm"
+                                                       type="password"
+                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       name="password_confirmation"
+                                                       required
+                                                       autocomplete="new-password"
+                                                       placeholder="••••••••">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Benachrichtigungen -->
+                                    <div>
+                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 mt-4">
+                                            <i class="fas fa-bell text-blue-600 mr-2"></i>
+                                            Benachrichtigungen
+                                        </h6>
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-envelope-circle-check text-blue-600 mr-1"></i>
+                                                    E-Mail Benachrichtigungen
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Zuletzt: {{$user->lastEmail?->format('d.m.Y H:i') ?? 'Nie'}}</span>
+                                                </label>
+                                                <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                        name="benachrichtigung">
                                                     <option value="daily" @if($user->benachrichtigung == 'daily') selected @endif>Täglich (bei neuen Nachrichten)</option>
-                                                    <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif >Wöchentlich (Freitags)</option>
+                                                    <option value="weekly" @if($user->benachrichtigung == 'weekly') selected @endif>Wöchentlich (Freitags)</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6 col-sm-12">
-                                            <div class="form-group">
-                                                <label>Kopie von Rückmeldungen erhalten</label>
-                                                <select class="custom-select" name="sendCopy">
-                                                    <option value="1" @if($user->sendCopy == 1) selected @endif >Kopie erhalten</option>
-                                                    <option value="0" @if($user->sendCopy == 0) selected @endif >keine
-                                                        Kopie senden
-                                                    </option>
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-copy text-blue-600 mr-1"></i>
+                                                    Kopie von Rückmeldungen
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Erhalten Sie eine Kopie Ihrer Rückmeldungen</span>
+                                                </label>
+                                                <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                        name="sendCopy">
+                                                    <option value="1" @if($user->sendCopy == 1) selected @endif>Kopie erhalten</option>
+                                                    <option value="0" @if($user->sendCopy == 0) selected @endif>Keine Kopie senden</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-3 col-sm-12">
-                                            <div class="form-group">
-                                                <label>Login aufzeichnen</label>
-                                                <select class="custom-select" name="track_login">
-                                                    <option value="1" @if($user->track_login == true) selected @endif >
-                                                        letzten Login aufzeichnen
-                                                    </option>
-                                                    <option value="0" @if($user->track_login == false) selected @endif >
-                                                        keine Speicherung
-                                                    </option>
+
+                                    <!-- Erweiterte Einstellungen -->
+                                    <div>
+                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 mt-4">
+                                            <i class="fas fa-sliders-h text-blue-600 mr-2"></i>
+                                            Erweiterte Einstellungen
+                                        </h6>
+                                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-sign-in-alt text-blue-600 mr-1"></i>
+                                                    Login aufzeichnen
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Speicherung des letzten Logins</span>
+                                                </label>
+                                                <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                        name="track_login">
+                                                    <option value="1" @if($user->track_login == true) selected @endif>Aufzeichnen</option>
+                                                    <option value="0" @if($user->track_login == false) selected @endif>Nicht speichern</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="col-md-4 col-sm-6">
-                                            <div class="form-group">
-                                                <label>Termine freigeben (Termine können dann per Link in externe
-                                                    Kalender integiert werden)</label>
-                                                <select class="custom-select" name="releaseCalendar">
-                                                    <option value="1"
-                                                            @if($user->releaseCalendar == true) selected @endif >ja
-                                                    </option>
-                                                    <option value="0"
-                                                            @if($user->releaseCalendar == false) selected @endif >nein
-                                                    </option>
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-calendar-share text-blue-600 mr-1"></i>
+                                                    Termine freigeben
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Link für externe Kalender</span>
+                                                </label>
+                                                <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                        name="releaseCalendar">
+                                                    <option value="1" @if($user->releaseCalendar == true) selected @endif>Ja, freigeben</option>
+                                                    <option value="0" @if($user->releaseCalendar == false) selected @endif>Nein</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="col-md-4 col-sm-6">
-                                            <div class="form-group">
-                                                <label>Prefix für Termine (die Namen der Termine bekommen das angegebene
-                                                    Prefix vorangestellt, damit diese leichter gefunden werden
-                                                    können)</label>
-                                                <input type="text" class="form-control border-input"
-                                                       name="calendar_prefix" value="{{$user->calendar_prefix}}"
-                                                       max="8">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-tag text-blue-600 mr-1"></i>
+                                                    Termin-Prefix
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Vorangestelltes Kürzel (max. 8 Zeichen)</span>
+                                                </label>
+                                                <input type="text"
+                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       name="calendar_prefix"
+                                                       value="{{$user->calendar_prefix}}"
+                                                       maxlength="8"
+                                                       placeholder="z.B. KITA">
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <button type="submit" class="btn btn-success btn-block collapse"
-                                                    id="btn-save">speichern
-                                            </button>
-                                        </div>
+
+                                    <div class="pt-4 border-t border-gray-200">
+                                        <button type="submit"
+                                                class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg hidden"
+                                                id="btn-save">
+                                            <i class="fas fa-save"></i>
+                                            <span>Änderungen speichern</span>
+                                        </button>
                                     </div>
 
                                 </form>
                             </div>
                         </div>
-
                     </div>
-                    <div class="col-md-4 col-sm-12">
-                        <div class="row">
-                            @if(auth()->user()->groups->count() > 0 || auth()->user()->children()?->count() > 0)
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5 class="card-title">
-                                                Kinder
-                                            </h5>
-                                            <p class="card-subtitle text-muted small">
-                                                Hier werden die Kinder angezeigt, die mit ihrem Konto verknüpft sind. Sie können hier auch weitere Kinder hinzufügen. Geben Sie dazu bitte Lerngruppe und Klassenstufe an. Sollte keine Lerngruppe vorhanden sein, tragen Sie bitte in beiden Feldern die Klassenstufe ein.<br>
-                                                Sollte Ihr Kind im Hort betreut werden, können Sie mittel der Glocke die Benachrichtigung aktivieren, wenn es sich im Hort an- bzw. abmeldet.
-                                            </p>
-                                        </div>
-                                        <div class="card-body">
-                                            <ul class="list-group">
-                                                @foreach($user->children() as $child)
-                                                    <li class="list-group-item">
-                                                        <a href="#"
-                                                           class="pull-left mr-2 edit-child-btn" data-child-id="{{ $child->id }}" data-child="{{ json_encode($child) }}">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
+                </div>
 
-                                                        {{$child->first_name}}
-                                                        {{$child->last_name}}
-
-
-                                                        @if($child->notification)
-                                                            <span class="badge bg-gradient-directional-teal p-2 ml-1 pull-right child-notification text-white" title="Benachrichtigung aktiv" data-child_id="{{$child->id}}" data-notification="1">
-                                                                <i class="fas fa-bell"></i>
-                                                            </span>
-                                                        @else
-                                                            <span class="badge bg-gradient-radial-amber p-2 ml-1 pull-right child-notification" title="Benachrichtigung deaktiviert"  data-child_id="{{$child->id}}" data-notification="0">
-                                                                <i class="fas fa-bell-slash"></i>
-                                                            </span>
-                                                        @endif
-
-                                                        <span class="badge badge-info ml-1 p-2 pull-right">
-                                                            {{$child->group->name ?? ''}}
-                                                        </span>
-                                                        <span class="badge badge-info ml-1 p-2 pull-right">
-                                                            {{$child->class->name ?? ''}}
-                                                        </span>
-                                                    </li>
-                                            @endforeach
-                                        </div>
-                                        <div class="card-footer border-top">
-                                            <form action="{{url('/child')}}" method="post">
-                                                @csrf
-                                                <div class="form-group row">
-                                                    <label for="first_name"
-                                                           class="col-form-label text-danger">Vorname</label>
-                                                    <input id="first_name" type="text" class="form-control"
-                                                           name="first_name" required>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <label for="last_name"
-                                                           class="col-form-label text-danger">Nachname</label>
-                                                    <input id="last_name" type="text" class="form-control"
-                                                           name="last_name" required>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <label for="group" class="col-form-label text-danger">Gruppe</label>
-                                                    <select id="group" class="form-control" name="group_id" required>
-                                                        @foreach(auth()->user()->groups as $group)
-                                                            <option value="{{$group->id}}">{{$group->name}}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <label for="class"
-                                                           class="col-form-label text-danger">Klassenstufe</label>
-                                                    <select id="class" class="form-control" name="class_id" required>
-                                                        @foreach(auth()->user()->groups as $group)
-                                                            <option value="{{$group->id}}">{{$group->name}}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <button type="submit" class="btn btn-block btn-primary">
-                                                    Kind hinzufügen
-                                                </button>
-
-                                            </form>
-                                        </div>
-                                    </div>
+                <!-- Zweite Reihe: Kinder und Gruppen nebeneinander -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 mt-4">
+                    @if(auth()->user()->groups->count() > 0 || auth()->user()->children()?->count() > 0)
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                                <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 border-b border-green-800">
+                                    <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                                        <i class="fas fa-child"></i>
+                                        Kinder
+                                    </h5>
                                 </div>
-                            @endif
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title">
-                                            Gruppen
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        @foreach($user->groups as $gruppe)
-                                            <div class="btn btn-outline-info">
-                                                {{$gruppe->name}}
+                                <div class="p-5">
+                                    <p class="text-xs text-gray-600 mb-4 leading-relaxed">
+                                        <i class="fas fa-info-circle text-blue-600 mr-1"></i>
+                                        Hier werden die Kinder angezeigt, die mit Ihrem Konto verknüpft sind. Sollte Ihr Kind im Hort betreut werden, können Sie mit der Glocke die Benachrichtigung aktivieren.
+                                    </p>
+                                    <div class="space-y-3">
+                                        @foreach($user->children() as $child)
+                                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-500 hover:shadow-sm transition-all duration-200">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-semibold text-gray-800 mb-2">
+                                                            {{$child->first_name}} {{$child->last_name}}
+                                                        </div>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <span class="inline-flex items-center px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                                                                <i class="fas fa-users mr-1.5 text-[10px]"></i>
+                                                                {{$child->group->name ?? ''}}
+                                                            </span>
+                                                            <span class="inline-flex items-center px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                                                                <i class="fas fa-graduation-cap mr-1.5 text-[10px]"></i>
+                                                                {{$child->class->name ?? ''}}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        @if($child->notification)
+                                                            <button class="inline-flex items-center justify-center w-9 h-9 bg-teal-500 hover:bg-teal-600 text-white rounded-lg cursor-pointer child-notification transition-colors"
+                                                                  title="Benachrichtigung aktiv"
+                                                                  data-child_id="{{$child->id}}"
+                                                                  data-notification="1">
+                                                                <i class="fas fa-bell text-sm"></i>
+                                                            </button>
+                                                        @else
+                                                            <button class="inline-flex items-center justify-center w-9 h-9 bg-amber-500 hover:bg-amber-600 text-white rounded-lg cursor-pointer child-notification transition-colors"
+                                                                  title="Benachrichtigung deaktiviert"
+                                                                  data-child_id="{{$child->id}}"
+                                                                  data-notification="0">
+                                                                <i class="fas fa-bell-slash text-sm"></i>
+                                                            </button>
+                                                        @endif
+                                                        <a href="#"
+                                                           class="inline-flex items-center justify-center w-9 h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors edit-child-btn"
+                                                           data-child-id="{{ $child->id }}"
+                                                           data-child="{{ json_encode($child) }}">
+                                                            <i class="fas fa-edit text-sm"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
-                                    <div class="card-footer">
-                                        <p class="footer-default small">
-                                            Sollte die Lerngruppe und/oder Alterststufe ihres Kindes nicht korrekt in
-                                            den
-                                            Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
-                                        </p>
-                                    </div>
+                                </div>
+                                <div class="border-t border-gray-200 p-5 bg-gray-50">
+                                    <h6 class="text-sm font-semibold text-gray-800 mb-4">
+                                        <i class="fas fa-plus-circle text-green-600 mr-1"></i>
+                                        Kind hinzufügen
+                                    </h6>
+                                    <form action="{{url('/child')}}" method="post" class="space-y-3">
+                                        @csrf
+                                        <div>
+                                            <label for="first_name" class="block text-xs font-semibold text-gray-700 mb-1.5">Vorname <span class="text-red-600">*</span></label>
+                                            <input id="first_name"
+                                                   type="text"
+                                                   class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
+                                                   name="first_name"
+                                                   placeholder="Vorname des Kindes"
+                                                   required>
+                                        </div>
+                                        <div>
+                                            <label for="last_name" class="block text-xs font-semibold text-gray-700 mb-1.5">Nachname <span class="text-red-600">*</span></label>
+                                            <input id="last_name"
+                                                   type="text"
+                                                   class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
+                                                   name="last_name"
+                                                   placeholder="Nachname des Kindes"
+                                                   required>
+                                        </div>
+                                        <div>
+                                            <label for="group" class="block text-xs font-semibold text-gray-700 mb-1.5">Gruppe <span class="text-red-600">*</span></label>
+                                            <select id="group"
+                                                    class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
+                                                    name="group_id"
+                                                    required>
+                                                <option value="">Bitte wählen...</option>
+                                                @foreach(auth()->user()->groups as $group)
+                                                    <option value="{{$group->id}}">{{$group->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="class" class="block text-xs font-semibold text-gray-700 mb-1.5">Klassenstufe <span class="text-red-600">*</span></label>
+                                            <select id="class"
+                                                    class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
+                                                    name="class_id"
+                                                    required>
+                                                <option value="">Bitte wählen...</option>
+                                                @foreach(auth()->user()->groups as $group)
+                                                    <option value="{{$group->id}}">{{$group->name}}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <button type="submit"
+                                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                                            <i class="fas fa-plus"></i>
+                                            <span>Kind hinzufügen</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 border-b border-purple-800">
+                                <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                                    <i class="fas fa-users"></i>
+                                    Gruppen
+                                </h5>
+                            </div>
+                            <div class="p-5">
+                                <div class="flex flex-wrap gap-2.5">
+                                    @foreach($user->groups as $gruppe)
+                                        <span class="inline-flex items-center px-3.5 py-2.5 bg-purple-100 text-purple-700 font-medium text-sm rounded-lg border border-purple-300 hover:bg-purple-200 transition-colors">
+                                            <i class="fas fa-user-friends mr-2"></i>
+                                            {{$gruppe->name}}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-200 p-5 bg-gray-50">
+                                <p class="text-xs text-gray-600 leading-relaxed">
+                                    <i class="fas fa-info-circle text-purple-600 mr-1"></i>
+                                    Sollte die Lerngruppe und/oder Alterststufe Ihres Kindes nicht korrekt in den Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
+                                </p>
+                            </div>
+                        </div>
+                </div>
+
+                <!-- Dritte Reihe: ICAL und API-Token -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    @if($user->releaseCalendar == 1)
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-cyan-600 to-cyan-700 px-4 py-3 border-b border-cyan-800">
+                                <h6 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    ICAL-Kalender
+                                </h6>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-sm text-gray-700 mb-3">
+                                    <i class="fas fa-info-circle text-cyan-600 mr-1"></i>
+                                    Die angegebene URL kann in den meisten Kalender-Anwendungen hinzugefügt werden, um die Termine direkt einzubinden.
+                                </p>
+                                <div class="p-3 bg-gray-50 border border-gray-300 rounded-lg">
+                                    <code class="text-xs text-gray-800 break-all">{{config('app.url')."/".$user->uuid.'/ical'}}</code>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
 
-                </div>
-                <div class="row">
-                    @if($user->releaseCalendar == 1)
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                        <div class="bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-3 border-b border-orange-800">
+                            <h6 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                                <i class="fas fa-key"></i>
+                                API-Token
+                            </h6>
+                        </div>
 
-                            <div class="col-md-6 col-sm-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6>
-                                            ICAL-Kalender
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="info">
-                                            Die angegebene URL kann in den meisten Kalender-Anwendungen hinzugefügt
-                                            werden
-                                            um die Termine direkt einzubinden
+                        @if(session()->has('token'))
+                            <div class="p-4 bg-green-50 border-b border-green-200">
+                                <div class="flex items-start gap-2">
+                                    <i class="fas fa-check-circle text-green-600 mt-1"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-green-800 font-medium mb-2">
+                                            Das Token wurde erfolgreich erstellt. Bitte speichern Sie das Token an einem sicheren Ort. Es kann nicht noch einmal angezeigt werden.
                                         </p>
-                                        <p>
-                                            {{config('app.url')."/".$user->uuid.'/ical'}}
-                                        </p>
+                                        <div class="p-3 bg-white border border-green-300 rounded-lg">
+                                            <code class="text-xs text-gray-800 break-all">{{session('token')}}</code>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                    @endif
-                    <div class="col-md-6 col-sm-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6>
-                                    API-Token
-                                </h6>
-                                <i class="">
-                                    Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
-                                </i>
-                            </div>
-                            @if(session()->has('token'))
-                                <div class="card-body">
-                                    <div class="alert alert-success">
-                                        <p>
-                                            Das Token wurde erfolgreich erstellt. Bitte speichern Sie das Token an einem sicheren Ort. Er kann nicht noch einmal angezeigt werden.
-                                        </p>
+                        @endif
 
-                                        <p>
-                                            {{session('token')}}
-                                        </p>
-                                    </div>
+                        <div class="p-4">
+                            <p class="text-sm text-gray-700 mb-3">
+                                <i class="fas fa-shield-alt text-orange-600 mr-1"></i>
+                                Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
+                            </p>
+
+                            @if(auth()->user()->tokens->count() > 0)
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-gray-100 border-b border-gray-300">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Erstellt am</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-700">Aktionen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            @foreach(auth()->user()->tokens as $token)
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-3 py-2 text-sm text-gray-800">{{$token->name}}</td>
+                                                    <td class="px-3 py-2 text-sm text-gray-600">{{$token->created_at->format('d.m.Y')}}</td>
+                                                    <td class="px-3 py-2 text-right">
+                                                        <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post" class="inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                    class="inline-flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors">
+                                                                <i class="fas fa-trash"></i>
+                                                                <span>Löschen</span>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="flex items-start gap-3 p-3 bg-gray-50 border-l-4 border-gray-400 rounded mb-4">
+                                    <i class="fas fa-info-circle text-gray-600 mt-1"></i>
+                                    <p class="text-gray-700 text-sm mb-0">Keine API-Tokens vorhanden</p>
                                 </div>
                             @endif
-                            <div class="card-body">
-                                <div class="">
-                                    <table class="table">
-                                        @foreach(auth()->user()->tokens as $token)
-                                            <tr>
-                                                <td>
-                                                    {{$token->name}}
-                                                </td>
-                                                <td>
-                                                    {{$token->created_at->format('d.m.Y')}}
-                                                </td>
-                                                <td>
-                                                    <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-sm">
-                                                            löschen
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </table>
-                            </div>
                         </div>
-                        <div class="card-footer border-top">
-                            <b>
+
+                        <div class="border-t border-gray-200 p-4 bg-gray-50">
+                            <h6 class="text-sm font-semibold text-gray-800 mb-3">
+                                <i class="fas fa-plus-circle text-orange-600 mr-1"></i>
                                 Neues Token erstellen
-                            </b>
-                            <form action="{{url('/einstellungen/token')}}" method="post">
+                            </h6>
+                            <form action="{{url('/einstellungen/token')}}" method="post" class="space-y-3">
                                 @csrf
-                                <div class="form-group row">
-                                    <div class="col-md-12">
-                                        <label for="name" class="col-form-label text-danger">Name</label>
-                                        <input id="name" type="text" class="form-control" name="name" required>
-                                    </div>
+                                <div>
+                                    <label for="name" class="block text-xs font-medium text-red-600 mb-1">Name*</label>
+                                    <input id="name"
+                                           type="text"
+                                           class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 outline-none"
+                                           name="name"
+                                           required>
                                 </div>
-                                <div class="form-group  row mb-0">
-                                    <div class="col-12">
-                                        <button type="submit" class="btn btn-primary">
-                                            Token erstellen
-                                        </button>
-                                    </div>  </div>
+                                <button type="submit"
+                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors duration-200">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Token erstellen</span>
+                                </button>
                             </form>
                         </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            @if($user->sorg2 != null)
-                <div class="card-footer">
-                    <p>
-                        Das Konto ist verknüpft mit <b>{{$user->sorgeberechtigter2?->name}}</b>. Dadurch sind
-                        die Rückmeldungen in beiden Konten sichtbar.
-                </div>
-            @endif
-        </div>
-    </div>
-</div>
-        <div class="modal fade" id="editChildModal" tabindex="-1" role="dialog" aria-labelledby="editChildModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editChildModalLabel">Kind bearbeiten</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+
+                @if($user->sorg2 != null)
+                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-link text-amber-600 mt-1"></i>
+                            <p class="text-sm text-amber-800 mb-0">
+                                Das Konto ist verknüpft mit <strong>{{$user->sorgeberechtigter2?->name}}</strong>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.
+                            </p>
+                        </div>
+                    </div>
+                @endif
+        </div> <!-- Ende p-4 -->
+    </div> <!-- Ende card -->
+</div> <!-- Ende container-fluid -->
+
+    <!-- Modal zum Bearbeiten von Kindern -->
+    <div class="modal fade" id="editChildModal" tabindex="-1" role="dialog" aria-labelledby="editChildModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content rounded-lg shadow-xl">
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 rounded-t-lg">
+                    <div class="flex items-center justify-between">
+                        <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2" id="editChildModalLabel">
+                            <i class="fas fa-edit"></i>
+                            Kind bearbeiten
+                        </h5>
+                        <button type="button" class="text-white hover:text-gray-200 transition-colors" data-dismiss="modal" aria-label="Close">
+                            <i class="fas fa-times text-xl"></i>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <form id="editChildForm" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group">
-                                <label for="editFirstName">Vorname</label>
-                                <input type="text" class="form-control" id="editFirstName" name="first_name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editLastName">Nachname</label>
-                                <input type="text" class="form-control" id="editLastName" name="last_name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editGroup">Gruppe</label>
-                                <select class="form-control" id="editGroup" name="group_id" required>
-                                    @foreach(auth()->user()->groups as $group)
-                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="editClass">Klassenstufe</label>
-                                <select class="form-control" id="editClass" name="class_id" required>
-                                    @foreach(auth()->user()->groups as $group)
-                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Speichern</button>
-                        </form>
-                    </div>
+                </div>
+                <div class="p-4">
+                    <form id="editChildForm" method="POST" class="space-y-3">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label for="editFirstName" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-user text-blue-600 mr-1"></i>
+                                Vorname
+                            </label>
+                            <input type="text"
+                                   class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                   id="editFirstName"
+                                   name="first_name"
+                                   required>
+                        </div>
+                        <div>
+                            <label for="editLastName" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-user text-blue-600 mr-1"></i>
+                                Nachname
+                            </label>
+                            <input type="text"
+                                   class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                   id="editLastName"
+                                   name="last_name"
+                                   required>
+                        </div>
+                        <div>
+                            <label for="editGroup" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-users text-blue-600 mr-1"></i>
+                                Gruppe
+                            </label>
+                            <select class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                    id="editGroup"
+                                    name="group_id"
+                                    required>
+                                @foreach(auth()->user()->groups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="editClass" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-graduation-cap text-blue-600 mr-1"></i>
+                                Klassenstufe
+                            </label>
+                            <select class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                    id="editClass"
+                                    name="class_id"
+                                    required>
+                                @foreach(auth()->user()->groups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex gap-2 pt-3">
+                            <button type="submit"
+                                    class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200">
+                                <i class="fas fa-save"></i>
+                                <span>Speichern</span>
+                            </button>
+                            <button type="button"
+                                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors duration-200"
+                                    data-dismiss="modal">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 @endsection
 
 @push('js')
 
     <script>
         $(document).ready(function () {
-
-
             $("input").keyup(function() {
                 checkChanged();
             });
@@ -447,15 +622,13 @@
             });
 
             function checkChanged() {
-
                 if (!$('input').val()) {
                     $("#btn-save").hide();
                 } else {
                     $("#btn-save").show();
-            }
+                }
             }
         });
-
 
         $('.child-notification').click(function () {
             let child_id = $(this).data('child_id');
@@ -471,10 +644,18 @@
                 },
                 success: function (data) {
                     if (data.notification == 1) {
-                        $('.child-notification[data-child_id=' + child_id + ']').removeClass('bg-gradient-radial-amber').addClass('bg-gradient-directional-teal text-white').html('<i class="fas fa-bell"></i>');
+                        $('.child-notification[data-child_id=' + child_id + ']')
+                            .removeClass('bg-amber-500 hover:bg-amber-600')
+                            .addClass('bg-teal-500 hover:bg-teal-600')
+                            .html('<i class="fas fa-bell text-sm"></i>')
+                            .attr('title', 'Benachrichtigung aktiv');
                         $('.child-notification[data-child_id=' + child_id + ']').data('notification', 1);
                     } else {
-                        $('.child-notification[data-child_id=' + child_id + ']').removeClass('bg-gradient-directional-teal text-white').addClass('bg-gradient-radial-amber').html('<i class="fas fa-bell-slash"></i>');
+                        $('.child-notification[data-child_id=' + child_id + ']')
+                            .removeClass('bg-teal-500 hover:bg-teal-600')
+                            .addClass('bg-amber-500 hover:bg-amber-600')
+                            .html('<i class="fas fa-bell-slash text-sm"></i>')
+                            .attr('title', 'Benachrichtigung deaktiviert');
                         $('.child-notification[data-child_id=' + child_id + ']').data('notification', 0);
                     }
                 },
@@ -483,24 +664,24 @@
                 }
             });
         });
-
     </script>
 
-            <script>
-                $(document).ready(function() {
-                    // Open the modal and populate the form with the child's data
-                    $('.edit-child-btn').click(function() {
-                        var childId = $(this).data('child-id');
-                        var child = $(this).data('child');
+    <script>
+        $(document).ready(function() {
+            // Open the modal and populate the form with the child's data
+            $('.edit-child-btn').click(function(e) {
+                e.preventDefault();
+                var childId = $(this).data('child-id');
+                var child = $(this).data('child');
 
-                        $('#editChildForm').attr('action', '/child/' + childId);
-                        $('#editFirstName').val(child.first_name);
-                        $('#editLastName').val(child.last_name);
-                        $('#editGroup').val(child.group_id);
-                        $('#editClass').val(child.class_id);
+                $('#editChildForm').attr('action', '/child/' + childId);
+                $('#editFirstName').val(child.first_name);
+                $('#editLastName').val(child.last_name);
+                $('#editGroup').val(child.group_id);
+                $('#editClass').val(child.class_id);
 
-                        $('#editChildModal').modal('show');
-                    });
-                });
-            </script>
+                $('#editChildModal').modal('show');
+            });
+        });
+    </script>
 @endpush
