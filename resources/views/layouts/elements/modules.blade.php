@@ -38,7 +38,7 @@
                         <a href="{{url($module->options['nav']['link'])}}"
                            class="nav-link flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-blue-600 hover:text-white transition-all duration-200 @if(request()->path() == $module->options['nav']['link']) bg-blue-600 text-white shadow-lg @endif group">
                             <div class="flex items-center gap-2">
-                                <i class="{{$module->options['nav']['icon']}} text-base group-hover:scale-110 transition-transform"></i>
+                                <i class="{{$module->options['nav']['icon']}} text-base group-hover:scale-110 transition-transform @if(request()->path() == $module->options['nav']['link']) text-white @endif"></i>
                                 <span class="font-medium">{{$module->options['nav']['name']}}</span>
                             </div>
                             @if(isset($notifications) and $notifications->where('type', $module->options['nav']['name'])->where('read',0)->count() > 0)
@@ -79,7 +79,7 @@
                     <li class="nav-item">
                         <a href="{{url($module->options['adm-nav']['link'])}}"
                            class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-purple-600 hover:text-white transition-all duration-200 @if(request()->path() == $module->options['adm-nav']['link']) bg-purple-600 text-white shadow-lg @endif group">
-                            <i class="{{$module->options['adm-nav']['icon']}} text-base group-hover:scale-110 transition-transform"></i>
+                            <i class="{{$module->options['adm-nav']['icon']}} text-base group-hover:scale-110 transition-transform @if(request()->path() == $module->options['adm-nav']['link']) text-white @endif"></i>
                             <span class="font-medium">{{$module->options['adm-nav']['name']}}</span>
                         </a>
                     </li>
