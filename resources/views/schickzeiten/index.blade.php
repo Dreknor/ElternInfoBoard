@@ -495,6 +495,10 @@
             </div>
         </div>
     </div>
+
+    {{-- Bestätigungsmodals für Schickzeiten --}}
+    @include('components.schickzeiten-confirmation-modals')
+
 @endsection
 
 @push('js')
