@@ -1,65 +1,93 @@
 @extends('layouts.app')
+@section('title') - Neues Changelog @endsection
 
 @section('content')
-
-<div class="card">
-    <div class="card-header">
-        <h6 class="card-title">
-            neues Changelog verfassen
-        </h6>
-    </div>
-    @if ($errors->any())
-        <div class="card-body">
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+<div class="container-fluid px-4 py-3">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 border-b border-purple-800">
+            <h5 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
+                <i class="fas fa-plus-circle"></i>
+                Neues Changelog verfassen
+            </h5>
         </div>
 
-    @endif
-    <div class="card-body">
-        <form action="{{url('/changelog')}}" method="post" class="form form-horizontal" enctype="multipart/form-data" id="nachrichtenForm">
-            @csrf
-            <div class="row">
-                <div class="col-md-8 col-sm-12">
-                    <div class="form-group">
-                        <label>Überschrift</label>
-                        <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{old('header')}}" required>
+        @if ($errors->any())
+            <div class="p-6 border-b border-gray-200">
+                <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-exclamation-circle text-red-600 mt-1"></i>
+                        <ul class="text-sm text-red-700 space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-12">
-                    <div class="form-group">
-                        <label>Ändert Benutzereinstellungen</label>
-                        <select class="custom-select" name="changeSettings" id="changeSettings">
-                                <option value="0" selected>nein</option>
-                                <option value="1" >ja</option>
+            </div>
+        @endif
 
+        <div class="p-8">
+            <form action="{{url('/changelog')}}" method="post" class="space-y-6" enctype="multipart/form-data" id="nachrichtenForm">
+                @csrf
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-heading text-purple-600 mr-1"></i>
+                            Überschrift
+                            <span class="text-red-600">*</span>
+                        </label>
+                        <input type="text"
+                               class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 outline-none"
+                               placeholder="z.B. Neue Funktionen im November 2025"
+                               name="header"
+                               value="{{old('header')}}"
+                               required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-cog text-purple-600 mr-1"></i>
+                            Einstellungen ändern
+                            <span class="block text-xs text-gray-500 font-normal mt-0.5">Beeinflusst Benutzereinstellungen</span>
+                        </label>
+                        <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 outline-none"
+                                name="changeSettings"
+                                id="changeSettings">
+                            <option value="0" selected>Nein</option>
+                            <option value="1">Ja</option>
                         </select>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>Changelog</label>
-                        <textarea class="form-control border-input" name="text">
-                            {{old('text')}}
-                        </textarea>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-edit text-purple-600 mr-1"></i>
+                        Changelog-Inhalt
+                        <span class="text-red-600">*</span>
+                        <span class="block text-xs text-gray-500 font-normal mt-0.5">Beschreiben Sie die Änderungen ausführlich</span>
+                    </label>
+                    <textarea class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 outline-none"
+                              name="text"
+                              rows="15">{{old('text')}}</textarea>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="submit"
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                                id="submitBtn">
+                            <i class="fas fa-save"></i>
+                            <span>Changelog speichern</span>
+                        </button>
+                        <a href="{{url('/changelog')}}"
+                           class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors duration-200">
+                            <i class="fas fa-times"></i>
+                            <span>Abbrechen</span>
+                        </a>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
-                        Speichern
-                    </button>
-                </div>
-            </div>
-        </form>
-
+            </form>
+        </div>
     </div>
 </div>
 

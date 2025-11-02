@@ -13,13 +13,35 @@
             </div>
             <div class="p-4">
                 @if(isset($changelog))
-                    <div class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                        <h6 class="text-lg font-semibold text-blue-800 mb-2">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            {{$changelog->header}}
-                        </h6>
-                        <div class="text-blue-700 text-sm">
-                            {!! $changelog->text !!}
+                    <div class="mb-6">
+                        <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl shadow-lg overflow-hidden">
+                            <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg">
+                                        <i class="fas fa-bullhorn text-2xl text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-xl font-bold text-white mb-0">
+                                            {{$changelog->header}}
+                                        </h5>
+                                        <p class="text-xs text-amber-100 mb-0 mt-0.5">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Neuigkeiten & Änderungen
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-5">
+                                <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed changelog-content">
+                                    {!! $changelog->text !!}
+                                </div>
+                            </div>
+                            <div class="px-6 py-3 bg-gradient-to-r from-amber-100 to-orange-100 border-t border-amber-200">
+                                <p class="text-xs text-amber-800 mb-0 flex items-center gap-2">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Bitte beachten Sie die oben genannten Änderungen und Hinweise.</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -685,3 +707,71 @@
         });
     </script>
 @endpush
+
+@push('css')
+    <style>
+        .changelog-content {
+            line-height: 1.75;
+        }
+        .changelog-content p {
+            margin-bottom: 1rem;
+        }
+        .changelog-content p:last-child {
+            margin-bottom: 0;
+        }
+        .changelog-content ul,
+        .changelog-content ol {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+        }
+        .changelog-content li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        .changelog-content li::marker {
+            color: #f59e0b;
+        }
+        .changelog-content strong {
+            color: #92400e;
+            font-weight: 600;
+        }
+        .changelog-content a {
+            color: #2563eb;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .changelog-content a:hover {
+            color: #1d4ed8;
+        }
+        .changelog-content h1,
+        .changelog-content h2,
+        .changelog-content h3,
+        .changelog-content h4 {
+            color: #92400e;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .changelog-content h1:first-child,
+        .changelog-content h2:first-child,
+        .changelog-content h3:first-child,
+        .changelog-content h4:first-child {
+            margin-top: 0;
+        }
+        .changelog-content code {
+            background: #fef3c7;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+            color: #92400e;
+        }
+        .changelog-content blockquote {
+            border-left: 4px solid #fbbf24;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #78350f;
+            font-style: italic;
+        }
+    </style>
+@endpush
+
