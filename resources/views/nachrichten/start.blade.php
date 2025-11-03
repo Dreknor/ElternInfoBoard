@@ -65,7 +65,7 @@
 
                                                 <!-- Nachricht Text -->
                                                 <div class="flex-1 min-w-0">
-                                                    <span class="block text-xs font-semibold leading-tight break-words
+                                                    <span class="block text-sm font-semibold leading-tight break-words
                                                         @switch($nachricht->type)
                                                             @case('pflicht')
                                                                 @if($nachricht->released == 1) text-red-100 @else text-red-600 @endif
