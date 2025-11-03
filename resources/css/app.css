@@ -3,6 +3,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Newsreader Font */
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/Newsreader-VariableFont_opsz,wght.ttf') format('truetype-variations');
+  font-weight: 200 800;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/Newsreader-Italic-VariableFont_opsz,wght.ttf') format('truetype-variations');
+  font-weight: 200 800;
+  font-stretch: 75% 125%;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --app-bg: #ffffff;
   --app-text: #111827;
@@ -14,6 +33,7 @@ html, body {
   padding: 0;
   background: var(--app-bg);
   color: var(--app-text);
+  font-family: 'Newsreader', ui-serif, Georgia, serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

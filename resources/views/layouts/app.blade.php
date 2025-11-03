@@ -15,8 +15,7 @@
     @endif
     <title>{{$settings->app_name}} @yield('title')</title>
 
-    <!-- Vite Assets (Tailwind CSS) -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 
     <!-- Alpine.js for Dropdown functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -24,7 +23,7 @@
     <!-- CSS Files -->
     <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet"/>
     <link href="{{asset('css/paper-dashboard.css')}}" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet"/>
+    <!--    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet"/> -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.12.1/font/bootstrap-icons.min.css">
     <!--<script src="https://kit.fontawesome.com/c8f58e3eb6.js"></script>-->
     <link href="{{asset('/css/all.css')}}?v=1" rel="stylesheet"> <!--load all styles -->
@@ -32,6 +31,9 @@
     <link href="{{asset('/css/mobile.css')}}?v=1" rel="stylesheet">
 
     <link href="{{asset('/css/comments.css')}}" rel="stylesheet"><!--load all styles -->
+
+    <!-- Vite Assets (Tailwind CSS) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('css')
 
 </head>
