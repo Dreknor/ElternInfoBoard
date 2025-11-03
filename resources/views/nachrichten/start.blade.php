@@ -76,7 +76,7 @@
                                                         @endswitch
                                                     ">
 
-                                                        {{\Illuminate\Support\Str::limit($nachricht->header, 50, $end='...')}}
+                                                        {{\Illuminate\Support\Str::limit($nachricht->header, 60, $end='...')}}
                                                     </span>
                                                 </div>
 
