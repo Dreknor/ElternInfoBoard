@@ -34,7 +34,7 @@
                                         <a href="#{{$nachricht->id}}"
                                            class="anker_link group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-3
                                                   @if($nachricht->released == 1)
-                                                      bg-gradient-to-br from-gray-100 to-gray-300 hover:from-blue-100 hover:to-blue-200 text-black
+                                                      bg-gradient-to-br from-gray-100 to-gray-200 hover:from-blue-100 hover:to-blue-200 text-black
                                                   @else
                                                       bg-white border-2 border-amber-400 hover:bg-amber-50 text-gray-800
                                                   @endif
