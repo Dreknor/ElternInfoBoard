@@ -151,7 +151,7 @@
     @else
         <!-- Standard Nachricht Type -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 transition-shadow duration-300 hover:shadow-xl
-            @if($nachricht->released == 0) ring-2 ring-blue-600 @endif
+            @if($nachricht->released == 0) ring-2  @endif
             @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach"
              id="{{$nachricht->id}}">
 
@@ -166,12 +166,12 @@
             @endif
 
             <!-- Header Section -->
-            <div class="relative @if(count($nachricht->getMedia('header'))>0) @if($nachricht->released == 0) backdrop-blur-sm bg-blue-600/95 @else backdrop-blur-sm bg-gradient-to-r from-gray-50 to-gray-100 @endif @else @if($nachricht->released == 0) bg-gradient-to-r from-blue-600 to-blue-700 @else bg-gradient-to-r from-gray-50 to-gray-100 @endif @endif px-6 py-3 border-b @if($nachricht->released == 0) border-blue-800 @else border-gray-200 @endif"
+            <div class="relative @if(count($nachricht->getMedia('header'))>0) @if($nachricht->released == 0) backdrop-blur-sm bg-gradient-to-br from-amber-100 to-amber-200 hover:from-amber-400 hover:to-amber-600  @else backdrop-blur-sm bg-gradient-to-r from-gray-50 to-gray-100 @endif @else @if($nachricht->released == 0) bg-gradient-to-r from-amber-200 to-amber-300 @else bg-gradient-to-r from-gray-50 to-gray-100 @endif @endif px-6 py-3 border-b @if($nachricht->released == 0) border-amber-800 @else border-gray-200 @endif"
                  @if(count($nachricht->getMedia('header'))>0) style="margin-top: -4rem;" @endif>
                     <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                         <!-- Title Section -->
                         <div class="flex-1 min-w-0">
-                            <h5 class="text-lg font-bold @if($nachricht->released == 0) text-white @else text-gray-900 @endif mb-1 flex items-center gap-2 flex-wrap">
+                            <h5 class="text-lg font-bold @if($nachricht->released == 0) text-gray-800 @else text-gray-900 @endif mb-1 flex items-center gap-2 flex-wrap">
                                 @if($nachricht->sticky)
                                     <span class="inline-flex items-center justify-center w-6 h-6 bg-yellow-400 text-yellow-900 rounded-full">
                                         <i class="fas fa-thumbtack text-xs"></i>
@@ -179,7 +179,7 @@
                                 @endif
                                 <span class="break-words">{{$nachricht->header}}</span>
                                 @if($nachricht->released == 0)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600/90 text-white">
                                         Unveröffentlicht
                                     </span>
                                 @endif
