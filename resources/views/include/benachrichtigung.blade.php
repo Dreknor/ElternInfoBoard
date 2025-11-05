@@ -28,8 +28,8 @@
              x-transition:leave="transition ease-in duration-75"
              x-transition:leave-start="transform opacity-100 scale-100"
              x-transition:leave-end="transform opacity-0 scale-95"
-             class="absolute right-0 mt-2 w-screen max-w-sm md:max-w-md bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
-             style="display: none; max-height: calc(100vh - 80px);"
+             class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 md:max-w-md bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
+             style="display: none; max-height: calc(100vh - 100px);"
              @click.away="open = false">
 
             <!-- Header -->
@@ -58,7 +58,7 @@
             </div>
 
             <!-- Notifications List -->
-            <div class="overflow-y-auto" style="max-height: 400px;">
+            <div class="overflow-y-auto max-h-[calc(100vh-240px)] sm:max-h-[400px]">
                 @if($notifications->count() > 0)
                     @foreach($notifications->sortBy('read') as $item)
                         <div x-show="!{{$item->read ? 'true' : 'false'}} || showRead"
