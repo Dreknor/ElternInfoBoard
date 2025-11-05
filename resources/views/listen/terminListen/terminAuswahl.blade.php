@@ -153,7 +153,7 @@
                         <i class="fas fa-times"></i>
                         Schließen
                     </button>
-                    <button type="submit" id="submitBtn"
+                    <button type="submit" id="submitBtn" form="terminForm"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
                         <i class="fas fa-check"></i>
                         Speichern
