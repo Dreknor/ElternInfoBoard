@@ -1,4 +1,4 @@
-<div class="nachricht {{$nachricht->type}} bg-white rounded-lg shadow-lg overflow-hidden @if($nachricht->released == 0) ring-2 ring-cyan-500 @endif" id="{{$nachricht->id}}">
+<div class="nachricht {{$nachricht->type}} bg-white rounded-xl shadow-lg overflow-hidden @if($nachricht->released == 0) ring-2 @endif" id="{{$nachricht->id}}">
     <!-- Header Image -->
     @if(count($nachricht->getMedia('header'))>0)
         <img class="w-full h-64 object-cover object-center"
@@ -7,24 +7,26 @@
     @endif
 
     <!-- Message Header -->
-    <div class="@if($nachricht->released == 0) bg-gradient-to-r from-cyan-500 to-cyan-600 @else bg-gradient-to-r from-blue-600 to-indigo-600 @endif px-6 py-4 border-b @if($nachricht->released == 0) border-cyan-800 @else border-blue-800 @endif">
+    <div class="@if($nachricht->released == 0) bg-gradient-to-r from-amber-200 to-amber-300 @else bg-gradient-to-r from-gray-50 to-gray-100 @endif px-6 py-4 border-b @if($nachricht->released == 0) border-amber-800 @else border-gray-200 @endif">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="flex-1">
-                <h5 class="text-xl font-bold text-white flex items-center gap-2 mb-2">
+                <h5 class="text-xl font-bold @if($nachricht->released == 0) text-gray-800 @else text-gray-900 @endif flex items-center gap-2 mb-2">
                     @if($nachricht->sticky)
-                        <i class="fas fa-thumbtack text-yellow-300"></i>
+                        <span class="inline-flex items-center justify-center w-6 h-6 bg-yellow-400 text-yellow-900 rounded-full">
+                            <i class="fas fa-thumbtack text-xs"></i>
+                        </span>
                     @endif
                     {{$nachricht->header}}
                     @if($nachricht->released == 0)
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-cyan-200 text-cyan-800">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600/90 text-white">
                             <i class="fas fa-eye-slash mr-1"></i>
-                            unveröffentlicht
+                            Unveröffentlicht
                         </span>
                     @endif
                 </h5>
 
                 <!-- Meta Information -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-blue-100">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
                     <div class="flex items-center gap-1">
                         <i class="fas fa-clock text-xs"></i>
                         <span>aktualisiert: {{$nachricht->updated_at->isoFormat('DD. MMMM YYYY HH:mm')}}</span>
@@ -45,20 +47,20 @@
                 <div class="flex items-center gap-2 flex-shrink-0">
                     @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
                         <a href="{{url('/posts/touch/'.$nachricht->id)}}"
-                           class="inline-flex items-center justify-center p-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all duration-200"
+                           class="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200"
                            title="Nachricht nach oben schieben">
                             <i class="fas fa-redo"></i>
                         </a>
                     @else
                         <a href="{{url('/posts/touch/'.$nachricht->id)}}"
-                           class="inline-flex items-center justify-center p-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all duration-200"
+                           class="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-blue-200 transition-all duration-200"
                            title="Nachricht kopieren">
                             <i class="far fa-clone"></i>
                         </a>
                     @endif
                     @if($nachricht->released == 0)
                         <a href="{{url('/posts/release/'.$nachricht->id)}}"
-                           class="inline-flex items-center justify-center p-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all duration-200"
+                           class="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200"
                            title="Nachricht veröffentlichen">
                             <i class="far fa-eye"></i>
                         </a>
@@ -69,8 +71,8 @@
 
         <!-- Show/Hide Button for Archived Messages -->
         @if($nachricht->is_archived)
-            <div class="mt-4 pt-4 border-t border-blue-700" x-data="{ showContent: false }">
-                <button class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 font-medium rounded-lg transition-all duration-200"
+            <div class="mt-4 pt-4 border-t border-gray-300" x-data="{ showContent: false }">
+                <button class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200"
                         @click="showContent = !showContent">
                     <i class="fas" :class="showContent ? 'fa-eye-slash' : 'fa-eye'"></i>
                     <span x-text="showContent ? 'Text ausblenden' : 'Text anzeigen'"></span>
@@ -93,7 +95,7 @@
                                     @if(count($nachricht->getMedia('images'))>0)
                                         <div class="bg-gray-50 rounded-lg p-4">
                                             <h6 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                <i class="fas fa-images text-blue-600"></i>
+                                                <i class="fas fa-images text-gray-600"></i>
                                                 Bilder
                                             </h6>
                                             @include('nachrichten.footer.bilder')
@@ -103,7 +105,7 @@
                                     @if(count($nachricht->getMedia('files'))>0)
                                         <div class="bg-gray-50 rounded-lg p-4">
                                             <h6 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                <i class="fas fa-file-alt text-blue-600"></i>
+                                                <i class="fas fa-file-alt text-gray-600"></i>
                                                 Dateien
                                             </h6>
                                             @include('nachrichten.footer.dateiliste')
@@ -139,7 +141,7 @@
                         @if(count($nachricht->getMedia('images'))>0)
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <h6 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <i class="fas fa-images text-blue-600"></i>
+                                    <i class="fas fa-images text-gray-600"></i>
                                     Bilder
                                 </h6>
                                 @include('nachrichten.footer.bilder')
@@ -149,7 +151,7 @@
                         @if(count($nachricht->getMedia('files'))>0)
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <h6 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <i class="fas fa-file-alt text-blue-600"></i>
+                                    <i class="fas fa-file-alt text-gray-600"></i>
                                     Dateien
                                 </h6>
                                 @include('nachrichten.footer.dateiliste')
@@ -171,7 +173,7 @@
             <!-- Response Status Indicators -->
             <div class="bg-gray-50 border-t border-gray-200 px-6 py-4">
                 <div class="flex items-center gap-2 mb-2">
-                    <i class="fas fa-chart-bar text-blue-600"></i>
+                    <i class="fas fa-chart-bar text-gray-600"></i>
                     <span class="text-sm font-medium text-gray-700">Rückmeldungsstatus</span>
                 </div>
                 <div class="flex items-center gap-1 flex-wrap">
@@ -193,7 +195,7 @@
         <!-- Show Feedback Responses (Admin only) -->
         @can('view rueckmeldungen')
             <div class="bg-gray-50 border-t border-gray-200 px-6 py-4" x-data="{ showFeedback: false }">
-                <button class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 font-medium rounded-lg transition-colors duration-200"
+                <button class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
                         @click="showFeedback = !showFeedback">
                     <i class="fas" :class="showFeedback ? 'fa-eye-slash' : 'fa-eye'"></i>
                     <span x-text="showFeedback ? 'Rückmeldungen ausblenden' : '{{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen'"></span>
