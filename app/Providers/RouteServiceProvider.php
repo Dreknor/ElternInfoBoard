@@ -28,6 +28,9 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
+        Route::model('event', \App\Model\ElternratEvent::class);
+        Route::model('task', \App\Model\ElternratTask::class);
+
         $this->routes(function () {
             Route::prefix('api')
                 ->middleware('api')

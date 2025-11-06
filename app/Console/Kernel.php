@@ -58,6 +58,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->weeklyOn(6, '00:00');
 
+        // Elternrat Event Erinnerungen - stündlich prüfen
+        $schedule->call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
+
         //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
         //Default ist die Queue über Supervisor zu starten
         if (config('queue.use_cronjob')) {

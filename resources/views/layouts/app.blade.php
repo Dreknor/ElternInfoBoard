@@ -15,7 +15,10 @@
     @endif
     <title>{{$settings->app_name}} @yield('title')</title>
 
-
+    <!-- Alpine.js x-cloak styling to prevent FOUC - MUST be before Alpine.js -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 
     <!-- Alpine.js for Dropdown functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
