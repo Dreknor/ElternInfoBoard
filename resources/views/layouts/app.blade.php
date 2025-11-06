@@ -120,7 +120,7 @@
 
 <div class="main-panel">
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg border-b border-gray-200 fixed-top" style="z-index: 1030;">
+    <nav class="bg-white shadow-lg border-b border-gray-200 fixed-top" style="z-index: 1030;" x-data="{ mobileSearchOpen: false }">
         <div class="container-fluid">
             <div class="flex items-center justify-between px-4 py-3">
                 <!-- Left Section: Toggle & Brand -->
@@ -168,9 +168,8 @@
                 <div class="flex items-center gap-2 md:gap-4">
                     <!-- Mobile Search Toggle -->
                     <button type="button"
-                            class="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
-                            data-toggle="collapse"
-                            data-target="#mobileSearch">
+                            @click="mobileSearchOpen = !mobileSearchOpen"
+                            class="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
                         <i class="fas fa-search text-lg"></i>
                     </button>
 
@@ -242,7 +241,15 @@
             </div>
 
             <!-- Mobile Search Bar (Collapsible) -->
-            <div class="collapse md:hidden px-4 pb-3" id="mobileSearch">
+            <div x-show="mobileSearchOpen"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="transform opacity-0 -translate-y-2"
+                 x-transition:enter-end="transform opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="transform opacity-100 translate-y-0"
+                 x-transition:leave-end="transform opacity-0 -translate-y-2"
+                 style="display: none;"
+                 class="md:hidden px-4 pb-3">
                 <form role="search" method="post" action="{{url('search')}}">
                     @csrf
                     <div class="relative">
