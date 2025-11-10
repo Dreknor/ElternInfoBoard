@@ -34,12 +34,14 @@ class DashboardController extends Controller
             $nachrichten = Post::query()
                 ->whereNull('archiv_ab')
                 ->orderBy('created_at', 'desc')
-                ->take(5);
+                ->take(5)
+                ->get();
 
             $termine = Termin::query()
                 ->where('start', '>=', Carbon::today())
                 ->orderBy('start')
-                ->take(5);
+                ->take(5)
+                ->get();
 
         } else {
             $nachrichten = Post::query()
