@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Alpine.js x-cloak - Prevents FOUC (Flash of Unstyled Content) */
+[x-cloak] {
+  display: none !important;
+}
+
 /* Newsreader Font */
 @font-face {
   font-family: 'Newsreader';

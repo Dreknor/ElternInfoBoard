@@ -10,7 +10,8 @@
         <!-- Notifications Bell with Badge -->
         <button type="button"
                 @click="open = !open"
-                @click.away="open = false"
+                aria-expanded="false"
+                x-bind:aria-expanded="open"
                 class="relative p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
             <i class="far fa-bell text-xl"></i>
             @if($notifications->where('read', 0)->count() > 0)
@@ -21,33 +22,39 @@
         </button>
 
         <!-- Dropdown Menu -->
-        <div x-show="open"
+        <div x-cloak x-show="open"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="transform opacity-0 scale-95"
              x-transition:enter-end="transform opacity-100 scale-100"
              x-transition:leave="transition ease-in duration-75"
              x-transition:leave-start="transform opacity-100 scale-100"
              x-transition:leave-end="transform opacity-0 scale-95"
-             class="absolute right-0 mt-2 w-screen max-w-sm md:max-w-md bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
-             style="display: none; max-height: calc(100vh - 80px);"
+             class="fixed left-2 right-2 top-14 max-h-[85vh] sm:bottom-auto sm:absolute sm:mt-2 sm:right-0 sm:left-auto sm:w-96 sm:max-w-[calc(100vw-2rem)] md:max-w-md bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50 flex flex-col"
              @click.away="open = false">
 
             <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
-                <h6 class="text-white font-bold text-base mb-0">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
+                <h6 class="text-white font-bold text-base mb-0 flex items-center">
                     <i class="fas fa-bell mr-2"></i>
                     Benachrichtigungen
                 </h6>
-                @if($notifications->where('read', 0)->count() > 0)
-                    <a href="{{route('notification.readAll')}}"
-                       class="text-xs text-white hover:text-blue-100 underline transition-colors">
-                        Alle als gelesen markieren
-                    </a>
-                @endif
+                <div class="flex items-center gap-2">
+                    @if($notifications->where('read', 0)->count() > 0)
+                        <a href="{{route('notification.readAll')}}"
+                           class="text-xs text-white hover:text-blue-100 underline transition-colors hidden sm:inline">
+                            Alle als gelesen markieren
+                        </a>
+                    @endif
+                    <button @click="open = false"
+                            class="text-white hover:text-blue-100 transition-colors p-1 rounded hover:bg-white/10"
+                            title="Schließen">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Filter Toggle -->
-            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                 <label class="flex items-center gap-2 cursor-pointer" @click.stop>
                     <input type="checkbox"
                            x-model="showRead"
@@ -58,7 +65,7 @@
             </div>
 
             <!-- Notifications List -->
-            <div class="overflow-y-auto" style="max-height: 400px;">
+            <div class="overflow-y-auto flex-1 min-h-0">
                 @if($notifications->count() > 0)
                     @foreach($notifications->sortBy('read') as $item)
                         <div x-show="!{{$item->read ? 'true' : 'false'}} || showRead"
@@ -112,7 +119,7 @@
 
             <!-- Footer -->
             @can('testing')
-                <div class="bg-gray-50 border-t border-gray-200 px-4 py-2">
+                <div class="bg-gray-50 border-t border-gray-200 px-4 py-2 flex-shrink-0">
                     <a href="{{route('push.test')}}"
                        class="text-xs text-blue-600 hover:text-blue-800 font-medium">
                         <i class="fas fa-vial mr-1"></i>
