@@ -41,7 +41,9 @@ class DashboardController extends Controller
                 ->orderBy('start')
                 ->take(5);
 
-        } else {
+        }
+
+        if (!$nachrichten or !$termine) {
             $nachrichten = Post::query()
                 ->where('released', 1)
                 ->where(function ($query) {
@@ -66,8 +68,6 @@ class DashboardController extends Controller
 
         }
 
-
-        // Hole die nächsten 5 Termine
 
         // Hole die heutige Losung
         $losung = Losung::whereDate('date', Carbon::today())->first();
