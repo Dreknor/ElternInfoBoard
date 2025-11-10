@@ -43,7 +43,6 @@ class DashboardController extends Controller
 
         }
 
-        if (!$nachrichten or !$termine) {
             $nachrichten = Post::query()
                 ->where('released', 1)
                 ->where(function ($query) {
@@ -66,7 +65,7 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
-        }
+
 
 
         // Hole die heutige Losung
