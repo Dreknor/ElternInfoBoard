@@ -85,18 +85,28 @@ class NachrichtenController extends Controller
             $show_link = false;
         }
 
+        if (auth()->user()->can('view all')) {
+            $nachrichten = Post::query()
+                ->whereNull('archiv_ab')
+                ->orderBy('sticky', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $nachrichten = Post::query()
+                ->where('released', 1)
+                ->where(function ($query) {
+                    $query->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', Carbon::now());
+                })
+                ->whereHas('groups', function ($query) {
+                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
         // Hole alle Nachrichten für die Übersichtsseite
-        $nachrichten = Post::query()
-            ->where('released', 1)
-            ->where(function ($query) {
-                $query->whereNull('archiv_ab')
-                    ->orWhere('archiv_ab', '>', Carbon::now());
-            })
-            ->whereHas('groups', function ($query) {
-                $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
+
 
         return view('nachrichten.index', [
             'datum' => Carbon::now(),

@@ -29,28 +29,45 @@ class DashboardController extends Controller
     public function index()
     {
         // Hole nur die neuesten 5 Nachrichten
-        $nachrichten = Post::query()
-            ->where('released', 1)
-            ->where(function ($query) {
-                $query->whereNull('archiv_ab')
-                    ->orWhere('archiv_ab', '>', Carbon::now());
-            })
-            ->whereHas('groups', function ($query) {
-                $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-            })
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
+
+        if (auth()->user()->can('view all')) {
+            $nachrichten = Post::query()
+                ->whereNull('archiv_ab')
+                ->orderBy('created_at', 'desc')
+                ->take(5);
+
+            $termine = Termin::query()
+                ->where('start', '>=', Carbon::today())
+                ->orderBy('start')
+                ->take(5);
+
+        } else {
+            $nachrichten = Post::query()
+                ->where('released', 1)
+                ->where(function ($query) {
+                    $query->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', Carbon::now());
+                })
+                ->whereHas('groups', function ($query) {
+                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+                })
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+
+            $termine = Termin::query()
+                ->where('start', '>=', Carbon::today())
+                ->whereHas('groups', function ($query) {
+                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+                })
+                ->orderBy('start')
+                ->take(5)
+                ->get();
+
+        }
+
 
         // Hole die nächsten 5 Termine
-        $termine = Termin::query()
-            ->where('start', '>=', Carbon::today())
-            ->whereHas('groups', function ($query) {
-                $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-            })
-            ->orderBy('start')
-            ->take(5)
-            ->get();
 
         // Hole die heutige Losung
         $losung = Losung::whereDate('date', Carbon::today())->first();

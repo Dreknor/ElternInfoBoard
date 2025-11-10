@@ -31,14 +31,24 @@ class TerminController extends Controller
      */
     public function index()
     {
-        $termine = Termin::query()
-            ->with('groups')
-            ->where('start', '>=', Carbon::today())
-            ->whereHas('groups', function ($query) {
-                $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-            })
-            ->orderBy('start')
-            ->get();
+        if (auth()->user()->can('view all')) {
+            $termine = Termin::query()
+                ->with('groups')
+                ->where('start', '>=', Carbon::today())
+                ->orderBy('start')
+                ->get();
+        } else {
+            $termine = Termin::query()
+                ->with('groups')
+                ->where('start', '>=', Carbon::today())
+                ->whereHas('groups', function ($query) {
+                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+                })
+                ->orderBy('start')
+                ->get();
+        }
+
+
 
         return view('termine.index', [
             'termine' => $termine,
