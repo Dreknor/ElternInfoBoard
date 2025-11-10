@@ -41,8 +41,7 @@ class DashboardController extends Controller
                 ->orderBy('start')
                 ->take(5);
 
-        }
-
+        } else {
             $nachrichten = Post::query()
                 ->where('released', 1)
                 ->where(function ($query) {
@@ -64,7 +63,7 @@ class DashboardController extends Controller
                 ->orderBy('start')
                 ->take(5)
                 ->get();
-
+        }
 
 
 
