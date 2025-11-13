@@ -59,15 +59,20 @@
                                                 </div>
                                                 <div class="col-md-10">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <h5 class="font-bold text-gray-800 mb-0">{{ $termin->terminname }}</h5>
+                                                        <h5 class="font-bold text-gray-800 mb-0">
+                                                            {{ $termin->terminname }}
+                                                            @if(auth()->user()->can('view all') && ($termin->public ?? false))
+                                                                <span class="badge badge-success ml-2" title="Dieser Termin ist öffentlich">Öffentlich</span>
+                                                            @endif
+                                                        </h5>
                                                         <div class="d-flex align-items-center gap-2">
                                                             <!-- Calendar Links -->
-                                                            <a href="{{$termin->link(auth()->user()->calendar_prefix)->ics()}}"
+                                                            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->ics()}}"
                                                                class="btn btn-sm btn-outline-secondary"
                                                                title="ICS-Download für Apple und Windows">
                                                                 <img src="{{asset('img/ics-icon.png')}}" style="width: 16px; height: 16px;" alt="ICS">
                                                             </a>
-                                                            <a href="{{$termin->link(auth()->user()->calendar_prefix)->google()}}"
+                                                            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->google()}}"
                                                                class="btn btn-sm btn-outline-secondary"
                                                                target="_blank"
                                                                title="Google-Kalender-Link">
@@ -142,4 +147,3 @@
     }
 </style>
 @endsection
-

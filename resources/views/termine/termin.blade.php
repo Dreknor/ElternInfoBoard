@@ -28,16 +28,19 @@
             <h6 class="text-sm font-bold text-gray-900">
                 {{$termin->terminname}}
             </h6>
+            @if(auth()->user()->can('view all') && ($termin->public ?? false))
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="Dieser Termin ist öffentlich">Öffentlich</span>
+            @endif
         </div>
 
         <!-- Kalender-Links -->
         <div class="flex items-center space-x-1.5 lg:w-auto">
-            <a href="{{$termin->link(auth()->user()->calendar_prefix)->ics()}}"
+            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->ics()}}"
                class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 transition-colors"
                title="ICS-Download für Apple und Windows">
                 <img src="{{asset('img/ics-icon.png')}}" class="w-5 h-5" alt="ICS">
             </a>
-            <a href="{{$termin->link(auth()->user()->calendar_prefix)->google()}}"
+            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->google()}}"
                class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 transition-colors"
                target="_blank"
                title="Google-Kalender-Link">
@@ -68,4 +71,3 @@
         </div>
     </div>
 </div>
-
