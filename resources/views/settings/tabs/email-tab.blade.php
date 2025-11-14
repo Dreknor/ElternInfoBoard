@@ -116,6 +116,21 @@
                 </div>
             </div>
         </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control d-flex align-items-center">
+                    <input type="checkbox" name="log_sent_emails" value="1"
+                           {{ $mailSettings->log_sent_emails ? 'checked' : '' }}
+                           class="mr-2">
+                    <strong>Versendete E-Mails in Logs erfassen</strong>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    <i class="fas fa-info-circle text-info"></i> Wenn aktiviert, werden Empfänger, Betreff und Zeitpunkt versendeter E-Mails in den Log-Einträgen gespeichert.
+                </div>
+            </div>
+        </div>
 
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">

@@ -61,6 +61,9 @@ class Kernel extends ConsoleKernel
         // Elternrat Event Erinnerungen - stündlich prüfen
         $schedule->call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 
+        // Alte Logs automatisch löschen (alle 7 Tage, Logs älter als 90 Tage)
+        $schedule->command('logs:cleanup --days=90')->weeklyOn(1, '02:00');
+
         //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
         //Default ist die Queue über Supervisor zu starten
         if (config('queue.use_cronjob')) {

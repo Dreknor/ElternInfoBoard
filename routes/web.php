@@ -455,6 +455,8 @@ Route::middleware('auth')->group(function () {
 
     Route::group(['middlewareGroups' => ['can:see logs']], function () {
         Route::get('logs', [LogController::class, 'index']);
+        Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
+        Route::delete('logs/cleanup', [LogController::class, 'cleanup'])->middleware('can:delete logs');
     });
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {
