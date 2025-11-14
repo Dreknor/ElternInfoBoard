@@ -140,7 +140,7 @@
 
                                     <div class="row">
                                         <div class="col-12">
-                                            <button type="submit" class="btn btn-success btn-block collapse" id="btn-save">speichern</button>
+                                            <button type="submit" class="btn btn-success btn-block" id="btn-save" style="display: none;">speichern</button>
                                         </div>
                                     </div>
 
@@ -222,25 +222,24 @@
 
     <script>
         $(document).ready(function () {
+            // Track initial form state
+            let formChanged = false;
 
-
-            $("input").keyup(function() {
+            $("input, select, textarea").on("input change", function() {
+                formChanged = true;
                 checkChanged();
             });
-            $("select").change(function() {
-                checkChanged();
-            });
 
-            $(":checkbox").change(function() {
+            $(":checkbox").on("change", function() {
+                formChanged = true;
                 checkChanged();
             });
 
             function checkChanged() {
-
-                if (!$('input').val()) {
-                    $("#btn-save").hide();
-                } else {
+                if (formChanged) {
                     $("#btn-save").show();
+                } else {
+                    $("#btn-save").hide();
                 }
             }
         });

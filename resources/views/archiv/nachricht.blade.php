@@ -72,7 +72,7 @@
         <!-- Show/Hide Button for Archived Messages -->
         @if($nachricht->is_archived)
             <div class="mt-4 pt-4 border-t border-gray-300" x-data="{ showContent: false }">
-                <button class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200"
+                <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200"
                         @click="showContent = !showContent">
                     <i class="fas" :class="showContent ? 'fa-eye-slash' : 'fa-eye'"></i>
                     <span x-text="showContent ? 'Text ausblenden' : 'Text anzeigen'"></span>
@@ -195,7 +195,7 @@
         <!-- Show Feedback Responses (Admin only) -->
         @can('view rueckmeldungen')
             <div class="bg-gray-50 border-t border-gray-200 px-6 py-4" x-data="{ showFeedback: false }">
-                <button class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
+                <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
                         @click="showFeedback = !showFeedback">
                     <i class="fas" :class="showFeedback ? 'fa-eye-slash' : 'fa-eye'"></i>
                     <span x-text="showFeedback ? 'Rückmeldungen ausblenden' : '{{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen'"></span>
