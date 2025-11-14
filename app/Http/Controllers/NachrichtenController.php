@@ -359,7 +359,7 @@ class NachrichtenController extends Controller
         if ($request->has('urgent') and $request->input('urgent') == 1 and $user->can('send urgent message') and Hash::check($request->input('password'), $user->password)) {
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $post);
 
-            @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo));
+            @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo, auth()->user()->email, auth()->user()->name));
             $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
             $post->update([
                 'send_at' => Carbon::now()
@@ -547,7 +547,7 @@ class NachrichtenController extends Controller
 
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $posts);
 
-            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
+            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo, auth()->user()->email, auth()->user()->name));
             $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
             $posts->update([
                 'send_at' => Carbon::now()
