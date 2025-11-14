@@ -152,10 +152,14 @@
                             </td>
                             <td class="px-4 py-3">
                                 <div class="text-sm text-gray-900">
-                                    <div class="{{ strlen($log->message) > 100 ? 'cursor-pointer' : '' }}" @if(strlen($log->message) > 100) @click="expanded = !expanded" @endif>
-                                        <span x-show="!expanded">{{ Str::limit($log->message, 100) }}</span>
-                                        <span x-show="expanded" x-cloak>{{ $log->message }}</span>
-                                        @if(strlen($log->message) > 100)
+                                    @php
+                                        $message = is_array($log->message) ? json_encode($log->message, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : $log->message;
+                                        $messageLength = strlen($message);
+                                    @endphp
+                                    <div class="{{ $messageLength > 100 ? 'cursor-pointer' : '' }}" @if($messageLength > 100) @click="expanded = !expanded" @endif>
+                                        <span x-show="!expanded">{{ Str::limit($message, 100) }}</span>
+                                        <span x-show="expanded" x-cloak>{{ $message }}</span>
+                                        @if($messageLength > 100)
                                             <button type="button" class="text-blue-600 hover:text-blue-800 text-xs ml-1">
                                                 <span x-show="!expanded">mehr anzeigen</span>
                                                 <span x-show="expanded" x-cloak>weniger anzeigen</span>
@@ -167,7 +171,12 @@
                                             <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
                                                 <i class="fas fa-info-circle mr-1"></i>Kontext anzeigen
                                             </summary>
-                                            <pre class="mt-2 p-2 bg-gray-100 rounded text-xs overflow-x-auto">{{ $log->context }}</pre>
+                                            @php
+                                                $context = is_array($log->context) || is_object($log->context)
+                                                    ? json_encode($log->context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                                                    : $log->context;
+                                            @endphp
+                                            <pre class="mt-2 p-2 bg-gray-100 rounded text-xs overflow-x-auto">{{ $context }}</pre>
                                         </details>
                                     @endif
                                 </div>
