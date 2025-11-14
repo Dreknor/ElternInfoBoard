@@ -99,7 +99,6 @@ class CareController extends Controller
             try {
                 $user = User::find($careSettings->info_to);
                 if ($user) {
-                    Log::info($user);
                     $notification = new Notification([
                         'user_id' => $user->id,
                         'type' => 'info',
@@ -107,6 +106,13 @@ class CareController extends Controller
                         'message' => 'Das Kind ' . $child->first_name .' '. $child->last_name . ' wurde nicht rechtzeitig abgemeldet.',
                     ]);
                     $notification->save();
+
+                    Log::info('Kind verspätet abgeholt', [
+                        'child_id' => $child->id,
+                        'child_name' => $child->first_name .' '. $child->last_name,
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                    ]);
                 }
             } catch (\Exception $e) {
                 Log::error('Error sending notification: ' . $e->getMessage());
