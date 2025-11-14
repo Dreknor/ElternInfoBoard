@@ -76,7 +76,7 @@ class LogEmailSent
         }
 
         // Log-Eintrag erstellen
-        Log::info('E-Mail versendet', [
+        Log::debug('E-Mail versendet', [
             'empfaenger' => implode(', ', $recipients),
             'betreff' => $subject,
             'zeitpunkt' => now()->toDateTimeString(),
