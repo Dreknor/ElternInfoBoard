@@ -406,4 +406,120 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt User, die nicht in der Gruppe Vereinsmitglied sind
+     *
+     * @return View
+     */
+    public function showNonVereinsmitglieder()
+    {
+        $vereinsgruppe = Group::where('name', 'Vereinsmitglied')->first();
+
+        // Alle User, die weder selbst noch deren Sorg2 in der Gruppe Vereinsmitglied sind
+        $users = User::whereDoesntHave('groups', function ($query) use ($vereinsgruppe) {
+            $query->where('groups.id', $vereinsgruppe?->id);
+        })
+        ->where(function ($query) use ($vereinsgruppe) {
+            // User ohne Sorg2 ODER User deren Sorg2 nicht in der Gruppe ist
+            $query->whereNull('sorg2')
+                ->orWhereDoesntHave('sorgeberechtigter2.groups', function ($q) use ($vereinsgruppe) {
+                    $q->where('groups.id', $vereinsgruppe?->id);
+                });
+        })
+        ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+        ->get();
+
+        // Bereite die User-Daten für Alpine.js vor
+        $usersData = $users->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'groups' => $u->groups->pluck('name')->toArray(),
+                'roles' => $u->roles->pluck('name')->toArray(),
+                'sorg2' => $u->sorgeberechtigter2?->name,
+                'removed' => false
+            ];
+        })->values();
+
+        // Alle verfügbaren Rollen für den Filter
+        $allRoles = Role::all();
+
+        return view('user.showNonVereinsmitglieder', [
+            'users' => $users,
+            'usersData' => $usersData,
+            'roles' => $allRoles,
+            'vereinsgruppe' => $vereinsgruppe,
+        ]);
+    }
+
+    /**
+     * Fügt einen User zur Gruppe Vereinsmitglied hinzu (Ajax)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function addToVereinsmitglied(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Benutzer nicht gefunden'
+            ], 404);
+        }
+
+        $vereinsgruppe = Group::where('name', 'Vereinsmitglied')->first();
+
+        if (!$vereinsgruppe) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gruppe Vereinsmitglied nicht gefunden'
+            ], 404);
+        }
+
+        // Zur Gruppe hinzufügen
+        $user->groups()->syncWithoutDetaching([$vereinsgruppe->id]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Benutzer zur Gruppe Vereinsmitglied hinzugefügt'
+        ]);
+    }
+
+    /**
+     * Überprüft alle Vereinsmitglieder und fügt ihnen die Rolle hinzu falls nicht vorhanden
+     *
+     * @return RedirectResponse
+     */
+    public function syncVereinsmitgliederRole()
+    {
+        $vereinsgruppe = Group::where('name', 'Vereinsmitglied')->first();
+        $vereinsrolle = Role::where('name', 'Vereinsmitglied')->first();
+
+        if (!$vereinsgruppe || !$vereinsrolle) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Gruppe oder Rolle Vereinsmitglied nicht gefunden',
+            ]);
+        }
+
+        $users = $vereinsgruppe->users;
+        $updated = 0;
+
+        foreach ($users as $user) {
+            if (!$user->hasRole('Vereinsmitglied')) {
+                $user->assignRole('Vereinsmitglied');
+                $updated++;
+            }
+        }
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => "$updated Benutzer(n) wurde die Rolle Vereinsmitglied zugewiesen",
+        ]);
+    }
+
 }

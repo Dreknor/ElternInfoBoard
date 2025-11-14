@@ -344,6 +344,10 @@ Route::middleware('auth')->group(function () {
             Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
             Route::delete('users/mass/delete', [UserController::class, 'massDelete'])->name('users.massDelete');
 
+            Route::get('users/vereinsmitglieder/non-members', [UserController::class, 'showNonVereinsmitglieder']);
+            Route::post('users/vereinsmitglieder/add', [UserController::class, 'addToVereinsmitglied']);
+            Route::post('users/vereinsmitglieder/sync-role', [UserController::class, 'syncVereinsmitgliederRole']);
+
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
             //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
