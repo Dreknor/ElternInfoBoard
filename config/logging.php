@@ -60,8 +60,6 @@ return [
         'database' => [
             'driver' => 'custom',
             'via' => danielme85\LaravelLogToDB\LogToDbHandler::class,
-            'detailed' => true,
-            'queue' => true,
         ],
 
         'single' => [

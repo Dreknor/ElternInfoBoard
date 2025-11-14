@@ -75,11 +75,15 @@ class LogEmailSent
             $from = config('mail.from.address');
         }
 
-        Log::debug(
-            'E-Mail gesendet: ' . $subject . ' an ' . implode(', ', $recipients) . ' von ' . $from
-        , [
-            ''
+        Log::debug('E-Mail gesendet:' , [
+            'Betreff' => $subject,
+            'Empfänger' => $recipients,
+            'Absender' => $from,
+            'Zeitpunkt' => now()->format('d.m.Y H:i:s')
         ]);
+
+        Log::debug(
+            'E-Mail gesendet: ' . $subject . ' an ' . implode(', ', $recipients) . ' von ' . $from);
 
     }
 }
