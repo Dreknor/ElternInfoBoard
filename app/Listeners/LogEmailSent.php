@@ -82,9 +82,6 @@ class LogEmailSent
             'Zeitpunkt' => now()->format('d.m.Y H:i:s')
         ]);
 
-        Log::debug(
-            'E-Mail gesendet: ' . $subject . ' an ' . implode(', ', $recipients) . ' von ' . $from);
-
     }
 }
 
