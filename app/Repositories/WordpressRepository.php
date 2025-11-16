@@ -65,23 +65,34 @@ class WordpressRepository
 
         if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')){
             $repository = new WordpressRepository();
+
+            // Erstelle zunächst den Post ohne Bilder (oder aktualisiere ihn)
             $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
 
             $return = json_decode($wp_call);
-            $post->update([
-                'published_wp_id' => $return->id
-            ]);
 
-
-
-            if (count($post->getMedia('header'))>0){
-                $return = $this->push_image($post, $post->getMedia('header')->first());
-                $media_id = json_decode($return)->id;
-                $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id, $media_id);
-
+            // Nur die ID setzen, wenn es ein neuer Post ist
+            if ($post->published_wp_id == null) {
+                $post->update([
+                    'published_wp_id' => $return->id
+                ]);
             }
 
+            $media_id = null;
 
+            // Header-Bild hochladen
+            if (count($post->getMedia('header'))>0){
+                $result = $this->push_image($post, $post->getMedia('header')->first());
+                if ($result) {
+                    $media_id = json_decode($result)->id;
+                }
+            }
+
+            // Alle Bilder aus der 'images' Collection hochladen und in den Content einbinden
+            $content = $this->embedImagesInContent($post);
+
+            // Post mit Bildern aktualisieren
+            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $content, $post->released, $post->published_wp_id, $media_id);
         }
     }
 
@@ -109,6 +120,69 @@ class WordpressRepository
             curl_close( $ch );
             return $result;
         }
+
+        return null;
+    }
+
+    /**
+     * Lädt alle Bilder eines Posts zu WordPress hoch und bindet sie in den Content ein
+     */
+    private function embedImagesInContent(Post $post): string
+    {
+        $content = $post->news;
+
+        // Alle Bilder aus der 'images' Collection hochladen
+        $images = $post->getMedia('images');
+
+        // Auch Bilder aus der 'files' Collection berücksichtigen (falls sie Bilder sind)
+        $files = $post->getMedia('files')->filter(function($file) {
+            return Str::contains($file->mime_type, 'image');
+        });
+
+        // Kombiniere beide Collections
+        $allImages = $images->merge($files);
+
+        if (count($allImages) > 0) {
+            $uploadedImages = [];
+
+            foreach ($allImages as $image) {
+                if ($post->published_wp_id != null) {
+                    $result = $this->push_image($post, $image);
+                    if ($result) {
+                        $imageData = json_decode($result);
+                        if (isset($imageData->source_url)) {
+                            $uploadedImages[] = [
+                                'url' => $imageData->source_url,
+                                'alt' => $image->name ?? '',
+                                'caption' => $image->custom_properties['caption'] ?? ''
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // Bilder in den Content einfügen
+            if (count($uploadedImages) > 0) {
+                $imageHtml = "\n\n<!-- wp:gallery -->\n<figure class=\"wp-block-gallery\">\n";
+
+                foreach ($uploadedImages as $imgData) {
+                    $caption = !empty($imgData['caption']) ? '<figcaption>' . htmlspecialchars($imgData['caption']) . '</figcaption>' : '';
+                    $imageHtml .= sprintf(
+                        '<figure class="wp-block-image"><img src="%s" alt="%s" />%s</figure>' . "\n",
+                        htmlspecialchars($imgData['url']),
+                        htmlspecialchars($imgData['alt']),
+                        $caption
+                    );
+                }
+
+                $imageHtml .= "</figure>\n<!-- /wp:gallery -->\n";
+
+                // Bilder am Ende des Contents hinzufügen
+                $content .= $imageHtml;
+            }
+        }
+
+        return $content;
     }
 
 }

@@ -34,7 +34,7 @@ class PostObserver
 
         if ($wp_push_is_enabled == 1 and $post->published_wp_id != NULL and auth()->user()->can('push to wordpress')){
             $repository = new WordpressRepository();
-            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
+            $repository->should_post($post);
         }
 
         Cache::forget('posts_' . auth()->id());
