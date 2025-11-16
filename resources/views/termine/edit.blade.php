@@ -97,7 +97,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-12">
-                        @if(auth()->user()->can('edit termin'))
+                        @can('delete', $termin)
                             <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
                                 @csrf
                                 @method('delete')
@@ -105,7 +105,7 @@
                                     Termin löschen<i class="far fa-trash-alt"></i>
                                 </button>
                             </form>
-                        @endif
+                        @endcan
                     </div>
 
                 </div>
@@ -123,7 +123,7 @@
 @push('js')
 
     <script>
-        $('#submitBtn').on('click', function (event) {
+        $('#submitBtn').on('click', function () {
             $("#terminForm").submit();
         })
     </script>
