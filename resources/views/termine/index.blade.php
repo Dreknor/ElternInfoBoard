@@ -79,7 +79,7 @@
                                                                 <img src="{{asset('img/icon-google-cal.png')}}" style="width: 16px; height: 16px;" alt="Google Calendar">
                                                             </a>
 
-                                                            @can('edit termine')
+                                                            @can('edit termin')
                                                                 <a href="{{ url('/termin/'.$termin->id.'/edit') }}" class="btn btn-sm btn-outline-primary">
                                                                     <i class="fas fa-edit"></i>
                                                                 </a>
