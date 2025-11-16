@@ -64,36 +64,59 @@ class WordpressRepository
         $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
         if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')){
-            $repository = new WordpressRepository();
+            $this->pushPost($post);
+        }
+    }
 
-            // Erstelle zunächst den Post ohne Bilder (oder aktualisiere ihn)
-            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
+    /**
+     * Pusht einen Post zu WordPress
+     */
+    public function pushPost(Post $post): void
+    {
+        // Erstelle zunächst den Post ohne Bilder (oder aktualisiere ihn)
+        $wp_call = $this->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
 
-            $return = json_decode($wp_call);
+        $return = json_decode($wp_call);
 
-            // Nur die ID setzen, wenn es ein neuer Post ist
-            if ($post->published_wp_id == null) {
-                $post->update([
-                    'published_wp_id' => $return->id
-                ]);
+        // Nur die ID setzen, wenn es ein neuer Post ist
+        if ($post->published_wp_id == null) {
+            $post->update([
+                'published_wp_id' => $return->id
+            ]);
+        }
+
+        $media_id = null;
+        $firstImageUsedAsHeader = false;
+
+        // Header-Bild hochladen
+        if (count($post->getMedia('header')) > 0) {
+            $result = $this->push_image($post, $post->getMedia('header')->first());
+            if ($result) {
+                $media_id = json_decode($result)->id;
+            }
+        } else {
+            // Wenn kein Header-Bild vorhanden ist, verwende das erste angehängte Bild
+            $allImages = $post->getMedia('images');
+            if ($allImages->isEmpty()) {
+                $allImages = $post->getMedia('files')->filter(function($file) {
+                    return Str::contains($file->mime_type, 'image');
+                });
             }
 
-            $media_id = null;
-
-            // Header-Bild hochladen
-            if (count($post->getMedia('header'))>0){
-                $result = $this->push_image($post, $post->getMedia('header')->first());
+            if ($allImages->isNotEmpty()) {
+                $result = $this->push_image($post, $allImages->first());
                 if ($result) {
                     $media_id = json_decode($result)->id;
+                    $firstImageUsedAsHeader = true;
                 }
             }
-
-            // Alle Bilder aus der 'images' Collection hochladen und in den Content einbinden
-            $content = $this->embedImagesInContent($post);
-
-            // Post mit Bildern aktualisieren
-            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $content, $post->released, $post->published_wp_id, $media_id);
         }
+
+        // Alle Bilder aus der 'images' Collection hochladen und in den Content einbinden
+        $content = $this->embedImagesInContent($post, $firstImageUsedAsHeader);
+
+        // Post mit Bildern aktualisieren
+        $wp_call = $this->remote_post(Str::slug($post->header), $post->header, $content, $post->released, $post->published_wp_id, $media_id);
     }
 
     public function push_image(Post $post, Media $image){
@@ -127,7 +150,7 @@ class WordpressRepository
     /**
      * Lädt alle Bilder eines Posts zu WordPress hoch und bindet sie in den Content ein
      */
-    private function embedImagesInContent(Post $post): string
+    private function embedImagesInContent(Post $post, bool $skipFirstImage = false): string
     {
         $content = $post->news;
 
@@ -141,6 +164,11 @@ class WordpressRepository
 
         // Kombiniere beide Collections
         $allImages = $images->merge($files);
+
+        // Wenn das erste Bild als Header verwendet wurde, überspringe es
+        if ($skipFirstImage && $allImages->isNotEmpty()) {
+            $allImages = $allImages->slice(1);
+        }
 
         if (count($allImages) > 0) {
             $uploadedImages = [];

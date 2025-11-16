@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CommentPostRequest;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
+use App\Jobs\PushPostToWordpress;
 use App\Mail\AktuelleInformationen;
 use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
@@ -349,8 +350,7 @@ class NachrichtenController extends Controller
         }
 
         if ($request->wp_push){
-            $repository = new WordpressRepository();
-            $repository->should_post($post);
+            PushPostToWordpress::dispatch($post);
         }
 
         $Meldung = 'Nachricht wurde erstellt.';
@@ -496,8 +496,7 @@ class NachrichtenController extends Controller
 
 
         if ($request->wp_push){
-            $repository = new WordpressRepository();
-            $repository->should_post($posts);
+            PushPostToWordpress::dispatch($posts);
         }
 
 

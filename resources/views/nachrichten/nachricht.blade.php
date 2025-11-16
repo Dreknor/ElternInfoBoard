@@ -1,55 +1,58 @@
-    @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
+@if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
         <!-- Image Gallery Type -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
             @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author))
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 border-b border-gray-200">
-                    <div class="flex justify-end gap-2">
-                        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
-                            <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
-                               title="Download"
-                               class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
-                                <i class="fa fa-download mr-1"></i>
-                            </a>
-                        @endif
-                        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
-                            <a href="{{url('/posts/edit/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
-                                <i class="far fa-edit"></i>
-                            </a>
-                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
-                                <i class="fas fa-redo"></i>
-                            </a>
-                        @else
-                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
-                                <i class="far fa-clone"></i>
-                            </a>
-                        @endif
-                        @if($nachricht->released == 0)
-                            <a href="{{url('/posts/release/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
-                                <i class="far fa-eye"></i>
-                            </a>
-                        @endif
-                        @if($nachricht->released == 1 and !$nachricht->is_archived)
-                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
-                                <i class="fas fa-archive"></i>
-                            </a>
-                        @endif
-                        @if(auth()->user()->can('make sticky'))
-                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 @if($nachricht->sticky) bg-green-100 text-green-700 hover:bg-green-200 @else bg-purple-600 hover:bg-purple-700 text-white @endif text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
-                                <i class="fas fa-thumbtack" @if($nachricht->sticky) style="transform: rotate(45deg)" @endif></i>
-                            </a>
-                        @endif
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex gap-2">
+                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                                   title="Download"
+                                   class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                    <i class="fa fa-download mr-1"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                                <a href="{{url('/posts/edit/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                            @else
+                                <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
+                                    <i class="far fa-clone"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->released == 0)
+                                <a href="{{url('/posts/release/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
+                                    <i class="far fa-eye"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->released == 1 and !$nachricht->is_archived)
+                                <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                    <i class="fas fa-archive"></i>
+                                </a>
+                            @endif
+                            @if(auth()->user()->can('make sticky'))
+                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 @if($nachricht->sticky) bg-green-100 text-green-700 hover:bg-green-200 @else bg-purple-600 hover:bg-purple-700 text-white @endif text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                    <i class="fas fa-thumbtack" @if($nachricht->sticky) style="transform: rotate(45deg)" @endif></i>
+                                </a>
+                            @endif
+                        </div>
+                        @include('nachrichten.partials.wp-status')
                     </div>
                 </div>
             @endif
@@ -60,7 +63,7 @@
                         @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
                             <div class="carousel-item @if($loop->first) active @endif">
                                 <a href="{{url('/image/'.$media->id)}}" target="_blank" class="block">
-                                    <img class="d-block w-full h-auto mx-auto" src="{{url('/image/'.$media->id)}}" style="max-height: 600px; object-fit: contain;">
+                                    <img class="d-block w-full h-auto mx-auto" src="{{url('/image/'.$media->id)}}" alt="{{$media->name}}" style="max-height: 600px; object-fit: contain;">
                                     @if($nachricht->rueckmeldung?->type == 'bild')
                                         <p class="text-center text-sm text-gray-600 mt-2">{{$media->name}}</p>
                                     @endif
@@ -91,53 +94,56 @@
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">
             @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author))
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 border-b border-gray-200">
-                    <div class="flex justify-end gap-2">
-                        @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
-                            <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
-                               title="Download"
-                               class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
-                                <i class="fa fa-download mr-1"></i>
-                            </a>
-                        @endif
-                        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
-                            <a href="{{url('/posts/edit/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
-                                <i class="far fa-edit"></i>
-                            </a>
-                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
-                                <i class="fas fa-redo"></i>
-                            </a>
-                        @else
-                            <a href="{{url('/posts/touch/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
-                                <i class="far fa-clone"></i>
-                            </a>
-                        @endif
-                        @if($nachricht->released == 0)
-                            <a href="{{url('/posts/release/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
-                                <i class="far fa-eye"></i>
-                            </a>
-                        @endif
-                        @if($nachricht->released == 1 and !$nachricht->is_archived)
-                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
-                                <i class="fas fa-archive"></i>
-                            </a>
-                        @endif
-                        @if(auth()->user()->can('make sticky'))
-                            <a href="{{url('/posts/stick/'.$nachricht->id)}}"
-                               class="inline-flex items-center px-3 py-1.5 @if($nachricht->sticky) bg-green-100 text-green-700 hover:bg-green-200 @else bg-purple-600 hover:bg-purple-700 text-white @endif text-sm font-medium rounded-lg transition-colors duration-200"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
-                                <i class="fas fa-thumbtack" @if($nachricht->sticky) style="transform: rotate(45deg)" @endif></i>
-                            </a>
-                        @endif
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex gap-2">
+                            @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'abfrage')
+                                <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id."/download")}}"
+                                   title="Download"
+                                   class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                    <i class="fa fa-download mr-1"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)))
+                                <a href="{{url('/posts/edit/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht bearbeiten">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht nach oben schieben">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                            @else
+                                <a href="{{url('/posts/touch/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht kopieren">
+                                    <i class="far fa-clone"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->released == 0)
+                                <a href="{{url('/posts/release/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht veröffentlichen">
+                                    <i class="far fa-eye"></i>
+                                </a>
+                            @endif
+                            @if($nachricht->released == 1 and !$nachricht->is_archived)
+                                <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                    <i class="fas fa-archive"></i>
+                                </a>
+                            @endif
+                            @if(auth()->user()->can('make sticky'))
+                                <a href="{{url('/posts/stick/'.$nachricht->id)}}"
+                                   class="inline-flex items-center px-3 py-1.5 @if($nachricht->sticky) bg-green-100 text-green-700 hover:bg-green-200 @else bg-purple-600 hover:bg-purple-700 text-white @endif text-sm font-medium rounded-lg transition-colors duration-200"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht anheften">
+                                    <i class="fas fa-thumbtack" @if($nachricht->sticky) style="transform: rotate(45deg)" @endif></i>
+                                </a>
+                            @endif
+                        </div>
+                        @include('nachrichten.partials.wp-status')
                     </div>
                 </div>
             @endif
@@ -192,8 +198,11 @@
 
                         <!-- Admin Actions -->
                         @if(request()->segment(1)!="kiosk" and (auth()->user()->can('edit posts') or auth()->user()->id == $nachricht->author))
-                            <div class="flex flex-wrap gap-2 md:flex-shrink-0">
-                                @include('nachrichten.header.admin-post')
+                            <div class="flex flex-col items-end gap-2">
+                                <div class="flex flex-wrap gap-2 md:flex-shrink-0">
+                                    @include('nachrichten.header.admin-post')
+                                </div>
+                                @include('nachrichten.partials.wp-status')
                             </div>
                         @endif
                     </div>
@@ -322,3 +331,4 @@
             </div>
         </div>
     @endif
+
