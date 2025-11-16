@@ -34,10 +34,11 @@ class Post extends Model implements HasMedia, ReactableInterface, Auditable
     use \OwenIt\Auditing\Auditable;
 
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'no_header'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'no_header'];
 
     protected $casts = [
         'archiv_ab' => 'datetime',
+        'read_receipt_deadline' => 'datetime',
         'reactable' => 'boolean',
         'external' => 'boolean',
         'read_receipt' => 'boolean',

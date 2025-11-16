@@ -126,6 +126,14 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-12" id="read_receipt_deadline_group" @if($post->read_receipt != 1) style="display: none;" @endif>
+                            <div class="form-group">
+                                <label>Frist für Lesebestätigung (optional)</label>
+                                <input type="datetime-local" class="form-control" name="read_receipt_deadline" id="read_receipt_deadline"
+                                       value="{{ $post->read_receipt_deadline ? $post->read_receipt_deadline->format('Y-m-d\TH:i') : '' }}">
+                                <small class="form-text text-muted">Leer lassen, um das Archivierungsdatum zu verwenden</small>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-12">
                                 <div class="form-group">
@@ -892,6 +900,17 @@
         $('.date-input').on('change', function (event) {
             event.target.value = event.target.value.substr(0, 19);
         })
+    </script>
+
+    <script>
+        // Show/hide read receipt deadline field
+        $('#read_receiptSelect').on('change', function() {
+            if ($(this).val() == '1') {
+                $('#read_receipt_deadline_group').show();
+            } else {
+                $('#read_receipt_deadline_group').hide();
+            }
+        });
     </script>
 
     <script>
