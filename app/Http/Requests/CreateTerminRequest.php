@@ -13,7 +13,8 @@ class CreateTerminRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()->can('edit termin');
+        $user = auth()->user();
+        return $user && ($user->can('edit termin') || $user->can('create termine'));
     }
 
     /**

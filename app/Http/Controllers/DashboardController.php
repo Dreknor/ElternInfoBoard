@@ -32,7 +32,10 @@ class DashboardController extends Controller
 
         if (auth()->user()->can('view all')) {
             $nachrichten = Post::query()
-                ->whereNull('archiv_ab')
+                ->where(function ($query) {
+                    $query->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', Carbon::now());
+                })
                 ->orderBy('created_at', 'desc')
                 ->take(5)
                 ->get();
