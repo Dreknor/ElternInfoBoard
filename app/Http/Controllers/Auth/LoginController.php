@@ -157,6 +157,12 @@ class LoginController extends Controller
 
         $keycloakSetting = new \App\Settings\KeyCloakSetting();
 
+        Log::debug('keyCloak callback called', [
+            'user' => Socialite::driver('keycloak')->user(),
+            'setting' => $keycloakSetting,
+
+        ]);
+
         if ($keycloakSetting->enabled == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
