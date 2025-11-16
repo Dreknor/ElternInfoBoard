@@ -13,14 +13,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Create the "delete logs" permission
-        $permission = Permission::create(['name' => 'delete logs']);
+        try {
+            // Create the "delete logs" permission
+            $permission = Permission::create(['name' => 'delete logs']);
 
-        // Assign to admin role if it exists
-        $adminRole = Role::where('name', 'admin')->first();
-        if ($adminRole) {
-            $adminRole->givePermissionTo($permission);
+            // Assign to admin role if it exists
+            $adminRole = Role::where('name', 'admin')->first();
+            if ($adminRole) {
+                $adminRole->givePermissionTo($permission);
+            }
+        } catch (\Exception $e) {
+            // Log the exception or handle it as needed
+            \Illuminate\Support\Facades\Log::error('Failed to create delete logs permission: ' . $e->getMessage());
         }
+
     }
 
     /**

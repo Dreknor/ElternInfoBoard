@@ -11,18 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('discussion_subscriptions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('discussion_id')->constrained()->onDelete('cascade');
-            $table->boolean('email_notifications')->default(true);
-            $table->boolean('web_notifications')->default(true);
-            $table->timestamps();
+        try {
+            Schema::create('discussion_subscriptions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->foreignId('discussion_id')->constrained()->onDelete('cascade');
+                $table->boolean('email_notifications')->default(true);
+                $table->boolean('web_notifications')->default(true);
+                $table->timestamps();
 
-            $table->unique(['user_id', 'discussion_id']);
-            $table->index('user_id');
-            $table->index('discussion_id');
-        });
+                $table->unique(['user_id', 'discussion_id']);
+                $table->index('user_id');
+                $table->index('discussion_id');
+            });
+        } catch (\Exception $e) {
+            // Log the exception or handle it as needed
+            \Illuminate\Support\Facades\Log::error('Failed to create discussion_subscriptions table: ' . $e->getMessage());
+        }
+
     }
 
     /**
