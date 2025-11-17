@@ -33,6 +33,32 @@ class ReadReceiptsController extends Controller
     }
 
     /**
+     * Admin: Bestätigt Lesebestätigung für einen bestimmten Nutzer
+     * (z.B. wenn E-Mail-Lesebestätigung eingegangen ist)
+     */
+    public function confirmForUser(Request $request, Post $post, \App\Model\User $user)
+    {
+        $receipt = ReadReceipts::firstOrCreate([
+            'post_id' => $post->id,
+            'user_id' => $user->id,
+        ]);
+
+        if (is_null($receipt->confirmed_at)) {
+            $receipt->confirmed_at = now();
+            $receipt->save();
+        }
+
+        Log::info($request->user()->name . ' hat Lesebestätigung für Nutzer ' . $user->name . ' und Nachricht "' . $post->header . '" bestätigt.');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lesebestätigung für ' . $user->name . ' wurde gespeichert.',
+            'user_id' => $user->id,
+            'confirmed_at' => $receipt->confirmed_at->format('d.m.Y H:i')
+        ]);
+    }
+
+    /**
      * Erste Erinnerung: 3 Tage vor Ablauf
      * Versendet E-Mail und In-App-Benachrichtigung
      */

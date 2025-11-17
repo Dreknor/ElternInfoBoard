@@ -181,7 +181,7 @@
                             <div class="divide-y divide-gray-200">
                                 @foreach($reminded->sortByDesc(fn($r)=>$r['receipt']->reminded_at) as $entry)
                                     @php $receipt = $entry['receipt']; $u = $entry['user']; @endphp
-                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-yellow-50 transition-colors duration-150">
+                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-yellow-50 transition-colors duration-150" data-user-id="{{ $u->id }}">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                                                 <span class="text-white font-bold text-xs">{{ substr($u->name, 0, 1) }}</span>
@@ -191,7 +191,12 @@
                                                 <p class="text-xs text-gray-500 mb-0"><i class="far fa-clock mr-1"></i>{{ $receipt->reminded_at?->format('d.m.Y H:i') }} Uhr</p>
                                             </div>
                                         </div>
-                                        <i class="fas fa-bell text-yellow-500"></i>
+                                        <button
+                                            onclick="confirmReadReceipt({{ $post->id }}, {{ $u->id }}, '{{ $u->name }}')"
+                                            class="ml-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-colors duration-150"
+                                            title="Als gelesen bestätigen">
+                                            <i class="fas fa-check mr-1"></i>Bestätigen
+                                        </button>
                                     </div>
                                 @endforeach
                             </div>
@@ -216,7 +221,7 @@
                         @if($pending->count() > 0)
                             <div class="divide-y divide-gray-200">
                                 @foreach($pending as $u)
-                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-50 transition-colors duration-150">
+                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-50 transition-colors duration-150" data-user-id="{{ $u->id }}">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
                                                 <span class="text-white font-bold text-xs">
@@ -225,7 +230,12 @@
                                             </div>
                                             <p class="text-sm font-medium text-gray-900 mb-0">{{ $u->name }}</p>
                                         </div>
-                                        <i class="fas fa-hourglass-half text-orange-500"></i>
+                                        <button
+                                            onclick="confirmReadReceipt({{ $post->id }}, {{ $u->id }}, '{{ $u->name }}')"
+                                            class="ml-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-colors duration-150"
+                                            title="Als gelesen bestätigen">
+                                            <i class="fas fa-check mr-1"></i>Bestätigen
+                                        </button>
                                     </div>
                                 @endforeach
                             </div>
@@ -240,4 +250,43 @@
             </div>
         </div>
     </div>
+
+    <script>
+    function confirmReadReceipt(postId, userId, userName) {
+        if (!confirm(`Lesebestätigung für ${userName} manuell bestätigen?`)) {
+            return;
+        }
+
+        const button = event.target.closest('button');
+        const originalContent = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Lädt...';
+
+        fetch(`/post/${postId}/readReceipt/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload page to update lists
+                location.reload();
+            } else {
+                alert('Fehler beim Speichern der Lesebestätigung');
+                button.disabled = false;
+                button.innerHTML = originalContent;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Fehler beim Speichern der Lesebestätigung');
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        });
+    }
+    </script>
 @endif
