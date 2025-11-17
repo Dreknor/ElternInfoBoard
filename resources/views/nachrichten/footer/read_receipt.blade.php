@@ -137,15 +137,23 @@
                     <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 py-2">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-check-circle text-white"></i>
-                            <h6 class="text-sm font-semibold text-white mb-0">{{ __('Bestätigt') }} ({{ $confirmedUsers }})</h6>
+                            <h6 class="text-sm font-semibold text-white mb-0">{{ __('Bestätigt') }} (<span class="confirmed-count">{{ $confirmedUsers }}</span>)</h6>
                         </div>
                     </div>
-                    <div class="max-h-96 overflow-y-auto">
+                    @if($confirmedUsers > 0)
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                        <input type="text"
+                               class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                               placeholder="Suchen..."
+                               onkeyup="filterUsers(this, 'confirmed-list-{{ $post->id }}', 'confirmed-count')">
+                    </div>
+                    @endif
+                    <div class="max-h-96 overflow-y-auto" id="confirmed-list-{{ $post->id }}">
                         @if($confirmedUsers > 0)
                             <div class="divide-y divide-gray-200">
                                 @foreach($confirmed->sortByDesc(fn($r)=>$r['receipt']->confirmed_at) as $entry)
                                     @php $receipt = $entry['receipt']; $u = $entry['user']; @endphp
-                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-green-50 transition-colors duration-150">
+                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-green-50 transition-colors duration-150 user-item" data-name="{{ strtolower($u->name) }}">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center flex-shrink-0">
                                                 <span class="text-white font-bold text-xs">{{ substr($u->name, 0, 1) }}</span>
@@ -173,15 +181,23 @@
                     <div class="bg-gradient-to-r from-yellow-500 to-amber-500 px-4 py-2">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-bell text-white"></i>
-                            <h6 class="text-sm font-semibold text-white mb-0">{{ __('Erinnert') }} ({{ $remindedUsers }})</h6>
+                            <h6 class="text-sm font-semibold text-white mb-0">{{ __('Erinnert') }} (<span class="reminded-count">{{ $remindedUsers }}</span>)</h6>
                         </div>
                     </div>
-                    <div class="max-h-96 overflow-y-auto">
+                    @if($remindedUsers > 0)
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                        <input type="text"
+                               class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                               placeholder="Suchen..."
+                               onkeyup="filterUsers(this, 'reminded-list-{{ $post->id }}', 'reminded-count')">
+                    </div>
+                    @endif
+                    <div class="max-h-96 overflow-y-auto" id="reminded-list-{{ $post->id }}">
                         @if($remindedUsers > 0)
                             <div class="divide-y divide-gray-200">
                                 @foreach($reminded->sortByDesc(fn($r)=>$r['receipt']->reminded_at) as $entry)
                                     @php $receipt = $entry['receipt']; $u = $entry['user']; @endphp
-                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-yellow-50 transition-colors duration-150" data-user-id="{{ $u->id }}">
+                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-yellow-50 transition-colors duration-150 user-item" data-user-id="{{ $u->id }}" data-name="{{ strtolower($u->name) }}">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                                                 <span class="text-white font-bold text-xs">{{ substr($u->name, 0, 1) }}</span>
@@ -214,14 +230,22 @@
                     <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-clock text-white"></i>
-                            <h6 class="text-sm font-semibold text-white mb-0">{{ __('Nicht bestätigt') }} ({{ $pending->count() }})</h6>
+                            <h6 class="text-sm font-semibold text-white mb-0">{{ __('Nicht bestätigt') }} (<span class="pending-count">{{ $pending->count() }}</span>)</h6>
                         </div>
                     </div>
-                    <div class="max-h-96 overflow-y-auto">
+                    @if($pending->count() > 0)
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                        <input type="text"
+                               class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                               placeholder="Suchen..."
+                               onkeyup="filterUsers(this, 'pending-list-{{ $post->id }}', 'pending-count')">
+                    </div>
+                    @endif
+                    <div class="max-h-96 overflow-y-auto" id="pending-list-{{ $post->id }}">
                         @if($pending->count() > 0)
                             <div class="divide-y divide-gray-200">
                                 @foreach($pending as $u)
-                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-50 transition-colors duration-150" data-user-id="{{ $u->id }}">
+                                    <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-50 transition-colors duration-150 user-item" data-user-id="{{ $u->id }}" data-name="{{ strtolower($u->name) }}">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
                                                 <span class="text-white font-bold text-xs">
@@ -252,6 +276,29 @@
     </div>
 
     <script>
+    function filterUsers(input, listId, countClass) {
+        const searchTerm = input.value.toLowerCase();
+        const listContainer = document.getElementById(listId);
+        const userItems = listContainer.querySelectorAll('.user-item');
+        let visibleCount = 0;
+
+        userItems.forEach(item => {
+            const userName = item.getAttribute('data-name');
+            if (userName.includes(searchTerm)) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Update count in header
+        const countSpan = document.querySelector('.' + countClass);
+        if (countSpan) {
+            countSpan.textContent = visibleCount;
+        }
+    }
+
     function confirmReadReceipt(postId, userId, userName) {
         if (!confirm(`Lesebestätigung für ${userName} manuell bestätigen?`)) {
             return;
