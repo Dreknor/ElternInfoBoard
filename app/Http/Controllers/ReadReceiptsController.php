@@ -17,10 +17,15 @@ class ReadReceiptsController extends Controller
 
     public function store(Request $request)
     {
-        ReadReceipts::firstOrCreate([
+        $receipt = ReadReceipts::firstOrCreate([
             'post_id' => $request->post_id,
             'user_id' => auth()->id(),
         ]);
+        // Markiere als bestätigt nur wenn der Nutzer aktiv bestätigt
+        if (is_null($receipt->confirmed_at)) {
+            $receipt->confirmed_at = now();
+            $receipt->save();
+        }
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Lesebestätigung erfolgreich gespeichert.',
@@ -60,42 +65,45 @@ class ReadReceiptsController extends Controller
             $receipts = $post->receipts;
 
             foreach ($users as $user) {
-                // Prüfe ob User bereits bestätigt hat
                 $existingReceipt = $receipts->where('user_id', $user->id)->first();
 
+                // Überspringe bereits bestätigte Nutzer
+                if ($existingReceipt && $existingReceipt->confirmed_at) {
+                    continue;
+                }
+
                 if (!$existingReceipt) {
-                    // Erstelle einen Eintrag, um zu tracken, dass wir erinnert haben
-                    ReadReceipts::create([
+                    // Erstelle einen Eintrag ausschließlich zum Tracken der Erinnerung
+                    $existingReceipt = ReadReceipts::create([
                         'post_id' => $post->id,
                         'user_id' => $user->id,
                         'reminded_at' => now(),
                     ]);
+                } elseif (is_null($existingReceipt->reminded_at)) {
+                    $existingReceipt->update(['reminded_at' => now()]);
+                }
 
-                    // Versende E-Mail
-                    $mail = new RemindReadReceiptMail(
-                        $user->email,
-                        $user->name,
-                        $post->header,
-                        $deadline->format('d.m.Y'),
-                        $post->id
-                    );
-                    $mail->subject('Lesebestätigung fehlt: ' . $post->header);
+                // Versende E-Mail
+                $mail = new RemindReadReceiptMail(
+                    $user->email,
+                    $user->name,
+                    $post->header,
+                    $deadline->format('d.m.Y'),
+                    $post->id
+                );
+                $mail->subject('Lesebestätigung fehlt: ' . $post->header);
 
-                    try {
-                        Mail::to($user->email)->queue($mail);
-                    } catch (\Exception $e) {
-                        Log::error('Mail konnte nicht versendet werden: ' . $e->getMessage());
-                    }
+                try {
+                    Mail::to($user->email)->queue($mail);
+                } catch (\Exception $e) {
+                    Log::error('Mail konnte nicht versendet werden: ' . $e->getMessage());
+                }
 
-                    // Versende In-App-Benachrichtigung
-                    try {
-                        $user->notify(new ReadReceiptReminderNotification($post, $deadline->format('d.m.Y')));
-                    } catch (\Exception $e) {
-                        Log::error('In-App-Benachrichtigung konnte nicht versendet werden: ' . $e->getMessage());
-                    }
-                } elseif ($existingReceipt && $existingReceipt->reminded_at && !$existingReceipt->created_at->eq($existingReceipt->updated_at)) {
-                    // User hat noch nicht bestätigt, aber wir haben schon erinnert
-                    // Nichts tun in dieser Phase
+                // Versende In-App-Benachrichtigung
+                try {
+                    $user->notify(new ReadReceiptReminderNotification($post, $deadline->format('d.m.Y')));
+                } catch (\Exception $e) {
+                    Log::error('In-App-Benachrichtigung konnte nicht versendet werden: ' . $e->getMessage());
                 }
             }
         }
@@ -134,14 +142,11 @@ class ReadReceiptsController extends Controller
             foreach ($users as $user) {
                 $existingReceipt = $receipts->where('user_id', $user->id)->first();
 
-                // Nur wenn User erinnert wurde aber noch nicht bestätigt hat
-                if ($existingReceipt &&
-                    $existingReceipt->reminded_at &&
-                    !$existingReceipt->final_reminder_sent_at &&
-                    $existingReceipt->created_at->eq($existingReceipt->updated_at)) {
+                // Nur wenn Nutzer nicht bestätigt hat (confirmed_at null) und bereits erinnert wurde
+                if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && !$existingReceipt->final_reminder_sent_at) {
 
                     // Hole die E-Mail-Adresse des Autors
-                    $authorEmail = $post->autor->email ?? config('mail.from.address');
+                    $authorEmail = optional($post->autor)->email ?? config('mail.from.address');
 
                     // Versende finale E-Mail mit Nachrichteninhalt und Lesebestätigung
                     $mail = new FinalReadReceiptReminderMail(
@@ -151,7 +156,7 @@ class ReadReceiptsController extends Controller
                         strip_tags($post->news), // Nachrichteninhalt
                         $deadline->format('d.m.Y'),
                         $post->id,
-                        $authorEmail // E-Mail des Autors für Lesebestätigung
+                        $authorEmail
                     );
 
                     try {
@@ -169,5 +174,4 @@ class ReadReceiptsController extends Controller
         }
     }
 }
-
 

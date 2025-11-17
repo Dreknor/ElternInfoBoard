@@ -18,13 +18,14 @@ class FinalReadReceiptReminderMail extends Mailable
     public string $content;
     public string $ende;
     public int $theme_id;
+    public ?string $authorEmail;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $Email, string $Name, string $thema, string $content, string $ende, int $theme_id)
+    public function __construct(string $Email, string $Name, string $thema, string $content, string $ende, int $theme_id, ?string $authorEmail = null)
     {
         $this->email = $Email;
         $this->name = $Name;
@@ -32,6 +33,7 @@ class FinalReadReceiptReminderMail extends Mailable
         $this->content = $content;
         $this->ende = $ende;
         $this->theme_id = $theme_id;
+        $this->authorEmail = $authorEmail;
     }
 
     /**
@@ -41,14 +43,9 @@ class FinalReadReceiptReminderMail extends Mailable
      */
     public function build(): static
     {
-        return $this
+        $mailable = $this
             ->subject('WICHTIG: Lesebestätigung erforderlich - ' . $this->thema)
             ->view('emails.FinalReadReceiptReminder')
-            ->withSwiftMessage(function ($message) {
-                $message->getHeaders()
-                    ->addTextHeader('Disposition-Notification-To', $this->authorEmail)
-                    ->addTextHeader('Return-Receipt-To', $this->authorEmail);
-            })
             ->with([
                 'name' => $this->name,
                 'thema' => $this->thema,
@@ -57,6 +54,15 @@ class FinalReadReceiptReminderMail extends Mailable
                 'theme_id' => $this->theme_id,
                 'BoardName' => (new GeneralSetting())->app_name,
             ]);
+
+        if ($this->authorEmail) {
+            $mailable->withSwiftMessage(function ($message) {
+                $message->getHeaders()
+                    ->addTextHeader('Disposition-Notification-To', $this->authorEmail)
+                    ->addTextHeader('Return-Receipt-To', $this->authorEmail);
+            });
+        }
+
+        return $mailable;
     }
 }
-
