@@ -157,11 +157,6 @@ class LoginController extends Controller
 
         $keycloakSetting = new \App\Settings\KeyCloakSetting();
 
-        Log::debug('keyCloak callback called', [
-            'user' => Socialite::driver('keycloak')->user(),
-            'setting' => $keycloakSetting,
-
-        ]);
 
         if ($keycloakSetting->enabled == false) {
             return redirect()->route('login')->with([
@@ -172,6 +167,7 @@ class LoginController extends Controller
 
         try {
             $user = Socialite::driver('keycloak')->user();
+            Log::debug('Keycloak user data', ['user' => $user]);
         } catch (\Exception $e) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
@@ -200,6 +196,7 @@ class LoginController extends Controller
 
             $mailDomains = $keycloakSetting->maildomain;
             $mailDomains = explode(',', $mailDomains);
+            $mailDomains = array_map('trim', $mailDomains);
 
 
             if (!is_array($mailDomains) || count($mailDomains) == 0) {
@@ -209,7 +206,8 @@ class LoginController extends Controller
                 ]);
 
             } else {
-                if (!in_array($domain, $mailDomains)) {
+                // Prüfen ob Wildcard (*) gesetzt ist - erlaubt alle Domains
+                if (!in_array('*', $mailDomains) && !in_array($domain, $mailDomains)) {
                     return redirect()->route('login')->with([
                         'type' => 'danger',
                         'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.'
@@ -223,6 +221,11 @@ class LoginController extends Controller
                 $name = explode('@', $user->email)[0];
             }
 
+            Log::info('Creating new user from Keycloak login', [
+                'name' => $name,
+                'email' => $user->email,
+            ]);
+
             $newUser = User::create([
                 'name' => $name,
                 'email' => $user->email,
@@ -233,7 +236,8 @@ class LoginController extends Controller
                 'lastEmail' => now(),
             ]);
 
-            $newUser->assignRole('Mitarbeiter');
+
+            //$newUser->assignRole('Mitarbeiter');
 
             auth()->login($newUser);
         }
