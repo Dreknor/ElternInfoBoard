@@ -167,7 +167,12 @@ class LoginController extends Controller
 
         try {
             $user = Socialite::driver('keycloak')->user();
-            Log::debug('Keycloak user data', ['user' => $user]);
+            Log::debug('Keycloak user data', [
+                'user' => $user,
+                'attributes' => $user->user,
+                'config' => config('services.keycloak'),
+
+                ]);
         } catch (\Exception $e) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
