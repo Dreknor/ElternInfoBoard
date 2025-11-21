@@ -17,6 +17,11 @@ class PasswordExpired
     {
         $user = $request->user();
 
+        // Skip password change enforcement for passwordless login
+        if ($request->session()->has('passwordless_login')) {
+            return $next($request);
+        }
+
         if ($user->changePassword and ! $request->session()->has('ownID')) {
             return redirect()->route('password.expired');
         }

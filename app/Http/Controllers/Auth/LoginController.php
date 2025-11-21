@@ -193,6 +193,8 @@ class LoginController extends Controller
 
         if ($existingUser) {
             auth()->login($existingUser);
+            // Remove passwordless login marker for Keycloak login
+            request()->session()->forget('passwordless_login');
 
         } else {
 
@@ -245,9 +247,26 @@ class LoginController extends Controller
             //$newUser->assignRole('Mitarbeiter');
 
             auth()->login($newUser);
+            // Remove passwordless login marker for Keycloak login
+            request()->session()->forget('passwordless_login');
         }
 
 
+
         return redirect()->intended('/home');
+    }
+
+    /**
+     * The user has been authenticated.
+     * Remove passwordless_login marker for regular login.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        // Remove passwordless login marker for regular email/password login
+        $request->session()->forget('passwordless_login');
     }
 }
