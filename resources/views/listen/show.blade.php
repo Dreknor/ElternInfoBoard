@@ -15,6 +15,13 @@
                                 inaktiv
                             </span>
                         @endif
+                        @if($liste->type == 'termin' && $liste->creates_pflichtstunden)
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-400 text-green-900 rounded-full text-sm font-semibold"
+                                  title="Für diese Liste werden automatisch Pflichtstunden-Einträge erstellt">
+                                <i class="fas fa-clock"></i>
+                                Pflichtstunden
+                            </span>
+                        @endif
                     </h2>
                 </div>
                 @if($liste->comment)
