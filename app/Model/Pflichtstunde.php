@@ -55,6 +55,11 @@ class Pflichtstunde extends Model
         return $this->belongsTo(User::class, 'rejected_by');
     }
 
+    public function listenTermin()
+    {
+        return $this->belongsTo(listen_termine::class, 'listen_termin_id');
+    }
+
     public function getDurationAttribute()
     {
         return $this->start->diffInMinutes($this->end);

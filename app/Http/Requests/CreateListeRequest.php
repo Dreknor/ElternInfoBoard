@@ -57,6 +57,11 @@ class CreateListeRequest extends FormRequest
                 'nullable',
                 'boolean',
             ],
+            'creates_pflichtstunden' => [
+                'sometimes',
+                'nullable',
+                'boolean',
+            ],
             'gruppen' => [
                 'array',
                 'min:1'

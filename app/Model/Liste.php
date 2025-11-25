@@ -2,7 +2,9 @@
 
 namespace App\Model;
 
+use App\Observers\ListeObserver;
 use App\Traits\NotificationTrait;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
+#[ObservedBy([ListeObserver::class])]
 class Liste extends Model
 {
     use HasFactory;
@@ -19,9 +22,9 @@ class Liste extends Model
 
     protected $table = 'listen';
 
-    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'pflichtstunden_erstellt', 'pflichtstunden_start_at', 'pflichtstunden_ende_at'];
+    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'creates_pflichtstunden'];
 
-    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'pflichtstunden_erstellt', 'pflichtstunden_start_at', 'pflichtstunden_ende_at'];
+    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'creates_pflichtstunden'];
 
     protected $casts = [
         'ende' => 'datetime',
@@ -29,9 +32,7 @@ class Liste extends Model
         'active' => 'boolean',
         'multiple' => 'boolean',
         'make_new_entry' => 'boolean',
-        'pflichtstunden_erstellt' => 'boolean',
-        'pflichtstunden_start_at' => 'datetime',
-        'pflichtstunden_ende_at' => 'datetime',
+        'creates_pflichtstunden' => 'boolean',
     ];
 
     public function ersteller(): BelongsTo

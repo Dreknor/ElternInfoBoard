@@ -170,8 +170,6 @@ class LoginController extends Controller
             Log::debug('Keycloak user data', [
                 'user' => $user,
                 'attributes' => $user->user,
-                'config' => config('services.keycloak'),
-
                 ]);
         } catch (\Exception $e) {
             return redirect()->route('login')->with([

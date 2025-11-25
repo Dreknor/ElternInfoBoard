@@ -99,6 +99,42 @@
                         </div>
                     </div>
 
+                    <!-- Pflichtstunden-Einstellung (nur bei Terminlisten) -->
+                    @if($liste->type == 'termin')
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <input type="checkbox" name="creates_pflichtstunden" id="creates_pflichtstunden" value="1"
+                                           {{ $liste->creates_pflichtstunden ? 'checked' : '' }}
+                                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-1">
+                                </div>
+                                <div class="flex-1">
+                                    <label for="creates_pflichtstunden" class="font-semibold text-gray-900 cursor-pointer">
+                                        <i class="fas fa-clock text-blue-600"></i>
+                                        Automatische Pflichtstunden-Erfassung
+                                    </label>
+                                    <p class="text-sm text-gray-700 mt-1">
+                                        Wenn aktiviert, werden bei Terminbuchungen automatisch Pflichtstunden-Einträge für die Teilnehmer erstellt.
+                                        Die Dauer entspricht der Termindauer. Bei Absage des Termins wird der Pflichtstunden-Eintrag automatisch abgelehnt.
+                                    </p>
+                                    <p class="text-xs text-gray-600 mt-2">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Voraussetzung:</strong> Die globale Einstellung "Pflichtstunden aus Listen automatisch erstellen" muss aktiviert sein.
+                                    </p>
+                                    @if($liste->termine()->where('reserviert_fuer', '!=', null)->count() > 0)
+                                        <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                            <p class="text-sm text-yellow-800">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                <strong>Hinweis:</strong> Diese Liste hat bereits {{ $liste->termine()->where('reserviert_fuer', '!=', null)->count() }} gebuchte(n) Termin(e).
+                                                Änderungen an dieser Einstellung werden auch auf bestehende Termine angewendet.
+                                            </p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Beschreibung und Gruppen -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>
