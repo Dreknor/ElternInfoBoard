@@ -71,15 +71,15 @@
 
         <!-- Show/Hide Button for Archived Messages -->
         @if($nachricht->is_archived)
-            <div class="mt-4 pt-4 border-t border-gray-300" x-data="{ showContent: false }">
+            <div class="mt-4 pt-4 border-t border-gray-300" x-data="{ showContent: false }" x-cloak>
                 <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200"
-                        @click="showContent = !showContent">
+                        @click.prevent="showContent = !showContent">
                     <i class="fas" :class="showContent ? 'fa-eye-slash' : 'fa-eye'"></i>
                     <span x-text="showContent ? 'Text ausblenden' : 'Text anzeigen'"></span>
                 </button>
 
                 <!-- Message Content for Archived Messages -->
-                <div class="mt-4" x-show="showContent" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95">
+                <div class="mt-4" x-show="showContent" x-cloak style="display: none;" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95">
                     <div class="bg-white rounded-lg p-6 shadow-inner">
                         @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -194,14 +194,14 @@
 
         <!-- Show Feedback Responses (Admin only) -->
         @can('view rueckmeldungen')
-            <div class="bg-gray-50 border-t border-gray-200 px-6 py-4" x-data="{ showFeedback: false }">
+            <div class="bg-gray-50 border-t border-gray-200 px-6 py-4" x-data="{ showFeedback: false }" x-cloak>
                 <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-                        @click="showFeedback = !showFeedback">
+                        @click.prevent="showFeedback = !showFeedback">
                     <i class="fas" :class="showFeedback ? 'fa-eye-slash' : 'fa-eye'"></i>
                     <span x-text="showFeedback ? 'Rückmeldungen ausblenden' : '{{$nachricht->userRueckmeldung->count()}} Rückmeldungen anzeigen'"></span>
                 </button>
 
-                <div class="mt-4" x-show="showFeedback" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95">
+                <div class="mt-4" x-show="showFeedback" x-cloak style="display: none;" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95">
                     <div class="bg-white rounded-lg p-4 space-y-3">
                         @foreach($nachricht->userRueckmeldung as $rueckmeldung)
                             <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
