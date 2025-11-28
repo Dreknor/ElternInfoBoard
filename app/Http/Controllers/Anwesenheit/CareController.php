@@ -38,14 +38,6 @@ class CareController extends Controller
     {
         $careSettings = new CareSetting();
 
-        Log::info('Anwesenheit Index aufgerufen', [
-            'showAll' => $showAll,
-            'groups_list' => $careSettings->groups_list,
-            'class_list' => $careSettings->class_list,
-            'hide_childs_when_absent' => $careSettings->hide_childs_when_absent,
-            'cookie_showAll' => request()->cookie('showAll'),
-        ]);
-
         if ($showAll == 1) {
             return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
         } elseif ($showAll == 'off') {
@@ -55,10 +47,6 @@ class CareController extends Controller
         $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
         $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
 
-        Log::info('Gruppen und Klassen geladen', [
-            'groups_count' => $groups->count(),
-            'classes_count' => $classes->count(),
-        ]);
 
         // Wenn keine Gruppen oder Klassen konfiguriert sind, keine Kinder anzeigen
         if (empty($careSettings->groups_list) || empty($careSettings->class_list)) {
@@ -85,11 +73,6 @@ class CareController extends Controller
             $childs->load('mandates');
         }
 
-        Log::info('Anwesenheit Daten geladen', [
-            'childs_count' => $childs->count(),
-            'groups_count' => $groups->count(),
-            'classes_count' => $classes->count(),
-        ]);
 
         return view('anwesenheit.index', [
             'children' => $childs,
