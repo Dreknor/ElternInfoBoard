@@ -170,7 +170,6 @@
     <!-- Feedback Section -->
     @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'email')
         @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
-        @if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1)
             <!-- Response Status Indicators -->
             <div class="bg-gray-50 border-t border-gray-200 px-6 py-4">
                 <div class="flex items-center gap-2 mb-2">
