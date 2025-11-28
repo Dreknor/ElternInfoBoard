@@ -374,10 +374,14 @@ class NachrichtenController extends Controller
             case 'email':
                 return view('nachrichten.createRueckmeldung', [
                     'nachricht' => $post,
+                    'terminlisten' => collect(),
                 ])->with([
                     'type' => 'success',
                     'Meldung' => $Meldung,
                 ]);
+                break;
+            case 'terminliste':
+                return redirect(url('rueckmeldung/create/'.$post->id.'/terminliste'));
                 break;
             case 'poll':
                 return view('nachrichten.createPoll', [

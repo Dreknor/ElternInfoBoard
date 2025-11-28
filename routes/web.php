@@ -205,6 +205,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/rueckmeldung/{rueckmeldung}/updateAbfrage', [RueckmeldungenController::class, 'updateAbfrage']);
         Route::delete('rueckmeldungen/{post}/', [RueckmeldungenController::class, 'destroyAbfrage']);
 
+        //TerminlisteRueckmeldung
+        Route::post('/rueckmeldung/{posts_id}/create/terminliste', [RueckmeldungenController::class, 'storeTerminliste']);
+        Route::put('/rueckmeldung/{post_id}/update/terminliste', [RueckmeldungenController::class, 'updateTerminliste']);
+
 
 
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);

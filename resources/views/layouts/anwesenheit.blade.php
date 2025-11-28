@@ -31,14 +31,14 @@
     <script src="{{asset('js/core/bootstrap.min.js')}}"></script>
     <script src="{{asset('js/plugins/perfect-scrollbar.jquery.min.js')}}"></script>
 
-    @stack('js')
-    @stack('head')
+    <!-- Alpine.js x-cloak styling to prevent FOUC -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 
-</head>
-<body id="app-layout">
-<div class="content">
-    @if(session('Meldung'))
-        <div class="container">
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
             <div class="row">
                 <div class="col-12" >
                     <div class="alert alert-{{session('type')}} alert-dismissible" role="alert">
@@ -49,8 +49,8 @@
                 </div>
             </div>
         </div>
-    @endif
-    @yield('content')
-</div>
-</body>
+                    <div class="alert alert-{{session('type')}} alert-dismissible" role="alert" x-data="{ show: true }" x-show="show" x-cloak>
+                        <button type="button" class="close" @click.prevent="show = false" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
 </html>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\AbfrageExport;
 use App\Http\Requests\createAbfrageRequest;
 use App\Http\Requests\createRueckmeldungRequest;
+use App\Http\Requests\createTerminlisteRueckmeldungRequest;
 use App\Http\Requests\updateRueckmeldeDateRequest;
 use App\Mail\ErinnerungRuecklaufFehlt;
 use App\Model\AbfrageAntworten;
@@ -51,18 +52,39 @@ class RueckmeldungenController extends Controller
      */
     public function create(Post $post, $type)
     {
-        if ($type != 'abfrage'){
-            return redirect()->back()->with([
-                'type' => 'danger',
-                'Meldung' => 'Rückmeldung erstellen fehlgeschlagen. Rückmeldetyp nicht gefunden.'
+        if ($type == 'abfrage') {
+            return view('nachrichten.createAbfrage', [
+                'nachricht' => $post,
+            ])->with([
+                'type' => 'success',
+                'Meldung' => 'Nachricht wurde erstellt',
+            ]);
+        } elseif ($type == 'terminliste') {
+            // Lade aktive Terminlisten mit freien Terminen
+            $terminlisten = \App\Model\Liste::where('type', 'termin')
+                ->where('active', 1)
+                ->where('ende', '>=', \Carbon\Carbon::today())
+                ->whereHas('termine', function($query) {
+                    $query->whereNull('reserviert_fuer')
+                          ->where('termin', '>=', \Carbon\Carbon::now());
+                })
+                ->with(['termine' => function($query) {
+                    $query->where('termin', '>=', \Carbon\Carbon::now());
+                }])
+                ->get();
+
+            return view('nachrichten.createTerminlisteRueckmeldung', [
+                'nachricht' => $post,
+                'terminlisten' => $terminlisten,
+            ])->with([
+                'type' => 'success',
+                'Meldung' => 'Nachricht wurde erstellt',
             ]);
         }
 
-        return view('nachrichten.createAbfrage', [
-            'nachricht' => $post,
-        ])->with([
-            'type' => 'success',
-            'Meldung' => 'Nachricht wurde erstellt',
+        return redirect()->back()->with([
+            'type' => 'danger',
+            'Meldung' => 'Rückmeldung erstellen fehlgeschlagen. Rückmeldetyp nicht gefunden.'
         ]);
     }
 
@@ -141,7 +163,11 @@ class RueckmeldungenController extends Controller
         }
 
         return view('rueckmeldungen.index', [
-            'rueckmeldungen' => Rueckmeldungen::whereHas('post')->with('post')->withCount('userRueckmeldungen as rueckmeldungen')->orderByDesc('ende')->get(),
+            'rueckmeldungen' => Rueckmeldungen::whereHas('post')
+                ->with(['post', 'liste'])
+                ->withCount('userRueckmeldungen as rueckmeldungen')
+                ->orderByDesc('ende')
+                ->get(),
         ]);
     }
 
@@ -168,6 +194,12 @@ class RueckmeldungenController extends Controller
         } elseif ($rueckmeldung->type == 'abfrage') {
             return view('rueckmeldungen.showAbfrage', [
                 'rueckmeldung' => $rueckmeldung->load('userRueckmeldungen'),
+            ]);
+        } elseif ($rueckmeldung->type == 'terminliste') {
+            // Leite direkt zur Terminlistenverwaltung weiter
+            return redirect()->to(url('listen/'.$rueckmeldung->liste_id))->with([
+                'type' => 'info',
+                'Meldung' => 'Die Terminverwaltung erfolgt direkt in der Terminliste.',
             ]);
         } else {
             return redirect()->back()->with([
@@ -409,6 +441,81 @@ class RueckmeldungenController extends Controller
         return redirect()->to(url('/home'))->with([
             'type' => 'success',
             'Meldung' => 'Rückmeldung erstellt.',
+        ]);
+    }
+
+    /**
+     * Store a newly created Terminliste Rueckmeldung in storage.
+     *
+     * @param createTerminlisteRueckmeldungRequest $request
+     * @param $posts_id
+     * @return RedirectResponse
+     */
+    public function storeTerminliste(createTerminlisteRueckmeldungRequest $request, $posts_id)
+    {
+        if (!auth()->user()->can('create posts')) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $rueckmeldung = new Rueckmeldungen($request->validated());
+        $rueckmeldung->type = 'terminliste';
+        $rueckmeldung->post_id = $posts_id;
+        $rueckmeldung->text = 'Terminbuchung';
+        $rueckmeldung->empfaenger = auth()->user()->email;
+        $rueckmeldung->save();
+
+        return redirect()->to(url('/home#'.$posts_id))->with([
+            'type' => 'success',
+            'Meldung' => 'Terminlisten-Rückmeldung erstellt.',
+        ]);
+    }
+
+    /**
+     * Update Terminliste Rueckmeldung
+     *
+     * @param createTerminlisteRueckmeldungRequest $request
+     * @param $post_id
+     * @return RedirectResponse
+     */
+    public function updateTerminliste(Request $request, $post_id)
+    {
+        $request->validate([
+            'terminliste_start_date' => ['required', 'date'],
+            'terminliste_end_date' => ['required', 'date', 'after_or_equal:terminliste_start_date'],
+            'ende' => ['required', 'date'],
+            'pflicht' => ['nullable'],
+        ]);
+
+        $rueckmeldung = Rueckmeldungen::where('post_id', $post_id)
+            ->where('type', 'terminliste')
+            ->firstOrFail();
+
+        if (!auth()->user()->can('create posts') && $rueckmeldung->post->author != auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        $rueckmeldung->terminliste_start_date = $request->terminliste_start_date;
+        $rueckmeldung->terminliste_end_date = $request->terminliste_end_date;
+        $rueckmeldung->ende = $request->ende;
+        $rueckmeldung->pflicht = $request->pflicht ?? 0;
+        $rueckmeldung->save();
+
+        $post = Post::find($post_id);
+        if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+            $post->update([
+                'archiv_ab' => $rueckmeldung->ende,
+            ]);
+        }
+
+        return redirect()->to(url('/posts/edit/'.$post_id))->with([
+            'type' => 'success',
+            'Meldung' => 'Terminlisten-Rückmeldung aktualisiert.',
         ]);
     }
 

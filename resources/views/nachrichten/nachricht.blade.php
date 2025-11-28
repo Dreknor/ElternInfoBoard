@@ -319,6 +319,10 @@
                     <div class="border-t border-gray-200">
                         @include('nachrichten.footer.abfrage')
                     </div>
+                @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'terminliste')
+                    <div class="border-t border-gray-200 p-6">
+                        @include('nachrichten.footer.terminliste')
+                    </div>
                 @elseif(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
                     <div class="border-t border-gray-200">
                         @include('nachrichten.footer.imageRueckmeldung')

@@ -32,7 +32,7 @@
                     @foreach($rueckmeldungen as $rueckmeldung)
                         <tr>
                             <td>
-                                @if($rueckmeldung->type == "email" or $rueckmeldung->type == "abfrage")
+                                @if($rueckmeldung->type == "email" or $rueckmeldung->type == "abfrage" or $rueckmeldung->type == "terminliste")
                                     <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
                                         <i class="fa fa-eye"></i>
                                     </a>
@@ -61,10 +61,17 @@
                                     @case('abfrage')
                                         <i class="fas fa-table" title="Abfrage"></i>
                                         @break
+                                    @case('terminliste')
+                                        <i class="fas fa-calendar-check" title="Terminliste: {{$rueckmeldung->liste?->listenname ?? 'N/A'}}"></i>
+                                        @break
                                 @endswitch
                             </td>
                             <td>
-                                {{$rueckmeldung->rueckmeldungen}}
+                                @if($rueckmeldung->type == 'terminliste')
+                                    {{$rueckmeldung->liste?->termine()->whereBetween('termin', [$rueckmeldung->terminliste_start_date, $rueckmeldung->terminliste_end_date])->whereNotNull('reserviert_fuer')->count() ?? 0}}
+                                @else
+                                    {{$rueckmeldung->rueckmeldungen}}
+                                @endif
                             </td>
                             <td>
                                 @if($rueckmeldung->type == "email" or $rueckmeldung->type == 'abfrage')
