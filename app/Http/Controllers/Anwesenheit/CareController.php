@@ -37,6 +37,14 @@ class CareController extends Controller
     public function index($showAll = false)
     {
         $careSettings = new CareSetting();
+
+        Log::info('Anwesenheit', [
+            'showAll' => $showAll,
+            'groups_list' => $careSettings->groups_list,
+            'class_list' => $careSettings->class_list,
+            'hide_childs_when_absent' => $careSettings->hide_childs_when_absent,
+        ]);
+
         if ($showAll == 1) {
             return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
         } elseif ($showAll == 'off') {
@@ -63,6 +71,10 @@ class CareController extends Controller
 
         $childs->load('mandates');
 
+
+        Log::info('Anwesenheit', [
+            'childs' => $childs,
+        ]);
 
         return view('anwesenheit.index', [
             'children' => $childs,
