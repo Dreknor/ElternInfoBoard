@@ -38,11 +38,12 @@ class CareController extends Controller
     {
         $careSettings = new CareSetting();
 
-        Log::info('Anwesenheit', [
+        Log::info('Anwesenheit Index aufgerufen', [
             'showAll' => $showAll,
             'groups_list' => $careSettings->groups_list,
             'class_list' => $careSettings->class_list,
             'hide_childs_when_absent' => $careSettings->hide_childs_when_absent,
+            'cookie_showAll' => request()->cookie('showAll'),
         ]);
 
         if ($showAll == 1) {
@@ -54,8 +55,18 @@ class CareController extends Controller
         $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
         $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
 
-        if ($careSettings->hide_childs_when_absent == true && !request()->cookie('showAll')) {
+        Log::info('Gruppen und Klassen geladen', [
+            'groups_count' => $groups->count(),
+            'classes_count' => $classes->count(),
+        ]);
+
+        // Wenn keine Gruppen oder Klassen konfiguriert sind, keine Kinder anzeigen
+        if (empty($careSettings->groups_list) || empty($careSettings->class_list)) {
+            $childs = collect();
+        } elseif ($careSettings->hide_childs_when_absent == true && !request()->cookie('showAll')) {
             $childs = Child::query()
+                ->whereIn('group_id', $careSettings->groups_list)
+                ->whereIn('class_id', $careSettings->class_list)
                 ->whereHas('checkIns', function ($query) {
                     $query
                         ->CheckedIn()
@@ -65,15 +76,19 @@ class CareController extends Controller
 
         } else {
             $childs = Child::query()
-
+                ->whereIn('group_id', $careSettings->groups_list)
+                ->whereIn('class_id', $careSettings->class_list)
                 ->get();
         }
 
-        $childs->load('mandates');
+        if ($childs->isNotEmpty()) {
+            $childs->load('mandates');
+        }
 
-
-        Log::info('Anwesenheit', [
-            'childs' => $childs,
+        Log::info('Anwesenheit Daten geladen', [
+            'childs_count' => $childs->count(),
+            'groups_count' => $groups->count(),
+            'classes_count' => $classes->count(),
         ]);
 
         return view('anwesenheit.index', [

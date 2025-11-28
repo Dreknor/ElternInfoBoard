@@ -13,7 +13,7 @@
                     </h4>
 
                     @php
-                        $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('lastname');
+                        $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('last_name');
                     @endphp
                     <div class="row">
                         @foreach($sortedChildren as $child)
