@@ -11,14 +11,17 @@
     @stack('header')
     <title>{{config('app.name')}}</title>
 
+
     <!-- CSS Files -->
     <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet" />
     <link href="{{asset('css/paper-dashboard.css?v=2.0.0')}}" rel="stylesheet" />
     <link href="{{asset('css/anwesenheit.css')}}" rel="stylesheet" />
     <link href="{{asset('css/palette-gradient.css')}}" rel="stylesheet" />
 
+
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Quicksand">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Quicksand">
 
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" crossorigin="anonymous">
 
@@ -28,32 +31,26 @@
     <script src="{{asset('js/core/bootstrap.min.js')}}"></script>
     <script src="{{asset('js/plugins/perfect-scrollbar.jquery.min.js')}}"></script>
 
-    <!-- Alpine.js x-cloak styling to prevent FOUC -->
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
+    @stack('js')
+    @stack('head')
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
-    <div class="wrapper">
-        @if(session('Meldung'))
-            <div class="container-fluid mt-3">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="alert alert-{{session('type')}} alert-dismissible" role="alert" x-data="{ show: true }" x-show="show" x-cloak>
-                            <button type="button" class="close" @click="show = false" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                            {{session('Meldung')}}
-                        </div>
+<body id="app-layout">
+<div class="content">
+    @if(session('Meldung'))
+        <div class="container">
+            <div class="row">
+                <div class="col-12" >
+                    <div class="alert alert-{{session('type')}} alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{session('Meldung')}}
+
                     </div>
                 </div>
             </div>
-        @endif
-
-        @yield('content')
-    </div>
+        </div>
+    @endif
+    @yield('content')
+</div>
 </body>
 </html>
