@@ -9,7 +9,13 @@ class ReadReceipts extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['post_id', 'user_id'];
+    protected $fillable = ['post_id', 'user_id', 'reminded_at', 'final_reminder_sent_at', 'confirmed_at'];
+
+    protected $casts = [
+        'reminded_at' => 'datetime',
+        'final_reminder_sent_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+    ];
 
     public function post()
     {

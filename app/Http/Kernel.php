@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\CheckNewsForUser;
 use App\Http\Middleware\LastOnlineAt;
+use App\Http\Middleware\MarkPasswordlessLogin;
 use App\Http\Middleware\PasswordExpired;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -69,6 +70,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'password_expired' => PasswordExpired::class,
+        'mark_passwordless_login' => MarkPasswordlessLogin::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
 
     ];

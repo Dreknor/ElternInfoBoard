@@ -1,46 +1,42 @@
-<div class="row mb-2">
-    <div class="col-auto">
+<div class="flex items-center justify-between mb-3">
+    <div class="flex items-center gap-2">
+        @php
+            $moduleContact = \Illuminate\Support\Facades\Cache::get('module_contact');
+            $showContactLink = $moduleContact && isset($moduleContact->options['active']) && $moduleContact->options['active'] == 1 && $nachricht->autor != null;
+        @endphp
 
-        @if(\Illuminate\Support\Facades\Cache::get('module_contact')->options['active'] == 1 && $nachricht->autor != null)
-            <a href="{{ url('feedback'.'/'.$nachricht->autor->id) }}" class="text-decoration-none">
-                <i class="fa fa-user"></i>  {{ $nachricht->autor?->name }}
+        @if($showContactLink)
+            <a href="{{ url('feedback'.'/'.$nachricht->autor->id) }}" class="inline-flex items-center gap-2 text-blue-900 hover:text-blue-600 transition-colors">
+                <i class="fa fa-user text-gray-500"></i>
+                <span class="font-medium">{{ $nachricht->autor?->name }}</span>
+            </a>
         @else
-            {{ $nachricht->autor?->name }}
-
+            <div class="inline-flex items-center gap-2 text-gray-700">
+                <i class="fa fa-user text-gray-500"></i>
+                <span class="font-medium">{{ $nachricht->autor?->name }}</span>
+            </div>
         @endif
     </div>
-    <div class="col-auto ml-auto">
-        <div class="d-md-none">
-            <a class="" data-toggle="collapse" href="#info_{{$nachricht->id}}" role="button" aria-expanded="false"
-               aria-controls="collapseExample">
-                <i class="fa fa-info-circle"></i>
-            </a>
-        </div>
-    </div>
 </div>
 
 
-<div class="d-md-block collapse" id="info_{{$nachricht->id}}">
-    <div class="row mt-1">
+<div class="" id="info_{{$nachricht->id}}">
+    <div class="flex flex-wrap gap-2 mt-2">
         @foreach($nachricht->groups as $group)
-            <div class="col-auto m-1">
-                <span class="badge badge-green p-2">
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-xs font-xs rounded-full">
                 {{ $group->name }}
-                </span>
-            </div>
+            </span>
         @endforeach
     </div>
-    <div class="row mt-1">
-        <div class="col-auto">
-            <span class="p-2">
-                aktualisiert: {{ $nachricht->updated_at->format('d.m.Y H:i') }}
-            </span>
+
+    <div class="flex flex-wrap items-center justify-between gap-4 mt-3 text-sm text-gray-600">
+        <div class="flex items-center gap-2 @if($nachricht->released == 0) text-white @endif">
+            <i class="far fa-clock text-gray-400"></i>
+            <span>aktualisiert: {{ $nachricht->updated_at->format('d.m.Y H:i') }}</span>
         </div>
-        <div class="col-auto ml-auto">
-            <span class="p-2">
-                Archiv ab: {{$nachricht->archiv_ab->format('d.m.Y')}}
-            </span>
+        <div class="flex items-center gap-2 @if($nachricht->released == 0) text-white @endif">
+            <i class="far fa-calendar text-gray-400"></i>
+            <span>Archiv ab: {{$nachricht->archiv_ab->format('d.m.Y')}}</span>
         </div>
     </div>
 </div>
-

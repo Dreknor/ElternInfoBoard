@@ -213,6 +213,7 @@ class SettingsController extends Controller
                     'mail_from_address' => 'required|max:255',
                     'mail_from_name' => 'required|max:255',
                     'new_user_welcome_text' => 'required|string|max:1000',
+                    'log_sent_emails' => 'nullable|boolean',
                 ]);
 
                 $mailSettings = new EmailSetting();
@@ -224,6 +225,7 @@ class SettingsController extends Controller
                 $mailSettings->mail_from_address = $validated['mail_from_address'];
                 $mailSettings->mail_from_name = $validated['mail_from_name'];
                 $mailSettings->new_user_welcome_text = $validated['new_user_welcome_text'];
+                $mailSettings->log_sent_emails = $validated['log_sent_emails'] ?? false;
                 $mailSettings->save();
 
                 config([

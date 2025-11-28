@@ -24,12 +24,12 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable', 'max_answers', 'multiple'];
+    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date'];
 
     /**
      * @var array
      */
-    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple'];
+    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date'];
 
     /**
      * @var array
@@ -39,6 +39,8 @@ class Rueckmeldungen extends Model
         'pflicht' => 'boolean',
         'commentable' => 'boolean',
         'multiple' => 'boolean',
+        'terminliste_start_date' => 'date',
+        'terminliste_end_date' => 'date',
     ];
 
     /**
@@ -95,5 +97,21 @@ class Rueckmeldungen extends Model
                 ]);
             }
         });
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function liste(): BelongsTo
+    {
+        return $this->belongsTo(Liste::class, 'liste_id');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTerminliste(): bool
+    {
+        return $this->type === 'terminliste';
     }
 }

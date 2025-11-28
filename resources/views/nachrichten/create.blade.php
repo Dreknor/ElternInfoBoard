@@ -120,12 +120,20 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-12" id="read_receipt_deadline_group" style="display: none;">
+                            <div class="form-group">
+                                <label>Frist für Lesebestätigung (optional)</label>
+                                <input type="datetime-local" class="form-control" name="read_receipt_deadline" id="read_receipt_deadline">
+                                <small class="form-text text-muted">Leer lassen, um das Archivierungsdatum zu verwenden</small>
+                            </div>
+                        </div>
                         <div class="col-12">
                             <div class="form-group">
                                 <label>Rückmeldungen benötigt?</label>
                                 <select class="custom-select" name="rueckmeldung">
                                     <option value="abfrage">Ja, Abfrage</option>
                                     <option value="email">Ja, Text (E-Mail)</option>
+                                    <option value="terminliste">Ja, Terminliste</option>
                                     <option value="commentable">Ja, Diskussion</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
@@ -323,5 +331,16 @@
         $('.date-input').on('change', function (event) {
             event.target.value = event.target.value.substr(0, 19);
         })
+    </script>
+
+    <script>
+        // Show/hide read receipt deadline field
+        $('#read_receiptSelect').on('change', function() {
+            if ($(this).val() == '1') {
+                $('#read_receipt_deadline_group').show();
+            } else {
+                $('#read_receipt_deadline_group').hide();
+            }
+        });
     </script>
 @endpush

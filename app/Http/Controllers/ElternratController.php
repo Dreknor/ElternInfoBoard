@@ -38,9 +38,41 @@ class ElternratController extends Controller
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
-        $themen = Discussion::query()->orderbyDesc('sticky')->orderbyDesc('updated_at')->paginate(15);
+        $query = Discussion::query();
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('header', 'like', "%{$searchTerm}%")
+                  ->orWhere('text', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Filter functionality
+        if ($request->filled('filter')) {
+            switch ($request->filter) {
+                case 'sticky':
+                    $query->where('sticky', 1);
+                    break;
+                case 'my':
+                    $query->where('owner', $request->user()->id);
+                    break;
+                case 'all':
+                default:
+                    // No additional filtering needed
+                    break;
+            }
+        }
+
+        // Default sorting
+        $themen = $query->orderByDesc('sticky')
+                       ->orderByDesc('updated_at')
+                       ->paginate(15)
+                       ->appends($request->only(['search', 'filter']));
+
         $Group = Group::where('name', '=', 'Elternrat')->first();
 
 
@@ -74,6 +106,16 @@ class ElternratController extends Controller
         return view('elternrat.createDiscussion');
     }
 
+    /**
+     * Display the specified resource (redirect to index)
+     *
+     * @param int $id
+     * @return RedirectResponse
+     */
+    public function show($id)
+    {
+        return redirect()->route('elternrat.index');
+    }
 
     /**
      * store new discussion
@@ -249,5 +291,42 @@ class ElternratController extends Controller
         $comment->delete();
 
         return response('Gelöscht');
+    }
+
+    /**
+     * Subscribe to discussion notifications
+     */
+    public function subscribe(Discussion $discussion, Request $request)
+    {
+        \App\Model\DiscussionSubscription::updateOrCreate(
+            [
+                'user_id' => $request->user()->id,
+                'discussion_id' => $discussion->id,
+            ],
+            [
+                'email_notifications' => true,
+                'web_notifications' => true,
+            ]
+        );
+
+        return back()->with([
+            'type' => 'success',
+            'meldung' => 'Benachrichtigungen aktiviert',
+        ]);
+    }
+
+    /**
+     * Unsubscribe from discussion notifications
+     */
+    public function unsubscribe(Discussion $discussion, Request $request)
+    {
+        \App\Model\DiscussionSubscription::where('user_id', $request->user()->id)
+            ->where('discussion_id', $discussion->id)
+            ->delete();
+
+        return back()->with([
+            'type' => 'success',
+            'meldung' => 'Benachrichtigungen deaktiviert',
+        ]);
     }
 }

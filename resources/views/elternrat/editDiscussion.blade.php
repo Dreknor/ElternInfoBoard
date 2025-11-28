@@ -1,87 +1,130 @@
 @extends('layouts.app')
 
 @section('content')
-
-<div class="card">
-    <div class="card-header">
-        <h6 class="card-title">
-            Mitteilung bearbeiten
-        </h6>
-    </div>
-    @if ($errors->any())
-        <div class="card-body">
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+    <div class="container-fluid px-4 py-6">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3">
+                <a href="{{url('elternrat')}}"
+                   class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Zurück</span>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                    <i class="fas fa-edit text-amber-600"></i>
+                    Mitteilung bearbeiten
+                </h1>
             </div>
         </div>
-    @endif
-    <div class="card-body">
-        <form action="{{url("/elternrat/discussion/$beitrag->id")}}" method="post" class="form form-horizontal" enctype="multipart/form-data" id="nachrichtenForm">
-            @csrf
-            @method('put')
-            <div class="row">
-                <div class="col-md-12 col-sm-12">
-                    <div class="form-group">
-                        <label>Überschrift</label>
-                        <input type="text" class="form-control border-input" placeholder="Überschrift" name="header" value="{{$beitrag->header}}" required>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>Nachrichtentext</label>
-                        <textarea class="form-control border-input" name="text">
-                            {!! $beitrag->text !!}
-                        </textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12">
-                    <div class="form-group">
-                        <label>Nachricht oben anheften</label>
-                        <select class="custom-select" name="sticky" id="sticky">
-                            <option value="0" @if(!$beitrag->sticky) selected @endif>nicht anheften</option>
-                            <option value="1" @if($beitrag->sticky) selected @endif>anheften</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
-                        Speichern
-                    </button>
+        <!-- Main Form Card -->
+        <div class="max-w-4xl">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <!-- Card Header -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4 border-b border-amber-700">
+                    <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                        <i class="fas fa-pen-to-square"></i>
+                        Beitrag bearbeiten
+                    </h5>
+                </div>
+
+                <!-- Error Messages -->
+                @if ($errors->any())
+                    <div class="p-6 bg-red-50 border-b border-red-200">
+                        <div class="bg-white border-l-4 border-red-500 rounded-lg p-4 shadow-sm">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-exclamation-circle text-red-500 text-xl mt-0.5"></i>
+                                <div class="flex-1">
+                                    <h6 class="font-semibold text-red-800 mb-2">Bitte beheben Sie folgende Fehler:</h6>
+                                    <ul class="list-disc list-inside space-y-1 text-sm text-red-700">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Card Body -->
+                <div class="p-6">
+                    <form action="{{url("/elternrat/discussion/$beitrag->id")}}"
+                          method="post"
+                          class="space-y-6"
+                          enctype="multipart/form-data"
+                          id="nachrichtenForm">
+                        @csrf
+                        @method('put')
+
+                        <!-- Header Field -->
+                        <div>
+                            <label for="header" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-heading text-amber-600"></i>
+                                Überschrift
+                            </label>
+                            <input type="text"
+                                   id="header"
+                                   name="header"
+                                   value="{{$beitrag->header}}"
+                                   placeholder="z.B. Einladung zur nächsten Sitzung"
+                                   required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all">
+                        </div>
+
+                        <!-- Text Field -->
+                        <div>
+                            <label for="text" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-align-left text-amber-600"></i>
+                                Nachrichtentext
+                            </label>
+                            <textarea name="text"
+                                      id="text"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all">{!! $beitrag->text !!}</textarea>
+                        </div>
+
+                        <!-- Sticky Field -->
+                        <div>
+                            <label for="sticky" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-thumbtack text-amber-600"></i>
+                                Nachricht oben anheften
+                            </label>
+                            <select name="sticky"
+                                    id="sticky"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white">
+                                <option value="0" @if(!$beitrag->sticky) selected @endif>Nicht anheften</option>
+                                <option value="1" @if($beitrag->sticky) selected @endif>Oben anheften</option>
+                            </select>
+                            <p class="mt-2 text-xs text-gray-500">
+                                <i class="fas fa-info-circle"></i>
+                                Angeheftete Beiträge werden immer oben angezeigt
+                            </p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-4 border-t border-gray-200">
+                            <button type="submit"
+                                    id="submitBtn"
+                                    class="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-amber-600 hover:to-orange-600 transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2">
+                                <i class="fas fa-save"></i>
+                                <span>Änderungen speichern</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </form>
-
+        </div>
     </div>
-</div>
-
 @endsection
 
-@push('css')
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
-
-@endpush
-
 @push('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
-
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
-    <script>tinymce.init({
-            selector: 'textarea',
-            lang:'de',
+    <script>
+        tinymce.init({
+            selector: '#text',
+            lang: 'de',
             height: 500,
             menubar: true,
             plugins: [
@@ -90,34 +133,10 @@
                 'insertdatetime table paste code wordcount',
                 'contextmenu',
             ],
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | ',
-            contextmenu: " link image inserttable | cell row column deletetable",
-        });</script>
-
-
-
-    <!-- piexif.min.js is needed for auto orienting image files OR when restoring exif data in resized images and when you
-        wish to resize images before upload. This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
-    <!-- sortable.min.js is only needed if you wish to sort / rearrange files in initial preview.
-        This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/sortable.min.js" type="text/javascript"></script>
-    <!-- purify.min.js is only needed if you wish to purify HTML content in your preview for
-        HTML files. This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/purify.min.js" type="text/javascript"></script>
-    <!-- popper.min.js below is needed if you use bootstrap 4.x (for popover and tooltips). You can also use the bootstrap js
-       3.3.x versions without popper.min.js. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/fileinput.min.js"></script>
-    <!-- following theme script is needed to use the Font Awesome 5.x theme (`fas`) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/themes/fas/theme.min.js"></script>
-
-
-    <script>
-        $('#submitBtn').on('click', function (event) {
-            $("#nachrichtenForm").submit();
-        })
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+            contextmenu: "link image inserttable | cell row column deletetable",
+            skin: 'oxide',
+            content_css: 'default'
+        });
     </script>
 @endpush

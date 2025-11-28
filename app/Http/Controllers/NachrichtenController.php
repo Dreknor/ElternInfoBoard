@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CommentPostRequest;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
+use App\Jobs\PushPostToWordpress;
 use App\Mail\AktuelleInformationen;
 use App\Mail\DringendeInformationen;
 use App\Mail\dringendeNachrichtStatus;
@@ -85,12 +86,33 @@ class NachrichtenController extends Controller
             $show_link = false;
         }
 
+        if (auth()->user()->can('view all')) {
+            $nachrichten = Post::query()
+                ->whereNull('archiv_ab')
+                ->orderBy('sticky', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $nachrichten = Post::query()
+                ->where('released', 1)
+                ->where(function ($query) {
+                    $query->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', Carbon::now());
+                })
+                ->whereHas('groups', function ($query) {
+                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        // Hole alle Nachrichten für die Übersichtsseite
 
 
-
-        return view('home', [
+        return view('nachrichten.index', [
             'datum' => Carbon::now(),
             'archiv' => $archiv,
+            'nachrichten' => $nachrichten,
         ]);
     }
 
@@ -328,8 +350,7 @@ class NachrichtenController extends Controller
         }
 
         if ($request->wp_push){
-            $repository = new WordpressRepository();
-            $repository->should_post($post);
+            PushPostToWordpress::dispatch($post);
         }
 
         $Meldung = 'Nachricht wurde erstellt.';
@@ -338,7 +359,7 @@ class NachrichtenController extends Controller
         if ($request->has('urgent') and $request->input('urgent') == 1 and $user->can('send urgent message') and Hash::check($request->input('password'), $user->password)) {
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $post);
 
-            @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo));
+            @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo, auth()->user()->email, auth()->user()->name));
             $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
             $post->update([
                 'send_at' => Carbon::now()
@@ -353,10 +374,14 @@ class NachrichtenController extends Controller
             case 'email':
                 return view('nachrichten.createRueckmeldung', [
                     'nachricht' => $post,
+                    'terminlisten' => collect(),
                 ])->with([
                     'type' => 'success',
                     'Meldung' => $Meldung,
                 ]);
+                break;
+            case 'terminliste':
+                return redirect(url('rueckmeldung/create/'.$post->id.'/terminliste'));
                 break;
             case 'poll':
                 return view('nachrichten.createPoll', [
@@ -475,8 +500,7 @@ class NachrichtenController extends Controller
 
 
         if ($request->wp_push){
-            $repository = new WordpressRepository();
-            $repository->should_post($posts);
+            PushPostToWordpress::dispatch($posts);
         }
 
 
@@ -526,7 +550,7 @@ class NachrichtenController extends Controller
 
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $posts);
 
-            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo));
+            @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo, auth()->user()->email, auth()->user()->name));
             $Meldung = 'Es wurden ' . count($sendTo) . ' Benutzer per Mail benachrichtigt.';
             $posts->update([
                 'send_at' => Carbon::now()

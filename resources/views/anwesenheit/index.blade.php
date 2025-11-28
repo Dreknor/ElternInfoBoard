@@ -12,6 +12,29 @@
             </div>
         @endif
 
+        @if($children->isEmpty() && $groups->isEmpty() && $classes->isEmpty())
+            <div class="alert alert-info">
+                <h4>Keine Daten verfügbar</h4>
+                <p>Es wurden keine Kinder, Gruppen oder Klassen gefunden. Bitte überprüfen Sie die Einstellungen.</p>
+                <p>Debug-Info:</p>
+                <ul>
+                    <li>Anzahl Kinder: {{ $children->count() }}</li>
+                    <li>Anzahl Gruppen: {{ $groups->count() }}</li>
+                    <li>Anzahl Klassen: {{ $classes->count() }}</li>
+                    <li>Konfigurierte Gruppen: {{ implode(', ', $careSettings->groups_list ?? []) }}</li>
+                    <li>Konfigurierte Klassen: {{ implode(', ', $careSettings->class_list ?? []) }}</li>
+                </ul>
+            </div>
+        @elseif($children->isEmpty())
+            <div class="alert alert-warning">
+                <h4>Keine Kinder gefunden</h4>
+                <p>Es wurden keine Kinder für die ausgewählten Gruppen und Klassen gefunden.</p>
+                @if($careSettings->hide_childs_when_absent && !request()->cookie('showAll'))
+                    <p>Möglicherweise sind heute keine Kinder angemeldet. Versuchen Sie, alle Kinder anzuzeigen.</p>
+                @endif
+            </div>
+        @endif
+
         <div class="row">
             @if(!$careSettings->view_detailed_care)
                 @include('anwesenheit.partials.simple_list')

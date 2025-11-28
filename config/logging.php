@@ -60,9 +60,6 @@ return [
         'database' => [
             'driver' => 'custom',
             'via' => danielme85\LaravelLogToDB\LogToDbHandler::class,
-            'name' => 'DB-Logging',
-            'detailed' => true,
-            'queue' => true,
         ],
 
         'single' => [

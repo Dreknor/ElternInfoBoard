@@ -60,6 +60,9 @@ class editPostRequest extends FormRequest
             'read_receipt' => [
                 'nullable', 'boolean',
             ],
+            'read_receipt_deadline' => [
+                'nullable', 'date',
+            ],
             'external' => [
                 'nullable', 'sometimes','boolean',
             ],

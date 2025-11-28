@@ -56,6 +56,9 @@ class createNachrichtRequest extends FormRequest
             'read_receipt' => [
                 'nullable', 'sometimes','boolean',
             ],
+            'read_receipt_deadline' => [
+                'nullable', 'date', 'after_or_equal:now',
+            ],
             'external' => [
                 'nullable', 'sometimes','boolean',
             ],

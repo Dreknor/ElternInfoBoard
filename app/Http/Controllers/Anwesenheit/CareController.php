@@ -37,6 +37,7 @@ class CareController extends Controller
     public function index($showAll = false)
     {
         $careSettings = new CareSetting();
+
         if ($showAll == 1) {
             return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
         } elseif ($showAll == 'off') {
@@ -46,8 +47,14 @@ class CareController extends Controller
         $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
         $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
 
-        if ($careSettings->hide_childs_when_absent == true && !request()->cookie('showAll')) {
+
+        // Wenn keine Gruppen oder Klassen konfiguriert sind, keine Kinder anzeigen
+        if (empty($careSettings->groups_list) || empty($careSettings->class_list)) {
+            $childs = collect();
+        } elseif ($careSettings->hide_childs_when_absent == true && !request()->cookie('showAll')) {
             $childs = Child::query()
+                ->whereIn('group_id', $careSettings->groups_list)
+                ->whereIn('class_id', $careSettings->class_list)
                 ->whereHas('checkIns', function ($query) {
                     $query
                         ->CheckedIn()
@@ -57,11 +64,14 @@ class CareController extends Controller
 
         } else {
             $childs = Child::query()
-
+                ->whereIn('group_id', $careSettings->groups_list)
+                ->whereIn('class_id', $careSettings->class_list)
                 ->get();
         }
 
-        $childs->load('mandates');
+        if ($childs->isNotEmpty()) {
+            $childs->load('mandates');
+        }
 
 
         return view('anwesenheit.index', [
@@ -99,7 +109,6 @@ class CareController extends Controller
             try {
                 $user = User::find($careSettings->info_to);
                 if ($user) {
-                    Log::info($user);
                     $notification = new Notification([
                         'user_id' => $user->id,
                         'type' => 'info',
@@ -107,6 +116,13 @@ class CareController extends Controller
                         'message' => 'Das Kind ' . $child->first_name .' '. $child->last_name . ' wurde nicht rechtzeitig abgemeldet.',
                     ]);
                     $notification->save();
+
+                    Log::info('Kind verspätet abgeholt', [
+                        'child_id' => $child->id,
+                        'child_name' => $child->first_name .' '. $child->last_name,
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                    ]);
                 }
             } catch (\Exception $e) {
                 Log::error('Error sending notification: ' . $e->getMessage());

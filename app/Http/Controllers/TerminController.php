@@ -24,6 +24,36 @@ class TerminController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
+    /**
+     * Display a listing of all termine.
+     *
+     * @return View
+     */
+    public function index()
+    {
+        if (auth()->user()->can('view all')) {
+            $termine = Termin::query()
+                ->with('groups')
+                ->where('start', '>=', Carbon::today())
+                ->orderBy('start')
+                ->get();
+        } else {
+            $termine = Termin::query()
+                ->with('groups')
+                ->where('start', '>=', Carbon::today())
+                ->whereHas('groups', function ($query) {
+                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
+                })
+                ->orderBy('start')
+                ->get();
+        }
+
+
+
+        return view('termine.index', [
+            'termine' => $termine,
+        ]);
+    }
 
     public function edit(Termin $termin)
     {
@@ -212,8 +242,12 @@ class TerminController extends Controller
 
             $termin->groups()->attach($gruppen);
 
+            $users = $termin->users;
+
+            $users->unique('id');
+
             $termin->notify(
-                users: $termin->users,
+                users: $users,
                 title: 'Neuer Termin',
                 message: 'Neuer Termin: ' . $termin->terminname,
                 type: 'Termine');

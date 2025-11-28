@@ -146,6 +146,7 @@ Route::middleware('auth')->group(function () {
 
 
         Route::delete('schickzeiten/{schickzeit}/delete', [SchickzeitenController::class, 'destroySchickzeit'])->name('schickzeiten.destroy');
+        Route::post('schickzeiten/check-daily-times', [SchickzeitenController::class, 'checkDailyTimesForWeekday'])->name('schickzeiten.checkDailyTimes');
 
        Route::get('schickzeiten/download', [SchickzeitenController::class, 'download'])->middleware('can:download schickzeiten');
         Route::post('schickzeiten/child/create', [SchickzeitenController::class, 'createChild']);
@@ -176,6 +177,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
         Route::get('diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
         //Termine
+        Route::resource('termine', TerminController::class);
         Route::resource('termin', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
         //Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
@@ -203,6 +205,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/rueckmeldung/{rueckmeldung}/updateAbfrage', [RueckmeldungenController::class, 'updateAbfrage']);
         Route::delete('rueckmeldungen/{post}/', [RueckmeldungenController::class, 'destroyAbfrage']);
 
+        //TerminlisteRueckmeldung
+        Route::post('/rueckmeldung/{posts_id}/create/terminliste', [RueckmeldungenController::class, 'storeTerminliste']);
+        Route::put('/rueckmeldung/{post_id}/update/terminliste', [RueckmeldungenController::class, 'updateTerminliste']);
+
 
 
         Route::post('/rueckmeldung/{posts_id}/create', [RueckmeldungenController::class, 'store']);
@@ -212,14 +218,21 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
 
 
+        //Dashboard
+        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+
         //show posts
         Route::get('/home', [NachrichtenController::class, 'index']);
+        Route::get('/nachrichten', [NachrichtenController::class, 'index'])->name('nachrichten.index');
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
-        Route::get('/', [NachrichtenController::class, 'index']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
+        Route::post('post/{post}/readReceipt/{user}', [ReadReceiptsController::class, 'confirmForUser'])
+            ->middleware('permission:manage rueckmeldungen')
+            ->name('nachrichten.read_receipt.confirm_for_user');
         //Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
@@ -338,6 +351,10 @@ Route::middleware('auth')->group(function () {
             Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
             Route::delete('users/mass/delete', [UserController::class, 'massDelete'])->name('users.massDelete');
 
+            Route::get('users/vereinsmitglieder/non-members', [UserController::class, 'showNonVereinsmitglieder']);
+            Route::post('users/vereinsmitglieder/add', [UserController::class, 'addToVereinsmitglied']);
+            Route::post('users/vereinsmitglieder/sync-role', [UserController::class, 'syncVereinsmitgliederRole']);
+
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
             //Route::get('users/{user}/delete', [UserController::class, 'destroy']);
@@ -402,17 +419,42 @@ Route::middleware('auth')->group(function () {
         });
         //Elternratsbereich
         Route::middleware('permission:view elternrat')->group(function () {
-            Route::resource('elternrat', ElternratController::class);
-            Route::delete('elternrat/file/{file}', [ElternratController::class, 'deleteFile']);
-            Route::delete('elternrat/discussion/{discussion}/delete', [ElternratController::class, 'destroy']);
-            Route::delete('elternrat/comment/{comment}', [ElternratController::class, 'deleteComment']);
+            // Events/Termine (VOR resource, um Konflikte zu vermeiden)
+            Route::get('elternrat/events', [\App\Http\Controllers\ElternratEventController::class, 'index'])->name('elternrat.events.index');
+            Route::get('elternrat/events/create', [\App\Http\Controllers\ElternratEventController::class, 'create'])->name('elternrat.events.create');
+            Route::post('elternrat/events', [\App\Http\Controllers\ElternratEventController::class, 'store'])->name('elternrat.events.store');
+            Route::post('elternrat/events/{event}/attendance', [\App\Http\Controllers\ElternratEventController::class, 'updateAttendance'])->name('elternrat.events.attendance');
+            Route::delete('elternrat/events/{event}', [\App\Http\Controllers\ElternratEventController::class, 'destroy'])->name('elternrat.events.destroy');
+
+            // Tasks/Aufgaben (VOR resource, um Konflikte zu vermeiden)
+            Route::get('elternrat/tasks', [\App\Http\Controllers\ElternratTaskController::class, 'index'])->name('elternrat.tasks.index');
+            Route::post('elternrat/tasks', [\App\Http\Controllers\ElternratTaskController::class, 'store'])->name('elternrat.tasks.store');
+            Route::patch('elternrat/tasks/{task}/status', [\App\Http\Controllers\ElternratTaskController::class, 'updateStatus'])->name('elternrat.tasks.status');
+            Route::delete('elternrat/tasks/{task}', [\App\Http\Controllers\ElternratTaskController::class, 'destroy'])->name('elternrat.tasks.destroy');
+
+            // Discussion spezifische Routen (VOR resource)
             Route::get('elternrat/add/file', [ElternratController::class, 'addFile']);
             Route::post('elternrat/file', [ElternratController::class, 'storeFile']);
-            Route::post('beitrag/{discussion}/comment/create', [ElternratController::class, 'storeComment']);
+            Route::delete('elternrat/file/{file}', [ElternratController::class, 'deleteFile']);
             Route::get('elternrat/discussion/create', [ElternratController::class, 'create']);
             Route::post('elternrat/discussion', [ElternratController::class, 'store']);
             Route::get('elternrat/discussion/edit/{discussion}', [ElternratController::class, 'edit']);
             Route::put('elternrat/discussion/{discussion}', [ElternratController::class, 'update']);
+            Route::delete('elternrat/discussion/{discussion}/delete', [ElternratController::class, 'destroy']);
+            Route::delete('elternrat/comment/{comment}', [ElternratController::class, 'deleteComment']);
+            Route::post('beitrag/{discussion}/comment/create', [ElternratController::class, 'storeComment']);
+
+            // Notifications/Benachrichtigungen
+            Route::post('elternrat/discussion/{discussion}/subscribe', [ElternratController::class, 'subscribe'])->name('elternrat.subscribe');
+            Route::delete('elternrat/discussion/{discussion}/unsubscribe', [ElternratController::class, 'unsubscribe'])->name('elternrat.unsubscribe');
+
+            // Test-Route für Event-Erinnerungen (nur Development - später entfernen!)
+            if (config('app.debug')) {
+                Route::get('elternrat/test/reminders', [\App\Http\Controllers\ElternratEventController::class, 'sendReminders']);
+            }
+
+            // Resource Route (nur für index) - NACH allen spezifischen Routen
+            Route::get('elternrat', [ElternratController::class, 'index'])->name('elternrat.index');
         });
     });
 
@@ -424,6 +466,8 @@ Route::middleware('auth')->group(function () {
 
     Route::group(['middlewareGroups' => ['can:see logs']], function () {
         Route::get('logs', [LogController::class, 'index']);
+        Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
+        Route::delete('logs/cleanup', [LogController::class, 'cleanup'])->middleware('can:delete logs');
     });
 
     Route::middleware(['can:edit schickzeiten'])->prefix('care') ->group(function () {

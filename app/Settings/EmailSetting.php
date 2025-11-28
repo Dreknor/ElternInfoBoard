@@ -23,6 +23,8 @@ class EmailSetting extends Settings
 
     public string $new_user_welcome_text;
 
+    public bool $log_sent_emails;
+
 
     public static function group(): string
     {

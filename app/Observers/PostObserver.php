@@ -2,11 +2,10 @@
 
 namespace App\Observers;
 
+use App\Jobs\PushPostToWordpress;
 use App\Model\Module;
 use App\Model\Post;
-use App\Repositories\WordpressRepository;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 class PostObserver
 {
@@ -33,8 +32,7 @@ class PostObserver
         $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
         if ($wp_push_is_enabled == 1 and $post->published_wp_id != NULL and auth()->user()->can('push to wordpress')){
-            $repository = new WordpressRepository();
-            $wp_call = $repository->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
+            PushPostToWordpress::dispatch($post);
         }
 
         Cache::forget('posts_' . auth()->id());

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Model\Termin;
 use App\Model\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -11,74 +12,56 @@ class TerminPolicy
 
     /**
      * Determine whether the user can view any termins.
-     *
-     * @return bool
      */
-    public function viewAny(): bool
+    public function viewAny(User $user): bool
     {
-        return auth()->check();
+        return $user !== null; // auth()->check()
     }
 
     /**
      * Determine whether the user can view the termin.
-     *
-     * @return bool
      */
-    public function view(): bool
+    public function view(User $user, ?Termin $termin = null): bool
     {
-        return auth()->check();
+        return $user !== null; // Jede/r angemeldete darf Termine sehen
     }
 
     /**
      * Determine whether the user can create termins.
-     *
-     * @return mixed
      */
-    public function create(): mixed
+    public function create(User $user): bool
     {
-        return auth()->user()->can('edit termin');
+        return $user->can('edit termin') || $user->can('create termine');
     }
 
     /**
      * Determine whether the user can update the termin.
-     *
-     * @param User $user
-     * @return bool
      */
-    public function update(User $user): bool
+    public function update(User $user, Termin $termin): bool
     {
         return $user->can('edit termin');
     }
 
     /**
      * Determine whether the user can delete the termin.
-     *
-     * @param User $user
-     * @return bool
      */
-    public function delete(User $user): bool
+    public function delete(User $user, Termin $termin): bool
     {
         return $user->can('edit termin');
     }
 
     /**
      * Determine whether the user can restore the termin.
-     *
-     * @param User $user
-     * @return bool
      */
-    public function restore(User $user): bool
+    public function restore(User $user, Termin $termin): bool
     {
         return $user->can('edit termin');
     }
 
     /**
      * Determine whether the user can permanently delete the termin.
-     *
-     * @param User $user
-     * @return bool
      */
-    public function forceDelete(User $user): bool
+    public function forceDelete(User $user, Termin $termin): bool
     {
         return $user->can('edit termin');
     }

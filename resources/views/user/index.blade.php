@@ -50,6 +50,14 @@
                                 </a>
                             </p>
                         </div>
+                        <div class="col">
+                            <p class=" pull-right">
+                                <a href="{{url('users/vereinsmitglieder/non-members')}}" class="btn btn-outline-success">
+                                    <i class="fas fa-users"></i>
+                                    Nicht-Vereinsmitglieder
+                                </a>
+                            </p>
+                        </div>
                     @endcan
                 </div>
             </div>

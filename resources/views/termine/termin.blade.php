@@ -1,52 +1,73 @@
-<div class="row  p-2 align-items-center h-100"
-     @if($loop->iteration%2) style="background-color: rgba(217,217,217,0.61);" @endif>
-    <div class="col-sm-6 col-md-2 col-lg-2">
-        @if($termin->start->day != $termin->ende->day)
-            {{$termin->start->format('d.m. ')}} - {{$termin->ende->format('d.m.Y')}}
-        @else
-            {{$termin->start->format('d.m.Y')}}
-        @endif
-    </div>
-    <div class="col-sm-6 col-md-2 col-lg-2">
-        @if($termin->start->day == $termin->ende->day and !$termin->fullDay )
-            {{$termin->start->format('H:i')}} -  {{$termin->ende->format('H:i')}} Uhr
-        @endif
-    </div>
-    <div class="col-sm-12 col-md-8 col-lg-6 font-weight-bold">
-        {{$termin->terminname}}
-        <div class="d-inline">
-            <div class="pull-right">
-                <a href="{{$termin->link(auth()->user()->calendar_prefix)->ics()}}" class="card-link"
-                   title="ICS-Download für Apple und Windows">
-                    <img src="{{asset('img/ics-icon.png')}}" height="25px">
-                </a>
-                <a href="{{$termin->link(auth()->user()->calendar_prefix)->google()}}" class="card-link" target="_blank"
-                   title="Goole-Kalender-Link">
-                    <img src="{{asset('img/icon-google-cal.png')}}" height="25px">
-                </a>
+<div class="px-4 py-2 hover:bg-gray-50 transition-all duration-200 @if($loop->iteration%2) bg-gray-50/50 @endif">
+    <div class="flex flex-col lg:flex-row lg:items-center gap-2">
+        <!-- Datum -->
+        <div class="flex items-center space-x-2 lg:w-40">
+            <div>
+                <div class="text-sm font-semibold text-gray-900 leading-tight">
+                    @if($termin->start->day != $termin->ende->day)
+                        {{$termin->start->format('d.m.')}} - {{$termin->ende->format('d.m.Y')}}
+                    @else
+                        {{$termin->start->format('d.m.Y')}}
+                    @endif
+                </div>
+                @if($termin->fullDay)
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    Ganztägig
+                </span>
+                @endif
+                @if($termin->start->day == $termin->ende->day and !$termin->fullDay)
+                    <div class="text-sm text-gray-600">
+                        {{$termin->start->format('H:i')}} - {{$termin->ende->format('H:i')}} Uhr
+                    </div>
+                @endif
             </div>
         </div>
-    </div>
 
-@if(auth()->user()->can('edit termin'))
-        <div class="col-auto">
-            <a href="#"
-               tabindex="0" role="button"
-               data-toggle="popover" title="{{$termin->terminname}} @if($termin->public == 1) (öffentlich) @endif"
-               data-content="Gruppen: @foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"
-               data-trigger="focus">
-                <i class="fa fa-info-circle">
-                </i>
+        <!-- Terminname -->
+        <div class="flex-1 min-w-0 flex items-center gap-2">
+            <h6 class="text-sm font-bold text-gray-900">
+                {{$termin->terminname}}
+            </h6>
+            @if(auth()->user()->can('view all') && ($termin->public ?? false))
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="Dieser Termin ist öffentlich">Öffentlich</span>
+            @endif
+        </div>
+
+        <!-- Kalender-Links -->
+        <div class="flex items-center space-x-1.5 lg:w-auto">
+            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->ics()}}"
+               class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 transition-colors"
+               title="ICS-Download für Apple und Windows">
+                <img src="{{asset('img/ics-icon.png')}}" class="w-5 h-5" alt="ICS">
             </a>
-        </div>
-        @if($termin->id != null)
-            <div class="col-auto">
-                <a href="{{url("termin/$termin->id/edit")}}" class="text-black-50">
-                    <i class="fa fa-edit"></i>
-                    <div class="d-none d-lg-inline ">bearbeiten</div>
-                </a>
-            </div>
-        @endif
+            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->google()}}"
+               class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 hover:bg-gray-200 transition-colors"
+               target="_blank"
+               title="Google-Kalender-Link">
+                <img src="{{asset('img/icon-google-cal.png')}}" class="w-5 h-5" alt="Google Calendar">
+            </a>
 
-    @endif
+            @can('edit termin')
+                <!-- Info-Button -->
+                <button type="button"
+                   class="inline-flex items-center justify-center w-8 h-8 rounded bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
+                   tabindex="0"
+                   data-toggle="popover"
+                   title="{{$termin->terminname}} @if($termin->public == 1) (öffentlich) @endif"
+                   data-content="Gruppen: @foreach($termin->groups as $group) {{$group->name}}@if(!$loop->last), @endif @endforeach"
+                   data-trigger="focus">
+                    <i class="fa fa-info-circle text-sm"></i>
+                </button>
+
+                <!-- Bearbeiten-Button -->
+                @if($termin->id != null)
+                    <a href="{{url("termin/$termin->id/edit")}}"
+                       class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors">
+                        <i class="fa fa-edit"></i>
+                        <span class="hidden lg:inline">Bearbeiten</span>
+                    </a>
+                @endif
+            @endcan
+        </div>
+    </div>
 </div>
