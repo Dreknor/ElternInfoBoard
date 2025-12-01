@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
         Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
 
         Route::middleware('permission:edit Pflichtstunden')->group(function () {
+            Route::get('verwaltung/pflichtstunden/export', [\App\Http\Controllers\PflichtstundeController::class, 'export'])->name('pflichtstunden.export');
             Route::get('verwaltung/pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'verwaltungIndex'])->name('pflichtstunden.indexVerwaltung');
             Route::put('pflichtstunden/{pflichtstunde}/approve', [\App\Http\Controllers\PflichtstundeController::class, 'approve'])->name('pflichtstunden.approve');
             Route::put('pflichtstunden/{pflichtstunde}/reject', [\App\Http\Controllers\PflichtstundeController::class, 'reject'])->name('pflichtstunden.reject');

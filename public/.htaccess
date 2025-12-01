@@ -5,6 +5,11 @@
 
     RewriteEngine On
     RewriteBase /
+
+    # Suppress 404 errors for source map files (development only)
+    RewriteCond %{REQUEST_URI} \.map$
+    RewriteRule .* - [R=204,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

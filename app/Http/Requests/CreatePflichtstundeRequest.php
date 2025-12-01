@@ -24,7 +24,21 @@ class CreatePflichtstundeRequest extends FormRequest
         return [
             'start' => ['required', 'date', 'before:end', 'before:tomorrow'],
             'end' => ['required', 'date', 'after:start', 'before:tomorrow'],
-            'description' => ['nullable', 'string', 'max:255']
+            'description' => ['required', 'string', 'max:500'],
+            'user_id' => ['sometimes', 'exists:users,id'] // Für Verwaltung
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'description.required' => 'Bitte geben Sie einen Grund für die Pflichtstunden an.',
+            'description.max' => 'Der Grund darf maximal 500 Zeichen lang sein.',
+            'start.before' => 'Das Startdatum muss vor dem Enddatum liegen.',
+            'end.after' => 'Das Enddatum muss nach dem Startdatum liegen.',
         ];
     }
 }
