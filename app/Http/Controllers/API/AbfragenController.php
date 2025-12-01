@@ -229,7 +229,7 @@ class AbfragenController extends Controller
         try {
             AbfrageAntworten::insert($data);
         } catch (\Exception $e) {
-            Log::error($e);
+            Log::error('API: Error saving abfrage antworten: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Error saving data']);
         }
 

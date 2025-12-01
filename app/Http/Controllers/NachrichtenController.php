@@ -77,8 +77,14 @@ class NachrichtenController extends Controller
                 return Module::query()->where(['setting' => 'Kontakt'])->first();
             });
 
-            Log::info($module->options['active']);
-            $show_link = $module->options['active'] == 1 ?? false;
+
+            if (config('app.debug')) {
+                Log::debug('Kontakt-Modul aktiv-Status abgefragt', [
+                    'active' => $module->options['active'] ?? null,
+                    'module_id' => $module->id ?? null,
+                ]);
+            }
+            $show_link = (($module->options['active'] ?? 0) == 1);
 
 
         } catch (Exception $exception) {

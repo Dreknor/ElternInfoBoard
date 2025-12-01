@@ -137,7 +137,9 @@ class KrankmeldungenController extends Controller
 
             return response()->json('Krankmeldung gesendet.',200);
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            Log::error("Krankmeldung-Fehler:",[
+                "error" => $e->getMessage()
+            ]);
             $text .= "Fehler beim Senden der Krankmeldung. Bitte überprüfen Sie die Eingaben.";
         }
 

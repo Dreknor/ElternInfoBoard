@@ -46,7 +46,11 @@ class ReadReceiptsController extends Controller
             return response()->json(['success' => true], 200);
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
-            Log::error($e->getMessage());
+            Log::error('Fehler beim Speichern der Lesebestätigung: ', [
+                'error' => $e->getMessage(),
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+            ]);
             return response()->json(['error' => 'Die Lesebestätigung konnte nicht verarbeitet werden.'], 500);
         }
 
