@@ -6,7 +6,12 @@ return new class extends SettingsMigration
 {
     public function up(): void
     {
-        $this->migrator->add('email.log_sent_emails', false);
+        try {
+            $this->migrator->add('email.log_sent_emails', true);
+        }
+        catch (\Throwable $th) {
+                return;
+        }
     }
 
     public function down(): void

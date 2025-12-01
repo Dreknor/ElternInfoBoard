@@ -14,6 +14,9 @@ return new class extends Migration
         $connection = config('audit.drivers.database.connection', config('database.default'));
         $table = config('audit.drivers.database.table', 'audits');
 
+        if (Schema::connection($connection)->hasTable($table)) {
+            return;
+        }
         Schema::connection($connection)->create($table, function (Blueprint $table) {
 
             $morphPrefix = config('audit.user.morph_prefix', 'user');

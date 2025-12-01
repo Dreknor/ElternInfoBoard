@@ -654,7 +654,145 @@
 
                                         </div>
                                         @break
-                                        @endswitch
+                            @case('terminliste')
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-calendar-check mr-2"></i>
+                                            Terminlisten-Rückmeldung bearbeiten
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form action="{{url("/rueckmeldung/$post->id/update/terminliste")}}" method="post" class="form form-horizontal">
+                                            @csrf
+                                            @method('put')
+
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Terminliste:</label>
+                                                        <p>
+                                                            <a href="{{url('listen/'.$post->rueckmeldung->liste_id)}}" target="_blank" class="text-primary">
+                                                                <i class="fas fa-external-link-alt mr-1"></i>
+                                                                {{$post->rueckmeldung->liste->listenname}}
+                                                            </a>
+                                                        </p>
+                                                        <small class="text-muted">Die verknüpfte Liste kann nicht geändert werden.</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Startdatum (Anzeige) <span class="text-danger">*</span></label>
+                                                        <input type="date"
+                                                               class="form-control"
+                                                               name="terminliste_start_date"
+                                                               id="terminliste_start_date_edit"
+                                                               value="{{old('terminliste_start_date', $post->rueckmeldung->terminliste_start_date?->format('Y-m-d'))}}"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Enddatum (Anzeige) <span class="text-danger">*</span></label>
+                                                        <input type="date"
+                                                               class="form-control"
+                                                               name="terminliste_end_date"
+                                                               id="terminliste_end_date_edit"
+                                                               value="{{old('terminliste_end_date', $post->rueckmeldung->terminliste_end_date?->format('Y-m-d'))}}"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Buchungsfrist <span class="text-danger">*</span></label>
+                                                        <input type="date"
+                                                               class="form-control"
+                                                               name="ende"
+                                                               value="{{old('ende', $post->rueckmeldung->ende?->format('Y-m-d'))}}"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Rückmeldung verpflichtend?</label>
+                                                        <select class="custom-select" name="pflicht">
+                                                            <option value="0" @if($post->rueckmeldung->pflicht == 0) selected @endif>Nein</option>
+                                                            <option value="1" @if($post->rueckmeldung->pflicht == 1) selected @endif>Ja</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @php
+                                                $termine = $post->rueckmeldung->liste->termine()
+                                                    ->whereBetween('termin', [
+                                                        $post->rueckmeldung->terminliste_start_date->copy()->startOfDay(),
+                                                        $post->rueckmeldung->terminliste_end_date->copy()->endOfDay()
+                                                    ])
+                                                    ->get();
+                                                $gebuchteTermine = $termine->whereNotNull('reserviert_fuer');
+                                                $freieTermine = $termine->whereNull('reserviert_fuer');
+                                            @endphp
+
+                                            <!-- Statistik -->
+                                            <div class="row mt-3 mb-3">
+                                                <div class="col-md-4">
+                                                    <div class="card bg-light mb-0">
+                                                        <div class="card-body text-center py-2">
+                                                            <h5 class="mb-0">{{$termine->count()}}</h5>
+                                                            <small class="text-muted">Termine gesamt</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card bg-success text-white mb-0">
+                                                        <div class="card-body text-center py-2">
+                                                            <h5 class="mb-0">{{$gebuchteTermine->count()}}</h5>
+                                                            <small>Gebucht</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card bg-info text-white mb-0">
+                                                        <div class="card-body text-center py-2">
+                                                            <h5 class="mb-0">{{$freieTermine->count()}}</h5>
+                                                            <small>Noch frei</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle mr-2"></i>
+                                                <strong>Hinweis:</strong> Sie können den Zeitraum und die Buchungsfrist anpassen. Die verknüpfte Liste und deren Mehrfachbuchungs-Einstellung können nicht geändert werden.
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <button type="submit" class="btn btn-primary btn-block">
+                                                        <i class="fas fa-save mr-2"></i>
+                                                        Änderungen speichern
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="btn btn-danger btn-block" id="rueckmeldungLoeschen"
+                                                         data-id="{{$rueckmeldung->id}}">
+                                                        <i class="fas fa-trash-alt mr-2"></i>
+                                                        Terminlisten-Rückmeldung löschen
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                @break
+                            @endswitch
                                     @endif
                                     @endif
 
@@ -800,6 +938,21 @@
             maxFileSize: @if(auth()->user()->can('upload great files')) {{config('media-library.max_file_size')}} @else 3000 @endif ,
             'theme': "fas",
         });
+    </script>
+
+    <script>
+        // Terminlisten-Datumsfelder synchronisieren
+        const startDateEdit = document.getElementById('terminliste_start_date_edit');
+        const endDateEdit = document.getElementById('terminliste_end_date_edit');
+
+        if (startDateEdit && endDateEdit) {
+            startDateEdit.addEventListener('change', function() {
+                if (!endDateEdit.value || endDateEdit.value < startDateEdit.value) {
+                    endDateEdit.value = startDateEdit.value;
+                }
+                endDateEdit.min = startDateEdit.value;
+            });
+        }
     </script>
 
 

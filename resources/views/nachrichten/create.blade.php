@@ -133,6 +133,7 @@
                                 <select class="custom-select" name="rueckmeldung">
                                     <option value="abfrage">Ja, Abfrage</option>
                                     <option value="email">Ja, Text (E-Mail)</option>
+                                    <option value="terminliste">Ja, Terminliste</option>
                                     <option value="commentable">Ja, Diskussion</option>
                                     <option value="bild">Ja, öffentliches Bild</option>
                                     <option value="bild_commentable">Ja, öffentliches Bild (Kommentierbar)</option>
