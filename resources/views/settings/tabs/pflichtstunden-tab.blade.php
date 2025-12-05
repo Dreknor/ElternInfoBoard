@@ -60,36 +60,94 @@
         </div>
 
         <div class="form-row mt-1 p-2 border">
-            <div class="col-md-6 col-sm-12">
+            <div class="col-md-12">
                 <label class="label-control w-100">
-                    <input type="checkbox" name="listen_autocreate" value="1"
-                           class="form-control" @if($pflichtstundenSettings->listen_autocreate) checked @endif>
-                    Pflichtstunden aus Listen automatisch erstellen
+                    Informationstext für Eltern
+                    <textarea class="form-control" name="pflichtstunden_text" rows="6">{{$pflichtstundenSettings->pflichtstunden_text ?? 'Bitte tragen Sie hier Ihre geleisteten Pflichtstunden ein. Pro Familie sind 20 Stunden jährlich zu leisten. Vielen Dank für Ihre Unterstützung!'}}</textarea>
                 </label>
             </div>
-            <div class="col-md-6 col-sm-12 m-auto">
+            <div class="col-md-12 mt-2">
                 <div class="small">
-                    Wenn diese Option aktiviert ist, werden Pflichtstunden automatisch aus Listeneinträgen erstellt. Dies bedeutet, dass jedes Mal, wenn ein Listeneintrag gebucht oder aktualisiert wird, die entsprechenden Pflichtstunden automatisch generiert und dem Benutzerkonto zugewiesen werden.
+                    Dieser Text wird den Eltern oben auf der Pflichtstunden-Seite angezeigt. Hier können Sie Informationen, Hinweise und Anweisungen zu den Pflichtstunden kommunizieren.
                 </div>
-            </div>
-        </div>
-        <div class="form-row mt-1 p-2 border">
-            <div class="col-md-6 col-sm-12">
-                <label class="label-control w-100">
-                    <textarea class="form-control" name="pflichtstunden_text" rows="3">{{$pflichtstundenSettings->pflichtstunden_text}}</textarea>
-                    Text für Pflichtstunden
-                </label>
-            </div>
-            <div class="col-md-6 col-sm-12 m-auto">
-                <div class="small">
-                    Hier kann der Text definiert werden, der im Bereich Pflichtstunden angezeigt wird. Dieser Text kann Informationen über die Pflichtstunden, deren Bedeutung oder Anweisungen für die Benutzer enthalten.
-                </div>
-            </div>
-        </div>
-        <div class="form-row mt-1 p-2 border">
-            <div class="col-md-6 col-sm-12">
-                <button type="submit" class="btn btn-primary">Speichern</button>
             </div>
         </div>
 
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="checkbox" name="listen_autocreate" value="1"
+                           @if($pflichtstundenSettings->listen_autocreate ?? false) checked @endif>
+                    Listen automatisch erstellen
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, werden die Pflichtstunden-Listen automatisch für alle Familien erstellt. Andernfalls müssen die Listen manuell angelegt werden.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <h5 class="label-control w-100">
+                    <strong>🎮 Gamification-Einstellungen</strong>
+                </h5>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="checkbox" name="gamification_show_progress" value="1"
+                           @if($pflichtstundenSettings->gamification_show_progress) checked @endif>
+                    Fortschritts-Card anzeigen
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Zeigt einen animierten Fortschrittsbalken mit deinem aktuellen Fortschritt und Achievement-Badges an.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="checkbox" name="gamification_show_ranking" value="1"
+                           @if($pflichtstundenSettings->gamification_show_ranking) checked @endif>
+                    Ranking-Card anzeigen
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Zeigt deine aktuelle Platzierung unter allen Eltern an mit zusätzlichen Rang-Abzeichen (z.B. 🥇 Platz 1, 🏆 Top 3).
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="checkbox" name="gamification_show_comparison" value="1"
+                           @if($pflichtstundenSettings->gamification_show_comparison) checked @endif>
+                    Vergleichs-Card anzeigen
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Zeigt einen Vergleich deines Fortschritts mit dem Durchschnitt aller Eltern an und motiviert dich, das Ziel zu erreichen.
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-row mt-3">
+            <button type="submit" class="btn btn-success btn-block">
+                <i class="fas fa-save"></i> Einstellungen speichern
+            </button>
+        </div>
+
     </form>
+</div>

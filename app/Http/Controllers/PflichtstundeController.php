@@ -29,11 +29,88 @@ class PflichtstundeController extends Controller
         }
 
         $pflichtstunden = auth()->user()->pflichtstunden;
+
+        // Berechne Statistiken für Gamification
+        $parent_stats = $this->calculateParentStats();
+
         return view('pflichtstunden.index', [
             'pflichtstunden' => $pflichtstunden,
-            'pflichtstunden_settings' => $this->pflichtstunden_settings
+            'pflichtstunden_settings' => $this->pflichtstunden_settings,
+            'parent_stats' => $parent_stats
         ]);
 
+    }
+
+    /**
+     * Berechne Statistiken für Ranking und Vergleich
+     */
+    private function calculateParentStats()
+    {
+        $currentUser = auth()->user();
+
+        // Hole alle Nutzer mit Permission "view Pflichtstunden"
+        $users = User::query()
+            ->permission('view Pflichtstunden')
+            ->with(['pflichtstunden' => function($query) {
+                $query->where('approved', true);
+            }])
+            ->get();
+
+        $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
+        $userStats = collect();
+
+        // Berechne für jeden Nutzer den Fortschritt
+        foreach ($users as $user) {
+            // Berücksichtige auch den verknüpften Partner (sorg2)
+            $totalMinutes = $user->pflichtstunden->sum('duration');
+
+            if ($user->sorg2) {
+                $partner = $users->where('id', $user->sorg2)->first();
+                if ($partner) {
+                    $totalMinutes += $partner->pflichtstunden->sum('duration');
+                }
+            }
+
+            $progress = $requiredMinutes > 0 ? min(100, round(($totalMinutes / $requiredMinutes) * 100, 2)) : 0;
+
+            $userStats->push([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'progress' => $progress,
+                'total_minutes' => $totalMinutes,
+            ]);
+        }
+
+        // Sortiere nach Fortschritt absteigend
+        $userStats = $userStats->sortByDesc('progress')->values();
+
+        // Finde Rang des aktuellen Nutzers
+        $currentUserProgress = $currentUser->pflichtstunden->sum('duration');
+        if ($currentUser->sorg2) {
+            $partner = $users->where('id', $currentUser->sorg2)->first();
+            if ($partner) {
+                $currentUserProgress += $partner->pflichtstunden->sum('duration');
+            }
+        }
+        $currentUserProgress = $requiredMinutes > 0 ? min(100, round(($currentUserProgress / $requiredMinutes) * 100, 2)) : 0;
+
+        $userRank = 1;
+        foreach ($userStats as $index => $stat) {
+            if ($stat['user_id'] == $currentUser->id) {
+                $userRank = $index + 1;
+                break;
+            }
+        }
+
+        // Berechne Durchschnitt
+        $avgProgress = $userStats->avg('progress');
+
+        return [
+            'total_parents' => $users->count(),
+            'your_rank' => $userRank,
+            'avg_progress' => round($avgProgress, 2),
+            'your_progress' => $currentUserProgress,
+        ];
     }
 
     /**

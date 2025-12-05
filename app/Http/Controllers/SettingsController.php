@@ -262,10 +262,13 @@ class SettingsController extends Controller
                     'pflichtstunden_ende' => 'required|string',
                     'pflichtstunden_text' => 'required|string',
                     'pflichtstunden_anzahl' => 'required|integer|min:1',
-                    'listen_autocreate' => 'required|boolean',
+                    'listen_autocreate' => 'nullable|boolean',
                     'pflichtstunden_betrag' => 'required|numeric|min:0',
+                    'gamification_show_progress' => 'nullable|boolean',
+                    'gamification_show_ranking' => 'nullable|boolean',
+                    'gamification_show_comparison' => 'nullable|boolean',
                 ]);
-                $pflichtstundenSetting = new PflichtstundenSetting();
+
                 try {
                     $start = Carbon::createFromFormat('m-d', $validated['pflichtstunden_start']);
                 } catch (\Exception $e) {
@@ -284,21 +287,18 @@ class SettingsController extends Controller
                     ]);
                 }
 
-
+                $pflichtstundenSetting = new PflichtstundenSetting();
                 $pflichtstundenSetting->pflichtstunden_start = $start->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
                 $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
-                $pflichtstundenSetting->listen_autocreate = $validated['listen_autocreate'];
+                $pflichtstundenSetting->listen_autocreate = $request->has('listen_autocreate');
                 $pflichtstundenSetting->pflichtstunden_betrag = $validated['pflichtstunden_betrag'];
+                $pflichtstundenSetting->gamification_show_progress = $request->has('gamification_show_progress');
+                $pflichtstundenSetting->gamification_show_ranking = $request->has('gamification_show_ranking');
+                $pflichtstundenSetting->gamification_show_comparison = $request->has('gamification_show_comparison');
                 $pflichtstundenSetting->save();
                 break;
-
-            default:
-                return redirect()->back()->with([
-                    'type' => 'danger',
-                    'Meldung' => 'Fehler',
-                ]);
         }
 
         return redirect()->back()->with([

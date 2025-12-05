@@ -2,11 +2,153 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3 space-y-4">
+        <!-- Gamification Stats Card -->
+        @if($pflichtstunden_settings->gamification_show_progress || $pflichtstunden_settings->gamification_show_ranking || $pflichtstunden_settings->gamification_show_comparison)
+        <div class="grid grid-cols-1 {{ $pflichtstunden_settings->gamification_show_progress && $pflichtstunden_settings->gamification_show_ranking && $pflichtstunden_settings->gamification_show_comparison ? 'md:grid-cols-3' : ($pflichtstunden_settings->gamification_show_progress && ($pflichtstunden_settings->gamification_show_ranking || $pflichtstunden_settings->gamification_show_comparison) ? 'md:grid-cols-2' : 'md:grid-cols-1') }} gap-3">
+
+            <!-- Progress Card -->
+            @if($pflichtstunden_settings->gamification_show_progress)
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-md overflow-hidden border border-blue-200">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 border-b border-blue-800">
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-0">
+                        <i class="fas fa-chart-line"></i>
+                        Fortschritt
+                    </h4>
+                </div>
+                <div class="p-3">
+                    @php
+                        $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
+                        $required_minutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
+                        $progress_percentage = min(round(($approved_minutes / $required_minutes) * 100), 100);
+                    @endphp
+
+                    <div class="space-y-2">
+                        @if($pflichtstunden_settings->gamification_show_progress)
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold text-gray-700">Fortschritt</span>
+                                <span class="text-sm font-bold text-blue-600">{{ $progress_percentage }}%</span>
+                            </div>
+                        @endif
+                        @if($pflichtstunden_settings->gamification_show_ranking)
+
+                            <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden shadow-inner">
+                            <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
+                                 style="width: {{ $progress_percentage }}%"></div>
+                            </div>
+                        @endif
+                        @if($pflichtstunden_settings->gamification_show_comparison)
+
+                            <div class="text-center text-xs text-gray-600">
+                                <span class="font-semibold text-green-600">{{ floor($approved_minutes / 60) }}h {{ $approved_minutes % 60 }}m</span>
+                                / <span class="font-semibold">{{ $pflichtstunden_settings->pflichtstunden_anzahl }}h</span>
+                            </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Ranking Card -->
+            @if($pflichtstunden_settings->gamification_show_ranking)
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-md overflow-hidden border border-purple-200">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-2 border-b border-purple-800">
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-0">
+                        <i class="fas fa-trophy"></i>
+                        Ranking
+                    </h4>
+                </div>
+                <div class="p-3">
+                    @php
+                        $total_parents = $parent_stats['total_parents'] ?? 1;
+                        $your_rank = $parent_stats['your_rank'] ?? 1;
+                        $rank_percentage = round(($your_rank / $total_parents) * 100);
+                    @endphp
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-gray-700">Platzierung</span>
+                            <span class="text-2xl font-bold text-purple-600">{{ $your_rank }}.</span>
+                        </div>
+
+                        <div class="text-center text-xs text-gray-600">
+                            von <span class="font-semibold">{{ $total_parents }}</span> Familien
+                        </div>
+
+                        <!-- Rank Badge -->
+                        <div class="mt-2 p-1.5 rounded-lg bg-white border border-purple-200 text-center">
+                            @if($your_rank == 1)
+                                <i class="fas fa-medal text-yellow-500 text-lg"></i>
+                                <p class="text-xs font-bold text-yellow-600 mt-1">🥇 Platz 1!</p>
+                            @elseif($rank_percentage <= 25)
+                                <i class="fas fa-medal text-gray-400 text-lg"></i>
+                                <p class="text-xs font-bold text-purple-600 mt-1">Top 25%!</p>
+                            @else
+                                <i class="fas fa-arrow-trend-up text-green-500 text-lg"></i>
+                                <p class="text-xs text-gray-600 mt-1">Noch Platz nach oben 💪</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Statistics/Comparison Card -->
+            @if($pflichtstunden_settings->gamification_show_comparison)
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-md overflow-hidden border border-green-200">
+                <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-3 py-2 border-b border-green-800">
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-0">
+                        <i class="fas fa-chart-bar"></i>
+                        Vergleich
+                    </h4>
+                </div>
+                <div class="p-3">
+                    @php
+                        $avg_progress = $parent_stats['avg_progress'] ?? $progress_percentage;
+                    @endphp
+
+                    <div class="space-y-2">
+                        <div class="text-xs">
+                            <div class="flex justify-between mb-0.5">
+                                <span class="text-gray-700 font-medium">Dein Wert:</span>
+                                <span class="font-bold text-green-600">{{ $progress_percentage }}%</span>
+                            </div>
+                            <div class="flex justify-between mb-0.5">
+                                <span class="text-gray-700 font-medium">Ø alle:</span>
+                                <span class="font-bold text-gray-600">{{ round($avg_progress) }}%</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-1.5 border-t border-green-200">
+                            @if($progress_percentage > $avg_progress)
+                                <div class="flex items-center gap-2 text-xs">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                    <span class="text-green-700">Über Ø! <strong>+{{ round($progress_percentage - $avg_progress) }}%</strong></span>
+                                </div>
+                            @elseif($progress_percentage < $avg_progress)
+                                <div class="flex items-center gap-2 text-xs">
+                                    <i class="fas fa-arrow-up text-orange-500"></i>
+                                    <span class="text-orange-700"><strong>{{ round($avg_progress - $progress_percentage) }}%</strong> bis Ø</span>
+                                </div>
+                            @else
+                                <div class="flex items-center gap-2 text-xs">
+                                    <i class="fas fa-equals text-blue-500"></i>
+                                    <span class="text-blue-700">Im Durchschnitt</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+
         <!-- Pflichtstunden Übersicht Card -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800">
                 <h3 class="text-xl font-bold text-white flex items-center gap-2 mb-0">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-tasks"></i>
                     Pflichtstunden
                 </h3>
             </div>

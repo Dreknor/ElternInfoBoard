@@ -18,6 +18,10 @@ class PflichtstundenSetting extends Settings
 
     public bool $listen_autocreate;
 
+    public bool $gamification_show_progress = true;
+    public bool $gamification_show_ranking = true;
+    public bool $gamification_show_comparison = true;
+
     public static function group(): string
     {
         return 'pflichtstunden';
