@@ -2,6 +2,13 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3 space-y-4">
+        @php
+            // Berechne grundlegende Werte für alle Gamification-Cards
+            $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
+            $required_minutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
+            $progress_percentage = min(round(($approved_minutes / $required_minutes) * 100), 100);
+        @endphp
+
         <!-- Gamification Stats Card -->
         @if($pflichtstunden_settings->gamification_show_progress || $pflichtstunden_settings->gamification_show_ranking || $pflichtstunden_settings->gamification_show_comparison)
         <div class="grid grid-cols-1 {{ $pflichtstunden_settings->gamification_show_progress && $pflichtstunden_settings->gamification_show_ranking && $pflichtstunden_settings->gamification_show_comparison ? 'md:grid-cols-3' : ($pflichtstunden_settings->gamification_show_progress && ($pflichtstunden_settings->gamification_show_ranking || $pflichtstunden_settings->gamification_show_comparison) ? 'md:grid-cols-2' : 'md:grid-cols-1') }} gap-3">
@@ -16,31 +23,44 @@
                     </h4>
                 </div>
                 <div class="p-3">
-                    @php
-                        $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
-                        $required_minutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
-                        $progress_percentage = min(round(($approved_minutes / $required_minutes) * 100), 100);
-                    @endphp
 
                     <div class="space-y-2">
-                        @if($pflichtstunden_settings->gamification_show_progress)
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-semibold text-gray-700">Fortschritt</span>
-                                <span class="text-sm font-bold text-blue-600">{{ $progress_percentage }}%</span>
-                            </div>
-                        @endif
-                        @if($pflichtstunden_settings->gamification_show_ranking)
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-gray-700">Fortschritt</span>
+                            <span class="text-sm font-bold text-blue-600">{{ $progress_percentage }}%</span>
+                        </div>
 
-                            <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden shadow-inner">
+                        <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden shadow-inner">
                             <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
                                  style="width: {{ $progress_percentage }}%"></div>
-                            </div>
-                        @endif
-                        @if($pflichtstunden_settings->gamification_show_comparison)
+                        </div>
 
-                            <div class="text-center text-xs text-gray-600">
-                                <span class="font-semibold text-green-600">{{ floor($approved_minutes / 60) }}h {{ $approved_minutes % 60 }}m</span>
-                                / <span class="font-semibold">{{ $pflichtstunden_settings->pflichtstunden_anzahl }}h</span>
+                        <div class="text-center text-xs text-gray-600">
+                            <span class="font-semibold text-green-600">{{ floor($approved_minutes / 60) }}h {{ $approved_minutes % 60 }}m</span>
+                            / <span class="font-semibold">{{ $pflichtstunden_settings->pflichtstunden_anzahl }}h</span>
+                        </div>
+
+                        <!-- Achievement Badge -->
+                        @if($progress_percentage >= 100)
+                            <div class="flex justify-center pt-1">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full animate-pulse">
+                                    <i class="fas fa-trophy"></i>
+                                    Ziel erreicht!
+                                </span>
+                            </div>
+                        @elseif($progress_percentage >= 75)
+                            <div class="flex justify-center pt-1">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                    <i class="fas fa-star"></i>
+                                    Fast geschafft!
+                                </span>
+                            </div>
+                        @elseif($progress_percentage >= 50)
+                            <div class="flex justify-center pt-1">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    Auf halbem Weg!
+                                </span>
                             </div>
                         @endif
 
