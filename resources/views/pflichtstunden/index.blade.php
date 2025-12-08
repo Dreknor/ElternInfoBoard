@@ -7,9 +7,24 @@
             $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
             $required_minutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
             $progress_percentage = min(round(($approved_minutes / $required_minutes) * 100), 100);
+
+            // Finde die Pflichtstunden-Hilfe-Site
+            $helpSite = \App\Model\Site::where('name', 'Pflichtstunden Hilfe')->where('is_active', true)->first();
         @endphp
 
+        <!-- Hilfe Link -->
+        <div class="flex justify-end mb-4">
+            @if($helpSite)
+                <a href="{{ route('sites.show', $helpSite->id) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-700 hover:text-indigo-700 font-medium rounded-lg transition-all duration-200">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="hidden sm:inline">Zur Erklärung</span>
+                </a>
+            @endif
+        </div>
+
         <!-- Gamification Stats Card -->
+
         @if($pflichtstunden_settings->gamification_show_progress || $pflichtstunden_settings->gamification_show_ranking || $pflichtstunden_settings->gamification_show_comparison)
         <div class="grid grid-cols-1 {{ $pflichtstunden_settings->gamification_show_progress && $pflichtstunden_settings->gamification_show_ranking && $pflichtstunden_settings->gamification_show_comparison ? 'md:grid-cols-3' : ($pflichtstunden_settings->gamification_show_progress && ($pflichtstunden_settings->gamification_show_ranking || $pflichtstunden_settings->gamification_show_comparison) ? 'md:grid-cols-2' : 'md:grid-cols-1') }} gap-3">
 

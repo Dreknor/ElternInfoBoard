@@ -27,8 +27,7 @@ class DatabaseSeeder extends Seeder
             UpdateGroupsPermission::class,
             DiseasesSeeder::class,
             UpdateSeetingsModuleNameSeeder::class,
-
-
+            CreatePflichtstundenHelpSiteSeeder::class,
         ]);
     }
 }
