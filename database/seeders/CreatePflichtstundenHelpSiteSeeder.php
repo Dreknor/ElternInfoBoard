@@ -52,11 +52,11 @@ class CreatePflichtstundenHelpSiteSeeder extends Seeder
         Was sind Pflichtstunden?
     </h2>
     <p class="text-gray-700 leading-relaxed mb-3">
-        Pflichtstunden sind Freiwilligenstunden, die Eltern (Sorgeberechtigte) erbringen, um die Schule oder Einrichtung zu unterstützen.
+        Pflichtstunden sind Stunden, die Familienerbringen, um die Schule oder Einrichtung zu unterstützen.
         Dies ist eine Gemeinschaftsaufgabe, bei der jede Familie einen Beitrag leistet.
     </p>
     <p class="text-gray-700 leading-relaxed">
-        <strong>Tipp:</strong> Sie und Ihr Ehepartner/Ihre Partnerin werden als <strong>eine Familie</strong> gezählt.
+        <strong>Tipp:</strong>Verknüfte Konten werden als <strong>eine Familie</strong> gezählt.
         Die Stunden werden zusammengezählt.
     </p>
 </div>
@@ -209,17 +209,6 @@ HTML
             </div>
         </div>
     </div>
-
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mt-4">
-        <h4 class="font-semibold text-yellow-900 mb-2">
-            <i class="fas fa-info-circle mr-2"></i>
-            Wichtig: Ranking bei Gleichstand
-        </h4>
-        <p class="text-yellow-800 text-sm">
-            Wenn mehrere Familien die gleichen Stunden geleistet haben, bekommen <strong>alle den schlechtesten Rang dieser Gruppe</strong>.
-            Das ist fair und transparent für alle.
-        </p>
-    </div>
 </div>
 HTML
         ]);
@@ -247,8 +236,8 @@ HTML
             Werden mein Partner und ich einzeln gewertet?
         </summary>
         <p class="text-gray-600 mt-3 ml-6">
-            <strong>Nein!</strong> Sie und Ihr Partner/Ihre Partnerin werden als <strong>eine Familie</strong> gewertet.
-            Alle von Ihnen gemeinsam geleisteten Stunden werden zusammengezählt. Das ist gerechter für Familien mit zwei Sorgeberechtigten.
+            <strong>Nein!</strong> Verknüfte Konten werden als <strong>eine Familie</strong> gewertet.
+            Alle von Ihnen gemeinsam geleisteten Stunden werden zusammengezählt. Sie dürfen auch Stunden von anderen Familienangehörigen erfassen
         </p>
     </details>
 
@@ -263,16 +252,6 @@ HTML
         </p>
     </details>
 
-    <details class="bg-white border border-gray-200 rounded-lg p-4 group">
-        <summary class="cursor-pointer font-semibold text-gray-900 flex items-center gap-2">
-            <i class="fas fa-chevron-right group-open:rotate-90 transition-transform text-gray-400"></i>
-            Wie lange dauert es, bis meine Stunden bestätigt werden?
-        </summary>
-        <p class="text-gray-600 mt-3 ml-6">
-            Das hängt von der Schule/Einrichtung ab. Normalerweise werden Eintragungen innerhalb weniger Tage überprüft.
-            Sie können den Status jederzeit in Ihrer Übersicht einsehen.
-        </p>
-    </details>
 
     <details class="bg-white border border-gray-200 rounded-lg p-4 group">
         <summary class="cursor-pointer font-semibold text-gray-900 flex items-center gap-2">
@@ -286,12 +265,9 @@ HTML
             <li>Schulfeste und Schulveranstaltungen</li>
             <li>Gartenarbeit und Schulhofgestaltung</li>
             <li>Hilfe bei der Schulreinigung</li>
-            <li>Aufsichtsdienste</li>
+            <li>Wegebegleitungen</li>
             <li>Unterstützung bei schulischen Projekten</li>
         </ul>
-        <p class="text-gray-600 mt-2 ml-6 text-sm">
-            <strong>Fragen Sie die Schulleitung oder Elternvertretung,</strong> wenn Sie sich unsicher sind, ob eine Tätigkeit zählt.
-        </p>
     </details>
 
     <details class="bg-white border border-gray-200 rounded-lg p-4 group">
@@ -300,8 +276,7 @@ HTML
             Was passiert, wenn ich die Pflichtstunden nicht erfülle?
         </summary>
         <p class="text-gray-600 mt-3 ml-6">
-            Jede Schule/Einrichtung hat ihre eigenen Regelungen.
-            Normalerweise müssen Sie einen Ausgleichsbeitrag zahlen.
+            Die nicht geleisteten Stunden werden am Ende des Schuljahres in Rechnung gestellt.
             Der genaue Betrag wird Ihnen in Ihrer Übersicht angezeigt.
         </p>
     </details>
@@ -364,7 +339,7 @@ HTML
             Koordinieren Sie mit Ihrem Partner
         </h4>
         <p class="text-orange-800 text-sm">
-            Da Sie als Familie gewertet werden, können beide Sorgeberechtigte Stunden erbringen.
+            Da Sie als Familie gewertet werden, können beide Sorgeberechtigte aber auch andere Familienangehörige Stunden erbringen.
             Teilen Sie sich die Aufgaben, wie es für Ihre Familie passt.
         </p>
     </div>
@@ -380,42 +355,7 @@ HTML
             'title' => null,
         ]);
 
-        // Block 6: Kontakt und Hilfe
-        $contact = SiteBlockText::create([
-            'content' => <<<'HTML'
-<div class="bg-gradient-to-r from-indigo-50 to-blue-50 border-l-4 border-indigo-600 p-6 rounded-lg">
-    <h2 class="text-2xl font-bold text-indigo-900 mb-4">
-        <i class="fas fa-headset mr-2"></i>
-        Fragen oder Probleme?
-    </h2>
-    <p class="text-indigo-800 mb-4">
-        Wenn Sie Fragen zur Erfassung von Pflichtstunden haben oder auf Probleme stoßen:
-    </p>
-    <ul class="space-y-2 text-indigo-800">
-        <li class="flex items-start gap-3">
-            <i class="fas fa-envelope mt-1 flex-shrink-0"></i>
-            <span><strong>Kontaktieren Sie die Schulleitung</strong> oder die Elternvertretung</span>
-        </li>
-        <li class="flex items-start gap-3">
-            <i class="fas fa-comments mt-1 flex-shrink-0"></i>
-            <span><strong>Nutzen Sie die Nachrichtenfunction</strong> im Portal, um Fragen zu stellen</span>
-        </li>
-        <li class="flex items-start gap-3">
-            <i class="fas fa-circle-question mt-1 flex-shrink-0"></i>
-            <span><strong>Schauen Sie in der Hilfe nach,</strong> ob Ihre Frage bereits beantwortet wurde</span>
-        </li>
-    </ul>
-</div>
-HTML
-        ]);
 
-        SiteBlock::create([
-            'site_id' => $site->id,
-            'block_id' => $contact->id,
-            'block_type' => SiteBlockText::class,
-            'position' => 6,
-            'title' => null,
-        ]);
 
         echo "✅ Pflichtstunden Hilfe Site wurde erstellt!\n";
         echo "Sie können die Seite unter: https://yoursite.local/sites/show/{$site->id} aufrufen.\n";
