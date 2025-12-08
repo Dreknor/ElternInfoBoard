@@ -24,7 +24,9 @@ class UpdateSiteBlockTextRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|string',
+
+            'site_id' => 'required|exists:sites,id',
+            'title' => 'nullable|string',
             'content' => 'required|string',
         ];
     }
