@@ -99,13 +99,13 @@
                         <div class="mt-2 p-1.5 rounded-lg bg-white border border-purple-200 text-center">
                             @if($your_rank == 1)
                                 <i class="fas fa-medal text-yellow-500 text-lg"></i>
-                                <p class="text-xs font-bold text-yellow-600 mt-1">🥇 Platz 1!</p>
+                                <p class="text-md font-bold text-yellow-600 mt-1">🥇 Platz 1!</p>
                             @elseif($rank_percentage <= 25)
                                 <i class="fas fa-medal text-gray-400 text-lg"></i>
-                                <p class="text-xs font-bold text-purple-600 mt-1">Top 25%!</p>
+                                <p class="text-md font-bold text-purple-600 mt-1">Top 25%!</p>
                             @else
                                 <i class="fas fa-arrow-trend-up text-green-500 text-lg"></i>
-                                <p class="text-xs text-gray-600 mt-1">Noch Platz nach oben 💪</p>
+                                <p class="text-md text-gray-600 mt-1">Noch Platz nach oben 💪</p>
                             @endif
                         </div>
                     </div>
