@@ -57,34 +57,45 @@ class PflichtstundeController extends Controller
             ->get();
 
         $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
-        $userStats = collect();
+        $familyStats = collect();
+        $processed = collect();
 
-        // Berechne für jeden Nutzer den Fortschritt
+        // Gruppiere Nutzer als Familien (User + sorg2 Partner)
         foreach ($users as $user) {
+            // Überspringe wenn bereits als sorg2 verarbeitet
+            if ($processed->contains($user->id)) {
+                continue;
+            }
+
             // Berücksichtige auch den verknüpften Partner (sorg2)
             $totalMinutes = $user->pflichtstunden->sum('duration');
+            $familyUserIds = [$user->id];
 
             if ($user->sorg2) {
                 $partner = $users->where('id', $user->sorg2)->first();
                 if ($partner) {
                     $totalMinutes += $partner->pflichtstunden->sum('duration');
+                    $familyUserIds[] = $partner->id;
+                    $processed->push($partner->id);
                 }
             }
 
             $progress = $requiredMinutes > 0 ? min(100, round(($totalMinutes / $requiredMinutes) * 100, 2)) : 0;
 
-            $userStats->push([
-                'user_id' => $user->id,
+            $familyStats->push([
+                'user_ids' => $familyUserIds, // Alle User-IDs dieser Familie
                 'name' => $user->name,
                 'progress' => $progress,
                 'total_minutes' => $totalMinutes,
             ]);
+
+            $processed->push($user->id);
         }
 
         // Sortiere nach Fortschritt absteigend
-        $userStats = $userStats->sortByDesc('progress')->values();
+        $familyStats = $familyStats->sortByDesc('progress')->values();
 
-        // Finde Rang des aktuellen Nutzers
+        // Berechne Fortschritt des aktuellen Nutzers
         $currentUserProgress = $currentUser->pflichtstunden->sum('duration');
         if ($currentUser->sorg2) {
             $partner = $users->where('id', $currentUser->sorg2)->first();
@@ -94,19 +105,31 @@ class PflichtstundeController extends Controller
         }
         $currentUserProgress = $requiredMinutes > 0 ? min(100, round(($currentUserProgress / $requiredMinutes) * 100, 2)) : 0;
 
+        // Finde Rang des aktuellen Nutzers (schlechtester Rang bei Gleichstand)
         $userRank = 1;
-        foreach ($userStats as $index => $stat) {
-            if ($stat['user_id'] == $currentUser->id) {
-                $userRank = $index + 1;
+        $currentRank = 1;
+        $previousProgress = null;
+
+        foreach ($familyStats as $index => $stat) {
+            // Bei neuem Fortschritt-Wert wird der Rang auf die aktuelle Position gesetzt
+            if ($previousProgress !== null && $stat['progress'] < $previousProgress) {
+                $currentRank = $index + 1;
+            }
+
+            // Prüfe ob der aktuelle User in dieser Familie ist
+            if (in_array($currentUser->id, $stat['user_ids'])) {
+                $userRank = $currentRank;
                 break;
             }
+
+            $previousProgress = $stat['progress'];
         }
 
         // Berechne Durchschnitt
-        $avgProgress = $userStats->avg('progress');
+        $avgProgress = $familyStats->avg('progress');
 
         return [
-            'total_parents' => $users->count(),
+            'total_parents' => $familyStats->count(),
             'your_rank' => $userRank,
             'avg_progress' => round($avgProgress, 2),
             'your_progress' => $currentUserProgress,
