@@ -107,22 +107,21 @@ class PflichtstundeController extends Controller
 
         // Finde Rang des aktuellen Nutzers (schlechtester Rang bei Gleichstand)
         $userRank = 1;
-        $currentRank = 1;
-        $previousProgress = null;
+        $currentUserProgress = null;
 
+        // Finde zuerst den Fortschritt des aktuellen Users
         foreach ($familyStats as $index => $stat) {
-            // Bei neuem Fortschritt-Wert wird der Rang auf die aktuelle Position gesetzt
-            if ($previousProgress !== null && $stat['progress'] < $previousProgress) {
-                $currentRank = $index + 1;
-            }
-
-            // Prüfe ob der aktuelle User in dieser Familie ist
             if (in_array($currentUser->id, $stat['user_ids'])) {
-                $userRank = $currentRank;
+                $currentUserProgress = $stat['progress'];
                 break;
             }
+        }
 
-            $previousProgress = $stat['progress'];
+        // Zähle alle Familien mit besserem oder gleichem Fortschritt
+        if ($currentUserProgress !== null) {
+            $userRank = $familyStats->filter(function($stat) use ($currentUserProgress) {
+                return $stat['progress'] >= $currentUserProgress;
+            })->count();
         }
 
         // Berechne Durchschnitt
