@@ -4,14 +4,21 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreatePflichtstundeRequest extends FormRequest
+class UpdatePflichtstundeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return auth()->user()->can('view Pflichtstunden');
+        $pflichtstunde = $this->route('pflichtstunde');
+
+        // User kann eigene Pflichtstunden bearbeiten wenn sie noch nicht bestätigt/abgelehnt wurden
+        // Oder wenn der User die edit Pflichtstunden Berechtigung hat
+        return (
+            ($pflichtstunde->user_id === auth()->id() && !$pflichtstunde->approved && !$pflichtstunde->rejected)
+            || auth()->user()->can('edit Pflichtstunden')
+        );
     }
 
     /**
@@ -60,3 +67,4 @@ class CreatePflichtstundeRequest extends FormRequest
         ];
     }
 }
+

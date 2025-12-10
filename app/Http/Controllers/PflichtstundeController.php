@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePflichtstundeRequest;
+use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
 use App\Model\User;
 use App\Settings\PflichtstundenSetting;
@@ -167,6 +168,7 @@ class PflichtstundeController extends Controller
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
+            ->where('end', '<', now())
             ->with('user')->get();
 
         // Hole alle Nutzer mit Permission "view Pflichtstunden"
@@ -323,5 +325,51 @@ class PflichtstundeController extends Controller
             new PflichtstundenExport($year),
             'pflichtstunden_abrechnung_' . ($year ?? 'aktuell') . '_' . date('Y-m-d') . '.xlsx'
         );
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdatePflichtstundeRequest $request, Pflichtstunde $pflichtstunde)
+    {
+        // Prüfe ob bereits bestätigt oder abgelehnt
+        if ($pflichtstunde->approved || $pflichtstunde->rejected) {
+            return redirect()->back()->with('error', 'Pflichtstunde kann nicht mehr bearbeitet werden, da sie bereits bestätigt oder abgelehnt wurde.');
+        }
+
+        $data = $request->validated();
+
+        // Wenn user_id gesetzt ist und Nutzer die Berechtigung hat, für andere Nutzer Stunden anzulegen
+        if (isset($data['user_id']) && auth()->user()->can('edit Pflichtstunden')) {
+            // user_id bleibt wie übergeben
+        } else {
+            // Sonst für den aktuell angemeldeten Nutzer
+            $data['user_id'] = auth()->id();
+        }
+
+        $pflichtstunde->update($data);
+
+        return redirect()->back()->with('success', 'Pflichtstunde aktualisiert');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Pflichtstunde $pflichtstunde)
+    {
+        // Prüfe Berechtigung: Entweder eigene Pflichtstunde (nicht bestätigt/abgelehnt) oder edit Pflichtstunden Berechtigung
+        if (!auth()->user()->can('edit Pflichtstunden') &&
+            ($pflichtstunde->user_id !== auth()->id() || $pflichtstunde->approved || $pflichtstunde->rejected)) {
+            return redirect()->back()->with('error', 'Berechtigung fehlt oder Pflichtstunde kann nicht mehr gelöscht werden.');
+        }
+
+        // Zusätzliche Prüfung für normale User
+        if (!auth()->user()->can('edit Pflichtstunden') && ($pflichtstunde->approved || $pflichtstunde->rejected)) {
+            return redirect()->back()->with('error', 'Pflichtstunde kann nicht mehr gelöscht werden, da sie bereits bestätigt oder abgelehnt wurde.');
+        }
+
+        $pflichtstunde->delete();
+
+        return redirect()->back()->with('success', 'Pflichtstunde gelöscht');
     }
 }

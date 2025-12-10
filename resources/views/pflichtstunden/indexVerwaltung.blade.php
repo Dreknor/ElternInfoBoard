@@ -209,15 +209,28 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                             @foreach ($pflichtstunden as $pflichtstunde)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                <tr class="hover:bg-gray-50 transition-colors duration-150" x-data="{
+                                    showEdit: false,
+                                    editData: {
+                                        start: '{{ $pflichtstunde->start->format('Y-m-d\TH:i') }}',
+                                        end: '{{ $pflichtstunde->end->format('Y-m-d\TH:i') }}',
+                                        description: {{ Js::from($pflichtstunde->description) }}
+                                    }
+                                }">
                                     <td class="px-4 py-3 text-sm text-gray-700">
-                                        @if($pflichtstunde->start->isSameDay($pflichtstunde->end))
-                                            <div class="font-medium">{{ $pflichtstunde->start->format('d.m.Y') }}</div>
-                                            <div class="text-xs text-gray-500">{{ $pflichtstunde->start->format('H:i') }} - {{ $pflichtstunde->end->format('H:i') }}</div>
-                                        @else
-                                            <div class="text-xs">{{ $pflichtstunde->start->format('d.m.Y H:i') }}</div>
-                                            <div class="text-xs">{{ $pflichtstunde->end->format('d.m.Y H:i') }}</div>
-                                        @endif
+                                        <span x-show="!showEdit">
+                                            @if($pflichtstunde->start->isSameDay($pflichtstunde->end))
+                                                <div class="font-medium">{{ $pflichtstunde->start->format('d.m.Y') }}</div>
+                                                <div class="text-xs text-gray-500">{{ $pflichtstunde->start->format('H:i') }} - {{ $pflichtstunde->end->format('H:i') }}</div>
+                                            @else
+                                                <div class="text-xs">{{ $pflichtstunde->start->format('d.m.Y H:i') }}</div>
+                                                <div class="text-xs">{{ $pflichtstunde->end->format('d.m.Y H:i') }}</div>
+                                            @endif
+                                        </span>
+                                        <div x-show="showEdit" x-cloak class="space-y-2">
+                                            <input type="datetime-local" x-model="editData.start" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                                            <input type="datetime-local" x-model="editData.end" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -232,10 +245,29 @@
                                         {{ $pflichtstunde->user->name }}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-700">
-                                        {{ Str::limit($pflichtstunde->description, 50) }}
+                                        <span x-show="!showEdit">{{ Str::limit($pflichtstunde->description, 50) }}</span>
+                                        <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="2" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
                                     </td>
                                     <td class="px-4 py-3 text-sm">
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <button @click="showEdit = !showEdit" type="button"
+                                                    class="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors duration-200">
+                                                <i class="fas" :class="showEdit ? 'fa-times' : 'fa-edit'"></i>
+                                                <span x-text="showEdit ? 'Abbrechen' : 'Bearbeiten'"></span>
+                                            </button>
+                                            <form x-show="showEdit" x-cloak :action="`{{ route('pflichtstunden.update', $pflichtstunde) }}`" method="POST" class="inline">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="start" :value="editData.start">
+                                                <input type="hidden" name="end" :value="editData.end">
+                                                <input type="hidden" name="description" :value="editData.description">
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded transition-colors duration-200"
+                                                        onclick="return confirm('Änderungen speichern?');">
+                                                    <i class="fas fa-save"></i>
+                                                    Speichern
+                                                </button>
+                                            </form>
                                             <form action="{{ route('pflichtstunden.approve', $pflichtstunde) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('PUT')
@@ -272,6 +304,16 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                            <form action="{{ route('pflichtstunden.destroy', $pflichtstunde) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded transition-colors duration-200"
+                                                        onclick="return confirm('Möchten Sie diese Pflichtstunde wirklich löschen?');">
+                                                    <i class="fas fa-trash"></i>
+                                                    Löschen
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

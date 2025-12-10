@@ -102,13 +102,14 @@ Route::middleware('auth')->group(function () {
 
         Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
         Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
+        Route::put('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'update'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.update');
+        Route::delete('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'destroy'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.destroy');
 
         Route::middleware('permission:edit Pflichtstunden')->group(function () {
             Route::get('verwaltung/pflichtstunden/export', [\App\Http\Controllers\PflichtstundeController::class, 'export'])->name('pflichtstunden.export');
             Route::get('verwaltung/pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'verwaltungIndex'])->name('pflichtstunden.indexVerwaltung');
             Route::put('pflichtstunden/{pflichtstunde}/approve', [\App\Http\Controllers\PflichtstundeController::class, 'approve'])->name('pflichtstunden.approve');
             Route::put('pflichtstunden/{pflichtstunde}/reject', [\App\Http\Controllers\PflichtstundeController::class, 'reject'])->name('pflichtstunden.reject');
-            Route::delete('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'destroy']);
         });
 
         //Datenschutz

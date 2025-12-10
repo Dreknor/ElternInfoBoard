@@ -201,17 +201,31 @@
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stundenanzahl</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Grund</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Aktionen</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             @foreach ($pflichtstunden as $pflichtstunde)
-                                <tr class="hover:bg-gray-50 transition-colors">
+                                <tr class="hover:bg-gray-50 transition-colors" x-data="{
+                                    showEdit: false,
+                                    editData: {
+                                        start: '{{ $pflichtstunde->start->format('Y-m-d\TH:i') }}',
+                                        end: '{{ $pflichtstunde->end->format('Y-m-d\TH:i') }}',
+                                        description: {{ Js::from($pflichtstunde->description) }}
+                                    }
+                                }">
                                     <td class="px-4 py-3 text-sm text-gray-800">
-                                        @if($pflichtstunde->start->isSameDay($pflichtstunde->end))
-                                            {{ $pflichtstunde->start->format('d.m.Y') }} von {{ $pflichtstunde->start->format('H:i') }} bis {{ $pflichtstunde->end->format('H:i') }}
-                                        @else
-                                            {{ $pflichtstunde->start->format('d.m.Y H:i') }} bis {{ $pflichtstunde->end->format('d.m.Y H:i') }}
-                                        @endif
+                                        <span x-show="!showEdit">
+                                            @if($pflichtstunde->start->isSameDay($pflichtstunde->end))
+                                                {{ $pflichtstunde->start->format('d.m.Y') }} von {{ $pflichtstunde->start->format('H:i') }} bis {{ $pflichtstunde->end->format('H:i') }}
+                                            @else
+                                                {{ $pflichtstunde->start->format('d.m.Y H:i') }} bis {{ $pflichtstunde->end->format('d.m.Y H:i') }}
+                                            @endif
+                                        </span>
+                                        <div x-show="showEdit" x-cloak class="space-y-2">
+                                            <input type="datetime-local" x-model="editData.start" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                                            <input type="datetime-local" x-model="editData.end" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-800 font-medium">
                                         @if($pflichtstunde->duration > 60)
@@ -221,7 +235,8 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-700">
-                                        {{ $pflichtstunde->description }}
+                                        <span x-show="!showEdit">{{ $pflichtstunde->description }}</span>
+                                        <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="3" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
                                     </td>
                                     <td class="px-4 py-3">
                                         @if($pflichtstunde->approved)
@@ -244,12 +259,48 @@
                                             </span>
                                         @endif
                                     </td>
+                                    <td class="px-4 py-3">
+                                        @if(!$pflichtstunde->approved && !$pflichtstunde->rejected)
+                                            <div class="flex items-center gap-2">
+                                                <button @click="showEdit = !showEdit" type="button"
+                                                        class="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors duration-200">
+                                                    <i class="fas" :class="showEdit ? 'fa-times' : 'fa-edit'"></i>
+                                                    <span x-text="showEdit ? 'Abbrechen' : 'Bearbeiten'"></span>
+                                                </button>
+                                                <form x-show="showEdit" x-cloak :action="`{{ route('pflichtstunden.update', $pflichtstunde) }}`" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="start" :value="editData.start">
+                                                    <input type="hidden" name="end" :value="editData.end">
+                                                    <input type="hidden" name="description" :value="editData.description">
+                                                    <button type="submit"
+                                                            class="inline-flex items-center gap-1 px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-colors duration-200"
+                                                            onclick="return confirm('Änderungen speichern?');">
+                                                        <i class="fas fa-save"></i>
+                                                        Speichern
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('pflichtstunden.destroy', $pflichtstunde) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="inline-flex items-center gap-1 px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors duration-200"
+                                                            onclick="return confirm('Möchten Sie diese Pflichtstunde wirklich löschen?');">
+                                                        <i class="fas fa-trash"></i>
+                                                        Löschen
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-500">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50 border-t-2 border-gray-300">
                             <tr>
-                                <th colspan="3" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                <th colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Gesamtstunden:
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-blue-600">
@@ -261,7 +312,7 @@
                                 </th>
                             </tr>
                             <tr>
-                                <th colspan="3" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                <th colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Verbleibende Stunden:
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-orange-600">
@@ -278,7 +329,7 @@
                                 </th>
                             </tr>
                             <tr>
-                                <th colspan="3" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                <th colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Offener Betrag ({{$pflichtstunden_settings->pflichtstunden_betrag}} € je Pflichtstunde):
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-red-600">
