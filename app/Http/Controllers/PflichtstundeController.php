@@ -143,11 +143,9 @@ class PflichtstundeController extends Controller
     {
         $data = $request->validated();
 
-        // Wenn user_id gesetzt ist und Nutzer die Berechtigung hat, für andere Nutzer Stunden anzulegen
-        if (isset($data['user_id']) && auth()->user()->can('edit Pflichtstunden')) {
-            // user_id bleibt wie übergeben
-        } else {
-            // Sonst für den aktuell angemeldeten Nutzer
+        // Wenn user_id nicht gesetzt ist oder Nutzer keine Berechtigung hat, für andere anzulegen
+        if (!isset($data['user_id']) || !auth()->user()->can('edit Pflichtstunden')) {
+            // Dann für den aktuell angemeldeten Nutzer
             $data['user_id'] = auth()->id();
         }
 
@@ -169,7 +167,8 @@ class PflichtstundeController extends Controller
             ->where('approved', false)
             ->where('rejected', false)
             ->where('end', '<', now())
-            ->with('user')->get();
+            ->orderBy('end', 'desc')
+            ->get();
 
         // Hole alle Nutzer mit Permission "view Pflichtstunden"
         $users = User::query()
@@ -339,13 +338,8 @@ class PflichtstundeController extends Controller
 
         $data = $request->validated();
 
-        // Wenn user_id gesetzt ist und Nutzer die Berechtigung hat, für andere Nutzer Stunden anzulegen
-        if (isset($data['user_id']) && auth()->user()->can('edit Pflichtstunden')) {
-            // user_id bleibt wie übergeben
-        } else {
-            // Sonst für den aktuell angemeldeten Nutzer
-            $data['user_id'] = auth()->id();
-        }
+        // user_id darf beim Update nicht geändert werden
+        unset($data['user_id']);
 
         $pflichtstunde->update($data);
 

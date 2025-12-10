@@ -50,7 +50,7 @@ class UpdatePflichtstundeRequest extends FormRequest
                 },
             ],
             'description' => ['required', 'string', 'max:500'],
-            'user_id' => ['sometimes', 'exists:users,id'] // Für Verwaltung
+            // user_id wird beim Update nicht akzeptiert, um ein Überschreiben zu verhindern
         ];
     }
 
