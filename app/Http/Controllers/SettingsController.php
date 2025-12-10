@@ -182,6 +182,11 @@ class SettingsController extends Controller
                 $settings->app_name = $validated['app_name'];
 
                 if ($request->hasFile('app_logo')) {
+                    // Alte Logo-Datei löschen (außer Standard-Logo)
+                    if ($settings->logo && $settings->logo !== 'app_logo.png' && Storage::disk('public')->exists('img/' . $settings->logo)) {
+                        Storage::disk('public')->delete('img/' . $settings->logo);
+                    }
+
                     $file = request()->file('app_logo');
                     $ext = $file->extension();
                     $name = Carbon::now()->format('YmdHis') . '_logo' . '.' . $ext;
@@ -191,6 +196,11 @@ class SettingsController extends Controller
 
                 }
                 if ($request->hasFile('favicon')) {
+                    // Alte Favicon-Datei löschen (außer Standard-Favicon)
+                    if ($settings->favicon && $settings->favicon !== 'app_logo.png' && Storage::disk('public')->exists('img/' . $settings->favicon)) {
+                        Storage::disk('public')->delete('img/' . $settings->favicon);
+                    }
+
                     $file = request()->file('favicon');
                     $ext = $file->extension();
                     $name = Carbon::now()->format('YmdHis') . '_favicon' . '.' . $ext;

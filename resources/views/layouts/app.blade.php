@@ -8,11 +8,35 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapidPublicKey" content=" {{ config('webpush.vapid.public_key') }}">
 
-    @if($settings->favicon == 'app_logo.png')
-        <link rel="shortcut icon" href="{{asset('img/'.$settings->favicon)}}" type="image/x-icon">
-    @else
-        <link rel="shortcut icon" href="{{url('storage/img/'.$settings->favicon)}}" type="image/x-icon">
-    @endif
+    @php
+        $faviconPath = 'img/app_logo.png';
+        $faviconVersion = time();
+
+        if ($settings->favicon == 'app_logo.png') {
+            $faviconPath = 'img/' . $settings->favicon;
+            $faviconUrl = asset($faviconPath);
+            if (file_exists(public_path($faviconPath))) {
+                $faviconVersion = @filemtime(public_path($faviconPath)) ?: time();
+            }
+        } else {
+            // Prüfe, ob die Datei im Storage existiert
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists('img/' . $settings->favicon)) {
+                $faviconPath = 'storage/img/' . $settings->favicon;
+                $faviconUrl = url($faviconPath);
+                try {
+                    $faviconVersion = \Illuminate\Support\Facades\Storage::disk('public')->lastModified('img/' . $settings->favicon);
+                } catch (\Exception $e) {
+                    $faviconVersion = time();
+                }
+            } else {
+                // Fallback zum Standard-Logo
+                $faviconPath = 'img/app_logo.png';
+                $faviconUrl = asset($faviconPath);
+                $faviconVersion = @filemtime(public_path($faviconPath)) ?: time();
+            }
+        }
+    @endphp
+    <link rel="shortcut icon" href="{{$faviconUrl}}?v={{$faviconVersion}}" type="image/x-icon">
     <title>{{$settings->app_name}} @yield('title')</title>
 
     <!-- Alpine.js x-cloak styling to prevent FOUC - MUST be before Alpine.js -->
