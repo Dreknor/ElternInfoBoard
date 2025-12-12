@@ -11,6 +11,43 @@
                 <p class="text-blue-100">{{ $datum->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</p>
             </div>
 
+            <!-- Aktive meldepflichtige Erkrankungen -->
+            @if($activeDiseases && count($activeDiseases) > 0)
+                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg shadow p-3 mb-4">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-red-500" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h6 class="font-bold text-red-800 mb-2">
+                                <i class="fas fa-virus"></i> Aktive meldepflichtige Erkrankungen
+                            </h6>
+                            <div class="space-y-2">
+                                @foreach($activeDiseases as $activeDisease)
+                                    <div class="bg-white border border-red-200 rounded p-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="font-semibold text-red-900 text-sm">
+                                                <i class="fas fa-disease"></i> {{ $activeDisease->disease->name }}
+                                            </span>
+                                            <span class="text-xs text-gray-600">
+                                                <i class="far fa-calendar"></i>
+                                                {{ $activeDisease->start->format('d.m.Y') }}
+                                                @if($activeDisease->end)
+                                                    - {{ $activeDisease->end->format('d.m.Y') }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-red-600 mt-2 mb-0">
+                                <i class="fas fa-info-circle"></i> Bitte beachten Sie die entsprechenden Hygienemaßnahmen.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Losung des Tages -->
             @if($losung)
                 @include('include.losung')

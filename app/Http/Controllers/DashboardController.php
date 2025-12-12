@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Losung;
 use App\Model\Post;
 use App\Model\Termin;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -81,12 +83,22 @@ class DashboardController extends Controller
             ->orderBy('first_name')
             ->get();
 
+        // Aktive meldepflichtige Erkrankungen abrufen
+        $activeDiseases = Cache::remember('active_diseases', 60 * 5, function () {
+            return ActiveDisease::query()
+                ->where('active', true)
+                ->whereDate('end', '>=', Carbon::now())
+                ->with('disease')
+                ->get();
+        });
+
         return view('dashboard.index', [
             'nachrichten' => $nachrichten,
             'termine' => $termine,
             'losung' => $losung,
             'datum' => Carbon::now(),
             'careChildren' => $careChildren,
+            'activeDiseases' => $activeDiseases,
         ]);
     }
 }
