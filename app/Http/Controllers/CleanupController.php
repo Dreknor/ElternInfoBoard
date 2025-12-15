@@ -58,18 +58,22 @@ class CleanupController extends Controller
         }
 
         try {
-            //Delete old Schickzeiten
-            $schickzeiten = Schickzeiten::withTrashed()->whereNotNull('deleted_at')->where('deleted_at', '<', now()->subDays(14))->get();
-            foreach ($schickzeiten as $schickzeit) {
-                $schickzeit->forceDelete();
-            }
+            //Delete Schickzeiten older than 14 days that are soft deleted
+            Schickzeiten::onlyTrashed()
+                ->where('deleted_at', '<', now()->subDays(14))
+                ->forceDelete();
+
+            //Delete Schickzeiten with specific_date older than 14 days
+            Schickzeiten::whereNotNull('specific_date')
+                ->whereDate('specific_date', '<', now()->subDays(14))
+                ->forceDelete();
         } catch (\Exception $e) {
             Log::error('Error while cleaning up Schickzeiten: ' . $e->getMessage());
             foreach ($admins as $admin) {
                 $notification = new Notification([
                     'user_id' => $admin->id,
                     'title' => 'Clean up Error',
-                    'message' => 'Error while cleaning up Schickzeiten ',
+                    'message' => 'Error while cleaning up Schickzeiten: ' . $e->getMessage(),
                     'type' => 'error',
                 ]);
                 $notification->save();
@@ -112,9 +116,9 @@ class CleanupController extends Controller
 
         try {
             //delete Vertretung entries older than 7 days
-            Vertretung::whereDate('date', '<', now()->subDays(7))->delete();
+            Vertretung::withoutGlobalScopes()->whereDate('date', '<', now()->subDays(7))->delete();
             VertretungsplanAbsence::whereDate('end_date', '<', now()->subDays(7))->delete();
-            VertretungsplanNews::whereDate('ende', '<', now()->subDays(7))->delete();
+            VertretungsplanNews::withoutGlobalScopes()->whereDate('ende', '<', now()->subDays(7))->delete();
             VertretungsplanWeek::whereDate('week', '<', now()->subDays(7))->delete();
         } catch (\Exception $e) {
             Log::error('Error while cleaning up Vertretung: ' . $e->getMessage());
@@ -122,7 +126,7 @@ class CleanupController extends Controller
                 $notification = new Notification([
                     'user_id' => $admin->id,
                     'title' => 'Clean up Error',
-                    'message' => 'Error while cleaning up Vertretung ',
+                    'message' => 'Error while cleaning up Vertretung: ' . $e->getMessage(),
                     'type' => 'error',
                 ]);
                 $notification->save();
@@ -130,16 +134,42 @@ class CleanupController extends Controller
         }
 
         try {
-            //delete old Schickzeiten
-            $schickzeiten = Schickzeiten::withTrashed()->where('deleted_at', '<', now()->subMonth(2))->forceDelete();
+            // Delete children and their Schickzeiten if they are not in any Care group or class
+            // AND their parents don't have the "Eltern" role
+            $childrenToDelete = \App\Model\Child::whereNull('group_id')
+                ->whereNull('class_id')
+                ->get();
 
+            foreach ($childrenToDelete as $child) {
+                // Check if all parents don't have the "Eltern" role
+                $parents = $child->parents;
+                $shouldDelete = true;
+
+                if ($parents->count() > 0) {
+                    foreach ($parents as $parent) {
+                        if ($parent->hasRole('Eltern')) {
+                            $shouldDelete = false;
+                            break;
+                        }
+                    }
+                }
+                // If no parents exist, $shouldDelete remains true
+
+                if ($shouldDelete) {
+                    // Delete all Schickzeiten for this child (both soft deleted and not)
+                    Schickzeiten::withTrashed()->where('child_id', $child->id)->forceDelete();
+
+                    // Delete the child
+                    $child->delete();
+                }
+            }
         } catch (\Exception $e) {
-            Log::error('Error while cleaning up Schickzeiten: ' . $e->getMessage());
+            Log::error('Error while cleaning up orphaned children: ' . $e->getMessage());
             foreach ($admins as $admin) {
                 $notification = new Notification([
                     'user_id' => $admin->id,
                     'title' => 'Clean up Error',
-                    'message' => 'Error while cleaning up Schickzeiten ',
+                    'message' => 'Error while cleaning up orphaned children: ' . $e->getMessage(),
                     'type' => 'error',
                 ]);
                 $notification->save();
