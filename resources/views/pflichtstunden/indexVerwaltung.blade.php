@@ -302,7 +302,7 @@
                                         {{ $pflichtstunde->user->name }}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-700">
-                                        <span x-show="!showEdit">{{ Str::limit($pflichtstunde->description, 50) }}</span>
+                                        <span x-show="!showEdit">{{ $pflichtstunde->description }}</span>
                                         <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="2" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
                                     </td>
                                     @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
