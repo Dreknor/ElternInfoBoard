@@ -200,6 +200,9 @@
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Datum</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stundenanzahl</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Grund</th>
+                                @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Bereich</th>
+                                @endif
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Aktionen</th>
                             </tr>
@@ -238,6 +241,18 @@
                                         <span x-show="!showEdit">{{ $pflichtstunde->description }}</span>
                                         <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="3" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
                                     </td>
+                                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        @if($pflichtstunde->bereich)
+                                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                                                <i class="fas fa-folder"></i>
+                                                {{ $pflichtstunde->bereich }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400 text-xs">-</span>
+                                        @endif
+                                    </td>
+                                    @endif
                                     <td class="px-4 py-3">
                                         @if($pflichtstunde->approved)
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
@@ -300,7 +315,7 @@
                         </tbody>
                         <tfoot class="bg-gray-50 border-t-2 border-gray-300">
                             <tr>
-                                <th colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Gesamtstunden:
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-blue-600">
@@ -312,7 +327,7 @@
                                 </th>
                             </tr>
                             <tr>
-                                <th colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Verbleibende Stunden:
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-orange-600">
@@ -329,7 +344,7 @@
                                 </th>
                             </tr>
                             <tr>
-                                <th colspan="4" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Offener Betrag ({{$pflichtstunden_settings->pflichtstunden_betrag}} € je Pflichtstunde):
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-red-600">
@@ -411,6 +426,27 @@
                         @enderror
                         <p class="text-xs text-gray-500 mt-1">Pflichtfeld - Bitte beschreiben Sie die durchgeführte Tätigkeit.</p>
                     </div>
+
+                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                    <div>
+                        <label for="bereich" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-folder text-green-600 mr-1"></i>
+                            Bereich
+                        </label>
+                        <select class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none @error('bereich') border-red-500 @enderror"
+                                id="bereich"
+                                name="bereich">
+                            <option value="">-- Bitte wählen --</option>
+                            @foreach($pflichtstunden_settings->pflichtstunden_bereiche as $bereich)
+                                <option value="{{ $bereich }}" {{ old('bereich') == $bereich ? 'selected' : '' }}>{{ $bereich }}</option>
+                            @endforeach
+                        </select>
+                        @error('bereich')
+                            <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                        @enderror
+                        <p class="text-xs text-gray-500 mt-1">Optional - Wählen Sie einen Bereich für eine bessere Kategorisierung aus.</p>
+                    </div>
+                    @endif
 
                     <button type="submit"
                             class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">

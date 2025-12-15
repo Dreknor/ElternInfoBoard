@@ -22,6 +22,7 @@ class Pflichtstunde extends Model
         'start',
         'end',
         'description',
+        'bereich',
         'approved',
         'approved_at',
         'approved_by',

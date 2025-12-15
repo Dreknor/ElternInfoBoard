@@ -78,7 +78,7 @@
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
     <script>tinymce.init({
-            selector: 'textarea',
+            selector: 'textarea:not(.no-tinymce)',
             lang:'de',
             height: 500,
             menubar: true,

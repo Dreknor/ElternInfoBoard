@@ -72,7 +72,19 @@
                 </div>
             </div>
         </div>
-
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-12">
+                <label class="label-control w-100">
+                    <strong>Bereiche für Pflichtstunden (einer pro Zeile)</strong>
+                    <textarea class="form-control no-tinymce" name="pflichtstunden_bereiche" rows="8" placeholder="z.B.&#10;Gartenarbeit&#10;Renovierung&#10;Reinigung&#10;Feste/Events&#10;Administrative Aufgaben">{{ is_array($pflichtstundenSettings->pflichtstunden_bereiche ?? []) ? implode("\n", $pflichtstundenSettings->pflichtstunden_bereiche) : '' }}</textarea>
+                </label>
+            </div>
+            <div class="col-md-12 mt-2">
+                <div class="small">
+                    Definieren Sie hier die verschiedenen Bereiche, in denen Pflichtstunden geleistet werden können. Geben Sie jeden Bereich in einer neuen Zeile ein. Diese Bereiche können dann bei der Erfassung von Pflichtstunden ausgewählt werden und ermöglichen eine gezielte Filterung in der Verwaltungsansicht.
+                </div>
+            </div>
+        </div>
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
@@ -95,6 +107,8 @@
                 </h5>
             </div>
         </div>
+
+
 
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">

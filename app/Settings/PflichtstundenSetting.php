@@ -22,6 +22,8 @@ class PflichtstundenSetting extends Settings
     public bool $gamification_show_ranking = true;
     public bool $gamification_show_comparison = true;
 
+    public array $pflichtstunden_bereiche = [];
+
     public static function group(): string
     {
         return 'pflichtstunden';

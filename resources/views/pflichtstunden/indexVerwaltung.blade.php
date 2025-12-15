@@ -168,6 +168,27 @@
                             @enderror
                         </div>
 
+                        @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                        <div class="md:col-span-2">
+                            <label for="admin_bereich" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-folder text-blue-600 mr-2"></i>
+                                Bereich
+                            </label>
+                            <select class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('bereich') border-red-500 @enderror"
+                                    id="admin_bereich"
+                                    name="bereich">
+                                <option value="">-- Bitte wählen --</option>
+                                @foreach($pflichtstunden_settings->pflichtstunden_bereiche as $bereich)
+                                    <option value="{{ $bereich }}" {{ old('bereich') == $bereich ? 'selected' : '' }}>{{ $bereich }}</option>
+                                @endforeach
+                            </select>
+                            @error('bereich')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1">Optional - Wählen Sie einen Bereich für eine bessere Kategorisierung aus.</p>
+                        </div>
+                        @endif
+
                         <div class="md:col-span-2">
                             <button type="submit"
                                     class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
@@ -182,12 +203,130 @@
         @endcan
 
         <!-- Unbestätigte Pflichtstunden -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6">
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6" x-data="{
+            selectedIds: [],
+            filterBereich: '',
+            init() {
+                // Filter aus URL-Parameter oder LocalStorage laden
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlFilter = urlParams.get('bereich_filter');
+                const storageFilter = localStorage.getItem('pflichtstunden_bereich_filter');
+
+                if (urlFilter) {
+                    this.filterBereich = urlFilter;
+                } else if (storageFilter) {
+                    this.filterBereich = storageFilter;
+                }
+
+                // Filter anwenden wenn gesetzt
+                if (this.filterBereich) {
+                    this.$nextTick(() => {
+                        this.filterByBereich();
+                    });
+                }
+            },
+            toggleAll() {
+                const visibleIds = this.getVisiblePflichtstunden();
+                if (this.selectedIds.length === visibleIds.length && visibleIds.length > 0) {
+                    this.selectedIds = [];
+                } else {
+                    this.selectedIds = visibleIds;
+                }
+            },
+            getVisiblePflichtstunden() {
+                const rows = document.querySelectorAll('[data-pflichtstunde-row]');
+                const visibleIds = [];
+                rows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        visibleIds.push(parseInt(row.getAttribute('data-pflichtstunde-id')));
+                    }
+                });
+                return visibleIds;
+            },
+            get allSelected() {
+                const visibleIds = this.getVisiblePflichtstunden();
+                return this.selectedIds.length === visibleIds.length && visibleIds.length > 0;
+            },
+            get someSelected() {
+                const visibleIds = this.getVisiblePflichtstunden();
+                return this.selectedIds.length > 0 && this.selectedIds.length < visibleIds.length;
+            },
+            filterByBereich() {
+                const rows = document.querySelectorAll('[data-pflichtstunde-row]');
+                rows.forEach(row => {
+                    const bereich = row.getAttribute('data-bereich') || '';
+                    if (this.filterBereich === '' || bereich === this.filterBereich) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Filter in LocalStorage speichern
+                if (this.filterBereich) {
+                    localStorage.setItem('pflichtstunden_bereich_filter', this.filterBereich);
+                } else {
+                    localStorage.removeItem('pflichtstunden_bereich_filter');
+                }
+
+                // URL-Parameter aktualisieren
+                const url = new URL(window.location.href);
+                if (this.filterBereich) {
+                    url.searchParams.set('bereich_filter', this.filterBereich);
+                } else {
+                    url.searchParams.delete('bereich_filter');
+                }
+                window.history.replaceState({}, '', url.toString());
+            },
+            approveSelected() {
+                if (this.selectedIds.length === 0) {
+                    alert('Bitte wählen Sie mindestens eine Pflichtstunde aus.');
+                    return;
+                }
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('pflichtstunden.approveMultiple') }}';
+
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'PUT';
+                form.appendChild(methodField);
+
+                const idsInput = document.createElement('input');
+                idsInput.type = 'hidden';
+                idsInput.name = 'ids';
+                idsInput.value = JSON.stringify(this.selectedIds);
+                form.appendChild(idsInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }">
             <div class="bg-gradient-to-r from-orange-500 to-amber-600 text-white px-6 py-4 rounded-t-xl">
-                <h3 class="text-xl font-bold flex items-center gap-3">
-                    <i class="fas fa-clock text-2xl"></i>
-                    Unbestätigte Pflichtstunden
-                </h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold flex items-center gap-3">
+                        <i class="fas fa-clock text-2xl"></i>
+                        Unbestätigte Pflichtstunden
+                    </h3>
+                    <div x-show="selectedIds.length > 0" x-cloak class="flex items-center gap-3">
+                        <span class="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                            <span x-text="selectedIds.length"></span> ausgewählt
+                        </span>
+                        <button @click="approveSelected()"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md">
+                            <i class="fas fa-check-double"></i>
+                            Ausgewählte bestätigen
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="p-6">
                 @if($pflichtstunden->isEmpty())
@@ -196,20 +335,52 @@
                         <p class="text-lg font-medium">Keine unbestätigten Pflichtstunden vorhanden</p>
                     </div>
                 @else
+                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                    <div class="mb-4 flex items-center gap-3">
+                        <label class="text-sm font-medium text-gray-700">
+                            <i class="fas fa-filter text-blue-600 mr-1"></i>
+                            Nach Bereich filtern:
+                        </label>
+                        <select x-model="filterBereich"
+                                @change="filterByBereich()"
+                                class="px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                            <option value="">Alle Bereiche</option>
+                            @foreach($pflichtstunden_settings->pflichtstunden_bereiche as $bereich)
+                                <option value="{{ $bereich }}">{{ $bereich }}</option>
+                            @endforeach
+                            <option value="__KEIN_BEREICH__">Ohne Bereich</option>
+                        </select>
+                    </div>
+                    @endif
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gray-50 border-b-2 border-gray-200">
                                 <tr>
+                                    <th class="px-4 py-3 text-left">
+                                        <input type="checkbox"
+                                               @click="toggleAll()"
+                                               :checked="allSelected"
+                                               :indeterminate="someSelected"
+                                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    </th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Datum</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stunden</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Person</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Grund</th>
+                                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Bereich</th>
+                                    @endif
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aktionen</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                             @foreach ($pflichtstunden as $pflichtstunde)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150" x-data="{
+                                <tr class="hover:bg-gray-50 transition-colors duration-150"
+                                    data-pflichtstunde-row
+                                    data-pflichtstunde-id="{{ $pflichtstunde->id }}"
+                                    data-bereich="{{ $pflichtstunde->bereich ?? '__KEIN_BEREICH__' }}"
+                                    :class="{ 'bg-blue-50': selectedIds.includes({{ $pflichtstunde->id }}) }"
+                                    x-data="{
                                     showEdit: false,
                                     editData: {
                                         start: '{{ $pflichtstunde->start->format('Y-m-d\TH:i') }}',
@@ -217,6 +388,12 @@
                                         description: {{ Js::from($pflichtstunde->description) }}
                                     }
                                 }">
+                                    <td class="px-4 py-3">
+                                        <input type="checkbox"
+                                               value="{{ $pflichtstunde->id }}"
+                                               x-model="selectedIds"
+                                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    </td>
                                     <td class="px-4 py-3 text-sm text-gray-700">
                                         <span x-show="!showEdit">
                                             @if($pflichtstunde->start->isSameDay($pflichtstunde->end))
@@ -248,6 +425,18 @@
                                         <span x-show="!showEdit">{{ Str::limit($pflichtstunde->description, 50) }}</span>
                                         <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="2" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
                                     </td>
+                                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                    <td class="px-4 py-3 text-sm">
+                                        @if($pflichtstunde->bereich)
+                                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                                                <i class="fas fa-folder"></i>
+                                                {{ $pflichtstunde->bereich }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400 text-xs">-</span>
+                                        @endif
+                                    </td>
+                                    @endif
                                     <td class="px-4 py-3 text-sm">
                                         <div class="flex items-center gap-2 flex-wrap">
                                             <button @click="showEdit = !showEdit" type="button"
@@ -271,9 +460,9 @@
                                             <form action="{{ route('pflichtstunden.approve', $pflichtstunde) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('PUT')
+                                                <input type="hidden" name="bereich_filter" x-bind:value="filterBereich">
                                                 <button type="submit"
-                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors duration-200"
-                                                        onclick="return confirm('Möchten Sie diese Pflichtstunde wirklich bestätigen?');">
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
                                                     <i class="fas fa-check"></i>
                                                     Bestätigen
                                                 </button>
@@ -292,6 +481,7 @@
                                                       class="inline-flex items-center gap-2">
                                                     @csrf
                                                     @method('PUT')
+                                                    <input type="hidden" name="bereich_filter" x-bind:value="filterBereich">
                                                     <input name="rejection_reason"
                                                            type="text"
                                                            class="px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-200"
@@ -768,6 +958,35 @@
                     'background-color': '#ffffff'
                 });
             });
+
+            // Auto-Scroll zur nächsten Pflichtstunde nach Bestätigung
+            const urlParams = new URLSearchParams(window.location.search);
+            const scrollToId = urlParams.get('scroll_to');
+
+            if (scrollToId) {
+                setTimeout(function() {
+                    const targetRow = document.querySelector(`tr[data-pflichtstunde-id="${scrollToId}"]`);
+                    if (targetRow) {
+                        // Scroll zur Zeile mit smooth scrolling
+                        targetRow.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                        // Highlight-Effekt für die Zeile
+                        targetRow.classList.add('bg-yellow-100');
+                        setTimeout(function() {
+                            targetRow.classList.remove('bg-yellow-100');
+                            targetRow.classList.add('transition-colors', 'duration-1000');
+                        }, 1500);
+
+                        // Nur scroll_to Parameter entfernen, bereich_filter behalten
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('scroll_to');
+                        window.history.replaceState({}, '', url.toString());
+                    }
+                }, 500);
+            }
         });
     </script>
 @endpush

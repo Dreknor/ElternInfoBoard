@@ -269,11 +269,13 @@ class PflichtstundeController extends Controller
         ]);
     }
 
-    public function approve(Pflichtstunde $pflichtstunde)
+    public function approve(Request $request, Pflichtstunde $pflichtstunde)
     {
         if (!auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
+
+        $currentId = $pflichtstunde->id;
 
         $pflichtstunde->approved = true;
         $pflichtstunde->approved_at = now();
@@ -284,7 +286,58 @@ class PflichtstundeController extends Controller
         $pflichtstunde->rejection_reason = null;
         $pflichtstunde->save();
 
-        return redirect()->route('pflichtstunden.indexVerwaltung')->with('success', 'Pflichtstunde genehmigt');
+        // Finde die nächste unbestätigte Pflichtstunde
+        $nextPflichtstunde = Pflichtstunde::query()
+            ->where('approved', false)
+            ->where('rejected', false)
+            ->where('end', '<', now())
+            ->where('id', '>', $currentId)
+            ->orderBy('id', 'asc')
+            ->first();
+
+        // URL-Parameter sammeln
+        $params = [];
+        if ($nextPflichtstunde) {
+            $params['scroll_to'] = $nextPflichtstunde->id;
+        }
+
+        // Bereich-Filter übernehmen falls vorhanden
+        if ($request->has('bereich_filter')) {
+            $params['bereich_filter'] = $request->input('bereich_filter');
+        }
+
+        return redirect()->route('pflichtstunden.indexVerwaltung', $params)
+            ->with('success', 'Pflichtstunde genehmigt');
+    }
+
+    public function approveMultiple(Request $request)
+    {
+        if (!auth()->user()->can('edit Pflichtstunden')) {
+            return redirect(url('/'))->with('error', 'Berechtigung fehlt');
+        }
+
+        $ids = json_decode($request->input('ids'), true);
+
+        if (empty($ids) || !is_array($ids)) {
+            return redirect()->route('pflichtstunden.indexVerwaltung')->with('error', 'Keine Pflichtstunden ausgewählt');
+        }
+
+        $count = Pflichtstunde::query()
+            ->whereIn('id', $ids)
+            ->where('approved', false)
+            ->where('rejected', false)
+            ->update([
+                'approved' => true,
+                'approved_at' => now(),
+                'approved_by' => auth()->id(),
+                'rejected' => false,
+                'rejected_at' => null,
+                'rejected_by' => null,
+                'rejection_reason' => null,
+            ]);
+
+        return redirect()->route('pflichtstunden.indexVerwaltung')
+            ->with('success', $count . ' Pflichtstunde(n) wurden genehmigt');
     }
 
     public function reject(Request $request, Pflichtstunde $pflichtstunde)
@@ -306,7 +359,14 @@ class PflichtstundeController extends Controller
         $pflichtstunde->rejection_reason = $request->input('rejection_reason');
         $pflichtstunde->save();
 
-        return redirect()->route('pflichtstunden.indexVerwaltung')->with('success', 'Pflichtstunde abgelehnt');
+        // URL-Parameter sammeln
+        $params = [];
+        if ($request->has('bereich_filter')) {
+            $params['bereich_filter'] = $request->input('bereich_filter');
+        }
+
+        return redirect()->route('pflichtstunden.indexVerwaltung', $params)
+            ->with('success', 'Pflichtstunde abgelehnt');
     }
 
     /**

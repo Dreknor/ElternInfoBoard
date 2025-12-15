@@ -277,6 +277,7 @@ class SettingsController extends Controller
                     'gamification_show_progress' => 'nullable|boolean',
                     'gamification_show_ranking' => 'nullable|boolean',
                     'gamification_show_comparison' => 'nullable|boolean',
+                    'pflichtstunden_bereiche' => 'nullable|string',
                 ]);
 
                 try {
@@ -297,6 +298,24 @@ class SettingsController extends Controller
                     ]);
                 }
 
+                // Bereiche verarbeiten - HTML-Tags entfernen und bereinigen
+                $bereiche = [];
+                if (!empty($validated['pflichtstunden_bereiche'])) {
+                    // HTML-Tags entfernen
+                    $cleanText = strip_tags($validated['pflichtstunden_bereiche']);
+                    // HTML-Entities dekodieren
+                    $cleanText = html_entity_decode($cleanText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    // In Zeilen aufteilen und bereinigen
+                    $lines = explode("\n", $cleanText);
+                    foreach ($lines as $line) {
+                        // Whitespace entfernen und nur nicht-leere Zeilen hinzufügen
+                        $trimmed = trim($line);
+                        if (!empty($trimmed)) {
+                            $bereiche[] = $trimmed;
+                        }
+                    }
+                }
+
                 $pflichtstundenSetting = new PflichtstundenSetting();
                 $pflichtstundenSetting->pflichtstunden_start = $start->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
@@ -307,6 +326,7 @@ class SettingsController extends Controller
                 $pflichtstundenSetting->gamification_show_progress = $request->has('gamification_show_progress');
                 $pflichtstundenSetting->gamification_show_ranking = $request->has('gamification_show_ranking');
                 $pflichtstundenSetting->gamification_show_comparison = $request->has('gamification_show_comparison');
+                $pflichtstundenSetting->pflichtstunden_bereiche = $bereiche;
                 $pflichtstundenSetting->save();
                 break;
         }
