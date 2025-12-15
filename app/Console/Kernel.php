@@ -35,7 +35,7 @@ class Kernel extends ConsoleKernel
         }
 
         $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
-        $schedule->call('App\Http\Controllers\CleanupController@clean_up')->weeklyOn([1],'00:00');
+        $schedule->call('App\Http\Controllers\CleanupController@clean_up')->daily()->at('01:00');
 
 
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt($notifySetting->hour_send_information_mail.':00');
