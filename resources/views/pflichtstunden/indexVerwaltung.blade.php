@@ -391,6 +391,17 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Button am Ende der Tabelle -->
+                    <div x-show="selectedIds.length > 0" x-cloak class="mt-4 flex items-center justify-end gap-3 px-6 pb-6">
+                        <span class="text-sm font-medium text-gray-700">
+                            <span x-text="selectedIds.length"></span> ausgewählt
+                        </span>
+                        <button @click="approveSelected()"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md">
+                            <i class="fas fa-check-double"></i>
+                            Ausgewählte bestätigen
+                        </button>
+                    </div>
                 @endif
             </div>
         </div>
