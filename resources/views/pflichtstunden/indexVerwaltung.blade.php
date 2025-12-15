@@ -82,126 +82,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Formular: Pflichtstunden für Nutzer erfassen -->
-        @can('edit Pflichtstunden')
-        <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl">
-                <h3 class="text-xl font-bold flex items-center gap-3">
-                    <i class="fas fa-user-clock text-2xl"></i>
-                    Pflichtstunden für Nutzer erfassen
-                </h3>
-            </div>
-            <div class="p-6">
-                <form method="POST" action="{{ route('pflichtstunden.store') }}">
-                    @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2">
-                            <label for="user_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-user text-blue-600 mr-2"></i>
-                                Nutzer auswählen
-                            </label>
-                            <select name="user_id"
-                                    id="user_id"
-                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('user_id') border-red-500 @enderror"
-                                    required>
-                                <option value="">-- Nutzer auswählen --</option>
-                                @foreach($allGroupedUsers as $group)
-                                    <option value="{{ $group['user']->id }}">
-                                        {{ $group['user']->name }}
-                                        @if($group['partner'])
-                                            / {{ $group['partner']->name }}
-                                        @endif
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('user_id')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="admin_start" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-calendar-day text-blue-600 mr-2"></i>
-                                Startdatum und -uhrzeit
-                            </label>
-                            <input type="datetime-local"
-                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('start') border-red-500 @enderror"
-                                   id="admin_start"
-                                   name="start"
-                                   value="{{ old('start') }}"
-                                   required>
-                            @error('start')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="admin_end" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-calendar-check text-blue-600 mr-2"></i>
-                                Enddatum und -uhrzeit
-                            </label>
-                            <input type="datetime-local"
-                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('end') border-red-500 @enderror"
-                                   id="admin_end"
-                                   name="end"
-                                   value="{{ old('end') }}"
-                                   required>
-                            @error('end')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="admin_description" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-align-left text-blue-600 mr-2"></i>
-                                Grund/Beschreibung
-                            </label>
-                            <textarea class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none @error('description') border-red-500 @enderror"
-                                      id="admin_description"
-                                      name="description"
-                                      rows="3"
-                                      placeholder="Beschreiben Sie den Grund für die Pflichtstunden..."
-                                      required>{{ old('description') }}</textarea>
-                            @error('description')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
-                        <div class="md:col-span-2">
-                            <label for="admin_bereich" class="block text-sm font-semibold text-gray-700 mb-2">
-                                <i class="fas fa-folder text-blue-600 mr-2"></i>
-                                Bereich
-                            </label>
-                            <select class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('bereich') border-red-500 @enderror"
-                                    id="admin_bereich"
-                                    name="bereich">
-                                <option value="">-- Bitte wählen --</option>
-                                @foreach($pflichtstunden_settings->pflichtstunden_bereiche as $bereich)
-                                    <option value="{{ $bereich }}" {{ old('bereich') == $bereich ? 'selected' : '' }}>{{ $bereich }}</option>
-                                @endforeach
-                            </select>
-                            @error('bereich')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Optional - Wählen Sie einen Bereich für eine bessere Kategorisierung aus.</p>
-                        </div>
-                        @endif
-
-                        <div class="md:col-span-2">
-                            <button type="submit"
-                                    class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
-                                <i class="fas fa-save"></i>
-                                Pflichtstunden erfassen
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        @endcan
-
         <!-- Unbestätigte Pflichtstunden -->
         <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6" x-data="{
             selectedIds: [],
@@ -514,6 +394,128 @@
                 @endif
             </div>
         </div>
+
+
+        <!-- Formular: Pflichtstunden für Nutzer erfassen -->
+        @can('edit Pflichtstunden')
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl">
+                    <h3 class="text-xl font-bold flex items-center gap-3">
+                        <i class="fas fa-user-clock text-2xl"></i>
+                        Pflichtstunden für Nutzer erfassen
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <form method="POST" action="{{ route('pflichtstunden.store') }}">
+                        @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label for="user_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-user text-blue-600 mr-2"></i>
+                                    Nutzer auswählen
+                                </label>
+                                <select name="user_id"
+                                        id="user_id"
+                                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('user_id') border-red-500 @enderror"
+                                        required>
+                                    <option value="">-- Nutzer auswählen --</option>
+                                    @foreach($allGroupedUsers as $group)
+                                        <option value="{{ $group['user']->id }}">
+                                            {{ $group['user']->name }}
+                                            @if($group['partner'])
+                                                / {{ $group['partner']->name }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('user_id')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="admin_start" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-day text-blue-600 mr-2"></i>
+                                    Startdatum und -uhrzeit
+                                </label>
+                                <input type="datetime-local"
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('start') border-red-500 @enderror"
+                                       id="admin_start"
+                                       name="start"
+                                       value="{{ old('start') }}"
+                                       required>
+                                @error('start')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="admin_end" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-check text-blue-600 mr-2"></i>
+                                    Enddatum und -uhrzeit
+                                </label>
+                                <input type="datetime-local"
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('end') border-red-500 @enderror"
+                                       id="admin_end"
+                                       name="end"
+                                       value="{{ old('end') }}"
+                                       required>
+                                @error('end')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="admin_description" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-align-left text-blue-600 mr-2"></i>
+                                    Grund/Beschreibung
+                                </label>
+                                <textarea class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none @error('description') border-red-500 @enderror"
+                                          id="admin_description"
+                                          name="description"
+                                          rows="3"
+                                          placeholder="Beschreiben Sie den Grund für die Pflichtstunden..."
+                                          required>{{ old('description') }}</textarea>
+                                @error('description')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                <div class="md:col-span-2">
+                                    <label for="admin_bereich" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-folder text-blue-600 mr-2"></i>
+                                        Bereich
+                                    </label>
+                                    <select class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none @error('bereich') border-red-500 @enderror"
+                                            id="admin_bereich"
+                                            name="bereich">
+                                        <option value="">-- Bitte wählen --</option>
+                                        @foreach($pflichtstunden_settings->pflichtstunden_bereiche as $bereich)
+                                            <option value="{{ $bereich }}" {{ old('bereich') == $bereich ? 'selected' : '' }}>{{ $bereich }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('bereich')
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                    <p class="text-xs text-gray-500 mt-1">Optional - Wählen Sie einen Bereich für eine bessere Kategorisierung aus.</p>
+                                </div>
+                            @endif
+
+                            <div class="md:col-span-2">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                                    <i class="fas fa-save"></i>
+                                    Pflichtstunden erfassen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endcan
+
+
         <!-- Übersicht der Pflichtstunden mit Suchfunktion und Pagination -->
         <div class="bg-white rounded-xl shadow-md border border-gray-200"
              x-data="{
