@@ -100,7 +100,7 @@ class ReadReceiptsController extends Controller
                 continue;
             }
 
-            $users = $post->users;
+            $users = $post->users->unique('id');
             $receipts = $post->receipts;
 
             foreach ($users as $user) {
@@ -175,7 +175,7 @@ class ReadReceiptsController extends Controller
                 continue;
             }
 
-            $users = $post->users;
+            $users = $post->users->unique('id');
             $receipts = $post->receipts;
 
             foreach ($users as $user) {
