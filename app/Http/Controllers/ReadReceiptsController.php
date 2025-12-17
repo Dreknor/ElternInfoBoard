@@ -17,15 +17,22 @@ class ReadReceiptsController extends Controller
 
     public function store(Request $request)
     {
-        $receipt = ReadReceipts::firstOrCreate([
-            'post_id' => $request->post_id,
-            'user_id' => auth()->id(),
-        ]);
-        // Markiere als bestätigt nur wenn der Nutzer aktiv bestätigt
-        if (is_null($receipt->confirmed_at)) {
+        $receipt = ReadReceipts::firstOrCreate(
+            [
+                'post_id' => $request->post_id,
+                'user_id' => auth()->id(),
+            ],
+            [
+                'confirmed_at' => now(),
+            ]
+        );
+
+        // Falls der Eintrag bereits existierte, aber noch nicht bestätigt war
+        if ($receipt->wasRecentlyCreated === false && is_null($receipt->confirmed_at)) {
             $receipt->confirmed_at = now();
             $receipt->save();
         }
+
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Lesebestätigung erfolgreich gespeichert.',
@@ -38,12 +45,18 @@ class ReadReceiptsController extends Controller
      */
     public function confirmForUser(Request $request, Post $post, \App\Model\User $user)
     {
-        $receipt = ReadReceipts::firstOrCreate([
-            'post_id' => $post->id,
-            'user_id' => $user->id,
-        ]);
+        $receipt = ReadReceipts::firstOrCreate(
+            [
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'confirmed_at' => now(),
+            ]
+        );
 
-        if (is_null($receipt->confirmed_at)) {
+        // Falls der Eintrag bereits existierte, aber noch nicht bestätigt war
+        if ($receipt->wasRecentlyCreated === false && is_null($receipt->confirmed_at)) {
             $receipt->confirmed_at = now();
             $receipt->save();
         }

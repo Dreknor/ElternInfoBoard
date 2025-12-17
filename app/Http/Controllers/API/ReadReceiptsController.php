@@ -35,14 +35,22 @@ class ReadReceiptsController extends Controller
 
         try {
             // Create a new read receipt if it doesn't already exist
-            $receipt = ReadReceipts::firstOrCreate([
-                'post_id' => $post->id,
-                'user_id' => $user->id,
-            ]);
-            if (is_null($receipt->confirmed_at)) {
+            $receipt = ReadReceipts::firstOrCreate(
+                [
+                    'post_id' => $post->id,
+                    'user_id' => $user->id,
+                ],
+                [
+                    'confirmed_at' => now(),
+                ]
+            );
+
+            // Falls der Eintrag bereits existierte, aber noch nicht bestätigt war
+            if ($receipt->wasRecentlyCreated === false && is_null($receipt->confirmed_at)) {
                 $receipt->confirmed_at = now();
                 $receipt->save();
             }
+
             return response()->json(['success' => true], 200);
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
