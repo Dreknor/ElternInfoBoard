@@ -11,11 +11,11 @@ class VertretungsplanNews extends Model
 {
 
     protected $table = 'vertretungsplan_news';
-    protected $fillable = ['start', 'ende', 'news'];
+    protected $fillable = ['start', 'end', 'news'];
 
     protected $casts = [
         'start' => 'date',
-        'ende' => 'date',
+        'end' => 'date',
     ];
 
     protected static function booted(): void
