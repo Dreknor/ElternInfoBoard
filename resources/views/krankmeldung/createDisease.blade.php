@@ -1,43 +1,26 @@
 @extends('layouts.app')
 
 @section('title')
-    - meldepfl. Krankheit erstellen
+    - Krankheiten verwalten
 @endsection
 
 @section('content')
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-6 col-sm-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="card-title">
-                            neue meldepflichtige Krankheit erstellen:
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <form action="{{url('diseases/create')}}" method="post" class="form form-horizontal">
-                            @csrf
-                            <div class="form-row">
-                                <label for="disease">
-                                    Name der Krankheit:
-                                </label>
-                                <select class="custom-select" name="disease_id" , id="disease">
-                                    @foreach($diseases as $disease)
-                                        <option value="{{$disease->id}}">{{$disease->name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-row">
-                                <button type="submit" class="btn btn-primary">Krankheit erstellen</button>
-                            </div>
-                        </form>
-                    </div>
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Diese Seite wurde zur neuen Krankheitenverwaltung verschoben.
                 </div>
             </div>
-            <div class="col-md-6 col-sm-12">
-                <div class="card">
-                    <div class="card-header">
-                        Erkrankungen bearbeiten
+        </div>
+    </div>
+
+    <script>
+        window.location.href = "{{route('diseases.index')}}";
+    </script>
+@endsection
+
                     </div>
                     <div class="card-body">
                         <table class="table table-striped table-hover">
@@ -57,14 +40,14 @@
 
                                     <td>
                                         @if($activeDisease->active)
-                                            <form action="{{url('diseases/'.$activeDisease->id.'/active')}}"
+                                            <form action="{{route('active-diseases.toggle', $activeDisease->id)}}"
                                                   method="post">
                                                 @csrf
                                                 @method('put')
                                                 <button type="submit" class="btn btn-warning">deativieren</button>
                                             </form>
                                         @else
-                                            <form action="{{url('diseases/'.$activeDisease->id.'/delete')}}"
+                                            <form action="{{route('active-diseases.delete', $activeDisease->id)}}"
                                                   method="post">
                                                 @csrf
                                                 @method('delete')
@@ -74,14 +57,14 @@
                                     </td>
                                     <td>
                                         @if(!$activeDisease->active)
-                                            <form action="{{url('diseases/'.$activeDisease->id.'/active')}}"
+                                            <form action="{{route('active-diseases.toggle', $activeDisease->id)}}"
                                                   method="post">
                                                 @csrf
                                                 @method('put')
                                                 <button type="submit" class="btn btn-warning">freigeben</button>
                                             </form>
                                         @else
-                                            <a href="{{url('diseases/'.$activeDisease->id.'/extend')}}"
+                                            <a href="{{route('active-diseases.extend', $activeDisease->id)}}"
                                                   class="btn btn-primary">verlängern</a>
                                         @endif
 
