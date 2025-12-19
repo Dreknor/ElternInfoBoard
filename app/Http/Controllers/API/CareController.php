@@ -101,7 +101,7 @@ class CareController extends Controller
                         'id' => $child->class->id,
                         'name' => $child->class->name,
                     ] : null,
-                    'checked_in_at' => $checkIn ? $checkIn->created_at->toIso8601String() : null,
+                    'checked_in_at' => $checkIn?->created_at?->toIso8601String(),
                     'is_sick' => $child->krankmeldungToday(),
                 ];
             });
@@ -194,8 +194,8 @@ class CareController extends Controller
                         'id' => $krankmeldung->id,
                         'name' => $krankmeldung->name,
                         'kommentar' => $krankmeldung->kommentar,
-                        'start' => $krankmeldung->start->toDateString(),
-                        'ende' => $krankmeldung->ende->toDateString(),
+                        'start' => $krankmeldung->start?->toDateString(),
+                        'ende' => $krankmeldung->ende?->toDateString(),
                         'disease' => $krankmeldung->disease ? [
                             'id' => $krankmeldung->disease->id,
                             'name' => $krankmeldung->disease->name,
