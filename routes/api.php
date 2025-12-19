@@ -129,4 +129,11 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::get('vertretungsplan', [\App\Http\Controllers\API\VertretungsplanController::class, 'index']);
 
+    /**
+     * Care / Anwesenheit
+     */
+    Route::get('care/present', [\App\Http\Controllers\API\CareController::class, 'getPresentChildren']);
+    Route::get('care/sick', [\App\Http\Controllers\API\CareController::class, 'getSickChildren']);
+    Route::get('care/overview', [\App\Http\Controllers\API\CareController::class, 'getCareOverview']);
+
 });
