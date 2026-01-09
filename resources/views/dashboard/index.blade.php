@@ -152,7 +152,25 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            @if(!$termin->fullDay)
+                                            @php
+                                                $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
+                                                $daysDiff = $isMultiDay ? $termin->start->diffInDays($termin->ende) + 1 : 0;
+                                            @endphp
+                                            @if($isMultiDay)
+                                                <p class="text-sm text-gray-600 mb-0">
+                                                    <i class="fas fa-calendar-week"></i>
+                                                    {{ $termin->start->locale('de')->isoFormat('D. MMM') }}
+                                                    @if(!$termin->fullDay)
+                                                        {{ $termin->start->format('H:i') }}
+                                                    @endif
+                                                    -
+                                                    {{ $termin->ende->locale('de')->isoFormat('D. MMM') }}
+                                                    @if(!$termin->fullDay)
+                                                        {{ $termin->ende->format('H:i') }}
+                                                    @endif
+                                                    <span class="badge badge-info badge-sm ml-1">{{ $daysDiff }} Tage</span>
+                                                </p>
+                                            @elseif(!$termin->fullDay)
                                                 <p class="text-sm text-gray-600 mb-0">
                                                     <i class="far fa-clock"></i> {{ $termin->start->format('H:i') }} Uhr
                                                     @if($termin->ende && $termin->start->format('Y-m-d') == $termin->ende->format('Y-m-d'))
