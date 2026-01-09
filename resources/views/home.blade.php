@@ -136,36 +136,6 @@
     @endcan
 
 
-        <script>
-            $('.btnShow').on('click', function () {
-                let btn = this;
-
-                if ($(btn).hasClass('aktiv')){
-                    $(btn).html( '<i class="fa fa-eye"></i> Text anzeigen') ;
-                    $(btn).removeClass('aktiv');
-                } else {
-                    $(btn).text("ausblenden");
-                    $(btn).addClass('aktiv');
-                }
-
-
-            });
-
-            $('.btnShowRueckmeldungen').on('click', function () {
-                let btn = this;
-
-                if ($(btn).hasClass('aktiv')){
-                    $(btn).html( '<i class="fa fa-eye"></i> Rückmeldungen anzeigen') ;
-                    $(btn).removeClass('aktiv');
-                } else {
-                    $(btn).text("ausblenden");
-                    $(btn).addClass('aktiv');
-                }
-
-
-            });
-        </script>
-
     <script>
         $('.commentLinks').on('click', function () {
             let btn = this;

@@ -118,7 +118,7 @@ class CleanupController extends Controller
             //delete Vertretung entries older than 7 days
             Vertretung::withoutGlobalScopes()->whereDate('date', '<', now()->subDays(7))->delete();
             VertretungsplanAbsence::whereDate('end_date', '<', now()->subDays(7))->delete();
-            VertretungsplanNews::withoutGlobalScopes()->whereDate('ende', '<', now()->subDays(7))->delete();
+            VertretungsplanNews::withoutGlobalScopes()->whereDate('end', '<', now()->subDays(7))->delete();
             VertretungsplanWeek::whereDate('week', '<', now()->subDays(7))->delete();
         } catch (\Exception $e) {
             Log::error('Error while cleaning up Vertretung: ' . $e->getMessage());

@@ -10,6 +10,7 @@ use App\Http\Controllers\BenutzerController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\ChildController;
 use App\Http\Controllers\DatenschutzController;
+use App\Http\Controllers\DiseaseController;
 use App\Http\Controllers\ElternratController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FileController;
@@ -175,11 +176,28 @@ Route::middleware('auth')->group(function () {
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
         Route::get('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
 
-        Route::get('diseases/create', [ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases');
-        Route::post('diseases/create', [ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases');
-        Route::put('diseases/{disease}/active', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
-        Route::delete('diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases');
-        Route::get('diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases');
+        // Redirect old disease create route to new manage page
+        Route::get('diseases/create', function() {
+            return redirect()->route('diseases.index');
+        })->middleware('permission:manage diseases');
+
+        // Disease master data management (inline forms, no separate create/edit views)
+        Route::get('diseases', [DiseaseController::class, 'index'])->middleware('permission:manage diseases')->name('diseases.index');
+        Route::post('diseases', [DiseaseController::class, 'store'])->middleware('permission:manage diseases')->name('diseases.store');
+        Route::put('diseases/{disease}', [DiseaseController::class, 'update'])->middleware('permission:manage diseases')->name('diseases.update');
+        Route::delete('diseases/{disease}', [DiseaseController::class, 'destroy'])->middleware('permission:manage diseases')->name('diseases.destroy');
+
+        // Redirect old disease edit route to new manage page
+        Route::get('diseases/{disease}/edit', function() {
+            return redirect()->route('diseases.index');
+        })->middleware('permission:manage diseases');
+
+        // Active Disease management
+        Route::get('active-diseases/create', [ActiveDiseaseController::class, 'create'])->middleware('permission:manage diseases')->name('active-diseases.create');
+        Route::post('active-diseases/create', [ActiveDiseaseController::class, 'store'])->middleware('permission:manage diseases')->name('active-diseases.store');
+        Route::put('active-diseases/{disease}/active', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases')->name('active-diseases.toggle');
+        Route::delete('active-diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases')->name('active-diseases.delete');
+        Route::get('active-diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases')->name('active-diseases.extend');
         //Termine
         Route::resource('termine', TerminController::class);
         Route::resource('termin', TerminController::class);

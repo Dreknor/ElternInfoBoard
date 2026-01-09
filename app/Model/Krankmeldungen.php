@@ -18,9 +18,9 @@ class Krankmeldungen extends Model implements HasMedia
 
     protected $table = 'krankmeldungen';
 
-    protected $fillable = ['name', 'kommentar', 'start', 'ende', 'users_id', 'child_id'];
+    protected $fillable = ['name', 'kommentar', 'start', 'ende', 'users_id', 'child_id', 'disease_id'];
 
-    protected $visible = ['name', 'kommentar', 'start', 'ende', 'users_id', 'child_id'];
+    protected $visible = ['name', 'kommentar', 'start', 'ende', 'users_id', 'child_id', 'disease_id'];
 
     public function user(): BelongsTo
     {
@@ -36,6 +36,11 @@ class Krankmeldungen extends Model implements HasMedia
     public function child(): BelongsTo
     {
         return $this->belongsTo(Child::class, 'child_id');
+    }
+
+    public function disease(): BelongsTo
+    {
+        return $this->belongsTo(Disease::class, 'disease_id');
     }
 
 

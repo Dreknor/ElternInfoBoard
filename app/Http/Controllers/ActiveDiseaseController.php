@@ -51,7 +51,9 @@ class ActiveDiseaseController extends Controller
         if ($activeDisease) {
             $activeDisease->update(['end' => $activeDisease->end->addDays($disease->aushang_dauer)]);
 
-            return redirect(url('/'))->with([
+            return redirect()
+                ->back()
+                ->with([
                 'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
                 'type' => 'success',
             ]);
@@ -66,8 +68,10 @@ class ActiveDiseaseController extends Controller
                 'active' => false,
             ]);
 
-            return redirect(url('/'))->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen',
+            return redirect()
+                ->back()
+                ->with([
+                'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen, muss nun aktiviert werden',
                 'type' => 'success',
             ]);
         }

@@ -71,7 +71,7 @@
         $headerClass = $nachricht->released == 0 ? 'px-6 py-4 border-b bg-blue-600 text-white border-blue-700' : 'px-6 py-4 border-b bg-gray-50';
     @endphp
 
-    <div class="{{ $cardClass }}" id="{{$nachricht->id}}">
+    <div class="{{ $cardClass }}" id="{{$nachricht->id}}" @if($nachricht->is_archived) x-data="{ showArchived: false }" @endif>
         @if(count($nachricht->getMedia('header'))>0)
             <div class="relative h-56 overflow-hidden">
                 <img class="w-full h-full object-cover object-center" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
@@ -125,15 +125,26 @@
             </div>
 
             @if($nachricht->is_archived)
-                <button class="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-700 rounded-md btnShow" data-toggle="collapse"
-                        data-target="#Collapse{{$nachricht->id}}">
-                    <i class="fa fa-eye mr-2"></i>
-                    Text anzeigen
+                <button @click="showArchived = !showArchived"
+                        class="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-700 hover:bg-blue-50 rounded-md transition-colors duration-200">
+                    <i class="fa mr-2" :class="showArchived ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    <span x-text="showArchived ? 'Text ausblenden' : 'Text anzeigen'"></span>
                 </button>
             @endif
         </div>
 
-        <div class="p-6 @if($nachricht->is_archived) collapse @endif" id="Collapse{{$nachricht->id}}">
+        <div x-show="@if($nachricht->is_archived) showArchived @else true @endif"
+             @if($nachricht->is_archived)
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             style="display: none;"
+             @endif
+             id="Collapse{{$nachricht->id}}"
+             class="p-6">
             @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-2 prose max-w-none text-gray-700">
