@@ -168,7 +168,7 @@
                                                     @if(!$termin->fullDay)
                                                         {{ $termin->ende->format('H:i') }}
                                                     @endif
-                                                    <span class="badge badge-info badge-sm ml-1">{{ $daysDiff }} Tage</span>
+                                                    <span class="badge badge-info badge-sm ml-1">{{ floor($daysDiff) }} Tage</span>
                                                 </p>
                                             @elseif(!$termin->fullDay)
                                                 <p class="text-sm text-gray-600 mb-0">
