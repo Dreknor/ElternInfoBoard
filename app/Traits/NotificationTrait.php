@@ -7,9 +7,9 @@ trait NotificationTrait {
 
     public function notify(Collection $users, string $title, string $message, bool $important = false, string $url = null, string $type = 'info', string $icon = '') : void
     {
-        $notification = [];
-        $users->each(function ($user) use ($title, $message, $url, $type, $icon) {
-            $notification[] = [
+        $notifications = [];
+        $users->each(function ($user) use ($title, $message, $url, $type, $icon, $important, &$notifications) {
+            $notifications[] = [
                 'user_id' => $user->id,
                 'title' => $title,
                 'message' => $message,
@@ -17,14 +17,14 @@ trait NotificationTrait {
                 'type' => $type,
                 'icon' => $icon,
                 'read' => false,
-                'important' => false,
+                'important' => $important,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-
-            Notification::insert($notification);
         });
 
-
+        if (!empty($notifications)) {
+            Notification::insert($notifications);
+        }
     }
 }
