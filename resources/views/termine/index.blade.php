@@ -30,8 +30,7 @@
                     @if($termine && count($termine) > 0)
                         @php
                             $terminsByMonth = $termine->groupBy(function($termin) {
-                                $displayDate = $termin->display_date ?? $termin->start;
-                                return $displayDate->format('Y-m');
+                                return $termin->start->format('Y-m');
                             });
                         @endphp
 
@@ -44,7 +43,6 @@
                                 <div class="space-y-3">
                                     @foreach($monthTermine as $termin)
                                         @php
-                                            $displayDate = $termin->display_date ?? $termin->start;
                                             $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
                                         @endphp
                                         <div class="p-4 border @if($isMultiDay) border-orange-400 bg-orange-50 @else border-gray-200 @endif rounded-lg hover:shadow-md transition-all duration-200">
@@ -52,13 +50,13 @@
                                                 <div class="col-md-2 text-center mb-3 mb-md-0">
                                                     <div class="d-inline-block" style="min-width: 80px;">
                                                         <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
-                                                            <small class="font-bold">{{ $displayDate->format('M') }}</small>
+                                                            <small class="font-bold">{{ $termin->start->format('M') }}</small>
                                                         </div>
                                                         <div class="bg-white border border-gray-200 rounded-b px-3 py-2">
-                                                            <span class="text-3xl font-bold text-gray-800">{{ $displayDate->format('d') }}</span>
+                                                            <span class="text-3xl font-bold text-gray-800">{{ $termin->start->format('d') }}</span>
                                                         </div>
                                                         <small class="text-gray-600 d-block mt-1">
-                                                            {{ $displayDate->locale('de')->isoFormat('dddd') }}
+                                                            {{ $termin->start->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
                                                 </div>

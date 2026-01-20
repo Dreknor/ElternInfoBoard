@@ -34,13 +34,19 @@ class TerminController extends Controller
         if (auth()->user()->can('view all')) {
             $termine = Termin::query()
                 ->with('groups')
-                ->where('start', '>=', Carbon::today())
+                ->where(function ($query) {
+                    $query->where('start', '>=', Carbon::today())
+                        ->orWhere('ende', '>=', Carbon::today());
+                })
                 ->orderBy('start')
                 ->get();
         } else {
             $termine = Termin::query()
                 ->with('groups')
-                ->where('start', '>=', Carbon::today())
+                ->where(function ($query) {
+                    $query->where('start', '>=', Carbon::today())
+                        ->orWhere('ende', '>=', Carbon::today());
+                })
                 ->whereHas('groups', function ($query) {
                     $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
                 })
@@ -48,34 +54,8 @@ class TerminController extends Controller
                 ->get();
         }
 
-        // Expandiere mehrtägige Termine für jeden Tag
-        $expandedTermine = collect();
-        foreach ($termine as $termin) {
-            if ($termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d')) {
-                // Mehrtägiger Termin - für jeden Tag eine Kopie erstellen
-                $currentDate = $termin->start->copy();
-                $endDate = $termin->ende->copy()->startOfDay();
-
-                while ($currentDate <= $endDate) {
-                    $terminCopy = clone $termin;
-                    $terminCopy->display_date = $currentDate->copy();
-                    $expandedTermine->push($terminCopy);
-                    $currentDate->addDay();
-                }
-            } else {
-                // Eintägiger Termin
-                $termin->display_date = $termin->start;
-                $expandedTermine->push($termin);
-            }
-        }
-
-        // Nach Display-Datum sortieren und eindeutige Termine behalten
-        $expandedTermine = $expandedTermine->unique(function($termin) {
-            return $termin->id . '-' . $termin->display_date->format('Y-m-d');
-        })->sortBy('display_date');
-
         return view('termine.index', [
-            'termine' => $expandedTermine,
+            'termine' => $termine,
         ]);
     }
 
