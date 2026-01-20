@@ -59,6 +59,7 @@
                                                             {{ $termin->start->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
+                                                    @if($isMultiDay)
                                                     -
                                                     <div class="d-inline-block" style="min-width: 80px;">
                                                         <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
@@ -71,7 +72,7 @@
                                                             {{ $termin->ende->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
-
+                                                    @endif
                                                 </div>
                                                 <div class="col-md-10">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
