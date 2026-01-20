@@ -59,6 +59,19 @@
                                                             {{ $termin->start->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
+                                                    -
+                                                    <div class="d-inline-block" style="min-width: 80px;">
+                                                        <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
+                                                            <small class="font-bold">{{ $termin->ende->format('M') }}</small>
+                                                        </div>
+                                                        <div class="bg-white border border-gray-200 rounded-b px-3 py-2">
+                                                            <span class="text-3xl font-bold text-gray-800">{{ $termin->ende->format('d') }}</span>
+                                                        </div>
+                                                        <small class="text-gray-600 d-block mt-1">
+                                                            {{ $termin->ende->locale('de')->isoFormat('dddd') }}
+                                                        </small>
+                                                    </div>
+
                                                 </div>
                                                 <div class="col-md-10">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
