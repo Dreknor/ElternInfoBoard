@@ -117,7 +117,7 @@
                                                                     @if(!$termin->fullDay)
                                                                         {{ $termin->ende->format('H:i') }}
                                                                     @endif
-                                                                    <span class="badge badge-info ml-2">{{ $daysDiff }} Tage</span>
+                                                                    <span class="badge badge-info ml-2">{{ floor($daysDiff) }} Tage</span>
                                                                 @elseif($termin->fullDay)
                                                                     <i class="far fa-calendar text-blue-600"></i>
                                                                     <strong>Ganztägig</strong>
