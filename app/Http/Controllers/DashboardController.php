@@ -10,7 +10,6 @@ use App\Model\Termin;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -96,8 +95,6 @@ class DashboardController extends Controller
         // Prüfe auf offene Anwesenheitsabfragen für die Kinder des Benutzers
         $openAttendanceSurveys = false;
         if ($careChildren->count() > 0) {
-            Log::debug('Prüfe offene Anwesenheitsabfragen für Benutzer ' . auth()->user()->id);
-            Log::debug('Kinder: ' . $careChildren->pluck('id'));
             $childIds = $careChildren->pluck('id');
 
             $openSurveys = \App\Model\ChildCheckIn::query()
