@@ -26,6 +26,15 @@ class ActiveDiseaseController extends Controller
     public function activate(ActiveDisease $disease)
     {
 
+        if ($disease->active) {
+            $disease->update(['active' => false]);
+
+            return redirect()->back()->with([
+                'Meldung' => 'Diese Krankmeldung wurde deaktiviert',
+                'type' => 'warning',
+            ]);
+        }
+
         $disease->update(['active' => true]);
             return redirect()->back()->with([
                 'Meldung' => 'Krankmeldung wurde erfolgreich aktiviert',
