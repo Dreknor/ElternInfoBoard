@@ -97,6 +97,7 @@ class DashboardController extends Controller
         $openAttendanceSurveys = false;
         if ($careChildren->count() > 0) {
             Log::debug('Prüfe offene Anwesenheitsabfragen für Benutzer ' . auth()->user()->id);
+            Log::debug('Kinder: ' . $careChildren->pluck('id'));
             $childIds = $careChildren->pluck('id');
 
             $openSurveys = \App\Model\ChildCheckIn::query()
@@ -117,7 +118,7 @@ class DashboardController extends Controller
                 })
                 ->count();
 
-                Log::debug($openSurveys);
+
 
             $openAttendanceSurveys = $openSurveys > 0;
         }
