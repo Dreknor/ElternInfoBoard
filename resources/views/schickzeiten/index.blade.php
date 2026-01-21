@@ -9,14 +9,7 @@
             return validTabs.includes(hash) ? hash : 'anwesenheit';
         })(),
         showTypeForm: 'genau'
-    }" x-init="
-        // Scrolle zum Tab-Bereich, wenn ein Hash vorhanden ist
-        if (window.location.hash) {
-            setTimeout(() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 100);
-        }
-    ">
+    }" x-init="window.location.hash && setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100)">
         <!-- Header -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-2">Hort-Modul</h1>
