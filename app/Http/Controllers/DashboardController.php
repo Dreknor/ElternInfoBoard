@@ -117,6 +117,8 @@ class DashboardController extends Controller
                 })
                 ->count();
 
+                Log::debug($openSurveys);
+
             $openAttendanceSurveys = $openSurveys > 0;
         }
 
