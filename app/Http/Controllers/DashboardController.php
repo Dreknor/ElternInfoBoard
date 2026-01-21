@@ -92,6 +92,32 @@ class DashboardController extends Controller
                 ->get();
         });
 
+        // Prüfe auf offene Anwesenheitsabfragen für die Kinder des Benutzers
+        $openAttendanceSurveys = false;
+        if (auth()->user()->can('view schickzeiten') && $careChildren->count() > 0) {
+            $childIds = $careChildren->pluck('id');
+
+            $openSurveys = \App\Model\ChildCheckIn::query()
+                ->whereIn('child_id', $childIds)
+                ->where('should_be', false)
+                ->where('checked_in', false)
+                ->where('checked_out', false)
+                ->where(function ($query) {
+                    // Wenn lock_at gesetzt ist, prüfe ob es noch gültig ist
+                    // Wenn lock_at nicht gesetzt ist, prüfe ob das Datum in der Zukunft liegt
+                    $query->where(function ($q) {
+                        $q->whereNotNull('lock_at')
+                            ->where('lock_at', '>=', Carbon::today());
+                    })->orWhere(function ($q) {
+                        $q->whereNull('lock_at')
+                            ->where('date', '>', Carbon::today());
+                    });
+                })
+                ->count();
+
+            $openAttendanceSurveys = $openSurveys > 0;
+        }
+
         return view('dashboard.index', [
             'nachrichten' => $nachrichten,
             'termine' => $termine,
@@ -99,6 +125,7 @@ class DashboardController extends Controller
             'datum' => Carbon::now(),
             'careChildren' => $careChildren,
             'activeDiseases' => $activeDiseases,
+            'openAttendanceSurveys' => $openAttendanceSurveys,
         ]);
     }
 }
