@@ -19,6 +19,7 @@ class Pflichtstunde extends Model
 
     protected $fillable = [
         'user_id',
+        'listen_termin_id',
         'start',
         'end',
         'description',
