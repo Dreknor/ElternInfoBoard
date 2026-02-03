@@ -1,13 +1,11 @@
 <?php
 
-use Illuminate\Support\ServiceProvider;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Facade;
 
 return [
 
     'timezone' => 'Europe/Berlin',
-
 
     'aliases' => Facade::defaultAliases()->merge([
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,

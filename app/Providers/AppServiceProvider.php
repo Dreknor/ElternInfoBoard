@@ -192,6 +192,5 @@ class AppServiceProvider extends ServiceProvider
         Route::model('event', \App\Model\ElternratEvent::class);
         Route::model('task', \App\Model\ElternratTask::class);
 
-
     }
 }
