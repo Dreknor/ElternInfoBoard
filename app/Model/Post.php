@@ -39,18 +39,21 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'no_header'];
 
-    protected $casts = [
-        'archiv_ab' => 'datetime',
-        'read_receipt_deadline' => 'datetime',
-        'reactable' => 'boolean',
-        'external' => 'boolean',
-        'read_receipt' => 'boolean',
-        'no_header' => 'boolean',
-    ];
-
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
 
     protected $with = ['rueckmeldung'];
+
+    protected function casts(): array
+    {
+        return [
+            'archiv_ab' => 'datetime',
+            'read_receipt_deadline' => 'datetime',
+            'reactable' => 'boolean',
+            'external' => 'boolean',
+            'read_receipt' => 'boolean',
+            'no_header' => 'boolean',
+        ];
+    }
 
     public function groups(): BelongsToMany
     {

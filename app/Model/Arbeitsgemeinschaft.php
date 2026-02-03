@@ -20,12 +20,15 @@ class Arbeitsgemeinschaft extends Model
         'manager_id',
     ];
 
-    protected $casts = [
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_time' => 'datetime:H:i',
+            'end_time' => 'datetime:H:i',
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
     public function groups()
     {

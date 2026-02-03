@@ -13,7 +13,10 @@ class Module extends Model
 
     protected $fillable = ['setting', 'category', 'description', 'options'];
 
-    protected $casts = [
-        'options' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'options' => 'array',
+        ];
+    }
 }

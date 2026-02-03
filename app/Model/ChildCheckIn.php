@@ -22,13 +22,16 @@ class ChildCheckIn extends Model implements Auditable
         'comment',
     ];
 
-    protected $casts = [
-        'checked_in' => 'boolean',
-        'checked_out' => 'boolean',
-        'should_be' => 'boolean',
-        'date' => 'date',
-        'lock_at' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'checked_in' => 'boolean',
+            'checked_out' => 'boolean',
+            'should_be' => 'boolean',
+            'date' => 'date',
+            'lock_at' => 'date',
+        ];
+    }
 
     public function child()
     {

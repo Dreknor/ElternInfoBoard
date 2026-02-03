@@ -11,9 +11,12 @@ class AbfrageOptions extends Model
 
     protected $fillable = ['rueckmeldung_id', 'type', 'option', 'required'];
 
-    protected $casts = [
-        'required' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'required' => 'boolean',
+        ];
+    }
 
     public function answers()
     {

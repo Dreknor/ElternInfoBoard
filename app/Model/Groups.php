@@ -17,9 +17,12 @@ class Groups extends Model implements HasMedia
 
     protected $visible = ['name', 'bereich', 'protected'];
 
-    protected $casts = [
-        'protected' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'protected' => 'boolean',
+        ];
+    }
 
     public function users(): BelongsToMany
     {

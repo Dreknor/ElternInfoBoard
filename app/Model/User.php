@@ -62,18 +62,21 @@ class User extends Authenticatable implements Auditable
     ];
 
     /**
-     * The attributes that should be cast to native types.
+     * Get the attributes that should be cast.
      *
-     * @var array
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'lastEmail' => 'datetime',
-        'changePassword' => 'boolean',
-        'last_online_at' => 'datetime',
-        'track_login' => 'boolean',
-        'changeSettings' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'lastEmail' => 'datetime',
+            'changePassword' => 'boolean',
+            'last_online_at' => 'datetime',
+            'track_login' => 'boolean',
+            'changeSettings' => 'boolean',
+        ];
+    }
 
     public function notifications(): HasMany
     {

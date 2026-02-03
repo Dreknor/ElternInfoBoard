@@ -24,12 +24,15 @@ class Schickzeiten extends Model implements Auditable
 
     protected $visible = ['child_name', 'weekday', 'specific_date', 'time', 'time_ab', 'time_spaet', 'type', 'users_id', 'changedBy', 'child_id'];
 
-    protected $casts = [
-        'time' => 'datetime:H:i:s',
-        'time_ab' => 'datetime:H:i:s',
-        'time_spaet' => 'datetime:H:i:s',
-        'specific_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'time' => 'datetime:H:i:s',
+            'time_ab' => 'datetime:H:i:s',
+            'time_spaet' => 'datetime:H:i:s',
+            'specific_date' => 'date',
+        ];
+    }
 
     public function user(): BelongsTo
     {

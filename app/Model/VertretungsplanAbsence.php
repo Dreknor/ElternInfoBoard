@@ -16,8 +16,11 @@ class VertretungsplanAbsence extends Model
 
     protected $table = 'vertretungsplan_absences';
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 }

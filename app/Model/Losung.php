@@ -14,9 +14,12 @@ class Losung extends Model
 
     protected $fillable = ['date', 'Losungsvers', 'Losungstext', 'Lehrtextvers', 'Lehrtext'];
 
-    protected $casts = [
-        'date' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'date' => 'datetime',
+        ];
+    }
 
     public function getDateAttribute($value)
     {

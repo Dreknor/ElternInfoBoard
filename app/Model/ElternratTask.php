@@ -22,10 +22,13 @@ class ElternratTask extends Model
         'completed_at',
     ];
 
-    protected $casts = [
-        'due_date' => 'date',
-        'completed_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'date',
+            'completed_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get the user assigned to the task

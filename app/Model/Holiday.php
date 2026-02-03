@@ -17,11 +17,14 @@ class Holiday extends Model
         'end',
     ];
 
-    protected $casts = [
-        'year' => 'integer',
-        'start' => 'date',
-        'end' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'year' => 'integer',
+            'start' => 'date',
+            'end' => 'date',
+        ];
+    }
 
     /**
      * Scope a query to only include holidays for a specific year.

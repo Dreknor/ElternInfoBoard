@@ -25,10 +25,13 @@ class Child extends Model implements HasMedia
         'auto_checkIn',
     ];
 
-    protected $casts = [
-        'notification' => 'boolean',
-        'auto_checkIn' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'notification' => 'boolean',
+            'auto_checkIn' => 'boolean',
+        ];
+    }
 
     public function group()
     {
