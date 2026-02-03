@@ -5,7 +5,6 @@ namespace App\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Model\User;
 
 class EventAttendee extends Model
 {
@@ -34,4 +33,3 @@ class EventAttendee extends Model
         return $this->belongsTo(User::class);
     }
 }
-

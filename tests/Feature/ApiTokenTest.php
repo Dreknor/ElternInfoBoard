@@ -21,7 +21,7 @@ class ApiTokenTest extends TestCase
         $user = User::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/me');
 
         $response->assertOk();
@@ -69,4 +69,3 @@ class ApiTokenTest extends TestCase
         $this->assertCount(3, $user->tokens);
     }
 }
-

@@ -19,7 +19,7 @@ class DeleteFilesRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new DeleteFilesRequest();
+        $this->subject = new DeleteFilesRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class DeleteFilesRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

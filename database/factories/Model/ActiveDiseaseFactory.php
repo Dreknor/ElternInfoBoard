@@ -37,4 +37,3 @@ class ActiveDiseaseFactory extends Factory
         ]);
     }
 }
-

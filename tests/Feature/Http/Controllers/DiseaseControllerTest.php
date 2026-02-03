@@ -20,6 +20,7 @@ class DiseaseControllerTest extends TestCase
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::firstOrCreate(['name' => 'manage diseases']);
         $user->givePermissionTo('manage diseases');
+
         return $user;
     }
 
@@ -50,7 +51,6 @@ class DiseaseControllerTest extends TestCase
 
         $response->assertStatus(403);
     }
-
 
     /**
      * @test
@@ -93,7 +93,6 @@ class DiseaseControllerTest extends TestCase
 
         $response->assertSessionHasErrors('name');
     }
-
 
     /**
      * @test
@@ -157,4 +156,3 @@ class DiseaseControllerTest extends TestCase
         $this->assertDatabaseHas('diseases', ['id' => $disease->id]);
     }
 }
-

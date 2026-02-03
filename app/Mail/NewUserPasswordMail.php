@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Model\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,7 +14,9 @@ class NewUserPasswordMail extends Mailable
     use Queueable, SerializesModels;
 
     public User $user;
+
     public string $password;
+
     public string $welcomeText;
 
     /**
@@ -38,7 +39,7 @@ class NewUserPasswordMail extends Mailable
     public function envelope()
     {
         return new Envelope(
-            subject: 'Ihr Zugang zu ' . config('app.name'),
+            subject: 'Ihr Zugang zu '.config('app.name'),
         );
     }
 
@@ -64,4 +65,3 @@ class NewUserPasswordMail extends Mailable
         return [];
     }
 }
-

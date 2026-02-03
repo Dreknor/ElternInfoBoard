@@ -95,6 +95,7 @@ class ElternratTaskController extends Controller
     {
         if (auth()->user()->can('delete elternrat file') || $task->created_by === auth()->id()) {
             $task->delete();
+
             return back()->with([
                 'type' => 'success',
                 'meldung' => 'Aufgabe gelöscht',

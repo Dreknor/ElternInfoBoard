@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 
 class ApiImportVertretungsWeekRequest extends FormRequest
 {
@@ -22,6 +21,7 @@ class ApiImportVertretungsWeekRequest extends FormRequest
         if ($vertretung['key'] == config('app.api_key')) {
             return true;
         }
+
         return false;
     }
 

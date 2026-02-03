@@ -13,10 +13,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 
-
 class FeedbackController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth');
@@ -24,13 +22,14 @@ class FeedbackController extends Controller
 
     public function deleteMail(MailModel $mail)
     {
-        if (!auth()->user()->can('see mails')) {
+        if (! auth()->user()->can('see mails')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Zugriff verweigert',
             ]);
         }
         $mail->delete();
+
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Nachricht wurde gelöscht',
@@ -49,8 +48,6 @@ class FeedbackController extends Controller
                 ->paginate(25);
         } else {
 
-
-
             $mails = MailModel::where('senders_id', auth()->id())
                 ->orWhere('to', auth()->user()->email)
                 ->orderBy('created_at', 'desc')->paginate(25);
@@ -68,9 +65,8 @@ class FeedbackController extends Controller
     }
 
     /**
-     *
      * Send Mail
-     * @param KontaktRequest $request
+     *
      * @return RedirectResponse
      */
     public function send(KontaktRequest $request)
@@ -83,7 +79,6 @@ class FeedbackController extends Controller
 
         $data = [];
 
-
         if ($request->hasFile('files')) {
             $files = $request->files->all();
             foreach ($files['files'] as $document) {
@@ -91,7 +86,7 @@ class FeedbackController extends Controller
                 // maximum allowed file size
                 if ($document->getError() == 1) {
                     $max_size = $document->getMaxFileSize() / 1024 / 1024;  // Get size in Mb
-                    $error = 'The document size must be less than ' . $max_size . 'Mb.';
+                    $error = 'The document size must be less than '.$max_size.'Mb.';
 
                     return redirect()->back()->with([
                         'type' => 'danger',
@@ -102,8 +97,7 @@ class FeedbackController extends Controller
             }
         }
 
-
-        //create Mail Model for logging Mail in Database
+        // create Mail Model for logging Mail in Database
         $mail = new MailModel([
             'senders_id' => auth()->id(),
             'to' => $email,
@@ -121,7 +115,6 @@ class FeedbackController extends Controller
             $data['document'][] = $media;
         }
 
-
         try {
             Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
             $feedback = [
@@ -133,7 +126,7 @@ class FeedbackController extends Controller
 
             $feedback = [
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: ' . $e->getMessage(),
+                'Meldung' => 'Fehler beim Versand der Nachricht. Fehler: '.$e->getMessage(),
             ];
         }
 
@@ -141,7 +134,6 @@ class FeedbackController extends Controller
     }
 
     /**
-     * @param MailModel $mail
      * @return View|RedirectResponse
      */
     public function showMail(MailModel $mail)
@@ -160,6 +152,7 @@ class FeedbackController extends Controller
 
     /**
      * Called from Console/Kernel
+     *
      * @return void
      */
     public function dailyReport()

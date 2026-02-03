@@ -18,7 +18,7 @@ class editUserRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new editUserRequest();
+        $this->subject = new editUserRequest;
     }
 
     /**

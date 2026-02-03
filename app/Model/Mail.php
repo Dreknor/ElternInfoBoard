@@ -11,8 +11,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Mail extends Model implements HasMedia
 {
-    use InteractsWithMedia;
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $fillable = ['senders_id', 'subject', 'text', 'to', 'file'];
 
@@ -27,17 +27,15 @@ class Mail extends Model implements HasMedia
     {
         static::addGlobalScope('own', function (Builder $builder) {
 
-            if (auth()->user()->sorg2 != null){
+            if (auth()->user()->sorg2 != null) {
                 $builder->where('senders_id', auth()->id())
-                ->orWhere('to', auth()->user()->email)
-                ->orWhere('to', auth()->user()->sorg2);
+                    ->orWhere('to', auth()->user()->email)
+                    ->orWhere('to', auth()->user()->sorg2);
             } else {
                 $builder->where('senders_id', auth()->id())
-                ->orWhere('to', auth()->user()->email);
+                    ->orWhere('to', auth()->user()->email);
             }
 
         });
     }
-
-
 }

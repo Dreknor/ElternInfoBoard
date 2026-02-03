@@ -19,7 +19,7 @@ class createAbfrageRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createAbfrageRequest();
+        $this->subject = new createAbfrageRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class createAbfrageRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

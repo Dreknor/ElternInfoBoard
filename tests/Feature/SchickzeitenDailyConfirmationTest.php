@@ -290,4 +290,3 @@ class SchickzeitenDailyConfirmationTest extends TestCase
         ]);
     }
 }
-

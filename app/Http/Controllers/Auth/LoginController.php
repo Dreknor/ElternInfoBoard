@@ -3,17 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Model\User;
+use App\Notifications\SendPasswordLessLinkNotification;
 use Grosv\LaravelPasswordlessLogin\LoginUrl;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-use App\Model\User;
-use App\Notifications\SendPasswordLessLinkNotification;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
-/**
- *
- */
 class LoginController extends Controller
 {
     /*
@@ -47,8 +44,8 @@ class LoginController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\Response
+     *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function login(Request $request)
@@ -56,23 +53,19 @@ class LoginController extends Controller
 
         if ($request->input('submit') == 'password-less') {
 
-
             $user = $this->loginViaPasswordLessLink($request);
 
-            if (!$user or !$user->can('allow password-less-login')) {
-
-
+            if (! $user or ! $user->can('allow password-less-login')) {
 
                 return redirect()->route('login')
                     ->withErrors(['email' => 'Benutzer existiert nicht oder hat keine Berechtigung für den Passwortlosen Login.'])
                     ->withInput();
             }
 
-
             return redirect()->route('login')
                 ->with([
                     'type' => 'success',
-                    'Meldung' => 'Login-Link wurde an die angegebene E-Mail-Adresse gesendet.'
+                    'Meldung' => 'Login-Link wurde an die angegebene E-Mail-Adresse gesendet.',
                 ]);
         }
 
@@ -89,34 +82,25 @@ class LoginController extends Controller
             if ($request->hasSession()) {
                 $request->session()->put('auth.password_confirmed_at', time());
             }
+
             return $this->sendLoginResponse($request);
         }
-
 
         $this->incrementLoginAttempts($request);
 
         return $this->sendFailedLoginResponse($request);
     }
 
-
-    /**
-     * @param Request $request
-     * @return User
-     */
     public function loginViaPasswordLessLink(Request $request): ?User
     {
 
-
         $user = User::where('email', $request->input('email'))->first();
 
-
         if ($user and $user->can('allow password-less-login')) {
-
 
             $generator = new LoginUrl($user);
             $generator->setRedirectUrl('/home');
             $url = $generator->generate();
-
 
             $user->notify(new SendPasswordLessLinkNotification($url));
 
@@ -127,21 +111,20 @@ class LoginController extends Controller
     }
 
     /**
-     *
      * @return \Illuminate\Http\RedirectResponse
-     *
      */
-    public function redirectToKeycloak() {
+    public function redirectToKeycloak()
+    {
         if (auth()->check()) {
             return redirect()->route('home');
         }
 
-        $keycloakSetting = new \App\Settings\KeyCloakSetting();
+        $keycloakSetting = new \App\Settings\KeyCloakSetting;
 
         if ($keycloakSetting->enabled == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Keycloak ist nicht aktiviert.'
+                'Meldung' => 'Keycloak ist nicht aktiviert.',
             ]);
         }
 
@@ -150,18 +133,16 @@ class LoginController extends Controller
 
     /**
      * @return \Illuminate\Http\RedirectResponse
-     *
      */
     public function handleKeycloakCallback()
     {
 
-        $keycloakSetting = new \App\Settings\KeyCloakSetting();
-
+        $keycloakSetting = new \App\Settings\KeyCloakSetting;
 
         if ($keycloakSetting->enabled == false) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Keycloak ist nicht aktiviert.'
+                'Meldung' => 'Keycloak ist nicht aktiviert.',
             ]);
         }
 
@@ -170,24 +151,22 @@ class LoginController extends Controller
             Log::debug('Keycloak user data', [
                 'user' => $user,
                 'attributes' => $user->user,
-                ]);
+            ]);
         } catch (\Exception $e) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Login fehlgeschlagen.'
+                'Meldung' => 'Login fehlgeschlagen.',
             ]);
         }
 
-
-        if (!$user->email) {
+        if (! $user->email) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'E-Mail-Adresse konnte nicht abgerufen werden.'
+                'Meldung' => 'E-Mail-Adresse konnte nicht abgerufen werden.',
             ]);
         }
 
         $existingUser = User::where('email', $user->email)->first();
-
 
         if ($existingUser) {
             auth()->login($existingUser);
@@ -196,26 +175,24 @@ class LoginController extends Controller
 
         } else {
 
-
             $domain = explode('@', $user->email)[1];
 
             $mailDomains = $keycloakSetting->maildomain;
             $mailDomains = explode(',', $mailDomains);
             $mailDomains = array_map('trim', $mailDomains);
 
-
-            if (!is_array($mailDomains) || count($mailDomains) == 0) {
+            if (! is_array($mailDomains) || count($mailDomains) == 0) {
                 return redirect()->route('login')->with([
                     'type' => 'danger',
-                    'Meldung' => 'E-Mail-Domain ist nicht gestattet.'
+                    'Meldung' => 'E-Mail-Domain ist nicht gestattet.',
                 ]);
 
             } else {
                 // Prüfen ob Wildcard (*) gesetzt ist - erlaubt alle Domains
-                if (!in_array('*', $mailDomains) && !in_array($domain, $mailDomains)) {
+                if (! in_array('*', $mailDomains) && ! in_array($domain, $mailDomains)) {
                     return redirect()->route('login')->with([
                         'type' => 'danger',
-                        'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.'
+                        'Meldung' => 'E-Mail-Adresse ist nicht erlaubt.',
                     ]);
                 }
             }
@@ -241,15 +218,12 @@ class LoginController extends Controller
                 'lastEmail' => now(),
             ]);
 
-
-            //$newUser->assignRole('Mitarbeiter');
+            // $newUser->assignRole('Mitarbeiter');
 
             auth()->login($newUser);
             // Remove passwordless login marker for Keycloak login
             request()->session()->forget('passwordless_login');
         }
-
-
 
         return redirect()->intended('/home');
     }
@@ -258,7 +232,6 @@ class LoginController extends Controller
      * The user has been authenticated.
      * Remove passwordless_login marker for regular login.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  mixed  $user
      * @return mixed
      */

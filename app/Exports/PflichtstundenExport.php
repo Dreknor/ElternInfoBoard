@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Model\User;
-use App\Model\Pflichtstunde;
 use App\Settings\PflichtstundenSetting;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -11,23 +10,26 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings, WithTitle
+class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
     protected PflichtstundenSetting $settings;
+
     protected ?int $year;
+
     protected Carbon $startDate;
+
     protected Carbon $endDate;
 
     public function __construct(?int $year = null)
     {
-        $this->settings = new PflichtstundenSetting();
+        $this->settings = new PflichtstundenSetting;
         $this->year = $year;
 
         // Zeitraum berechnen
         if ($year) {
             // Spezifisches Jahr
-            $this->startDate = Carbon::createFromFormat('Y-m-d', $year . '-' . $this->settings->pflichtstunden_start)->startOfDay();
-            $this->endDate = Carbon::createFromFormat('Y-m-d', ($year + 1) . '-' . $this->settings->pflichtstunden_ende)->endOfDay();
+            $this->startDate = Carbon::createFromFormat('Y-m-d', $year.'-'.$this->settings->pflichtstunden_start)->startOfDay();
+            $this->endDate = Carbon::createFromFormat('Y-m-d', ($year + 1).'-'.$this->settings->pflichtstunden_ende)->endOfDay();
         } else {
             // Aktueller Zeitraum
             $this->startDate = Carbon::createFromFormat('m-d', $this->settings->pflichtstunden_start)->startOfDay();
@@ -48,9 +50,9 @@ class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings,
     {
         // Hole alle Nutzer mit Permission "view Pflichtstunden"
         $users = User::permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function($query) {
+            ->with(['pflichtstunden' => function ($query) {
                 $query->where('approved', true)
-                      ->whereBetween('start', [$this->startDate, $this->endDate]);
+                    ->whereBetween('start', [$this->startDate, $this->endDate]);
             }])
             ->get();
 
@@ -84,10 +86,6 @@ class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings,
         return $grouped;
     }
 
-    /**
-     * @param $item
-     * @return array
-     */
     public function map($item): array
     {
         $user = $item['user'];
@@ -115,7 +113,7 @@ class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings,
         // Namen zusammenstellen
         $name = $user->name;
         if ($partner) {
-            $name .= ' / ' . $partner->name;
+            $name .= ' / '.$partner->name;
         }
 
         // Formatiere Stunden
@@ -126,8 +124,8 @@ class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings,
             $name,
             $geleistetFormatted,
             $offenFormatted,
-            number_format($beitrag, 2, ',', '.') . ' €',
-            round(min(100, ($totalMinutes / $requiredMinutes) * 100), 2) . '%',
+            number_format($beitrag, 2, ',', '.').' €',
+            round(min(100, ($totalMinutes / $requiredMinutes) * 100), 2).'%',
         ];
     }
 
@@ -145,14 +143,12 @@ class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings,
         ];
     }
 
-    /**
-     * @return string
-     */
     public function title(): string
     {
         if ($this->year) {
-            return 'Pflichtstunden ' . $this->year . '-' . ($this->year + 1);
+            return 'Pflichtstunden '.$this->year.'-'.($this->year + 1);
         }
+
         return 'Pflichtstunden Abrechnung';
     }
 
@@ -164,10 +160,10 @@ class PflichtstundenExport implements FromCollection, WithMapping, WithHeadings,
         if ($minutes >= 60) {
             $hours = floor($minutes / 60);
             $mins = $minutes % 60;
-            return $hours . ' Std. ' . $mins . ' Min.';
+
+            return $hours.' Std. '.$mins.' Min.';
         }
 
-        return $minutes . ' Min.';
+        return $minutes.' Min.';
     }
 }
-

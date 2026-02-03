@@ -12,7 +12,9 @@ class dringendeNachrichtStatus extends Mailable
     use Queueable, SerializesModels;
 
     public array $empfaenger;
+
     public string $senderEmail;
+
     public string $senderName;
 
     /**
@@ -40,6 +42,7 @@ class dringendeNachrichtStatus extends Mailable
             'senderName' => $this->senderName,
             'empfaenger_email' => $this->empfaenger,
         ]);
+
         return $this
             ->from(
                 $this->senderEmail,

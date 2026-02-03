@@ -3,9 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\KrankmeldungRequest;
-
-use App\Model\User;
-
 use Tests\TestCase;
 
 /**
@@ -20,13 +17,13 @@ class KrankmeldungRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new KrankmeldungRequest();
+        $this->subject = new KrankmeldungRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function authorize()
@@ -45,7 +42,7 @@ class KrankmeldungRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

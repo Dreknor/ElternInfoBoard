@@ -13,22 +13,16 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller
 {
-    /**
-     *
-     */
     public function __construct()
     {
         $this->middleware(['auth', 'password_expired']);
     }
 
     /**
-     * @param Request $request
-     * @param Rueckmeldungen $rueckmeldung
      * @return RedirectResponse
      */
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
@@ -48,7 +42,6 @@ class UserRueckmeldungenController extends Controller
         ]);
         $userRueckmeldung->save();
 
-
         $this->generateAnswerModels($request, $userRueckmeldung);
 
         return redirect()->back()->with([
@@ -58,8 +51,6 @@ class UserRueckmeldungenController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param $post_id
      * @return Application|RedirectResponse|Redirector
      */
     public function sendRueckmeldung(Request $request, $post_id)
@@ -110,7 +101,6 @@ class UserRueckmeldungenController extends Controller
     }
 
     /**
-     * @param UserRueckmeldungen $userRueckmeldungen
      * @return Application|Factory|View|RedirectResponse
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
@@ -147,8 +137,6 @@ class UserRueckmeldungenController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param UserRueckmeldungen $userRueckmeldungen
      * @return Application|RedirectResponse|Redirector
      */
     public function update(Request $request, UserRueckmeldungen $userRueckmeldungen)
@@ -210,11 +198,6 @@ class UserRueckmeldungenController extends Controller
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @param UserRueckmeldungen $userRueckmeldung
-     * @return void
-     */
     public function generateAnswerModels(Request $request, UserRueckmeldungen $userRueckmeldung): void
     {
         $answers = [];

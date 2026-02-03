@@ -6,11 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class verwaltungEditUserRequest extends FormRequest
 {
-
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -19,8 +16,6 @@ class verwaltungEditUserRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
@@ -54,17 +49,17 @@ class verwaltungEditUserRequest extends FormRequest
             'sendCopy' => [
                 'nullable',
                 'min:0',
-                'max:1'
+                'max:1',
             ],
             'track_login' => [
                 'nullable',
                 'min:0',
-                'max:1'
+                'max:1',
             ],
             'changePassword' => [
                 'nullable',
                 'min:0',
-                'max:1'
+                'max:1',
             ],
         ];
     }

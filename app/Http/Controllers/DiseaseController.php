@@ -30,7 +30,6 @@ class DiseaseController extends Controller
         return view('krankmeldung.diseases.manage', compact('diseases', 'activeDiseases'));
     }
 
-
     /**
      * Store a newly created disease in storage.
      */
@@ -52,14 +51,13 @@ class DiseaseController extends Controller
         ]);
     }
 
-
     /**
      * Update the specified disease in storage.
      */
     public function update(Request $request, Disease $disease)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:diseases,name,' . $disease->id,
+            'name' => 'required|string|max:255|unique:diseases,name,'.$disease->id,
             'reporting' => 'required|boolean',
             'wiederzulassung_durch' => 'required|string|max:255',
             'wiederzulassung_wann' => 'required|string|max:255',
@@ -95,4 +93,3 @@ class DiseaseController extends Controller
         ]);
     }
 }
-

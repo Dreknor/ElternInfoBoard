@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Model\Rueckmeldungen;
-use App\Model\UserRueckmeldungen;
 use App\Model\User;
+use App\Model\UserRueckmeldungen;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -103,4 +103,3 @@ class RueckmeldungenTest extends TestCase
         $this->assertEquals($post->id, $rueckmeldung->post->id);
     }
 }
-

@@ -3,9 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\createListenEintragungsRequest;
-
-use App\Model\User;
-
 use Tests\TestCase;
 
 /**
@@ -20,13 +17,13 @@ class createListenEintragungsRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createListenEintragungsRequest();
+        $this->subject = new createListenEintragungsRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function authorize()
@@ -45,7 +42,7 @@ class createListenEintragungsRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

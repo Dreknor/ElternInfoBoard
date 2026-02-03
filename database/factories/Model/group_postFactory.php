@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\group_post;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class group_postFactory extends Factory
 {

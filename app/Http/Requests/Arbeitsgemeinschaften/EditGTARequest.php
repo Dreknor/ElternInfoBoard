@@ -32,11 +32,11 @@ class EditGTARequest extends FormRequest
             'max_participants' => [
                 'required',
                 'integer',
-                'min:' . $this->arbeitsgemeinschaft->participants()->count(),
+                'min:'.$this->arbeitsgemeinschaft->participants()->count(),
             ],
             'manager_id' => 'required|exists:users,id',
             'groups' => 'required|array|min:1',
-            'groups.*' => 'exists:groups,id'
+            'groups.*' => 'exists:groups,id',
         ];
 
     }

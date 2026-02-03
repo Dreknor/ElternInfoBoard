@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\listen_termine;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class listen_termineFactory extends Factory
 {

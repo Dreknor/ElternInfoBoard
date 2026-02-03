@@ -13,7 +13,7 @@ class UpdateSiteBlockTextRequest extends FormRequest
      */
     public function authorize()
     {
-        return auth()->user()->can('create sites') ;
+        return auth()->user()->can('create sites');
     }
 
     /**

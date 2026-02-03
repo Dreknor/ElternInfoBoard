@@ -11,15 +11,14 @@ use Illuminate\Queue\SerializesModels;
 
 class PushPostToWordpress implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
      */
     public function __construct(
         public Post $post
-    )
-    {
+    ) {
         //
     }
 
@@ -28,7 +27,7 @@ class PushPostToWordpress implements ShouldQueue
      */
     public function handle(): void
     {
-        $repository = new WordpressRepository();
+        $repository = new WordpressRepository;
         $repository->pushPost($this->post);
     }
 }

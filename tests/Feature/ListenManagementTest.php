@@ -80,4 +80,3 @@ class ListenManagementTest extends TestCase
         $this->assertEquals($user->id, $liste->ersteller->id);
     }
 }
-

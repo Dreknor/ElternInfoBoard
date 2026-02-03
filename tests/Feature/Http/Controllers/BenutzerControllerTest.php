@@ -33,7 +33,7 @@ class BenutzerControllerTest extends TestCase
     /**
      * @test
      **/
-    public function show_displays_changelog_when_changeSettings_is_true()
+    public function show_displays_changelog_when_change_settings_is_true()
     {
         $user = User::factory()->create(['changeSettings' => true, 'changePassword' => false]);
         $changelog = Changelog::factory()->create(['changeSettings' => true]);

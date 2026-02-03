@@ -19,7 +19,7 @@ class createRueckmeldungRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createRueckmeldungRequest();
+        $this->subject = new createRueckmeldungRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class createRueckmeldungRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

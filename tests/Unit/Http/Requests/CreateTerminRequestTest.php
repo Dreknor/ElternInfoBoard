@@ -19,7 +19,7 @@ class CreateTerminRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateTerminRequest();
+        $this->subject = new CreateTerminRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class CreateTerminRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

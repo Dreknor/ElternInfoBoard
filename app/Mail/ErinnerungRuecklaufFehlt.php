@@ -15,7 +15,9 @@ class ErinnerungRuecklaufFehlt extends Mailable
     public string $name;
 
     public string $thema;
+
     public string $ende;
+
     public int $theme_id;
 
     /**
@@ -45,7 +47,7 @@ class ErinnerungRuecklaufFehlt extends Mailable
                 'name' => $this->name,
                 'thema' => $this->thema,
                 'ende' => $this->ende,
-                'theme_id' => $this->theme_id
+                'theme_id' => $this->theme_id,
             ]);
     }
 }

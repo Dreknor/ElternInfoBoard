@@ -24,7 +24,6 @@ class RolesController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function update(Request $request)
@@ -33,20 +32,18 @@ class RolesController extends Controller
             $role->syncPermissions($request->input($role->name));
         }
 
-        return  redirect()->back()->with([
+        return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Berechtigungen gespeichert',
         ]);
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function store(Request $request)
     {
         Role::firstOrCreate(['name' => $request->name]);
-
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -55,12 +52,11 @@ class RolesController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function storePermission(Request $request)
     {
-       Permission::firstOrCreate(['name' => $request->name]);
+        Permission::firstOrCreate(['name' => $request->name]);
 
         return redirect()->back()->with([
             'type' => 'success',

@@ -3,7 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\StorePushRequest;
-
 use Tests\TestCase;
 
 /**
@@ -18,13 +17,13 @@ class StorePushRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new StorePushRequest();
+        $this->subject = new StorePushRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

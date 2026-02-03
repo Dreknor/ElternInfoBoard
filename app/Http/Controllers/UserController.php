@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\createUserRequest;
-use App\Http\Requests\PasswordlessUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Mail\NewUserPasswordMail;
 use App\Model\Discussion;
-use App\Settings\EmailSetting;
 use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
@@ -17,18 +15,17 @@ use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
+use App\Settings\EmailSetting;
 use Carbon\Carbon;
-use Grosv\LaravelPasswordlessLogin\LoginUrl;
-use Grosv\LaravelPasswordlessLogin\PasswordlessLogin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -64,7 +61,6 @@ class UserController extends Controller
     public function create()
     {
 
-
         if (auth()->user()->can('edit permission')) {
             $roles = Role::all();
         } elseif (auth()->user()->can('assign roles to users')) {
@@ -79,14 +75,13 @@ class UserController extends Controller
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
-            'roles' => $roles
+            'roles' => $roles,
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param createUserRequest $request
      * @return RedirectResponse
      */
     public function store(createUserRequest $request)
@@ -99,7 +94,6 @@ class UserController extends Controller
         $user->changePassword = true;
         $user->lastEmail = Carbon::now();
         $user->save();
-
 
         $gruppen = $request->input('gruppen');
         if (isset($gruppen)) {
@@ -115,11 +109,11 @@ class UserController extends Controller
         }
 
         if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-            if (auth()->user()->can('edit permission') && !is_null($request->roles)) {
+            if (auth()->user()->can('edit permission') && ! is_null($request->roles)) {
                 $roles = Role::whereIn('name', $request->roles)->get();
                 $user->roles()->sync($roles);
             } elseif (auth()->user()->can('assign roles to users')) {
-                if (!is_null($request->roles)) {
+                if (! is_null($request->roles)) {
                     $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
                         $query->where('name', 'role is assignable');
                     })->get();
@@ -140,14 +134,13 @@ class UserController extends Controller
 
         return redirect(url("users/$user->id"))->with([
             'type' => 'success',
-            'Meldung' => 'Benutzer wurde angelegt. ' . $emailStatus,
+            'Meldung' => 'Benutzer wurde angelegt. '.$emailStatus,
         ]);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param User $user
      * @return View
      */
     public function show(User $user)
@@ -181,8 +174,6 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param verwaltungEditUserRequest $request
-     * @param User $user
      * @return RedirectResponse
      */
     public function update(verwaltungEditUserRequest $request, User $user)
@@ -190,25 +181,24 @@ class UserController extends Controller
         $user->fill($request->validated());
         $gruppen = $request->input('gruppen');
 
-        if (!is_null($gruppen)) {
+        if (! is_null($gruppen)) {
 
             $gruppen = $this->groupsRepository->getGroups($gruppen);
             $user->groups()->sync($gruppen);
         }
-
 
         if ($request->user()->can('edit permission')) {
             $permissions = $request->input('permissions');
             $user->syncPermissions($permissions);
         }
 
-        if (!is_null($request->roles)) {
+        if (! is_null($request->roles)) {
             if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-                if (auth()->user()->can('edit permission') and !is_null($request->roles)) {
+                if (auth()->user()->can('edit permission') and ! is_null($request->roles)) {
                     $roles = Role::whereIn('name', $request->roles)->get();
                     $roles->unique();
                     $user->roles()->sync($roles);
-                } elseif (auth()->user()->can('assign roles to users') and !is_null($request->roles)) {
+                } elseif (auth()->user()->can('assign roles to users') and ! is_null($request->roles)) {
                     $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
                         $query->where('name', 'role is assignable');
                     })->get();
@@ -223,7 +213,6 @@ class UserController extends Controller
                 }
             }
         }
-
 
         if ($request->user()->can('set password') and $request->input('new-password') != '') {
             $user->password = Hash::make($request->input('new-password'));
@@ -251,7 +240,6 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
      * @return RedirectResponse
      */
     public function destroy(int $id, $redirect = true)
@@ -262,10 +250,10 @@ class UserController extends Controller
 
             if ($user->sorg2 != null) {
                 $sorg2 = User::where('id', '=', $user->sorg2)->first();
-                if (!is_null($sorg2)) {
+                if (! is_null($sorg2)) {
                     $sorg2->update([
-                            'sorg2' => null,
-                        ]
+                        'sorg2' => null,
+                    ]
                     );
                 }
 
@@ -285,7 +273,6 @@ class UserController extends Controller
 
             Liste::query()->where('besitzer', $user->id)->update(['besitzer' => null]);
 
-
             $user->listen_termine()->delete();
             $user->userRueckmeldung()->delete();
             $user->reinigung()->delete();
@@ -298,15 +285,15 @@ class UserController extends Controller
 
             $user->delete();
 
-            $Fehler = "";
+            $Fehler = '';
         } catch (\Exception $exception) {
             $Fehler = $exception;
         }
 
         if ($redirect) {
             return redirect()->back()->with([
-                'type' => ($Fehler == "") ? 'success' : 'danger',
-                'Meldung' => ($Fehler != "") ? $Fehler : 'Benutzer gelöscht',
+                'type' => ($Fehler == '') ? 'success' : 'danger',
+                'Meldung' => ($Fehler != '') ? $Fehler : 'Benutzer gelöscht',
             ]);
         } else {
             return $Fehler;
@@ -315,8 +302,6 @@ class UserController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param $id
      * @return RedirectResponse
      */
     public function loginAsUser(Request $request, $id)
@@ -334,15 +319,12 @@ class UserController extends Controller
         return redirect()->to(url('/'));
     }
 
-
     /**
-     * @param User $user
-     * @param Int $sorg2
      * @return RedirectResponse
      */
-    public function removeVerknuepfung(User $user, Int $sorg2)
+    public function removeVerknuepfung(User $user, int $sorg2)
     {
-        if ($user->sorg2 != $sorg2){
+        if ($user->sorg2 != $sorg2) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Verknüpfung konnte nicht aufgehoben werden, da User und Sorgeberechtigter nicht übereinstimmen.',
@@ -373,7 +355,7 @@ class UserController extends Controller
             ->get();
 
         return view('user.showMassDelete')->with([
-            'users' => $users
+            'users' => $users,
         ]);
     }
 
@@ -382,27 +364,30 @@ class UserController extends Controller
         // Die geschützten Rollen sind fest im Code definiert und NICHT über die Settings änderbar
         $protectedRoles = ['Mitarbeiter', 'Vereinsmitglieder', 'Administrator'];
         $userIds = $request->input('user_ids', []);
-        $fehler = "";
+        $fehler = '';
         $deleted = 0;
 
         foreach ($userIds as $userId) {
             $user = User::find($userId);
-            if (!$user) continue;
+            if (! $user) {
+                continue;
+            }
             if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
-                $fehler .= ($fehler ? ', ' : 'Nicht gelöscht: ') . $user->name;
+                $fehler .= ($fehler ? ', ' : 'Nicht gelöscht: ').$user->name;
+
                 continue;
             }
             $ergebnis = $this->destroy($userId, false);
-            if ($ergebnis != "") {
-                $fehler .= ($fehler ? ', ' : 'Fehler bei: ') . $user->name;
+            if ($ergebnis != '') {
+                $fehler .= ($fehler ? ', ' : 'Fehler bei: ').$user->name;
             } else {
                 $deleted++;
             }
         }
 
         return redirect()->back()->with([
-            'type' => ($fehler == "") ? 'success' : 'danger',
-            'Meldung' => ($deleted ? "$deleted Benutzer gelöscht. " : '') . $fehler,
+            'type' => ($fehler == '') ? 'success' : 'danger',
+            'Meldung' => ($deleted ? "$deleted Benutzer gelöscht. " : '').$fehler,
         ]);
     }
 
@@ -419,15 +404,15 @@ class UserController extends Controller
         $users = User::whereDoesntHave('groups', function ($query) use ($vereinsgruppe) {
             $query->where('groups.id', $vereinsgruppe?->id);
         })
-        ->where(function ($query) use ($vereinsgruppe) {
-            // User ohne Sorg2 ODER User deren Sorg2 nicht in der Gruppe ist
-            $query->whereNull('sorg2')
-                ->orWhereDoesntHave('sorgeberechtigter2.groups', function ($q) use ($vereinsgruppe) {
-                    $q->where('groups.id', $vereinsgruppe?->id);
-                });
-        })
-        ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
-        ->get();
+            ->where(function ($query) use ($vereinsgruppe) {
+                // User ohne Sorg2 ODER User deren Sorg2 nicht in der Gruppe ist
+                $query->whereNull('sorg2')
+                    ->orWhereDoesntHave('sorgeberechtigter2.groups', function ($q) use ($vereinsgruppe) {
+                        $q->where('groups.id', $vereinsgruppe?->id);
+                    });
+            })
+            ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+            ->get();
 
         // Bereite die User-Daten für Alpine.js vor
         $usersData = $users->map(function ($u) {
@@ -438,7 +423,7 @@ class UserController extends Controller
                 'groups' => $u->groups->pluck('name')->toArray(),
                 'roles' => $u->roles->pluck('name')->toArray(),
                 'sorg2' => $u->sorgeberechtigter2?->name,
-                'removed' => false
+                'removed' => false,
             ];
         })->values();
 
@@ -456,7 +441,6 @@ class UserController extends Controller
     /**
      * Fügt einen User zur Gruppe Vereinsmitglied hinzu (Ajax)
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function addToVereinsmitglied(Request $request)
@@ -464,19 +448,19 @@ class UserController extends Controller
         $userId = $request->input('user_id');
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Benutzer nicht gefunden'
+                'message' => 'Benutzer nicht gefunden',
             ], 404);
         }
 
         $vereinsgruppe = Group::where('name', 'Vereinsmitglied')->first();
 
-        if (!$vereinsgruppe) {
+        if (! $vereinsgruppe) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gruppe Vereinsmitglied nicht gefunden'
+                'message' => 'Gruppe Vereinsmitglied nicht gefunden',
             ], 404);
         }
 
@@ -485,7 +469,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Benutzer zur Gruppe Vereinsmitglied hinzugefügt'
+            'message' => 'Benutzer zur Gruppe Vereinsmitglied hinzugefügt',
         ]);
     }
 
@@ -499,7 +483,7 @@ class UserController extends Controller
         $vereinsgruppe = Group::where('name', 'Vereinsmitglied')->first();
         $vereinsrolle = Role::where('name', 'Vereinsmitglied')->first();
 
-        if (!$vereinsgruppe || !$vereinsrolle) {
+        if (! $vereinsgruppe || ! $vereinsrolle) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Gruppe oder Rolle Vereinsmitglied nicht gefunden',
@@ -510,7 +494,7 @@ class UserController extends Controller
         $updated = 0;
 
         foreach ($users as $user) {
-            if (!$user->hasRole('Vereinsmitglied')) {
+            if (! $user->hasRole('Vereinsmitglied')) {
                 $user->assignRole('Vereinsmitglied');
                 $updated++;
             }
@@ -521,5 +505,4 @@ class UserController extends Controller
             'Meldung' => "$updated Benutzer(n) wurde die Rolle Vereinsmitglied zugewiesen",
         ]);
     }
-
 }

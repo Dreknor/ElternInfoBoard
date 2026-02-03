@@ -7,17 +7,22 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-
 class FinalReadReceiptReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public string $email;
+
     public string $name;
+
     public string $thema;
+
     public string $content;
+
     public string $ende;
+
     public int $theme_id;
+
     public ?string $authorEmail;
 
     /**
@@ -44,7 +49,7 @@ class FinalReadReceiptReminderMail extends Mailable
     public function build(): static
     {
         $mailable = $this
-            ->subject('WICHTIG: Lesebestätigung erforderlich - ' . $this->thema)
+            ->subject('WICHTIG: Lesebestätigung erforderlich - '.$this->thema)
             ->view('emails.FinalReadReceiptReminder')
             ->with([
                 'name' => $this->name,
@@ -52,7 +57,7 @@ class FinalReadReceiptReminderMail extends Mailable
                 'content' => $this->content,
                 'ende' => $this->ende,
                 'theme_id' => $this->theme_id,
-                'BoardName' => (new GeneralSetting())->app_name,
+                'BoardName' => (new GeneralSetting)->app_name,
             ]);
 
         if ($this->authorEmail) {

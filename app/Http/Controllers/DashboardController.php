@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Model\ActiveDisease;
-use App\Model\Child;
 use App\Model\Losung;
 use App\Model\Post;
 use App\Model\Termin;
@@ -72,8 +71,6 @@ class DashboardController extends Controller
                 ->get();
         }
 
-
-
         // Hole die heutige Losung
         $losung = Losung::whereDate('date', Carbon::today())->first();
 
@@ -115,8 +112,6 @@ class DashboardController extends Controller
                 })
                 ->count();
 
-
-
             $openAttendanceSurveys = $openSurveys > 0;
         }
 
@@ -131,4 +126,3 @@ class DashboardController extends Controller
         ]);
     }
 }
-

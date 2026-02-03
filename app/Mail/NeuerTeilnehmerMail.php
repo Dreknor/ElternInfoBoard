@@ -13,6 +13,7 @@ class NeuerTeilnehmerMail extends Mailable
     use Queueable, SerializesModels;
 
     protected $arbeitsgemeinschaft;
+
     protected $child;
 
     public function __construct(Arbeitsgemeinschaft $arbeitsgemeinschaft, Child $child)
@@ -26,7 +27,7 @@ class NeuerTeilnehmerMail extends Mailable
         return $this->subject('Neuer Teilnehmer in Ihrer AG')
             ->markdown('emails.NewParticipantNotification', [
                 'arbeitsgemeinschaft' => $this->arbeitsgemeinschaft,
-                'child' => $this->child
+                'child' => $this->child,
             ]);
     }
 }

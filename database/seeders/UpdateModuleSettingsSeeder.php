@@ -4,9 +4,7 @@ namespace Database\Seeders;
 
 use App\Model\Module;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UpdateModuleSettingsSeeder extends Seeder
@@ -22,9 +20,8 @@ class UpdateModuleSettingsSeeder extends Seeder
         Module::query()->where('setting', 'Losung')->delete();
 
         Module::where('setting', 'Gruppen')->update([
-            'options' => '{"active":"1","rights":["view groups"],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends","bottom-nav":"true"}}'
+            'options' => '{"active":"1","rights":["view groups"],"nav":{"name":"Gruppen","link":"groups","icon":"fas fa-user-friends","bottom-nav":"true"}}',
         ]);
-
 
         $settings = [
             [
@@ -35,7 +32,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                 'options' => json_encode([
                     'active' => '1',
                     'rights' => [],
-                    "home-view-top" => "include.losung",
+                    'home-view-top' => 'include.losung',
                     'nav' => [],
                     'adm-nav' => [
                         'adm-rights' => ['edit settings'],
@@ -43,7 +40,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                         'link' => 'settings/losungen/import',
                         'icon' => 'fas fa-file-import',
                     ],
-                ])
+                ]),
             ],
             [
                 'id' => 1150,
@@ -82,20 +79,20 @@ class UpdateModuleSettingsSeeder extends Seeder
                 'description' => 'Erlaubt das Anlegen und Verwalten von Seiten',
                 'category' => 'module',
                 'options' => json_encode([
-                    "active"=>"0",
-                    "rights" => json_encode(["view sites"]),
-                    "nav"=>json_encode([
-                        "name"=>"Seiten",
-                        "link"=>"sites",
-                        "icon"=>"fa fa-file",
-                        "bottom-nav"=>"false"
+                    'active' => '0',
+                    'rights' => json_encode(['view sites']),
+                    'nav' => json_encode([
+                        'name' => 'Seiten',
+                        'link' => 'sites',
+                        'icon' => 'fa fa-file',
+                        'bottom-nav' => 'false',
                     ]),
-                    "adm-nav"=>json_encode([
-                        "adm-rights"=>json_encode(["create sites"]),
-                        "name"=>"neue Seite",
-                        "link"=>"sites/create",
-                        "icon"=>"fa fa-file-pen"
-                    ])
+                    'adm-nav' => json_encode([
+                        'adm-rights' => json_encode(['create sites']),
+                        'name' => 'neue Seite',
+                        'link' => 'sites/create',
+                        'icon' => 'fa fa-file-pen',
+                    ]),
                 ]),
             ],  [
                 'setting' => 'Settings',
@@ -113,57 +110,57 @@ class UpdateModuleSettingsSeeder extends Seeder
                         'icon' => 'fas fa-cogs',
                         'permission' => 'edit settings',
                     ]),
-                ])
-                ], [
-                    'setting' => 'Anwesenheitsliste',
-                    'description' => "digitale Anwesenheitsliste der Kinder",
-                    'category' => 'module',
-                    'options' => json_encode([
-                            "active" => "0",
-                            'rights' => [],
-                            "adm-nav" => [
-                                "adm-rights" => ["edit schickzeiten"],
-                                "name" => "Anwesenheit",
-                                "link" => "care/anwesenheit",
-                                "icon" => "fa-solid fa-children"
-                            ]
-                        ]),
-                    'created_at' => now(),
-                ], [
-                    'setting' => 'Kinderverwaltung',
-                    'description' => "Verwaltung der angelegten Kinder",
-                    'category' => 'module',
-                    'options' => json_encode([
-                            "active" => "0",
-                            'rights' => [],
-                            "adm-nav" => [
-                                "adm-rights" => ["edit schickzeiten"],
-                                "name" => "Kinder",
-                                "link" => "care/children",
-                                "icon" => "fa-solid fa-children"
-                            ]
-                        ]),
-                    'created_at' => now(),
-                ],
-                [
-                    'setting' => 'bearbeite Rueckmeldungen',
-                    'category' => 'module',
-                    'options' => json_encode([
-                        'active' => '0',
-                        'rights' => [],
-                        'adm-nav' => [
-                            'adm-rights' => ['manage rueckmeldungen'],
-                            'name' => 'Rückmeldungen',
-                            'link' => 'rueckmeldungen',
-                            'icon' => 'fas fa-comment-dots',
-                        ],
-                    ]),
-                    'created_at' => Carbon::now(),
-                ],
+                ]),
+            ], [
+                'setting' => 'Anwesenheitsliste',
+                'description' => 'digitale Anwesenheitsliste der Kinder',
+                'category' => 'module',
+                'options' => json_encode([
+                    'active' => '0',
+                    'rights' => [],
+                    'adm-nav' => [
+                        'adm-rights' => ['edit schickzeiten'],
+                        'name' => 'Anwesenheit',
+                        'link' => 'care/anwesenheit',
+                        'icon' => 'fa-solid fa-children',
+                    ],
+                ]),
+                'created_at' => now(),
+            ], [
+                'setting' => 'Kinderverwaltung',
+                'description' => 'Verwaltung der angelegten Kinder',
+                'category' => 'module',
+                'options' => json_encode([
+                    'active' => '0',
+                    'rights' => [],
+                    'adm-nav' => [
+                        'adm-rights' => ['edit schickzeiten'],
+                        'name' => 'Kinder',
+                        'link' => 'care/children',
+                        'icon' => 'fa-solid fa-children',
+                    ],
+                ]),
+                'created_at' => now(),
+            ],
+            [
+                'setting' => 'bearbeite Rueckmeldungen',
+                'category' => 'module',
+                'options' => json_encode([
+                    'active' => '0',
+                    'rights' => [],
+                    'adm-nav' => [
+                        'adm-rights' => ['manage rueckmeldungen'],
+                        'name' => 'Rückmeldungen',
+                        'link' => 'rueckmeldungen',
+                        'icon' => 'fas fa-comment-dots',
+                    ],
+                ]),
+                'created_at' => Carbon::now(),
+            ],
         ];
 
         foreach ($settings as $setting) {
-            Log::info('UpdateModuleSettingsSeeder: ' . $setting['setting']);
+            Log::info('UpdateModuleSettingsSeeder: '.$setting['setting']);
             Module::insert($setting);
         }
     }

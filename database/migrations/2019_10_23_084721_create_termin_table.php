@@ -8,8 +8,6 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
@@ -33,8 +31,6 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
@@ -46,7 +42,7 @@ return new class extends Migration
 
         Schema::table('termine', function (Blueprint $table) {
 
-           if (Schema::hasColumn('termine', 'group_id')) {
+            if (Schema::hasColumn('termine', 'group_id')) {
                 $table->dropColumn('group_id');
             }
 

@@ -24,7 +24,6 @@ class SchoolYearService
             // 2. Rollen anpassen
             $this->updateRoles($roleMapping);
 
-
             try {
                 // 3. Arbeitsgemeinschaften löschen
                 Log::info('Alle Arbeitsgemeinschaften werden gelöscht');
@@ -58,14 +57,16 @@ class SchoolYearService
 
         });
         Log::info('Schuljahreswechsel abgeschlossen', [
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
     }
 
     private function updateGroups(array $groupMapping)
     {
         foreach ($groupMapping as $oldGroupId => $newGroupId) {
-            if ($oldGroupId == $newGroupId) continue;
+            if ($oldGroupId == $newGroupId) {
+                continue;
+            }
             Log::info('Gruppenwechsel', ['alt' => $oldGroupId, 'neu' => $newGroupId]);
             $userIds = DB::table('group_user')
                 ->where('group_id', $oldGroupId)
@@ -76,7 +77,7 @@ class SchoolYearService
                     ->where('user_id', $userId)
                     ->where('group_id', $newGroupId)
                     ->exists();
-                if (!$exists && $newGroupId) {
+                if (! $exists && $newGroupId) {
                     DB::table('group_user')->insert([
                         'user_id' => $userId,
                         'group_id' => $newGroupId,
@@ -120,7 +121,7 @@ class SchoolYearService
                     $update['class_id'] = $newClassId;
                 }
             }
-            if (!empty($update)) {
+            if (! empty($update)) {
                 DB::table('children')
                     ->where('id', $child->id)
                     ->update($update);
@@ -132,7 +133,9 @@ class SchoolYearService
     {
         $modelType = 'App\\Model\\User';
         foreach ($roleMapping as $oldRole => $newRole) {
-            if ($oldRole == $newRole) continue;
+            if ($oldRole == $newRole) {
+                continue;
+            }
             Log::info('Rollenwechsel', ['alt' => $oldRole, 'neu' => $newRole]);
             // Alle User mit alter Rolle holen
             $userIds = DB::table('model_has_roles')
@@ -146,7 +149,7 @@ class SchoolYearService
                     ->where('model_id', $userId)
                     ->where('model_type', $modelType)
                     ->exists();
-                if (!$exists && $newRole) {
+                if (! $exists && $newRole) {
                     // Update auf neue Rolle
                     DB::table('model_has_roles')
                         ->where('role_id', $oldRole)
@@ -169,8 +172,9 @@ class SchoolYearService
     {
         // Nur Nutzer ohne Gruppen, die NICHT die geschützten Rollen haben
         $protectedRoles = ['Mitarbeiter', 'Schulbegleiter', 'Administrator'];
+
         return User::doesntHave('groups')
-            ->whereDoesntHave('roles', function($query) use ($protectedRoles) {
+            ->whereDoesntHave('roles', function ($query) use ($protectedRoles) {
                 $query->whereIn('name', $protectedRoles);
             })
             ->get();

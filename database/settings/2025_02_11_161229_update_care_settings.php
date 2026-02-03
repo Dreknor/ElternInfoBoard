@@ -9,6 +9,5 @@ return new class extends SettingsMigration
         $this->migrator->add('care.groups_list', []);
         $this->migrator->add('care.class_list', []);
 
-
     }
 };

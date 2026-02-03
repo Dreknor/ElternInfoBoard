@@ -21,7 +21,7 @@ class DeleteLogsPermissionSeeder extends Seeder
         // Assign to admin role if it exists
         $adminRole = Role::where('name', 'admin')->first();
         if ($adminRole) {
-            if (!$adminRole->hasPermissionTo($permission)) {
+            if (! $adminRole->hasPermissionTo($permission)) {
                 $adminRole->givePermissionTo($permission);
                 echo "✓ Permission der Admin-Rolle zugewiesen.\n";
             } else {
@@ -30,4 +30,3 @@ class DeleteLogsPermissionSeeder extends Seeder
         }
     }
 }
-

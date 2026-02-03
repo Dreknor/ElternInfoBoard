@@ -18,6 +18,7 @@ class CareControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private CareSetting $careSettings;
 
     protected function setUp(): void
@@ -29,7 +30,7 @@ class CareControllerTest extends TestCase
         $this->user->givePermissionTo('edit schickzeiten');
 
         // Setup care settings
-        $this->careSettings = new CareSetting();
+        $this->careSettings = new CareSetting;
         $this->careSettings->groups_list = [1];
         $this->careSettings->class_list = [1];
         $this->careSettings->save();
@@ -330,4 +331,3 @@ class CareControllerTest extends TestCase
             ]);
     }
 }
-

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Http\Controllers;
 
-use App\Model\Child;
 use App\Model\Krankmeldungen;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -87,7 +86,6 @@ class KrankmeldungenControllerTest extends TestCase
     {
         $user1 = User::factory()->create(['password_changed_at' => now()]);
         $user2 = User::factory()->create(['password_changed_at' => now()]);
-
 
         $krankmeldung1 = Krankmeldungen::factory()->create([
             'users_id' => $user1->id,

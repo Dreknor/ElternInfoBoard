@@ -4,11 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Model\Post;
+use App\Model\User;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\Request;
-use App\Model\User;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Class NachrichtenController
@@ -28,7 +27,6 @@ class NachrichtenController extends Controller
      *
      * @group Nachrichten
      *
-     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
@@ -36,11 +34,11 @@ class NachrichtenController extends Controller
 
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        if ( $user->hasPermissionTo('view all', 'web')) {
+        if ($user->hasPermissionTo('view all', 'web')) {
             $nachrichten = Post::query()
                 ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                 ->orderByDesc('sticky')
@@ -57,7 +55,7 @@ class NachrichtenController extends Controller
                 ->with(['receipts' => function ($query) use ($user) {
                     return $query->where('user_id', $user->id);
                 }])
-                ->with(['userRueckmeldung' => function ($query) use ($user)  {
+                ->with(['userRueckmeldung' => function ($query) use ($user) {
                     return $query->where([
                         'users_id' => $user->id,
                     ]);
@@ -65,9 +63,7 @@ class NachrichtenController extends Controller
 
                 ->get();
 
-
         } else {
-
 
             $nachrichten = $user->postsNotArchived()
                 ->distinct()
@@ -93,7 +89,6 @@ class NachrichtenController extends Controller
                     ]);
                 }])
                 ->get();
-
 
             if ($user->hasPermissionTo('create posts', 'web')) {
                 $eigenePosts = Post::query()
@@ -126,15 +121,13 @@ class NachrichtenController extends Controller
 
         $nachrichten = $nachrichten->unique('id');
 
-
-
         $reactions_collection = Reaction::query()->select('name')->get()->toArray();
 
         foreach ($nachrichten as $nachricht) {
             $nachricht->author = (is_null($nachricht->autor)) ? 'Fehler bei Nachricht '.$nachricht->id : $nachricht->autor->name;
             unset($nachricht->autor);
 
-            $reactions = array_fill_keys(array_column($reactions_collection, 'name'),0);
+            $reactions = array_fill_keys(array_column($reactions_collection, 'name'), 0);
             foreach ($nachricht->getReactionsSummary() as $reaction) {
                 $reactions[$reaction->name] = $reaction->count;
             }
@@ -149,7 +142,6 @@ class NachrichtenController extends Controller
 
         }
 
-
         return response()->json($nachrichten);
     }
 
@@ -161,25 +153,21 @@ class NachrichtenController extends Controller
      *
      * @group Nachrichten
      *
-     *
-     * @param  \Illuminate\Http\Request  $request
      * @urlParam post_id int required The ID of the post. Example: 1
      *
-     * @param  \Illuminate\Http\Request  $request
      * @bodyParam reaction string required The name of the reaction. Example: like
-     *
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateReaction(Request $request, Post $post)
     {
 
-        if (!$post) {
+        if (! $post) {
             return response()->json(['error' => 'Post not found'], 404);
         }
 
         $reaction = Reaction::query()->where('name', $request->reaction)->first();
-        if (!$reaction) {
+        if (! $reaction) {
             return response()->json(['error' => 'Reaction not found'], 404);
         }
 
@@ -201,30 +189,26 @@ class NachrichtenController extends Controller
      *
      * @urlParam post required The ID of the post. Example: 1
      *
-     * @param  \Illuminate\Http\Request  $request
-     *
      * @param  int  $post
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request, Post $post)
     {
-        if (!$post) {
+        if (! $post) {
             return response()->json(['error' => 'Post not found'], 404);
         }
 
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
-
-        if (!$post->users->contains($user)) {
+        if (! $post->users->contains($user)) {
             return response()->json(['error' => 'User not allowed'], 403);
         }
 
         return response()->json($post);
 
     }
-
 }

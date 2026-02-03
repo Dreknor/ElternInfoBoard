@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Poll_Answers;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class Poll_AnswersFactory extends Factory
 {

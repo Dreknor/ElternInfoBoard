@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class VereinImport implements ToCollection, WithHeadingRow
 {
-
     protected \Illuminate\Database\Eloquent\Collection $groups;
 
     protected $Gruppe;
@@ -23,10 +22,6 @@ class VereinImport implements ToCollection, WithHeadingRow
         $this->Gruppe = $group;
     }
 
-    /**
-     * @param Collection $collection
-     * @return void
-     */
     public function collection(Collection $collection): void
     {
 
@@ -35,13 +30,12 @@ class VereinImport implements ToCollection, WithHeadingRow
 
             $user1 = null;
 
-
-            if (!is_null($row['person_e_mail_privat'])) {
+            if (! is_null($row['person_e_mail_privat'])) {
                 $email = explode(';', $row['person_e_mail_privat']);
                 if (count($email) > 1) {
                     foreach ($email as $mail) {
                         $user = User::where('email', Str::remove(' ', $mail))->first();
-                        if (!is_null($user)) {
+                        if (! is_null($user)) {
                             $email = $user->email;
                         }
                     }
@@ -63,7 +57,7 @@ class VereinImport implements ToCollection, WithHeadingRow
                         'lastEmail' => Carbon::now(),
                     ]);
 
-                if (!$user1->wasRecentlyCreated) {
+                if (! $user1->wasRecentlyCreated) {
                     $user1->update([
                         'changeSettings' => 1,
                     ]);

@@ -2,10 +2,8 @@
 
 namespace App\Mail;
 
-use App\Model\Disease;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
 class Krankmeldung extends Mailable
@@ -25,7 +23,6 @@ class Krankmeldung extends Mailable
     public string $bemerkung;
 
     public ?string $disease;
-
 
     /**
      * Create a new message instance.

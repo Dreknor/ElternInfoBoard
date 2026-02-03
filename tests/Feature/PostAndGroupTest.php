@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Model\Post;
 use App\Model\Group;
+use App\Model\Post;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -88,4 +88,3 @@ class PostAndGroupTest extends TestCase
         $this->assertEquals($group->id, $post->groups->first()->id);
     }
 }
-

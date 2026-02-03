@@ -43,8 +43,7 @@ class PushNews extends Notification
         return (new WebPushMessage)
             ->title('Neue Mitteilung im '.config('app.name'))
             ->icon(asset('img/'.config('app.favicon')))
-            ->body('Neue Mitteilung:'.$this->post->header)
-            //->action('Zeige Nachricht', url("#".$this->post->id))
-;
+            ->body('Neue Mitteilung:'.$this->post->header);
+        // ->action('Zeige Nachricht', url("#".$this->post->id))
     }
 }

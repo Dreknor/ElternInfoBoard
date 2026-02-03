@@ -41,13 +41,13 @@ class TerminAbsage extends Mailable
         return $this->from(
             $this->user->email,
             $this->user->name
-             )
+        )
             ->subject('Absage Termin: '.$this->termin->format('d.m.Y H:i'))
             ->view('emails.terminAbsage')->with([
-                'empfaenger' => $this->empfaenger,
-                'termin' => $this->termin,
-                'liste' => $this->liste,
-                'user' => $this->user->name,
+           'empfaenger' => $this->empfaenger,
+           'termin' => $this->termin,
+           'liste' => $this->liste,
+           'user' => $this->user->name,
             ]);
     }
 }

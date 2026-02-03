@@ -32,4 +32,3 @@ class createTerminlisteRueckmeldungRequest extends FormRequest
         ];
     }
 }
-

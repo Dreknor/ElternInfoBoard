@@ -6,18 +6,12 @@ use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-/**
- *
- */
 class SchickzeitenExport implements WithMultipleSheets
 {
-    /**
-     * @return array
-     */
     public function sheets(): array
     {
 
-        $einstellungen = new SchickzeitenSetting();
+        $einstellungen = new SchickzeitenSetting;
 
         $sheets = [];
         $von = Carbon::createFromFormat('H:i', $einstellungen->schicken_ab);

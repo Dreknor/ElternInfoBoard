@@ -19,7 +19,7 @@ class ReinigungsRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new ReinigungsRequest();
+        $this->subject = new ReinigungsRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class ReinigungsRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

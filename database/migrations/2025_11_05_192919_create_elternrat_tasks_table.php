@@ -31,7 +31,7 @@ return new class extends Migration
             });
         } catch (\Exception $e) {
             // Log the exception or handle it as needed
-            Log::error('Failed to create elternrat_tasks table: ' . $e->getMessage());
+            Log::error('Failed to create elternrat_tasks table: '.$e->getMessage());
         }
 
     }

@@ -13,13 +13,15 @@ class ChildNewsComposer
         $children = auth()->user()->children();
 
         if ($children->count() > 0) {
-            $allowedClasses = Cache::remember('careSettings_classes', now()->addDay(), function ()  use ($children){
-                $careSettings = new CareSetting();
+            $allowedClasses = Cache::remember('careSettings_classes', now()->addDay(), function () {
+                $careSettings = new CareSetting;
+
                 return $careSettings->class_list;
             });
 
-            $allowedGroups = Cache::remember('careSettings_groups', now()->addDay(), function () use ($children) {
-                $careSettings = new CareSetting();
+            $allowedGroups = Cache::remember('careSettings_groups', now()->addDay(), function () {
+                $careSettings = new CareSetting;
+
                 return $careSettings->groups_list;
             });
 
@@ -32,7 +34,6 @@ class ChildNewsComposer
                 });
 
         }
-
 
         $view->with('children', $children);
     }

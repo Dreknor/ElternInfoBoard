@@ -29,12 +29,12 @@ class CleanupOldFavicons extends Command
      */
     public function handle()
     {
-        $settings = new GeneralSetting();
+        $settings = new GeneralSetting;
         $currentFavicon = $settings->favicon;
         $currentLogo = $settings->logo;
 
-        $this->info('Aktuelles Favicon: ' . $currentFavicon);
-        $this->info('Aktuelles Logo: ' . $currentLogo);
+        $this->info('Aktuelles Favicon: '.$currentFavicon);
+        $this->info('Aktuelles Logo: '.$currentLogo);
 
         $files = Storage::disk('public')->files('img');
         $deletedCount = 0;
@@ -54,14 +54,14 @@ class CleanupOldFavicons extends Command
 
             // Lösche alte Favicon- und Logo-Dateien
             if (preg_match('/^\d{14}_(favicon|logo)\.(png|jpg|jpeg|gif|svg|ico)$/', $filename)) {
-                $this->info('Lösche alte Datei: ' . $filename);
+                $this->info('Lösche alte Datei: '.$filename);
                 Storage::disk('public')->delete($file);
                 $deletedCount++;
             }
         }
 
         $this->info("Bereinigung abgeschlossen. {$deletedCount} Datei(en) gelöscht.");
+
         return 0;
     }
 }
-

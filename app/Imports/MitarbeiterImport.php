@@ -11,9 +11,6 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class MitarbeiterImport implements ToCollection, WithHeadingRow
 {
-    /**
-     * @param  Collection  $collection
-     */
     public function collection(Collection $collection)
     {
         foreach ($collection as $row) {

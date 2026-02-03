@@ -128,4 +128,3 @@ class UserTest extends TestCase
         $this->assertEquals('email', $user->benachrichtigung);
     }
 }
-

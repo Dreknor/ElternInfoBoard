@@ -9,8 +9,6 @@ class createNachrichtRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -23,14 +21,12 @@ class createNachrichtRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
         return [
-            'header'    => [
-                'required','max:120'
+            'header' => [
+                'required', 'max:120',
             ],
             'news' => [
                 Rule::requiredIf(request()->type != 'image'),
@@ -54,19 +50,19 @@ class createNachrichtRequest extends FormRequest
                 'nullable', 'boolean',
             ],
             'read_receipt' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
             'read_receipt_deadline' => [
                 'nullable', 'date', 'after_or_equal:now',
             ],
             'external' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
             'wp_push' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
             'no_header' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
 
         ];

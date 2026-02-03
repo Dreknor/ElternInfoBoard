@@ -199,9 +199,9 @@ return [
         Barryvdh\DomPDF\ServiceProvider::class,
         DevDojo\LaravelReactions\Providers\ReactionsServiceProvider::class,
 
-        //eigene
+        // eigene
         App\Providers\ComposerServiceProvider::class,
-        //App\Providers\KeycloakProvider::class,
+        // App\Providers\KeycloakProvider::class,
         App\Providers\SettingsServiceProvider::class,
 
     ],
@@ -223,31 +223,31 @@ return [
         'Redis' => Illuminate\Support\Facades\Redis::class,
     ])->toArray(),
 
-    //Odner des Elternrate
+    // Odner des Elternrate
     'directories_elternrat' => explode(',', env('ELTERNRAT_DIRS', 'Allgemein,Protokolle')),
 
-    //Logo
+    // Logo
     'logo' => env('APP_LOGO', 'logo.png'),
     'favicon' => env('APP_FAVICON', 'favicon.ico'),
     'logo_small' => env('APP_LOGO_SMALL', 'app_logo.png'),
 
-    //Link Mitarbeiterboard - Benötigt für Vertretungsplan
+    // Link Mitarbeiterboard - Benötigt für Vertretungsplan
     'mitarbeiterboard' => env('LINK_MITARBEITERBOARD'),
     'mitarbeiterboard_api_key' => env('API_KEY_MITARBEITERBOARD'),
 
-    //API-Key
+    // API-Key
     'api_key' => env('API_KEY'),
 
-    //Passwort für Import
+    // Passwort für Import
     'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
     'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),
     'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', Carbon::now()->format('dmY')),
     'import_verein' => env('PW_IMPORT_VEREIN', Carbon::now()->format('dmY')),
 
-    //Reactions
+    // Reactions
     'enable_reactions' => env('ENABLE_REACTIONS', true),
 
-    //KeyCloak
+    // KeyCloak
     'keycloak' => [
         'enabled' => env('KEYCLOAK_ENABLED', false),
         'url' => env('KEYCLOAK_URL', 'http://localhost:8080/auth'),
@@ -255,5 +255,5 @@ return [
         'client_id' => env('KEYCLOAK_CLIENT_ID', 'elterninfoboard'),
         'client_secret' => env('KEYCLOAK_CLIENT_SECRET', now()->timestamp),
         'mail_domain' => explode('|', env('KEYCLOAK_MAIL_DOMAIN', explode('@', env('MAIL_FROM_ADDRESS'))[1])),
-    ]
+    ],
 ];

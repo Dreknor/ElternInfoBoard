@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DiseasesSeeder extends Seeder
@@ -230,8 +229,7 @@ class DiseasesSeeder extends Seeder
                 'wiederzulassung_durch' => 'Arzt (kein Attest notwendig)',
                 'wiederzulassung_wann' => 'nach Eintrocknen der letzten Bläschen oder bei zuverlässiger Abdeckung',
                 'aushang_dauer' => 0,
-            ]
-
+            ],
 
         ];
 

@@ -2,9 +2,9 @@
 
 namespace App\Mail;
 
-use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 

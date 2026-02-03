@@ -4,18 +4,18 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Address;
-use Illuminate\Mail\Mailables\Envelope;
-
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
 class SendFeedback extends Mailable
 {
     use Queueable, SerializesModels;
 
     public string $text;
+
     public string $von;
 
     protected string $betreff;
@@ -34,7 +34,6 @@ class SendFeedback extends Mailable
         $this->data = $data;
         $this->von = $von ?? optional(auth()->user())->name ?? '';
     }
-
 
     /**
      * Get the message envelope.
@@ -64,7 +63,6 @@ class SendFeedback extends Mailable
         );
     }
 
-
     /**
      * Get the attachments for the message.
      *
@@ -90,6 +88,7 @@ class SendFeedback extends Mailable
 
             return $return;
         }
+
         return [
 
         ];

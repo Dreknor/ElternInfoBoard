@@ -13,7 +13,7 @@ class PflichtstundeFactory extends Factory
     public function definition()
     {
         $start = $this->faker->dateTimeBetween('-1 year', 'now');
-        $end = (clone $start)->modify('+' . $this->faker->numberBetween(1, 8) . ' hours');
+        $end = (clone $start)->modify('+'.$this->faker->numberBetween(1, 8).' hours');
 
         return [
             'user_id' => User::factory(),
@@ -62,4 +62,3 @@ class PflichtstundeFactory extends Factory
         });
     }
 }
-

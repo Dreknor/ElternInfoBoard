@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Mail\DringendeInformationen;
-use App\Model\Group;
 use App\Model\Post;
 use App\Model\User;
 use Carbon\Carbon;
@@ -33,8 +32,9 @@ class SendTestUrgentMessageCommand extends Command
     {
         $email = $this->argument('email');
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error('❌ Ungültige E-Mail-Adresse!');
+
             return self::FAILURE;
         }
 
@@ -84,12 +84,12 @@ class SendTestUrgentMessageCommand extends Command
         $testPost->setRelation('media', collect([]));
 
         $this->info('✅ Test-Post erstellt');
-        $this->line('   Titel: ' . $testPost->header);
-        $this->line('   Autor: ' . $testAutor->name);
+        $this->line('   Titel: '.$testPost->header);
+        $this->line('   Autor: '.$testAutor->name);
 
         // Versende die Test-Mail
         try {
-            $this->info('📤 Versende Test-Mail an: ' . $email);
+            $this->info('📤 Versende Test-Mail an: '.$email);
 
             Mail::to($email)->send(new DringendeInformationen($testPost));
 
@@ -97,9 +97,9 @@ class SendTestUrgentMessageCommand extends Command
             $this->info('✅ Test-Mail erfolgreich versendet!');
             $this->line('');
             $this->line('📋 Details:');
-            $this->line('   Empfänger: ' . $email);
-            $this->line('   Betreff: ' . $testPost->header);
-            $this->line('   Zeitpunkt: ' . Carbon::now()->format('d.m.Y H:i:s'));
+            $this->line('   Empfänger: '.$email);
+            $this->line('   Betreff: '.$testPost->header);
+            $this->line('   Zeitpunkt: '.Carbon::now()->format('d.m.Y H:i:s'));
             $this->newLine();
             $this->comment('💡 Tipp: Überprüfen Sie Ihren Posteingang und ggf. den Spam-Ordner.');
 
@@ -108,7 +108,7 @@ class SendTestUrgentMessageCommand extends Command
         } catch (\Exception $e) {
             $this->newLine();
             $this->error('❌ Fehler beim Versenden der Test-Mail:');
-            $this->error('   ' . $e->getMessage());
+            $this->error('   '.$e->getMessage());
             $this->newLine();
             $this->comment('💡 Überprüfen Sie die Mail-Konfiguration in der .env Datei');
 
@@ -116,4 +116,3 @@ class SendTestUrgentMessageCommand extends Command
         }
     }
 }
-

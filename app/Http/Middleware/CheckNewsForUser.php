@@ -14,7 +14,6 @@ class CheckNewsForUser
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle($request, Closure $next)
@@ -72,7 +71,7 @@ class CheckNewsForUser
                 }
 
                 $gruppen = auth()->user()->groups->load('media');
-                $media = new Collection();
+                $media = new Collection;
 
                 foreach ($gruppen as $gruppe) {
                     $gruppenMedien = $gruppe->getMedia();

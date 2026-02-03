@@ -15,39 +15,38 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class LosungController extends Controller
 {
-
     /**
      * @return View|RedirectResponse
      */
     public function importView()
     {
-        if (!auth()->user()->can('edit settings')) {
+        if (! auth()->user()->can('edit settings')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
+
         return view('losung.import');
     }
 
     /**
-     * @param ImportLosungenRequest $request
      * @return Application|RedirectResponse|Redirector
      */
     public function import(ImportLosungenRequest $request)
     {
-        if (!auth()->user()->can('edit settings')) {
+        if (! auth()->user()->can('edit settings')) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
-        Excel::import(new LosungenImport(), $request->file('files'));
+        Excel::import(new LosungenImport, $request->file('files'));
 
         return redirect(url('/'))->with([
             'type' => 'success',
-            'Meldung' => 'Losungen wurden importiert'
+            'Meldung' => 'Losungen wurden importiert',
         ]);
 
     }

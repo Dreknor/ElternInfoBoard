@@ -19,7 +19,7 @@ class CreateListeRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateListeRequest();
+        $this->subject = new CreateListeRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class CreateListeRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()
