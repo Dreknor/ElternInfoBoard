@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -34,7 +35,8 @@ class ChildCheckIn extends Model implements Auditable
         return $this->belongsTo(Child::class);
     }
 
-    public function scopeCheckedIn($query)
+    #[Scope]
+    protected function checkedIn($query)
     {
         return $query->where('checked_in', true)->where('checked_out', false);
     }

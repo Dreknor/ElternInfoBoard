@@ -2,6 +2,9 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use App\Observers\PostObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Traits\NotificationTrait;
 use Artisanry\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
@@ -21,6 +24,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
+#[ObservedBy([PostObserver::class])]
 class Post extends Model implements Auditable, HasMedia, ReactableInterface
 {
     use Cloneable;
@@ -85,12 +89,14 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         return ! ($this->archiv_ab > Carbon::now());
     }
 
-    public function scopeNotArchived(Builder $query): Builder
+    #[Scope]
+    protected function notArchived(Builder $query): Builder
     {
         return $query->where('archiv_ab', '>', now());
     }
 
-    public function scopeReleased(Builder $query): Builder
+    #[Scope]
+    protected function released(Builder $query): Builder
     {
         return $query->where('released', 1);
     }

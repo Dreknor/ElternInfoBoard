@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -163,7 +164,8 @@ class Child extends Model implements HasMedia
         */
     }
 
-    public function scopeCare($query)
+    #[Scope]
+    protected function care($query)
     {
         return $query->where(function ($query) {
             $query->whereIn('group_id', (new CareSetting)->groups_list)
