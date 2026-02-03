@@ -9,8 +9,6 @@ class UserRueckmeldungenObserver
 {
     /**
      * Handle the Post "created" event.
-     *
-     * @return void
      */
     public function created(UserRueckmeldungen $rueckmeldungen): void
     {
@@ -20,8 +18,6 @@ class UserRueckmeldungenObserver
 
     /**
      * Handle the Post "updated" event.
-     *
-     * @return void
      */
     public function updated(UserRueckmeldungen $rueckmeldungen): void
     {
@@ -31,8 +27,6 @@ class UserRueckmeldungenObserver
 
     /**
      * Handle the Post "deleted" event.
-     *
-     * @return void
      */
     public function deleted(UserRueckmeldungen $rueckmeldungen): void
     {
@@ -42,8 +36,6 @@ class UserRueckmeldungenObserver
 
     /**
      * Handle the Post "restored" event.
-     *
-     * @return void
      */
     public function restored(UserRueckmeldungen $rueckmeldungen): void
     {
@@ -53,8 +45,6 @@ class UserRueckmeldungenObserver
 
     /**
      * Handle the Post "force deleted" event.
-     *
-     * @return void
      */
     public function forceDeleted(UserRueckmeldungen $rueckmeldungen): void
     {

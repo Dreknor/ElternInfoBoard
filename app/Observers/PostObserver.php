@@ -13,7 +13,6 @@ class PostObserver
      * Handle the Post "created" event.
      *
      * @param  \App\Post  $post
-     * @return void
      */
     public function created(Post $post): void
     {
@@ -25,7 +24,6 @@ class PostObserver
      * Handle the Post "updated" event.
      *
      * @param  \App\Post  $post
-     * @return void
      */
     public function updated(Post $post): void
     {
@@ -43,7 +41,6 @@ class PostObserver
      * Handle the Post "deleted" event.
      *
      * @param  \App\Post  $post
-     * @return void
      */
     public function deleted(Post $post): void
     {
@@ -55,7 +52,6 @@ class PostObserver
      * Handle the Post "restored" event.
      *
      * @param  \App\Post  $post
-     * @return void
      */
     public function restored(Post $post): void
     {
@@ -67,7 +63,6 @@ class PostObserver
      * Handle the Post "force deleted" event.
      *
      * @param  \App\Post  $post
-     * @return void
      */
     public function forceDeleted(Post $post): void
     {

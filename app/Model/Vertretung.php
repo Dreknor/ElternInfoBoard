@@ -2,12 +2,12 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Observers\VertretungObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[ObservedBy([VertretungObserver::class])]
 class Vertretung extends Model
