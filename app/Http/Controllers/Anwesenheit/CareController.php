@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Anwesenheit;
 
+use Illuminate\Support\Facades\Gate;
 use App\Exports\AnwesenheitsAbfrageExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
@@ -457,7 +458,7 @@ class CareController extends Controller
 
     public function editMandates(Child $child)
     {
-        $this->authorize('edit schickzeiten');
+        Gate::authorize('edit schickzeiten');
 
         return view('child.editMandates', [
             'child' => $child,
@@ -469,7 +470,7 @@ class CareController extends Controller
     public function updateMandates(Request $request, Child $child)
     {
 
-        $this->authorize('edit schickzeiten');
+        Gate::authorize('edit schickzeiten');
 
         $request->validate([
             'mandates' => 'nullable|string',
@@ -504,7 +505,7 @@ class CareController extends Controller
 
     public function deleteMandates(Child $child, ChildMandate $childMandate)
     {
-        $this->authorize('edit schickzeiten');
+        Gate::authorize('edit schickzeiten');
 
         if ($child->id !== $childMandate->child_id) {
             return redirect()->back()->with([

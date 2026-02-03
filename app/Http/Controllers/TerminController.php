@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\CreateTerminRequest;
 use App\Model\Group;
 use App\Model\Post;
@@ -137,7 +138,7 @@ class TerminController extends Controller
      */
     public function create()
     {
-        if (! $this->authorize('create', Termin::class)) {
+        if (! Gate::authorize('create', Termin::class)) {
             return redirect()->to(url('home'))->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -151,7 +152,7 @@ class TerminController extends Controller
 
     public function createFromPost(Post $post)
     {
-        if (! $this->authorize('create', Termin::class)) {
+        if (! Gate::authorize('create', Termin::class)) {
             return redirect()->to(url('home'))->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung Termine zu erstellen fehlt',
@@ -204,7 +205,7 @@ class TerminController extends Controller
      */
     public function store(CreateTerminRequest $request)
     {
-        $this->authorize('create', Termin::class);
+        Gate::authorize('create', Termin::class);
 
         try {
             $start = Carbon::parse($request->start);
@@ -271,7 +272,7 @@ class TerminController extends Controller
      */
     public function destroy(Termin $termin)
     {
-        $this->authorize('delete', $termin);
+        Gate::authorize('delete', $termin);
 
         $termin->groups()->detach();
         $termin->delete();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\StoreListeTerminRequest;
 use App\Http\Requests\TerminabsageRequest;
 use App\Mail\TerminAbsage;
@@ -31,7 +32,7 @@ class ListenTerminController extends Controller
      */
     public function copy(listen_termine $listen_termine)
     {
-        $this->authorize('storeTerminToListe', $listen_termine->liste);
+        Gate::authorize('storeTerminToListe', $listen_termine->liste);
 
         $new = $listen_termine->replicate();
         $new->reserviert_fuer = null;
@@ -52,7 +53,7 @@ class ListenTerminController extends Controller
      */
     public function store(Liste $liste, StoreListeTerminRequest $request)
     {
-        $this->authorize('storeTerminToListe', $liste);
+        Gate::authorize('storeTerminToListe', $liste);
         $datum = Carbon::createFromFormat('Y-m-d H:i', $request->termin.' '.$request->zeit);
         $termin = new listen_termine([
             'listen_id' => $liste->id,
