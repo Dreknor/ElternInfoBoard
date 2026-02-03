@@ -17,7 +17,7 @@ class TerminManagementTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_termin()
+    public function user_can_create_termin(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
@@ -36,7 +36,7 @@ class TerminManagementTest extends TestCase
     /**
      * @test
      */
-    public function termin_belongs_to_author()
+    public function termin_belongs_to_author(): void
     {
         // Termine haben keine author_id Spalte - Test übersprungen
         $this->markTestSkipped('Termine Tabelle hat keine author_id Spalte');
@@ -45,7 +45,7 @@ class TerminManagementTest extends TestCase
     /**
      * @test
      */
-    public function future_termins_can_be_queried()
+    public function future_termins_can_be_queried(): void
     {
         Termin::create([
             'terminname' => 'Zukünftiger Termin',

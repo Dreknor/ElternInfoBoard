@@ -18,7 +18,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function role_can_be_created()
+    public function role_can_be_created(): void
     {
         $role = Role::create(['name' => 'admin']);
 
@@ -30,7 +30,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function permission_can_be_created()
+    public function permission_can_be_created(): void
     {
         $permission = Permission::create(['name' => 'edit posts']);
 
@@ -42,7 +42,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_be_assigned_role()
+    public function user_can_be_assigned_role(): void
     {
         $user = User::factory()->create();
         $role = Role::create(['name' => 'moderator']);
@@ -55,7 +55,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_multiple_roles()
+    public function user_can_have_multiple_roles(): void
     {
         $user = User::factory()->create();
         $role1 = Role::create(['name' => 'admin']);
@@ -71,7 +71,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function role_can_have_permissions()
+    public function role_can_have_permissions(): void
     {
         $role = Role::create(['name' => 'editor']);
         $permission = Permission::create(['name' => 'edit articles']);
@@ -84,7 +84,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function user_inherits_permissions_from_role()
+    public function user_inherits_permissions_from_role(): void
     {
         $user = User::factory()->create();
         $role = Role::create(['name' => 'writer']);
@@ -99,7 +99,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_direct_permissions()
+    public function user_can_have_direct_permissions(): void
     {
         $user = User::factory()->create();
         $permission = Permission::create(['name' => 'special action']);
@@ -112,7 +112,7 @@ class RoleAndPermissionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_be_checked_for_permission_via_gate()
+    public function user_can_be_checked_for_permission_via_gate(): void
     {
         $user = User::factory()->create();
         $permission = Permission::create(['name' => 'view dashboard']);

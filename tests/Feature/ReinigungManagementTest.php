@@ -18,7 +18,7 @@ class ReinigungManagementTest extends TestCase
     /**
      * @test
      */
-    public function user_can_be_assigned_to_reinigung()
+    public function user_can_be_assigned_to_reinigung(): void
     {
         $user = User::factory()->create();
 
@@ -36,7 +36,7 @@ class ReinigungManagementTest extends TestCase
     /**
      * @test
      */
-    public function reinigung_belongs_to_user()
+    public function reinigung_belongs_to_user(): void
     {
         $user = User::factory()->create();
         $reinigung = Reinigung::factory()->create(['users_id' => $user->id]);
@@ -48,7 +48,7 @@ class ReinigungManagementTest extends TestCase
     /**
      * @test
      */
-    public function reinigung_can_have_tasks()
+    public function reinigung_can_have_tasks(): void
     {
         $reinigung = Reinigung::factory()->create();
         $tasks = ReinigungsTask::factory()->count(5)->create();
@@ -61,7 +61,7 @@ class ReinigungManagementTest extends TestCase
     /**
      * @test
      */
-    public function reinigungstask_can_be_created()
+    public function reinigungstask_can_be_created(): void
     {
         $task = ReinigungsTask::factory()->create();
 
@@ -73,7 +73,7 @@ class ReinigungManagementTest extends TestCase
     /**
      * @test
      */
-    public function user_can_see_upcoming_reinigung_assignments()
+    public function user_can_see_upcoming_reinigung_assignments(): void
     {
         $user = User::factory()->create();
 

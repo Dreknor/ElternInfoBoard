@@ -11,7 +11,7 @@ class ApiImportVertretungsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         $vertretung = json_decode(
             $this->getContent(),
@@ -30,7 +30,7 @@ class ApiImportVertretungsRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
 
         $vertretung = json_decode(

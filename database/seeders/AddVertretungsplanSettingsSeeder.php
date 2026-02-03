@@ -14,7 +14,7 @@ class AddVertretungsplanSettingsSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         DB::table('permissions')->insert([
             'name' => 'view vertretungsplan',

@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('krankmeldungen', function (Blueprint $table) {
             $table->unsignedBigInteger('child_id')->after('users_id')->nullable();
@@ -25,7 +25,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('krankmeldungen', function (Blueprint $table) {
             $table->dropForeign(['child_id']);

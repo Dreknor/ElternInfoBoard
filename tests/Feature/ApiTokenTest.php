@@ -16,7 +16,7 @@ class ApiTokenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_access_api_with_valid_token()
+    public function user_can_access_api_with_valid_token(): void
     {
         $user = User::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
@@ -33,7 +33,7 @@ class ApiTokenTest extends TestCase
     /**
      * @test
      */
-    public function api_request_without_token_fails()
+    public function api_request_without_token_fails(): void
     {
         $response = $this->getJson('/api/me');
 
@@ -43,7 +43,7 @@ class ApiTokenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_revoke_token()
+    public function user_can_revoke_token(): void
     {
         $user = User::factory()->create();
         $token = $user->createToken('test-token');
@@ -58,7 +58,7 @@ class ApiTokenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_multiple_tokens()
+    public function user_can_have_multiple_tokens(): void
     {
         $user = User::factory()->create();
 

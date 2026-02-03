@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         if (Schema::connection(config('logtodb.connection'))->hasTable(config('logtodb.collection')) === false) {
             Schema::connection(config('logtodb.connection'))->create(config('logtodb.collection'), function (Blueprint $table) {
@@ -34,7 +34,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::connection(config('logtodb.connection'))->dropIfExists(config('logtodb.collection'));
     }

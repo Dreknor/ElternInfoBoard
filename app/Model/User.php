@@ -277,19 +277,19 @@ class User extends Authenticatable implements Auditable
         return $vorname;
     }
 
-    public function schickzeiten()
+    public function schickzeiten(): HasMany
     {
         return $this->hasMany(Schickzeiten::class, 'users_id')->orWhere('users_id', $this->sorg2);
     }
 
-    public function schickzeiten_own()
+    public function schickzeiten_own(): HasMany
     {
         return $this->hasMany(Schickzeiten::class, 'users_id');
     }
 
     // Krankmeldungen
 
-    public function krankmeldungen()
+    public function krankmeldungen(): HasMany
     {
         return $this->hasMany(Krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
     }
@@ -314,7 +314,7 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
 
-    public function pflichtstunden()
+    public function pflichtstunden(): HasMany
     {
         if ($this->sorg2 != null) {
             return $this->hasMany(Pflichtstunde::class, 'user_id')->orWhere('user_id', $this->sorg2);

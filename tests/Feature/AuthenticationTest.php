@@ -17,7 +17,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_not_register()
+    public function user_can_not_register(): void
     {
         // Test that the register route does not exist (registration is disabled)
         $this->expectException(\Symfony\Component\Routing\Exception\RouteNotFoundException::class);
@@ -27,7 +27,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_login_with_correct_credentials()
+    public function user_can_login_with_correct_credentials(): void
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
@@ -45,7 +45,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_cannot_login_with_incorrect_password()
+    public function user_cannot_login_with_incorrect_password(): void
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
@@ -63,7 +63,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function authenticated_user_can_logout()
+    public function authenticated_user_can_logout(): void
     {
         $user = User::factory()->create();
 
@@ -76,7 +76,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_must_verify_email_when_required()
+    public function user_must_verify_email_when_required(): void
     {
         $user = User::factory()->create([
             'email_verified_at' => null,
@@ -95,7 +95,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_uuid_is_generated_on_creation()
+    public function user_uuid_is_generated_on_creation(): void
     {
         $user = User::factory()->create();
 
@@ -106,7 +106,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_track_login()
+    public function user_can_track_login(): void
     {
         $user = User::factory()->create(['track_login' => true]);
 
@@ -118,7 +118,7 @@ class AuthenticationTest extends TestCase
     /**
      * @test
      */
-    public function user_password_is_hashed()
+    public function user_password_is_hashed(): void
     {
         $user = User::factory()->create([
             'password' => Hash::make('secret123'),

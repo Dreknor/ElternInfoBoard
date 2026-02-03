@@ -19,7 +19,7 @@ class SchickzeitenDailyConfirmationTest extends TestCase
     /**
      * @test
      */
-    public function when_changing_regular_schickzeit_with_daily_times_user_gets_confirmation()
+    public function when_changing_regular_schickzeit_with_daily_times_user_gets_confirmation(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -63,7 +63,7 @@ class SchickzeitenDailyConfirmationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_update_daily_times_when_changing_regular_schickzeit()
+    public function user_can_update_daily_times_when_changing_regular_schickzeit(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -110,7 +110,7 @@ class SchickzeitenDailyConfirmationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_delete_daily_times_when_changing_regular_schickzeit()
+    public function user_can_delete_daily_times_when_changing_regular_schickzeit(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -156,7 +156,7 @@ class SchickzeitenDailyConfirmationTest extends TestCase
     /**
      * @test
      */
-    public function when_deleting_regular_schickzeit_with_daily_times_user_gets_confirmation()
+    public function when_deleting_regular_schickzeit_with_daily_times_user_gets_confirmation(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -196,7 +196,7 @@ class SchickzeitenDailyConfirmationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_keep_daily_times_when_deleting_regular_schickzeit()
+    public function user_can_keep_daily_times_when_deleting_regular_schickzeit(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -246,7 +246,7 @@ class SchickzeitenDailyConfirmationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_delete_daily_times_when_deleting_regular_schickzeit()
+    public function user_can_delete_daily_times_when_deleting_regular_schickzeit(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();

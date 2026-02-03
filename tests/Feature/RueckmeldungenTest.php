@@ -18,7 +18,7 @@ class RueckmeldungenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_rueckmeldung()
+    public function user_can_create_rueckmeldung(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $post = \App\Model\Post::factory()->create();
@@ -38,7 +38,7 @@ class RueckmeldungenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_respond_to_rueckmeldung()
+    public function user_can_respond_to_rueckmeldung(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create();
         $user = User::factory()->create(['password_changed_at' => now()]);
@@ -59,7 +59,7 @@ class RueckmeldungenTest extends TestCase
     /**
      * @test
      */
-    public function rueckmeldung_has_many_user_responses()
+    public function rueckmeldung_has_many_user_responses(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create();
         $responses = UserRueckmeldungen::factory()->count(10)->create([
@@ -72,7 +72,7 @@ class RueckmeldungenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_change_response()
+    public function user_can_change_response(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create();
         $user = User::factory()->create(['password_changed_at' => now()]);
@@ -94,7 +94,7 @@ class RueckmeldungenTest extends TestCase
     /**
      * @test
      */
-    public function rueckmeldung_belongs_to_post()
+    public function rueckmeldung_belongs_to_post(): void
     {
         $post = \App\Model\Post::factory()->create();
         $rueckmeldung = Rueckmeldungen::factory()->create(['post_id' => $post->id]);

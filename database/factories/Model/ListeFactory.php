@@ -19,7 +19,7 @@ class ListeFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'listenname' => $this->faker->word(),

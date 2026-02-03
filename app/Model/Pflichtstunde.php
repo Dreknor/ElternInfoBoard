@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Observers\PflichtstundenObserver;
 use App\Settings\PflichtstundenSetting;
 use Carbon\Carbon;
@@ -45,22 +46,22 @@ class Pflichtstunde extends Model
         ];
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function approver()
+    public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function rejector()
+    public function rejector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
     }
 
-    public function listenTermin()
+    public function listenTermin(): BelongsTo
     {
         return $this->belongsTo(listen_termine::class, 'listen_termin_id');
     }

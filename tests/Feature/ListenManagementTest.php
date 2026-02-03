@@ -18,7 +18,7 @@ class ListenManagementTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_liste()
+    public function user_can_create_liste(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
@@ -37,7 +37,7 @@ class ListenManagementTest extends TestCase
     /**
      * @test
      */
-    public function liste_can_have_eintragungen()
+    public function liste_can_have_eintragungen(): void
     {
         $liste = Liste::factory()->create();
         $eintragungen = Listen_Eintragungen::factory()->count(5)->create([
@@ -50,7 +50,7 @@ class ListenManagementTest extends TestCase
     /**
      * @test
      */
-    public function user_can_add_eintragung_to_liste()
+    public function user_can_add_eintragung_to_liste(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $liste = Liste::factory()->create();
@@ -71,7 +71,7 @@ class ListenManagementTest extends TestCase
     /**
      * @test
      */
-    public function liste_belongs_to_author()
+    public function liste_belongs_to_author(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $liste = Liste::factory()->create(['besitzer' => $user->id]);

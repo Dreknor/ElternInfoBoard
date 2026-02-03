@@ -16,7 +16,7 @@ class DiscussionTest extends TestCase
     /**
      * @test
      */
-    public function discussion_can_be_created_with_factory()
+    public function discussion_can_be_created_with_factory(): void
     {
         $discussion = Discussion::factory()->create();
 
@@ -27,7 +27,7 @@ class DiscussionTest extends TestCase
     /**
      * @test
      */
-    public function discussion_has_required_attributes()
+    public function discussion_has_required_attributes(): void
     {
         $discussion = Discussion::factory()->create([
             'header' => 'Test Discussion',
@@ -41,7 +41,7 @@ class DiscussionTest extends TestCase
     /**
      * @test
      */
-    public function discussion_can_be_sticky()
+    public function discussion_can_be_sticky(): void
     {
         $discussion = Discussion::factory()->create([
             'sticky' => true,
@@ -53,7 +53,7 @@ class DiscussionTest extends TestCase
     /**
      * @test
      */
-    public function discussion_can_be_soft_deleted()
+    public function discussion_can_be_soft_deleted(): void
     {
         $discussion = Discussion::factory()->create();
         $discussionId = $discussion->id;
@@ -66,7 +66,7 @@ class DiscussionTest extends TestCase
     /**
      * @test
      */
-    public function discussion_sticky_is_cast_to_boolean()
+    public function discussion_sticky_is_cast_to_boolean(): void
     {
         $discussion = Discussion::factory()->create([
             'sticky' => 1,

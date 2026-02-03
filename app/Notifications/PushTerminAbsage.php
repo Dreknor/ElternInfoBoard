@@ -18,7 +18,7 @@ class PushTerminAbsage extends Notification
         $this->body = $body;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
@@ -29,7 +29,7 @@ class PushTerminAbsage extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
             'created' => Carbon::now()->toIso8601String(),

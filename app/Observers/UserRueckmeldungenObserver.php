@@ -12,7 +12,7 @@ class UserRueckmeldungenObserver
      *
      * @return void
      */
-    public function created(UserRueckmeldungen $rueckmeldungen)
+    public function created(UserRueckmeldungen $rueckmeldungen): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -23,7 +23,7 @@ class UserRueckmeldungenObserver
      *
      * @return void
      */
-    public function updated(UserRueckmeldungen $rueckmeldungen)
+    public function updated(UserRueckmeldungen $rueckmeldungen): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -34,7 +34,7 @@ class UserRueckmeldungenObserver
      *
      * @return void
      */
-    public function deleted(UserRueckmeldungen $rueckmeldungen)
+    public function deleted(UserRueckmeldungen $rueckmeldungen): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -45,7 +45,7 @@ class UserRueckmeldungenObserver
      *
      * @return void
      */
-    public function restored(UserRueckmeldungen $rueckmeldungen)
+    public function restored(UserRueckmeldungen $rueckmeldungen): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -56,7 +56,7 @@ class UserRueckmeldungenObserver
      *
      * @return void
      */
-    public function forceDeleted(UserRueckmeldungen $rueckmeldungen)
+    public function forceDeleted(UserRueckmeldungen $rueckmeldungen): void
     {
         Cache::forget('posts_'.auth()->id());
 

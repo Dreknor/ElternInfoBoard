@@ -19,7 +19,7 @@ class PollFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'author_id' => \App\Model\User::factory(),

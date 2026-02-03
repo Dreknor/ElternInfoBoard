@@ -77,7 +77,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_can_see_terminliste_option_when_creating_post()
+    public function user_can_see_terminliste_option_when_creating_post(): void
     {
         $response = $this->actingAs($this->user)->get('/posts/create');
 
@@ -86,7 +86,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_can_create_terminliste_rueckmeldung()
+    public function user_can_create_terminliste_rueckmeldung(): void
     {
         $startDate = Carbon::today()->addDays(1);
         $endDate = Carbon::today()->addDays(7);
@@ -113,7 +113,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function terminliste_rueckmeldung_requires_valid_liste()
+    public function terminliste_rueckmeldung_requires_valid_liste(): void
     {
         $response = $this->actingAs($this->user)->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
             'liste_id' => 99999, // Nicht existierende Liste
@@ -126,7 +126,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function terminliste_rueckmeldung_requires_valid_date_range()
+    public function terminliste_rueckmeldung_requires_valid_date_range(): void
     {
         // Ende vor Start
         $response = $this->actingAs($this->user)->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -140,7 +140,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_can_see_free_termine_in_nachricht()
+    public function user_can_see_free_termine_in_nachricht(): void
     {
         $rueckmeldung = Rueckmeldungen::create([
             'post_id' => $this->post->id,
@@ -162,7 +162,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_can_book_termin_from_nachricht()
+    public function user_can_book_termin_from_nachricht(): void
     {
         $termin = $this->liste->termine()->whereNull('reserviert_fuer')->first();
 
@@ -191,7 +191,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_sees_own_booked_termine_in_nachricht()
+    public function user_sees_own_booked_termine_in_nachricht(): void
     {
         $termin = $this->liste->termine()->first();
         $termin->update(['reserviert_fuer' => $this->user->id]);
@@ -216,7 +216,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_cannot_book_multiple_termine_when_multiple_is_false()
+    public function user_cannot_book_multiple_termine_when_multiple_is_false(): void
     {
         $termin1 = $this->liste->termine()->first();
         $termin1->update(['reserviert_fuer' => $this->user->id]);
@@ -243,7 +243,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_can_book_multiple_termine_when_multiple_is_true()
+    public function user_can_book_multiple_termine_when_multiple_is_true(): void
     {
         $this->liste->update(['multiple' => true]);
 
@@ -270,7 +270,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_cannot_book_after_deadline()
+    public function user_cannot_book_after_deadline(): void
     {
         $termin = $this->liste->termine()->whereNull('reserviert_fuer')->first();
 
@@ -294,7 +294,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function only_termine_in_date_range_are_shown()
+    public function only_termine_in_date_range_are_shown(): void
     {
         // Termin außerhalb des Zeitraums
         $terminOutside = listen_termine::factory()->create([
@@ -323,7 +323,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function admin_can_see_terminliste_statistics()
+    public function admin_can_see_terminliste_statistics(): void
     {
         $rueckmeldung = Rueckmeldungen::create([
             'post_id' => $this->post->id,
@@ -352,7 +352,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function terminliste_rueckmeldung_shows_in_index()
+    public function terminliste_rueckmeldung_shows_in_index(): void
     {
         $rueckmeldung = Rueckmeldungen::create([
             'post_id' => $this->post->id,
@@ -374,7 +374,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_with_sorg2_sees_both_bookings()
+    public function user_with_sorg2_sees_both_bookings(): void
     {
         $sorg2 = User::factory()->create();
         $this->user->update(['sorg2' => $sorg2->id]);
@@ -406,7 +406,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function only_active_listen_with_free_termine_shown_in_dropdown()
+    public function only_active_listen_with_free_termine_shown_in_dropdown(): void
     {
         // Inaktive Liste
         $inactiveListe = Liste::factory()->create([
@@ -449,7 +449,7 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function terminliste_can_be_deleted_from_edit_view()
+    public function terminliste_can_be_deleted_from_edit_view(): void
     {
         $rueckmeldung = Rueckmeldungen::create([
             'post_id' => $this->post->id,

@@ -11,7 +11,7 @@ class UpdateGroupsPermission extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $roles = \Spatie\Permission\Models\Role::all();
 
