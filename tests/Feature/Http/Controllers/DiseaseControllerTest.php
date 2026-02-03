@@ -27,7 +27,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_view_diseases_index()
+    public function authorized_user_can_view_diseases_index(): void
     {
         $user = $this->createAuthorizedUser();
         Disease::factory()->count(3)->create();
@@ -43,7 +43,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthorized_user_cannot_view_diseases_index()
+    public function unauthorized_user_cannot_view_diseases_index(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
@@ -55,7 +55,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_create_disease()
+    public function authorized_user_can_create_disease(): void
     {
         $user = $this->createAuthorizedUser();
 
@@ -76,7 +76,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function disease_name_must_be_unique()
+    public function disease_name_must_be_unique(): void
     {
         $user = $this->createAuthorizedUser();
         Disease::factory()->create(['name' => 'Existing Disease']);
@@ -97,7 +97,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_update_disease()
+    public function authorized_user_can_update_disease(): void
     {
         $user = $this->createAuthorizedUser();
         $disease = Disease::factory()->create();
@@ -123,7 +123,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_delete_disease_without_active_diseases()
+    public function authorized_user_can_delete_disease_without_active_diseases(): void
     {
         $user = $this->createAuthorizedUser();
         $disease = Disease::factory()->create();
@@ -137,7 +137,7 @@ class DiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function cannot_delete_disease_with_active_diseases()
+    public function cannot_delete_disease_with_active_diseases(): void
     {
         $user = $this->createAuthorizedUser();
         $disease = Disease::factory()->create();

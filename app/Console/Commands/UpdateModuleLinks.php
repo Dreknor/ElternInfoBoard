@@ -26,7 +26,7 @@ class UpdateModuleLinks extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         // Update Nachrichten Module
         $nachrichtenModule = Module::query()->where('setting', 'Nachrichten')->first();

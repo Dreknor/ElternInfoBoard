@@ -23,7 +23,7 @@ class Push extends Notification
         $this->title = $title;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
@@ -34,7 +34,7 @@ class Push extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
             'created' => Carbon::now()->toIso8601String(),

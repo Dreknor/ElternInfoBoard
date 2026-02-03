@@ -19,7 +19,7 @@ class AbfrageOptionsFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'rueckmeldung_id' => \App\Model\Rueckmeldungen::factory(),

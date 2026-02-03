@@ -17,7 +17,7 @@ class KrankmeldungenControllerTest extends TestCase
     /**
      * @test
      */
-    public function index_returns_an_ok_response()
+    public function index_returns_an_ok_response(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
@@ -35,7 +35,7 @@ class KrankmeldungenControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_creates_new_krankmeldung()
+    public function store_creates_new_krankmeldung(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
@@ -60,7 +60,7 @@ class KrankmeldungenControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_validates_with_a_form_request()
+    public function store_validates_with_a_form_request(): void
     {
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\KrankmeldungenController::class,
@@ -72,7 +72,7 @@ class KrankmeldungenControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthenticated_user_cannot_access_krankmeldung()
+    public function unauthenticated_user_cannot_access_krankmeldung(): void
     {
         $response = $this->get('krankmeldung');
 
@@ -82,7 +82,7 @@ class KrankmeldungenControllerTest extends TestCase
     /**
      * @test
      **/
-    public function user_can_only_view_their_own_krankmeldungen()
+    public function user_can_only_view_their_own_krankmeldungen(): void
     {
         $user1 = User::factory()->create(['password_changed_at' => now()]);
         $user2 = User::factory()->create(['password_changed_at' => now()]);

@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,7 +19,7 @@ class AbfrageOptions extends Model
         ];
     }
 
-    public function answers()
+    public function answers(): HasMany
     {
         return $this->hasMany(AbfrageAntworten::class, 'option_id');
     }

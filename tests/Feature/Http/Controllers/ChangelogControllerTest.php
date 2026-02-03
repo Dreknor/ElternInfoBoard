@@ -18,7 +18,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function index_returns_an_ok_response()
+    public function index_returns_an_ok_response(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
         Changelog::factory()->count(3)->create();
@@ -33,7 +33,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function index_displays_paginated_changelogs()
+    public function index_displays_paginated_changelogs(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
         Changelog::factory()->count(10)->create();
@@ -48,7 +48,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function create_returns_an_ok_response_for_authorized_user()
+    public function create_returns_an_ok_response_for_authorized_user(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
         Permission::create(['name' => 'add changelog']);
@@ -63,7 +63,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function create_redirects_for_unauthorized_user()
+    public function create_redirects_for_unauthorized_user(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
 
@@ -75,7 +75,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_creates_new_changelog()
+    public function store_creates_new_changelog(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
         Permission::create(['name' => 'add changelog']);
@@ -99,7 +99,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_updates_user_change_settings_when_flag_is_set()
+    public function store_updates_user_change_settings_when_flag_is_set(): void
     {
         $user = User::factory()->create(['changeSettings' => false]);
         Permission::create(['name' => 'add changelog']);
@@ -122,7 +122,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_validates_with_a_form_request()
+    public function store_validates_with_a_form_request(): void
     {
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\ChangelogController::class,
@@ -134,7 +134,7 @@ class ChangelogControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthenticated_user_cannot_access_changelog_index()
+    public function unauthenticated_user_cannot_access_changelog_index(): void
     {
         $response = $this->get(route('changelog.index'));
 

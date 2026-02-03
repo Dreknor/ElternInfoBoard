@@ -14,7 +14,7 @@ class UpdateModuleSettingsSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
 
         Module::query()->where('setting', 'Losung')->delete();

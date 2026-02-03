@@ -2,6 +2,8 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class Arbeitsgemeinschaft extends Model
@@ -30,18 +32,18 @@ class Arbeitsgemeinschaft extends Model
         ];
     }
 
-    public function groups()
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'arbeitsgemeinschaften_groups', 'ag_id', 'group_id');
     }
 
-    public function participants()
+    public function participants(): BelongsToMany
     {
         return $this->belongsToMany(Child::class, 'arbeitsgemeinschaften_participants', 'ag_id', 'participant_id');
 
     }
 
-    public function manager()
+    public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
     }

@@ -12,7 +12,7 @@ class ExampleTest extends TestCase
      *
      * @return void
      */
-    public function test_basic_test()
+    public function test_basic_test(): void
     {
         $response = $this->get('/');
 
@@ -25,7 +25,7 @@ class ExampleTest extends TestCase
      *
      * @return void
      */
-    public function test_authenticated_user_can_access_home()
+    public function test_authenticated_user_can_access_home(): void
     {
         $user = User::factory()->create();
 

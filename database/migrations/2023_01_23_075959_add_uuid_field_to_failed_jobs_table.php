@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         if (Schema::hasTable('failed_jobs') and ! Schema::hasColumn('failed_jobs', 'uuid')) {
             Schema::table('failed_jobs', function (Blueprint $table) {
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         if (Schema::hasTable('failed_jobs') and ! Schema::hasColumn('failed_jobs', 'uuid')) {
             Schema::table('failed_jobs', function (Blueprint $table) {

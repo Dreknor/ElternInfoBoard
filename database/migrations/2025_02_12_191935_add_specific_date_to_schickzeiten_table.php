@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::table('schickzeiten', function (Blueprint $table) {
             $table->date('specific_date')->nullable()->after('weekday');
@@ -14,7 +14,7 @@ return new class extends Migration
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::table('schickzeiten', function (Blueprint $table) {
             $table->dropColumn('specific_date');

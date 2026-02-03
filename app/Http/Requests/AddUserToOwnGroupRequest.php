@@ -11,7 +11,7 @@ class AddUserToOwnGroupRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return $this->route('group')->owner->id === auth()->id() && auth()->user()->can('create own group');
 
@@ -22,7 +22,7 @@ class AddUserToOwnGroupRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'user_id' => [

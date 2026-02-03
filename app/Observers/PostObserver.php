@@ -15,7 +15,7 @@ class PostObserver
      * @param  \App\Post  $post
      * @return void
      */
-    public function created(Post $post)
+    public function created(Post $post): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -27,7 +27,7 @@ class PostObserver
      * @param  \App\Post  $post
      * @return void
      */
-    public function updated(Post $post)
+    public function updated(Post $post): void
     {
         $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
@@ -45,7 +45,7 @@ class PostObserver
      * @param  \App\Post  $post
      * @return void
      */
-    public function deleted(Post $post)
+    public function deleted(Post $post): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -57,7 +57,7 @@ class PostObserver
      * @param  \App\Post  $post
      * @return void
      */
-    public function restored(Post $post)
+    public function restored(Post $post): void
     {
         Cache::forget('posts_'.auth()->id());
 
@@ -69,7 +69,7 @@ class PostObserver
      * @param  \App\Post  $post
      * @return void
      */
-    public function forceDeleted(Post $post)
+    public function forceDeleted(Post $post): void
     {
         Cache::forget('posts_'.auth()->id());
 

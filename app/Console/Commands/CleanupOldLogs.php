@@ -28,7 +28,7 @@ class CleanupOldLogs extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $days = (int) $this->option('days');
         $level = $this->option('level');

@@ -19,7 +19,7 @@ class DiscussionFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'header' => $this->faker->sentence(),

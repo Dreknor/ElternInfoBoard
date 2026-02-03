@@ -12,7 +12,7 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         // Hole das Nachrichten-Modul
         $nachrichtenModule = Module::query()->where('setting', 'Nachrichten')->first();

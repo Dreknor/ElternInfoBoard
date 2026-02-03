@@ -9,7 +9,7 @@ class DiseaseFactory extends Factory
 {
     protected $model = Disease::class;
 
-    public function definition()
+    public function definition(): array
     {
         $diseases = [
             'Masern',

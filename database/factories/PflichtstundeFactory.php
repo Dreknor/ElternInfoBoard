@@ -10,7 +10,7 @@ class PflichtstundeFactory extends Factory
 {
     protected $model = Pflichtstunde::class;
 
-    public function definition()
+    public function definition(): array
     {
         $start = $this->faker->dateTimeBetween('-1 year', 'now');
         $end = (clone $start)->modify('+'.$this->faker->numberBetween(1, 8).' hours');

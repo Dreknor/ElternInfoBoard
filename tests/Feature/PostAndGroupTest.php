@@ -18,7 +18,7 @@ class PostAndGroupTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_post()
+    public function user_can_create_post(): void
     {
         $user = User::factory()->create();
 
@@ -38,7 +38,7 @@ class PostAndGroupTest extends TestCase
     /**
      * @test
      */
-    public function post_belongs_to_author()
+    public function post_belongs_to_author(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $post = Post::factory()->create(['author' => $user->id]);
@@ -50,7 +50,7 @@ class PostAndGroupTest extends TestCase
     /**
      * @test
      */
-    public function group_can_have_multiple_users()
+    public function group_can_have_multiple_users(): void
     {
         $group = Group::factory()->create();
         $users = User::factory()->count(5)->create();
@@ -63,7 +63,7 @@ class PostAndGroupTest extends TestCase
     /**
      * @test
      */
-    public function user_can_join_multiple_groups()
+    public function user_can_join_multiple_groups(): void
     {
         $user = User::factory()->create();
         $groups = Group::factory()->count(3)->create();
@@ -76,7 +76,7 @@ class PostAndGroupTest extends TestCase
     /**
      * @test
      */
-    public function post_can_belong_to_group()
+    public function post_can_belong_to_group(): void
     {
         $group = Group::factory()->create();
         $post = Post::factory()->create();

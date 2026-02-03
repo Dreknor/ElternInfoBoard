@@ -17,7 +17,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      */
-    public function create_returns_redirect_to_home()
+    public function create_returns_redirect_to_home(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
@@ -29,7 +29,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_creates_new_termin()
+    public function store_creates_new_termin(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         \Spatie\Permission\Models\Permission::create(['name' => 'create termine']);
@@ -52,7 +52,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_validates_with_a_form_request()
+    public function store_validates_with_a_form_request(): void
     {
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\TerminController::class,
@@ -64,7 +64,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      **/
-    public function author_can_delete_own_termin()
+    public function author_can_delete_own_termin(): void
     {
 
         $user = User::factory()->create(['password_changed_at' => now()]);
@@ -83,7 +83,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      **/
-    public function user_cannot_delete_others_termin()
+    public function user_cannot_delete_others_termin(): void
     {
         $user1 = User::factory()->create(['password_changed_at' => now()]);
         $termin = Termin::create([
@@ -102,7 +102,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      **/
-    public function unauthenticated_user_cannot_create_termin()
+    public function unauthenticated_user_cannot_create_termin(): void
     {
         $response = $this->post(route('termin.store'), [
             'title' => 'Test Termin',
@@ -118,7 +118,7 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      **/
-    public function termin_requires_valid_dates()
+    public function termin_requires_valid_dates(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         \Spatie\Permission\Models\Permission::create(['name' => 'create termine']);

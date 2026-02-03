@@ -17,7 +17,7 @@ class MailSystemTest extends TestCase
     /**
      * @test
      */
-    public function mail_can_be_stored_in_database()
+    public function mail_can_be_stored_in_database(): void
     {
         $user = User::factory()->create();
 
@@ -37,7 +37,7 @@ class MailSystemTest extends TestCase
     /**
      * @test
      */
-    public function mail_belongs_to_author()
+    public function mail_belongs_to_author(): void
     {
         $user = User::factory()->create();
         $mail = Mail::factory()->create(['senders_id' => $user->id]);
@@ -49,7 +49,7 @@ class MailSystemTest extends TestCase
     /**
      * @test
      */
-    public function user_receives_copy_when_send_copy_is_enabled()
+    public function user_receives_copy_when_send_copy_is_enabled(): void
     {
         $user = User::factory()->create(['sendCopy' => true]);
 
@@ -59,7 +59,7 @@ class MailSystemTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_public_email()
+    public function user_can_have_public_email(): void
     {
         $user = User::factory()->create([
             'email' => 'private@example.com',
@@ -73,7 +73,7 @@ class MailSystemTest extends TestCase
     /**
      * @test
      */
-    public function last_email_timestamp_is_tracked()
+    public function last_email_timestamp_is_tracked(): void
     {
         $user = User::factory()->create();
 

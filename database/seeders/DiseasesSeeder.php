@@ -11,7 +11,7 @@ class DiseasesSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $dieases = [
             ['name' => 'Cholera',

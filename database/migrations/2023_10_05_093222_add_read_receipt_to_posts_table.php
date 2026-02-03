@@ -11,7 +11,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('posts', function (Blueprint $table) {
             $table->boolean('read_receipt')->default(false)->after('news');
@@ -30,7 +30,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('posts', function (Blueprint $table) {
             $table->removeColumn('read_receipt');

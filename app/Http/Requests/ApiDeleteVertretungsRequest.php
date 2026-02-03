@@ -11,7 +11,7 @@ class ApiDeleteVertretungsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
 
         $vertretung = json_decode(
@@ -33,7 +33,7 @@ class ApiDeleteVertretungsRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             //

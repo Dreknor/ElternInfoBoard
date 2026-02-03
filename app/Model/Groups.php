@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -34,7 +35,7 @@ class Groups extends Model implements HasMedia
         return $this->belongsToMany(Post::class)->withTimestamps();
     }
 
-    public function vertretungen()
+    public function vertretungen(): HasMany
     {
         return $this->hasMany(Vertretung::class);
     }

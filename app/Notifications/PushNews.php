@@ -19,7 +19,7 @@ class PushNews extends Notification
         $this->post = $post;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
@@ -30,7 +30,7 @@ class PushNews extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
             'action_url' => url('#'.$this->post->id),

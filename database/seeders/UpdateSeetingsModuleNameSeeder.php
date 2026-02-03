@@ -12,7 +12,7 @@ class UpdateSeetingsModuleNameSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         try {
             $modul = \App\Model\Module::query()->where('setting', 'Settings')->first();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Symfony\Component\HttpFoundation\Response;
 use App\Settings\GeneralSetting;
 use Closure;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class ValidateFaviconExists
      *
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         try {
             $settings = new GeneralSetting;

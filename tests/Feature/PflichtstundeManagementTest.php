@@ -17,7 +17,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_pflichtstunde()
+    public function user_can_create_pflichtstunde(): void
     {
         $user = User::factory()->create();
 
@@ -34,7 +34,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function pflichtstunde_can_be_approved()
+    public function pflichtstunde_can_be_approved(): void
     {
         $user = User::factory()->create();
         $approver = User::factory()->create();
@@ -54,7 +54,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function pflichtstunde_can_be_rejected()
+    public function pflichtstunde_can_be_rejected(): void
     {
         $user = User::factory()->create();
         $rejecter = User::factory()->create();
@@ -75,7 +75,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function pflichtstunde_belongs_to_user()
+    public function pflichtstunde_belongs_to_user(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $pflichtstunde = Pflichtstunde::factory()->create([
@@ -91,7 +91,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function pflichtstunde_has_approver_relation()
+    public function pflichtstunde_has_approver_relation(): void
     {
         $approver = User::factory()->create(['password_changed_at' => now()]);
         $pflichtstunde = Pflichtstunde::factory()->approved()->create([
@@ -107,7 +107,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function pflichtstunde_duration_is_calculated_correctly()
+    public function pflichtstunde_duration_is_calculated_correctly(): void
     {
         $start = now();
         $end = now()->addHours(3);
@@ -124,7 +124,7 @@ class PflichtstundeManagementTest extends TestCase
     /**
      * @test
      */
-    public function soft_deleted_pflichtstunde_can_be_restored()
+    public function soft_deleted_pflichtstunde_can_be_restored(): void
     {
         $pflichtstunde = Pflichtstunde::factory()->create();
 

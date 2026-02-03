@@ -19,7 +19,7 @@ class ReinigungFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'users_id' => \App\Model\User::factory(),

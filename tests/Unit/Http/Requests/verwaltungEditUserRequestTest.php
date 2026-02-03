@@ -25,7 +25,7 @@ class verwaltungEditUserRequestTest extends TestCase
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('edit user');
@@ -39,7 +39,7 @@ class verwaltungEditUserRequestTest extends TestCase
     /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $user = User::factory()->create();
         $targetUser = User::factory()->create();

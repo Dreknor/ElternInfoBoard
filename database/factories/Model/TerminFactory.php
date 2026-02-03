@@ -19,7 +19,7 @@ class TerminFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'terminname' => $this->faker->word(),

@@ -18,7 +18,7 @@ class CommentTest extends TestCase
     /**
      * @test
      */
-    public function comment_can_be_created_with_factory()
+    public function comment_can_be_created_with_factory(): void
     {
         $comment = Comment::factory()->create();
 
@@ -29,7 +29,7 @@ class CommentTest extends TestCase
     /**
      * @test
      */
-    public function comment_has_body_attribute()
+    public function comment_has_body_attribute(): void
     {
         $comment = Comment::factory()->create([
             'body' => 'Test comment body',
@@ -41,7 +41,7 @@ class CommentTest extends TestCase
     /**
      * @test
      */
-    public function comment_has_commentable_type()
+    public function comment_has_commentable_type(): void
     {
         $post = Post::factory()->create();
         $comment = Comment::factory()->create([
@@ -56,7 +56,7 @@ class CommentTest extends TestCase
     /**
      * @test
      */
-    public function comment_has_creator()
+    public function comment_has_creator(): void
     {
         $user = User::factory()->create();
         $comment = Comment::factory()->create([
@@ -71,7 +71,7 @@ class CommentTest extends TestCase
     /**
      * @test
      */
-    public function comment_can_have_parent()
+    public function comment_can_have_parent(): void
     {
         $parentComment = Comment::factory()->create([
             'parent_id' => null,
@@ -87,7 +87,7 @@ class CommentTest extends TestCase
     /**
      * @test
      */
-    public function comment_has_nested_set_attributes()
+    public function comment_has_nested_set_attributes(): void
     {
         $comment = Comment::factory()->create([
             '_lft' => 1,

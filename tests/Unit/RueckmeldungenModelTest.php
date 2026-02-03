@@ -14,7 +14,7 @@ class RueckmeldungenModelTest extends TestCase
     use RefreshDatabase;
 
     /** @test */
-    public function it_has_terminliste_fields_in_fillable()
+    public function it_has_terminliste_fields_in_fillable(): void
     {
         $rueckmeldung = new Rueckmeldungen;
 
@@ -24,7 +24,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function it_casts_terminliste_dates_correctly()
+    public function it_casts_terminliste_dates_correctly(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'terminliste_start_date' => '2025-12-01',
@@ -36,7 +36,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function it_belongs_to_liste()
+    public function it_belongs_to_liste(): void
     {
         $liste = Liste::factory()->create();
         $rueckmeldung = Rueckmeldungen::factory()->create([
@@ -48,7 +48,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function liste_relation_returns_null_when_liste_id_is_null()
+    public function liste_relation_returns_null_when_liste_id_is_null(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'liste_id' => null,
@@ -58,7 +58,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function is_terminliste_returns_true_for_terminliste_type()
+    public function is_terminliste_returns_true_for_terminliste_type(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'type' => 'terminliste',
@@ -68,7 +68,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function is_terminliste_returns_false_for_other_types()
+    public function is_terminliste_returns_false_for_other_types(): void
     {
         $emailRueckmeldung = Rueckmeldungen::factory()->create(['type' => 'email']);
         $abfrageRueckmeldung = Rueckmeldungen::factory()->create(['type' => 'abfrage']);
@@ -78,7 +78,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function it_can_store_terminliste_with_all_fields()
+    public function it_can_store_terminliste_with_all_fields(): void
     {
         $post = Post::factory()->create();
         $liste = Liste::factory()->create();
@@ -103,7 +103,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function terminliste_dates_can_be_null()
+    public function terminliste_dates_can_be_null(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'type' => 'email',
@@ -116,7 +116,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function it_updates_post_archiv_ab_when_ende_is_greater()
+    public function it_updates_post_archiv_ab_when_ende_is_greater(): void
     {
         $post = Post::factory()->create([
             'archiv_ab' => Carbon::now()->addDays(5),
@@ -138,7 +138,7 @@ class RueckmeldungenModelTest extends TestCase
     }
 
     /** @test */
-    public function liste_relation_uses_null_on_delete()
+    public function liste_relation_uses_null_on_delete(): void
     {
         $liste = Liste::factory()->create();
         $rueckmeldung = Rueckmeldungen::factory()->create([

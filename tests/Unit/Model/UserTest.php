@@ -17,7 +17,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_can_be_created_with_factory()
+    public function user_can_be_created_with_factory(): void
     {
         $user = User::factory()->create();
 
@@ -29,7 +29,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_password_is_hashed()
+    public function user_password_is_hashed(): void
     {
         $user = User::factory()->create([
             'password' => Hash::make('test-password'),
@@ -42,7 +42,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_has_required_attributes()
+    public function user_has_required_attributes(): void
     {
         $user = User::factory()->create([
             'name' => 'Test User',
@@ -57,7 +57,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_track_login_enabled()
+    public function user_can_have_track_login_enabled(): void
     {
         $user = User::factory()->create([
             'track_login' => true,
@@ -69,7 +69,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_send_copy_enabled()
+    public function user_can_have_send_copy_enabled(): void
     {
         $user = User::factory()->create([
             'sendCopy' => true,
@@ -81,7 +81,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_change_password_flag()
+    public function user_can_have_change_password_flag(): void
     {
         $user = User::factory()->create([
             'changePassword' => true,
@@ -93,7 +93,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_has_last_online_tracking()
+    public function user_has_last_online_tracking(): void
     {
         $user = User::factory()->create([
             'last_online_at' => now(),
@@ -106,7 +106,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_email_must_be_unique()
+    public function user_email_must_be_unique(): void
     {
         $email = 'unique@example.com';
 
@@ -119,7 +119,7 @@ class UserTest extends TestCase
     /**
      * @test
      */
-    public function user_can_have_benachrichtigung_setting()
+    public function user_can_have_benachrichtigung_setting(): void
     {
         $user = User::factory()->create([
             'benachrichtigung' => 'email',

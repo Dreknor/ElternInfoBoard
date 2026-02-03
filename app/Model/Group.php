@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use App\Scopes\GetGroupsScope;
 use App\Scopes\SortGroupsScope;
@@ -55,7 +56,7 @@ class Group extends Model implements HasMedia
         return $this->belongsTo(User::class, 'owner_id');
     }
 
-    public function vertretungen()
+    public function vertretungen(): HasMany
     {
         return $this->hasMany(Vertretung::class, 'klasse');
     }

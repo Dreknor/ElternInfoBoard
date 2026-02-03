@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Observers\VertretungObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Carbon\Carbon;
@@ -32,7 +33,7 @@ class Vertretung extends Model
 
     }
 
-    public function group()
+    public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'klasse');
     }

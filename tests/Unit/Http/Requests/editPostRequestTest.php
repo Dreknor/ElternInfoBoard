@@ -25,7 +25,7 @@ class editPostRequestTest extends TestCase
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         $post = Post::factory()->create(['author' => $user->id]);
@@ -53,7 +53,7 @@ class editPostRequestTest extends TestCase
     /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

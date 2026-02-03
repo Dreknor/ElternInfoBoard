@@ -13,7 +13,7 @@ class KeycloakProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         Socialite::extend('keycloak', function ($app) {
             $config = $app['config']['services.keycloak'];

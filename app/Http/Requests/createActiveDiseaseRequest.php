@@ -11,7 +11,7 @@ class createActiveDiseaseRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->user()->can('manage diseases') ?? false;
     }
@@ -21,7 +21,7 @@ class createActiveDiseaseRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'disease_id' => 'required|exists:diseases,id',
