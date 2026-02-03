@@ -40,7 +40,7 @@ class Holiday extends Model
                 ->orWhereBetween('end', [$startDate, $endDate])
                 ->orWhere(function ($q) use ($startDate, $endDate) {
                     $q->where('start', '<=', $startDate)
-                      ->where('end', '>=', $endDate);
+                        ->where('end', '>=', $endDate);
                 });
         });
     }
@@ -51,6 +51,7 @@ class Holiday extends Model
     public function includesDate($date): bool
     {
         $date = \Carbon\Carbon::parse($date);
+
         return $date->between($this->start, $this->end);
     }
 
@@ -62,4 +63,3 @@ class Holiday extends Model
         return $this->start->diffInDays($this->end) + 1;
     }
 }
-

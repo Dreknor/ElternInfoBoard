@@ -3,9 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\searchRequest;
-
-use App\Model\User;
-
 use Tests\TestCase;
 
 /**
@@ -20,13 +17,13 @@ class searchRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new searchRequest();
+        $this->subject = new searchRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function authorize()
@@ -45,7 +42,7 @@ class searchRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

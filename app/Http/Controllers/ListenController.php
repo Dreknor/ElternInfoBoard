@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateListenRequest;
 use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
-use App\Model\listen_termine;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -21,7 +20,6 @@ use Spatie\IcalendarGenerator\Components\Event;
 
 class ListenController extends Controller
 {
-
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
@@ -29,11 +27,10 @@ class ListenController extends Controller
         $this->grousRepository = $groupsRepository;
     }
 
-
     public function search(Request $request)
     {
 
-        if (!$request->user()->can('edit terminliste')){
+        if (! $request->user()->can('edit terminliste')) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',
@@ -45,10 +42,6 @@ class ListenController extends Controller
             ->where('listenname', 'LIKE', "%{$query}%")
             ->paginate(10);
 
-
-
-
-
         return view('listen.search', [
             'archiv' => $archiv,
         ]);
@@ -58,6 +51,7 @@ class ListenController extends Controller
      * Display a listing of the resource.
      *
      * @return View
+     *
      * @throws AuthorizationException
      */
     public function index(Request $request)
@@ -104,6 +98,7 @@ class ListenController extends Controller
      * Show the form for creating a new resource.
      *
      * @return View
+     *
      * @throws AuthorizationException
      */
     public function create()
@@ -118,8 +113,8 @@ class ListenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param CreateListeRequest $request
      * @return RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function store(CreateListeRequest $request)
@@ -129,16 +124,15 @@ class ListenController extends Controller
         if (is_null($gruppen)) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Es muss mindestens eine Gruppe ausgewählt werden.'
+                'Meldung' => 'Es muss mindestens eine Gruppe ausgewählt werden.',
             ]);
         }
 
         $Liste = new Liste($request->validated());
-        //$Liste->active = 0;
+        // $Liste->active = 0;
         $Liste->besitzer = auth()->id();
 
         $Liste->save();
-
 
         $gruppen = $this->grousRepository->getGroups($gruppen);
         $Liste->groups()->attach($gruppen);
@@ -147,12 +141,11 @@ class ListenController extends Controller
             $Liste->notify(
                 users: $Liste->users,
                 title: 'Neue Liste erstellt',
-                message: 'Es wurde eine die Liste ' . $Liste->listenname . ' veröffentlicht.',
-                url: url('listen/' . $Liste->id),
+                message: 'Es wurde eine die Liste '.$Liste->listenname.' veröffentlicht.',
+                url: url('listen/'.$Liste->id),
                 type: 'Listen'
             );
         }
-
 
         return redirect(url("listen/$Liste->id"));
     }
@@ -160,7 +153,6 @@ class ListenController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Liste $terminListe
      * @return View
      */
     public function show(Liste $terminListe)
@@ -184,8 +176,8 @@ class ListenController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Liste $terminListe
      * @return View
+     *
      * @throws AuthorizationException
      */
     public function edit(Liste $terminListe)
@@ -201,9 +193,9 @@ class ListenController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
-     * @param Liste $terminListe
+     * @param  Request  $request
      * @return RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function update(UpdateListenRequest $request, Liste $terminListe)
@@ -221,11 +213,9 @@ class ListenController extends Controller
         return redirect()->to(url('listen'));
     }
 
-
     /**
      * Veröffentlicht die Liste
      *
-     * @param $liste
      * @return RedirectResponse
      */
     public function activate($liste)
@@ -239,9 +229,8 @@ class ListenController extends Controller
     }
 
     /**
-     *
      * Liste ausblenden
-     * @param $liste
+     *
      * @return RedirectResponse
      */
     public function deactivate($liste)
@@ -256,7 +245,7 @@ class ListenController extends Controller
 
     /**
      *  Erstellt eine druckbare Ansicht im Browser
-     * @param Liste $liste
+     *
      * @return View|RedirectResponse
      */
     public function pdf(Liste $liste)
@@ -285,8 +274,8 @@ class ListenController extends Controller
     /**
      * Abgelaufene Liste verlängern um 2 Wochen
      *
-     * @param Liste $liste
      * @return RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function refresh(Liste $liste)
@@ -306,8 +295,8 @@ class ListenController extends Controller
     /**
      * Aktive Liste archivieren
      *
-     * @param Liste $liste
      * @return RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function archiv(Liste $liste)
@@ -326,7 +315,7 @@ class ListenController extends Controller
 
     public function icalExport(Liste $liste)
     {
-        if (!auth()->user()->can('edit terminliste')) {
+        if (! auth()->user()->can('edit terminliste')) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',
@@ -347,7 +336,7 @@ class ListenController extends Controller
         // loop over events
         foreach ($termine as $termin) {
 
-            if ($termin->reserviert_fuer != null){
+            if ($termin->reserviert_fuer != null) {
                 $name = $liste->listenname.'-'.$termin->eingetragenePerson?->name;
             } else {
                 $name = $liste->listenname;
@@ -364,14 +353,13 @@ class ListenController extends Controller
 
         return response($icalObject->get())->header('Content-Type', 'text/calendar');
 
-
     }
 
     public function exportExcelTermine($id)
     {
         $liste = Liste::findOrFail($id);
 
-        if ($liste->type == 'termin'){
+        if ($liste->type == 'termin') {
             $listentermine = $liste->termine;
         } else {
             $listentermine = $liste->eintragungen;
@@ -379,8 +367,7 @@ class ListenController extends Controller
 
         return Excel::download(
             new ListenExport($listentermine, $liste),
-            $liste->listenname . '.xlsx'
+            $liste->listenname.'.xlsx'
         );
     }
-
 }

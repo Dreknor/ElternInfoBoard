@@ -27,7 +27,7 @@ class ChildNoticeRequest extends FormRequest
             'notice' => [
                 'nullable',
                 'string',
-                'max:500'
+                'max:500',
             ],
             'date' => [
                 'required',

@@ -2,33 +2,24 @@
 
 namespace App\Console;
 
-use App\Http\Controllers\GroupsController;
-use App\Http\Controllers\SchickzeitenController;
 use App\Model\Module;
 use App\Settings\NotifySetting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
 
-/**
- *
- */
 class Kernel extends ConsoleKernel
 {
     /**
      * Define the application's command schedule.
      *
-     * @param  Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
 
+        $notifySetting = new NotifySetting;
 
-        $notifySetting = new NotifySetting();
-
-        //Kinder einchecken
+        // Kinder einchecken
         $careModule = Module::where('setting', 'Anwesenheitsliste')->first();
         if ($careModule->options['active'] == 1) {
             $schedule->call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at('08:30');
@@ -36,7 +27,6 @@ class Kernel extends ConsoleKernel
 
         $schedule->call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');
         $schedule->call('App\Http\Controllers\CleanupController@clean_up')->daily()->at('01:00');
-
 
         $schedule->call('App\Http\Controllers\NachrichtenController@emailDaily')->dailyAt($notifySetting->hour_send_information_mail.':00');
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':00');
@@ -48,7 +38,7 @@ class Kernel extends ConsoleKernel
         $schedule->call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':55');
 
         $schedule->call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
-        $schedule->call('App\Http\Controllers\ReadReceiptsController@remind')->dailyAt($notifySetting->hour_send_reminder_mail . ':00');
+        $schedule->call('App\Http\Controllers\ReadReceiptsController@remind')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
         $schedule->call('App\Http\Controllers\ReadReceiptsController@sendFinalReminder')->hourly();
 
         $schedule->call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at($notifySetting->krankmeldungen_report_hour.':'.$notifySetting->krankmeldungen_report_minute);
@@ -65,8 +55,8 @@ class Kernel extends ConsoleKernel
         // Alte Logs automatisch löschen (alle 7 Tage, Logs älter als 90 Tage)
         $schedule->command('logs:cleanup --days=90')->weeklyOn(1, '02:00');
 
-        //Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
-        //Default ist die Queue über Supervisor zu starten
+        // Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
+        // Default ist die Queue über Supervisor zu starten
         if (config('queue.use_cronjob')) {
             $schedule->command('queue:work --stop-when-empty')->withoutOverlapping();
         }

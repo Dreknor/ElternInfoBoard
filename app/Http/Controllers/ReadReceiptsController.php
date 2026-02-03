@@ -10,11 +10,9 @@ use App\Notifications\ReadReceiptReminderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 
 class ReadReceiptsController extends Controller
 {
-
     public function store(Request $request)
     {
         $receipt = ReadReceipts::firstOrCreate(
@@ -61,13 +59,13 @@ class ReadReceiptsController extends Controller
             $receipt->save();
         }
 
-        Log::info($request->user()->name . ' hat Lesebestätigung für Nutzer ' . $user->name . ' und Nachricht "' . $post->header . '" bestätigt.');
+        Log::info($request->user()->name.' hat Lesebestätigung für Nutzer '.$user->name.' und Nachricht "'.$post->header.'" bestätigt.');
 
         return response()->json([
             'success' => true,
-            'message' => 'Lesebestätigung für ' . $user->name . ' wurde gespeichert.',
+            'message' => 'Lesebestätigung für '.$user->name.' wurde gespeichert.',
             'user_id' => $user->id,
-            'confirmed_at' => $receipt->confirmed_at->format('d.m.Y H:i')
+            'confirmed_at' => $receipt->confirmed_at->format('d.m.Y H:i'),
         ]);
     }
 
@@ -88,7 +86,7 @@ class ReadReceiptsController extends Controller
             // Bestimme die Deadline (entweder read_receipt_deadline oder archiv_ab)
             $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;
 
-            if (!$deadline) {
+            if (! $deadline) {
                 continue;
             }
 
@@ -111,7 +109,7 @@ class ReadReceiptsController extends Controller
                     continue;
                 }
 
-                if (!$existingReceipt) {
+                if (! $existingReceipt) {
                     // Erstelle einen Eintrag ausschließlich zum Tracken der Erinnerung
                     $existingReceipt = ReadReceipts::create([
                         'post_id' => $post->id,
@@ -130,19 +128,19 @@ class ReadReceiptsController extends Controller
                     $deadline->format('d.m.Y'),
                     $post->id
                 );
-                $mail->subject('Lesebestätigung fehlt: ' . $post->header);
+                $mail->subject('Lesebestätigung fehlt: '.$post->header);
 
                 try {
                     Mail::to($user->email)->queue($mail);
                 } catch (\Exception $e) {
-                    Log::error('Mail konnte nicht versendet werden: ' . $e->getMessage());
+                    Log::error('Mail konnte nicht versendet werden: '.$e->getMessage());
                 }
 
                 // Versende In-App-Benachrichtigung
                 try {
                     $user->notify(new ReadReceiptReminderNotification($post, $deadline->format('d.m.Y')));
                 } catch (\Exception $e) {
-                    Log::error('In-App-Benachrichtigung konnte nicht versendet werden: ' . $e->getMessage());
+                    Log::error('In-App-Benachrichtigung konnte nicht versendet werden: '.$e->getMessage());
                 }
             }
         }
@@ -165,7 +163,7 @@ class ReadReceiptsController extends Controller
             // Bestimme die Deadline
             $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;
 
-            if (!$deadline) {
+            if (! $deadline) {
                 continue;
             }
 
@@ -182,7 +180,7 @@ class ReadReceiptsController extends Controller
                 $existingReceipt = $receipts->where('user_id', $user->id)->first();
 
                 // Nur wenn Nutzer nicht bestätigt hat (confirmed_at null) und bereits erinnert wurde
-                if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && !$existingReceipt->final_reminder_sent_at) {
+                if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && ! $existingReceipt->final_reminder_sent_at) {
 
                     // Hole die E-Mail-Adresse des Autors
                     $authorEmail = optional($post->autor)->email ?? config('mail.from.address');
@@ -206,11 +204,10 @@ class ReadReceiptsController extends Controller
                             'final_reminder_sent_at' => now(),
                         ]);
                     } catch (\Exception $e) {
-                        Log::error('Finale Erinnerungs-Mail konnte nicht versendet werden: ' . $e->getMessage());
+                        Log::error('Finale Erinnerungs-Mail konnte nicht versendet werden: '.$e->getMessage());
                     }
                 }
             }
         }
     }
 }
-

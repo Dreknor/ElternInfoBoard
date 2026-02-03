@@ -3,9 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\StoreListeTerminRequest;
-
-use App\Model\User;
-
 use Tests\TestCase;
 
 /**
@@ -20,13 +17,13 @@ class StoreListeTerminRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new StoreListeTerminRequest();
+        $this->subject = new StoreListeTerminRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function authorize()
@@ -45,7 +42,7 @@ class StoreListeTerminRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

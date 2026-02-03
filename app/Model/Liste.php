@@ -17,8 +17,8 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Liste extends Model
 {
     use HasFactory;
-    use NotificationTrait;
     use HasRelationships;
+    use NotificationTrait;
 
     protected $table = 'listen';
 

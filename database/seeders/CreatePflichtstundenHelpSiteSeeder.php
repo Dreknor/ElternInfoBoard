@@ -20,11 +20,11 @@ class CreatePflichtstundenHelpSiteSeeder extends Seeder
             $query->where('name', 'admin');
         })->first();
 
-        if (!$admin) {
+        if (! $admin) {
             $admin = User::first();
         }
 
-        if (!$admin) {
+        if (! $admin) {
             return; // Kein User gefunden
         }
 
@@ -355,10 +355,7 @@ HTML
             'title' => null,
         ]);
 
-
-
         echo "✅ Pflichtstunden Hilfe Site wurde erstellt!\n";
         echo "Sie können die Seite unter: https://yoursite.local/sites/show/{$site->id} aufrufen.\n";
     }
 }
-

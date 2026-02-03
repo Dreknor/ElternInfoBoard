@@ -26,18 +26,15 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class SchickzeitenController extends Controller
 {
-
     protected SchickzeitenSetting $schickenzeitenSetting;
+
     protected CareSetting $careSettings;
 
-    /**
-     *
-     */
     public function __construct()
     {
         $this->middleware('auth');
-        $this->schickenzeitenSetting = new SchickzeitenSetting();
-        $this->careSettings = new CareSetting();
+        $this->schickenzeitenSetting = new SchickzeitenSetting;
+        $this->careSettings = new CareSetting;
 
     }
 
@@ -61,10 +58,8 @@ class SchickzeitenController extends Controller
             'checkIns' => fn ($query) => $query->where('date', '>=', today()),
             'schickzeiten',
             'mandates',
-            'notice' => fn ($query) => $query->where('date', '>=', today())
+            'notice' => fn ($query) => $query->where('date', '>=', today()),
         ]);
-
-
 
         $weekdays = [
             '1' => 'Montag',
@@ -77,14 +72,14 @@ class SchickzeitenController extends Controller
         return view('schickzeiten.index', [
             'children' => $children,
             'weekdays' => $weekdays,
-            'vorgaben' => new SchickzeitenSetting(),
+            'vorgaben' => new SchickzeitenSetting,
             'careSettings' => $this->careSettings,
         ]);
     }
 
     public function anwesenheitTrue(ChildCheckIn $childCheckIn)
     {
-        if (!auth()->user()->children()->contains($childCheckIn->child)) {
+        if (! auth()->user()->children()->contains($childCheckIn->child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -111,7 +106,7 @@ class SchickzeitenController extends Controller
     public function anwesenheitFalse(ChildCheckIn $childCheckIn)
     {
 
-        if (!auth()->user()->children()->contains($childCheckIn->child)) {
+        if (! auth()->user()->children()->contains($childCheckIn->child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -141,9 +136,7 @@ class SchickzeitenController extends Controller
             ]);
         }
 
-        $careSettings = new CareSetting();
-
-
+        $careSettings = new CareSetting;
 
         $children = Child::query()
             ->whereIn('group_id', $careSettings->groups_list)
@@ -152,24 +145,19 @@ class SchickzeitenController extends Controller
             ->orderBy('last_name')
             ->get();
 
-
         $abfragen = ChildCheckIn::query()
             ->where('date', '>', today())
             ->get(['date', 'should_be', 'child_id', 'comment']);
-
 
         $abfragen_daten = [];
 
         foreach ($abfragen->groupBy('date') as $datum) {
             $date = $datum->first()->date->format('Y-m-d');
 
-
             $abfragen_daten[$date]['count'] = count($datum->where('should_be', true));
-            $abfragen_daten[$date] ['comment'] = $datum->first()->comment;
-
+            $abfragen_daten[$date]['comment'] = $datum->first()->comment;
 
         }
-
 
         $weekdays = [
             '1' => 'Montag',
@@ -178,7 +166,6 @@ class SchickzeitenController extends Controller
             '4' => 'Donnerstag',
             '5' => 'Freitag',
         ];
-
 
         return view('schickzeiten.index_verwaltung', [
             'children' => $children,
@@ -194,7 +181,7 @@ class SchickzeitenController extends Controller
      */
     public function createChild(CreateChildRequest $request)
     {
-       Schickzeiten::firstOrCreate([
+        Schickzeiten::firstOrCreate([
             'users_id' => auth()->id(),
             'child_name' => $request->child,
         ]);
@@ -206,7 +193,6 @@ class SchickzeitenController extends Controller
     }
 
     /**
-     * @param CreateChildRequest $request
      * @return RedirectResponse
      */
     public function createChildVerwaltung(CreateChildRequest $request)
@@ -227,8 +213,6 @@ class SchickzeitenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param $parent
-     * @param SchickzeitRequest $request
      * @return RedirectResponse
      */
     public function storeVerwaltung($parent, SchickzeitRequest $request)
@@ -244,7 +228,7 @@ class SchickzeitenController extends Controller
         $weekday = $weekdays[$request->weekday];
 
         // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
-        if (!$request->has('update_daily_times')) {
+        if (! $request->has('update_daily_times')) {
             $dailyTimes = Schickzeiten::query()
                 ->whereNotNull('specific_date')
                 ->where('specific_date', '>=', Carbon::now()->toDateString())
@@ -258,7 +242,7 @@ class SchickzeitenController extends Controller
             if ($dailyTimes->count() > 0) {
                 return redirect()->back()->with([
                     'type' => 'confirm_verwaltung',
-                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
+                    'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
                     'confirm_verwaltung_data' => [
                         'parent' => $parent,
                         'child' => $request->child,
@@ -266,12 +250,12 @@ class SchickzeitenController extends Controller
                         'type' => $request->type,
                         'time' => $request->time,
                         'time_spaet' => $request->time_spaet,
-                    ]
+                    ],
                 ]);
             }
         }
 
-       Schickzeiten::query()->where([
+        Schickzeiten::query()->where([
             'child_name' => $request->child,
             'weekday' => $weekday,
             'users_id' => $parent,
@@ -360,21 +344,21 @@ class SchickzeitenController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return RedirectResponse
      */
-    public function store(SchickzeitRequest $request, Child $child = null, $weekday = null)
+    public function store(SchickzeitRequest $request, ?Child $child = null, $weekday = null)
     {
 
-        if (!$child and ! $request->input('child_id') ) {
+        if (! $child and ! $request->input('child_id')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Kein Kind ausgewählt',
             ]);
         }
 
-        if (!$child) {
+        if (! $child) {
             $child = Child::find($request->input('child_id'));
         }
 
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -384,14 +368,14 @@ class SchickzeitenController extends Controller
         // Prüfen, ob für spezifischen Tag oder Wochentag erstellt werden soll
         $specificDate = $request->input('specific_date');
 
-        if (!$specificDate && !$weekday) {
+        if (! $specificDate && ! $weekday) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Sie müssen entweder einen Wochentag oder ein spezifisches Datum angeben.',
             ]);
         }
 
-        if ($weekday){
+        if ($weekday) {
             switch ($weekday) {
                 case 'Montag':
                     $weekday = 1;
@@ -420,9 +404,9 @@ class SchickzeitenController extends Controller
         $settings_ab = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_ab);
         $settings_bis = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_bis);
 
-        if ($request->type == 'genau'){
+        if ($request->type == 'genau') {
 
-            if ($request->time == '' ) {
+            if ($request->time == '') {
                 return redirect()->back()->with([
                     'type' => 'warning',
                     'Meldung' => 'Bitte geben Sie eine Zeit an',
@@ -438,9 +422,9 @@ class SchickzeitenController extends Controller
                 ]);
             }
 
-            if ($weekday){
+            if ($weekday) {
                 // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
-                if (!$request->has('update_daily_times')) {
+                if (! $request->has('update_daily_times')) {
                     $dailyTimes = $child->schickzeiten()
                         ->whereNotNull('specific_date')
                         ->where('specific_date', '>=', Carbon::now()->toDateString())
@@ -452,7 +436,7 @@ class SchickzeitenController extends Controller
                     if ($dailyTimes->count() > 0) {
                         return redirect()->back()->with([
                             'type' => 'confirm',
-                            'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
+                            'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
                             'confirm_data' => [
                                 'child_id' => $child->id,
                                 'weekday' => $weekday,
@@ -460,7 +444,7 @@ class SchickzeitenController extends Controller
                                 'time' => $request->time,
                                 'time_ab' => $request->time_ab,
                                 'time_spaet' => $request->time_spaet,
-                            ]
+                            ],
                         ]);
                     }
                 }
@@ -507,12 +491,12 @@ class SchickzeitenController extends Controller
                 'type' => $request->type,
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id
+                'users_id' => $child->parents()->first()->id,
             ]);
 
         } else {
 
-            if ($request->time_ab == '' ) {
+            if ($request->time_ab == '') {
                 return redirect()->back()->with([
                     'type' => 'warning',
                     'Meldung' => 'Bitte geben Sie an, ab wann das Kind gehen darf',
@@ -524,7 +508,6 @@ class SchickzeitenController extends Controller
                 $time_spaet = Carbon::createFromFormat('H:i', $request->time_spaet);
             }
 
-
             if ($time_ab->lt($settings_ab) || $time_ab->gt($settings_bis) || (isset($time_spaet) && ($time_spaet->lt($settings_ab) || $time_spaet->gt($settings_bis)))) {
                 return redirect()->back()->with([
                     'type' => 'warning',
@@ -532,9 +515,9 @@ class SchickzeitenController extends Controller
                 ]);
             }
 
-            if ($weekday){
+            if ($weekday) {
                 // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
-                if (!$request->has('update_daily_times')) {
+                if (! $request->has('update_daily_times')) {
                     $dailyTimes = $child->schickzeiten()
                         ->whereNotNull('specific_date')
                         ->where('specific_date', '>=', Carbon::now()->toDateString())
@@ -546,7 +529,7 @@ class SchickzeitenController extends Controller
                     if ($dailyTimes->count() > 0) {
                         return redirect()->back()->with([
                             'type' => 'confirm',
-                            'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
+                            'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch angepasst werden?',
                             'confirm_data' => [
                                 'child_id' => $child->id,
                                 'weekday' => $weekday,
@@ -554,7 +537,7 @@ class SchickzeitenController extends Controller
                                 'time' => $request->time,
                                 'time_ab' => $request->time_ab,
                                 'time_spaet' => $request->time_spaet,
-                            ]
+                            ],
                         ]);
                     }
                 }
@@ -596,7 +579,7 @@ class SchickzeitenController extends Controller
                 'time_ab' => $request->time_ab,
                 'time_spaet' => $time_spaet ?? null,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id
+                'users_id' => $child->parents()->first()->id,
             ]);
 
         }
@@ -611,8 +594,7 @@ class SchickzeitenController extends Controller
                 $nextDate = Carbon::now()->next($weekday);
             }
 
-
-            Log::debug('Schickzeit Änderung für Kind '.$child->first_name.' '.$child->last_name,[
+            Log::debug('Schickzeit Änderung für Kind '.$child->first_name.' '.$child->last_name, [
                 'child_id' => $child->id,
                 'next_date' => $nextDate->toDateString(),
                 'type' => $request->type,
@@ -620,13 +602,12 @@ class SchickzeitenController extends Controller
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
                 'changedBy' => \auth()->user()->name,
-                'users_id' => $child->parents()->first()->id
+                'users_id' => $child->parents()->first()->id,
             ]);
             // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
             $exists = $child->schickzeiten()
                 ->where('specific_date', $nextDate->toDateString())
                 ->delete();
-
 
             $schickzeit = new Schickzeiten([
                 'specific_date' => $nextDate->toDateString(),
@@ -641,12 +622,9 @@ class SchickzeitenController extends Controller
 
             $schickzeit->save();
 
-            Log::debug('Schickzeit für Kind '.$child->first_name.' '.$child->last_name.' für den '. $nextDate->toDateString().' erstellt',[
-               'schickzeit' => $schickzeit,
+            Log::debug('Schickzeit für Kind '.$child->first_name.' '.$child->last_name.' für den '.$nextDate->toDateString().' erstellt', [
+                'schickzeit' => $schickzeit,
             ]);
-
-
-
 
         }
 
@@ -656,14 +634,12 @@ class SchickzeitenController extends Controller
         ]);
     }
 
-
-
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(Request $request, $day, Child $child)
     {
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -684,7 +660,7 @@ class SchickzeitenController extends Controller
             'day' => $weekdays[$day],
             'day_number' => $day,
             'schickzeit' => $schickzeit,
-            'vorgaben' => new SchickzeitenSetting(),
+            'vorgaben' => new SchickzeitenSetting,
 
         ]);
     }
@@ -715,15 +691,12 @@ class SchickzeitenController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param $day
-     * @param $child
      * @return RedirectResponse
      */
     public function destroy(Request $request, $day, $child)
     {
         // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
-        if (!$request->has('delete_daily_times')) {
+        if (! $request->has('delete_daily_times')) {
             $dailyTimes = $request->user()->schickzeiten_own()
                 ->whereNotNull('specific_date')
                 ->where('specific_date', '>=', Carbon::now()->toDateString())
@@ -736,11 +709,11 @@ class SchickzeitenController extends Controller
             if ($dailyTimes->count() > 0) {
                 return redirect()->back()->with([
                     'type' => 'confirm_delete',
-                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
                     'confirm_delete_data' => [
                         'day' => $day,
                         'child' => $child,
-                    ]
+                    ],
                 ]);
             }
         }
@@ -798,15 +771,12 @@ class SchickzeitenController extends Controller
     }
 
     /**
-     * @param $day
-     * @param $child
-     * @param $parent
      * @return RedirectResponse
      */
     public function destroyVerwaltung(Request $request, $day, $child, $parent)
     {
         // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
-        if (!$request->has('delete_daily_times')) {
+        if (! $request->has('delete_daily_times')) {
             $dailyTimes = Schickzeiten::query()
                 ->whereNotNull('specific_date')
                 ->where('specific_date', '>=', Carbon::now()->toDateString())
@@ -820,12 +790,12 @@ class SchickzeitenController extends Controller
             if ($dailyTimes->count() > 0) {
                 return redirect()->back()->with([
                     'type' => 'confirm_delete_verwaltung',
-                    'Meldung' => 'Es existieren ' . $dailyTimes->count() . ' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
                     'confirm_delete_verwaltung_data' => [
                         'day' => $day,
                         'child' => $child,
                         'parent' => $parent,
-                    ]
+                    ],
                 ]);
             }
         }
@@ -878,7 +848,7 @@ class SchickzeitenController extends Controller
         Log::debug('Sende Schickzeiten Reminder an '.count($users).' Nutzer');
 
         foreach ($users as $user) {
-            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children() ));
+            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children()));
         }
     }
 
@@ -888,7 +858,7 @@ class SchickzeitenController extends Controller
     public function deleteChild(Child $child)
     {
 
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -896,7 +866,6 @@ class SchickzeitenController extends Controller
         }
 
         $child->schickzeiten()->delete();
-
 
         return redirect()->back()->with([
             'type' => 'warning',
@@ -929,23 +898,22 @@ class SchickzeitenController extends Controller
 
     public function storeDailyVerwaltung(SchickzeitRequest $request, Child $child)
     {
-        if (!auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
-
         $child->schickzeiten()->where('specific_date', '=', Carbon::now()->toDateString())->delete();
 
-        if ($request->type == 'genau'){
+        if ($request->type == 'genau') {
             $child->schickzeiten()->create([
                 'specific_date' => Carbon::now(),
                 'type' => $request->type,
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id
+                'users_id' => $child->parents()->first()->id,
             ]);
         } else {
             $child->schickzeiten()->create([
@@ -954,11 +922,10 @@ class SchickzeitenController extends Controller
                 'time_ab' => $request->ab,
                 'time_spaet' => $request->spaet,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id
+                'users_id' => $child->parents()->first()->id,
             ]);
 
         }
-
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -969,7 +936,7 @@ class SchickzeitenController extends Controller
 
     public function destroySchickzeit(Schickzeiten $schickzeit, Request $request)
     {
-       if (!auth()->user()->children()->contains($schickzeit->child) && !auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->children()->contains($schickzeit->child) && ! auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1012,7 +979,7 @@ class SchickzeitenController extends Controller
 
         $child = Child::find($childId);
 
-        if (!$child || (!auth()->user()->children()->contains($child) && !auth()->user()->can('edit schickzeiten'))) {
+        if (! $child || (! auth()->user()->children()->contains($child) && ! auth()->user()->can('edit schickzeiten'))) {
             return response()->json(['error' => 'Nicht autorisiert'], 403);
         }
 
@@ -1028,16 +995,15 @@ class SchickzeitenController extends Controller
         return response()->json([
             'has_daily_times' => $dailyTimes->count() > 0,
             'count' => $dailyTimes->count(),
-            'dates' => $dailyTimes->map(function($time) {
+            'dates' => $dailyTimes->map(function ($time) {
                 return $time->specific_date->format('d.m.Y');
-            })
+            }),
         ]);
     }
 
-
     public function storeAbfrageAnwesenheit(Request $request)
     {
-        if (!auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -1063,7 +1029,7 @@ class SchickzeitenController extends Controller
             if ($date->isWeekend()) {
                 continue;
             }
-           $child->checkIns()->updateOrCreate([
+            $child->checkIns()->updateOrCreate([
                 'date' => $date->toDateString(),
             ], [
                 'checked_in' => false,
@@ -1123,7 +1089,6 @@ class SchickzeitenController extends Controller
             ->whereNotNull('child_id')
             ->get();
 
-
         foreach ($weeklySchickzeiten as $schickzeit) {
             // Berechne das Datum des nächsten Wochentags
             $nextDate = Carbon::now()->next($schickzeit->weekday);
@@ -1133,7 +1098,7 @@ class SchickzeitenController extends Controller
                 ->where('specific_date', $nextDate->toDateString())
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 // Erstelle neue Schickzeit mit spezifischem Datum
                 if ($schickzeit->child()->exists()) {
                     Schickzeiten::create([
@@ -1152,5 +1117,4 @@ class SchickzeitenController extends Controller
             }
         }
     }
-
 }

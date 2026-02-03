@@ -26,7 +26,7 @@ return new class extends Migration
             });
         } catch (\Exception $e) {
             // Log the exception or handle it as needed
-            \Illuminate\Support\Facades\Log::error('Failed to create discussion_subscriptions table: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to create discussion_subscriptions table: '.$e->getMessage());
         }
 
     }

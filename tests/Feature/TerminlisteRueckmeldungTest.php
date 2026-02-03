@@ -19,9 +19,13 @@ class TerminlisteRueckmeldungTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     protected User $user;
+
     protected User $admin;
+
     protected Group $group;
+
     protected Liste $liste;
+
     protected Post $post;
 
     protected function setUp(): void
@@ -467,4 +471,3 @@ class TerminlisteRueckmeldungTest extends TestCase
         $response->assertSee('rueckmeldungLoeschen');
     }
 }
-

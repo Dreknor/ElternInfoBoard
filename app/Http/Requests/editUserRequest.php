@@ -42,12 +42,12 @@ class editUserRequest extends FormRequest
             'sendCopy' => [
                 'nullable',
                 'min:0',
-                'max:1'
+                'max:1',
             ],
             'track_login' => [
                 'nullable',
                 'min:0',
-                'max:1'
+                'max:1',
             ],
             'publicMail' => [
                 'nullable',
@@ -60,7 +60,7 @@ class editUserRequest extends FormRequest
             'calendar_prefix' => [
                 'nullable',
                 'string',
-                'max:8'
+                'max:8',
             ],
             'releaseCalendar' => [
                 'nullable',
@@ -80,8 +80,6 @@ class editUserRequest extends FormRequest
                 'string',
                 'min:8',
             ],
-
-
 
         ];
     }

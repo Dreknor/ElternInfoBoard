@@ -83,4 +83,3 @@ class ChildManagementTest extends TestCase
         $this->assertFalse($childWithoutAutoCheckIn->auto_checkIn);
     }
 }
-

@@ -16,9 +16,9 @@ class KioskController extends Controller
     public function kioskView($bereich = '')
     {
 
-        //Elterninfos
-        $Nachrichten = new Collection();
-        $Listen = new Collection();
+        // Elterninfos
+        $Nachrichten = new Collection;
+        $Listen = new Collection;
 
         $Gruppen = Group::where('protected', 0)->with(
             ['posts' => function ($query) {

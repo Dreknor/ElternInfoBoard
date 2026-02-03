@@ -15,12 +15,12 @@ class ArbeitsgemeinschaftController extends Controller
 {
     public function index(Request $request)
     {
-         $weekdays = [
+        $weekdays = [
             1 => 'Montag',
             2 => 'Dienstag',
             3 => 'Mittwoch',
             4 => 'Donnerstag',
-            5 => 'Freitag'
+            5 => 'Freitag',
         ];
 
         $children = auth()->user()->children();
@@ -34,20 +34,19 @@ class ArbeitsgemeinschaftController extends Controller
             })
             ->get();
 
-
         $availableChildrenByAg = [];
         foreach ($arbeitsgemeinschaften as $ag) {
             $availableChildrenByAg[$ag->id] = auth()->user()->children()
-                ->filter(function($child) use ($ag) {
+                ->filter(function ($child) use ($ag) {
                     return ($ag->groups->pluck('id')->intersect($child->group_id)->isNotEmpty() or $ag->groups->pluck('id')->intersect($child->class_id)->isNotEmpty())
-                        && !$ag->participants->contains($child->id);
+                        && ! $ag->participants->contains($child->id);
                 });
         }
 
         return view('arbeitsgemeinschaften.eltern.index', [
             'arbeitsgemeinschaften' => $arbeitsgemeinschaften,
             'weekdays' => $weekdays,
-            'availableChildrenByAg' => $availableChildrenByAg
+            'availableChildrenByAg' => $availableChildrenByAg,
 
         ]);
     }
@@ -55,26 +54,26 @@ class ArbeitsgemeinschaftController extends Controller
     public function anmelden(Request $request, Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
         $request->validate([
-            'child_id' => 'required|exists:children,id'
+            'child_id' => 'required|exists:children,id',
         ]);
 
         // Prüfen ob das Kind zum eingeloggten User gehört
         $child = auth()->user()->children()->find($request->child_id);
-        if (!$child) {
+        if (! $child) {
             return back()->with(
                 [
                     'type' => 'danger',
-                    'Meldung' => 'Das Kind gehört nicht zu Ihnen.'
+                    'Meldung' => 'Das Kind gehört nicht zu Ihnen.',
                 ]
             );
         }
 
         // Prüfen ob das Kind in einer der erlaubten Gruppen ist
-        if (!$arbeitsgemeinschaft->groups->pluck('id')->intersect($child->group_id)->isNotEmpty()  and !$arbeitsgemeinschaft->groups->pluck('id')->intersect($child->class_id)->isNotEmpty()) {
+        if (! $arbeitsgemeinschaft->groups->pluck('id')->intersect($child->group_id)->isNotEmpty() and ! $arbeitsgemeinschaft->groups->pluck('id')->intersect($child->class_id)->isNotEmpty()) {
             return back()->with(
                 [
                     'type' => 'danger',
-                    'Meldung' => 'Das Kind gehört nicht zu einer der erlaubten Gruppen.'
+                    'Meldung' => 'Das Kind gehört nicht zu einer der erlaubten Gruppen.',
                 ]
             );
         }
@@ -84,7 +83,7 @@ class ArbeitsgemeinschaftController extends Controller
             return back()->with(
                 [
                     'type' => 'danger',
-                    'Meldung' => 'Die maximale Teilnehmerzahl ist bereits erreicht.'
+                    'Meldung' => 'Die maximale Teilnehmerzahl ist bereits erreicht.',
                 ]
             );
         }
@@ -93,16 +92,15 @@ class ArbeitsgemeinschaftController extends Controller
             return back()->with(
                 [
                     'type' => 'danger',
-                    'Meldung' => 'Das Kind ist bereits angemeldet.'
+                    'Meldung' => 'Das Kind ist bereits angemeldet.',
                 ]
             );
         }
 
         // Kind anmelden
         $arbeitsgemeinschaft->participants()->attach($request->child_id, [
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
-
 
         /*
          * Die Eltern der gruppe hinzufügen
@@ -113,16 +111,14 @@ class ArbeitsgemeinschaftController extends Controller
         // Nur die automatisch erstellte AG-Gruppe verwenden
         $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
 
-
-
         if ($agGroup) {
             foreach ($parents as $parent) {
                 // Prüfen, ob der Elternteil bereits in der Gruppe ist
-                if (!$agGroup->users()->where('users.id', $parent->id)->exists()) {
+                if (! $agGroup->users()->where('users.id', $parent->id)->exists()) {
                     $agGroup->users()->attach($parent->id);
                 }
 
-                if ($parent->sorg2 != null && !$agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
+                if ($parent->sorg2 != null && ! $agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
                     // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
                     $agGroup->users()->attach($parent->sorg2);
                 }
@@ -130,17 +126,16 @@ class ArbeitsgemeinschaftController extends Controller
 
         }
 
-
         // E-Mail an den AG-Leiter senden
         try {
             Mail::to($arbeitsgemeinschaft->manager->email)
                 ->queue(mailable: new NeuerTeilnehmerMail($arbeitsgemeinschaft, $child));
         } catch (\Exception $e) {
             // Fehler beim E-Mail-Versand loggen, aber nicht den Prozess abbrechen
-            Log::error('Fehler beim Senden der E-Mail an AG-Leiter: ' . $e->getMessage());
+            Log::error('Fehler beim Senden der E-Mail an AG-Leiter: '.$e->getMessage());
             $arbeitsgemeinschaft->manager->notify(new PushNews(
                 'Neuer Teilnehmer in Ihrer AG',
-                'Ein neues Kind hat sich für Ihre AG angemeldet: ' . $child->first_name . ' ' . $child->last_name
+                'Ein neues Kind hat sich für Ihre AG angemeldet: '.$child->first_name.' '.$child->last_name
 
             ));
         }
@@ -148,7 +143,7 @@ class ArbeitsgemeinschaftController extends Controller
         return back()->with(
             [
                 'type' => 'success',
-                'Meldung' => 'Das Kind wurde erfolgreich angemeldet.'
+                'Meldung' => 'Das Kind wurde erfolgreich angemeldet.',
             ]
         );
     }

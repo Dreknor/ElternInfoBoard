@@ -23,7 +23,7 @@ class ListeObserver
     public function updated(Liste $liste): void
     {
         // Prüfen, ob creates_pflichtstunden geändert wurde
-        if (!$liste->isDirty('creates_pflichtstunden')) {
+        if (! $liste->isDirty('creates_pflichtstunden')) {
             return;
         }
 
@@ -35,7 +35,7 @@ class ListeObserver
         $settings = app(PflichtstundenSetting::class);
 
         // Nur wenn listen_autocreate aktiviert ist
-        if (!$settings->listen_autocreate) {
+        if (! $settings->listen_autocreate) {
             return;
         }
 
@@ -103,6 +103,7 @@ class ListeObserver
                         ]);
                         $reactivated++;
                     }
+
                     continue;
                 }
 
@@ -115,8 +116,8 @@ class ListeObserver
                     'listen_termin_id' => $termin->id,
                     'start' => $start,
                     'end' => $end,
-                    'description' => 'Automatisch erstellt: ' . $termin->liste->listenname .
-                                    ($termin->comment ? ' - ' . $termin->comment : ''),
+                    'description' => 'Automatisch erstellt: '.$termin->liste->listenname.
+                                    ($termin->comment ? ' - '.$termin->comment : ''),
                     'approved' => false,
                 ]);
                 $created++;
@@ -124,7 +125,7 @@ class ListeObserver
             } catch (\Exception $e) {
                 Log::error('Fehler beim Erstellen der Pflichtstunde für bestehenden Termin', [
                     'listen_termin_id' => $termin->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -133,7 +134,7 @@ class ListeObserver
             Log::info('Pflichtstunden für bestehende Termine verarbeitet', [
                 'liste_id' => $termine->first()->liste->id,
                 'created' => $created,
-                'reactivated' => $reactivated
+                'reactivated' => $reactivated,
             ]);
         }
     }
@@ -149,12 +150,12 @@ class ListeObserver
             try {
                 $pflichtstunde = Pflichtstunde::where('listen_termin_id', $termin->id)->first();
 
-                if (!$pflichtstunde) {
+                if (! $pflichtstunde) {
                     continue;
                 }
 
                 // Nur ablehnen, wenn noch nicht genehmigt
-                if (!$pflichtstunde->approved && !$pflichtstunde->rejected) {
+                if (! $pflichtstunde->approved && ! $pflichtstunde->rejected) {
                     $pflichtstunde->update([
                         'rejected' => true,
                         'rejected_at' => now(),
@@ -167,7 +168,7 @@ class ListeObserver
             } catch (\Exception $e) {
                 Log::error('Fehler beim Ablehnen der Pflichtstunde für bestehenden Termin', [
                     'listen_termin_id' => $termin->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -175,7 +176,7 @@ class ListeObserver
         if ($rejected > 0) {
             Log::info('Pflichtstunden für bestehende Termine abgelehnt', [
                 'liste_id' => $termine->first()->liste->id,
-                'rejected' => $rejected
+                'rejected' => $rejected,
             ]);
         }
     }

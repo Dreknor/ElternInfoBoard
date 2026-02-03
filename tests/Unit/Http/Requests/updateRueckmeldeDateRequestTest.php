@@ -19,7 +19,7 @@ class updateRueckmeldeDateRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new updateRueckmeldeDateRequest();
+        $this->subject = new updateRueckmeldeDateRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class updateRueckmeldeDateRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

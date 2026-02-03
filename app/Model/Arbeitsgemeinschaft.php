@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Arbeitsgemeinschaft extends Model
 {
-
     protected $table = 'arbeitsgemeinschaften';
+
     protected $fillable = [
         'name',
         'description',
@@ -19,7 +19,6 @@ class Arbeitsgemeinschaft extends Model
         'max_participants',
         'manager_id',
     ];
-
 
     protected $casts = [
         'start_time' => 'datetime:H:i',

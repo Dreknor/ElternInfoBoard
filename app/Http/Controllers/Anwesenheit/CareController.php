@@ -9,17 +9,15 @@ use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\ChildMandate;
 use App\Model\Groups;
+use App\Model\Holiday;
 use App\Model\Notification;
 use App\Model\User;
-use App\Notifications\Push;
 use App\Settings\CareSetting;
-use App\Model\Holiday;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-
 
 class CareController extends Controller
 {
@@ -36,7 +34,7 @@ class CareController extends Controller
      */
     public function index($showAll = false)
     {
-        $careSettings = new CareSetting();
+        $careSettings = new CareSetting;
 
         if ($showAll == 1) {
             return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
@@ -47,11 +45,10 @@ class CareController extends Controller
         $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
         $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
 
-
         // Wenn keine Gruppen oder Klassen konfiguriert sind, keine Kinder anzeigen
         if (empty($careSettings->groups_list) || empty($careSettings->class_list)) {
             $childs = collect();
-        } elseif ($careSettings->hide_childs_when_absent == true && !request()->cookie('showAll')) {
+        } elseif ($careSettings->hide_childs_when_absent == true && ! request()->cookie('showAll')) {
             $childs = Child::query()
                 ->whereIn('group_id', $careSettings->groups_list)
                 ->whereIn('class_id', $careSettings->class_list)
@@ -73,7 +70,6 @@ class CareController extends Controller
             $childs->load('mandates');
         }
 
-
         return view('anwesenheit.index', [
             'children' => $childs,
             'groups' => $groups,
@@ -81,7 +77,6 @@ class CareController extends Controller
             'careSettings' => $careSettings,
         ]);
     }
-
 
     /**
      * Marks a child as checked out and clears its cache entry.
@@ -99,8 +94,7 @@ class CareController extends Controller
                 'checked_out' => true,
             ]);
 
-
-        $careSettings = new CareSetting();
+        $careSettings = new CareSetting;
 
         if ($careSettings->end_time != null and
             Carbon::parse($careSettings->end_time)->lt(now()) and
@@ -113,19 +107,19 @@ class CareController extends Controller
                         'user_id' => $user->id,
                         'type' => 'info',
                         'title' => 'Verspätete Abmeldung',
-                        'message' => 'Das Kind ' . $child->first_name .' '. $child->last_name . ' wurde nicht rechtzeitig abgemeldet.',
+                        'message' => 'Das Kind '.$child->first_name.' '.$child->last_name.' wurde nicht rechtzeitig abgemeldet.',
                     ]);
                     $notification->save();
 
                     Log::info('Kind verspätet abgeholt', [
                         'child_id' => $child->id,
-                        'child_name' => $child->first_name .' '. $child->last_name,
+                        'child_name' => $child->first_name.' '.$child->last_name,
                         'user_id' => $user->id,
                         'user_name' => $user->name,
                     ]);
                 }
             } catch (\Exception $e) {
-                Log::error('Error sending notification: ' . $e->getMessage());
+                Log::error('Error sending notification: '.$e->getMessage());
             }
 
         }
@@ -140,13 +134,13 @@ class CareController extends Controller
             }
         }
 
-        Cache::forget('checkedIn' . $child->id);
+        Cache::forget('checkedIn'.$child->id);
+
         return response()->json([
             'success' => true,
         ]);
 
     }
-
 
     /**
      * Marks a child as checked in and dispatches relevant notifications.
@@ -157,11 +151,9 @@ class CareController extends Controller
     public function anmelden(Child $child)
     {
 
-
         $checkIn = $child->checkIns()
             ->whereDate('date', now()->toDateString())
             ->first();
-
 
         if ($child->krankmeldungToday()) {
             $krankmeldung = $child->krankmeldungen()
@@ -202,23 +194,23 @@ class CareController extends Controller
                     dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
                 }
             } catch (\Exception $e) {
-                Log::error('Error sending notification: ' . $e->getMessage());
+                Log::error('Error sending notification: '.$e->getMessage());
             }
 
         }
 
+        Cache::forget('checkedIn'.$child->id);
+        Cache::forget('should_be_today'.$child->id);
 
-        Cache::forget('checkedIn' . $child->id);
-        Cache::forget('should_be_today' . $child->id);
         return response()->json([
             'success' => true,
         ]);
 
     }
 
-
     /**
      * beim Aufruf wird für alle Kinder ein CheckIn erstellt
+     *
      * @return void
      */
     public function dailyCheckIn()
@@ -239,13 +231,14 @@ class CareController extends Controller
         // Wenn keine Ferientage in der Datenbank vorhanden sind, von der API fetchern
         if ($holidays->isEmpty()) {
             try {
-                $ferien = Cache::remember('ferien_' . $currentYear, now()->diff(Carbon::now()->endOfYear()), function () use ($currentYear) {
-                    $url = 'https://ferien-api.de/api/v1/holidays/SN/' . $currentYear;
+                $ferien = Cache::remember('ferien_'.$currentYear, now()->diff(Carbon::now()->endOfYear()), function () use ($currentYear) {
+                    $url = 'https://ferien-api.de/api/v1/holidays/SN/'.$currentYear;
+
                     return json_decode(file_get_contents($url), true);
                 });
 
                 // Speichere die Ferientage in der Datenbank
-                if (is_array($ferien) && !empty($ferien)) {
+                if (is_array($ferien) && ! empty($ferien)) {
                     foreach ($ferien as $ferieTage) {
                         Holiday::query()->updateOrCreate(
                             [
@@ -267,7 +260,8 @@ class CareController extends Controller
                         ->get();
                 }
             } catch (\Exception $e) {
-                Log::error('Error fetching holidays from API: ' . $e->getMessage());
+                Log::error('Error fetching holidays from API: '.$e->getMessage());
+
                 return;
             }
         }
@@ -288,11 +282,10 @@ class CareController extends Controller
             ->where('auto_checkIn', true)
             ->get();
 
-
         $checkIn = [];
         foreach ($children as $child) {
 
-            if ($child->krankmeldungToday() || !$child->auto_checkIn) {
+            if ($child->krankmeldungToday() || ! $child->auto_checkIn) {
                 continue;
             }
 
@@ -308,10 +301,9 @@ class CareController extends Controller
         ChildCheckIn::query()->insert($checkIn);
     }
 
-
     public function destroyAbfrage($date)
     {
-        if (!auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('edit schickzeiten')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -337,7 +329,8 @@ class CareController extends Controller
         ]);
     }
 
-    public function storeAbfrage (Request $request){
+    public function storeAbfrage(Request $request)
+    {
         $request->validate([
             'date_start' => 'required|date',
             'date_end' => 'nullable|date|after_or_equal:date_start',
@@ -348,7 +341,7 @@ class CareController extends Controller
         $date_end = $request->date_end ? Carbon::parse($request->date_end) : $date_start->copy();
         $lock_at = $request->lock_at ? Carbon::parse($request->lock_at) : null;
 
-        $careSettings = new CareSetting();
+        $careSettings = new CareSetting;
 
         $children = Child::query()
             ->whereIn('class_id', $careSettings->class_list)
@@ -370,7 +363,6 @@ class CareController extends Controller
                     continue;
                 }
 
-
                 $checkIns[] = [
                     'child_id' => $child->id,
                     'checked_in' => false,
@@ -390,25 +382,20 @@ class CareController extends Controller
         ]);
     }
 
-    public function downloadAbfrageAnwesenheit (Request $request)
+    public function downloadAbfrageAnwesenheit(Request $request)
     {
         $request->validate([
             'date_start' => 'required|date',
             'date_end' => 'nullable|date|after_or_equal:date_start',
         ]);
 
-       $dates = ChildCheckIn::query()
+        $dates = ChildCheckIn::query()
             ->whereBetween('date', [$request->date_start, $request->date_end])
             ->orderBy('date')
             ->pluck('date')
             ->unique();
 
-
-
-
         return Excel::download(new AnwesenheitsAbfrageExport($request->date_start, $request->date_end, $dates), 'Anwesenheitsabfrage.xlsx');
-
-
 
     }
 
@@ -435,10 +422,10 @@ class CareController extends Controller
         }
     }
 
-    public function toogleShouldBe( $checkIn)
+    public function toogleShouldBe($checkIn)
     {
 
-        if (!auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('edit schickzeiten')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -449,7 +436,7 @@ class CareController extends Controller
             ->where('id', $checkIn)
             ->first();
 
-        if (!$checkIn) {
+        if (! $checkIn) {
             return response()->json([
                 'success' => false,
                 'message' => 'CheckIn nicht gefunden.',
@@ -457,10 +444,10 @@ class CareController extends Controller
         }
 
         $checkIn->update([
-            'should_be' => !$checkIn->should_be,
+            'should_be' => ! $checkIn->should_be,
         ]);
 
-        Cache::forget('should_be_today' . $checkIn->child_id);
+        Cache::forget('should_be_today'.$checkIn->child_id);
 
         return response()->json([
             'success' => true,
@@ -488,26 +475,26 @@ class CareController extends Controller
             'mandates' => 'nullable|string',
         ]);
 
-       $Zeilen = preg_split('/\r\n|\r|\n/', $request->mandates);
-       $mandates = array_filter(array_map('trim', $Zeilen));
+        $Zeilen = preg_split('/\r\n|\r|\n/', $request->mandates);
+        $mandates = array_filter(array_map('trim', $Zeilen));
 
+        foreach ($mandates as $mandate) {
+            $teile = explode(',', $mandate, 2);
+            try {
+                $child->mandates()->updateOrCreate([
+                    'mandate_name' => trim($teile[0]),
+                    'mandate_description' => isset($teile[1]) ? trim($teile[1]) : null,
+                    'created_by' => auth()->id(),
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error updating/creating mandate: '.$e->getMessage());
 
-       foreach ($mandates as $mandate) {
-           $teile = explode(',', $mandate, 2);
-           try {
-               $child->mandates()->updateOrCreate([
-                     'mandate_name' => trim($teile[0]),
-                     'mandate_description' => isset($teile[1]) ? trim($teile[1]) : null,
-                        'created_by' => auth()->id(),
-               ]);
-           } catch (\Exception $e) {
-               Log::error('Error updating/creating mandate: ' . $e->getMessage());
-               return redirect()->back()->with([
-                   'type' => 'danger',
-                   'Meldung' => 'Fehler beim Speichern der Vollmacht.' . $e->getMessage()
-               ]);
-           }
-       }
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Fehler beim Speichern der Vollmacht.'.$e->getMessage(),
+                ]);
+            }
+        }
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -529,10 +516,11 @@ class CareController extends Controller
         try {
             $childMandate->delete();
         } catch (\Exception $e) {
-            Log::error('Error deleting mandate: ' . $e->getMessage());
+            Log::error('Error deleting mandate: '.$e->getMessage());
+
             return redirect()->back()->with([
                 'type' => 'danger',
-                'Meldung' => 'Fehler beim Löschen der Vollmacht.' . $e->getMessage()
+                'Meldung' => 'Fehler beim Löschen der Vollmacht.'.$e->getMessage(),
             ]);
         }
 

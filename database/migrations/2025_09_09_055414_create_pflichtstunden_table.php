@@ -59,7 +59,7 @@ return new class extends Migration
                     'link' => 'verwaltung/pflichtstunden',
                     'icon' => 'fas fa-clock',
                 ],
-            ])
+            ]),
         ];
 
         DB::table('settings_modules')->insert($module);

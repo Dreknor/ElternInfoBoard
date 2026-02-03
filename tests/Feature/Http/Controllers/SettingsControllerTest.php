@@ -42,7 +42,4 @@ class SettingsControllerTest extends TestCase
 
         $response->assertForbidden();
     }
-
 }
-
-

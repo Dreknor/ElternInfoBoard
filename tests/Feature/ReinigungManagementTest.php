@@ -94,5 +94,3 @@ class ReinigungManagementTest extends TestCase
         $this->assertCount(1, $upcomingReinigungen);
     }
 }
-
-

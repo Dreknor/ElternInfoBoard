@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Pflichtstunde;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PflichtstundeFactory extends Factory
 {
@@ -72,4 +72,3 @@ class PflichtstundeFactory extends Factory
         ]);
     }
 }
-

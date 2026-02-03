@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Cache;
 
 class ChildNoticeController extends Controller
 {
-
-
-
     /**
      * Store a newly created resource in storage.
      *
@@ -22,13 +19,13 @@ class ChildNoticeController extends Controller
     public function store(ChildNoticeRequest $request, Child $child)
     {
 
-
         if (auth()->user()->children()->contains($child)) {
             if ($request->notice == null) {
-               $childNotice = ChildNotice::where('child_id', $child->id)->where('date', $request->date)->first();
+                $childNotice = ChildNotice::where('child_id', $child->id)->where('date', $request->date)->first();
                 if ($childNotice) {
-                     $childNotice->delete();
-                     return response()->json(['message' => 'success'], 200);
+                    $childNotice->delete();
+
+                    return response()->json(['message' => 'success'], 200);
                 }
             } else {
                 try {
@@ -40,9 +37,10 @@ class ChildNoticeController extends Controller
                     $childNotice->child_id = $child->id;
                     $childNotice->user_id = auth()->id();
                     $childNotice->save();
+
                     return response()->json(['message' => 'success'], 200);
                 } catch (\Exception $e) {
-                    return response()->json(['message' => 'error: ' . $e], 500);
+                    return response()->json(['message' => 'error: '.$e], 500);
                 }
             }
         }
@@ -55,6 +53,7 @@ class ChildNoticeController extends Controller
     {
         if (auth()->user()->children()->contains($child)) {
             $childNotices = ChildNotice::where('child_id', $child->id)->where('date', today())->first();
+
             return response()->json($childNotices);
         }
 
@@ -71,8 +70,10 @@ class ChildNoticeController extends Controller
     {
         if (auth()->user()->children()->contains($childNotice->child)) {
             $childNotice->delete();
+
             return response()->json(['message' => 'success'], 200);
         }
+
         return response()->json(['message' => 'error'], 403);
     }
 
@@ -87,25 +88,24 @@ class ChildNoticeController extends Controller
             } elseif ($childNotice && $request->notice == null) {
                 $childNotice->delete();
             } elseif ($request->notice != null) {
-                $childNotice = new ChildNotice();
+                $childNotice = new ChildNotice;
                 $childNotice->fill($request->validated());
                 $childNotice->child_id = $child->id;
                 $childNotice->user_id = auth()->id();
                 $childNotice->save();
             }
 
-            Cache::forget('notice' . $child->id);
-
+            Cache::forget('notice'.$child->id);
 
             return redirect()->back()->with([
                 'type' => 'success',
-                'Meldung' => 'Notiz wurde erfolgreich gespeichert'
+                'Meldung' => 'Notiz wurde erfolgreich gespeichert',
             ]);
         }
 
         return redirect()->back()->with([
             'type' => 'danger',
-            'Meldung' => 'Keine Berechtigung'
+            'Meldung' => 'Keine Berechtigung',
         ]);
     }
 }

@@ -19,7 +19,7 @@ class verwaltungEditUserRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new verwaltungEditUserRequest();
+        $this->subject = new verwaltungEditUserRequest;
     }
 
     /**

@@ -16,19 +16,12 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
 
     protected \Illuminate\Database\Eloquent\Collection $groups;
 
-    /**
-     * @param array $header
-     */
     public function __construct(array $header)
     {
         $this->header = $header;
         $this->groups = Group::all();
     }
 
-    /**
-     * @param Collection $collection
-     * @return void
-     */
     public function collection(Collection $collection): void
     {
         foreach ($collection as $row) {

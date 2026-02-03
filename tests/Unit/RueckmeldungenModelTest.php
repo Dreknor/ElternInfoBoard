@@ -16,7 +16,7 @@ class RueckmeldungenModelTest extends TestCase
     /** @test */
     public function it_has_terminliste_fields_in_fillable()
     {
-        $rueckmeldung = new Rueckmeldungen();
+        $rueckmeldung = new Rueckmeldungen;
 
         $this->assertContains('liste_id', $rueckmeldung->getFillable());
         $this->assertContains('terminliste_start_date', $rueckmeldung->getFillable());

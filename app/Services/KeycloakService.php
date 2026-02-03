@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\ProviderInterface;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Arr;
 
 class KeycloakService extends AbstractProvider implements ProviderInterface
 {
@@ -30,7 +29,7 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
             [
                 'headers' => [
                     'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $token,
+                    'Authorization' => 'Bearer '.$token,
                 ],
             ]
         );
@@ -83,7 +82,6 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
             'refresh_token' => Arr::get($response, 'refresh_token'),
             'expires_in' => Arr::get($response, 'expires_in'),
         ]);
-
 
     }
 }

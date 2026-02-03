@@ -3,7 +3,6 @@
 namespace Tests\Unit\Model;
 
 use App\Model\Group;
-use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -49,4 +48,3 @@ class GroupTest extends TestCase
         $this->assertTrue($group->protected);
     }
 }
-

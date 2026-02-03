@@ -30,8 +30,9 @@ class SendTestNewsletterCommand extends Command
     {
         $email = $this->argument('email');
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error('Ungültige E-Mail-Adresse!');
+
             return self::FAILURE;
         }
 
@@ -39,17 +40,17 @@ class SendTestNewsletterCommand extends Command
 
         // Demo-Nachrichten (intern)
         $news = new Collection([
-            (object)[
+            (object) [
                 'header' => 'Wichtige Information zur Schulveranstaltung',
                 'external' => 0,
                 'created_at' => now()->subHours(2),
             ],
-            (object)[
+            (object) [
                 'header' => 'Neues aus dem Schulvorstand',
                 'external' => 0,
                 'created_at' => now()->subHours(5),
             ],
-            (object)[
+            (object) [
                 'header' => 'Elternabend: Termine für das kommende Halbjahr',
                 'external' => 0,
                 'created_at' => now()->subDay(),
@@ -58,12 +59,12 @@ class SendTestNewsletterCommand extends Command
 
         // Demo-Nachrichten (extern)
         $newsExternal = new Collection([
-            (object)[
+            (object) [
                 'header' => 'Ferienangebot: Sommercamp 2025',
                 'external' => 1,
                 'created_at' => now()->subHours(3),
             ],
-            (object)[
+            (object) [
                 'header' => 'Kulturelles Angebot: Theaterworkshop für Kinder',
                 'external' => 1,
                 'created_at' => now()->subHours(6),
@@ -75,37 +76,37 @@ class SendTestNewsletterCommand extends Command
 
         // Demo-Diskussionen
         $diskussionen = new Collection([
-            (object)[
+            (object) [
                 'header' => 'Diskussion: Schulhofgestaltung',
             ],
-            (object)[
+            (object) [
                 'header' => 'Austausch: Digitalisierung im Unterricht',
             ],
         ]);
 
         // Demo-Listen
         $listen = new Collection([
-            (object)[
+            (object) [
                 'listenname' => 'Klassenliste 5a - Aktualisiert',
             ],
-            (object)[
+            (object) [
                 'listenname' => 'Teilnehmerliste Schulausflug',
             ],
         ]);
 
         // Demo-Termine
         $termine = new Collection([
-            (object)[
+            (object) [
                 'terminname' => 'Elternsprechtag',
                 'start' => now()->addDays(14)->setTime(15, 0),
                 'ende' => now()->addDays(14)->setTime(19, 0),
             ],
-            (object)[
+            (object) [
                 'terminname' => 'Sommerfest',
                 'start' => now()->addDays(30)->setTime(14, 0),
                 'ende' => now()->addDays(30)->setTime(18, 0),
             ],
-            (object)[
+            (object) [
                 'terminname' => 'Projektwoche',
                 'start' => now()->addDays(45)->setTime(8, 0),
                 'ende' => now()->addDays(49)->setTime(13, 0),
@@ -114,18 +115,18 @@ class SendTestNewsletterCommand extends Command
 
         // Demo-GTA
         $gta = new Collection([
-            (object)[
+            (object) [
                 'name' => 'Fußball AG',
             ],
-            (object)[
+            (object) [
                 'name' => 'Chor',
             ],
-            (object)[
+            (object) [
                 'name' => 'Robotik AG',
             ],
         ]);
 
-        $this->info('Sende Test-Mail an: ' . $email);
+        $this->info('Sende Test-Mail an: '.$email);
 
         try {
             Mail::to($email)->send(
@@ -142,20 +143,20 @@ class SendTestNewsletterCommand extends Command
             $this->newLine();
             $this->info('✓ Test-Mail erfolgreich versendet!');
             $this->newLine();
-            $this->line('Empfänger: ' . $email);
-            $this->line('Nachrichten (intern): ' . $news->count());
-            $this->line('Nachrichten (extern): ' . $newsExternal->count());
-            $this->line('Diskussionen: ' . $diskussionen->count());
-            $this->line('Listen: ' . $listen->count());
-            $this->line('Termine: ' . $termine->count());
-            $this->line('GTA: ' . $gta->count());
+            $this->line('Empfänger: '.$email);
+            $this->line('Nachrichten (intern): '.$news->count());
+            $this->line('Nachrichten (extern): '.$newsExternal->count());
+            $this->line('Diskussionen: '.$diskussionen->count());
+            $this->line('Listen: '.$listen->count());
+            $this->line('Termine: '.$termine->count());
+            $this->line('GTA: '.$gta->count());
 
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Fehler beim Versenden der E-Mail:');
             $this->error($e->getMessage());
+
             return self::FAILURE;
         }
     }
 }
-

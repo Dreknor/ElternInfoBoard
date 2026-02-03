@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Model\Mail;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail as MailFacade;
 use Tests\TestCase;
 
 /**
@@ -50,7 +49,7 @@ class MailSystemTest extends TestCase
     /**
      * @test
      */
-    public function user_receives_copy_when_sendCopy_is_enabled()
+    public function user_receives_copy_when_send_copy_is_enabled()
     {
         $user = User::factory()->create(['sendCopy' => true]);
 
@@ -84,4 +83,3 @@ class MailSystemTest extends TestCase
         $this->assertInstanceOf(\DateTime::class, $user->lastEmail);
     }
 }
-

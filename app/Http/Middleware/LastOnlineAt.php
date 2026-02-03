@@ -12,7 +12,6 @@ class LastOnlineAt
      * Handle an incoming request.
      *
      * @param  Illuminate\Support\Facades\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)

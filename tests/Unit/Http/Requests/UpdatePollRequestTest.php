@@ -19,7 +19,7 @@ class UpdatePollRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new UpdatePollRequest();
+        $this->subject = new UpdatePollRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class UpdatePollRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

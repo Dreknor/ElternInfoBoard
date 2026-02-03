@@ -36,8 +36,6 @@ class PollController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Post $post
-     * @param StorePollRequest $request
      * @return Application|RedirectResponse|Redirector
      */
     public function store(Post $post, StorePollRequest $request)
@@ -49,7 +47,7 @@ class PollController extends Controller
 
         $options = [];
         foreach ($request->options as $option) {
-            if ($option != ""){
+            if ($option != '') {
                 $options[] = [
                     'option' => $option,
                     'poll_id' => $poll->id,
@@ -106,8 +104,6 @@ class PollController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  UpdatePollRequest  $request
-     * @param  Poll  $poll
      * @return RedirectResponse
      */
     public function update(UpdatePollRequest $request, Poll $poll)
@@ -134,5 +130,4 @@ class PollController extends Controller
             'Meldung' => 'Umfrage geändert',
         ]);
     }
-
 }

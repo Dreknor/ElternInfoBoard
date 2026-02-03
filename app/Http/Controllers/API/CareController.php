@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Model\Child;
 use App\Settings\CareSetting;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,23 +44,20 @@ class CareController extends Controller
      * @responseField data.*.checked_in_at datetime The time the child was checked in.
      * @responseField data.*.is_sick boolean Whether the child is currently reported sick.
      * @responseField count int The total count of present children.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getPresentChildren(Request $request): JsonResponse
     {
         $user = $request->user();
 
         // Check if user has permission to view care data
-        if (!$user->can('edit schickzeiten')) {
+        if (! $user->can('edit schickzeiten')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie haben keine Berechtigung für diese Aktion.',
             ], 403);
         }
 
-        $careSettings = new CareSetting();
+        $careSettings = new CareSetting;
 
         // Get all children who are currently checked in
         $children = Child::query()
@@ -82,11 +78,12 @@ class CareController extends Controller
                         ->where('checked_out', false)
                         ->whereDate('date', now()->toDateString())
                         ->select('id', 'child_id', 'checked_in', 'checked_out', 'date', 'created_at');
-                }
+                },
             ])
             ->get()
             ->map(function ($child) {
                 $checkIn = $child->checkIns->first();
+
                 return [
                     'id' => $child->id,
                     'first_name' => $child->first_name,
@@ -137,23 +134,20 @@ class CareController extends Controller
      * @responseField data.*.krankmeldung.ende string The end date of the sick report.
      * @responseField data.*.krankmeldung.disease object The disease information (if available).
      * @responseField count int The total count of sick children.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getSickChildren(Request $request): JsonResponse
     {
         $user = $request->user();
 
         // Check if user has permission to view care data
-        if (!$user->can('edit schickzeiten')) {
+        if (! $user->can('edit schickzeiten')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie haben keine Berechtigung für diese Aktion.',
             ], 403);
         }
 
-        $careSettings = new CareSetting();
+        $careSettings = new CareSetting;
 
         // Get all children in care area who have active sick reports today
         $children = Child::query()
@@ -171,11 +165,12 @@ class CareController extends Controller
                         ->whereDate('ende', '>=', today())
                         ->with('disease:id,name')
                         ->orderByDesc('created_at');
-                }
+                },
             ])
             ->get()
             ->map(function ($child) {
                 $krankmeldung = $child->krankmeldungen->first();
+
                 return [
                     'id' => $child->id,
                     'first_name' => $child->first_name,
@@ -225,16 +220,13 @@ class CareController extends Controller
      * @responseField data.sick_children array The list of children currently reported sick.
      * @responseField data.sick_count int The count of sick children.
      * @responseField data.timestamp string The timestamp of the data retrieval.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getCareOverview(Request $request): JsonResponse
     {
         $user = $request->user();
 
         // Check if user has permission to view care data
-        if (!$user->can('edit schickzeiten')) {
+        if (! $user->can('edit schickzeiten')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -261,4 +253,3 @@ class CareController extends Controller
         ], 200);
     }
 }
-

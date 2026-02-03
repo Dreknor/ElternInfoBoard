@@ -2,12 +2,10 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class VertretungsplanAbsence extends Model
 {
-
     protected $fillable = [
         'name',
         'start_date',

@@ -9,11 +9,10 @@ class AbfrageOptions extends Model
 {
     use HasFactory;
 
-
     protected $fillable = ['rueckmeldung_id', 'type', 'option', 'required'];
 
     protected $casts = [
-        'required' => 'boolean'
+        'required' => 'boolean',
     ];
 
     public function answers()

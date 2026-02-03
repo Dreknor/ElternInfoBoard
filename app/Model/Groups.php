@@ -10,8 +10,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Groups extends Model implements HasMedia
 {
-    use InteractsWithMedia;
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $fillable = ['name', 'bereich', 'protected'];
 

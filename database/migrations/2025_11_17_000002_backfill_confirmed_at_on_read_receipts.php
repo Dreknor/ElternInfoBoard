@@ -18,4 +18,3 @@ return new class extends Migration
         // no-op revert: keep confirmed_at as-is
     }
 };
-

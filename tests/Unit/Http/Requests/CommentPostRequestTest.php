@@ -18,7 +18,7 @@ class CommentPostRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CommentPostRequest();
+        $this->subject = new CommentPostRequest;
     }
 
     /**
@@ -51,5 +51,4 @@ class CommentPostRequestTest extends TestCase
             ],
         ], $actual);
     }
-
 }

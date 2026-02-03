@@ -15,10 +15,9 @@ class UpdatePflichtstundeRequest extends FormRequest
 
         // User kann eigene Pflichtstunden bearbeiten wenn sie noch nicht bestätigt/abgelehnt wurden
         // Oder wenn der User die edit Pflichtstunden Berechtigung hat
-        return (
-            ($pflichtstunde->user_id === auth()->id() && !$pflichtstunde->approved && !$pflichtstunde->rejected)
-            || auth()->user()->can('edit Pflichtstunden')
-        );
+        return
+            ($pflichtstunde->user_id === auth()->id() && ! $pflichtstunde->approved && ! $pflichtstunde->rejected)
+            || auth()->user()->can('edit Pflichtstunden');
     }
 
     /**
@@ -67,4 +66,3 @@ class UpdatePflichtstundeRequest extends FormRequest
         ];
     }
 }
-

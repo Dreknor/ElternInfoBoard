@@ -19,7 +19,7 @@ class CreateGroupRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateGroupRequest();
+        $this->subject = new CreateGroupRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class CreateGroupRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

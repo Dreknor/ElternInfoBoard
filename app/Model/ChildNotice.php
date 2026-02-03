@@ -11,8 +11,8 @@ use OwenIt\Auditing\Contracts\Auditable;
 class ChildNotice extends Model implements Auditable
 {
     use HasFactory;
-    use SoftDeletes;
     use \OwenIt\Auditing\Auditable;
+    use SoftDeletes;
 
     protected $fillable = [
         'child_id',
@@ -35,7 +35,6 @@ class ChildNotice extends Model implements Auditable
     {
         return $this->belongsTo(User::class);
     }
-
 
     public function scopeFuture(Builder $query)
     {

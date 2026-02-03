@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\group_user;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class group_userFactory extends Factory
 {

@@ -3,8 +3,6 @@
 namespace Tests\Unit\Model;
 
 use App\Model\Child;
-use App\Model\Group;
-use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -36,12 +34,9 @@ class ChildTest extends TestCase
             'last_name' => 'Child',
         ])->fresh();
 
-        $this->assertEquals('Test Child', $child->first_name . ' ' . $child->last_name);
-
+        $this->assertEquals('Test Child', $child->first_name.' '.$child->last_name);
 
     }
-
-
 
     /**
      * @test
@@ -54,8 +49,4 @@ class ChildTest extends TestCase
 
         $this->assertTrue(is_bool($child->auto_check_in));
     }
-
-
-
 }
-

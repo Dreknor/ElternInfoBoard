@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
-use Symfony\Component\{HttpKernel\Exception\HttpException,
-    HttpKernel\Exception\NotFoundHttpException,
-    Routing\Exception\MethodNotAllowedException};
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -37,7 +37,6 @@ class Handler extends ExceptionHandler
     /**
      * Report or log an exception.
      *
-     * @param  \Throwable  $exception
      * @return void
      */
     public function report(Throwable $exception)
@@ -52,9 +51,9 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         if ($exception instanceof ModelNotFoundException || $exception instanceof NotFoundHttpException) {
-        $url = Request::fullUrl();
+            $url = Request::fullUrl();
 
-        Log::info("404 in {$url}");
+            Log::info("404 in {$url}");
         }
 
         if ($exception instanceof HttpException && $exception->getStatusCode() == 302) {
@@ -71,8 +70,6 @@ class Handler extends ExceptionHandler
         if ($this->shouldReport($exception) && ! $this->isHttpException($exception) && ! config('app.debug')) {
             $exception = new HttpException(500, 'Whoops!');
         }
-
-
 
         return parent::render($request, $exception);
     }

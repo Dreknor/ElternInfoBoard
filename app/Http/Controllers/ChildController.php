@@ -5,19 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ChildNotificationRequest;
 use App\Http\Requests\CreateChildRequest;
 use App\Model\Child;
-use App\Model\ChildCheckIn;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ChildController extends Controller
 {
-    public function __construct()
-    {
-
-    }
+    public function __construct() {}
 
     public function index()
     {
@@ -50,12 +45,11 @@ class ChildController extends Controller
             ]);
         }
 
-        if (!$request->has('parent_id')) {
+        if (! $request->has('parent_id')) {
             auth()->user()->children_rel()->create($request->validated());
         } else {
             $parent = User::find($request->parent_id);
             $child = $parent->children_rel()->create($request->validated());
-
 
             if (session()->has('schickzeiten')) {
                 $schickzeit = session()->get('schickzeiten');
@@ -69,14 +63,12 @@ class ChildController extends Controller
                         }
                     });
 
-
                 $schickzeitenQuery->update([
                     'child_id' => $child->id,
                 ]);
                 session()->forget('schickzeiten');
             }
         }
-
 
         return redirect()->back()->with([
             'Meldung' => 'Kind wurde erfolgreich erstellt',
@@ -96,7 +88,7 @@ class ChildController extends Controller
             ->get();
 
         return view('child.create', [
-            'child' => $child ?? new Child(),
+            'child' => $child ?? new Child,
             'groups' => Group::all(),
             'parents' => $parents,
         ]);
@@ -112,8 +104,7 @@ class ChildController extends Controller
 
         $parents = $schickzeiten->user;
 
-
-        if (!$parents) {
+        if (! $parents) {
             $parents = User::query()
                 ->whereHas('role', function ($query) {
                     $query->where('name', 'Eltern');
@@ -128,14 +119,13 @@ class ChildController extends Controller
             $parents = collect([$parents]);
         }
 
-
-        $child = new Child();
+        $child = new Child;
         $child->first_name = $schickzeiten->child_name;
 
         return view('child.create', [
             'child' => $child,
             'groups' => $groups,
-            'parents' => $parents
+            'parents' => $parents,
         ]);
     }
 
@@ -162,11 +152,10 @@ class ChildController extends Controller
         $this->middleware('auth');
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
-            if (!$child->parents->contains($request->parent_id)) {
+            if (! $child->parents->contains($request->parent_id)) {
                 $child->parents()->sync($request->parent_id);
             }
         }
-
 
         $child->update(
             $request->only([
@@ -177,7 +166,6 @@ class ChildController extends Controller
                 'auto_checkIn',
             ])
         );
-
 
         return redirect()->back()->with([
             'Meldung' => 'Kind wurde erfolgreich bearbeitet',
@@ -225,7 +213,7 @@ class ChildController extends Controller
     {
         $this->middleware('auth');
 
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung',
                 'type' => 'danger',
@@ -253,7 +241,7 @@ class ChildController extends Controller
     {
         $this->middleware('auth');
 
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
                 'type' => 'danger',
@@ -262,7 +250,7 @@ class ChildController extends Controller
 
         $mandate = $child->mandates()->where('id', $mandateId)->first();
 
-        if (!$mandate) {
+        if (! $mandate) {
             return redirect()->back()->with([
                 'Meldung' => 'Vollmacht nicht gefunden',
                 'type' => 'danger',
@@ -276,5 +264,4 @@ class ChildController extends Controller
             'type' => 'success',
         ]);
     }
-
 }

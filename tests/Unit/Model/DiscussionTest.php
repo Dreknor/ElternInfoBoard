@@ -3,7 +3,6 @@
 namespace Tests\Unit\Model;
 
 use App\Model\Discussion;
-use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -76,4 +75,3 @@ class DiscussionTest extends TestCase
         $this->assertTrue(is_bool($discussion->sticky));
     }
 }
-

@@ -6,7 +6,6 @@ use Spatie\LaravelSettings\Settings;
 
 class GeneralSetting extends Settings
 {
-
     public string $app_name;
 
     public string $logo;

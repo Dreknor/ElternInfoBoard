@@ -36,8 +36,9 @@ class Child extends Model implements HasMedia
 
     public function mandates()
     {
-        return     $this->hasMany(ChildMandate::class, 'child_id');
+        return $this->hasMany(ChildMandate::class, 'child_id');
     }
+
     public function class()
     {
         return $this->belongsTo(Group::class);
@@ -56,7 +57,7 @@ class Child extends Model implements HasMedia
 
     public function arbeitsgemeinschaften_today()
     {
-        return Cache::remember('arbeitsgemeinschaften_today_' . $this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function () {
+        return Cache::remember('arbeitsgemeinschaften_today_'.$this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function () {
             return $this->arbeitsgemeinschaften()
                 ->where('weekday', (now()->dayOfWeek))
                 ->where('end_date', '>', now())
@@ -71,14 +72,12 @@ class Child extends Model implements HasMedia
                 ->get();
         });
 
-
     }
-
 
     public function checkedIn()
     {
 
-        $checkIn = Cache::remember('checkedIn' . $this->id, 300, function () {
+        $checkIn = Cache::remember('checkedIn'.$this->id, 300, function () {
             return $this->checkIns()
                 ->where('checked_in', true)
                 ->where('checked_out', false)
@@ -105,7 +104,7 @@ class Child extends Model implements HasMedia
      */
     public function should_be_today()
     {
-        $checkIn = Cache::remember('should_be_today' . $this->id, 300, function () {
+        $checkIn = Cache::remember('should_be_today'.$this->id, 300, function () {
             return $this->checkIns()
                 ->where('checked_in', false)
                 ->where('checked_out', false)
@@ -113,7 +112,6 @@ class Child extends Model implements HasMedia
                 ->whereDate('date', today())
                 ->first();
         });
-
 
         if (is_null($checkIn)) {
             return false;
@@ -131,7 +129,7 @@ class Child extends Model implements HasMedia
     public function schickzeiten(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Schickzeiten::class, 'child_id')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('specific_date', '>=', today())
                     ->orWhereNull('specific_date');
             });
@@ -140,20 +138,20 @@ class Child extends Model implements HasMedia
     public function getSchickzeitenForToday()
     {
 
-        $schickzeiten = Cache::remember('schickzeiten_'.$this->id, 300, function() {
-             return $this->schickzeiten()
+        $schickzeiten = Cache::remember('schickzeiten_'.$this->id, 300, function () {
+            return $this->schickzeiten()
                 ->where(function ($query) {
                     /*
-                     * alt: Es werden alle Schickzeiten geladen, die entweder heute sind oder für den aktuellen Wochentag gelten.
+                    * alt: Es werden alle Schickzeiten geladen, die entweder heute sind oder für den aktuellen Wochentag gelten.
                     $query->where('weekday', now()->dayOfWeek)
-                        ->orWhere('specific_date', today());
+                       ->orWhere('specific_date', today());
                     */
                     // Neu: Es werden alle Schickzeiten geladen, die für heute sind.
                     $query->where('specific_date', today());
                 })
                 ->orderBy('specific_date', 'desc')
                 ->get();
-            });
+        });
 
         return $schickzeiten;
         /*
@@ -168,8 +166,8 @@ class Child extends Model implements HasMedia
     public function scopeCare($query)
     {
         return $query->where(function ($query) {
-           $query->whereIn('group_id', (new CareSetting())->groups_list)
-                ->orWhereIn('class_id', (new CareSetting())->class_list);
+            $query->whereIn('group_id', (new CareSetting)->groups_list)
+                ->orWhereIn('class_id', (new CareSetting)->class_list);
         });
     }
 
@@ -181,20 +179,20 @@ class Child extends Model implements HasMedia
     public function krankmeldungToday()
     {
 
-         $meldung = Cache::remember('krankmeldung_'.$this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function(){
-             return $this->krankmeldungen()
-            ->where(function ($query) {
-                $query->whereDate('start', '<=', today())
-                    ->whereDate('ende', '>=', today());
-            })
-            ->get();
-            });
+        $meldung = Cache::remember('krankmeldung_'.$this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function () {
+            return $this->krankmeldungen()
+                ->where(function ($query) {
+                    $query->whereDate('start', '<=', today())
+                        ->whereDate('ende', '>=', today());
+                })
+                ->get();
+        });
 
-         if ($meldung->count() > 0) {
-             return true;
-            } else {
-                return false;
-            }
+        if ($meldung->count() > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function notice()
@@ -202,10 +200,9 @@ class Child extends Model implements HasMedia
         return $this->hasMany(ChildNotice::class, 'child_id')->orderByDesc('created_at');
     }
 
-
     public function hasNotice()
     {
-        $notice = Cache::remember('notice' . $this->id, 300, function () {
+        $notice = Cache::remember('notice'.$this->id, 300, function () {
             return $this->notice()
                 ->whereDate('date', today())
                 ->first();
@@ -216,13 +213,12 @@ class Child extends Model implements HasMedia
 
     public function noticeToday()
     {
-        $notice = Cache::remember('notice' . $this->id, 300, function () {
+        $notice = Cache::remember('notice'.$this->id, 300, function () {
             return $this->notice()
                 ->whereDate('date', today())
                 ->first();
         });
+
         return $notice;
     }
-
-
 }

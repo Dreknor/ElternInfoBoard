@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use danielme85\LaravelLogToDB\LogToDB;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class LogController extends Controller
 {
@@ -22,12 +22,12 @@ class LogController extends Controller
 
         // Filter by channel
         if ($request->filled('channel')) {
-            $query->where('channel', 'like', '%' . $request->channel . '%');
+            $query->where('channel', 'like', '%'.$request->channel.'%');
         }
 
         // Search in message
         if ($request->filled('search')) {
-            $query->where('message', 'like', '%' . $request->search . '%');
+            $query->where('message', 'like', '%'.$request->search.'%');
         }
 
         $logs = $query->paginate(50)->withQueryString();
@@ -35,7 +35,7 @@ class LogController extends Controller
 
         return view('logs.index', [
             'logs' => $logs,
-            'totalLogs' => $totalLogs
+            'totalLogs' => $totalLogs,
         ]);
     }
 

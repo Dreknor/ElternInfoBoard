@@ -30,7 +30,7 @@ return new class extends Migration
             });
         } catch (\Exception $e) {
             // Log the error message
-            Log::error('Error creating elternrat_events table: ' . $e->getMessage());
+            Log::error('Error creating elternrat_events table: '.$e->getMessage());
 
         }
 
@@ -44,4 +44,3 @@ return new class extends Migration
         Schema::dropIfExists('elternrat_events');
     }
 };
-

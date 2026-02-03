@@ -10,16 +10,15 @@ class Disease extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer'
+        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer',
     ];
+
     protected $visible = [
-        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer', 'id'
+        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer', 'id',
     ];
 
     public function activeDiseases()
     {
         return $this->hasMany(ActiveDisease::class);
     }
-
-
 }

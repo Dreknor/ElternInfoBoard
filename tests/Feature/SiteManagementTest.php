@@ -138,4 +138,3 @@ class SiteManagementTest extends TestCase
         $this->assertTrue($ownSites->contains($inactiveSite));
     }
 }
-

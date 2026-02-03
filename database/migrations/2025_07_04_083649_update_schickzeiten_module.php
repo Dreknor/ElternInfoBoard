@@ -2,8 +2,6 @@
 
 use App\Model\Module;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -18,7 +16,6 @@ return new class extends Migration
             $options['home-view-top'] = 'child.include.home-header';
             $module->options = $options;
             $module->save();
-
 
         }
     }

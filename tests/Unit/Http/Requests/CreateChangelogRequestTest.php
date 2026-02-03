@@ -19,7 +19,7 @@ class CreateChangelogRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateChangelogRequest();
+        $this->subject = new CreateChangelogRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class CreateChangelogRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

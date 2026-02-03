@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Model\Post;
 use App\Model\ReadReceipts;
-use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -16,8 +15,6 @@ use Illuminate\Support\Facades\Log;
  */
 class ReadReceiptsController extends Controller
 {
-
-
     /**
      * Post: mark a post as read
      *
@@ -25,7 +22,7 @@ class ReadReceiptsController extends Controller
      *
      * @group Nachrichten
      *
-     * @param \Illuminate\Http\Request $request The incoming request instance.
+     * @param  \Illuminate\Http\Request  $request  The incoming request instance.
      * @return \Illuminate\Http\JsonResponse JSON response indicating success or failure.
      */
     public function store(Request $request, Post $post)
@@ -59,6 +56,7 @@ class ReadReceiptsController extends Controller
                 'post_id' => $post->id,
                 'user_id' => $user->id,
             ]);
+
             return response()->json(['error' => 'Die Lesebestätigung konnte nicht verarbeitet werden.'], 500);
         }
 

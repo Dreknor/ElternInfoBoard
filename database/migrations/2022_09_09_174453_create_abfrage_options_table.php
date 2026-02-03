@@ -8,8 +8,6 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
@@ -49,14 +47,11 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
 
         Schema::dropIfExists('abfrage_answers');
-
 
         Schema::table('rueckmeldungen', function (Blueprint $table) {
             $table->dropColumn('max_answers');
@@ -65,7 +60,6 @@ return new class extends Migration
         Schema::table('users_rueckmeldungen', function (Blueprint $table) {
             $table->dropColumn('rueckmeldung_number');
         });
-
 
         Schema::dropIfExists('abfrage_options');
     }

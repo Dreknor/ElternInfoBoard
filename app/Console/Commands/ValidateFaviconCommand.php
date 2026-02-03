@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Settings\GeneralSetting;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ValidateFaviconCommand extends Command
 {
@@ -30,21 +30,21 @@ class ValidateFaviconCommand extends Command
      */
     public function handle()
     {
-        $settings = new GeneralSetting();
+        $settings = new GeneralSetting;
         $changed = false;
 
         // Prüfe Favicon
         if ($settings->favicon && $settings->favicon !== 'app_logo.png') {
-            if (!Storage::disk('public')->exists('img/' . $settings->favicon)) {
-                $this->warn('Favicon nicht gefunden: ' . $settings->favicon);
+            if (! Storage::disk('public')->exists('img/'.$settings->favicon)) {
+                $this->warn('Favicon nicht gefunden: '.$settings->favicon);
                 $this->info('Setze Favicon auf Standard-Logo zurück: app_logo.png');
 
-                Log::warning('Favicon nicht gefunden: ' . $settings->favicon . '. Setze auf Standard-Logo zurück.');
+                Log::warning('Favicon nicht gefunden: '.$settings->favicon.'. Setze auf Standard-Logo zurück.');
 
                 $settings->favicon = 'app_logo.png';
                 $changed = true;
             } else {
-                $this->info('Favicon gefunden: ' . $settings->favicon);
+                $this->info('Favicon gefunden: '.$settings->favicon);
             }
         } else {
             $this->info('Favicon ist bereits Standard-Logo: app_logo.png');
@@ -52,16 +52,16 @@ class ValidateFaviconCommand extends Command
 
         // Prüfe Logo
         if ($settings->logo && $settings->logo !== 'app_logo.png') {
-            if (!Storage::disk('public')->exists('img/' . $settings->logo)) {
-                $this->warn('Logo nicht gefunden: ' . $settings->logo);
+            if (! Storage::disk('public')->exists('img/'.$settings->logo)) {
+                $this->warn('Logo nicht gefunden: '.$settings->logo);
                 $this->info('Setze Logo auf Standard-Logo zurück: app_logo.png');
 
-                Log::warning('Logo nicht gefunden: ' . $settings->logo . '. Setze auf Standard-Logo zurück.');
+                Log::warning('Logo nicht gefunden: '.$settings->logo.'. Setze auf Standard-Logo zurück.');
 
                 $settings->logo = 'app_logo.png';
                 $changed = true;
             } else {
-                $this->info('Logo gefunden: ' . $settings->logo);
+                $this->info('Logo gefunden: '.$settings->logo);
             }
         } else {
             $this->info('Logo ist bereits Standard-Logo: app_logo.png');
@@ -77,4 +77,3 @@ class ValidateFaviconCommand extends Command
         return 0;
     }
 }
-

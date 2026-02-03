@@ -6,7 +6,6 @@ use Spatie\LaravelSettings\Settings;
 
 class EmailSetting extends Settings
 {
-
     public string $mail_server;
 
     public string $mail_port;
@@ -24,7 +23,6 @@ class EmailSetting extends Settings
     public string $new_user_welcome_text;
 
     public bool $log_sent_emails;
-
 
     public static function group(): string
     {

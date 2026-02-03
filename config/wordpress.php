@@ -1,8 +1,5 @@
 <?php
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Facade;
-
 return [
 
     /*
@@ -21,6 +18,5 @@ return [
 
     'wp_username' => env('WP_USER_NAME'),
     'wp_password' => env('WP_PASSWORD'),
-
 
 ];

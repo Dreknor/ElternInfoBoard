@@ -4,7 +4,6 @@ namespace App\Http\View\Composers;
 
 use App\Model\ActiveDisease;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 class DiseaseComposer
 {

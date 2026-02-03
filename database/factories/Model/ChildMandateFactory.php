@@ -29,4 +29,3 @@ class ChildMandateFactory extends Factory
         ]);
     }
 }
-

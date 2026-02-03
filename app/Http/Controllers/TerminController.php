@@ -69,7 +69,7 @@ class TerminController extends Controller
 
     public function update(CreateTerminRequest $request, Termin $termin)
     {
-        if (!auth()->user()->can('edit termin')) {
+        if (! auth()->user()->can('edit termin')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -98,7 +98,7 @@ class TerminController extends Controller
             );
         } catch (\Exception $e) {
 
-            Log::error('Termin: Fehler beim Aktualisieren des Termins: ' . $e->getMessage());
+            Log::error('Termin: Fehler beim Aktualisieren des Termins: '.$e->getMessage());
 
             return redirect()->back()->with([
                 'type' => 'danger',
@@ -112,7 +112,7 @@ class TerminController extends Controller
 
         } catch (\Exception $e) {
 
-            Log::error('Termin: Fehler beim Aktualisieren der Gruppen: ' . $e->getMessage());
+            Log::error('Termin: Fehler beim Aktualisieren der Gruppen: '.$e->getMessage());
 
             return redirect()->back()->with([
                 'type' => 'danger',
@@ -120,8 +120,7 @@ class TerminController extends Controller
             ]);
         }
 
-
-        Cache::forget('termine' . auth()->id());
+        Cache::forget('termine'.auth()->id());
 
         return redirect(url('/'))->with([
             'type' => 'success',
@@ -129,11 +128,11 @@ class TerminController extends Controller
         ]);
     }
 
-
     /**
      * Show the form for creating a new resource.
      *
      * @return View|RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function create()
@@ -164,12 +163,11 @@ class TerminController extends Controller
         $matches = [];
         $termin = preg_match($pattern, $post->header, $matches);
 
-
-        if (!$termin) {
+        if (! $termin) {
             $termin = preg_match($pattern, $post->news, $matches);
         }
 
-        if (!$termin) {
+        if (! $termin) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Kein Datum im Beitrag gefunden.',
@@ -179,10 +177,8 @@ class TerminController extends Controller
         $terminname = $post->header;
         $terminname = str_replace($matches[0], '', $terminname);
 
-
         $start = Carbon::parse($matches[0]);
         $ende = Carbon::parse($matches[0]);
-
 
         $termin = new Termin([
             'terminname' => $terminname,
@@ -192,24 +188,18 @@ class TerminController extends Controller
             'public' => false,
         ]);
 
-
-
-
-
-
         return view('termine.createFromPost', [
             'gruppen' => Group::all(),
             'termin' => $termin,
-            'post' => $post
+            'post' => $post,
         ]);
     }
-
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param CreateTerminRequest $request
      * @return RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function store(CreateTerminRequest $request)
@@ -253,18 +243,18 @@ class TerminController extends Controller
             $termin->notify(
                 users: $users,
                 title: 'Neuer Termin',
-                message: 'Neuer Termin: ' . $termin->terminname,
+                message: 'Neuer Termin: '.$termin->terminname,
                 type: 'Termine');
 
             Cache::forget('termine'.auth()->id());
         } catch (\Exception $e) {
-            Log::error('Termin: Fehler beim Erstellen des Termins: ' . $e->getMessage());
+            Log::error('Termin: Fehler beim Erstellen des Termins: '.$e->getMessage());
+
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Fehler beim Erstellen des Termins.',
             ]);
         }
-
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -275,8 +265,8 @@ class TerminController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Termin $termin
      * @return RedirectResponse
+     *
      * @throws AuthorizationException
      */
     public function destroy(Termin $termin)

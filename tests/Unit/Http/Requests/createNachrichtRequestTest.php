@@ -19,7 +19,7 @@ class createNachrichtRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createNachrichtRequest();
+        $this->subject = new createNachrichtRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class createNachrichtRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()
