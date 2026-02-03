@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\CreateSitesBlockRequest;
 use App\Http\Requests\UpdateSiteBlockImageRequest;
 use App\Http\Requests\UpdateSiteBlockTextRequest;
@@ -12,11 +14,13 @@ use App\Model\SiteBlockImages;
 use App\Model\SiteBlockText;
 use Illuminate\Support\Facades\Cache;
 
-class SiteBlockController extends Controller
+class SiteBlockController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('permission:create sites');
+        return [
+            'permission:create sites',
+        ];
     }
 
     public function store(CreateSitesBlockRequest $request)

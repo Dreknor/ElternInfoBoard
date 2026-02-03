@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\CreateTerminRequest;
 use App\Model\Group;
@@ -15,14 +17,21 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class TerminController extends Controller
+class TerminController extends Controller implements HasMiddleware
 {
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->middleware('password_expired');
+
         $this->grousRepository = $groupsRepository;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'password_expired',
+        ];
     }
 
     /**

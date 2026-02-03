@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
 use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
@@ -18,17 +20,13 @@ use Illuminate\Support\Facades\Mail;
  *
  * Controller for handling sick leave related API requests.
  */
-class KrankmeldungenController extends Controller
+class KrankmeldungenController extends Controller implements HasMiddleware
 {
-    /**
-     * KrankmeldungenController constructor.
-     *
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

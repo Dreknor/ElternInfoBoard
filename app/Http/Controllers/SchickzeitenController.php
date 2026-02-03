@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Exports\SchickzeitenExport;
 use App\Http\Requests\CreateChildRequest;
 use App\Http\Requests\SchickzeitRequest;
@@ -24,7 +26,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
-class SchickzeitenController extends Controller
+class SchickzeitenController extends Controller implements HasMiddleware
 {
     protected SchickzeitenSetting $schickenzeitenSetting;
 
@@ -32,10 +34,17 @@ class SchickzeitenController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth');
+
         $this->schickenzeitenSetting = new SchickzeitenSetting;
         $this->careSettings = new CareSetting;
 
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+        ];
     }
 
     /**

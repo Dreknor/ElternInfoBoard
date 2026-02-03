@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\DeleteFilesRequest;
 use App\Mail\newFilesAddToPost;
 use App\Model\Group;
@@ -21,14 +23,21 @@ use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class FileController extends Controller
+class FileController extends Controller implements HasMiddleware
 {
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->middleware('password_expired');
+
         $this->grousRepository = $groupsRepository;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'password_expired',
+        ];
     }
 
     /**

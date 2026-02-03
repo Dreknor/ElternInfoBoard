@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\createUserRequest;
 use App\Http\Requests\verwaltungEditUserRequest;
 use App\Mail\NewUserPasswordMail;
@@ -30,14 +32,21 @@ use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
     private $groupsRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->groupsRepository = $groupsRepository;
-        $this->middleware(['permission:edit user']);
+
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            ['permission:edit user'],
+        ];
     }
 
     /**

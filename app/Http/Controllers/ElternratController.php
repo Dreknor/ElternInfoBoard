@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\createDiscussionRequest;
 use App\Model\Comment;
 use App\Model\Discussion;
@@ -20,11 +22,13 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class ElternratController extends Controller
+class ElternratController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:view elternrat']);
+        return [
+            ['permission:view elternrat'],
+        ];
     }
 
     /**

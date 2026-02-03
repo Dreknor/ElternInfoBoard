@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Mail\TestEmail;
 use App\Model\Group;
 use App\Model\Groups;
@@ -24,12 +26,14 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
-class SettingsController extends Controller
+class SettingsController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
-        $this->middleware(['permission:edit settings']);
+        return [
+            'auth',
+            ['permission:edit settings'],
+        ];
     }
 
     public function index()

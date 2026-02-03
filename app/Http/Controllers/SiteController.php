@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\CreateSitesRequest;
 use App\Model\Group;
 use App\Model\Site;
@@ -10,14 +12,21 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
-class SiteController extends Controller
+class SiteController extends Controller implements HasMiddleware
 {
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->middleware('password_expired');
+
         $this->grousRepository = $groupsRepository;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'password_expired',
+        ];
     }
 
     public function deleteCache(Site $site)

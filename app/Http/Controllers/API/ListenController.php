@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
@@ -9,11 +11,13 @@ use App\Model\listen_termine;
 use App\Model\User;
 use Illuminate\Http\Request;
 
-class ListenController extends Controller
+class ListenController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**
