@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\API;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
 use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
@@ -11,6 +9,7 @@ use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 /** Class VertretungsplanController
  *

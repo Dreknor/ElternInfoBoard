@@ -35,8 +35,6 @@ class AnwesenheitNotificationJob implements ShouldQueue
 
     /**
      * Führe den Job aus.
-     *
-     * @return void
      */
     public function handle(): void
     {

@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\createActiveDiseaseRequest;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 class ActiveDiseaseController extends Controller implements HasMiddleware
 {

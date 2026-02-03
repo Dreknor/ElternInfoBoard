@@ -9,8 +9,6 @@ class ExampleTest extends TestCase
 {
     /**
      * Test dass die Anwendung ohne Authentifizierung zum Login weiterleitet.
-     *
-     * @return void
      */
     public function test_basic_test(): void
     {
@@ -22,8 +20,6 @@ class ExampleTest extends TestCase
 
     /**
      * Test dass authentifizierte Benutzer die Startseite sehen können.
-     *
-     * @return void
      */
     public function test_authenticated_user_can_access_home(): void
     {

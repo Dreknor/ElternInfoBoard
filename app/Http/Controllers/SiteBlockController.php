@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\CreateSitesBlockRequest;
 use App\Http\Requests\UpdateSiteBlockImageRequest;
 use App\Http\Requests\UpdateSiteBlockTextRequest;
@@ -12,6 +10,7 @@ use App\Model\SiteBlock;
 use App\Model\SiteBlockFiles;
 use App\Model\SiteBlockImages;
 use App\Model\SiteBlockText;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
 
 class SiteBlockController extends Controller implements HasMiddleware

@@ -2,15 +2,15 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use App\Observers\PostObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Traits\NotificationTrait;
 use Artisanry\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Contracts\ReactableInterface;
 use DevDojo\LaravelReactions\Traits\Reactable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

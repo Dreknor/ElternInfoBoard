@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
@@ -11,6 +9,7 @@ use App\Model\VertretungsplanWeek;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 class VertretungsplanController extends Controller implements HasMiddleware
 {

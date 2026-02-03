@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use App\Exports\PflichtstundenExport;
 use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Http\Requests\UpdatePflichtstundeRequest;
@@ -11,6 +9,7 @@ use App\Model\Pflichtstunde;
 use App\Model\User;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PflichtstundeController extends Controller implements HasMiddleware

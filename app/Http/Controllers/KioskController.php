@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use App\Model\Group;
 use Carbon\Carbon;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Collection;
 
 class KioskController extends Controller implements HasMiddleware

@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers\Anwesenheit;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Gate;
 use App\Exports\AnwesenheitsAbfrageExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
@@ -18,7 +15,9 @@ use App\Model\User;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
