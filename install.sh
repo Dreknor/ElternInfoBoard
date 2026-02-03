@@ -41,7 +41,7 @@ ask_and_replace "Mail-Host" MAIL_HOST
 ask_and_replace "Mail-Port" MAIL_PORT
 ask_and_replace "Mail-Benutzername" MAIL_USERNAME
 ask_and_replace "Mail-Passwort" MAIL_PASSWORD
-ask_and_replace "Mail-Verschlüsselung" MAIL_ENCRYPTION
+ask_and_replace "Mail-Verschlüsselung" MAIL_SCHEME
 ask_and_replace "Mail-Absender-Adresse" MAIL_FROM_ADDRESS
 ask_and_replace "Mail-Absender-Name" MAIL_FROM_NAME
 
