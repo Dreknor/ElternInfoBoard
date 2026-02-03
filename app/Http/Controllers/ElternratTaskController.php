@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Model\ElternratTask;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
-class ElternratTaskController extends Controller
+class ElternratTaskController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:view elternrat']);
+        return [
+            ['permission:view elternrat'],
+        ];
     }
 
     /**

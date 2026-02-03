@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Anwesenheit;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 use App\Exports\AnwesenheitsAbfrageExport;
 use App\Http\Controllers\Controller;
@@ -20,11 +22,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
-class CareController extends Controller
+class CareController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     /**

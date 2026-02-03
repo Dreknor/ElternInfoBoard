@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
 use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
@@ -14,16 +16,13 @@ use Illuminate\Http\Request;
  *
  * Controller for handling Vertretungsplan (substitution plan) related API requests.
  **/
-class VertretungsplanController extends Controller
+class VertretungsplanController extends Controller implements HasMiddleware
 {
-    /**
-     * VertretungsplanController constructor.
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

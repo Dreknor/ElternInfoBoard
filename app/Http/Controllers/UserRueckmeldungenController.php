@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Mail\UserRueckmeldung as UserRueckmeldungMail;
 use App\Model\AbfrageAntworten;
 use App\Model\Post;
@@ -15,11 +17,13 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Mail;
 
-class UserRueckmeldungenController extends Controller
+class UserRueckmeldungenController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['auth', 'password_expired']);
+        return [
+            ['auth', 'password_expired'],
+        ];
     }
 
     /**

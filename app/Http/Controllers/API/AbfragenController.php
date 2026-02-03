@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
 use App\Model\AbfrageAntworten;
 use App\Model\Post;
@@ -14,15 +16,13 @@ use Illuminate\Support\Facades\Log;
  * Class AbfragenController
  * Controller for handling abfragen related API requests.
  */
-class AbfragenController extends Controller
+class AbfragenController extends Controller implements HasMiddleware
 {
-    /**
-     * AbfragenController constructor.
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

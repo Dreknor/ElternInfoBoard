@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\editUserRequest;
 use App\Model\Changelog;
@@ -11,12 +13,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class BenutzerController extends Controller
+class BenutzerController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
-
+        return [
+            'auth',
+        ];
     }
 
     /**

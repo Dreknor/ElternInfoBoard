@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Exports\PflichtstundenExport;
 use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Http\Requests\UpdatePflichtstundeRequest;
@@ -11,14 +13,21 @@ use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
-class PflichtstundeController extends Controller
+class PflichtstundeController extends Controller implements HasMiddleware
 {
     protected PflichtstundenSetting $pflichtstunden_settings;
 
     public function __construct()
     {
-        $this->middleware('auth');
+
         $this->pflichtstunden_settings = new PflichtstundenSetting;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+        ];
     }
 
     /**

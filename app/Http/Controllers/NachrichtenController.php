@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\CommentPostRequest;
 use App\Http\Requests\createNachrichtRequest;
 use App\Http\Requests\editPostRequest;
@@ -42,7 +44,7 @@ use Spatie\Permission\Models\Role;
 /**
  * Class NachrichtenController
  */
-class NachrichtenController extends Controller
+class NachrichtenController extends Controller implements HasMiddleware
 {
     private GroupsRepository $groupsRepository;
 
@@ -56,9 +58,15 @@ class NachrichtenController extends Controller
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->groupsRepository = $groupsRepository;
-        $this->middleware('auth');
 
         $this->settings = new GeneralSetting;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+        ];
     }
 
     /**

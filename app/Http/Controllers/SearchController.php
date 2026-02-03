@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Requests\searchRequest;
 use App\Model\Group;
 use App\Model\Post;
 use App\Support\Collection;
 use Illuminate\View\View;
 
-class SearchController extends Controller
+class SearchController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['auth', 'password_expired']);
+        return [
+            ['auth', 'password_expired'],
+        ];
     }
 
     /**

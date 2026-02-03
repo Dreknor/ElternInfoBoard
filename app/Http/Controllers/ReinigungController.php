@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Exports\ReinigungExport;
 use App\Http\Requests\CreateAutoReinigungRequest;
 use App\Http\Requests\ReinigungsRequest;
@@ -20,11 +22,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class ReinigungController extends Controller
+class ReinigungController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     public function autoCreateStart($bereich)

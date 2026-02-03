@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
@@ -16,14 +18,13 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 
-class ImportController extends Controller
+class ImportController extends Controller implements HasMiddleware
 {
-    /**
-     * Permission to import user is required
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:import user']);
+        return [
+            ['permission:import user'],
+        ];
     }
 
     /**

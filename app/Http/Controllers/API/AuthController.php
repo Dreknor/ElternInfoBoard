@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,16 +14,13 @@ use Illuminate\Validation\ValidationException;
  *
  * Controller for handling authentication related API requests.
  */
-class AuthController extends Controller
+class AuthController extends Controller implements HasMiddleware
 {
-    /**
-     * AuthController constructor.
-     *
-     * Apply authentication middleware except for the login method.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum')->except('login');
+        return [
+            new Middleware('auth:sanctum', except: ['login']),
+        ];
     }
 
     /**
