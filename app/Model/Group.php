@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use App\Scopes\GetGroupsScope;
 use App\Scopes\SortGroupsScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ScopedBy([GetGroupsScope::class])]
+#[ScopedBy([SortGroupsScope::class])]
 class Group extends Model implements HasMedia
 {
     use HasFactory;
@@ -23,12 +26,6 @@ class Group extends Model implements HasMedia
     protected $casts = [
         'protected' => 'boolean',
     ];
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new SortGroupsScope);
-        static::addGlobalScope(new GetGroupsScope);
-    }
 
     public function users(): BelongsToMany
     {

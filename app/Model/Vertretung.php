@@ -2,10 +2,13 @@
 
 namespace App\Model;
 
+use App\Observers\VertretungObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy([VertretungObserver::class])]
 class Vertretung extends Model
 {
     protected $table = 'vertretungen';

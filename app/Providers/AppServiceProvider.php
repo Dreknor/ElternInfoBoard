@@ -2,12 +2,6 @@
 
 namespace App\Providers;
 
-use App\Model\Post;
-use App\Model\UserRueckmeldungen;
-use App\Model\Vertretung;
-use App\Observers\PostObserver;
-use App\Observers\UserRueckmeldungenObserver;
-use App\Observers\VertretungObserver;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,9 +30,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(GeneralSetting $settings): void
     {
         Paginator::useBootstrap();
-        Post::observe(PostObserver::class);
-        Vertretung::observe(VertretungObserver::class);
-        UserRueckmeldungen::observe(UserRueckmeldungenObserver::class);
 
         View::share('settings', $settings);
 

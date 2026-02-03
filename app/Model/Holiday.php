@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,7 +26,8 @@ class Holiday extends Model
     /**
      * Scope a query to only include holidays for a specific year.
      */
-    public function scopeForYear($query, int $year)
+    #[Scope]
+    protected function forYear($query, int $year)
     {
         return $query->where('year', $year);
     }
@@ -33,7 +35,8 @@ class Holiday extends Model
     /**
      * Scope a query to only include holidays within a date range.
      */
-    public function scopeBetweenDates($query, $startDate, $endDate)
+    #[Scope]
+    protected function betweenDates($query, $startDate, $endDate)
     {
         return $query->where(function ($q) use ($startDate, $endDate) {
             $q->whereBetween('start', [$startDate, $endDate])

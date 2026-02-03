@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use App\Observers\ListenTermineObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -52,7 +53,8 @@ class listen_termine extends Model
         return $this->hasOne(Pflichtstunde::class, 'listen_termin_id');
     }
 
-    public function scopeUser(Builder $query, $user)
+    #[Scope]
+    protected function user(Builder $query, $user)
     {
         if ($user != null) {
             return $query->where('reserviert_fuer', $user);

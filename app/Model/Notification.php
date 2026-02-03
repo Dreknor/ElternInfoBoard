@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use App\Notifications\Push;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +27,8 @@ class Notification extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function scopeUnread($query)
+    #[Scope]
+    protected function unread($query)
     {
         return $query->where('read', false);
     }
