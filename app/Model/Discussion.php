@@ -19,9 +19,12 @@ class Discussion extends Model implements HasMedia
 
     protected $fillable = ['header', 'text', 'owner', 'sticky'];
 
-    protected $casts = [
-        'sticky' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'sticky' => 'boolean',
+        ];
+    }
 
     public function author(): HasOne
     {

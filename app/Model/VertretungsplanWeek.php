@@ -10,7 +10,10 @@ class VertretungsplanWeek extends Model
 
     protected $fillable = ['week', 'type'];
 
-    protected $casts = [
-        'week' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'week' => 'date',
+        ];
+    }
 }

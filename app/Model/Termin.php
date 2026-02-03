@@ -27,13 +27,16 @@ class Termin extends Model implements Auditable
 
     protected $visible = ['start', 'ende', 'terminname', 'fullDay', 'public', 'id'];
 
-    protected $casts = [
-        'creted_at' => 'datetime',
-        'start' => 'datetime',
-        'ende' => 'datetime',
-        'fullDay' => 'boolean',
-        'public' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'creted_at' => 'datetime',
+            'start' => 'datetime',
+            'ende' => 'datetime',
+            'fullDay' => 'boolean',
+            'public' => 'boolean',
+        ];
+    }
 
     public function getfullDayAttribute($value): bool
     {

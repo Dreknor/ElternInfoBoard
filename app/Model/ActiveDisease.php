@@ -14,10 +14,13 @@ class ActiveDisease extends Model
 
     protected $fillable = ['disease_id', 'user_id', 'start', 'end', 'comment', 'active'];
 
-    protected $casts = [
-        'start' => 'datetime',
-        'end' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'datetime',
+            'end' => 'datetime',
+        ];
+    }
 
     public function disease()
     {

@@ -22,10 +22,13 @@ class ChildNotice extends Model implements Auditable
         'user_id',
     ];
 
-    protected $casts = [
-        'date' => 'datetime',
-        'created_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'date' => 'datetime',
+            'created_at' => 'datetime',
+        ];
+    }
 
     public function child()
     {

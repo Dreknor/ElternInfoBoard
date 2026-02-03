@@ -33,14 +33,17 @@ class Pflichtstunde extends Model
         'rejection_reason',
     ];
 
-    protected $casts = [
-        'start' => 'datetime',
-        'end' => 'datetime',
-        'approved' => 'boolean',
-        'approved_at' => 'datetime',
-        'rejected' => 'boolean',
-        'rejected_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'datetime',
+            'end' => 'datetime',
+            'approved' => 'boolean',
+            'approved_at' => 'datetime',
+            'rejected' => 'boolean',
+            'rejected_at' => 'datetime',
+        ];
+    }
 
     public function user()
     {

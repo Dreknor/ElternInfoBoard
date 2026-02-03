@@ -17,10 +17,13 @@ class Notification extends Model
 
     protected $visible = ['id', 'type', 'user_id', 'title', 'message', 'icon', 'url', 'read', 'important'];
 
-    protected $casts = [
-        'read' => 'boolean',
-        'important' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'read' => 'boolean',
+            'important' => 'boolean',
+        ];
+    }
 
     public function user()
     {

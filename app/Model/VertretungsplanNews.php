@@ -12,10 +12,13 @@ class VertretungsplanNews extends Model
 
     protected $fillable = ['start', 'end', 'news'];
 
-    protected $casts = [
-        'start' => 'date',
-        'end' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'date',
+            'end' => 'date',
+        ];
+    }
 
     protected static function booted(): void
     {

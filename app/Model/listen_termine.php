@@ -24,9 +24,12 @@ class listen_termine extends Model
 
     protected $visible = ['id', 'listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
 
-    protected $casts = [
-        'termin' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'termin' => 'datetime',
+        ];
+    }
 
     public function eingetragenePerson(): BelongsTo
     {
