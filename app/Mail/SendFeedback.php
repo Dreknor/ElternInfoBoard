@@ -32,7 +32,7 @@ class SendFeedback extends Mailable
         $this->text = $text;
         $this->betreff = $betreff;
         $this->data = $data;
-        $this->von = $von ?? optional(auth()->user())->name ?? '';
+        $this->von = $von ?? auth()->user()?->name ?? '';
     }
 
     /**
