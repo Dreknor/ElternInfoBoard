@@ -3,15 +3,13 @@
 namespace App\Model;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
 
 class Vertretung extends Model
 {
-
     protected $table = 'vertretungen';
+
     protected $fillable = [
         'id',
         'date',
@@ -35,6 +33,4 @@ class Vertretung extends Model
     {
         return $this->belongsTo(Group::class, 'klasse');
     }
-
-
 }

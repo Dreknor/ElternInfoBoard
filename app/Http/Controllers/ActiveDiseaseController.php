@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createActiveDiseaseRequest;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
-use Illuminate\Http\Request;
 
 class ActiveDiseaseController extends Controller
 {
@@ -18,11 +17,13 @@ class ActiveDiseaseController extends Controller
     public function extend(ActiveDisease $disease)
     {
         $disease->update(['end' => $disease->end->addDays($disease->disease->aushang_dauer)]);
+
         return redirect()->back()->with([
             'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
             'type' => 'success',
         ]);
     }
+
     public function activate(ActiveDisease $disease)
     {
 
@@ -36,10 +37,11 @@ class ActiveDiseaseController extends Controller
         }
 
         $disease->update(['active' => true]);
-            return redirect()->back()->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich aktiviert',
-                'type' => 'success',
-            ]);
+
+        return redirect()->back()->with([
+            'Meldung' => 'Krankmeldung wurde erfolgreich aktiviert',
+            'type' => 'success',
+        ]);
 
     }
 
@@ -63,10 +65,9 @@ class ActiveDiseaseController extends Controller
             return redirect()
                 ->back()
                 ->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
-                'type' => 'success',
-            ]);
-
+                    'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
+                    'type' => 'success',
+                ]);
 
         } else {
             ActiveDisease::insert([
@@ -80,17 +81,16 @@ class ActiveDiseaseController extends Controller
             return redirect()
                 ->back()
                 ->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen, muss nun aktiviert werden',
-                'type' => 'success',
-            ]);
+                    'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen, muss nun aktiviert werden',
+                    'type' => 'success',
+                ]);
         }
-
 
     }
 
     public function destroy(ActiveDisease $disease)
     {
-        if (!auth()->user()->can('manage diseases')) {
+        if (! auth()->user()->can('manage diseases')) {
             return redirect()->back()->with([
                 'Meldung' => 'Du hast keine Berechtigung diese Krankmeldung zu löschen',
                 'type' => 'danger',
@@ -105,12 +105,13 @@ class ActiveDiseaseController extends Controller
         }
 
         $disease->delete();
+
         return redirect()->back();
     }
 
     public function update(ActiveDisease $disease)
     {
-        if (!auth()->user()->can('manage diseases')) {
+        if (! auth()->user()->can('manage diseases')) {
             return redirect()->back()->with([
                 'Meldung' => 'Du hast keine Berechtigung diese Krankmeldung zu löschen',
                 'type' => 'danger',
@@ -118,6 +119,7 @@ class ActiveDiseaseController extends Controller
         }
 
         $disease->update(['active' => false]);
+
         return redirect()->back();
     }
 }

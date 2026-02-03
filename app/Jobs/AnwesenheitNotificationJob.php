@@ -15,17 +15,16 @@ class AnwesenheitNotificationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $parent;
+
     public $childName;
 
     public $type;
 
-
-
     /**
      * Erstelle eine neue Instanz des Jobs.
      *
-     * @param User $parent Das Elternteil
-     * @param string $childName Name des abgemeldeten Kindes
+     * @param  User  $parent  Das Elternteil
+     * @param  string  $childName  Name des abgemeldeten Kindes
      */
     public function __construct(User $parent, string $childName, string $type)
     {

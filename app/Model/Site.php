@@ -47,5 +47,4 @@ class Site extends Model
                 ->orWhere('author_id', auth()->id());
         });
     }
-
 }

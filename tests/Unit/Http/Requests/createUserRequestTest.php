@@ -19,7 +19,7 @@ class createUserRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createUserRequest();
+        $this->subject = new createUserRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class createUserRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

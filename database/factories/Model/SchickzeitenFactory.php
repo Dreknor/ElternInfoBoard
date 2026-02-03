@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Schickzeiten;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SchickzeitenFactory extends Factory
 {

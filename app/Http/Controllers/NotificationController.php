@@ -19,7 +19,7 @@ class NotificationController extends Controller
             'id' => 'required|integer',
         ]);
 
-        if (!auth()->user()->notifications()->where('id', $request->id)->exists()) {
+        if (! auth()->user()->notifications()->where('id', $request->id)->exists()) {
             return response()->json(['success' => false]);
         }
 
@@ -33,6 +33,7 @@ class NotificationController extends Controller
     public function readAll()
     {
         auth()->user()->notifications()->update(['read' => true]);
+
         return redirect()->back();
     }
 
@@ -45,8 +46,6 @@ class NotificationController extends Controller
         auth()->user()->notifications()->where('type', $request->type)->update(['read' => true]);
 
     }
-
-
 
     public function clean_up()
     {
@@ -62,7 +61,6 @@ class NotificationController extends Controller
                 'important' => false,
                 'type' => 'Admin',
             ]);
-
 
             $notification->save();
         }

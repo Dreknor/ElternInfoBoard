@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
-
 class ChangelogController extends Controller
 {
     /**
@@ -47,7 +46,6 @@ class ChangelogController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param CreateChangelogRequest $request
      * @return RedirectResponse
      */
     public function store(CreateChangelogRequest $request)
@@ -57,7 +55,7 @@ class ChangelogController extends Controller
 
         $changelog->notify(
             users: User::all(),
-            title: 'Update des ' . config('app.name'),
+            title: 'Update des '.config('app.name'),
             message: $changelog->header,
             url: url('changelog')
         );

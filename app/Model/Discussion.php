@@ -12,10 +12,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Discussion extends Model implements HasMedia
 {
-    use SoftDeletes;
+    use HasComments;
     use HasFactory;
     use InteractsWithMedia;
-    use HasComments;
+    use SoftDeletes;
 
     protected $fillable = ['header', 'text', 'owner', 'sticky'];
 

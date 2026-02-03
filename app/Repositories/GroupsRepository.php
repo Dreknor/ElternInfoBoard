@@ -10,16 +10,12 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class GroupsRepository
 {
-    /**
-     * @param array $gruppen
-     * @return Collection
-     */
     public function getGroups(array $gruppen): Collection
     {
-        $groups = new Collection();
+        $groups = new Collection;
 
-        //($gruppen);
-        if ($gruppen[0] == "all") {
+        // ($gruppen);
+        if ($gruppen[0] == 'all') {
             $groups = Group::where('protected', 0)->get();
         }
 
@@ -35,6 +31,7 @@ class GroupsRepository
         if (count($gruppen) < 1) {
             return [];
         }
+
         return $groups;
 
     }

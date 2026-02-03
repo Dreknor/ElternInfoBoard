@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Rueckmeldungen extends Model
 {
-    use SoftDeletes;
     use HasFactory;
+    use SoftDeletes;
 
     /**
      * @var string
@@ -43,17 +43,11 @@ class Rueckmeldungen extends Model
         'terminliste_end_date' => 'date',
     ];
 
-    /**
-     * @return BelongsTo
-     */
     public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class, 'post_id');
     }
 
-    /**
-     * @return HasMany
-     */
     public function userRueckmeldungen(): HasMany
     {
         /*
@@ -75,8 +69,6 @@ class Rueckmeldungen extends Model
 
     /**
      * The "booted" method of the model.
-     *
-     * @return void
      */
     protected static function booted(): void
     {
@@ -99,17 +91,11 @@ class Rueckmeldungen extends Model
         });
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function liste(): BelongsTo
     {
         return $this->belongsTo(Liste::class, 'liste_id');
     }
 
-    /**
-     * @return bool
-     */
     public function isTerminliste(): bool
     {
         return $this->type === 'terminliste';

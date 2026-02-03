@@ -11,9 +11,6 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class LosungenImport implements ToCollection, WithHeadingRow
 {
-    /**
-     * @param Collection $collection
-     */
     public function collection(Collection $collection)
     {
         $newLosungenArray = [];
@@ -24,7 +21,7 @@ class LosungenImport implements ToCollection, WithHeadingRow
                 'Losungsvers' => $row['losungsvers'],
                 'Losungstext' => Str::remove('/', $row['losungstext']),
                 'Lehrtextvers' => $row['lehrtextvers'],
-                'Lehrtext' => Str::remove('/', $row['lehrtext'])
+                'Lehrtext' => Str::remove('/', $row['lehrtext']),
             ];
         }
         Losung::insert($newLosungenArray);

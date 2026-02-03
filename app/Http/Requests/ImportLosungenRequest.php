@@ -8,8 +8,6 @@ class ImportLosungenRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -24,7 +22,7 @@ class ImportLosungenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'files' => 'required|max:50000|mimes:xlsx,xls'
+            'files' => 'required|max:50000|mimes:xlsx,xls',
         ];
     }
 }

@@ -68,12 +68,12 @@ class UpdateModuleLinks extends Command
             }
 
             // Add or update navigation
-            if (!isset($options['nav'])) {
+            if (! isset($options['nav'])) {
                 $options['nav'] = [
                     'name' => 'Termine',
                     'link' => 'termin',
                     'icon' => 'far fa-calendar-alt',
-                    'bottom-nav' => 'true'
+                    'bottom-nav' => 'true',
                 ];
                 $this->info('Added nav to Termine module');
             } else {
@@ -97,4 +97,3 @@ class UpdateModuleLinks extends Command
         return 0;
     }
 }
-

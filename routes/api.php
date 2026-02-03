@@ -14,9 +14,7 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\FilesController;
 use App\Http\Controllers\API\ImageController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 
 /*
  * Vertretungsplan aus MitarbeiterBoard
@@ -38,17 +36,13 @@ Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });
 
-
-
 Route::post('/token/create', [AuthController::class, 'login']);
-
-
 
 Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('me',[AuthController::class, 'me']);
+    Route::get('me', [AuthController::class, 'me']);
     Route::post('/token/logout', [AuthController::class, 'logout']);
 
     /**
@@ -58,10 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('notification/read', [\App\Http\Controllers\API\NotificationController::class, 'read']);
     Route::post('notification/readAllByType', [\App\Http\Controllers\API\NotificationController::class, 'readAllByType']);
     Route::post('notification/readAll', [\App\Http\Controllers\API\NotificationController::class, 'readAll']);
-
-
-
-
 
     /**
      * Listen
@@ -73,7 +63,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/listen/{liste}/eintrag/add', [\App\Http\Controllers\API\ListenController::class, 'addEintrag']);
     Route::put('/listen/eintrag/{eintrag}/stornieren', [\App\Http\Controllers\API\ListenController::class, 'removeEintrag']);
     Route::put('/listen/eintrag/{eintrag}/reservieren', [\App\Http\Controllers\API\ListenController::class, 'reserveEintrag']);
-
 
     /**
      * Krankmeldung
@@ -90,7 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * Abfragen
      */
-
     Route::get('abfrage/{post_id}', [\App\Http\Controllers\API\AbfragenController::class, 'getFields']);
     Route::post('abfrage/{post}', [\App\Http\Controllers\API\AbfragenController::class, 'storeAnswer']);
 
@@ -111,7 +99,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
     Route::post('posts/{post}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
-
 
     /**
      * Kontakt

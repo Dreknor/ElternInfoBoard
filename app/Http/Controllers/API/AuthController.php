@@ -31,7 +31,6 @@ class AuthController extends Controller
      *
      *
      *
-     * @param \Illuminate\Http\Request $request
      *
      * @bodyParam email string required The email address of the user.
      * @bodyParam password string required The password of the user.
@@ -42,8 +41,8 @@ class AuthController extends Controller
      * @group Benutzer
      *
      * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Validation\ValidationException
      *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function login(Request $request)
     {
@@ -60,6 +59,7 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+
         return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
     }
 
@@ -69,17 +69,17 @@ class AuthController extends Controller
      * The user is logged out and the authentication token is revoked.
      *
      * @group Benutzer
+     *
      * @responseField message string A message indicating that the user has been logged out.
      *
-     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Logged out']);
     }
-
 
     /**
      * User information.
@@ -87,9 +87,9 @@ class AuthController extends Controller
      * Get the authenticated user's information.
      *
      * @group Benutzer
+     *
      * @responseField user object The authenticated user's information.
      *
-     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function me(Request $request)

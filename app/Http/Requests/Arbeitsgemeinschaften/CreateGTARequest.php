@@ -32,7 +32,7 @@ class CreateGTARequest extends FormRequest
             'max_participants' => 'required|integer|min:1',
             'manager_id' => 'required|exists:users,id',
             'groups' => 'required|array|min:1',
-            'groups.*' => 'exists:groups,id'
+            'groups.*' => 'exists:groups,id',
 
         ];
     }

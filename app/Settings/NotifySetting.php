@@ -2,12 +2,10 @@
 
 namespace App\Settings;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\LaravelSettings\Settings;
 
 class NotifySetting extends Settings
 {
-
     /**
      * The Hour to send the information mail to the users
      */
@@ -18,17 +16,15 @@ class NotifySetting extends Settings
     public int $hour_send_reminder_mail;
 
     public int $krankmeldungen_report_hour;
+
     public int $krankmeldungen_report_minute;
 
     public int $schickzeiten_report_hour;
+
     public int $schickzeiten_report_weekday;
 
     public static function group(): string
     {
         return 'notify_setting';
     }
-
-
-
-
 }

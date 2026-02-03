@@ -43,7 +43,7 @@ class CreatePflichtstundeRequest extends FormRequest
                 },
             ],
             'description' => ['required', 'string', 'max:500'],
-            'user_id' => ['sometimes', 'exists:users,id'] ,
+            'user_id' => ['sometimes', 'exists:users,id'],
             'bereich' => ['nullable', 'string', 'max:255'],
         ];
     }

@@ -19,7 +19,7 @@ class createDiscussionRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createDiscussionRequest();
+        $this->subject = new createDiscussionRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class createDiscussionRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

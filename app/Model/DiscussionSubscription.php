@@ -5,7 +5,6 @@ namespace App\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Model\User;
 
 class DiscussionSubscription extends Model
 {
@@ -39,4 +38,3 @@ class DiscussionSubscription extends Model
         return $this->belongsTo(Discussion::class);
     }
 }
-

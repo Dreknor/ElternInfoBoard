@@ -17,7 +17,7 @@ class PostObserver
      */
     public function created(Post $post)
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
@@ -31,11 +31,11 @@ class PostObserver
     {
         $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
-        if ($wp_push_is_enabled == 1 and $post->published_wp_id != NULL and auth()->user()->can('push to wordpress')){
+        if ($wp_push_is_enabled == 1 and $post->published_wp_id != null and auth()->user()->can('push to wordpress')) {
             PushPostToWordpress::dispatch($post);
         }
 
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
@@ -47,7 +47,7 @@ class PostObserver
      */
     public function deleted(Post $post)
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
@@ -59,7 +59,7 @@ class PostObserver
      */
     public function restored(Post $post)
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
@@ -71,7 +71,7 @@ class PostObserver
      */
     public function forceDeleted(Post $post)
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 }

@@ -14,7 +14,7 @@ class Notification extends Model
 
     protected $fillable = ['type', 'user_id', 'title', 'message', 'icon', 'url', 'read', 'important'];
 
-    protected $visible = ['id','type', 'user_id', 'title', 'message', 'icon', 'url', 'read', 'important'];
+    protected $visible = ['id', 'type', 'user_id', 'title', 'message', 'icon', 'url', 'read', 'important'];
 
     protected $casts = [
         'read' => 'boolean',
@@ -37,8 +37,4 @@ class Notification extends Model
             $notification->user->notify(new Push($notification->title, $notification->message));
         });
     }
-
-
-
-
 }

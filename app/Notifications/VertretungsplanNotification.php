@@ -30,7 +30,7 @@ class VertretungsplanNotification extends Notification
     /**
      * Get the array representation of the notification.
      *
-     * @param mixed $notifiable
+     * @param  mixed  $notifiable
      * @return array
      */
     public function toArray($notifiable)
@@ -44,7 +44,7 @@ class VertretungsplanNotification extends Notification
     {
         return (new WebPushMessage)
             ->title($this->title)
-            ->icon(asset('img/' . config('app.favicon')))
+            ->icon(asset('img/'.config('app.favicon')))
             ->body($this->body);
     }
 }

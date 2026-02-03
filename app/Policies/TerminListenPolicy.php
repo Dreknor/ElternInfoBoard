@@ -12,8 +12,6 @@ class TerminListenPolicy
 
     /**
      * Determine whether the user can view any termins.
-     *
-     * @return bool
      */
     public function viewAny(): bool
     {
@@ -22,8 +20,6 @@ class TerminListenPolicy
 
     /**
      * Determine whether the user can create termins.
-     *
-     * @return mixed
      */
     public function create(): mixed
     {

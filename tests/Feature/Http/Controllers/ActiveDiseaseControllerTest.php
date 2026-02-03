@@ -112,4 +112,3 @@ class ActiveDiseaseControllerTest extends TestCase
         $this->assertEquals(2, $activeCount);
     }
 }
-

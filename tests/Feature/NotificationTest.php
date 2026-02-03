@@ -89,4 +89,3 @@ class NotificationTest extends TestCase
         $this->assertFalse($userWithoutNotifications->benachrichtigung);
     }
 }
-

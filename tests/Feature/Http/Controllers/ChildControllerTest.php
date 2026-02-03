@@ -5,8 +5,6 @@ namespace Tests\Feature\Http\Controllers;
 use App\Model\Child;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -38,18 +36,16 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      * */
-
     public function user_can_create_child()
     {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->post(route('child.store'),
             [
-            'first_name' => 'Max',
-            'last_name' => 'Mustermann',
-            'notification' => true,
-        ]);
-
+                'first_name' => 'Max',
+                'last_name' => 'Mustermann',
+                'notification' => true,
+            ]);
 
         $response->assertRedirect();
 
@@ -83,6 +79,7 @@ class ChildControllerTest extends TestCase
             'auto_checkIn' => true,
         ]);
     }
+
     /**
      * @test
      */
@@ -101,9 +98,9 @@ class ChildControllerTest extends TestCase
         ]);
         $this->assertDatabaseHas('children',
             [
-            'id' => $child->id,
-            'first_name' => 'Hacked Name'
-        ]);
+                'id' => $child->id,
+                'first_name' => 'Hacked Name',
+            ]);
 
         $response->assertRedirect();
 
@@ -141,4 +138,3 @@ class ChildControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 }
-

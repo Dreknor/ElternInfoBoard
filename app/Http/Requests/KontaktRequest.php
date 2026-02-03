@@ -8,8 +8,6 @@ class KontaktRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -18,8 +16,6 @@ class KontaktRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
@@ -37,15 +33,15 @@ class KontaktRequest extends FormRequest
             'mitarbeiter' => [
                 'present',
             ],
-            'files' =>[
+            'files' => [
                 'nullable',
                 'array',
                 'max:3',
             ],
             'files.*' => [
                 'file',
-                'max:8000'
-            ]
+                'max:8000',
+            ],
 
         ];
     }

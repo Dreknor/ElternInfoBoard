@@ -21,9 +21,6 @@ class UsersImport implements ToCollection, WithHeadingRow
 
     protected \Illuminate\Database\Eloquent\Collection $groups;
 
-    /**
-     * @param array $header
-     */
     public function __construct(array $header)
     {
         $this->header = $header;
@@ -43,17 +40,16 @@ class UsersImport implements ToCollection, WithHeadingRow
             $Lerngruppe = $this->groups->firstWhere('name', substr($row[$this->header['lerngruppe']], 1));
 
             $gruppen = [];
-            if (!is_null($Klassenstufe)) {
+            if (! is_null($Klassenstufe)) {
                 $gruppen[$Klassenstufe->id] = $Klassenstufe->id;
             }
-            if (!is_null($Lerngruppe)) {
+            if (! is_null($Lerngruppe)) {
                 $gruppen[$Lerngruppe->id] = $Lerngruppe->id;
             }
 
-
             foreach (explode($row[$this->header['gruppen']], ';') as $user_group) {
                 $group = $this->groups->firstWhere('name', $user_group);
-                if (!is_null($group)) {
+                if (! is_null($group)) {
                     $gruppen[$group->id] = $group->id;
                 }
             }
@@ -64,7 +60,7 @@ class UsersImport implements ToCollection, WithHeadingRow
 
                 try {
                     // Prüfe ob Benutzer bereits existiert
-                    $isNewUser1 = !User::where('email', $email1)->exists();
+                    $isNewUser1 = ! User::where('email', $email1)->exists();
 
                     // Generiere Zufallspasswort für neuen Benutzer
                     $password1 = Str::password(12, true, true, true, false);
@@ -73,7 +69,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                         'email' => $email1,
                     ],
                         [
-                            'name' => $row[$this->header['S1Vorname']] . ' ' . $row[$this->header['S1Nachname']],
+                            'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
                             'changePassword' => 1,
                             'password' => Hash::make($password1),
                             'lastEmail' => Carbon::now(),
@@ -90,18 +86,18 @@ class UsersImport implements ToCollection, WithHeadingRow
                         try {
                             $emailSettings = app(EmailSetting::class);
                             Mail::to($user1->email)->queue(new NewUserPasswordMail($user1, $password1, $emailSettings->new_user_welcome_text));
-                            Log::info('Willkommens-E-Mail an ' . $user1->email . ' versendet');
+                            Log::info('Willkommens-E-Mail an '.$user1->email.' versendet');
                         } catch (\Exception $mailException) {
-                            Log::error('Fehler beim Versenden der Willkommens-E-Mail an ' . $user1->email . ': ' . $mailException->getMessage());
+                            Log::error('Fehler beim Versenden der Willkommens-E-Mail an '.$user1->email.': '.$mailException->getMessage());
                         }
                     }
 
-                    if (!is_null($row[$this->header['S2Email']])) {
+                    if (! is_null($row[$this->header['S2Email']])) {
                         $email2 = explode(';', $row[$this->header['S2Email']]);
                         $email2 = $email2[0];
 
                         // Prüfe ob zweiter Benutzer bereits existiert
-                        $isNewUser2 = !User::where('email', $email2)->exists();
+                        $isNewUser2 = ! User::where('email', $email2)->exists();
 
                         // Generiere Zufallspasswort für neuen zweiten Benutzer
                         $password2 = Str::password(12, true, true, true, false);
@@ -110,7 +106,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                             'email' => $email2,
                         ],
                             [
-                                'name' => $row[$this->header['S2Vorname']] . ' ' . $row[$this->header['S2Nachname']],
+                                'name' => $row[$this->header['S2Vorname']].' '.$row[$this->header['S2Nachname']],
                                 'changePassword' => 1,
                                 'password' => Hash::make($password2),
                                 'lastEmail' => Carbon::now(),
@@ -126,9 +122,9 @@ class UsersImport implements ToCollection, WithHeadingRow
                             try {
                                 $emailSettings = app(EmailSetting::class);
                                 Mail::to($user2->email)->queue(new NewUserPasswordMail($user2, $password2, $emailSettings->new_user_welcome_text));
-                                Log::info('Willkommens-E-Mail an ' . $user2->email . ' versendet');
+                                Log::info('Willkommens-E-Mail an '.$user2->email.' versendet');
                             } catch (\Exception $mailException) {
-                                Log::error('Fehler beim Versenden der Willkommens-E-Mail an ' . $user2->email . ': ' . $mailException->getMessage());
+                                Log::error('Fehler beim Versenden der Willkommens-E-Mail an '.$user2->email.': '.$mailException->getMessage());
                             }
                         }
 
@@ -142,13 +138,11 @@ class UsersImport implements ToCollection, WithHeadingRow
                         $user1->save();
                     }
                 } catch (\Exception $e) {
-                    Log::error('Fehler beim Importieren von ' . $row[$this->header['S1Vorname']] . ' ' . $row[$this->header['S1Nachname']]);
+                    Log::error('Fehler beim Importieren von '.$row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']]);
                     Log::error($e->getMessage());
                 }
 
-
             }
-
 
         }
     }

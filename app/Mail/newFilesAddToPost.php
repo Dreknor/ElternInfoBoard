@@ -13,21 +13,12 @@ class newFilesAddToPost extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * @var string
-     */
     public string $von;
 
-    /**
-     * @var string
-     */
     public string $Betreff;
 
     /**
      * newFilesAddToPost constructor.
-     *
-     * @param string $von
-     * @param string $Betreff
      */
     public function __construct(string $von, string $Betreff)
     {

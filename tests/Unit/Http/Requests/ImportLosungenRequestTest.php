@@ -19,7 +19,7 @@ class ImportLosungenRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new ImportLosungenRequest();
+        $this->subject = new ImportLosungenRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class ImportLosungenRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

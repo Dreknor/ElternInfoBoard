@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use App\Model\SiteBlock;
 use App\Model\Site;
+use App\Model\SiteBlock;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SiteBlockFactory extends Factory
@@ -21,4 +21,3 @@ class SiteBlockFactory extends Factory
         ];
     }
 }
-

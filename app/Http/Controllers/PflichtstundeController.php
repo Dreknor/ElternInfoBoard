@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PflichtstundenExport;
 use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
 use App\Model\User;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
-use App\Exports\PflichtstundenExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PflichtstundeController extends Controller
 {
     protected PflichtstundenSetting $pflichtstunden_settings;
+
     public function __construct()
     {
         $this->middleware('auth');
-        $this->pflichtstunden_settings = new PflichtstundenSetting();
+        $this->pflichtstunden_settings = new PflichtstundenSetting;
     }
 
     /**
@@ -25,7 +26,7 @@ class PflichtstundeController extends Controller
      */
     public function index()
     {
-        if (!auth()->user()->can('view Pflichtstunden')) {
+        if (! auth()->user()->can('view Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
@@ -37,7 +38,7 @@ class PflichtstundeController extends Controller
         return view('pflichtstunden.index', [
             'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
-            'parent_stats' => $parent_stats
+            'parent_stats' => $parent_stats,
         ]);
 
     }
@@ -52,7 +53,7 @@ class PflichtstundeController extends Controller
         // Hole alle Nutzer mit Permission "view Pflichtstunden"
         $users = User::query()
             ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function($query) {
+            ->with(['pflichtstunden' => function ($query) {
                 $query->where('approved', true);
             }])
             ->get();
@@ -120,7 +121,7 @@ class PflichtstundeController extends Controller
 
         // Zähle alle Familien mit besserem oder gleichem Fortschritt
         if ($currentUserProgress !== null) {
-            $userRank = $familyStats->filter(function($stat) use ($currentUserProgress) {
+            $userRank = $familyStats->filter(function ($stat) use ($currentUserProgress) {
                 return $stat['progress'] >= $currentUserProgress;
             })->count();
         }
@@ -144,7 +145,7 @@ class PflichtstundeController extends Controller
         $data = $request->validated();
 
         // Wenn user_id nicht gesetzt ist oder Nutzer keine Berechtigung hat, für andere anzulegen
-        if (!isset($data['user_id']) || !auth()->user()->can('edit Pflichtstunden')) {
+        if (! isset($data['user_id']) || ! auth()->user()->can('edit Pflichtstunden')) {
             // Dann für den aktuell angemeldeten Nutzer
             $data['user_id'] = auth()->id();
         }
@@ -157,9 +158,9 @@ class PflichtstundeController extends Controller
     /**
      * Verwaltungsansicht der Pflichtstunden
      */
-
-    public function verwaltungIndex(){
-        if (!auth()->user()->can('edit Pflichtstunden')) {
+    public function verwaltungIndex()
+    {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
@@ -173,7 +174,7 @@ class PflichtstundeController extends Controller
         // Hole alle Nutzer mit Permission "view Pflichtstunden"
         $users = User::query()
             ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function($query) {
+            ->with(['pflichtstunden' => function ($query) {
                 $query->where('approved', true);
             }])
             ->get();
@@ -271,7 +272,7 @@ class PflichtstundeController extends Controller
 
     public function approve(Request $request, Pflichtstunde $pflichtstunde)
     {
-        if (!auth()->user()->can('edit Pflichtstunden')) {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
@@ -312,13 +313,13 @@ class PflichtstundeController extends Controller
 
     public function approveMultiple(Request $request)
     {
-        if (!auth()->user()->can('edit Pflichtstunden')) {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
         $ids = json_decode($request->input('ids'), true);
 
-        if (empty($ids) || !is_array($ids)) {
+        if (empty($ids) || ! is_array($ids)) {
             return redirect()->route('pflichtstunden.indexVerwaltung')->with('error', 'Keine Pflichtstunden ausgewählt');
         }
 
@@ -337,12 +338,12 @@ class PflichtstundeController extends Controller
             ]);
 
         return redirect()->route('pflichtstunden.indexVerwaltung')
-            ->with('success', $count . ' Pflichtstunde(n) wurden genehmigt');
+            ->with('success', $count.' Pflichtstunde(n) wurden genehmigt');
     }
 
     public function reject(Request $request, Pflichtstunde $pflichtstunde)
     {
-        if (!auth()->user()->can('edit Pflichtstunden')) {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
@@ -374,7 +375,7 @@ class PflichtstundeController extends Controller
      */
     public function export(Request $request)
     {
-        if (!auth()->user()->can('edit Pflichtstunden')) {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
@@ -382,7 +383,7 @@ class PflichtstundeController extends Controller
 
         return Excel::download(
             new PflichtstundenExport($year),
-            'pflichtstunden_abrechnung_' . ($year ?? 'aktuell') . '_' . date('Y-m-d') . '.xlsx'
+            'pflichtstunden_abrechnung_'.($year ?? 'aktuell').'_'.date('Y-m-d').'.xlsx'
         );
     }
 
@@ -412,13 +413,13 @@ class PflichtstundeController extends Controller
     public function destroy(Pflichtstunde $pflichtstunde)
     {
         // Prüfe Berechtigung: Entweder eigene Pflichtstunde (nicht bestätigt/abgelehnt) oder edit Pflichtstunden Berechtigung
-        if (!auth()->user()->can('edit Pflichtstunden') &&
+        if (! auth()->user()->can('edit Pflichtstunden') &&
             ($pflichtstunde->user_id !== auth()->id() || $pflichtstunde->approved || $pflichtstunde->rejected)) {
             return redirect()->back()->with('error', 'Berechtigung fehlt oder Pflichtstunde kann nicht mehr gelöscht werden.');
         }
 
         // Zusätzliche Prüfung für normale User
-        if (!auth()->user()->can('edit Pflichtstunden') && ($pflichtstunde->approved || $pflichtstunde->rejected)) {
+        if (! auth()->user()->can('edit Pflichtstunden') && ($pflichtstunde->approved || $pflichtstunde->rejected)) {
             return redirect()->back()->with('error', 'Pflichtstunde kann nicht mehr gelöscht werden, da sie bereits bestätigt oder abgelehnt wurde.');
         }
 

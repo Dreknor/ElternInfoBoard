@@ -98,4 +98,3 @@ class CommentTest extends TestCase
         $this->assertEquals(2, $comment->_rgt);
     }
 }
-

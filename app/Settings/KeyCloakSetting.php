@@ -17,6 +17,7 @@ class KeyCloakSetting extends Settings
     public string $redirect_uri;
 
     public string $base_url;
+
     public string $maildomain;
 
     public static function group(): string

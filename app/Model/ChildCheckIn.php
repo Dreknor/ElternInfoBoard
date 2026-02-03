@@ -11,7 +11,6 @@ class ChildCheckIn extends Model implements Auditable
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
 
-
     protected $fillable = [
         'child_id',
         'checked_in',
@@ -21,7 +20,6 @@ class ChildCheckIn extends Model implements Auditable
         'lock_at',
         'comment',
     ];
-
 
     protected $casts = [
         'checked_in' => 'boolean',
@@ -40,5 +38,4 @@ class ChildCheckIn extends Model implements Auditable
     {
         return $query->where('checked_in', true)->where('checked_out', false);
     }
-
 }

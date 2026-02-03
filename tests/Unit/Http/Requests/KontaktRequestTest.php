@@ -3,9 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\KontaktRequest;
-
-use App\Model\User;
-
 use Tests\TestCase;
 
 /**
@@ -20,13 +17,13 @@ class KontaktRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new KontaktRequest();
+        $this->subject = new KontaktRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function authorize()
@@ -45,7 +42,7 @@ class KontaktRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

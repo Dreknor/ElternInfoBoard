@@ -11,16 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-/**
- *
- */
 class BenutzerController extends Controller
 {
-
-
-    /**
-     *
-     */
     public function __construct()
     {
         $this->middleware('auth');
@@ -28,7 +20,6 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return Application|View
      */
     public function show(Request $request)
@@ -46,7 +37,6 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param editUserRequest $request
      * @return RedirectResponse
      */
     public function update(editUserRequest $request)
@@ -79,7 +69,6 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param CreateTokenRequest $request
      * @return RedirectResponse
      */
     public function createToken(CreateTokenRequest $request)
@@ -95,10 +84,8 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param
      * @return RedirectResponse
      */
-
     public function deleteToken($token)
     {
         $user = auth()->user();
@@ -109,8 +96,4 @@ class BenutzerController extends Controller
             'Meldung' => 'Token gelöscht.',
         ]);
     }
-
-
-
-
 }

@@ -12,9 +12,9 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Krankmeldungen extends Model implements HasMedia
 {
-    use SoftDeletes;
     use HasFactory;
     use InteractsWithMedia;
+    use SoftDeletes;
 
     protected $table = 'krankmeldungen';
 
@@ -32,7 +32,6 @@ class Krankmeldungen extends Model implements HasMedia
         'ende' => 'datetime',
     ];
 
-
     public function child(): BelongsTo
     {
         return $this->belongsTo(Child::class, 'child_id');
@@ -43,14 +42,12 @@ class Krankmeldungen extends Model implements HasMedia
         return $this->belongsTo(Disease::class, 'disease_id');
     }
 
-
     protected static function booted()
     {
         static::saved(function ($krankmeldung) {
-            if (!is_null($krankmeldung->child_id)) {
-                Cache::forget('krankmeldung_' . $krankmeldung->child_id);
+            if (! is_null($krankmeldung->child_id)) {
+                Cache::forget('krankmeldung_'.$krankmeldung->child_id);
             }
         });
     }
-
 }

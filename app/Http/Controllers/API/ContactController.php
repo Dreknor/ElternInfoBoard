@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -36,6 +34,7 @@ class ContactController extends Controller
      * @responseField data array The list of employees.
      * @responseField data.id int The ID of the employee.
      * @responseField data.name string The name of the employee.
+     *
      * @group Kontakt
      *
      * @return \Illuminate\Http\JsonResponse
@@ -63,11 +62,12 @@ class ContactController extends Controller
      * @bodyParam mitarbeiter int required The ID of the employee to send the email to. If 0, the email is sent to the default address.
      * @bodyParam betreff string required The subject of the email.
      * @bodyParam text string required The content of the email.
+     *
      * @responseField success string The success message.
      * @responseField error string The error message.
+     *
      * @group Kontakt
      *
-     * @param \App\Http\Requests\KontaktRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function send(KontaktRequest $request)

@@ -20,14 +20,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-/**
- *
- */
 class ElternratController extends Controller
 {
-    /**
-     *
-     */
     public function __construct()
     {
         $this->middleware(['permission:view elternrat']);
@@ -45,9 +39,9 @@ class ElternratController extends Controller
         // Search functionality
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
                 $q->where('header', 'like', "%{$searchTerm}%")
-                  ->orWhere('text', 'like', "%{$searchTerm}%");
+                    ->orWhere('text', 'like', "%{$searchTerm}%");
             });
         }
 
@@ -69,12 +63,11 @@ class ElternratController extends Controller
 
         // Default sorting
         $themen = $query->orderByDesc('sticky')
-                       ->orderByDesc('updated_at')
-                       ->paginate(15)
-                       ->appends($request->only(['search', 'filter']));
+            ->orderByDesc('updated_at')
+            ->paginate(15)
+            ->appends($request->only(['search', 'filter']));
 
         $Group = Group::where('name', '=', 'Elternrat')->first();
-
 
         $user = Role::findByName('Elternrat');
         $user = $user->users;
@@ -95,7 +88,6 @@ class ElternratController extends Controller
         ]);
     }
 
-
     /**
      * show view for creating new discussion
      *
@@ -109,7 +101,7 @@ class ElternratController extends Controller
     /**
      * Display the specified resource (redirect to index)
      *
-     * @param int $id
+     * @param  int  $id
      * @return RedirectResponse
      */
     public function show($id)
@@ -120,7 +112,6 @@ class ElternratController extends Controller
     /**
      * store new discussion
      *
-     * @param createDiscussionRequest $request
      * @return RedirectResponse
      */
     public function store(createDiscussionRequest $request)
@@ -141,10 +132,8 @@ class ElternratController extends Controller
     }
 
     /**
-     *
      * delete the given discussion
      *
-     * @param Discussion $discussion
      * @return RedirectResponse
      */
     public function destroy(Discussion $discussion)
@@ -153,6 +142,7 @@ class ElternratController extends Controller
         if (auth()->user()->can('delete elternrat file')) {
             $discussion->comments()->delete();
             $discussion->delete();
+
             return redirect()->to(url('elternrat'))->with([
                 'type' => 'success',
                 'meldung' => 'Beitrag gelöscht',
@@ -165,28 +155,21 @@ class ElternratController extends Controller
         ]);
     }
 
-
-
     /**
-     *
      * show view to edit the given discussion
      *
-     * @param Discussion $discussion
      * @return Application|Factory|\Illuminate\Contracts\View\View
      */
     public function edit(Discussion $discussion)
     {
-        return  view('elternrat.editDiscussion', [
+        return view('elternrat.editDiscussion', [
             'beitrag' => $discussion,
         ]);
     }
 
-
     /**
      * Update the Ressource
      *
-     * @param createDiscussionRequest $request
-     * @param Discussion $discussion
      * @return RedirectResponse
      */
     public function update(createDiscussionRequest $request, Discussion $discussion)
@@ -199,13 +182,9 @@ class ElternratController extends Controller
         ]);
     }
 
-
     /**
-     *
      * delete the given Media
      *
-     * @param Request $request
-     * @param Media $file
      * @return JsonResponse
      */
     public function deleteFile(Request $request, Media $file)
@@ -226,7 +205,6 @@ class ElternratController extends Controller
     }
 
     /**
-     *
      * Show view to add new file
      *
      * @return Application|Factory|\Illuminate\Contracts\View\View
@@ -239,11 +217,10 @@ class ElternratController extends Controller
     }
 
     /**
-     *
      * Add new File
      *
-     * @param Request $request
      * @return RedirectResponse
+     *
      * @throws FileDoesNotExist
      * @throws FileIsTooBig
      */
@@ -253,8 +230,8 @@ class ElternratController extends Controller
 
         if ($request->hasFile('files')) {
             $gruppe->addMediaFromRequest('files')
-                    ->preservingOriginal()
-                    ->toMediaCollection($request->directory);
+                ->preservingOriginal()
+                ->toMediaCollection($request->directory);
         }
 
         return redirect()->to(url('elternrat'))->with([
@@ -266,8 +243,6 @@ class ElternratController extends Controller
     /**
      * Store the new Comment
      *
-     * @param Discussion $discussion
-     * @param Request $request
      * @return RedirectResponse
      */
     public function storeComment(Discussion $discussion, Request $request)
@@ -283,7 +258,7 @@ class ElternratController extends Controller
 
     /**
      * Delete the given comment
-     * @param Comment $comment
+     *
      * @return Application|ResponseFactory|Response
      */
     public function deleteComment(Comment $comment)

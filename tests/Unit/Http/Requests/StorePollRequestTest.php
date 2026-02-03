@@ -19,7 +19,7 @@ class StorePollRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new StorePollRequest();
+        $this->subject = new StorePollRequest;
     }
 
     /**
@@ -39,7 +39,7 @@ class StorePollRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
     public function rules()

@@ -3,11 +3,10 @@
 namespace Tests\Feature;
 
 use App\Settings\EmailSetting;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Mail\Events\MessageSent;
 use Tests\TestCase;
 
 class EmailLoggingTest extends TestCase
@@ -34,7 +33,7 @@ class EmailLoggingTest extends TestCase
         $this->assertNotEmpty($listeners);
         $this->assertContains(
             \App\Listeners\LogEmailSent::class,
-            array_map(function($listener) {
+            array_map(function ($listener) {
                 return is_string($listener) ? $listener : get_class($listener);
             }, $listeners)
         );
@@ -63,4 +62,3 @@ class EmailLoggingTest extends TestCase
         $this->assertTrue(true); // Placeholder für echten Test
     }
 }
-

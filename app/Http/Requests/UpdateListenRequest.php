@@ -8,8 +8,6 @@ class UpdateListenRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -18,8 +16,6 @@ class UpdateListenRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
@@ -60,7 +56,7 @@ class UpdateListenRequest extends FormRequest
             ],
             'gruppen' => [
                 'array',
-                'min:1'
+                'min:1',
             ],
             'comment' => [
                 'sometimes',

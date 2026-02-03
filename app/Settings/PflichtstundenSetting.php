@@ -6,8 +6,8 @@ use Spatie\LaravelSettings\Settings;
 
 class PflichtstundenSetting extends Settings
 {
-
     public string $pflichtstunden_start;
+
     public string $pflichtstunden_ende;
 
     public string $pflichtstunden_text;
@@ -19,7 +19,9 @@ class PflichtstundenSetting extends Settings
     public bool $listen_autocreate;
 
     public bool $gamification_show_progress = true;
+
     public bool $gamification_show_ranking = true;
+
     public bool $gamification_show_comparison = true;
 
     public array $pflichtstunden_bereiche = [];

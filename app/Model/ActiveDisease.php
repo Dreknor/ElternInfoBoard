@@ -18,7 +18,6 @@ class ActiveDisease extends Model
         'end' => 'datetime',
     ];
 
-
     public function disease()
     {
         return $this->belongsTo(Disease::class);
@@ -33,5 +32,4 @@ class ActiveDisease extends Model
     {
         return $query->where('active', 1);
     }
-
 }

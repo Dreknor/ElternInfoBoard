@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('child_check_ins', function (Blueprint $table) {
-            $table->string('comment', 256 )->nullable()->after('lock_at');
+            $table->string('comment', 256)->nullable()->after('lock_at');
         });
     }
 

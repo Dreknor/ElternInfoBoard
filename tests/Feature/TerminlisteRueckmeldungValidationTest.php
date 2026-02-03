@@ -18,7 +18,9 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     protected User $user;
+
     protected Liste $liste;
+
     protected Post $post;
 
     protected function setUp(): void

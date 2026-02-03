@@ -14,6 +14,7 @@ class ReadReceiptReminderNotification extends Notification
     use Queueable;
 
     public Post $post;
+
     public string $deadline;
 
     public function __construct(Post $post, string $deadline)
@@ -50,7 +51,6 @@ class ReadReceiptReminderNotification extends Notification
             ->title('Lesebestätigung fehlt')
             ->icon(asset('img/'.config('app.favicon')))
             ->body('Bitte bestätigen Sie die Nachricht "'.$this->post->header.'" bis zum '.$this->deadline)
-            ->action('Zur Nachricht', url("#".$this->post->id));
+            ->action('Zur Nachricht', url('#'.$this->post->id));
     }
 }
-

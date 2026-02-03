@@ -14,7 +14,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache  as CacheAlias;
+use Illuminate\Support\Facades\Cache as CacheAlias;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
@@ -32,7 +32,6 @@ class FileController extends Controller
     }
 
     /**
-     * @param Media $file
      * @return JsonResponse
      */
     public function delete(Media $file)
@@ -45,7 +44,6 @@ class FileController extends Controller
     }
 
     /**
-     * @param Media $file
      * @return RedirectResponse
      */
     public function destroy(Media $file)
@@ -78,7 +76,7 @@ class FileController extends Controller
             ]);
         } else {
             $gruppen = $user->groups()->with('media')->get();
-            $media = new Collection();
+            $media = new Collection;
 
             foreach ($gruppen as $gruppe) {
                 $gruppenMedien = $gruppe->getMedia();
@@ -107,7 +105,6 @@ class FileController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function store(Request $request)
@@ -129,7 +126,6 @@ class FileController extends Controller
                     ->toMediaCollection();
             }
 
-
         }
 
         return redirect()->to('/files')->with([
@@ -139,9 +135,8 @@ class FileController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param Post $posts
      * @return RedirectResponse
+     *
      * @throws FileDoesNotExist
      * @throws FileIsTooBig
      */
@@ -149,7 +144,7 @@ class FileController extends Controller
     {
         if ($request->hasFile('files')) {
             $posts->addAllMediaFromRequest()
-                ->each(fn($fileAdder) => $fileAdder
+                ->each(fn ($fileAdder) => $fileAdder
                     ->usingName($request->name)
                     ->toMediaCollection('images'));
 
@@ -182,7 +177,7 @@ class FileController extends Controller
                 continue;
             }
 
-            $MediaModel = $Media->filter(fn($item) => $item->id == $dir)->first();
+            $MediaModel = $Media->filter(fn ($item) => $item->id == $dir)->first();
 
             if ($MediaModel == null) {
                 $scan = scandir(storage_path().'/app/'.$dir);
@@ -237,7 +232,6 @@ class FileController extends Controller
     }
 
     /**
-     * @param DeleteFilesRequest $request
      * @return RedirectResponse
      */
     public function removeOldFiles(DeleteFilesRequest $request)

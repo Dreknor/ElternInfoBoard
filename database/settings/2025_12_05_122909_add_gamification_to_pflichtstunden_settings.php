@@ -18,4 +18,3 @@ return new class extends SettingsMigration
         $this->migrator->delete('pflichtstunden.gamification_show_comparison');
     }
 };
-

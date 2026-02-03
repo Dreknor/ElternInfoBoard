@@ -2,11 +2,11 @@
 
 namespace Tests;
 
-use JMac\Testing\Traits\AdditionalAssertions;
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use JMac\Testing\Traits\AdditionalAssertions;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesApplication, AdditionalAssertions, RefreshDatabase;
+    use AdditionalAssertions, CreatesApplication, RefreshDatabase;
 }

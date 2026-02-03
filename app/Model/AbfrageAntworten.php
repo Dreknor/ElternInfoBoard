@@ -10,7 +10,6 @@ class AbfrageAntworten extends Model
 {
     use HasFactory;
 
-
     protected $table = 'abfrage_answers';
 
     protected $fillable = [

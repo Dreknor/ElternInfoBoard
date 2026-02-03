@@ -2,11 +2,8 @@
 
 namespace App\Providers;
 
-
 use App\Settings\EmailSetting;
-use App\Settings\GeneralSetting;
 use App\Settings\KeyCloakSetting;
-use App\Settings\NotifySetting;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,8 +11,6 @@ class SettingsServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
-     *
-     * @return void
      */
     public function register(): void
     {
@@ -24,8 +19,6 @@ class SettingsServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap services.
-     *
-     * @return void
      */
     public function boot(): void
     {
@@ -46,7 +39,7 @@ class SettingsServiceProvider extends ServiceProvider
                 'mail.from.name' => $emailSetting->mail_from_name,
             ]);
         } catch (\Exception $e) {
-            Log::error("Setting Email failed: ". $e->getMessage());
+            Log::error('Setting Email failed: '.$e->getMessage());
         }
 
         try {
@@ -60,7 +53,7 @@ class SettingsServiceProvider extends ServiceProvider
                 'keycloak.enabled' => $keyCloakSetting->enabled ?? false,
             ]);
         } catch (\Exception $e) {
-            Log::error("Setting Keycloak failed: ". $e->getMessage());
+            Log::error('Setting Keycloak failed: '.$e->getMessage());
         }
 
     }

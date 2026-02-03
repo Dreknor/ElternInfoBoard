@@ -64,8 +64,8 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      **/
-
-    public function author_can_delete_own_termin()  {
+    public function author_can_delete_own_termin()
+    {
 
         $user = User::factory()->create(['password_changed_at' => now()]);
         $termin = Termin::create([
@@ -83,7 +83,8 @@ class TerminControllerTest extends TestCase
     /**
      * @test
      **/
-    public function user_cannot_delete_others_termin(){
+    public function user_cannot_delete_others_termin()
+    {
         $user1 = User::factory()->create(['password_changed_at' => now()]);
         $termin = Termin::create([
             'terminname' => 'Test Termin',
@@ -137,4 +138,3 @@ class TerminControllerTest extends TestCase
         $response->assertSessionHasErrors(['start', 'end']);
     }
 }
-

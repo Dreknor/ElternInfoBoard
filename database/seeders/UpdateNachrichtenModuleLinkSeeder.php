@@ -52,12 +52,12 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
             }
 
             // Füge Navigation hinzu, falls nicht vorhanden
-            if (!isset($options['nav'])) {
+            if (! isset($options['nav'])) {
                 $options['nav'] = [
                     'name' => 'Termine',
                     'link' => 'termin',
                     'icon' => 'far fa-calendar-alt',
-                    'bottom-nav' => 'true'
+                    'bottom-nav' => 'true',
                 ];
             } else {
                 $options['nav']['link'] = 'termin';
@@ -71,4 +71,3 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
         }
     }
 }
-

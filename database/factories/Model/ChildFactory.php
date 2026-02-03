@@ -59,4 +59,3 @@ class ChildFactory extends Factory
         });
     }
 }
-

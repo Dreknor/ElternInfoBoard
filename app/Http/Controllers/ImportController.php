@@ -35,14 +35,13 @@ class ImportController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function import(Request $request)
     {
         if ($request->hasFile('file')) {
             if ($request->input('type') == 'eltern') {
-                //group_user::truncate();
+                // group_user::truncate();
 
                 foreach (Group::where('protected', 0)->get() as $group) {
                     $group->users()->detach();
@@ -77,7 +76,7 @@ class ImportController extends Controller
                 Excel::import(new AufnahmeImport($header), $request->file('file'));
                 $Meldung = 'Aufnahme-Import abgeschlossen';
             } else {
-                Excel::import(new MitarbeiterImport(), $request->file('file'));
+                Excel::import(new MitarbeiterImport, $request->file('file'));
                 $Meldung = 'Mitarbeiter-Import abgeschlossen';
             }
 
@@ -104,20 +103,18 @@ class ImportController extends Controller
 
             $group = Group::firstOrCreate(['name' => 'Vereinsmitglied'], [
                 'protected' => 1,
-                'bereich' => "Verein"
+                'bereich' => 'Verein',
             ]);
-
 
             group_user::where('group_id', $group->id)->delete();
 
             $role = Role::firstOrCreate(['name' => 'Vereinsmitglied'], [
-                'guard_name' => "web",
+                'guard_name' => 'web',
             ]);
 
             foreach ($role->users as $user) {
                 $user->removeRole($role);
             }
-
 
             Excel::import(new VereinImport($group), $request->file('file'));
             $Meldung = 'Mitglieder wurden importiert';

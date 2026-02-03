@@ -14,13 +14,13 @@ return new class extends Migration
     public function up()
     {
         Schema::table('posts', function (Blueprint $table) {
-            $table->boolean("read_receipt")->default(false)->after("news");
+            $table->boolean('read_receipt')->default(false)->after('news');
         });
 
         Schema::create('read_receipts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("post_id");
-            $table->unsignedBigInteger("user_id");
+            $table->unsignedBigInteger('post_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });
     }
@@ -33,7 +33,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('posts', function (Blueprint $table) {
-            $table->removeColumn("read_receipt");
+            $table->removeColumn('read_receipt');
         });
 
         Schema::dropIfExists('read_receipts');

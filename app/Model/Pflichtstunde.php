@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[ObservedBy([PflichtstundenObserver::class])]
 class Pflichtstunde extends Model
 {
-    use SoftDeletes, HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'pflichtstunden';
 
@@ -33,7 +33,7 @@ class Pflichtstunde extends Model
         'rejection_reason',
     ];
 
-    protected $casts =[
+    protected $casts = [
         'start' => 'datetime',
         'end' => 'datetime',
         'approved' => 'boolean',
@@ -68,10 +68,9 @@ class Pflichtstunde extends Model
     }
 
     protected static function booted(): void
-
     {
         static::addGlobalScope('aktuellerZeitraum', function ($query) {
-            $setting = (new PflichtstundenSetting());
+            $setting = (new PflichtstundenSetting);
             $start = Carbon::createFromFormat('m-d', $setting->pflichtstunden_start)->startOfDay();
             if ($start->isFuture()) {
                 $start->subYear();
@@ -81,7 +80,6 @@ class Pflichtstunde extends Model
                 $end->addYear();
             }
             $query->whereBetween('start', [$start, $end]);
-
 
         });
     }

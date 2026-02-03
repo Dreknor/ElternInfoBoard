@@ -3,8 +3,6 @@
 namespace Tests\Unit\Model;
 
 use App\Model\Post;
-use App\Model\User;
-use App\Model\Group;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -150,4 +148,3 @@ class PostTest extends TestCase
         $this->assertInstanceOf(\DateTime::class, $post->archiv_ab);
     }
 }
-

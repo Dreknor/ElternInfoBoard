@@ -124,4 +124,3 @@ class RoleAndPermissionTest extends TestCase
         $this->assertFalse($user->can('delete everything'));
     }
 }
-

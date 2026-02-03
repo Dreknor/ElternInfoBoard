@@ -17,37 +17,30 @@ use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Spatie\LaravelSettings\Settings;
-use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
-
 
 class SettingsController extends Controller
 {
-    /**
-     *
-     */
     public function __construct()
     {
         $this->middleware('auth');
         $this->middleware(['permission:edit settings']);
     }
 
-
     public function index()
     {
-        $settings = new GeneralSetting();
-        $mailSettings = new EmailSetting();
-        $notifySettings = new NotifySetting();
-        $KeyCloakSetting = new KeyCloakSetting();
-        $schickzeitenSetting = new SchickzeitenSetting();
-        $careSettings = new CareSetting();
-        $pflichtstundenSetting = new PflichtstundenSetting();
-
+        $settings = new GeneralSetting;
+        $mailSettings = new EmailSetting;
+        $notifySettings = new NotifySetting;
+        $KeyCloakSetting = new KeyCloakSetting;
+        $schickzeitenSetting = new SchickzeitenSetting;
+        $careSettings = new CareSetting;
+        $pflichtstundenSetting = new PflichtstundenSetting;
 
         $groups = Group::all();
         $roles = Role::all();
@@ -73,11 +66,6 @@ class SettingsController extends Controller
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @param $group
-     * @return RedirectResponse
-     */
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
@@ -92,7 +80,7 @@ class SettingsController extends Controller
 
                 ]);
 
-                $keyCloakSetting = new KeyCloakSetting();
+                $keyCloakSetting = new KeyCloakSetting;
                 $keyCloakSetting->enabled = $validated['enabled'] ?? false;
                 $keyCloakSetting->client_id = $validated['client_id'];
                 $keyCloakSetting->client_secret = $validated['client_secret'];
@@ -101,7 +89,6 @@ class SettingsController extends Controller
                 $keyCloakSetting->base_url = $validated['base_url'];
                 $keyCloakSetting->maildomain = $validated['maildomain'];
                 $keyCloakSetting->save();
-
 
                 break;
 
@@ -118,7 +105,7 @@ class SettingsController extends Controller
                     'end_time' => 'nullable|date_format:H:i',
                 ]);
 
-                $careSettings = new CareSetting();
+                $careSettings = new CareSetting;
                 $careSettings->view_detailed_care = $validated['view_detailed_care'] ?? false;
                 $careSettings->hide_childs_when_absent = $validated['hide_childs_when_absent'] ?? false;
                 $careSettings->groups_list = $validated['groups_list'] ?? [];
@@ -140,7 +127,7 @@ class SettingsController extends Controller
                     'schicken_intervall' => 'required|numeric|min:1|max:60',
                 ]);
 
-                $schickzeitenSetting = new SchickzeitenSetting();
+                $schickzeitenSetting = new SchickzeitenSetting;
                 $schickzeitenSetting->schicken_ab = $validated['schicken_ab'];
                 $schickzeitenSetting->schicken_bis = $validated['schicken_bis'];
                 $schickzeitenSetting->schicken_text = $validated['schicken_text'];
@@ -160,7 +147,7 @@ class SettingsController extends Controller
 
                 $krankmeldungen_report_time = explode(':', $validated['krankmeldungen_report_time']);
 
-                $notifySettings = new NotifySetting();
+                $notifySettings = new NotifySetting;
                 $notifySettings->hour_send_information_mail = $validated['hour_send_information_mail'];
                 $notifySettings->weekday_send_information_mail = $validated['weekday_send_information_mail'];
                 $notifySettings->hour_send_reminder_mail = $validated['hour_send_reminder_mail'];
@@ -178,34 +165,34 @@ class SettingsController extends Controller
                     'favicon' => 'sometimes|nullable|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
                 ]);
 
-                $settings = new GeneralSetting();
+                $settings = new GeneralSetting;
                 $settings->app_name = $validated['app_name'];
 
                 if ($request->hasFile('app_logo')) {
                     // Alte Logo-Datei löschen (außer Standard-Logo)
-                    if ($settings->logo && $settings->logo !== 'app_logo.png' && Storage::disk('public')->exists('img/' . $settings->logo)) {
-                        Storage::disk('public')->delete('img/' . $settings->logo);
+                    if ($settings->logo && $settings->logo !== 'app_logo.png' && Storage::disk('public')->exists('img/'.$settings->logo)) {
+                        Storage::disk('public')->delete('img/'.$settings->logo);
                     }
 
                     $file = request()->file('app_logo');
                     $ext = $file->extension();
-                    $name = Carbon::now()->format('YmdHis') . '_logo' . '.' . $ext;
+                    $name = Carbon::now()->format('YmdHis').'_logo'.'.'.$ext;
 
-                    Storage::disk('public')->put('img/' . $name, file_get_contents($file));
+                    Storage::disk('public')->put('img/'.$name, file_get_contents($file));
                     $settings->logo = $name;
 
                 }
                 if ($request->hasFile('favicon')) {
                     // Alte Favicon-Datei löschen (außer Standard-Favicon)
-                    if ($settings->favicon && $settings->favicon !== 'app_logo.png' && Storage::disk('public')->exists('img/' . $settings->favicon)) {
-                        Storage::disk('public')->delete('img/' . $settings->favicon);
+                    if ($settings->favicon && $settings->favicon !== 'app_logo.png' && Storage::disk('public')->exists('img/'.$settings->favicon)) {
+                        Storage::disk('public')->delete('img/'.$settings->favicon);
                     }
 
                     $file = request()->file('favicon');
                     $ext = $file->extension();
-                    $name = Carbon::now()->format('YmdHis') . '_favicon' . '.' . $ext;
+                    $name = Carbon::now()->format('YmdHis').'_favicon'.'.'.$ext;
 
-                    Storage::disk('public')->put('img/' . $name, file_get_contents($file));
+                    Storage::disk('public')->put('img/'.$name, file_get_contents($file));
                     $settings->favicon = $name;
                 }
                 $settings->save();
@@ -226,7 +213,7 @@ class SettingsController extends Controller
                     'log_sent_emails' => 'nullable|boolean',
                 ]);
 
-                $mailSettings = new EmailSetting();
+                $mailSettings = new EmailSetting;
                 $mailSettings->mail_server = $validated['mail_server'];
                 $mailSettings->mail_port = $validated['mail_port'];
                 $mailSettings->mail_username = $validated['mail_username'];
@@ -252,7 +239,7 @@ class SettingsController extends Controller
                 Artisan::call('cache:clear');
 
                 try {
-                    Mail::to(auth()->user())->send(new TestEmail());
+                    Mail::to(auth()->user())->send(new TestEmail);
 
                     return redirect()->back()->with([
                         'type' => 'success',
@@ -262,7 +249,7 @@ class SettingsController extends Controller
                 } catch (\Exception $e) {
                     return redirect()->back()->with([
                         'type' => 'danger',
-                        'Meldung' => 'Fehler beim Versenden der Testmail. Bitte überprüfen Sie die Einstellungen. ' . $e->getMessage(),
+                        'Meldung' => 'Fehler beim Versenden der Testmail. Bitte überprüfen Sie die Einstellungen. '.$e->getMessage(),
                     ]);
                 }
                 break;
@@ -285,7 +272,7 @@ class SettingsController extends Controller
                 } catch (\Exception $e) {
                     return redirect()->back()->with([
                         'type' => 'danger',
-                        'Meldung' => "Falsches Datumsformat beim Startdatum"
+                        'Meldung' => 'Falsches Datumsformat beim Startdatum',
                     ]);
                 }
 
@@ -294,13 +281,13 @@ class SettingsController extends Controller
                 } catch (\Exception $e) {
                     return redirect()->back()->with([
                         'type' => 'danger',
-                        'Meldung' => "Falsches Datumsformat beim Enddatum"
+                        'Meldung' => 'Falsches Datumsformat beim Enddatum',
                     ]);
                 }
 
                 // Bereiche verarbeiten - HTML-Tags entfernen und bereinigen
                 $bereiche = [];
-                if (!empty($validated['pflichtstunden_bereiche'])) {
+                if (! empty($validated['pflichtstunden_bereiche'])) {
                     // HTML-Tags entfernen
                     $cleanText = strip_tags($validated['pflichtstunden_bereiche']);
                     // HTML-Entities dekodieren
@@ -310,13 +297,13 @@ class SettingsController extends Controller
                     foreach ($lines as $line) {
                         // Whitespace entfernen und nur nicht-leere Zeilen hinzufügen
                         $trimmed = trim($line);
-                        if (!empty($trimmed)) {
+                        if (! empty($trimmed)) {
                             $bereiche[] = $trimmed;
                         }
                     }
                 }
 
-                $pflichtstundenSetting = new PflichtstundenSetting();
+                $pflichtstundenSetting = new PflichtstundenSetting;
                 $pflichtstundenSetting->pflichtstunden_start = $start->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
@@ -344,17 +331,12 @@ class SettingsController extends Controller
     {
         $module = Module::all();
 
-
-
-
-
         return view('settings.module', [
             'module' => $module,
         ]);
     }
 
     /**
-     * @param string $modulname
      * @return RedirectResponse
      */
     public function change_status(string $modulname)
@@ -380,7 +362,6 @@ class SettingsController extends Controller
     }
 
     /**
-     * @param string $modulname
      * @return RedirectResponse
      */
     public function change_nav(string $modulname)

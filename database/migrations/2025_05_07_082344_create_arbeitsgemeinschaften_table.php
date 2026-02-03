@@ -56,7 +56,7 @@ return new class extends Migration
                 'options' => json_encode([
                     'active' => '0',
                     'rights' => [
-                        'view GTA'
+                        'view GTA',
                     ],
                     'nav' => [
                         'name' => 'AGs',
@@ -69,12 +69,12 @@ return new class extends Migration
                         'link' => 'verwaltung/arbeitsgemeinschaften',
                         'icon' => 'fas fa-user-friends',
                     ],
-                ])
+                ]),
             ];
 
         DB::table('settings_modules')->insert($settings);
 
-        $permission =[
+        $permission = [
             [
                 'name' => 'edit GTA',
                 'guard_name' => 'web',
@@ -92,7 +92,6 @@ return new class extends Migration
         DB::table('permissions')->insert($permission);
 
         Cache::clear();
-
 
     }
 

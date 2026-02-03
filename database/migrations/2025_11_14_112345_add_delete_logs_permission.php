@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -24,7 +22,7 @@ return new class extends Migration
             }
         } catch (\Exception $e) {
             // Log the exception or handle it as needed
-            \Illuminate\Support\Facades\Log::error('Failed to create delete logs permission: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to create delete logs permission: '.$e->getMessage());
         }
 
     }
