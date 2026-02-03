@@ -131,7 +131,7 @@ class SchoolYearService
 
     private function updateRoles(array $roleMapping)
     {
-        $modelType = 'App\\Model\\User';
+        $modelType = \App\Model\User::class;
         foreach ($roleMapping as $oldRole => $newRole) {
             if ($oldRole == $newRole) {
                 continue;
