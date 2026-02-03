@@ -183,7 +183,7 @@ class ReadReceiptsController extends Controller
                 if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && ! $existingReceipt->final_reminder_sent_at) {
 
                     // Hole die E-Mail-Adresse des Autors
-                    $authorEmail = optional($post->autor)->email ?? config('mail.from.address');
+                    $authorEmail = $post->autor?->email ?? config('mail.from.address');
 
                     // Versende finale E-Mail mit Nachrichteninhalt und Lesebestätigung
                     $mail = new FinalReadReceiptReminderMail(
