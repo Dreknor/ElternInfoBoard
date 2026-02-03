@@ -11,6 +11,7 @@
   <php>
     <env name="APP_ENV" value="testing"/>
     <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
     <env name="CACHE_STORE" value="array"/>
     <env name="MAIL_MAILER" value="array"/>
     <env name="QUEUE_CONNECTION" value="sync"/>
@@ -19,6 +20,7 @@
     <env name="DB_DATABASE" value=":memory:"/>
     <env name="TELESCOPE_ENABLED" value="false"/>
     <ini name="memory_limit" value="4092M"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
   </php>
   <source>
     <include>
