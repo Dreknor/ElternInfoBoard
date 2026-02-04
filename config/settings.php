@@ -72,7 +72,7 @@ return [
      * additional prefix.
      */
     'cache' => [
-        'enabled' => env('SETTINGS_CACHE_ENABLED', true),
+        'enabled' => env('SETTINGS_CACHE_ENABLED', false),
         'store' => null,
         'prefix' => 'settings',
         'ttl' => null,
