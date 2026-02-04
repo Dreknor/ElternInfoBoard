@@ -8,21 +8,20 @@ use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Class AbfragenController
  * Controller for handling abfragen related API requests.
  */
-class AbfragenController extends Controller
+class AbfragenController extends Controller implements HasMiddleware
 {
-    /**
-     * AbfragenController constructor.
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

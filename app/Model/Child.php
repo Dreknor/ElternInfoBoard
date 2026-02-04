@@ -4,8 +4,12 @@ namespace App\Model;
 
 use App\Settings\CareSetting;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -24,32 +28,35 @@ class Child extends Model implements HasMedia
         'auto_checkIn',
     ];
 
-    protected $casts = [
-        'notification' => 'boolean',
-        'auto_checkIn' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'notification' => 'boolean',
+            'auto_checkIn' => 'boolean',
+        ];
+    }
 
-    public function group()
+    public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
     }
 
-    public function mandates()
+    public function mandates(): HasMany
     {
         return $this->hasMany(ChildMandate::class, 'child_id');
     }
 
-    public function class()
+    public function class(): BelongsTo
     {
         return $this->belongsTo(Group::class);
     }
 
-    public function parents()
+    public function parents(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'child_user');
     }
 
-    public function arbeitsgemeinschaften()
+    public function arbeitsgemeinschaften(): BelongsToMany
     {
         return $this->belongsToMany(Arbeitsgemeinschaft::class, 'arbeitsgemeinschaften_participants', 'participant_id', 'ag_id')
             ->where('end_date', '>', now());
@@ -121,7 +128,7 @@ class Child extends Model implements HasMedia
         }
     }
 
-    public function checkIns()
+    public function checkIns(): HasMany
     {
         return $this->hasMany(ChildCheckIn::class, 'child_id');
     }
@@ -163,7 +170,8 @@ class Child extends Model implements HasMedia
         */
     }
 
-    public function scopeCare($query)
+    #[Scope]
+    protected function care($query)
     {
         return $query->where(function ($query) {
             $query->whereIn('group_id', (new CareSetting)->groups_list)
@@ -171,7 +179,7 @@ class Child extends Model implements HasMedia
         });
     }
 
-    public function krankmeldungen()
+    public function krankmeldungen(): HasMany
     {
         return $this->hasMany(Krankmeldungen::class, 'child_id')->orderByDesc('created_at');
     }
@@ -195,7 +203,7 @@ class Child extends Model implements HasMedia
         }
     }
 
-    public function notice()
+    public function notice(): HasMany
     {
         return $this->hasMany(ChildNotice::class, 'child_id')->orderByDesc('created_at');
     }

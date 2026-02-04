@@ -5,6 +5,9 @@ namespace App\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 
 class Site extends Model
@@ -13,12 +16,12 @@ class Site extends Model
 
     protected $fillable = ['name', 'author_id', 'is_active'];
 
-    public function author()
+    public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
     }
 
-    public function groups()
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'site_group');
     }
@@ -33,7 +36,7 @@ class Site extends Model
         return $this->hasManyDeep(User::class, ['site_group', Group::class, 'group_user']);
     }
 
-    public function blocks()
+    public function blocks(): HasMany
     {
         return $this->hasMany(SiteBlock::class)->orderBy('position');
     }

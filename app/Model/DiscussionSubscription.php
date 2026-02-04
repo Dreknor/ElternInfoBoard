@@ -17,10 +17,13 @@ class DiscussionSubscription extends Model
         'web_notifications',
     ];
 
-    protected $casts = [
-        'email_notifications' => 'boolean',
-        'web_notifications' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_notifications' => 'boolean',
+            'web_notifications' => 'boolean',
+        ];
+    }
 
     /**
      * Get the user

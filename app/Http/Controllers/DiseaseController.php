@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class DiseaseController extends Controller
+class DiseaseController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
-        $this->middleware('permission:manage diseases');
+        return [
+            'auth',
+            'permission:manage diseases',
+        ];
     }
 
     /**

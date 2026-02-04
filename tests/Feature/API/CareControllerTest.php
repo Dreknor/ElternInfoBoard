@@ -37,7 +37,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_requires_authentication_to_access_present_children()
+    public function it_requires_authentication_to_access_present_children(): void
     {
         $response = $this->getJson('/api/care/present');
 
@@ -45,7 +45,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_requires_permission_to_access_present_children()
+    public function it_requires_permission_to_access_present_children(): void
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -60,7 +60,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_present_children()
+    public function it_returns_present_children(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -109,7 +109,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_requires_authentication_to_access_sick_children()
+    public function it_requires_authentication_to_access_sick_children(): void
     {
         $response = $this->getJson('/api/care/sick');
 
@@ -117,7 +117,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_requires_permission_to_access_sick_children()
+    public function it_requires_permission_to_access_sick_children(): void
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -132,7 +132,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_sick_children()
+    public function it_returns_sick_children(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -193,7 +193,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_requires_authentication_to_access_care_overview()
+    public function it_requires_authentication_to_access_care_overview(): void
     {
         $response = $this->getJson('/api/care/overview');
 
@@ -201,7 +201,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_requires_permission_to_access_care_overview()
+    public function it_requires_permission_to_access_care_overview(): void
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -216,7 +216,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_care_overview()
+    public function it_returns_care_overview(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -273,7 +273,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_excludes_checked_out_children_from_present_list()
+    public function it_excludes_checked_out_children_from_present_list(): void
     {
         Sanctum::actingAs($this->user);
 
@@ -301,7 +301,7 @@ class CareControllerTest extends TestCase
     }
 
     /** @test */
-    public function it_excludes_expired_sick_reports_from_sick_list()
+    public function it_excludes_expired_sick_reports_from_sick_list(): void
     {
         Sanctum::actingAs($this->user);
 

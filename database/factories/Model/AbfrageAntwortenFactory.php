@@ -16,10 +16,8 @@ class AbfrageAntwortenFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'rueckmeldung_id' => \App\Model\Rueckmeldungen::factory(),

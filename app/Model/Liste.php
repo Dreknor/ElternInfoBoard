@@ -26,14 +26,17 @@ class Liste extends Model
 
     protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'creates_pflichtstunden'];
 
-    protected $casts = [
-        'ende' => 'datetime',
-        'visible_for_all' => 'boolean',
-        'active' => 'boolean',
-        'multiple' => 'boolean',
-        'make_new_entry' => 'boolean',
-        'creates_pflichtstunden' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'ende' => 'datetime',
+            'visible_for_all' => 'boolean',
+            'active' => 'boolean',
+            'multiple' => 'boolean',
+            'make_new_entry' => 'boolean',
+            'creates_pflichtstunden' => 'boolean',
+        ];
+    }
 
     public function ersteller(): BelongsTo
     {

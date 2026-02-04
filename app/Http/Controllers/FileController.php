@@ -14,6 +14,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache as CacheAlias;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
@@ -21,14 +22,21 @@ use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class FileController extends Controller
+class FileController extends Controller implements HasMiddleware
 {
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->middleware('password_expired');
+
         $this->grousRepository = $groupsRepository;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'password_expired',
+        ];
     }
 
     /**

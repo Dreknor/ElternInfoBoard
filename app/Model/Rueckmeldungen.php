@@ -32,16 +32,21 @@ class Rueckmeldungen extends Model
     protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date'];
 
     /**
-     * @var array
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
      */
-    protected $casts = [
-        'ende' => 'datetime',
-        'pflicht' => 'boolean',
-        'commentable' => 'boolean',
-        'multiple' => 'boolean',
-        'terminliste_start_date' => 'date',
-        'terminliste_end_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'ende' => 'datetime',
+            'pflicht' => 'boolean',
+            'commentable' => 'boolean',
+            'multiple' => 'boolean',
+            'terminliste_start_date' => 'date',
+            'terminliste_end_date' => 'date',
+        ];
+    }
 
     public function post(): BelongsTo
     {

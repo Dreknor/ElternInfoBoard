@@ -18,7 +18,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function author_can_create_site()
+    public function author_can_create_site(): void
     {
         $user = User::factory()->create();
 
@@ -38,7 +38,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function site_can_be_activated()
+    public function site_can_be_activated(): void
     {
         $site = Site::factory()->inactive()->create();
 
@@ -53,7 +53,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function site_belongs_to_author()
+    public function site_belongs_to_author(): void
     {
         $user = User::factory()->create();
         $site = Site::factory()->create(['author_id' => $user->id]);
@@ -65,7 +65,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function site_can_have_blocks()
+    public function site_can_have_blocks(): void
     {
         $site = Site::factory()->create();
         $blocks = SiteBlock::factory()->count(5)->create([
@@ -78,7 +78,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function blocks_are_ordered_by_position()
+    public function blocks_are_ordered_by_position(): void
     {
         $site = Site::factory()->create();
 
@@ -106,7 +106,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function only_active_sites_are_visible_to_non_authors()
+    public function only_active_sites_are_visible_to_non_authors(): void
     {
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
@@ -125,7 +125,7 @@ class SiteManagementTest extends TestCase
     /**
      * @test
      */
-    public function author_can_see_own_inactive_sites()
+    public function author_can_see_own_inactive_sites(): void
     {
         $user = User::factory()->create();
 

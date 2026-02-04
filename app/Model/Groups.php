@@ -5,6 +5,7 @@ namespace App\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -17,9 +18,12 @@ class Groups extends Model implements HasMedia
 
     protected $visible = ['name', 'bereich', 'protected'];
 
-    protected $casts = [
-        'protected' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'protected' => 'boolean',
+        ];
+    }
 
     public function users(): BelongsToMany
     {
@@ -31,7 +35,7 @@ class Groups extends Model implements HasMedia
         return $this->belongsToMany(Post::class)->withTimestamps();
     }
 
-    public function vertretungen()
+    public function vertretungen(): HasMany
     {
         return $this->hasMany(Vertretung::class);
     }

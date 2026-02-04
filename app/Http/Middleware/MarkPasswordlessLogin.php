@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MarkPasswordlessLogin
 {
@@ -12,7 +13,7 @@ class MarkPasswordlessLogin
      *
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         // Mark this session as coming from passwordless login
         $request->session()->put('passwordless_login', true);

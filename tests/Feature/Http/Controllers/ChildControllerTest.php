@@ -17,7 +17,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_view_their_children()
+    public function user_can_view_their_children(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         \Spatie\Permission\Models\Permission::create(['name' => 'edit Schickzeiten']);
@@ -36,7 +36,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      * */
-    public function user_can_create_child()
+    public function user_can_create_child(): void
     {
         $user = User::factory()->create();
 
@@ -58,7 +58,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_update_their_child()
+    public function user_can_update_their_child(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -83,7 +83,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_cannot_update_other_users_child()
+    public function user_cannot_update_other_users_child(): void
     {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
@@ -113,7 +113,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_delete_their_child()
+    public function user_can_delete_their_child(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -131,7 +131,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthenticated_user_cannot_access_children()
+    public function unauthenticated_user_cannot_access_children(): void
     {
         $response = $this->get(route('child.index'));
 

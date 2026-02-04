@@ -10,13 +10,16 @@ use App\Model\SiteBlock;
 use App\Model\SiteBlockFiles;
 use App\Model\SiteBlockImages;
 use App\Model\SiteBlockText;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
 
-class SiteBlockController extends Controller
+class SiteBlockController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('permission:create sites');
+        return [
+            'permission:create sites',
+        ];
     }
 
     public function store(CreateSitesBlockRequest $request)

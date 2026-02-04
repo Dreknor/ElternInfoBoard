@@ -6,16 +6,19 @@ use App\Mail\EventReminderMail;
 use App\Model\ElternratEvent;
 use App\Model\EventAttendee;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class ElternratEventController extends Controller
+class ElternratEventController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:view elternrat']);
+        return [
+            ['permission:view elternrat'],
+        ];
     }
 
     /**

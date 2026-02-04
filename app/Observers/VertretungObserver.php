@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 class VertretungObserver
 {
-    public function created(Vertretung $vertretung)
+    public function created(Vertretung $vertretung): void
     {
         $group = $vertretung->group;
         $users = $group->users;

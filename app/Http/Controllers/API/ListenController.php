@@ -8,12 +8,15 @@ use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
 use App\Model\User;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class ListenController extends Controller
+class ListenController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Model\Disease;
 use App\Model\krankmeldungen;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -18,17 +19,13 @@ use Illuminate\Support\Facades\Mail;
  *
  * Controller for handling sick leave related API requests.
  */
-class KrankmeldungenController extends Controller
+class KrankmeldungenController extends Controller implements HasMiddleware
 {
-    /**
-     * KrankmeldungenController constructor.
-     *
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

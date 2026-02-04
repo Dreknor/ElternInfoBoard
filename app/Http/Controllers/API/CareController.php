@@ -7,22 +7,20 @@ use App\Model\Child;
 use App\Settings\CareSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 /**
  * Class CareController
  *
  * Controller for handling Care related API requests.
  */
-class CareController extends Controller
+class CareController extends Controller implements HasMiddleware
 {
-    /**
-     * CareController constructor.
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

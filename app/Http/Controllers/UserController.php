@@ -19,6 +19,7 @@ use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -30,14 +31,21 @@ use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class UserController extends Controller
+class UserController extends Controller implements HasMiddleware
 {
     private $groupsRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
         $this->groupsRepository = $groupsRepository;
-        $this->middleware(['permission:edit user']);
+
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            ['permission:edit user'],
+        ];
     }
 
     /**

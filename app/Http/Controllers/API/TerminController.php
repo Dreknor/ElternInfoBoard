@@ -5,17 +5,20 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Model\Termin;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 /**
  * Class TerminController
  *
  * @group Termine
  */
-class TerminController extends Controller
+class TerminController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

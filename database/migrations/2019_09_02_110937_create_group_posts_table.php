@@ -24,10 +24,8 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
 
         Schema::table('group_post', function (Blueprint $table) {

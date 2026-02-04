@@ -9,16 +9,24 @@ use App\Model\Pflichtstunde;
 use App\Model\User;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Maatwebsite\Excel\Facades\Excel;
 
-class PflichtstundeController extends Controller
+class PflichtstundeController extends Controller implements HasMiddleware
 {
     protected PflichtstundenSetting $pflichtstunden_settings;
 
     public function __construct()
     {
-        $this->middleware('auth');
+
         $this->pflichtstunden_settings = new PflichtstundenSetting;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+        ];
     }
 
     /**

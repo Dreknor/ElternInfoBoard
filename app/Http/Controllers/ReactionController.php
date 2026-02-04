@@ -5,15 +5,15 @@ namespace App\Http\Controllers;
 use App\Model\Post;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class ReactionController extends Controller
+class ReactionController extends Controller implements HasMiddleware
 {
-    /**
-     * Authentifcation required
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     /**

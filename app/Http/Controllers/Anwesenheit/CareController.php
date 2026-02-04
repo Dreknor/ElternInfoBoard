@@ -15,15 +15,19 @@ use App\Model\User;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
-class CareController extends Controller
+class CareController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     /**
@@ -457,7 +461,7 @@ class CareController extends Controller
 
     public function editMandates(Child $child)
     {
-        $this->authorize('edit schickzeiten');
+        Gate::authorize('edit schickzeiten');
 
         return view('child.editMandates', [
             'child' => $child,
@@ -469,7 +473,7 @@ class CareController extends Controller
     public function updateMandates(Request $request, Child $child)
     {
 
-        $this->authorize('edit schickzeiten');
+        Gate::authorize('edit schickzeiten');
 
         $request->validate([
             'mandates' => 'nullable|string',
@@ -504,7 +508,7 @@ class CareController extends Controller
 
     public function deleteMandates(Child $child, ChildMandate $childMandate)
     {
-        $this->authorize('edit schickzeiten');
+        Gate::authorize('edit schickzeiten');
 
         if ($child->id !== $childMandate->child_id) {
             return redirect()->back()->with([

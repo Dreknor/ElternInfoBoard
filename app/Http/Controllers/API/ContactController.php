@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -13,16 +14,13 @@ use Illuminate\Support\Facades\Mail;
  *
  * Controller for handling contact form related API requests.
  */
-class ContactController extends Controller
+class ContactController extends Controller implements HasMiddleware
 {
-    /**
-     * ContactController constructor.
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

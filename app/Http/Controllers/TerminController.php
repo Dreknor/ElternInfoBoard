@@ -11,17 +11,26 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
-class TerminController extends Controller
+class TerminController extends Controller implements HasMiddleware
 {
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->middleware('password_expired');
+
         $this->grousRepository = $groupsRepository;
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            'password_expired',
+        ];
     }
 
     /**
@@ -137,7 +146,7 @@ class TerminController extends Controller
      */
     public function create()
     {
-        if (! $this->authorize('create', Termin::class)) {
+        if (! Gate::authorize('create', Termin::class)) {
             return redirect()->to(url('home'))->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -151,7 +160,7 @@ class TerminController extends Controller
 
     public function createFromPost(Post $post)
     {
-        if (! $this->authorize('create', Termin::class)) {
+        if (! Gate::authorize('create', Termin::class)) {
             return redirect()->to(url('home'))->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung Termine zu erstellen fehlt',
@@ -204,7 +213,7 @@ class TerminController extends Controller
      */
     public function store(CreateTerminRequest $request)
     {
-        $this->authorize('create', Termin::class);
+        Gate::authorize('create', Termin::class);
 
         try {
             $start = Carbon::parse($request->start);
@@ -271,7 +280,7 @@ class TerminController extends Controller
      */
     public function destroy(Termin $termin)
     {
-        $this->authorize('delete', $termin);
+        Gate::authorize('delete', $termin);
 
         $termin->groups()->detach();
         $termin->delete();

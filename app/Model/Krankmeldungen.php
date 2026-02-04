@@ -27,10 +27,13 @@ class Krankmeldungen extends Model implements HasMedia
         return $this->belongsTo(User::class, 'users_id');
     }
 
-    protected $casts = [
-        'start' => 'datetime',
-        'ende' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'datetime',
+            'ende' => 'datetime',
+        ];
+    }
 
     public function child(): BelongsTo
     {

@@ -16,7 +16,7 @@ class ChildTest extends TestCase
     /**
      * @test
      */
-    public function child_can_be_created_with_factory()
+    public function child_can_be_created_with_factory(): void
     {
         $child = Child::factory()->create();
 
@@ -27,7 +27,7 @@ class ChildTest extends TestCase
     /**
      * @test
      */
-    public function child_has_name_attribute()
+    public function child_has_name_attribute(): void
     {
         $child = Child::factory()->create([
             'first_name' => 'Test',
@@ -41,7 +41,7 @@ class ChildTest extends TestCase
     /**
      * @test
      */
-    public function child_auto_check_in_is_boolean()
+    public function child_auto_check_in_is_boolean(): void
     {
         $child = Child::factory()->create([
             'auto_check_in' => true,

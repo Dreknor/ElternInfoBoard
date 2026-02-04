@@ -19,7 +19,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_view_create_disease_form()
+    public function authorized_user_can_view_create_disease_form(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
@@ -34,7 +34,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_create_active_disease()
+    public function authorized_user_can_create_active_disease(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
@@ -62,7 +62,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_deactivate_disease()
+    public function authorized_user_can_deactivate_disease(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
@@ -83,7 +83,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthorized_user_cannot_manage_diseases()
+    public function unauthorized_user_cannot_manage_diseases(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $disease = Disease::factory()->create();
@@ -100,7 +100,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function active_diseases_can_be_created_and_retrieved()
+    public function active_diseases_can_be_created_and_retrieved(): void
     {
         $user = User::factory()->create();
 

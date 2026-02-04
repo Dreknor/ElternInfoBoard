@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\IcalendarGenerator\Components\Calendar;
@@ -56,7 +57,7 @@ class ListenController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('viewAny', Liste::class);
+        Gate::authorize('viewAny', Liste::class);
 
         if ($request->user()->can('edit terminliste')) {
             $listen = Liste::where('ende', '>=', Carbon::today())->get();
@@ -103,7 +104,7 @@ class ListenController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Liste::class);
+        Gate::authorize('create', Liste::class);
 
         return view('listen.create', [
             'gruppen' => Group::all(),
@@ -119,7 +120,7 @@ class ListenController extends Controller
      */
     public function store(CreateListeRequest $request)
     {
-        $this->authorize('create', Liste::class);
+        Gate::authorize('create', Liste::class);
         $gruppen = $request->input('gruppen');
         if (is_null($gruppen)) {
             return redirect()->back()->with([
@@ -182,7 +183,7 @@ class ListenController extends Controller
      */
     public function edit(Liste $terminListe)
     {
-        $this->authorize('editListe', $terminListe);
+        Gate::authorize('editListe', $terminListe);
 
         return view('listen.edit', [
             'liste' => $terminListe,
@@ -200,7 +201,7 @@ class ListenController extends Controller
      */
     public function update(UpdateListenRequest $request, Liste $terminListe)
     {
-        $this->authorize('editListe', $terminListe);
+        Gate::authorize('editListe', $terminListe);
 
         $terminListe->update($request->validated());
 
@@ -280,7 +281,7 @@ class ListenController extends Controller
      */
     public function refresh(Liste $liste)
     {
-        $this->authorize('editListe', $liste);
+        Gate::authorize('editListe', $liste);
 
         $liste->update([
             'ende' => Carbon::now()->addWeeks(2),
@@ -301,7 +302,7 @@ class ListenController extends Controller
      */
     public function archiv(Liste $liste)
     {
-        $this->authorize('editListe', $liste);
+        Gate::authorize('editListe', $liste);
 
         $liste->update([
             'ende' => Carbon::now()->subDay(),

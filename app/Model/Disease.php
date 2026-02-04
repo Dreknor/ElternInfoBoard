@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Disease extends Model
 {
@@ -17,7 +18,7 @@ class Disease extends Model
         'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer', 'id',
     ];
 
-    public function activeDiseases()
+    public function activeDiseases(): HasMany
     {
         return $this->hasMany(ActiveDisease::class);
     }

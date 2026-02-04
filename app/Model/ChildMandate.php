@@ -4,6 +4,7 @@ namespace App\Model;
 
 use App\Observers\ChildMandateObserver;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use OwenIt\Auditing\Contracts\Auditable;
 
 #[ObservedBy([ChildMandateObserver::class])]
@@ -20,7 +21,7 @@ class ChildMandate extends Model implements Auditable
         'created_by',
     ];
 
-    public function child()
+    public function child(): BelongsTo
     {
         return $this->belongsTo(Child::class, 'child_id');
     }

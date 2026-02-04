@@ -4,6 +4,7 @@ namespace App\Model;
 
 use App\Observers\ListenTermineObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,9 +24,12 @@ class listen_termine extends Model
 
     protected $visible = ['id', 'listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
 
-    protected $casts = [
-        'termin' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'termin' => 'datetime',
+        ];
+    }
 
     public function eingetragenePerson(): BelongsTo
     {
@@ -52,7 +56,8 @@ class listen_termine extends Model
         return $this->hasOne(Pflichtstunde::class, 'listen_termin_id');
     }
 
-    public function scopeUser(Builder $query, $user)
+    #[Scope]
+    protected function user(Builder $query, $user)
     {
         if ($user != null) {
             return $query->where('reserviert_fuer', $user);

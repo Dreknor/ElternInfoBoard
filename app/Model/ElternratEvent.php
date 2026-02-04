@@ -22,11 +22,14 @@ class ElternratEvent extends Model
         'reminder_hours',
     ];
 
-    protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'send_reminder' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_time' => 'datetime',
+            'end_time' => 'datetime',
+            'send_reminder' => 'boolean',
+        ];
+    }
 
     /**
      * Get the creator of the event

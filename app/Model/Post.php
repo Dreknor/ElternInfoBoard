@@ -2,12 +2,15 @@
 
 namespace App\Model;
 
+use App\Observers\PostObserver;
 use App\Traits\NotificationTrait;
 use Artisanry\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Contracts\ReactableInterface;
 use DevDojo\LaravelReactions\Traits\Reactable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +24,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
+#[ObservedBy([PostObserver::class])]
 class Post extends Model implements Auditable, HasMedia, ReactableInterface
 {
     use Cloneable;
@@ -35,18 +39,21 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'no_header'];
 
-    protected $casts = [
-        'archiv_ab' => 'datetime',
-        'read_receipt_deadline' => 'datetime',
-        'reactable' => 'boolean',
-        'external' => 'boolean',
-        'read_receipt' => 'boolean',
-        'no_header' => 'boolean',
-    ];
-
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
 
     protected $with = ['rueckmeldung'];
+
+    protected function casts(): array
+    {
+        return [
+            'archiv_ab' => 'datetime',
+            'read_receipt_deadline' => 'datetime',
+            'reactable' => 'boolean',
+            'external' => 'boolean',
+            'read_receipt' => 'boolean',
+            'no_header' => 'boolean',
+        ];
+    }
 
     public function groups(): BelongsToMany
     {
@@ -85,12 +92,14 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         return ! ($this->archiv_ab > Carbon::now());
     }
 
-    public function scopeNotArchived(Builder $query): Builder
+    #[Scope]
+    protected function notArchived(Builder $query): Builder
     {
         return $query->where('archiv_ab', '>', now());
     }
 
-    public function scopeReleased(Builder $query): Builder
+    #[Scope]
+    protected function released(Builder $query): Builder
     {
         return $query->where('released', 1);
     }

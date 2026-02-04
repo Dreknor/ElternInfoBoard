@@ -6,14 +6,17 @@ use App\Model\User;
 use App\Notifications\Push;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-class PushController extends Controller
+class PushController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     /**
@@ -48,7 +51,7 @@ class PushController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
+        $request->validate([
             'endpoint' => 'required',
             'keys.auth' => 'required',
             'keys.p256dh' => 'required',

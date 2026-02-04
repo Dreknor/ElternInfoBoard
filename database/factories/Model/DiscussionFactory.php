@@ -16,10 +16,8 @@ class DiscussionFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'header' => $this->faker->sentence(),

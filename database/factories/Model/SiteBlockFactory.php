@@ -14,7 +14,7 @@ class SiteBlockFactory extends Factory
     {
         return [
             'site_id' => Site::factory(),
-            'block_type' => $this->faker->randomElement(['App\Model\Post', 'App\Model\File']),
+            'block_type' => $this->faker->randomElement([\App\Model\Post::class, 'App\Model\File']),
             'block_id' => 1,
             'position' => $this->faker->numberBetween(1, 10),
             'title' => $this->faker->sentence(3),

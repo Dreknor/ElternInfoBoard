@@ -3,8 +3,10 @@
 namespace App\Model;
 
 use App\Notifications\Push;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
@@ -16,17 +18,21 @@ class Notification extends Model
 
     protected $visible = ['id', 'type', 'user_id', 'title', 'message', 'icon', 'url', 'read', 'important'];
 
-    protected $casts = [
-        'read' => 'boolean',
-        'important' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'read' => 'boolean',
+            'important' => 'boolean',
+        ];
+    }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function scopeUnread($query)
+    #[Scope]
+    protected function unread($query)
     {
         return $query->where('read', false);
     }

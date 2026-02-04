@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([PflichtstundenObserver::class])]
@@ -33,31 +34,34 @@ class Pflichtstunde extends Model
         'rejection_reason',
     ];
 
-    protected $casts = [
-        'start' => 'datetime',
-        'end' => 'datetime',
-        'approved' => 'boolean',
-        'approved_at' => 'datetime',
-        'rejected' => 'boolean',
-        'rejected_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'datetime',
+            'end' => 'datetime',
+            'approved' => 'boolean',
+            'approved_at' => 'datetime',
+            'rejected' => 'boolean',
+            'rejected_at' => 'datetime',
+        ];
+    }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function approver()
+    public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function rejector()
+    public function rejector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
     }
 
-    public function listenTermin()
+    public function listenTermin(): BelongsTo
     {
         return $this->belongsTo(listen_termine::class, 'listen_termin_id');
     }

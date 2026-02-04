@@ -16,7 +16,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_be_created_with_factory()
+    public function post_can_be_created_with_factory(): void
     {
         $post = Post::factory()->create();
 
@@ -27,7 +27,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_has_required_attributes()
+    public function post_has_required_attributes(): void
     {
         $post = Post::factory()->create([
             'header' => 'Test Header',
@@ -41,7 +41,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_be_released()
+    public function post_can_be_released(): void
     {
         $post = Post::factory()->create([
             'released' => true,
@@ -53,7 +53,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_be_sticky()
+    public function post_can_be_sticky(): void
     {
         $post = Post::factory()->create([
             'sticky' => true,
@@ -65,7 +65,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_be_reactable()
+    public function post_can_be_reactable(): void
     {
         $post = Post::factory()->create([
             'reactable' => true,
@@ -77,7 +77,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_has_type_attribute()
+    public function post_has_type_attribute(): void
     {
         $post = Post::factory()->create([
             'type' => 'news',
@@ -89,7 +89,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_be_external()
+    public function post_can_be_external(): void
     {
         $post = Post::factory()->create([
             'external' => true,
@@ -101,7 +101,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_have_read_receipt()
+    public function post_can_have_read_receipt(): void
     {
         $post = Post::factory()->create([
             'read_receipt' => true,
@@ -113,7 +113,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_have_no_header()
+    public function post_can_have_no_header(): void
     {
         $post = Post::factory()->create([
             'no_header' => true,
@@ -125,7 +125,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_can_be_soft_deleted()
+    public function post_can_be_soft_deleted(): void
     {
         $post = Post::factory()->create();
         $postId = $post->id;
@@ -138,7 +138,7 @@ class PostTest extends TestCase
     /**
      * @test
      */
-    public function post_archiv_ab_is_cast_to_datetime()
+    public function post_archiv_ab_is_cast_to_datetime(): void
     {
         $date = now()->addDays(30);
         $post = Post::factory()->create([

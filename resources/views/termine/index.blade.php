@@ -89,12 +89,12 @@
                                                         </h5>
                                                         <div class="d-flex align-items-center gap-2">
                                                             <!-- Calendar Links -->
-                                                            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->ics()}}"
+                                                            <a href="{{$termin->link(auth()->user()?->calendar_prefix)->ics()}}"
                                                                class="btn btn-sm btn-outline-secondary"
                                                                title="ICS-Download für Apple und Windows">
                                                                 <img src="{{asset('img/ics-icon.png')}}" style="width: 16px; height: 16px;" alt="ICS">
                                                             </a>
-                                                            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->google()}}"
+                                                            <a href="{{$termin->link(auth()->user()?->calendar_prefix)->google()}}"
                                                                class="btn btn-sm btn-outline-secondary"
                                                                target="_blank"
                                                                title="Google-Kalender-Link">

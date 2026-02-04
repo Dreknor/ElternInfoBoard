@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Model\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Spatie\Permission\Models\Role;
 
-class NotificationController extends Controller
+class NotificationController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     public function read(Request $request)

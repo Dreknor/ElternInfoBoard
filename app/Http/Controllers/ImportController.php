@@ -13,17 +13,17 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 
-class ImportController extends Controller
+class ImportController extends Controller implements HasMiddleware
 {
-    /**
-     * Permission to import user is required
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:import user']);
+        return [
+            ['permission:import user'],
+        ];
     }
 
     /**

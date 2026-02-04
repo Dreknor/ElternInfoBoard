@@ -16,10 +16,8 @@ class PflichtstundeFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         $start = $this->faker->dateTimeBetween('-1 month', '+1 month');
         $end = $this->faker->dateTimeBetween($start, '+4 hours');

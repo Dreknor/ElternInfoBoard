@@ -2,10 +2,14 @@
 
 namespace App\Model;
 
+use App\Observers\VertretungObserver;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([VertretungObserver::class])]
 class Vertretung extends Model
 {
     protected $table = 'vertretungen';
@@ -29,7 +33,7 @@ class Vertretung extends Model
 
     }
 
-    public function group()
+    public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'klasse');
     }

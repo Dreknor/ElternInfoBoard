@@ -5,22 +5,19 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 /**
  * Class FilesController
  * Controller for handling file related API requests.
  */
-class FilesController extends Controller
+class FilesController extends Controller implements HasMiddleware
 {
-    /**
-     * Files constructor.
-     *
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

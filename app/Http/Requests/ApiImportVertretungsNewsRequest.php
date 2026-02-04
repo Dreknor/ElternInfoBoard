@@ -8,10 +8,8 @@ class ApiImportVertretungsNewsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         $vertretung = json_decode(
             $this->getContent(),
@@ -30,7 +28,7 @@ class ApiImportVertretungsNewsRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
 
         $vertretung = json_decode(

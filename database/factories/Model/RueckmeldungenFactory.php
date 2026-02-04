@@ -16,10 +16,8 @@ class RueckmeldungenFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'post_id' => \App\Model\Post::factory(),

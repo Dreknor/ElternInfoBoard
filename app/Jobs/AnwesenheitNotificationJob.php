@@ -35,10 +35,8 @@ class AnwesenheitNotificationJob implements ShouldQueue
 
     /**
      * Führe den Job aus.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $currentDateTime = now()->format('d.m.Y H:i');
         if ($this->type == 'checkIn') {

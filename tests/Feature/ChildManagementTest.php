@@ -18,7 +18,7 @@ class ChildManagementTest extends TestCase
     /**
      * @test
      */
-    public function child_belongs_to_group()
+    public function child_belongs_to_group(): void
     {
         $group = Group::factory()->create();
         $child = Child::factory()->create(['group_id' => $group->id]);
@@ -30,7 +30,7 @@ class ChildManagementTest extends TestCase
     /**
      * @test
      */
-    public function child_can_have_multiple_parents()
+    public function child_can_have_multiple_parents(): void
     {
         $child = Child::factory()->create();
         $parent1 = User::factory()->create();
@@ -46,7 +46,7 @@ class ChildManagementTest extends TestCase
     /**
      * @test
      */
-    public function parent_can_access_child_information()
+    public function parent_can_access_child_information(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -62,7 +62,7 @@ class ChildManagementTest extends TestCase
     /**
      * @test
      */
-    public function child_notification_setting_works()
+    public function child_notification_setting_works(): void
     {
         $childWithNotification = Child::factory()->create(['notification' => true]);
         $childWithoutNotification = Child::factory()->withoutNotification()->create();
@@ -74,7 +74,7 @@ class ChildManagementTest extends TestCase
     /**
      * @test
      */
-    public function child_auto_check_in_works()
+    public function child_auto_check_in_works(): void
     {
         $childWithAutoCheckIn = Child::factory()->withAutoCheckIn()->create();
         $childWithoutAutoCheckIn = Child::factory()->create(['auto_checkIn' => false]);

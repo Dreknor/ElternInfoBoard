@@ -9,21 +9,19 @@ use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 /** Class VertretungsplanController
  *
  * Controller for handling Vertretungsplan (substitution plan) related API requests.
  **/
-class VertretungsplanController extends Controller
+class VertretungsplanController extends Controller implements HasMiddleware
 {
-    /**
-     * VertretungsplanController constructor.
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**

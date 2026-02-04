@@ -57,7 +57,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function liste_id_is_required()
+    public function liste_id_is_required(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -70,7 +70,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function liste_id_must_exist()
+    public function liste_id_must_exist(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -84,7 +84,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function start_date_is_required()
+    public function start_date_is_required(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -97,7 +97,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function end_date_is_required()
+    public function end_date_is_required(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -110,7 +110,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function start_date_must_be_today_or_future()
+    public function start_date_must_be_today_or_future(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -124,7 +124,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function end_date_cannot_be_before_start_date()
+    public function end_date_cannot_be_before_start_date(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -138,7 +138,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function buchungsfrist_is_required()
+    public function buchungsfrist_is_required(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -151,7 +151,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function pflicht_must_be_0_or_1()
+    public function pflicht_must_be_0_or_1(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -166,7 +166,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function valid_data_creates_rueckmeldung()
+    public function valid_data_creates_rueckmeldung(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -183,7 +183,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function same_start_and_end_date_is_valid()
+    public function same_start_and_end_date_is_valid(): void
     {
         $date = Carbon::today();
 
@@ -200,7 +200,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function empfaenger_must_be_valid_email_if_provided()
+    public function empfaenger_must_be_valid_email_if_provided(): void
     {
         $response = $this->actingAs($this->user)
             ->post("/rueckmeldung/{$this->post->id}/create/terminliste", [
@@ -215,7 +215,7 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     }
 
     /** @test */
-    public function user_without_permission_cannot_create_terminliste_rueckmeldung()
+    public function user_without_permission_cannot_create_terminliste_rueckmeldung(): void
     {
         $unauthorizedUser = User::factory()->create();
 

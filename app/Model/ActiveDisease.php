@@ -2,8 +2,10 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ActiveDisease extends Model
@@ -13,22 +15,26 @@ class ActiveDisease extends Model
 
     protected $fillable = ['disease_id', 'user_id', 'start', 'end', 'comment', 'active'];
 
-    protected $casts = [
-        'start' => 'datetime',
-        'end' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'datetime',
+            'end' => 'datetime',
+        ];
+    }
 
-    public function disease()
+    public function disease(): BelongsTo
     {
         return $this->belongsTo(Disease::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function scopeActive($query)
+    #[Scope]
+    protected function active($query)
     {
         return $query->where('active', 1);
     }

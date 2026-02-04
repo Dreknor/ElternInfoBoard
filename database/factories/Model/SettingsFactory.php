@@ -16,10 +16,8 @@ class SettingsFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'setting' => $this->faker->word(),

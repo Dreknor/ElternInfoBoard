@@ -19,7 +19,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_creates_new_poll()
+    public function store_creates_new_poll(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $post = Post::factory()->create(['author' => $user->id]);
@@ -47,7 +47,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function store_validates_with_a_form_request()
+    public function store_validates_with_a_form_request(): void
     {
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\PollController::class,
@@ -59,7 +59,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function vote_allows_user_to_vote_on_poll()
+    public function vote_allows_user_to_vote_on_poll(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $post = Post::factory()->create();
@@ -90,7 +90,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function vote_prevents_duplicate_votes()
+    public function vote_prevents_duplicate_votes(): void
     {
         $user = User::factory()->create();
         $post = Post::factory()->create();
@@ -113,7 +113,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function vote_prevents_too_many_answers()
+    public function vote_prevents_too_many_answers(): void
     {
         $user = User::factory()->create();
         $post = Post::factory()->create();
@@ -136,7 +136,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function update_validates_with_a_form_request()
+    public function update_validates_with_a_form_request(): void
     {
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\PollController::class,
@@ -148,7 +148,7 @@ class PollControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthenticated_user_cannot_create_poll()
+    public function unauthenticated_user_cannot_create_poll(): void
     {
         $post = Post::factory()->create();
 
