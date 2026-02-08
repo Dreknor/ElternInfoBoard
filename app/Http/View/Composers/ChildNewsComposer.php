@@ -10,6 +10,11 @@ class ChildNewsComposer
 {
     public function compose($view): void
     {
+        if (!auth()->check()) {
+            $view->with('children', collect([]));
+            return;
+        }
+
         $children = auth()->user()->children();
 
         if ($children->count() > 0) {

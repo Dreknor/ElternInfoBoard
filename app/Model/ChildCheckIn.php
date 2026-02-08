@@ -2,7 +2,6 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,8 +38,10 @@ class ChildCheckIn extends Model implements Auditable
         return $this->belongsTo(Child::class);
     }
 
-    #[Scope]
-    protected function checkedIn($query)
+    /**
+     * Scope a query to only include checked-in records.
+     */
+    public function scopeCheckedIn($query)
     {
         return $query->where('checked_in', true)->where('checked_out', false);
     }

@@ -6,10 +6,24 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('db:create-password-resets', function () {
+    if (!Schema::hasTable('password_resets')) {
+        Schema::create('password_resets', function (Blueprint $table) {
+            $table->string('email')->index();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+        $this->info('Tabelle "password_resets" wurde erfolgreich erstellt.');
+    } else {
+        $this->info('Tabelle "password_resets" existiert bereits.');
+    }
+})->purpose('Create password_resets table if it does not exist');
 
 // Only load settings and modules if tables exist (not during migrations)
 try {

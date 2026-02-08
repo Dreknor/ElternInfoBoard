@@ -1,7 +1,8 @@
 @auth
-    @foreach($modules as $module)
+    @if(isset($modules) && is_iterable($modules))
+        @foreach($modules as $module)
 
-        @if(count($module->options['rights']) == 0 or auth()->user()->hasAnyPermission($module->options['rights']))
+            @if(count($module->options['rights']) == 0 or auth()->user()->hasAnyPermission($module->options['rights']))
 
             @if(array_key_exists('home-view',$module->options) and $module->options['home-view']!="" and (request()->segment(1) ==""  or request()->segment(1) =="home"))
                 @push('home-view')
@@ -73,32 +74,33 @@
                     @endpush
                 @endif
             @endif
-        @endif
-        @if(array_key_exists('adm-nav', $module->options) and is_array($module->options['adm-nav']) and isset($module->options['adm-nav']['adm-rights']))
-            @php
-                $hasAdmPermission = false;
-                foreach ($module->options['adm-nav']['adm-rights'] as $permission) {
-                    if (auth()->user()->can($permission)) {
-                        $hasAdmPermission = true;
-                        break;
+            @if(array_key_exists('adm-nav', $module->options) and is_array($module->options['adm-nav']) and isset($module->options['adm-nav']['adm-rights']))
+                @php
+                    $hasAdmPermission = false;
+                    foreach ($module->options['adm-nav']['adm-rights'] as $permission) {
+                        if (auth()->user()->can($permission)) {
+                            $hasAdmPermission = true;
+                            break;
+                        }
                     }
-                }
-            @endphp
+                @endphp
 
-            @if($hasAdmPermission)
-                @push('adm-nav')
-                    <li class="nav-item">
-                        <a href="{{url($module->options['adm-nav']['link'])}}"
-                           class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-purple-600 hover:text-white transition-all duration-200 @if(request()->path() == $module->options['adm-nav']['link']) bg-purple-600 text-white shadow-lg @endif group">
-                            <i class="{{$module->options['adm-nav']['icon']}} text-base group-hover:scale-110 transition-transform @if(request()->path() == $module->options['adm-nav']['link']) text-white @endif"></i>
-                            <span class="font-medium">{{$module->options['adm-nav']['name']}}</span>
-                        </a>
-                    </li>
-                @endpush
+                @if($hasAdmPermission)
+                    @push('adm-nav')
+                        <li class="nav-item">
+                            <a href="{{url($module->options['adm-nav']['link'])}}"
+                               class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:bg-purple-600 hover:text-white transition-all duration-200 @if(request()->path() == $module->options['adm-nav']['link']) bg-purple-600 text-white shadow-lg @endif group">
+                                <i class="{{$module->options['adm-nav']['icon']}} text-base group-hover:scale-110 transition-transform @if(request()->path() == $module->options['adm-nav']['link']) text-white @endif"></i>
+                                <span class="font-medium">{{$module->options['adm-nav']['name']}}</span>
+                            </a>
+                        </li>
+                    @endpush
+                @endif
             @endif
         @endif
 
     @endforeach
+    @endif
 @endauth
 @push('js')
     <script>

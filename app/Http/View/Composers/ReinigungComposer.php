@@ -9,6 +9,11 @@ class ReinigungComposer
 {
     public function compose($view): void
     {
+        if (!auth()->check()) {
+            $view->with('reinigung', null);
+            return;
+        }
+
         $expire = now()->diffInSeconds(now()->endOfDay());
 
         $reinigung = Cache::remember('reinigung'.auth()->id(), $expire, function () {

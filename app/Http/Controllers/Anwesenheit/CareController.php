@@ -58,21 +58,76 @@ class CareController extends Controller implements HasMiddleware
                 ->whereIn('class_id', $careSettings->class_list)
                 ->whereHas('checkIns', function ($query) {
                     $query
-                        ->CheckedIn()
+                        ->checkedIn()
                         ->whereDate('date', now()->toDateString());
                 })
+                ->with([
+                    'mandates',
+                    'checkIns' => function ($query) {
+                        $query->whereDate('date', today());
+                    },
+                    'schickzeiten' => function ($query) {
+                        $query->where('specific_date', today())
+                            ->orderBy('specific_date', 'desc');
+                    },
+                    'krankmeldungen' => function ($query) {
+                        $query->whereDate('start', '<=', today())
+                            ->whereDate('ende', '>=', today());
+                    },
+                    'notice' => function ($query) {
+                        $query->whereDate('date', today());
+                    },
+                    'arbeitsgemeinschaften' => function ($query) {
+                        $query->where('end_date', '>', now())
+                            ->where('weekday', now()->dayOfWeek)
+                            ->where(function ($q) {
+                                $q->whereDate('start_date', '<=', today())
+                                    ->orWhereNull('start_date');
+                            })
+                            ->where(function ($q) {
+                                $q->whereDate('end_date', '>=', today())
+                                    ->orWhereNull('end_date');
+                            });
+                    }
+                ])
                 ->get();
 
         } else {
             $childs = Child::query()
                 ->whereIn('group_id', $careSettings->groups_list)
                 ->whereIn('class_id', $careSettings->class_list)
+                ->with([
+                    'mandates',
+                    'checkIns' => function ($query) {
+                        $query->whereDate('date', today());
+                    },
+                    'schickzeiten' => function ($query) {
+                        $query->where('specific_date', today())
+                            ->orderBy('specific_date', 'desc');
+                    },
+                    'krankmeldungen' => function ($query) {
+                        $query->whereDate('start', '<=', today())
+                            ->whereDate('ende', '>=', today());
+                    },
+                    'notice' => function ($query) {
+                        $query->whereDate('date', today());
+                    },
+                    'arbeitsgemeinschaften' => function ($query) {
+                        $query->where('end_date', '>', now())
+                            ->where('weekday', now()->dayOfWeek)
+                            ->where(function ($q) {
+                                $q->whereDate('start_date', '<=', today())
+                                    ->orWhereNull('start_date');
+                            })
+                            ->where(function ($q) {
+                                $q->whereDate('end_date', '>=', today())
+                                    ->orWhereNull('end_date');
+                            });
+                    }
+                ])
                 ->get();
         }
 
-        if ($childs->isNotEmpty()) {
-            $childs->load('mandates');
-        }
 
         return view('anwesenheit.index', [
             'children' => $childs,

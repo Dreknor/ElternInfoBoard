@@ -135,9 +135,9 @@
             <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <i class="fas fa-comment-alt text-blue-600"></i>
                 Nachrichten
-                @if($child->notice()->Future()->count() > 0)
+                @if($child->notice()->future()->count() > 0)
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {{$child->notice()->Future()->count()}}
+                        {{$child->notice()->future()->count()}}
                     </span>
                 @endif
             </h4>
@@ -148,7 +148,7 @@
         </div>
 
         <!-- Bestehende Notizen -->
-        @if($child->notice()->Future()->count() > 0)
+        @if($child->notice()->future()->count() > 0)
             <div class="space-y-2 mb-3">
                 @foreach($child->notice()->future()->get() as $notice)
                     <div class="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">

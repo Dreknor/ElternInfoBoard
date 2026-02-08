@@ -4,7 +4,6 @@ namespace App\Model;
 
 use App\Settings\CareSetting;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -81,9 +80,25 @@ class Child extends Model implements HasMedia
 
     }
 
-    public function checkedIn()
-    {
 
+    /**
+     * Check if the child is currently checked in today.
+     */
+    public function checkedIn(): bool
+    {
+        // Wenn die Beziehung bereits geladen ist, verwende sie
+        if ($this->relationLoaded('checkIns')) {
+            $checkIn = $this->checkIns
+                ->where('checked_in', true)
+                ->where('checked_out', false)
+                ->filter(function ($item) {
+                    return $item->date->isToday();
+                })
+                ->first();
+            return !is_null($checkIn);
+        }
+
+        // Fallback mit Cache für direkte Aufrufe
         $checkIn = Cache::remember('checkedIn'.$this->id, 300, function () {
             return $this->checkIns()
                 ->where('checked_in', true)
@@ -111,6 +126,20 @@ class Child extends Model implements HasMedia
      */
     public function should_be_today()
     {
+        // Wenn die Beziehung bereits geladen ist, verwende sie
+        if ($this->relationLoaded('checkIns')) {
+            $checkIn = $this->checkIns
+                ->where('checked_in', false)
+                ->where('checked_out', false)
+                ->where('should_be', true)
+                ->filter(function ($item) {
+                    return $item->date->isToday();
+                })
+                ->first();
+            return !is_null($checkIn);
+        }
+
+        // Fallback mit Cache für direkte Aufrufe
         $checkIn = Cache::remember('should_be_today'.$this->id, 300, function () {
             return $this->checkIns()
                 ->where('checked_in', false)
@@ -144,7 +173,12 @@ class Child extends Model implements HasMedia
 
     public function getSchickzeitenForToday()
     {
+        // Wenn die Beziehung bereits geladen ist, verwende sie
+        if ($this->relationLoaded('schickzeiten')) {
+            return $this->schickzeiten;
+        }
 
+        // Fallback mit Cache für direkte Aufrufe
         $schickzeiten = Cache::remember('schickzeiten_'.$this->id, 300, function () {
             return $this->schickzeiten()
                 ->where(function ($query) {
@@ -170,8 +204,7 @@ class Child extends Model implements HasMedia
         */
     }
 
-    #[Scope]
-    protected function care($query)
+    public function scopeCare($query)
     {
         return $query->where(function ($query) {
             $query->whereIn('group_id', (new CareSetting)->groups_list)
@@ -186,7 +219,12 @@ class Child extends Model implements HasMedia
 
     public function krankmeldungToday()
     {
+        // Wenn die Beziehung bereits geladen ist, verwende sie
+        if ($this->relationLoaded('krankmeldungen')) {
+            return $this->krankmeldungen->count() > 0;
+        }
 
+        // Fallback mit Cache für direkte Aufrufe
         $meldung = Cache::remember('krankmeldung_'.$this->id, Carbon::now()->diffInSeconds(Carbon::now()->endOfDay()), function () {
             return $this->krankmeldungen()
                 ->where(function ($query) {
@@ -210,6 +248,12 @@ class Child extends Model implements HasMedia
 
     public function hasNotice()
     {
+        // Wenn die Beziehung bereits geladen ist, verwende sie
+        if ($this->relationLoaded('notice')) {
+            return $this->notice->first();
+        }
+
+        // Fallback mit Cache für direkte Aufrufe
         $notice = Cache::remember('notice'.$this->id, 300, function () {
             return $this->notice()
                 ->whereDate('date', today())
@@ -221,6 +265,12 @@ class Child extends Model implements HasMedia
 
     public function noticeToday()
     {
+        // Wenn die Beziehung bereits geladen ist, verwende sie
+        if ($this->relationLoaded('notice')) {
+            return $this->notice->first();
+        }
+
+        // Fallback mit Cache für direkte Aufrufe
         $notice = Cache::remember('notice'.$this->id, 300, function () {
             return $this->notice()
                 ->whereDate('date', today())

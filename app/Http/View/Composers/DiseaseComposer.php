@@ -9,6 +9,10 @@ class DiseaseComposer
 {
     public function compose($view): void
     {
+        if (!auth()->check()) {
+            $view->with('diseases', collect([]));
+            return;
+        }
 
         if (auth()->user()->can('manage diseases')) {
             $disaeses = ActiveDisease::whereDate('end', '>=', Carbon::today())->with('disease')->orderBy('end')->get();

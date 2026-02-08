@@ -10,6 +10,14 @@ class NachrichtenComposer
 {
     public function compose($view): void
     {
+        if (!auth()->check()) {
+            $view->with([
+                'nachrichten' => collect([]),
+                'user' => null,
+            ]);
+            return;
+        }
+
         $expire = 30;
 
         $nachrichten = Cache::remember('posts_'.auth()->id(), $expire, function () {

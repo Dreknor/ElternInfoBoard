@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\ActiveDisease;
+use App\Model\Child;
 use App\Model\Losung;
 use App\Model\Post;
 use App\Model\Termin;
@@ -73,8 +74,11 @@ class DashboardController extends Controller implements HasMiddleware
         $losung = Losung::whereDate('date', Carbon::today())->first();
 
         // Hole die Kinder des Benutzers, die den Care-Scope erfüllen
-        $careChildren = auth()->user()->children_rel()
+           $careChildren = auth()->user()->children_rel()
             ->care()
+            ->whereHas('parents', function ($query) {
+                $query->where('users.id', auth()->id());
+            })
             ->orderBy('first_name')
             ->get();
 

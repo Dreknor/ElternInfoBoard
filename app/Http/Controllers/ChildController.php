@@ -9,16 +9,21 @@ use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ChildController extends Controller
+class ChildController extends Controller implements HasMiddleware
 {
-    public function __construct() {}
+    public static function middleware(): array
+    {
+        return [
+            'auth',
+            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit']),
+        ];
+    }
 
     public function index()
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
-
         $childs = Child::query()
             ->with(['group', 'class', 'parents'])
             ->get();
@@ -30,7 +35,6 @@ class ChildController extends Controller
 
     public function store(CreateChildRequest $request)
     {
-        $this->middleware('auth');
 
         $child = Child::query()
             ->whereLike('first_name', '%'.$request->first_name.'%')
@@ -78,8 +82,6 @@ class ChildController extends Controller
 
     public function create($child = null)
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
         $parents = User::query()
             ->whereHas('roles', function ($query) {
@@ -96,9 +98,6 @@ class ChildController extends Controller
 
     public function createFromSchickzeit(Schickzeiten $schickzeiten)
     {
-
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
         session()->put('schickzeiten', $schickzeiten);
 
@@ -131,8 +130,6 @@ class ChildController extends Controller
 
     public function edit(Child $child)
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
         $parents = User::query()
             ->whereHas('roles', function ($query) {
@@ -149,7 +146,6 @@ class ChildController extends Controller
 
     public function update(CreateChildRequest $request, Child $child)
     {
-        $this->middleware('auth');
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
             if (! $child->parents->contains($request->parent_id)) {
@@ -211,7 +207,6 @@ class ChildController extends Controller
 
     public function storeMandate(Request $request, Child $child)
     {
-        $this->middleware('auth');
 
         if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
@@ -239,7 +234,6 @@ class ChildController extends Controller
 
     public function destroyMandate(Request $request, Child $child, $mandateId)
     {
-        $this->middleware('auth');
 
         if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([

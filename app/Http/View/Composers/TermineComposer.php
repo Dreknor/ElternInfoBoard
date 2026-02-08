@@ -10,6 +10,11 @@ class TermineComposer
 {
     public function compose($view): void
     {
+        if (!auth()->check()) {
+            $view->with('termine', collect([]));
+            return;
+        }
+
         $expire = 60;
 
         $termine = Cache::remember('termine'.auth()->id(), $expire, function () {
