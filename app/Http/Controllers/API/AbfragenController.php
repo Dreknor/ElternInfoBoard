@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Model\AbfrageAntworten;
+use App\Model\AbfrageOptions;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
@@ -53,8 +54,8 @@ class AbfragenController extends Controller implements HasMiddleware
 
         $rueckmeldung = Rueckmeldungen::query()
             ->where('post_id', $post_id)
-            ->where('type', 'abfrage')
             ->first([
+                'id',
                 'post_id',
                 'type',
                 'ende',
@@ -64,9 +65,17 @@ class AbfragenController extends Controller implements HasMiddleware
                 'max_answers',
             ]);
 
+
+        Log::debug('API: Get fields for post '.$post_id.' and rueckmeldung '.$rueckmeldung->id);
+        Log::debug($rueckmeldung);
+
+        $optionen = AbfrageOptions::query()
+            ->where('rueckmeldung_id', $rueckmeldung->id)
+            ->get(['id', 'option', 'type', 'required']);
+
         return response()->json([
             'success' => true,
-            'fields' => $rueckmeldung->options,
+            'fields' => $optionen,
             'rueckmeldung' => $rueckmeldung,
         ]);
 
