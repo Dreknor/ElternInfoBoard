@@ -101,6 +101,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 
     /**
+     * Comments
+     */
+    Route::get('posts/{post}/comments', [\App\Http\Controllers\API\CommentController::class, 'index']);
+    Route::post('posts/{post}/comments', [\App\Http\Controllers\API\CommentController::class, 'store']);
+    Route::delete('comments/{comment}', [\App\Http\Controllers\API\CommentController::class, 'destroy']);
+
+    /**
+     * Polls
+     */
+    Route::get('posts/{post}/poll', [\App\Http\Controllers\API\PollController::class, 'show']);
+    Route::post('posts/{post}/poll/vote', [\App\Http\Controllers\API\PollController::class, 'vote']);
+
+    /**
      * Kontakt
      */
     Route::get('contact', [\App\Http\Controllers\API\ContactController::class, 'index']);

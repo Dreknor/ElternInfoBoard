@@ -140,6 +140,20 @@ class NachrichtenController extends Controller
             $nachricht->userReaction = $nachricht->userReaction($user);
             $nachricht->reactions = $reactions;
 
+            // Add poll information if available
+            if ($nachricht->poll) {
+                $nachricht->has_poll = true;
+                $nachricht->poll_id = $nachricht->poll->id;
+                $nachricht->user_has_voted = $nachricht->poll->votes()->where('author_id', $user->id)->exists();
+            } else {
+                $nachricht->has_poll = false;
+                $nachricht->poll_id = null;
+                $nachricht->user_has_voted = false;
+            }
+
+            // Add comment count
+            $nachricht->comment_count = $nachricht->comments()->count();
+
         }
 
         return response()->json($nachrichten);
