@@ -14,6 +14,7 @@ use App\Settings\KeyCloakSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
+use App\Settings\StundenplanSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -44,6 +45,7 @@ class SettingsController extends Controller implements HasMiddleware
         $schickzeitenSetting = new SchickzeitenSetting;
         $careSettings = new CareSetting;
         $pflichtstundenSetting = new PflichtstundenSetting;
+        $stundenplanSettings = new StundenplanSetting;
 
         $groups = Group::all();
         $roles = Role::all();
@@ -63,6 +65,7 @@ class SettingsController extends Controller implements HasMiddleware
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
             'pflichtstundenSettings' => $pflichtstundenSetting,
+            'stundenplanSettings' => $stundenplanSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -319,11 +322,41 @@ class SettingsController extends Controller implements HasMiddleware
                 $pflichtstundenSetting->pflichtstunden_bereiche = $bereiche;
                 $pflichtstundenSetting->save();
                 break;
+
+            case 'stundenplan':
+                $validated = $request->validate([
+                    'allow_web_import' => 'nullable|boolean',
+                    'allow_api_import' => 'nullable|boolean',
+                ]);
+
+                $stundenplanSetting = new StundenplanSetting;
+                $stundenplanSetting->allow_web_import = $request->has('allow_web_import');
+                $stundenplanSetting->allow_api_import = $request->has('allow_api_import');
+                $stundenplanSetting->save();
+
+                // Clear cache
+                Cache::forget('stundenplan_data');
+                break;
         }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Einstellungen gespeichert',
+        ]);
+    }
+
+    /**
+     * Regenerate Stundenplan API Key
+     */
+    public function regenerateStundenplanApiKey(Request $request): RedirectResponse
+    {
+        $stundenplanSetting = new StundenplanSetting;
+        $stundenplanSetting->import_api_key = \Illuminate\Support\Str::random(64);
+        $stundenplanSetting->save();
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Neuer API-Key erfolgreich generiert',
         ]);
     }
 

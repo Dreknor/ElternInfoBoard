@@ -32,6 +32,12 @@ Route::post('absences/', [\App\Http\Controllers\API\VertretungsplanConnectContro
 Route::put('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'updateAbsence']);
 Route::delete('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteAbsence']);
 
+/*
+ * Stundenplan Import API
+ */
+Route::post('stundenplan/import', [\App\Http\Controllers\API\StundenplanImportController::class, 'import']);
+Route::get('stundenplan/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'status']);
+
 Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });

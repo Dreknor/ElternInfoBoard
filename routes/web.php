@@ -99,6 +99,12 @@ Route::middleware('auth')->group(function () {
         // Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
 
+        // Stundenplan
+        Route::get('stundenplan', [\App\Http\Controllers\StundenplanController::class, 'index'])->middleware('can:view stundenplan')->name('stundenplan.index');
+        Route::get('stundenplan/klassen/{class}', [\App\Http\Controllers\StundenplanController::class, 'klassenAnsicht'])->middleware('can:view stundenplan')->name('stundenplan.klassen');
+        Route::get('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'showImport'])->middleware('permission:edit settings')->name('stundenplan.import');
+        Route::post('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'processImport'])->middleware('permission:edit settings')->name('stundenplan.import.process');
+
         Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
         Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
 
@@ -398,6 +404,7 @@ Route::middleware('auth')->group(function () {
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
             Route::get('settings', [SettingsController::class, 'index']);
             Route::put('settings/{group}', [SettingsController::class, 'update']);
+            Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
 
         });
 

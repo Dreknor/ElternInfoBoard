@@ -48,6 +48,9 @@ class AppServiceProvider extends ServiceProvider
 
         Schema::defaultStringLength(191);
 
+        // Set Laravel locale
+        app()->setLocale('de');
+
         setlocale(LC_TIME, 'de_DE');
         Carbon::setLocale('de_DE');
 

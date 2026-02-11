@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class Rueckmeldungen
@@ -73,6 +74,7 @@ class Rueckmeldungen extends Model
         if ($this->type == 'abfrage') {
             return $this->hasMany(AbfrageOptions::class, 'rueckmeldung_id');
         }
+
 
         return null;
     }

@@ -53,6 +53,11 @@
                                         type="button" role="tab" aria-controls="schoolyear" aria-selected="false">Schuljahreswechsel
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="stundenplan-tab" data-toggle="tab" data-target="#stundenplan"
+                                        type="button" role="tab" aria-controls="stundenplan" aria-selected="false">Stundenplan
+                                </button>
+                            </li>
                         </ul>
                         <div class="tab-content">
                             @include('settings.tabs.home-tab')
@@ -63,6 +68,7 @@
                             @include('settings.tabs.keycloak-tab')
                             @include('settings.tabs.schoolyear-tab')
                             @include('settings.tabs.pflichtstunden-tab')
+                            @include('settings.tabs.stundenplan-tab')
                         </div>
                     </div>
                 </div>

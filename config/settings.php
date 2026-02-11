@@ -18,6 +18,7 @@ return [
         \App\Settings\NotifySetting::class,
         \App\Settings\PflichtstundenSetting::class,
         \App\Settings\SchickzeitenSetting::class,
+        \App\Settings\StundenplanSetting::class,
 
     ],
 
