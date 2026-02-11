@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use App\Observers\PostObserver;
+use App\Traits\HasCommentsWithOptionalParent;
 use App\Traits\NotificationTrait;
 use Artisanry\Commentable\Traits\HasComments;
 use Bkwld\Cloner\Cloneable;
@@ -28,7 +29,9 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 class Post extends Model implements Auditable, HasMedia, ReactableInterface
 {
     use Cloneable;
-    use HasComments;
+    use HasComments, HasCommentsWithOptionalParent {
+        HasCommentsWithOptionalParent::comment insteadof HasComments;
+    }
     use HasFactory;
     use HasRelationships;
     use InteractsWithMedia;

@@ -8,6 +8,7 @@ use App\Model\User;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class NachrichtenController
@@ -27,15 +28,64 @@ class NachrichtenController extends Controller
      *
      * @group Nachrichten
      *
+     * @response 200 {
+     *   "success": true,
+     *   "data": [{
+     *     "id": 1,
+     *     "header": "string",
+     *     "news": "string",
+     *     "author": "string",
+     *     "sticky": boolean,
+     *     "reactable": boolean,
+     *     "read_receipt": boolean|string,
+     *     "read_receipt_deadline": "datetime|null",
+     *     "created_at": "datetime",
+     *     "updated_at": "datetime",
+     *     "archiv_ab": "datetime",
+     *     "media": [],
+     *     "reactions": {"like": 0, "love": 0, "celebrate": 0},
+     *     "user_reaction": "string|null",
+     *     "user_receipt": boolean,
+     *     "feedback": {
+     *       "type": "string|null",
+     *       "has_feedback": boolean,
+     *       "user_has_responded": boolean
+     *     },
+     *     "poll": {
+     *       "has_poll": boolean,
+     *       "poll_id": "integer|null",
+     *       "user_has_voted": boolean
+     *     },
+     *     "comments": {
+     *       "enabled": boolean,
+     *       "count": integer
+     *     }
+     *   }],
+     *   "available_reactions": [
+     *     {
+     *       "name": "like",
+     *       "id":: integer
+     *     },
+     *     {
+     *       "name": "love",
+     *        "id":: integer
+     *     }
+     *   ],
+     *   "message": "Posts retrieved successfully"
+     * }
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
-
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'Benutzer nicht gefunden'
+            ], 404);
         }
 
         if ($user->hasPermissionTo('view all', 'web')) {
@@ -121,42 +171,107 @@ class NachrichtenController extends Controller
 
         $nachrichten = $nachrichten->unique('id');
 
-        $reactions_collection = Reaction::query()->select('name')->get()->toArray();
+        Log::debug($nachrichten);
+
+        // Lade alle verfügbaren Reaktionstypen aus der Datenbank
+        $availableReactions = Reaction::query()
+            ->select('id', 'name')
+            ->get()
+            ->map(function ($reaction) {
+                return [
+                    'name' => $reaction->name,
+                    'id' => $reaction->id
+                ];
+            });
+
+        $formattedNachrichten = [];
 
         foreach ($nachrichten as $nachricht) {
             $nachricht->author = (is_null($nachricht->autor)) ? 'Fehler bei Nachricht '.$nachricht->id : $nachricht->autor->name;
             unset($nachricht->autor);
 
-            $reactions = array_fill_keys(array_column($reactions_collection, 'name'), 0);
+            // Format reactions - initialisiere mit 0 für alle verfügbaren Reaktionen
+            $reactions = [];
+            foreach ($availableReactions as $availableReaction) {
+                $reactions[$availableReaction['name']] = 0;
+            }
+
+            // Zähle die tatsächlichen Reaktionen für diesen Post
             foreach ($nachricht->getReactionsSummary() as $reaction) {
                 $reactions[$reaction->name] = $reaction->count;
             }
 
             $nachricht->read_receipt = ($nachricht->read_receipt == true) ? '1' : false;
-
             $nachricht->userReceipt = (is_null($nachricht->receipts()->where('user_id', $user->id)->first())) ? false : true;
 
             unset($nachricht->reactions);
             $nachricht->userReaction = $nachricht->userReaction($user);
             $nachricht->reactions = $reactions;
 
-            // Add poll information if available
-            if ($nachricht->poll) {
-                $nachricht->has_poll = true;
-                $nachricht->poll_id = $nachricht->poll->id;
-                $nachricht->user_has_voted = $nachricht->poll->votes()->where('author_id', $user->id)->exists();
-            } else {
-                $nachricht->has_poll = false;
-                $nachricht->poll_id = null;
-                $nachricht->user_has_voted = false;
+            // Structure feedback information
+            $feedbackInfo = [
+                'type' => null,
+                'has_feedback' => false,
+                'user_has_responded' => false,
+                'is_required' => false,
+                'deadline' => null,
+                'allows_multiple' => false,
+            ];
+
+            if ($nachricht->rueckmeldung) {
+                $feedbackInfo['has_feedback'] = true;
+                $feedbackInfo['type'] = $nachricht->rueckmeldung->type;
+                $feedbackInfo['is_required'] = (bool) $nachricht->rueckmeldung->pflicht;
+                $feedbackInfo['deadline'] = $nachricht->rueckmeldung->ende;
+                $feedbackInfo['allows_multiple'] = (bool) $nachricht->rueckmeldung->multiple;
+                $feedbackInfo['is_commentable'] = (bool) $nachricht->rueckmeldung->commentable;
+
+                $userFeedback = $nachricht->userRueckmeldung()
+                    ->where('users_id', $user->id)
+                    ->first();
+
+                $feedbackInfo['user_has_responded'] = !is_null($userFeedback);
             }
 
-            // Add comment count
-            $nachricht->comment_count = $nachricht->comments()->count();
+            $nachricht->feedback = $feedbackInfo;
 
+            // Structure poll information
+            $pollInfo = [
+                'has_poll' => false,
+                'poll_id' => null,
+                'user_has_voted' => false,
+            ];
+
+            if ($nachricht->poll) {
+                $pollInfo['has_poll'] = true;
+                $pollInfo['poll_id'] = $nachricht->poll->id;
+                $pollInfo['user_has_voted'] = $nachricht->poll->votes()->where('author_id', $user->id)->exists();
+            }
+
+            $nachricht->poll = $pollInfo;
+
+            // Structure comment information
+            $commentInfo = [
+                'enabled' => ($nachricht->rueckmeldung && $nachricht->rueckmeldung->commentable),
+                'count' => $nachricht->comments()->count(),
+            ];
+
+            $nachricht->comments = $commentInfo;
+
+            // Remove redundant fields
+            unset($nachricht->userRueckmeldung);
+            unset($nachricht->receipts);
+            unset($nachricht->rueckmeldung);
+
+            $formattedNachrichten[] = $nachricht;
         }
 
-        return response()->json($nachrichten);
+        return response()->json([
+            'success' => true,
+            'data' => $formattedNachrichten,
+            'available_reactions' => $availableReactions->toArray(),
+            'message' => 'Posts retrieved successfully'
+        ]);
     }
 
     /**
@@ -171,25 +286,56 @@ class NachrichtenController extends Controller
      *
      * @bodyParam reaction string required The name of the reaction. Example: like
      *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Reaction added"
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "Post not found",
+     *   "message": "Der Beitrag wurde nicht gefunden"
+     * }
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateReaction(Request $request, Post $post)
     {
 
         if (! $post) {
-            return response()->json(['error' => 'Post not found'], 404);
+            return response()->json([
+                'success' => false,
+                'error' => 'Post not found',
+                'message' => 'Der Beitrag wurde nicht gefunden'
+            ], 404);
         }
 
         $reaction = Reaction::query()->where('name', $request->reaction)->first();
         if (! $reaction) {
-            return response()->json(['error' => 'Reaction not found'], 404);
+            return response()->json([
+                'success' => false,
+                'error' => 'Reaction not found',
+                'message' => 'Die Reaktion wurde nicht gefunden'
+            ], 404);
         }
+
+        Log::debug('Reaktion: ' . $reaction);
+        Log::debug('Post: ' . $post);
+        Log::debug('oldReaction: ' . $post->getReactionsSummary());
 
         $user = $request->user();
 
+        Log::debug('User '.$user->id.' reacts to post '.$post->id.' with reaction '.$reaction->name);
+
+
         $user->reactTo($post, $reaction);
 
-        return response()->json(['success' => 'Reaction added'], 200);
+        Log::debug($post->getReactionsSummary());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reaction added'
+        ], 200);
 
     }
 
@@ -203,26 +349,63 @@ class NachrichtenController extends Controller
      *
      * @urlParam post required The ID of the post. Example: 1
      *
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "id": 1,
+     *     "header": "string",
+     *     "news": "string",
+     *     "...": "..."
+     *   }
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "Post not found",
+     *   "message": "Der Beitrag wurde nicht gefunden"
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "error": "User not allowed",
+     *   "message": "Sie haben keine Berechtigung für diesen Beitrag"
+     * }
+     *
      * @param  int  $post
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Request $request, Post $post)
     {
         if (! $post) {
-            return response()->json(['error' => 'Post not found'], 404);
+            return response()->json([
+                'success' => false,
+                'error' => 'Post not found',
+                'message' => 'Der Beitrag wurde nicht gefunden'
+            ], 404);
         }
 
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['error' => 'User not found'], 404);
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'Benutzer nicht gefunden'
+            ], 404);
         }
 
         if (! $post->users->contains($user)) {
-            return response()->json(['error' => 'User not allowed'], 403);
+            return response()->json([
+                'success' => false,
+                'error' => 'User not allowed',
+                'message' => 'Sie haben keine Berechtigung für diesen Beitrag'
+            ], 403);
         }
 
-        return response()->json($post);
+        return response()->json([
+            'success' => true,
+            'data' => $post
+        ]);
 
     }
 }

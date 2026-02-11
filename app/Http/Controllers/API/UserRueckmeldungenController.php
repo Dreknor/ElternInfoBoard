@@ -21,11 +21,39 @@ class UserRueckmeldungenController extends Controller
      *
      * @group Rückmeldungen
      *
-     * @bodyParam post_id integer required The ID of the post to which the feedback is related.
-     * @bodyParam text string required The feedback text.
+     * @bodyParam post_id integer required The ID of the post to which the feedback is related. Example: 1
+     * @bodyParam text string required The feedback text. Example: "Ich nehme teil"
      *
-     * @responseField success string The success message.
-     * @responseField userRueckmeldung object The user feedback object.
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Rückmeldung abgegeben",
+     *   "data": {
+     *     "id": 1,
+     *     "post_id": 1,
+     *     "users_id": 1,
+     *     "text": "Ich nehme teil",
+     *     "created_at": "2026-02-11T10:00:00.000000Z",
+     *     "updated_at": "2026-02-11T10:00:00.000000Z"
+     *   }
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "User not found",
+     *   "message": "Benutzer nicht gefunden"
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "error": "User not allowed",
+     *   "message": "Keine Berechtigung für diesen Beitrag"
+     * }
+     *
+     * @response 409 {
+     *   "success": false,
+     *   "error": "Already responded",
+     *   "message": "Rückmeldung bereits abgegeben"
+     * }
      *
      * @authenticated
      *
@@ -33,42 +61,51 @@ class UserRueckmeldungenController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'post_id' => 'required|integer|exists:posts,id',
+            'text' => 'required|string|max:5000',
+        ]);
+
         $post = Post::query()->find($request->post_id);
         $user = $request->user();
 
         if (! $user) {
             return response()->json([
+                'success' => false,
                 'error' => 'User not found',
+                'message' => 'Benutzer nicht gefunden'
             ], 404);
         }
 
         if (! $post) {
             return response()->json([
+                'success' => false,
                 'error' => 'Post not found',
+                'message' => 'Beitrag nicht gefunden'
             ], 404);
         }
 
         if (! $post->users->contains($user)) {
             return response()->json([
-                'error' => 'User not allowed to give feedback for this post',
+                'success' => false,
+                'error' => 'User not allowed',
+                'message' => 'Keine Berechtigung für diesen Beitrag'
             ], 403);
         }
 
         if (! $post->rueckmeldung) {
             return response()->json([
-                'error' => 'Feedback not enabled for this post',
+                'success' => false,
+                'error' => 'Feedback not enabled',
+                'message' => 'Rückmeldung für diesen Beitrag nicht aktiviert'
             ], 404);
         }
 
         if ($post->rueckmeldung->active != 1) {
             return response()->json([
-                'error' => 'Feedback not active for this post',
-            ], 404);
-        }
-
-        if (! $user) {
-            return response()->json([
-                'error' => 'User not found',
+                'success' => false,
+                'error' => 'Feedback not active',
+                'message' => 'Rückmeldung ist nicht aktiv'
             ], 404);
         }
 
@@ -80,8 +117,10 @@ class UserRueckmeldungenController extends Controller
 
             if ($userRueckmeldung) {
                 return response()->json([
-                    'error' => 'Rückmeldung bereits abgegeben',
-                    'userRueckmeldung' => $userRueckmeldung,
+                    'success' => false,
+                    'error' => 'Already responded',
+                    'message' => 'Rückmeldung bereits abgegeben',
+                    'data' => $userRueckmeldung,
                 ], 409);
             }
         }
@@ -117,8 +156,9 @@ class UserRueckmeldungenController extends Controller
         }
 
         return response()->json([
-            'success' => 'Rückmeldung abgegeben',
-            'userRueckmeldung' => $userRueckmeldung,
+            'success' => true,
+            'message' => 'Rückmeldung abgegeben',
+            'data' => $userRueckmeldung,
         ], 200);
     }
 }

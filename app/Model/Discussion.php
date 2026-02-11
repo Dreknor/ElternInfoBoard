@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Traits\HasCommentsWithOptionalParent;
 use Artisanry\Commentable\Traits\HasComments;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,9 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Discussion extends Model implements HasMedia
 {
-    use HasComments;
+    use HasComments, HasCommentsWithOptionalParent {
+        HasCommentsWithOptionalParent::comment insteadof HasComments;
+    }
     use HasFactory;
     use InteractsWithMedia;
     use SoftDeletes;

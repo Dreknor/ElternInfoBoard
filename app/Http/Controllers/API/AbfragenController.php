@@ -30,12 +30,52 @@ class AbfragenController extends Controller implements HasMiddleware
      *
      * Get the fields for the post with the given id
      *
-     *  @group Rückmeldungen
+     * @group Rückmeldungen
      *
-     * @responseField fields array The fields
-     * @responseField rueckmeldung object The rueckmeldung
+     * @urlParam post_id required The id of the post. Example: 1
      *
-     * @urlParam post_id required The id of the post
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "fields": [
+     *       {
+     *         "id": 1,
+     *         "option": "Name",
+     *         "type": "text",
+     *         "required": true
+     *       },
+     *       {
+     *         "id": 2,
+     *         "option": "Email",
+     *         "type": "email",
+     *         "required": true
+     *       }
+     *     ],
+     *     "rueckmeldung": {
+     *       "id": 1,
+     *       "post_id": 1,
+     *       "type": "abfrage",
+     *       "ende": "2026-03-01T00:00:00.000000Z",
+     *       "text": "Bitte füllen Sie die Abfrage aus",
+     *       "pflicht": true,
+     *       "multiple": false,
+     *       "max_answers": 1
+     *     }
+     *   },
+     *   "message": "Felder erfolgreich abgerufen"
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "Post not found",
+     *   "message": "Beitrag nicht gefunden"
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "error": "Access denied",
+     *   "message": "Sie haben keine Berechtigung für diesen Beitrag"
+     * }
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -45,11 +85,19 @@ class AbfragenController extends Controller implements HasMiddleware
         $post = Post::query()->where('id', $post_id)->firstOrFail();
 
         if ($post == null) {
-            return response()->json(['success' => false, 'message' => 'Post not found']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Post not found',
+                'message' => 'Beitrag nicht gefunden'
+            ], 404);
         }
 
         if ($post->groups->intersect(auth()->user()->groups)->count() == 0) {
-            return response()->json(['success' => false, 'message' => 'You are not allowed to see this post']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Access denied',
+                'message' => 'Sie haben keine Berechtigung für diesen Beitrag'
+            ], 403);
         }
 
         $rueckmeldung = Rueckmeldungen::query()
@@ -65,6 +113,13 @@ class AbfragenController extends Controller implements HasMiddleware
                 'max_answers',
             ]);
 
+        if (!$rueckmeldung) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No rueckmeldung found',
+                'message' => 'Keine Rückmeldung für diesen Beitrag gefunden'
+            ], 404);
+        }
 
         Log::debug('API: Get fields for post '.$post_id.' and rueckmeldung '.$rueckmeldung->id);
         Log::debug($rueckmeldung);
@@ -75,8 +130,11 @@ class AbfragenController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'fields' => $optionen,
-            'rueckmeldung' => $rueckmeldung,
+            'data' => [
+                'fields' => $optionen,
+                'rueckmeldung' => $rueckmeldung,
+            ],
+            'message' => 'Felder erfolgreich abgerufen',
         ]);
 
     }
@@ -88,9 +146,32 @@ class AbfragenController extends Controller implements HasMiddleware
      *
      * @group Rückmeldungen
      *
-     * bodyParam data array required the data to store. The data must be an array of objects with the following structure of getFields response.
+     * @urlParam post required The id of the post. Example: 1
      *
-     * @urlParam post required The id of the post
+     * @bodyParam data array required The data to store. The data must be an array of objects with the following structure: [{"id": 1, "value": "Antwort"}]. Each object must have an "id" (the field ID from getFields) and a "value" (the user's answer). Example: [{"id": 1, "value": "Max Mustermann"}, {"id": 2, "value": "max@example.com"}]
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Antwort gespeichert"
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "Post not found",
+     *   "message": "Beitrag nicht gefunden"
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "error": "Access denied",
+     *   "message": "Sie haben keine Berechtigung, auf diesen Beitrag zu antworten"
+     * }
+     *
+     * @response 400 {
+     *   "success": false,
+     *   "error": "Invalid data",
+     *   "message": "Ungültige Daten"
+     * }
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -98,27 +179,45 @@ class AbfragenController extends Controller implements HasMiddleware
     {
 
         $request->validate([
-            'data' => 'required',
+            'data' => 'required|array',
+            'data.*.id' => 'required|integer',
+            'data.*.value' => 'required',
         ]);
 
         $post = Post::query()->where('id', $post)->firstOrFail();
 
         if ($post == null) {
-            return response()->json(['success' => false, 'message' => 'Post not found']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Post not found',
+                'message' => 'Beitrag nicht gefunden'
+            ], 404);
         }
 
         if ($post->groups->intersect(request()->user()->groups)->count() == 0) {
-            return response()->json(['success' => false, 'message' => 'You are not allowed to answer this post']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Access denied',
+                'message' => 'Sie haben keine Berechtigung, auf diesen Beitrag zu antworten'
+            ], 403);
         }
 
         $rueckmeldung = $post->rueckmeldung;
 
         if ($rueckmeldung == null) {
-            return response()->json(['success' => false, 'message' => 'No abfrage found']);
+            return response()->json([
+                'success' => false,
+                'error' => 'No abfrage found',
+                'message' => 'Keine Abfrage für diesen Beitrag gefunden'
+            ], 404);
         }
 
         if ($rueckmeldung->type != 'abfrage') {
-            return response()->json(['success' => false, 'message' => 'Invalid abfrage type']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid abfrage type',
+                'message' => 'Ungültiger Rückmeldungstyp'
+            ], 400);
         }
 
         $userRueckmeldung = UserRueckmeldungen::query()
@@ -139,9 +238,13 @@ class AbfragenController extends Controller implements HasMiddleware
 
             foreach ($request->data as $value) {
 
-                if (is_array($value) && count($value) == 2) {
+                if (is_array($value) && isset($value['id']) && isset($value['value'])) {
                     if (! is_numeric($value['id'])) {
-                        return response()->json(['success' => false, 'message' => 'Invalid data']);
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Invalid data',
+                            'message' => 'Ungültige Daten: ID muss numerisch sein'
+                        ], 400);
                     }
 
                     $data[] = [
@@ -154,7 +257,11 @@ class AbfragenController extends Controller implements HasMiddleware
                     ];
 
                 } else {
-                    return response()->json(['success' => false, 'message' => 'Invalid data']);
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Invalid data',
+                        'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
+                    ], 400);
                 }
 
             }
@@ -175,9 +282,13 @@ class AbfragenController extends Controller implements HasMiddleware
 
             foreach ($request->data as $value) {
 
-                if (is_array($value) && count($value) == 2) {
+                if (is_array($value) && isset($value['id']) && isset($value['value'])) {
                     if (! is_numeric($value['id'])) {
-                        return response()->json(['success' => false, 'message' => 'Invalid data']);
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Invalid data',
+                            'message' => 'Ungültige Daten: ID muss numerisch sein'
+                        ], 400);
                     }
 
                     $data[] = [
@@ -190,7 +301,11 @@ class AbfragenController extends Controller implements HasMiddleware
                     ];
 
                 } else {
-                    return response()->json(['success' => false, 'message' => 'Invalid data']);
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Invalid data',
+                        'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
+                    ], 400);
                 }
 
             }
@@ -198,9 +313,13 @@ class AbfragenController extends Controller implements HasMiddleware
         }
 
         if (count($data) == 0) {
-            $rueckmeldung->delete();
+            $userRueckmeldung->delete();
 
-            return response()->json(['success' => false, 'message' => 'Invalid data']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid data',
+                'message' => 'Keine gültigen Daten zum Speichern'
+            ], 400);
         }
 
         try {
@@ -208,10 +327,17 @@ class AbfragenController extends Controller implements HasMiddleware
         } catch (\Exception $e) {
             Log::error('API: Error saving abfrage antworten: '.$e->getMessage());
 
-            return response()->json(['success' => false, 'message' => 'Error saving data']);
+            return response()->json([
+                'success' => false,
+                'error' => 'Error saving data',
+                'message' => 'Fehler beim Speichern der Daten'
+            ], 500);
         }
 
-        return response()->json(['success' => true, 'message' => 'Antwort gespeichert']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Antwort gespeichert'
+        ]);
 
     }
 }

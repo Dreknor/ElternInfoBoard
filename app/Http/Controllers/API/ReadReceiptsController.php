@@ -22,6 +22,19 @@ class ReadReceiptsController extends Controller
      *
      * @group Nachrichten
      *
+     * @urlParam post required The ID of the post. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Lesebestätigung gespeichert"
+     * }
+     *
+     * @response 500 {
+     *   "success": false,
+     *   "error": "Die Lesebestätigung konnte nicht verarbeitet werden.",
+     *   "message": "Ein Fehler ist aufgetreten"
+     * }
+     *
      * @param  \Illuminate\Http\Request  $request  The incoming request instance.
      * @return \Illuminate\Http\JsonResponse JSON response indicating success or failure.
      */
@@ -48,7 +61,10 @@ class ReadReceiptsController extends Controller
                 $receipt->save();
             }
 
-            return response()->json(['success' => true], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Lesebestätigung gespeichert'
+            ], 200);
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
             Log::error('Fehler beim Speichern der Lesebestätigung: ', [
@@ -57,7 +73,11 @@ class ReadReceiptsController extends Controller
                 'user_id' => $user->id,
             ]);
 
-            return response()->json(['error' => 'Die Lesebestätigung konnte nicht verarbeitet werden.'], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Die Lesebestätigung konnte nicht verarbeitet werden.',
+                'message' => 'Ein Fehler ist aufgetreten'
+            ], 500);
         }
 
     }

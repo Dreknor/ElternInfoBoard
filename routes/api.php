@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
      * Nachrichten
      */
     Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
+    Route::get('posts/{post}', [\App\Http\Controllers\API\NachrichtenController::class, 'show']);
     Route::post('posts/{post}/reactions', [\App\Http\Controllers\API\NachrichtenController::class, 'updateReaction']);
     Route::post('posts/{post}/read', [\App\Http\Controllers\API\ReadReceiptsController::class, 'store']);
 

@@ -47,7 +47,7 @@ class CommentController extends Controller
         }
 
         $comments = $post->comments()
-            ->with(['commentator' => function ($query) {
+            ->with(['creator' => function ($query) {
                 $query->select('id', 'name');
             }])
             ->orderBy('created_at', 'desc')
@@ -56,8 +56,8 @@ class CommentController extends Controller
                 return [
                     'id' => $comment->id,
                     'body' => $comment->body,
-                    'author' => $comment->commentator->name ?? 'Unbekannt',
-                    'author_id' => $comment->commentator_id,
+                    'author' => $comment->creator->name ?? 'Unbekannt',
+                    'author_id' => $comment->creator_id,
                     'created_at' => $comment->created_at->toIso8601String(),
                     'updated_at' => $comment->updated_at->toIso8601String(),
                 ];
@@ -155,7 +155,7 @@ class CommentController extends Controller
         }
 
         // Check if user is the author or has delete permission
-        if ($comment->commentator_id !== $user->id && !$user->can('delete posts')) {
+        if ($comment->creator_id !== $user->id && !$user->can('delete posts')) {
             return response()->json(['error' => 'User not allowed to delete this comment'], 403);
         }
 
