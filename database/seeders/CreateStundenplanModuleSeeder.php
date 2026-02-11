@@ -17,6 +17,8 @@ class CreateStundenplanModuleSeeder extends Seeder
         // Create permissions for stundenplan
         $permissions = [
             'view stundenplan',
+            'view stundenplan teacher',
+            'view stundenplan room',
             'edit stundenplan',
         ];
 
@@ -32,11 +34,19 @@ class CreateStundenplanModuleSeeder extends Seeder
                 $adminRole->givePermissionTo($permission);
             }
 
-            // Assign view permission to lehrer role
-            if ($permissionName === 'view stundenplan') {
+            // Assign view permissions to lehrer role
+            if (in_array($permissionName, ['view stundenplan', 'view stundenplan teacher', 'view stundenplan room'])) {
                 $lehrerRole = Role::where('name', 'lehrer')->first();
                 if ($lehrerRole && !$lehrerRole->hasPermissionTo($permission)) {
                     $lehrerRole->givePermissionTo($permission);
+                }
+            }
+
+            // Assign only basic view permission to eltern role (restricted to children's classes)
+            if ($permissionName === 'view stundenplan') {
+                $elternRole = Role::where('name', 'eltern')->first();
+                if ($elternRole && !$elternRole->hasPermissionTo($permission)) {
+                    $elternRole->givePermissionTo($permission);
                 }
             }
         }

@@ -44,12 +44,116 @@ class StundenplanController extends Controller
             ]);
         }
 
+        $user = $request->user();
+        $allClasses = $this->extractClasses($data);
+        $classes = $allClasses;
+
+        // Filter classes for parents
+        if ($user->hasRole('eltern')) {
+            $allowedClasses = $this->getAllowedClassesForParent($user);
+            $classes = array_intersect($allClasses, $allowedClasses);
+        }
+
         return view('stundenplan.index', [
             'data' => $data,
             'currentView' => $view,
-            'classes' => $this->extractClasses($data),
+            'classes' => $classes,
             'teachers' => $this->extractTeachers($data),
             'rooms' => $this->extractRooms($data),
+            'isParent' => $user->hasRole('eltern'),
+            'canViewTeacher' => $user->can('view stundenplan teacher'),
+            'canViewRoom' => $user->can('view stundenplan room'),
+        ]);
+    }
+
+    /**
+     * Display the teacher view
+     */
+    public function lehrerAnsicht(Request $request, $teacher)
+    {
+        if (!$request->user()->can('view stundenplan')) {
+            return redirect(url('home'))->with([
+                'type' => 'error',
+                'Meldung' => 'Sie haben keine Berechtigung, den Stundenplan anzusehen.',
+            ]);
+        }
+
+        // Check permission for teacher view
+        if (!$request->user()->can('view stundenplan teacher')) {
+            return redirect()->route('stundenplan.index')->with([
+                'type' => 'error',
+                'Meldung' => 'Sie haben keine Berechtigung, die Lehreransicht anzusehen.',
+            ]);
+        }
+
+        $data = $this->getStundenplanData();
+
+        // If no data available, redirect to index with message
+        if (!$data) {
+            return redirect()->route('stundenplan.index')->with([
+                'type' => 'warning',
+                'Meldung' => 'Noch kein Stundenplan importiert.',
+            ]);
+        }
+
+        $timetable = $this->buildTimetableForTeacher($data, $teacher);
+
+        // Get substitutions for the teacher for the current week
+        $startDate = Carbon::now()->startOfWeek();
+        $endDate = Carbon::now()->endOfWeek();
+
+        try {
+            $vertretungen = Vertretung::whereJsonContains('lehrer', $teacher)
+                ->orWhere('lehrer', 'LIKE', "%{$teacher}%")
+                ->whereBetween('date', [$startDate, $endDate])
+                ->get()
+                ->groupBy(function($item) {
+                    return Carbon::parse($item->date)->dayOfWeekIso;
+                });
+        } catch (\Exception $e) {
+            $vertretungen = collect();
+        }
+
+        try {
+            // Get news for the current week
+            $news = VertretungsplanNews::where('start', '<=', $endDate)
+                ->where('end', '>=', $startDate)
+                ->get();
+        } catch (\Exception $e) {
+            $news = collect();
+        }
+
+        try {
+            // Get absences for this week
+            $absences = VertretungsplanAbsence::where('start_date', '<=', $endDate)
+                ->where(function($query) use ($startDate) {
+                    $query->where('end_date', '>=', $startDate)
+                        ->orWhereNull('end_date');
+                })
+                ->get();
+        } catch (\Exception $e) {
+            $absences = collect();
+        }
+
+        try {
+            // Get week type (A/B week)
+            $currentWeek = VertretungsplanWeek::whereDate('week', '<=', Carbon::now())
+                ->orderBy('week', 'desc')
+                ->first();
+        } catch (\Exception $e) {
+            $currentWeek = null;
+        }
+
+        return view('stundenplan.lehrer', [
+            'teacher' => $teacher,
+            'timetable' => $timetable,
+            'basisdaten' => $data['Basisdaten'],
+            'zeitslots' => $data['Zeitslots'],
+            'vertretungen' => $vertretungen,
+            'news' => $news,
+            'absences' => $absences,
+            'currentWeek' => $currentWeek,
+            'startDate' => $startDate,
         ]);
     }
 
@@ -58,11 +162,25 @@ class StundenplanController extends Controller
      */
     public function klassenAnsicht(Request $request, $class)
     {
-        if (!$request->user()->can('view stundenplan')) {
+        // Check if user is parent and restrict to their child's classes
+        $user = $request->user();
+
+        if (!$user->can('view stundenplan')) {
             return redirect(url('home'))->with([
                 'type' => 'error',
                 'Meldung' => 'Sie haben keine Berechtigung, den Stundenplan anzusehen.',
             ]);
+        }
+
+        // Check parent permissions
+        if ($user->hasRole('eltern')) {
+            $allowedClasses = $this->getAllowedClassesForParent($user);
+            if (!in_array($class, $allowedClasses)) {
+                return redirect()->route('stundenplan.index')->with([
+                    'type' => 'error',
+                    'Meldung' => 'Sie haben keine Berechtigung, diesen Stundenplan anzusehen.',
+                ]);
+            }
         }
 
         $data = $this->getStundenplanData();
@@ -258,6 +376,81 @@ class StundenplanController extends Controller
         }
 
         return $timetable;
+    }
+
+    /**
+     * Build timetable array for a specific teacher
+     */
+    private function buildTimetableForTeacher($data, $teacherName)
+    {
+        $timetable = [];
+
+        // Initialize empty timetable
+        for ($tag = 1; $tag <= 5; $tag++) {
+            for ($stunde = 1; $stunde <= 6; $stunde++) {
+                $timetable[$tag][$stunde] = [];
+            }
+        }
+
+        // Search through all classes
+        foreach ($data['Klassen'] as $klasse) {
+            if (!isset($klasse['Plan']) || !is_array($klasse['Plan'])) {
+                continue;
+            }
+
+            foreach ($klasse['Plan'] as $entry) {
+                // Check if this entry includes the teacher
+                if (!isset($entry['PlLe']) || !is_array($entry['PlLe'])) {
+                    continue;
+                }
+
+                if (!in_array($teacherName, $entry['PlLe'])) {
+                    continue;
+                }
+
+                // Skip entries with missing or invalid data
+                if (!isset($entry['PlTg']) || !isset($entry['PlSt'])) {
+                    continue;
+                }
+
+                $tag = (int) $entry['PlTg'];
+                $stunde = (int) $entry['PlSt'];
+
+                // Validate ranges
+                if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= 6) {
+                    // Add class information to entry
+                    $entryWithClass = $entry;
+                    $entryWithClass['KlassenInfo'] = $klasse['Kurzform'];
+                    $timetable[$tag][$stunde][] = $entryWithClass;
+                }
+            }
+        }
+
+        return $timetable;
+    }
+
+    /**
+     * Get allowed classes for a parent user
+     */
+    private function getAllowedClassesForParent($user)
+    {
+        $allowedClasses = [];
+
+        // Get all children of the parent
+        $children = $user->childRelations()->with('child.groups')->get();
+
+        foreach ($children as $childRelation) {
+            if ($childRelation->child && $childRelation->child->groups) {
+                foreach ($childRelation->child->groups as $group) {
+                    // Use group shortname as class identifier
+                    if ($group->shortname) {
+                        $allowedClasses[] = $group->shortname;
+                    }
+                }
+            }
+        }
+
+        return array_unique($allowedClasses);
     }
 
     /**

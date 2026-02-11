@@ -44,18 +44,22 @@
                         <i class="fas fa-users"></i>
                         {{ __('stundenplan.view_by_class') }}
                     </button>
+                    @if($canViewTeacher)
                     <button @click="activeTab = 'teacher'"
                             :class="activeTab === 'teacher' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2">
                         <i class="fas fa-chalkboard-teacher"></i>
                         {{ __('stundenplan.view_by_teacher') }}
                     </button>
+                    @endif
+                    @if($canViewRoom)
                     <button @click="activeTab = 'room'"
                             :class="activeTab === 'room' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                             class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center gap-2">
                         <i class="fas fa-door-open"></i>
                         {{ __('stundenplan.view_by_room') }}
                     </button>
+                    @endif
                 </nav>
 
                 <!-- Content Area -->
@@ -101,10 +105,11 @@
                             </select>
                         </div>
 
-                        <div class="bg-blue-50 rounded-lg p-12 text-center border-2 border-blue-200">
-                            <i class="fas fa-chalkboard-teacher text-6xl text-blue-400 mb-4"></i>
-                            <p class="text-blue-700 text-lg font-medium">{{ __('stundenplan.teacher_view_development') }}</p>
-                            <p class="text-blue-600 text-sm mt-2">{{ __('stundenplan.feature_coming_soon') }}</p>
+                        <div id="teacher-timetable-container">
+                            <div class="bg-gray-50 rounded-lg p-12 text-center">
+                                <i class="fas fa-chalkboard-teacher text-6xl text-gray-300 mb-4"></i>
+                                <p class="text-gray-500 text-lg">{{ __('stundenplan.select_teacher') }}</p>
+                            </div>
                         </div>
                     </div>
 
@@ -159,6 +164,39 @@ function loadClassTimetable(className) {
     // Fetch timetable for selected class
     window.location.href = `/stundenplan/klassen/${className}`;
 }
+
+function loadTeacherTimetable(teacherName) {
+    if (!teacherName) {
+        document.getElementById('teacher-timetable-container').innerHTML = `
+            <div class="bg-gray-50 rounded-lg p-12 text-center">
+                <i class="fas fa-chalkboard-teacher text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">{{ __('stundenplan.select_teacher') }}</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Show loading state
+    document.getElementById('teacher-timetable-container').innerHTML = `
+        <div class="bg-blue-50 rounded-lg p-12 text-center border-2 border-blue-200">
+            <i class="fas fa-spinner fa-spin text-6xl text-blue-500 mb-4"></i>
+            <p class="text-blue-700 text-lg font-medium">{{ __('stundenplan.loading') }}</p>
+        </div>
+    `;
+
+    // Fetch timetable for selected teacher
+    window.location.href = `/stundenplan/lehrer/${teacherName}`;
+}
+
+// Add event listener for teacher select
+document.addEventListener('DOMContentLoaded', function() {
+    const teacherSelect = document.getElementById('teacher-select');
+    if (teacherSelect) {
+        teacherSelect.addEventListener('change', function() {
+            loadTeacherTimetable(this.value);
+        });
+    }
+});
 </script>
 @endsection
 

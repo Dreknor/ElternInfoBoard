@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
         // Stundenplan
         Route::get('stundenplan', [\App\Http\Controllers\StundenplanController::class, 'index'])->middleware('can:view stundenplan')->name('stundenplan.index');
         Route::get('stundenplan/klassen/{class}', [\App\Http\Controllers\StundenplanController::class, 'klassenAnsicht'])->middleware('can:view stundenplan')->name('stundenplan.klassen');
+        Route::get('stundenplan/lehrer/{teacher}', [\App\Http\Controllers\StundenplanController::class, 'lehrerAnsicht'])->middleware('can:view stundenplan teacher')->name('stundenplan.lehrer');
         Route::get('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'showImport'])->middleware('permission:edit settings')->name('stundenplan.import');
         Route::post('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'processImport'])->middleware('permission:edit settings')->name('stundenplan.import.process');
 

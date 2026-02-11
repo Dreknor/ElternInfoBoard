@@ -38,6 +38,18 @@ Route::delete('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnect
 Route::post('stundenplan/import', [\App\Http\Controllers\API\StundenplanImportController::class, 'import']);
 Route::get('stundenplan/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'status']);
 
+/*
+ * Stundenplan Query API (with authentication)
+ */
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('stundenplan/classes', [\App\Http\Controllers\API\StundenplanController::class, 'getClasses']);
+    Route::get('stundenplan/teachers', [\App\Http\Controllers\API\StundenplanController::class, 'getTeachers']);
+    Route::get('stundenplan/rooms', [\App\Http\Controllers\API\StundenplanController::class, 'getRooms']);
+    Route::get('stundenplan/class/{classId}', [\App\Http\Controllers\API\StundenplanController::class, 'getTimetableByClass']);
+    Route::get('stundenplan/teacher/{teacherId}', [\App\Http\Controllers\API\StundenplanController::class, 'getTimetableByTeacher']);
+    Route::get('stundenplan/room/{roomId}', [\App\Http\Controllers\API\StundenplanController::class, 'getTimetableByRoom']);
+});
+
 Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });
