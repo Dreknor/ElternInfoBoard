@@ -101,7 +101,7 @@ class UserRueckmeldungenController extends Controller
             ], 404);
         }
 
-        if ($post->rueckmeldung->active != 1) {
+        if ($post->rueckmeldung->active === false) {
             return response()->json([
                 'success' => false,
                 'error' => 'Feedback not active',
