@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * Rueckmeldungen
      */
+    Route::get('rueckmeldung/{post_id}', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'index']);
     Route::post('rueckmeldung', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'store']);
 
     /**

@@ -17,6 +17,97 @@ use Illuminate\Support\Facades\Mail;
 class UserRueckmeldungenController extends Controller
 {
     /**
+     * Get existing user feedback for a post.
+     *
+     * @group Rückmeldungen
+     *
+     * @urlParam post_id integer required The ID of the post. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "post_id": 1,
+     *       "users_id": 1,
+     *       "text": "Ich nehme teil",
+     *       "created_at": "2026-02-11T10:00:00.000000Z",
+     *       "updated_at": "2026-02-11T10:00:00.000000Z",
+     *       "user": {
+     *         "id": 1,
+     *         "name": "Max Mustermann",
+     *         "email": "max@example.com"
+     *       }
+     *     }
+     *   ]
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "Post not found",
+     *   "message": "Beitrag nicht gefunden"
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "error": "User not allowed",
+     *   "message": "Keine Berechtigung für diesen Beitrag"
+     * }
+     *
+     * @authenticated
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request, $post_id)
+    {
+        $post = Post::query()->find($post_id);
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'Benutzer nicht gefunden'
+            ], 404);
+        }
+
+        if (! $post) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Post not found',
+                'message' => 'Beitrag nicht gefunden'
+            ], 404);
+        }
+
+        if (! $post->users->contains($user)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not allowed',
+                'message' => 'Keine Berechtigung für diesen Beitrag'
+            ], 403);
+        }
+
+        // Collect user IDs: authenticated user and sorgeberechtigter2
+        $userIds = [$user->id];
+        if (! is_null($user->sorg2)) {
+            $userIds[] = $user->sorg2;
+        }
+
+        // Get all feedback from the user and sorgeberechtigter2 for this post
+        $rueckmeldungen = UserRueckmeldungen::query()
+            ->where('post_id', $post_id)
+            ->whereIn('users_id', $userIds)
+            ->with('user:id,name,email')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $rueckmeldungen,
+        ], 200);
+    }
+
+    /**
      * Store a newly created user feedback in storage.
      *
      * @group Rückmeldungen

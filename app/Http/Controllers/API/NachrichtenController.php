@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use function PHPUnit\Framework\returnArgument;
 
 /**
  * Class NachrichtenController
@@ -363,8 +364,47 @@ class NachrichtenController extends Controller
      *     "id": 1,
      *     "header": "string",
      *     "news": "string",
-     *     "...": "..."
-     *   }
+     *     "author": "string",
+     *     "sticky": boolean,
+     *     "reactable": boolean,
+     *     "read_receipt": boolean|string,
+     *     "read_receipt_deadline": "datetime|null",
+     *     "created_at": "datetime",
+     *     "updated_at": "datetime",
+     *     "archiv_ab": "datetime",
+     *     "media": [],
+     *     "reactions": {
+     *       "enabled": boolean,
+     *       "reactions": {"like": 0, "love": 0, "celebrate": 0}
+     *     },
+     *     "user_reaction": "string|null",
+     *     "user_receipt": boolean,
+     *     "feedback": {
+     *       "type": "string|null",
+     *       "has_feedback": boolean,
+     *       "user_has_responded": boolean
+     *     },
+     *     "poll": {
+     *       "has_poll": boolean,
+     *       "poll_id": "integer|null",
+     *       "user_has_voted": boolean
+     *     },
+     *     "comments": {
+     *       "enabled": boolean,
+     *       "count": integer
+     *     }
+     *   },
+     *   "available_reactions": [
+     *     {
+     *       "name": "like",
+     *       "id":: integer
+     *     },
+     *     {
+     *       "name": "love",
+     *        "id":: integer
+     *     }
+     *   ],
+     *   "message": "Post retrieved successfully"
      * }
      *
      * @response 404 {
@@ -384,6 +424,7 @@ class NachrichtenController extends Controller
      */
     public function show(Request $request, Post $post)
     {
+
         if (! $post) {
             return response()->json([
                 'success' => false,
@@ -402,17 +443,134 @@ class NachrichtenController extends Controller
             ], 404);
         }
 
-        if (! $post->users->contains($user)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not allowed',
-                'message' => 'Sie haben keine Berechtigung für diesen Beitrag'
-            ], 403);
+        // Check if user has access to this post
+        if (! $user->hasPermissionTo('view all', 'web')) {
+            if (! $post->users->contains($user)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'User not allowed',
+                    'message' => 'Sie haben keine Berechtigung für diesen Beitrag'
+                ], 403);
+            }
         }
+
+        // Load only necessary relations with user-specific filtering
+        $post->load([
+            'autor' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'media' => function ($query) {
+                return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+            },
+            'reactions' => function ($query) {
+                return $query->select('name');
+            },
+            'receipts' => function ($query) use ($user) {
+                return $query->where('user_id', $user->id);
+            },
+            'userRueckmeldung' => function ($query) use ($user) {
+                return $query->where('users_id', $user->id);
+            }
+        ]);
+
+        // Load all available reactions
+        $availableReactions = Reaction::query()
+            ->select('id', 'name')
+            ->get()
+            ->map(function ($reaction) {
+                return [
+                    'name' => $reaction->name,
+                    'id' => $reaction->id
+                ];
+            });
+
+        // Format author
+        $post->author = (is_null($post->autor)) ? 'Fehler bei Nachricht '.$post->id : $post->autor->name;
+        unset($post->autor);
+
+        // Format reactions - initialize with 0 for all available reactions
+        $reactions = [];
+        foreach ($availableReactions as $availableReaction) {
+            $reactions[$availableReaction['name']] = 0;
+        }
+
+        // Count actual reactions for this post
+        foreach ($post->getReactionsSummary() as $reaction) {
+            $reactions[$reaction->name] = $reaction->count;
+        }
+
+        $post->read_receipt = ($post->read_receipt == true) ? '1' : false;
+        $post->userReceipt = (is_null($post->receipts()->where('user_id', $user->id)->first())) ? false : true;
+
+        unset($post->reactions);
+        $post->userReaction = $post->userReaction($user);
+
+        // Structure reactions with enabled flag and reactions object
+        $post->reactions = [
+            'enabled' => (bool) $post->reactable,
+            'reactions' => $reactions
+        ];
+
+        // Structure feedback information
+        $feedbackInfo = [
+            'type' => null,
+            'has_feedback' => false,
+            'user_has_responded' => false,
+            'is_required' => false,
+            'deadline' => null,
+            'allows_multiple' => false,
+        ];
+
+        if ($post->rueckmeldung) {
+            $feedbackInfo['has_feedback'] = true;
+            $feedbackInfo['type'] = $post->rueckmeldung->type;
+            $feedbackInfo['is_required'] = (bool) $post->rueckmeldung->pflicht;
+            $feedbackInfo['deadline'] = $post->rueckmeldung->ende;
+            $feedbackInfo['allows_multiple'] = (bool) $post->rueckmeldung->multiple;
+            $feedbackInfo['is_commentable'] = (bool) $post->rueckmeldung->commentable;
+
+            $userFeedback = $post->userRueckmeldung()
+                ->where('users_id', $user->id)
+                ->first();
+
+            $feedbackInfo['user_has_responded'] = !is_null($userFeedback);
+        }
+
+        $post->feedback = $feedbackInfo;
+
+        // Structure poll information
+        $pollInfo = [
+            'has_poll' => false,
+            'poll_id' => null,
+            'user_has_voted' => false,
+        ];
+
+        if ($post->poll) {
+            $pollInfo['has_poll'] = true;
+            $pollInfo['poll_id'] = $post->poll->id;
+            $pollInfo['user_has_voted'] = $post->poll->votes()->where('author_id', $user->id)->exists();
+        }
+
+        $post->poll = $pollInfo;
+
+        // Structure comment information
+        $commentInfo = [
+            'enabled' => ($post->rueckmeldung && $post->rueckmeldung->commentable),
+            'count' => $post->comments()->count(),
+        ];
+
+        $post->comments = $commentInfo;
+
+        // Remove redundant fields that might contain data from other users
+        unset($post->userRueckmeldung);
+        unset($post->receipts);
+        unset($post->rueckmeldung);
 
         return response()->json([
             'success' => true,
-            'data' => $post
+            'data' => $post,
+            'available_reactions' => $availableReactions->toArray(),
+            'message' => 'Post retrieved successfully'
         ]);
 
     }
