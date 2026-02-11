@@ -43,7 +43,10 @@ class NachrichtenController extends Controller
      *     "updated_at": "datetime",
      *     "archiv_ab": "datetime",
      *     "media": [],
-     *     "reactions": {"like": 0, "love": 0, "celebrate": 0},
+     *     "reactions": {
+     *       "enabled": boolean,
+     *       "reactions": {"like": 0, "love": 0, "celebrate": 0}
+     *     },
      *     "user_reaction": "string|null",
      *     "user_receipt": boolean,
      *     "feedback": {
@@ -206,7 +209,12 @@ class NachrichtenController extends Controller
 
             unset($nachricht->reactions);
             $nachricht->userReaction = $nachricht->userReaction($user);
-            $nachricht->reactions = $reactions;
+
+            // Structure reactions with enabled flag and reactions object
+            $nachricht->reactions = [
+                'enabled' => (bool) $nachricht->reactable,
+                'reactions' => $reactions
+            ];
 
             // Structure feedback information
             $feedbackInfo = [
