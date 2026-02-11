@@ -192,7 +192,10 @@
                                                     $fach = $entry['PlFa'] ?? '';
                                                     $lehrer = implode(', ', $entry['PlLe'] ?? []);
                                                     $raum = implode(', ', $entry['PlRa'] ?? []);
-                                                    $klassen = implode(', ', $entry['PlKl'] ?? []);
+
+                                                    // Use KlassenInfo (bundled classes) if available, otherwise PlKl
+                                                    $klassenArray = $entry['KlassenInfo'] ?? $entry['PlKl'] ?? [];
+                                                    $klassen = is_array($klassenArray) ? implode(', ', $klassenArray) : $klassenArray;
 
                                                     // Color coding based on subject
                                                     $colorClass = match(true) {
@@ -296,4 +299,5 @@
 }
 </style>
 @endsection
+
 

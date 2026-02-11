@@ -392,6 +392,9 @@ class StundenplanController extends Controller
             }
         }
 
+        // Collect all entries first
+        $tempEntries = [];
+
         // Search through all classes
         foreach ($data['Klassen'] as $klasse) {
             if (!isset($klasse['Plan']) || !is_array($klasse['Plan'])) {
@@ -421,7 +424,57 @@ class StundenplanController extends Controller
                     // Add class information to entry
                     $entryWithClass = $entry;
                     $entryWithClass['KlassenInfo'] = $klasse['Kurzform'];
-                    $timetable[$tag][$stunde][] = $entryWithClass;
+
+                    // Store in temporary array
+                    if (!isset($tempEntries[$tag][$stunde])) {
+                        $tempEntries[$tag][$stunde] = [];
+                    }
+                    $tempEntries[$tag][$stunde][] = $entryWithClass;
+                }
+            }
+        }
+
+        // Group entries by room and subject
+        foreach ($tempEntries as $tag => $stunden) {
+            foreach ($stunden as $stunde => $entries) {
+                $grouped = [];
+
+                foreach ($entries as $entry) {
+                    // Create a key based on room and subject
+                    $raum = implode(',', $entry['PlRa'] ?? []);
+                    $fach = $entry['PlFa'] ?? '';
+                    $key = $raum . '|' . $fach;
+
+                    if (!isset($grouped[$key])) {
+                        $grouped[$key] = [
+                            'PlTg' => $entry['PlTg'],
+                            'PlSt' => $entry['PlSt'],
+                            'PlFa' => $entry['PlFa'] ?? '',
+                            'PlLe' => $entry['PlLe'] ?? [],
+                            'PlRa' => $entry['PlRa'] ?? [],
+                            'PlKl' => [],
+                            'KlassenInfo' => [],
+                        ];
+                    }
+
+                    // Add class to grouped entry
+                    if (isset($entry['KlassenInfo'])) {
+                        $grouped[$key]['KlassenInfo'][] = $entry['KlassenInfo'];
+                    }
+
+                    // Merge PlKl if exists
+                    if (isset($entry['PlKl']) && is_array($entry['PlKl'])) {
+                        $grouped[$key]['PlKl'] = array_merge($grouped[$key]['PlKl'], $entry['PlKl']);
+                    }
+                }
+
+                // Add grouped entries to timetable
+                foreach ($grouped as $groupedEntry) {
+                    // Remove duplicates from class lists
+                    $groupedEntry['KlassenInfo'] = array_unique($groupedEntry['KlassenInfo']);
+                    $groupedEntry['PlKl'] = array_unique($groupedEntry['PlKl']);
+
+                    $timetable[$tag][$stunde][] = $groupedEntry;
                 }
             }
         }
