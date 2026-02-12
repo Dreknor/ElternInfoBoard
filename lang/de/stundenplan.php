@@ -153,6 +153,8 @@ return [
     'no_room_selected' => 'Kein Raum ausgewählt',
     'data_not_found' => 'Daten nicht gefunden',
     'loading_error' => 'Fehler beim Laden',
+    'no_permission_teacher' => 'Sie haben keine Berechtigung, die Lehreransicht anzusehen',
+    'no_permission_room' => 'Sie haben keine Berechtigung, die Raumansicht anzusehen',
 
     // Zeiträume
     'today' => 'Heute',

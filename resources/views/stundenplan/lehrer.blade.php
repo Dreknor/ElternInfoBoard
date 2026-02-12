@@ -244,7 +244,7 @@
     </div>
 
     <!-- Legend -->
-    <div class="mt-6 bg-white rounded-lg shadow p-6">
+    <div class="legend mt-6 bg-white rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
             <i class="fas fa-palette mr-2"></i>
             {{ __('stundenplan.color_legend') }}
@@ -288,13 +288,248 @@
 
 <style>
 @media print {
-    .no-print {
+    /* Hide all non-printable elements */
+    .no-print,
+    .sidebar,
+    .sidebar-wrapper,
+    .navbar,
+    .main-panel > .navbar,
+    nav,
+    .mobile-bottom-nav,
+    .sidebar-overlay,
+    button,
+    .btn,
+    a[href]:not(.print-keep),
+    .legend {
         display: none !important;
     }
 
+    /* Reset page margins and padding */
+    @page {
+        size: A4 landscape;
+        margin: 8mm 10mm;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
     body {
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+        background: white !important;
+    }
+
+    /* Full width for print */
+    .main-panel,
+    .content,
+    .container,
+    .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Optimize header for print */
+    .container.mx-auto {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Hide back button and print button */
+    .mb-8 a,
+    .mb-8 .flex.space-x-2 {
+        display: none !important;
+    }
+
+    /* Compact header */
+    .mb-8 {
+        margin-bottom: 8px !important;
+        page-break-after: avoid;
+    }
+
+    .mb-8 h1 {
+        font-size: 16pt !important;
+        margin-bottom: 4px !important;
+        page-break-after: avoid;
+    }
+
+    .mb-8 p {
+        font-size: 9pt !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* Compact news and absences sections */
+    .mb-6 {
+        margin-bottom: 6px !important;
+        padding: 6px !important;
+        page-break-inside: avoid;
+    }
+
+    .mb-6 h3 {
+        font-size: 10pt !important;
+        margin-bottom: 3px !important;
+    }
+
+    .mb-6 .text-sm,
+    .mb-6 .text-xs {
+        font-size: 8pt !important;
+    }
+
+    /* Optimize table for A4 */
+    .bg-white.rounded-lg.shadow-lg {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-inside: avoid;
+        margin-top: 0 !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 9pt !important;
+        page-break-inside: avoid;
+    }
+
+    thead {
+        background: linear-gradient(to right, #2563eb, #4f46e5) !important;
+        color: white !important;
+    }
+
+    thead th {
+        padding: 5px 3px !important;
+        font-size: 10pt !important;
+        font-weight: 600 !important;
+        border: 1px solid #ddd !important;
+    }
+
+    tbody tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    tbody td {
+        padding: 4px 3px !important;
+        font-size: 8pt !important;
+        border: 1px solid #e5e7eb !important;
+        vertical-align: top !important;
+    }
+
+    /* Time column */
+    tbody td:first-child {
+        width: 10% !important;
+        background-color: #f9fafb !important;
+        text-align: center !important;
+        padding: 4px 2px !important;
+    }
+
+    tbody td:first-child > div {
+        font-size: 9pt !important;
+        line-height: 1.2 !important;
+    }
+
+    tbody td:first-child .text-xs {
+        font-size: 7pt !important;
+    }
+
+    /* Lesson cells */
+    tbody td > div.rounded-md {
+        border-radius: 2px !important;
+        padding: 4px 5px !important;
+        margin: 0 !important;
+        min-height: 35px !important;
+        height: 100% !important;
+    }
+
+    tbody td > div.rounded-md .font-semibold {
+        font-size: 9pt !important;
+        margin-bottom: 2px !important;
+        font-weight: 600 !important;
+    }
+
+    tbody td > div.rounded-md .text-xs {
+        font-size: 7pt !important;
+        line-height: 1.3 !important;
+        margin-bottom: 1px !important;
+    }
+
+    tbody td > div.rounded-md i {
+        font-size: 7pt !important;
+        width: 10px !important;
+    }
+
+    /* Substitution styling for print */
+    .border-red-500 {
+        border-left: 3px solid #ef4444 !important;
+    }
+
+    .bg-red-50 {
+        background-color: #fef2f2 !important;
+    }
+
+    .text-red-700,
+    .text-red-800,
+    .text-red-900 {
+        color: #b91c1c !important;
+    }
+
+    /* Badge styling for print */
+    .absolute.top-1.right-1 {
+        position: absolute !important;
+        top: 2px !important;
+        right: 2px !important;
+        font-size: 6pt !important;
+        padding: 1px 3px !important;
+    }
+
+    /* Week type badge */
+    .rounded-full {
+        padding: 2px 6px !important;
+        font-size: 10pt !important;
+    }
+
+    /* Color backgrounds - ensure they print */
+    .bg-blue-100 { background-color: #dbeafe !important; }
+    .bg-yellow-100 { background-color: #fef3c7 !important; }
+    .bg-purple-100 { background-color: #f3e8ff !important; }
+    .bg-green-100 { background-color: #dcfce7 !important; }
+    .bg-pink-100 { background-color: #fce7f3 !important; }
+    .bg-orange-100 { background-color: #ffedd5 !important; }
+    .bg-indigo-100 { background-color: #e0e7ff !important; }
+    .bg-gray-100 { background-color: #f3f4f6 !important; }
+
+    /* Border colors - ensure they print */
+    .border-blue-300 { border-left-color: #93c5fd !important; }
+    .border-yellow-300 { border-left-color: #fcd34d !important; }
+    .border-purple-300 { border-left-color: #d8b4fe !important; }
+    .border-green-300 { border-left-color: #86efac !important; }
+    .border-pink-300 { border-left-color: #f9a8d4 !important; }
+    .border-orange-300 { border-left-color: #fdba74 !important; }
+    .border-indigo-300 { border-left-color: #a5b4fc !important; }
+    .border-gray-300 { border-left-color: #d1d5db !important; }
+
+    /* Hide legend on print */
+    .mt-6.bg-white.rounded-lg.shadow {
+        display: none !important;
+    }
+
+    /* Empty cell styling */
+    .text-center.text-gray-400 {
+        font-size: 7pt !important;
+        color: #9ca3af !important;
+    }
+
+    /* Prevent widows and orphans */
+    h1, h2, h3 {
+        page-break-after: avoid;
+    }
+
+    /* Ensure proper page breaks */
+    .overflow-x-auto {
+        overflow: visible !important;
     }
 }
 </style>
