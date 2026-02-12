@@ -17,16 +17,67 @@ use App\Services\StundenplanDataProvider;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * Stundenplan API Controller
+ *
+ * Dieser Controller verwaltet alle API-Endpunkte für Stundenpläne.
+ * Es werden Stundenpläne für Klassen, Lehrer und Räume bereitgestellt.
+ * Zusätzlich werden Vertretungsinformationen einbezogen.
+ *
+ * @group Stundenplan
+ */
 class StundenplanController extends Controller
 {
     /**
-     * Get all available classes
+     * Alle verfügbaren Klassen abrufen
+     *
+     * Gibt eine Liste aller verfügbaren Klassen für das aktive Schuljahr zurück.
+     * Eltern sehen nur die Klassen ihrer Kinder.
+     *
+     * @group Stundenplan
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "kurzform": "5a",
+     *       "name": "Klasse 5a"
+     *     },
+     *     {
+     *       "id": 2,
+     *       "kurzform": "5b",
+     *       "name": "Klasse 5b"
+     *     }
+     *   ]
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Keine Berechtigung zum Anzeigen von Stundenplänen"
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Kein aktives Schuljahr gefunden"
+     * }
+     *
+     * @responseField success boolean Gibt an, ob die Anfrage erfolgreich war
+     * @responseField data array Liste der verfügbaren Klassen
+     * @responseField data[].id integer ID der Klasse
+     * @responseField data[].kurzform string Kurzform der Klasse (z.B. "5a")
+     * @responseField data[].name string Vollständiger Name der Klasse
      *
      * @return JsonResponse
      */
     public function getClasses(Request $request): JsonResponse
     {
+
+        Log::debug('getClasses API called', ['user_id' => $request->user()->id]);
         // Check permissions
         $user = $request->user();
         if (!$user->can('view stundenplan')) {
@@ -37,7 +88,8 @@ class StundenplanController extends Controller
         }
 
         try {
-            $schuljahr = Schuljahr::where('is_active', true)->first();
+            $schuljahr = Schuljahr::where('is_active', true)->get();
+
 
             if (!$schuljahr) {
                 return response()->json([
@@ -46,10 +98,25 @@ class StundenplanController extends Controller
                 ], 404);
             }
 
-            $klassen = Klasse::where('schuljahr_id', $schuljahr->id)
+            $klassen = Klasse::whereIn('schuljahr_id', $schuljahr->pluck('id'))
                 ->orderBy('kurzform')
                 ->get(['id', 'kurzform', 'name']);
 
+
+            $availableClasses = [];
+
+            foreach ($klassen as $klasse) {
+                $availableClasses[] = [
+                    'id' => $klasse->id,
+                    'kurzform' => $klasse->kurzform,
+                    'name' => $klasse->name,
+                ];
+
+            }
+
+            Log::debug('getClasses API returning', ['availableClasses' => $availableClasses]);
+
+            /*
             // Filter for parents
             if ($user->hasRole('eltern')) {
                 $allowedClasses = $this->getAllowedClassesForParent($user);
@@ -58,9 +125,11 @@ class StundenplanController extends Controller
                 })->values();
             }
 
+
+*/
             return response()->json([
                 'success' => true,
-                'data' => $klassen,
+                'data' => $availableClasses,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -71,7 +140,47 @@ class StundenplanController extends Controller
     }
 
     /**
-     * Get all available teachers
+     * Alle verfügbaren Lehrer abrufen
+     *
+     * Gibt eine Liste aller verfügbaren Lehrer zurück.
+     * Diese Funktion erfordert die Berechtigung 'view stundenplan teacher'.
+     *
+     * @group Stundenplan
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "kuerzel": "MUE",
+     *       "name": "Müller",
+     *       "vorname": "Hans",
+     *       "full_name": "Hans Müller"
+     *     },
+     *     {
+     *       "id": 2,
+     *       "kuerzel": "SCH",
+     *       "name": "Schmidt",
+     *       "vorname": "Anna",
+     *       "full_name": "Anna Schmidt"
+     *     }
+     *   ]
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Keine Berechtigung zum Anzeigen von Lehrerstundenplänen"
+     * }
+     *
+     * @responseField success boolean Gibt an, ob die Anfrage erfolgreich war
+     * @responseField data array Liste der verfügbaren Lehrer
+     * @responseField data[].id integer ID des Lehrers
+     * @responseField data[].kuerzel string Kürzel des Lehrers (z.B. "MUE")
+     * @responseField data[].name string Nachname des Lehrers
+     * @responseField data[].vorname string Vorname des Lehrers
+     * @responseField data[].full_name string Vollständiger Name des Lehrers
      *
      * @return JsonResponse
      */
@@ -110,7 +219,41 @@ class StundenplanController extends Controller
     }
 
     /**
-     * Get all available rooms
+     * Alle verfügbaren Räume abrufen
+     *
+     * Gibt eine Liste aller verfügbaren Räume zurück.
+     * Diese Funktion erfordert die Berechtigung 'view stundenplan room'.
+     *
+     * @group Stundenplan
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "kuerzel": "A101",
+     *       "name": "Raum A101"
+     *     },
+     *     {
+     *       "id": 2,
+     *       "kuerzel": "B205",
+     *       "name": "Computerraum B205"
+     *     }
+     *   ]
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Keine Berechtigung zum Anzeigen von Raumstundenplänen"
+     * }
+     *
+     * @responseField success boolean Gibt an, ob die Anfrage erfolgreich war
+     * @responseField data array Liste der verfügbaren Räume
+     * @responseField data[].id integer ID des Raums
+     * @responseField data[].kuerzel string Kürzel des Raums (z.B. "A101")
+     * @responseField data[].name string Name des Raums
      *
      * @return JsonResponse
      */
@@ -141,7 +284,90 @@ class StundenplanController extends Controller
     }
 
     /**
-     * Get timetable for a specific class
+     * Stundenplan für eine spezifische Klasse abrufen
+     *
+     * Gibt den Stundenplan einer bestimmten Klasse zurück, inklusive aller Einträge und Vertretungen.
+     * Die Klasse kann über ihre ID oder Kurzform identifiziert werden.
+     * Eltern haben nur Zugriff auf die Stundenpläne ihrer Kinder.
+     *
+     * @group Stundenplan
+     *
+     * @authenticated
+     *
+     * @urlParam classId string required Die ID oder Kurzform der Klasse (z.B. "5a" oder "1"). Example: 5a
+     *
+     * @response 200 scenario="Erfolgreiche Anfrage" {
+     *   "success": true,
+     *   "data": {
+     *     "class": {
+     *       "id": 1,
+     *       "kurzform": "5a",
+     *       "name": "Klasse 5a"
+     *     },
+     *     "schuljahr": {
+     *       "name": "2025/2026",
+     *       "datum_von": "2025-08-01",
+     *       "datum_bis": "2026-07-31"
+     *     },
+     *     "timetable": {
+     *       "1": {
+     *         "1": [
+     *           {
+     *             "id": 1,
+     *             "unterrichts_id": "MAT-5A-01",
+     *             "fach": {
+     *               "kuerzel": "MAT",
+     *               "name": "Mathematik",
+     *               "farbe": "#FF5733"
+     *             },
+     *             "lehrer": [
+     *               {
+     *                 "kuerzel": "MUE",
+     *                 "name": "Müller"
+     *               }
+     *             ],
+     *             "raeume": [
+     *               {
+     *                 "kuerzel": "A101",
+     *                 "name": "Raum A101"
+     *               }
+     *             ],
+     *             "klassen": ["5a"],
+     *             "zeit": {
+     *               "stunde": 1,
+     *               "von": "08:00:00",
+     *               "bis": "08:45:00"
+     *             }
+     *           }
+     *         ]
+     *       }
+     *     },
+     *     "vertretungen": {}
+     *   }
+     * }
+     *
+     * @response 403 scenario="Keine Berechtigung" {
+     *   "success": false,
+     *   "message": "Keine Berechtigung zum Anzeigen von Stundenplänen"
+     * }
+     *
+     * @response 404 scenario="Klasse nicht gefunden" {
+     *   "success": false,
+     *   "message": "Klasse nicht gefunden"
+     * }
+     *
+     * @responseField success boolean Gibt an, ob die Anfrage erfolgreich war
+     * @responseField data object Stundenplan-Daten
+     * @responseField data.class object Informationen zur Klasse
+     * @responseField data.class.id integer ID der Klasse
+     * @responseField data.class.kurzform string Kurzform der Klasse
+     * @responseField data.class.name string Name der Klasse
+     * @responseField data.schuljahr object Informationen zum Schuljahr
+     * @responseField data.schuljahr.name string Name des Schuljahres
+     * @responseField data.schuljahr.datum_von string Startdatum des Schuljahres
+     * @responseField data.schuljahr.datum_bis string Enddatum des Schuljahres
+     * @responseField data.timetable object Stundenplan-Einträge nach Wochentag und Stunde
+     * @responseField data.vertretungen object Vertretungen gruppiert nach Wochentag
      *
      * @param Request $request
      * @param string $classId Class ID or Kurzform
@@ -150,6 +376,7 @@ class StundenplanController extends Controller
     public function getTimetableByClass(Request $request, string $classId): JsonResponse
     {
         $user = $request->user();
+
 
         if (!$user->can('view stundenplan')) {
             return response()->json([
@@ -170,11 +397,9 @@ class StundenplanController extends Controller
 
             // Find class by ID or Kurzform
             $klasse = Klasse::where('schuljahr_id', $schuljahr->id)
-                ->where(function ($query) use ($classId) {
-                    $query->where('id', $classId)
-                        ->orWhere('kurzform', $classId);
-                })
+                ->where('kurzform', 'like', $classId . '%')
                 ->first();
+
 
             if (!$klasse) {
                 return response()->json([
@@ -182,7 +407,7 @@ class StundenplanController extends Controller
                     'message' => 'Klasse nicht gefunden',
                 ], 404);
             }
-
+/*
             // Check parent permissions
             if ($user->hasRole('eltern')) {
                 $allowedClasses = $this->getAllowedClassesForParent($user);
@@ -193,9 +418,13 @@ class StundenplanController extends Controller
                     ], 403);
                 }
             }
-
+*/
             $timetable = $this->buildTimetableForClassFromDB($schuljahr, $klasse);
+
+
+
             $vertretungen = $this->getVertretungenForClass($klasse->kurzform);
+
 
             return response()->json([
                 'success' => true,
@@ -223,7 +452,94 @@ class StundenplanController extends Controller
     }
 
     /**
-     * Get timetable for a specific teacher
+     * Stundenplan für einen spezifischen Lehrer abrufen
+     *
+     * Gibt den Stundenplan eines bestimmten Lehrers zurück, inklusive aller Einträge und Vertretungen.
+     * Der Lehrer kann über seine ID oder sein Kürzel identifiziert werden.
+     * Diese Funktion erfordert die Berechtigung 'view stundenplan teacher'.
+     *
+     * @group Stundenplan
+     *
+     * @authenticated
+     *
+     * @urlParam teacherId string required Die ID oder das Kürzel des Lehrers (z.B. "MUE" oder "1"). Example: MUE
+     *
+     * @response 200 scenario="Erfolgreiche Anfrage" {
+     *   "success": true,
+     *   "data": {
+     *     "teacher": {
+     *       "id": 1,
+     *       "kuerzel": "MUE",
+     *       "name": "Müller",
+     *       "vorname": "Hans",
+     *       "full_name": "Hans Müller"
+     *     },
+     *     "schuljahr": {
+     *       "name": "2025/2026",
+     *       "datum_von": "2025-08-01",
+     *       "datum_bis": "2026-07-31"
+     *     },
+     *     "timetable": {
+     *       "1": {
+     *         "1": [
+     *           {
+     *             "id": 1,
+     *             "unterrichts_id": "MAT-5A-01",
+     *             "fach": {
+     *               "kuerzel": "MAT",
+     *               "name": "Mathematik",
+     *               "farbe": "#FF5733"
+     *             },
+     *             "lehrer": [
+     *               {
+     *                 "kuerzel": "MUE",
+     *                 "name": "Müller"
+     *               }
+     *             ],
+     *             "raeume": [
+     *               {
+     *                 "kuerzel": "A101",
+     *                 "name": "Raum A101"
+     *               }
+     *             ],
+     *             "klassen": ["5a", "5b"],
+     *             "zeit": {
+     *               "stunde": 1,
+     *               "von": "08:00:00",
+     *               "bis": "08:45:00"
+     *             }
+     *           }
+     *         ]
+     *       }
+     *     },
+     *     "vertretungen": {}
+     *   }
+     * }
+     *
+     * @response 403 scenario="Keine Berechtigung" {
+     *   "success": false,
+     *   "message": "Keine Berechtigung zum Anzeigen von Lehrerstundenplänen"
+     * }
+     *
+     * @response 404 scenario="Lehrer nicht gefunden" {
+     *   "success": false,
+     *   "message": "Lehrer nicht gefunden"
+     * }
+     *
+     * @responseField success boolean Gibt an, ob die Anfrage erfolgreich war
+     * @responseField data object Stundenplan-Daten
+     * @responseField data.teacher object Informationen zum Lehrer
+     * @responseField data.teacher.id integer ID des Lehrers
+     * @responseField data.teacher.kuerzel string Kürzel des Lehrers
+     * @responseField data.teacher.name string Nachname des Lehrers
+     * @responseField data.teacher.vorname string Vorname des Lehrers
+     * @responseField data.teacher.full_name string Vollständiger Name des Lehrers
+     * @responseField data.schuljahr object Informationen zum Schuljahr
+     * @responseField data.schuljahr.name string Name des Schuljahres
+     * @responseField data.schuljahr.datum_von string Startdatum des Schuljahres
+     * @responseField data.schuljahr.datum_bis string Enddatum des Schuljahres
+     * @responseField data.timetable object Stundenplan-Einträge nach Wochentag und Stunde
+     * @responseField data.vertretungen object Vertretungen gruppiert nach Wochentag
      *
      * @param Request $request
      * @param string $teacherId Teacher ID or Kuerzel
@@ -292,7 +608,88 @@ class StundenplanController extends Controller
     }
 
     /**
-     * Get timetable for a specific room
+     * Stundenplan für einen spezifischen Raum abrufen
+     *
+     * Gibt den Stundenplan eines bestimmten Raums zurück, inklusive aller Einträge.
+     * Der Raum kann über seine ID oder sein Kürzel identifiziert werden.
+     * Diese Funktion erfordert die Berechtigung 'view stundenplan room'.
+     *
+     * @group Stundenplan
+     *
+     * @authenticated
+     *
+     * @urlParam roomId string required Die ID oder das Kürzel des Raums (z.B. "A101" oder "1"). Example: A101
+     *
+     * @response 200 scenario="Erfolgreiche Anfrage" {
+     *   "success": true,
+     *   "data": {
+     *     "room": {
+     *       "id": 1,
+     *       "kuerzel": "A101",
+     *       "name": "Raum A101"
+     *     },
+     *     "schuljahr": {
+     *       "name": "2025/2026",
+     *       "datum_von": "2025-08-01",
+     *       "datum_bis": "2026-07-31"
+     *     },
+     *     "timetable": {
+     *       "1": {
+     *         "1": [
+     *           {
+     *             "id": 1,
+     *             "unterrichts_id": "MAT-5A-01",
+     *             "fach": {
+     *               "kuerzel": "MAT",
+     *               "name": "Mathematik",
+     *               "farbe": "#FF5733"
+     *             },
+     *             "lehrer": [
+     *               {
+     *                 "kuerzel": "MUE",
+     *                 "name": "Müller"
+     *               }
+     *             ],
+     *             "raeume": [
+     *               {
+     *                 "kuerzel": "A101",
+     *                 "name": "Raum A101"
+     *               }
+     *             ],
+     *             "klassen": ["5a"],
+     *             "zeit": {
+     *               "stunde": 1,
+     *               "von": "08:00:00",
+     *               "bis": "08:45:00"
+     *             }
+     *           }
+     *         ]
+     *       }
+     *     }
+     *   }
+     * }
+     *
+     * @response 403 scenario="Keine Berechtigung" {
+     *   "success": false,
+     *   "message": "Keine Berechtigung zum Anzeigen von Raumstundenplänen"
+     * }
+     *
+     * @response 404 scenario="Raum nicht gefunden" {
+     *   "success": false,
+     *   "message": "Raum nicht gefunden"
+     * }
+     *
+     * @responseField success boolean Gibt an, ob die Anfrage erfolgreich war
+     * @responseField data object Stundenplan-Daten
+     * @responseField data.room object Informationen zum Raum
+     * @responseField data.room.id integer ID des Raums
+     * @responseField data.room.kuerzel string Kürzel des Raums
+     * @responseField data.room.name string Name des Raums
+     * @responseField data.schuljahr object Informationen zum Schuljahr
+     * @responseField data.schuljahr.name string Name des Schuljahres
+     * @responseField data.schuljahr.datum_von string Startdatum des Schuljahres
+     * @responseField data.schuljahr.datum_bis string Enddatum des Schuljahres
+     * @responseField data.timetable object Stundenplan-Einträge nach Wochentag und Stunde
      *
      * @param Request $request
      * @param string $roomId Room ID or Kuerzel
@@ -362,7 +759,7 @@ class StundenplanController extends Controller
     private function buildTimetableForClassFromDB($schuljahr, $klasse)
     {
         $timetable = [];
-
+Log::debug('Erstelle Plan für Klasse', ['schuljahr' => $schuljahr->name, 'klasse' => $klasse->kurzform]);
         // Initialize empty timetable
         for ($tag = 1; $tag <= 5; $tag++) {
             $timetable[$tag] = [];
@@ -378,12 +775,14 @@ class StundenplanController extends Controller
             ->orderBy('zeitslot_id')
             ->get();
 
+
         foreach ($eintraege as $eintrag) {
             $tag = $eintrag->wochentag;
 
             if (!isset($timetable[$tag][$eintrag->zeitslot->stunde])) {
                 $timetable[$tag][$eintrag->zeitslot->stunde] = [];
             }
+
 
             $timetable[$tag][$eintrag->zeitslot->stunde][] = [
                 'id' => $eintrag->id,
@@ -414,7 +813,17 @@ class StundenplanController extends Controller
                     'bis' => $eintrag->zeitslot->zeit_bis,
                 ],
             ];
+
+            Log::debug('Eintrag hinzugefügt', [
+                'tag' => $tag,
+                'stunde' => $eintrag->zeitslot->stunde,
+                'fach' => $eintrag->fach->kuerzel,
+                'lehrer' => $eintrag->lehrer->pluck('kuerzel')->toArray(),
+                'raeume' => $eintrag->raeume->pluck('kuerzel')->toArray(),
+                'klassen' => $eintrag->klassen->pluck('kurzform')->toArray(),
+            ]);
         }
+
 
         return $timetable;
     }

@@ -38,7 +38,8 @@ class ApiImportVertretungsRequest extends FormRequest
 
         return [
             'date' => 'required|date',
-            'klasse' => 'required|string|exists:groups,name',
+            'klasse' => 'required_without:klasse_kurzform|string|exists:groups,name',
+            'klasse_kurzform' => 'required_without:klasse|string|exists:stundenplan_klassen,kurzform',
             'stunde' => 'required|string',
             'altFach' => 'required|string',
             'neuFach' => 'string|nullable',
