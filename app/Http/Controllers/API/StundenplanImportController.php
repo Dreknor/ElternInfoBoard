@@ -30,8 +30,14 @@ class StundenplanImportController extends Controller
                 throw new \Exception('Ungültige JSON-Daten');
             }
 
-            // Remove the 'key' from the data before storing (legacy support)
+            // Extract schulform and beschreibung if provided
+            $schulform = $data['schulform'] ?? null;
+            $beschreibung = $data['beschreibung'] ?? null;
+
+            // Remove metadata from the data before normalizing
             unset($data['key']);
+            unset($data['schulform']);
+            unset($data['beschreibung']);
 
             // Normalize data format (supports both direct and Indiware export format)
             $normalizedData = StundenplanDataAdapter::normalize($data);
@@ -41,9 +47,9 @@ class StundenplanImportController extends Controller
                 throw new \Exception('Datenvalidierung fehlgeschlagen');
             }
 
-            // Import to database
+            // Import to database with schulform
             $importer = new StundenplanDatabaseImporter();
-            $importStats = $importer->import($normalizedData);
+            $importStats = $importer->import($normalizedData, $schulform, $beschreibung);
 
             // Store temporarily for backup/debugging (optional)
             $filename = 'stundenplan/import_' . date('Y-m-d_H-i-s') . '.json';

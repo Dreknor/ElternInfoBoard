@@ -8,9 +8,10 @@ class StundenplanDataAdapter
 {
     /**
      * Normalize imported data to internal format
-     * Supports both:
+     * Supports:
      * - Direct format (Basisdaten, Zeitslots, Klassen)
      * - Indiware Export format (Gesamtexport.Stundenplan.StundenplanKlassen)
+     * - Indiware Gesamtexport Version 1.1 (Gesamtexport.Stammdaten + Gesamtexport.Stundenplan)
      */
     public static function normalize(array $data): array
     {
@@ -19,7 +20,14 @@ class StundenplanDataAdapter
             return $data;
         }
 
-        // Check if it's Indiware Gesamtexport format
+        // Check if it's Indiware Gesamtexport Version 1.1 (new format)
+        if (isset($data['Gesamtexport']['Informationen']['Version']) &&
+            $data['Gesamtexport']['Informationen']['Version'] === '1.1' &&
+            isset($data['Gesamtexport']['Stammdaten'])) {
+            return self::convertFromIndiwareGesamtexportV11($data['Gesamtexport']);
+        }
+
+        // Check if it's older Indiware Gesamtexport format
         if (isset($data['Gesamtexport']['Stundenplan']['StundenplanKlassen'])) {
             return self::convertFromIndiwareExport($data['Gesamtexport']['Stundenplan']['StundenplanKlassen']);
         }
@@ -28,7 +36,148 @@ class StundenplanDataAdapter
     }
 
     /**
-     * Convert from Indiware Gesamtexport to internal format
+     * Convert from Indiware Gesamtexport Version 1.1 to internal format
+     * Structure:
+     * - Stammdaten.Grunddaten (Schuljahr, Beginn, Ende, Zeiten, Schulwochen)
+     * - Stammdaten.Unterricht (Nummer, Fach, Lehrer, Klassen, Stunden)
+     * - Stammdaten.Stundenplan.PlanSp (Nummer, Tag, Stunde, Raeume, Woche)
+     */
+    private static function convertFromIndiwareGesamtexportV11(array $gesamtexport): array
+    {
+        $grunddaten = $gesamtexport['Stammdaten']['Grunddaten'] ?? [];
+        $unterricht = $gesamtexport['Stammdaten']['Unterricht'] ?? [];
+        $planSp = $gesamtexport['Stammdaten']['Stundenplan']['PlanSp'] ?? [];
+
+        // Build Basisdaten
+        $beginn = $grunddaten['Beginn'] ?? '01.08.2025';
+        $ende = $grunddaten['Ende'] ?? '31.07.2026';
+
+        // Extract week numbers
+        $schulwochen = $grunddaten['Schulwochen'] ?? [];
+        $swVon = !empty($schulwochen) ? $schulwochen[0]['Nr'] : 1;
+        $swBis = !empty($schulwochen) ? $schulwochen[count($schulwochen) - 1]['Nr'] : 52;
+
+        $result = [
+            'Basisdaten' => [
+                'DatumVon' => $beginn,
+                'DatumBis' => $ende,
+                'SwVon' => (string) $swVon,
+                'SwBis' => (string) $swBis,
+                'TageProWoche' => '5',
+                'Zeitstempel' => now()->format('d.m.Y, H:i'),
+            ],
+            'Zeitslots' => [],
+            'Klassen' => [],
+        ];
+
+        // Build Zeitslots from Zeiten
+        $dauerEinzelstunde = (int) ($grunddaten['DauerEinzelstunde'] ?? 45);
+        foreach ($grunddaten['Zeiten'] ?? [] as $zeit) {
+            // Calculate end time based on DauerEinzelstunde
+            $zeitVon = $zeit['Zeit'];
+            $zeitVonTime = \Carbon\Carbon::createFromFormat('H:i', $zeitVon);
+            $zeitBis = $zeitVonTime->copy()->addMinutes($dauerEinzelstunde)->format('H:i');
+
+            $result['Zeitslots'][] = [
+                'Stunde' => (string) $zeit['Stunde'],
+                'ZeitVon' => $zeitVon,
+                'ZeitBis' => $zeitBis,
+            ];
+        }
+
+        // Index Unterricht by Nummer
+        $unterrichtsMap = [];
+        foreach ($unterricht as $u) {
+            $unterrichtsMap[$u['Nummer']] = $u;
+        }
+
+        // Group PlanSp by Nummer
+        $planSpByNummer = [];
+        foreach ($planSp as $element) {
+            $nummer = $element['Nummer'];
+            if (!isset($planSpByNummer[$nummer])) {
+                $planSpByNummer[$nummer] = [];
+            }
+            $planSpByNummer[$nummer][] = $element;
+        }
+
+        // Build Plan entries: Map Nummer → Tag/Stunde/Raum from PlanSp
+        $planEntries = [];
+        foreach ($planSpByNummer as $nummer => $elemente) {
+            if (!isset($unterrichtsMap[$nummer])) {
+                continue; // Skip if no matching Unterricht
+            }
+
+            $unterrichtData = $unterrichtsMap[$nummer];
+            $fach = $unterrichtData['Fach'] ?? '';
+            $lehrer = $unterrichtData['Lehrer'] ?? [];
+            $klassen = $unterrichtData['Klassen'] ?? [];
+
+            // Each element is a scheduled slot
+            foreach ($elemente as $element) {
+                $tag = $element['Tag'];
+                $stunde = $element['Stunde'];
+                $raeume = $element['Raeume'] ?? [];
+                $woche = $element['Woche'] ?? 0; // 0 = beide, 1 = Woche 1, 2 = Woche 2
+
+                // Skip if woche-specific planning (we use woche 0 = both weeks for now)
+                // TODO: Future enhancement for A/B weeks
+                if ($woche != 0) {
+                    continue; // Skip A/B-Wochen specific entries for now
+                }
+
+                $planEntry = [
+                    'PlUn' => (string) $nummer,
+                    'PlTg' => (string) $tag,
+                    'PlSt' => (string) $stunde,
+                    'PlFa' => $fach,
+                    'PlLe' => is_array($lehrer) ? $lehrer : [$lehrer],
+                    'PlRa' => is_array($raeume) ? $raeume : ($raeume ? [$raeume] : []),
+                    'PlKl' => is_array($klassen) ? $klassen : [$klassen],
+                ];
+
+                $planEntries[] = $planEntry;
+            }
+        }
+
+        // Collect all unique class names
+        $allKlassen = [];
+        foreach ($planEntries as $entry) {
+            foreach ($entry['PlKl'] as $klasse) {
+                $allKlassen[$klasse] = true;
+            }
+        }
+
+        // Build Klassen entries
+        foreach (array_keys($allKlassen) as $klassenName) {
+            $klassePlan = [];
+
+            // Find all plan entries for this class
+            foreach ($planEntries as $planEntry) {
+                if (in_array($klassenName, $planEntry['PlKl'])) {
+                    $klassePlan[] = $planEntry;
+                }
+            }
+
+            $result['Klassen'][] = [
+                'Kurzform' => $klassenName,
+                'Plan' => $klassePlan,
+            ];
+        }
+
+        Log::info('Converted Indiware Gesamtexport V1.1 to internal format', [
+            'klassen_count' => count($result['Klassen']),
+            'zeitslots_count' => count($result['Zeitslots']),
+            'plan_entries' => count($planEntries),
+            'unterricht' => count($unterricht),
+            'planSp' => count($planSp),
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Convert from Indiware Gesamtexport to internal format (older format)
      */
     private static function convertFromIndiwareExport(array $stundenplanKlassen): array
     {

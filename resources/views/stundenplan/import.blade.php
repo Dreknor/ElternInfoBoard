@@ -40,6 +40,35 @@
                                         @enderror
                                     </div>
 
+                                    <div class="form-group">
+                                        <label for="schulform">Schulform <small class="text-muted">(optional)</small></label>
+                                        <input type="text"
+                                               class="form-control @error('schulform') is-invalid @enderror"
+                                               id="schulform"
+                                               name="schulform"
+                                               placeholder="z.B. Grundschule, Oberschule, Gymnasium"
+                                               maxlength="100">
+                                        <small class="form-text text-muted">
+                                            Ermöglicht parallele Stundenpläne mit unterschiedlichen Zeitrastern (z.B. Grundschule und Oberschule).
+                                        </small>
+                                        @error('schulform')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="beschreibung">Beschreibung <small class="text-muted">(optional)</small></label>
+                                        <textarea class="form-control @error('beschreibung') is-invalid @enderror"
+                                                  id="beschreibung"
+                                                  name="beschreibung"
+                                                  rows="2"
+                                                  maxlength="500"
+                                                  placeholder="Zusätzliche Informationen zu diesem Stundenplan..."></textarea>
+                                        @error('beschreibung')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-upload"></i> Hochladen und importieren
                                     </button>

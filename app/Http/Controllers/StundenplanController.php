@@ -96,6 +96,36 @@ class StundenplanController extends Controller
             ]);
         }
 
+        // Find all Schuljahre where this teacher teaches
+        $schuljahrIds = [];
+        foreach ($data['Klassen'] as $klasse) {
+            if (!isset($klasse['Plan']) || !is_array($klasse['Plan'])) {
+                continue;
+            }
+            foreach ($klasse['Plan'] as $entry) {
+                if (isset($entry['PlLe']) && is_array($entry['PlLe']) && in_array($teacher, $entry['PlLe'])) {
+                    $schuljahrIds[] = $klasse['schuljahr_id'] ?? null;
+                }
+            }
+        }
+        $schuljahrIds = array_unique(array_filter($schuljahrIds));
+
+        // Get Zeitslots from all relevant Schuljahre (teacher may teach in multiple schools)
+        $zeitslots = array_filter($data['Zeitslots'], function($slot) use ($schuljahrIds) {
+            return in_array($slot['schuljahr_id'] ?? null, $schuljahrIds);
+        });
+
+        // Remove duplicates based on Stunde and sort
+        $zeitslotsByStunde = [];
+        foreach ($zeitslots as $slot) {
+            $stunde = $slot['Stunde'];
+            if (!isset($zeitslotsByStunde[$stunde])) {
+                $zeitslotsByStunde[$stunde] = $slot;
+            }
+        }
+        ksort($zeitslotsByStunde);
+        $zeitslots = array_values($zeitslotsByStunde);
+
         $timetable = $this->buildTimetableForTeacher($data, $teacher);
 
         // Get substitutions for the teacher for the current week
@@ -148,7 +178,7 @@ class StundenplanController extends Controller
             'teacher' => $teacher,
             'timetable' => $timetable,
             'basisdaten' => $data['Basisdaten'],
-            'zeitslots' => $data['Zeitslots'],
+            'zeitslots' => $zeitslots, // Use filtered zeitslots instead of all
             'vertretungen' => $vertretungen,
             'news' => $news,
             'absences' => $absences,
@@ -192,6 +222,34 @@ class StundenplanController extends Controller
                 'Meldung' => 'Noch kein Stundenplan importiert.',
             ]);
         }
+
+        // Find the class and get its schuljahr_id
+        $klasseData = null;
+        $schuljahrId = null;
+        foreach ($data['Klassen'] as $klasse) {
+            if ($klasse['Kurzform'] === $class) {
+                $klasseData = $klasse;
+                $schuljahrId = $klasse['schuljahr_id'] ?? null;
+                break;
+            }
+        }
+
+        if (!$klasseData) {
+            return redirect()->route('stundenplan.index')->with([
+                'type' => 'error',
+                'Meldung' => 'Klasse nicht gefunden.',
+            ]);
+        }
+
+        // Filter Zeitslots for this class's Schuljahr
+        $zeitslots = array_filter($data['Zeitslots'], function($slot) use ($schuljahrId) {
+            return ($slot['schuljahr_id'] ?? null) === $schuljahrId;
+        });
+
+        // Sort by Stunde
+        usort($zeitslots, function($a, $b) {
+            return (int)$a['Stunde'] <=> (int)$b['Stunde'];
+        });
 
         $timetable = $this->buildTimetableForClass($data, $class);
 
@@ -244,7 +302,7 @@ class StundenplanController extends Controller
             'class' => $class,
             'timetable' => $timetable,
             'basisdaten' => $data['Basisdaten'],
-            'zeitslots' => $data['Zeitslots'],
+            'zeitslots' => $zeitslots, // Use filtered zeitslots instead of all
             'vertretungen' => $vertretungen,
             'news' => $news,
             'absences' => $absences,
@@ -346,9 +404,20 @@ class StundenplanController extends Controller
     {
         $timetable = [];
 
-        // Initialize empty timetable
+        // Determine max Stunde from actual Zeitslots
+        $maxStunde = 6; // Default fallback
+        if (isset($data['Zeitslots']) && is_array($data['Zeitslots'])) {
+            foreach ($data['Zeitslots'] as $slot) {
+                $stunde = (int) ($slot['Stunde'] ?? 0);
+                if ($stunde > $maxStunde) {
+                    $maxStunde = $stunde;
+                }
+            }
+        }
+
+        // Initialize empty timetable with dynamic max Stunde
         for ($tag = 1; $tag <= 5; $tag++) {
-            for ($stunde = 1; $stunde <= 6; $stunde++) {
+            for ($stunde = 1; $stunde <= $maxStunde; $stunde++) {
                 $timetable[$tag][$stunde] = null;
             }
         }
@@ -366,8 +435,8 @@ class StundenplanController extends Controller
                     $tag = (int) $entry['PlTg'];
                     $stunde = (int) $entry['PlSt'];
 
-                    // Validate ranges
-                    if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= 6) {
+                    // Validate ranges (dynamically based on maxStunde)
+                    if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= $maxStunde) {
                         $timetable[$tag][$stunde] = $entry;
                     }
                 }
@@ -385,9 +454,20 @@ class StundenplanController extends Controller
     {
         $timetable = [];
 
-        // Initialize empty timetable
+        // Determine max Stunde from actual Zeitslots
+        $maxStunde = 6; // Default fallback
+        if (isset($data['Zeitslots']) && is_array($data['Zeitslots'])) {
+            foreach ($data['Zeitslots'] as $slot) {
+                $stunde = (int) ($slot['Stunde'] ?? 0);
+                if ($stunde > $maxStunde) {
+                    $maxStunde = $stunde;
+                }
+            }
+        }
+
+        // Initialize empty timetable with dynamic max Stunde
         for ($tag = 1; $tag <= 5; $tag++) {
-            for ($stunde = 1; $stunde <= 6; $stunde++) {
+            for ($stunde = 1; $stunde <= $maxStunde; $stunde++) {
                 $timetable[$tag][$stunde] = [];
             }
         }
@@ -419,8 +499,8 @@ class StundenplanController extends Controller
                 $tag = (int) $entry['PlTg'];
                 $stunde = (int) $entry['PlSt'];
 
-                // Validate ranges
-                if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= 6) {
+                // Validate ranges (dynamically based on maxStunde)
+                if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= $maxStunde) {
                     // Add class information to entry
                     $entryWithClass = $entry;
                     $entryWithClass['KlassenInfo'] = $klasse['Kurzform'];
@@ -622,6 +702,8 @@ class StundenplanController extends Controller
 
         $request->validate([
             'json_file' => 'required|file|mimes:json|max:10240', // Max 10MB
+            'schulform' => 'nullable|string|max:100',
+            'beschreibung' => 'nullable|string|max:500',
         ]);
 
         try {
@@ -641,9 +723,11 @@ class StundenplanController extends Controller
                 throw new \Exception('Datenvalidierung fehlgeschlagen. Erforderliche Felder fehlen.');
             }
 
-            // Import to database
+            // Import to database with Schulform
             $importer = new StundenplanDatabaseImporter();
-            $importStats = $importer->import($normalizedData);
+            $schulform = $request->input('schulform');
+            $beschreibung = $request->input('beschreibung');
+            $importStats = $importer->import($normalizedData, $schulform, $beschreibung);
 
             // Store with timestamp (backup)
             $filename = 'stundenplan/import_' . date('Y-m-d_H-i-s') . '.json';

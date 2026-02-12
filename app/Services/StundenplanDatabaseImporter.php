@@ -21,11 +21,13 @@ class StundenplanDatabaseImporter
      * Import normalized stundenplan data to database
      *
      * @param array $data Normalized data from StundenplanDataAdapter
+     * @param string|null $schulform Optional: Schulform (z.B. "Grundschule", "Oberschule")
+     * @param string|null $beschreibung Optional: Description
      * @return array Import statistics
      */
-    public function import(array $data): array
+    public function import(array $data, ?string $schulform = null, ?string $beschreibung = null): array
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $schulform, $beschreibung) {
             $stats = [
                 'schuljahr_id' => null,
                 'klassen' => 0,
@@ -37,7 +39,7 @@ class StundenplanDatabaseImporter
             ];
 
             // 1. Create or update Schuljahr
-            $schuljahr = $this->importSchuljahr($data['Basisdaten']);
+            $schuljahr = $this->importSchuljahr($data['Basisdaten'], $schulform, $beschreibung);
             $stats['schuljahr_id'] = $schuljahr->id;
 
             // 2. Import Zeitslots
@@ -72,19 +74,34 @@ class StundenplanDatabaseImporter
     /**
      * Import Schuljahr
      */
-    private function importSchuljahr(array $basisdaten): Schuljahr
+    private function importSchuljahr(array $basisdaten, ?string $schulform = null, ?string $beschreibung = null): Schuljahr
     {
         $datumVon = Carbon::createFromFormat('d.m.Y', $basisdaten['DatumVon']);
         $datumBis = Carbon::createFromFormat('d.m.Y', $basisdaten['DatumBis']);
 
         $name = $datumVon->year . '/' . $datumBis->year;
+        if ($schulform) {
+            $name .= ' - ' . $schulform;
+        }
 
-        // Deactivate all other Schuljahre
-        Schuljahr::where('is_active', true)->update(['is_active' => false]);
+        // Only deactivate Schuljahre with the SAME Schulform (or both null)
+        // This allows multiple active Schuljahre with different Schulformen
+        Schuljahr::where('is_active', true)
+            ->where(function($query) use ($schulform) {
+                if ($schulform) {
+                    $query->where('schulform', $schulform);
+                } else {
+                    $query->whereNull('schulform');
+                }
+            })
+            ->update(['is_active' => false]);
 
         // Create or update current Schuljahr
         return Schuljahr::updateOrCreate(
-            ['name' => $name],
+            [
+                'name' => $name,
+                'schulform' => $schulform,
+            ],
             [
                 'datum_von' => $datumVon,
                 'datum_bis' => $datumBis,
@@ -95,6 +112,7 @@ class StundenplanDatabaseImporter
                     ? Carbon::createFromFormat('d.m.Y, H:i', $basisdaten['Zeitstempel'])
                     : now(),
                 'is_active' => true,
+                'beschreibung' => $beschreibung,
             ]
         );
     }

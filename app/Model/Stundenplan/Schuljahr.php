@@ -14,6 +14,8 @@ class Schuljahr extends Model
 
     protected $fillable = [
         'name',
+        'schulform',
+        'beschreibung',
         'datum_von',
         'datum_bis',
         'sw_von',
