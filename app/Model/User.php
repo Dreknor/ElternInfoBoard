@@ -158,7 +158,8 @@ class User extends Authenticatable implements Auditable
      */
     public function postsNotArchived(): HasManyDeep
     {
-        return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])->NotArchived();
+        return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])
+            ->where('archiv_ab', '>', now());
     }
 
     /**
