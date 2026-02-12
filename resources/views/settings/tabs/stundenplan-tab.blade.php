@@ -86,7 +86,7 @@
                     <strong>Wichtig:</strong> Der API-Key kann auf mehrere Arten übergeben werden:
                     <br><br>
                     <strong>Methode 1: Query-Parameter (empfohlen, am einfachsten)</strong>
-                    <pre class="bg-light p-2 small mt-2">
+                    <pre class="bg-light p-2 small mt-2" style="font-size: 10px;">
 POST {{ url('/api/stundenplan/import') }}?key={{ substr($stundenplanSettings->import_api_key, 0, 20) }}...
 Content-Type: application/json
 
@@ -95,8 +95,27 @@ Content-Type: application/json
   "Zeitslots": [ ... ],
   "Klassen": [ ... ]
 }</pre>
+
+                    <strong>Mit optionalen Parametern (schulform, beschreibung):</strong>
+                    <pre class="bg-light p-2 small mt-2" style="font-size: 10px;">
+POST {{ url('/api/stundenplan/import') }}?key=...&schulform=Oberschule&beschreibung=Klassen%205-10
+Content-Type: application/json
+
+{
+  "Gesamtexport": { ... }
+}
+
+# Oder im JSON-Body:
+{
+  "schulform": "Oberschule",
+  "beschreibung": "Klassen 5-10",
+  "Gesamtexport": { ... }
+}
+
+# Hinweis: URL-Parameter haben Vorrang vor JSON-Body</pre>
+
                     <strong>Methode 2: Header</strong>
-                    <pre class="bg-light p-2 small mt-2">
+                    <pre class="bg-light p-2 small mt-2" style="font-size: 10px;">
 POST {{ url('/api/stundenplan/import') }}
 X-API-Key: {{ substr($stundenplanSettings->import_api_key, 0, 20) }}...
 Content-Type: application/json
@@ -106,7 +125,7 @@ Content-Type: application/json
   ...
 }</pre>
                     <strong>Methode 3: Bearer Token</strong>
-                    <pre class="bg-light p-2 small mt-2">
+                    <pre class="bg-light p-2 small mt-2" style="font-size: 10px;">
 POST {{ url('/api/stundenplan/import') }}
 Authorization: Bearer {{ substr($stundenplanSettings->import_api_key, 0, 20) }}...
 Content-Type: application/json
@@ -115,6 +134,12 @@ Content-Type: application/json
   "Basisdaten": { ... },
   ...
 }</pre>
+
+                    <div class="alert alert-info mt-3 p-2" style="font-size: 11px;">
+                        <strong><i class="fas fa-lightbulb"></i> Tipp für Automation:</strong><br>
+                        Verwenden Sie URL-Parameter für Schulform, um Original-Export-Dateien direkt zu importieren:<br>
+                        <code class="d-inline">?key=...&schulform=Grundschule&beschreibung=Import%20vom%2012.02.2026</code>
+                    </div>
                 </div>
             </div>
         </div>
