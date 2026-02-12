@@ -16,6 +16,11 @@ class StundenplanImportController extends Controller
     /**
      * Import stundenplan data via API
      *
+     * Supports schulform and beschreibung via:
+     * 1. URL parameters: ?schulform=Grundschule&beschreibung=Test
+     * 2. JSON body: {"schulform": "Grundschule", "beschreibung": "Test", ...}
+     * URL parameters have priority over JSON body values
+     *
      * @param ApiImportStundenplanRequest $request
      * @return JsonResponse
      */
@@ -30,9 +35,13 @@ class StundenplanImportController extends Controller
                 throw new \Exception('Ungültige JSON-Daten');
             }
 
-            // Extract schulform and beschreibung if provided
-            $schulform = $data['schulform'] ?? null;
-            $beschreibung = $data['beschreibung'] ?? null;
+            // Extract schulform and beschreibung from JSON body
+            $schulformFromBody = $data['schulform'] ?? null;
+            $beschreibungFromBody = $data['beschreibung'] ?? null;
+
+            // URL parameters have priority over JSON body
+            $schulform = $request->query('schulform', $schulformFromBody);
+            $beschreibung = $request->query('beschreibung', $beschreibungFromBody);
 
             // Remove metadata from the data before normalizing
             unset($data['key']);
@@ -61,6 +70,8 @@ class StundenplanImportController extends Controller
 
             Log::info('Stundenplan imported via API', array_merge([
                 'filename' => $filename,
+                'schulform' => $schulform,
+                'beschreibung' => $beschreibung,
             ], $importStats));
 
             return response()->json([
@@ -68,6 +79,8 @@ class StundenplanImportController extends Controller
                 'message' => 'Stundenplan erfolgreich in Datenbank importiert',
                 'data' => array_merge([
                     'filename' => $filename,
+                    'schulform' => $schulform,
+                    'beschreibung' => $beschreibung,
                 ], $importStats),
             ]);
 

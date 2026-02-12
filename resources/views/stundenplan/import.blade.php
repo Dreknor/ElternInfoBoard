@@ -136,21 +136,41 @@
                                     </div>
                                     <div class="card-body">
                                         <p class="small mb-2">
-                                            <strong>Vollständige Import-URL (empfohlen):</strong>
+                                            <strong>Basis-URL:</strong>
                                         </p>
                                         <code class="d-block bg-light p-2 small" style="word-break: break-all;">
                                             {{ url('/api/stundenplan/import') }}?key={{ $stundenplanSettings->import_api_key }}
                                         </code>
 
                                         <p class="small mt-3 mb-2">
-                                            <strong>Verwendung:</strong>
+                                            <strong>Mit Schulform (URL-Parameter):</strong>
                                         </p>
-                                        <pre class="bg-light p-2 small">POST zur obigen URL mit JSON-Body:
-{
-  "Basisdaten": { ... },
-  "Zeitslots": [ ... ],
-  "Klassen": [ ... ]
-}</pre>
+                                        <code class="d-block bg-light p-2 small" style="word-break: break-all;">
+                                            {{ url('/api/stundenplan/import') }}?key={{ $stundenplanSettings->import_api_key }}&schulform=Grundschule&beschreibung=Klassen%201-4
+                                        </code>
+
+                                        <p class="small mt-3 mb-2">
+                                            <strong>Verwendung mit JSON-Body:</strong>
+                                        </p>
+                                        <pre class="bg-light p-2 small" style="font-size: 11px;">POST {{ url('/api/stundenplan/import') }}?key=...
+
+# Option 1: Schulform in URL
+curl -X POST "...?key=KEY&schulform=Oberschule" \
+  -H "Content-Type: application/json" \
+  -d @stundenplan.json
+
+# Option 2: Schulform in JSON
+curl -X POST "...?key=KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schulform": "Oberschule",
+    "beschreibung": "Klassen 5-10",
+    "Gesamtexport": { ... }
+  }'</pre>
+
+                                        <p class="small mb-2 mt-3">
+                                            <strong>Hinweis:</strong> URL-Parameter haben Vorrang vor JSON-Body-Werten.
+                                        </p>
 
                                         <p class="small mb-0">
                                             <strong>Status:</strong>
