@@ -425,6 +425,11 @@ class StundenplanController extends Controller
 
             $vertretungen = $this->getVertretungenForClass($klasse->kurzform);
 
+            Log::debug('getTimetableByClass API returning', [
+                'class' => $klasse->kurzform,
+                'timetable_entries' => count($timetable),
+                'vertretungen' => $vertretungen,
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -813,15 +818,6 @@ Log::debug('Erstelle Plan für Klasse', ['schuljahr' => $schuljahr->name, 'klass
                     'bis' => $eintrag->zeitslot->zeit_bis,
                 ],
             ];
-
-            Log::debug('Eintrag hinzugefügt', [
-                'tag' => $tag,
-                'stunde' => $eintrag->zeitslot->stunde,
-                'fach' => $eintrag->fach->kuerzel,
-                'lehrer' => $eintrag->lehrer->pluck('kuerzel')->toArray(),
-                'raeume' => $eintrag->raeume->pluck('kuerzel')->toArray(),
-                'klassen' => $eintrag->klassen->pluck('kurzform')->toArray(),
-            ]);
         }
 
 
@@ -999,12 +995,20 @@ Log::debug('Erstelle Plan für Klasse', ['schuljahr' => $schuljahr->name, 'klass
         $endDate = Carbon::now()->endOfWeek();
 
         try {
-            return Vertretung::where('klasse', $classKurzform)
-                ->whereBetween('date', [$startDate, $endDate])
-                ->get()
-                ->groupBy(function ($item) {
-                    return Carbon::parse($item->date)->dayOfWeekIso;
-                });
+
+            Log::debug('Suche Vertretungen für Klasse', ['klasse' => $classKurzform, 'startDate' => $startDate->toDateString(), 'endDate' => $endDate->toDateString()]);
+
+                $vertretungen = Vertretung::where('klasse_kurzform', $classKurzform)
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->withoutGlobalScope('date')
+                    ->get()
+                    ->groupBy(function($item) {
+                        return Carbon::parse($item->date)->dayOfWeekIso;
+                    });
+
+                Log::debug('Vertretungen für Klasse gefunden', ['klasse' => $classKurzform, 'count' => $vertretungen->count()]);
+            return $vertretungen;
+
         } catch (\Exception $e) {
             return collect();
         }

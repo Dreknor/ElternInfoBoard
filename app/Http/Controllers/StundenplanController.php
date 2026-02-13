@@ -258,12 +258,15 @@ class StundenplanController extends Controller
         $endDate = Carbon::now()->endOfWeek();
 
         try {
-            $vertretungen = Vertretung::where('klasse', $class)
+            $vertretungen = Vertretung::where('klasse_kurzform', $class)
                 ->whereBetween('date', [$startDate, $endDate])
+                ->withoutGlobalScope('date')
                 ->get()
                 ->groupBy(function($item) {
                     return Carbon::parse($item->date)->dayOfWeekIso;
                 });
+
+
         } catch (\Exception $e) {
 
         }
