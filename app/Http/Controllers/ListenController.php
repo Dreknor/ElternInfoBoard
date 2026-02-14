@@ -13,7 +13,6 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\IcalendarGenerator\Components\Calendar;
@@ -53,14 +52,14 @@ class ListenController extends Controller
      *
      * @return View
      *
-     * @throws AuthorizationException
+     *
      */
     public function index(Request $request)
     {
         if (!auth()->user()->can('view terminliste')) {
             return redirect()->back()->with([
                 'type' => 'error',
-                'Meldung' => 'Berechtigung fehlt',
+                'Meldung' => 'Berechtigung fehlt für Terminlisten',
             ]);
         }
 
