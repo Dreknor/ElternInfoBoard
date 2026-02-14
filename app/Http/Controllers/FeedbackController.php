@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class FeedbackController extends Controller implements HasMiddleware
@@ -44,15 +45,15 @@ class FeedbackController extends Controller implements HasMiddleware
      */
     public function show($id = null)
     {
+        $user = auth()->user();
 
-        if (auth()->user()->can('see mails')) {
+        if ($user && $user->can('see mails')) {
             $mails = MailModel::withoutGlobalScope('own')
                 ->orderBy('created_at', 'desc')
                 ->paginate(25);
         } else {
-
             $mails = MailModel::where('senders_id', auth()->id())
-                ->orWhere('to', auth()->user()->email)
+                ->orWhere('to', $user?->email ?? '')
                 ->orderBy('created_at', 'desc')->paginate(25);
         }
 
@@ -80,6 +81,16 @@ class FeedbackController extends Controller implements HasMiddleware
             $email = config('mail.from.address');
         }
 
+        Log::debug('FeedbackController: send() method called', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'text_length' => strlen($request->input('text')),
+            'betreff' => $request->input('betreff'),
+            'mitarbeiterId' => $request->input('mitarbeiter'),
+            'has_files' => $request->hasFile('files'),
+            'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
+        ]);
+
         $data = [];
 
         if ($request->hasFile('files')) {
@@ -99,7 +110,7 @@ class FeedbackController extends Controller implements HasMiddleware
                 $data[] = $document;
             }
         }
-
+/*
         // create Mail Model for logging Mail in Database
         $mail = new MailModel([
             'senders_id' => auth()->id(),
@@ -108,6 +119,7 @@ class FeedbackController extends Controller implements HasMiddleware
             'text' => $request->text,
         ]);
         $mail->save();
+
         $data = [];
 
         $mail->addAllMediaFromRequest(['files'])
@@ -117,9 +129,17 @@ class FeedbackController extends Controller implements HasMiddleware
         foreach ($mail->getMedia('files') as $media) {
             $data['document'][] = $media;
         }
-
+        */
         try {
-            Mail::to($email)->cc($request->user()->email)->send(new SendFeedback($request->text, $request->betreff, $data));
+            $user = $request->user();
+            Mail::to($email)->cc($user->email)->send(new SendFeedback(
+                $request->text,
+                $request->betreff,
+                $data,
+                $user->name,
+                $user->email,
+                $user->name
+            ));
             $feedback = [
                 'type' => 'success',
                 'Meldung' => 'Nachricht wurde versandt',
