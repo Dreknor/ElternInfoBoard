@@ -156,4 +156,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('care/sick', [\App\Http\Controllers\API\CareController::class, 'getSickChildren']);
     Route::get('care/overview', [\App\Http\Controllers\API\CareController::class, 'getCareOverview']);
 
+    /**
+     * Parent / Eltern
+     */
+    Route::get('parent/children', [\App\Http\Controllers\API\ParentController::class, 'getChildren']);
+    Route::get('parent/children/check-in-status', [\App\Http\Controllers\API\ParentController::class, 'getChildrenCheckInStatus']);
+    Route::put('parent/check-in/{checkInId}/confirm', [\App\Http\Controllers\API\ParentController::class, 'confirmAttendance']);
+    Route::put('parent/check-in/{checkInId}/decline', [\App\Http\Controllers\API\ParentController::class, 'declineAttendance']);
+    Route::get('parent/schickzeiten', [\App\Http\Controllers\API\ParentController::class, 'getSchickzeiten']);
+    Route::get('parent/krankmeldungen', [\App\Http\Controllers\API\ParentController::class, 'getKrankmeldungen']);
+    Route::get('parent/krankmeldungen/history', [\App\Http\Controllers\API\ParentController::class, 'getKrankmeldungenHistory']);
+
 });
