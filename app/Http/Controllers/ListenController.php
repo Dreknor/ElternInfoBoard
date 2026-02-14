@@ -57,7 +57,12 @@ class ListenController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', Liste::class);
+        if (!auth()->user()->can('view terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
 
         if ($request->user()->can('edit terminliste')) {
             $listen = Liste::where('ende', '>=', Carbon::today())->get();
