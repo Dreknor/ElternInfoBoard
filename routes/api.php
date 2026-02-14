@@ -56,7 +56,7 @@ Route::get('home/{post_id}', function () {
 
 Route::post('/token/create', [AuthController::class, 'login']);
 
-Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
+Route::get('files/{media_uuid}/download', [ImageController::class, 'getFileByUuid'])->name('api.files.download');
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -104,8 +104,12 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * Dateien, Bilder, Downloads
      */
-    Route::get('files', [FilesController::class, 'index']);
+    Route::get('files', [FilesController::class, 'index'])->name('api.files.index');
+    Route::get('files/mime-types', [FilesController::class, 'mimeTypes'])->name('api.files.mime-types');
+    Route::get('files/stats', [FilesController::class, 'stats'])->name('api.files.stats');
+    Route::get('files/{uuid}', [FilesController::class, 'show'])->name('api.files.show');
     Route::get('image/{media_id}', [ImageController::class, 'getImage']);
+
 
     /**
      * Termine
