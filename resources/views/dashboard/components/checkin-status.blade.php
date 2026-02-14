@@ -10,9 +10,17 @@
             <div class="p-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($careChildren as $child)
+                        @php
+                            // Nutze bereits geladene Relationen für Performance
+                            $todayCheckIn = $child->checkIns->first();
+                            $isCheckedIn = $todayCheckIn && $todayCheckIn->checked_in && !$todayCheckIn->checked_out;
+                            $isCheckedOut = $todayCheckIn && $todayCheckIn->checked_out;
+                            $hasKrankmeldung = $child->krankmeldungen->count() > 0;
+                            $schickzeitenToday = $child->schickzeiten;
+                        @endphp
                         <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                             <!-- Header -->
-                            <div class="@if($child->checkedIn()) bg-gradient-to-r from-teal-500 to-teal-600 text-white @else bg-gradient-to-r from-orange-500 to-amber-600 text-white @endif px-4 py-3">
+                            <div class="@if($isCheckedIn) bg-gradient-to-r from-teal-500 to-teal-600 text-white @else bg-gradient-to-r from-orange-500 to-amber-600 text-white @endif px-4 py-3">
                                 <h6 class="font-bold text-base mb-0">
                                     {{$child->first_name}} {{$child->last_name}}
                                 </h6>
@@ -23,7 +31,7 @@
 
                             <!-- Body -->
                             <div class="p-4 bg-gray-50">
-                                @if($child->krankmeldungToday())
+                                @if($hasKrankmeldung)
                                     <!-- Krankmeldung -->
                                     <div class="flex items-start gap-2 p-3 bg-red-50 border-l-4 border-red-500 rounded">
                                         <i class="fas fa-notes-medical text-red-600 mt-1"></i>
@@ -32,18 +40,18 @@
                                             <p class="text-red-600 text-xs mb-0">Heute nicht in der Einrichtung</p>
                                         </div>
                                     </div>
-                                @elseif(!$child->checkedIn() and $child->checkIns()->where('date', today())->first()?->checked_out)
+                                @elseif($isCheckedOut)
                                     <!-- Ausgecheckt -->
                                     <div class="flex items-start gap-2 p-3 bg-gray-100 border-l-4 border-gray-400 rounded">
                                         <i class="fas fa-sign-out-alt text-gray-600 mt-1"></i>
                                         <div>
                                             <p class="text-gray-800 font-semibold text-sm mb-0">Abgemeldet</p>
                                             <p class="text-gray-600 text-xs mb-0">
-                                                um {{$child->checkIns()->where('date', today())->first()?->updated_at?->format('H:i')}} Uhr
+                                                um {{$todayCheckIn?->updated_at?->format('H:i')}} Uhr
                                             </p>
                                         </div>
                                     </div>
-                                @elseif($child->checkedIn())
+                                @elseif($isCheckedIn)
                                     <!-- Eingecheckt -->
                                     <div class="space-y-3">
                                         <div class="flex items-start gap-2 p-3 bg-teal-50 border-l-4 border-teal-500 rounded">
@@ -55,13 +63,13 @@
                                         </div>
 
                                         <!-- Schickzeiten -->
-                                        @if($child->getSchickzeitenForToday()->count() > 0)
+                                        @if($schickzeitenToday->count() > 0)
                                             <div class="bg-blue-50 border border-blue-200 rounded p-3">
                                                 <div class="flex items-center gap-2 mb-2">
                                                     <i class="far fa-clock text-blue-600 text-sm"></i>
                                                     <span class="font-semibold text-blue-800 text-sm">Schickzeit heute:</span>
                                                 </div>
-                                                @foreach($child->getSchickzeitenForToday() as $schickzeit)
+                                                @foreach($schickzeitenToday as $schickzeit)
                                                     <p class="text-blue-700 text-sm mb-0 ml-6">
                                                         @if($schickzeit->type == 'genau')
                                                             <i class="fas fa-dot-circle text-xs mr-1"></i>
