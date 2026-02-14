@@ -12,12 +12,7 @@ class KontaktRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $isAuthorized = auth()->check();
-        Log::channel('single')->info('KontaktRequest: authorize() called', [
-            'is_authorized' => $isAuthorized,
-            'user_id' => auth()->id(),
-        ]);
-        return $isAuthorized;
+        return auth()->check();
     }
 
     /**
@@ -25,13 +20,6 @@ class KontaktRequest extends FormRequest
      */
     public function rules(): array
     {
-        Log::channel('single')->info('KontaktRequest: rules() called', [
-            'has_text' => $this->has('text'),
-            'has_betreff' => $this->has('betreff'),
-            'has_mitarbeiter' => $this->has('mitarbeiter'),
-            'has_files' => $this->hasFile('files'),
-        ]);
-
         return [
             'text' => [
                 'required',
@@ -55,7 +43,6 @@ class KontaktRequest extends FormRequest
                 'file',
                 'max:8000',
             ],
-
         ];
     }
 }

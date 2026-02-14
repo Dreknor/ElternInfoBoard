@@ -57,6 +57,13 @@ class FeedbackController extends Controller implements HasMiddleware
                 ->orderBy('created_at', 'desc')->paginate(25);
         }
 
+        Log::debug('FeedbackController: show() method called', [
+            'user_id' => $user?->id,
+            'user_email' => $user?->email,
+            'mails_count' => $mails->count(),
+            'has_id_parameter' => $id !== null,
+        ]);
+
         return view('feedback.show', [
             'mitarbeiter' => User::whereHas('roles', function ($q) {
                 $q->where('name', 'Mitarbeiter');
