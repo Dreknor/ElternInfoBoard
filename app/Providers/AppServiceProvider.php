@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Model\PersonalAccessToken;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSetting $settings): void
     {
+        // Use custom PersonalAccessToken model with explicit MySQL connection
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
         Paginator::useBootstrap();
 
         View::share('settings', $settings);
