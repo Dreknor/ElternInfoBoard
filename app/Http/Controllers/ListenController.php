@@ -56,12 +56,7 @@ class ListenController extends Controller
      */
     public function index(Request $request)
     {
-        if (!auth()->user()->can('view terminliste')) {
-            return redirect()->back()->with([
-                'type' => 'error',
-                'Meldung' => 'Berechtigung fehlt für Terminlisten',
-            ]);
-        }
+
 
         if ($request->user()->can('edit terminliste')) {
             $listen = Liste::where('ende', '>=', Carbon::today())->get();
@@ -174,7 +169,7 @@ class ListenController extends Controller
      */
     public function show(Liste $terminListe)
     {
-        if (!auth()->user()->can('view terminliste')) {
+        if (!auth()->user()->listen()->where('listen.id', $terminListe->id)->exists() and !auth()->user()->can('edit terminliste')) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',

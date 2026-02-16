@@ -43,7 +43,18 @@ class NachrichtenController extends Controller
      *     "created_at": "datetime",
      *     "updated_at": "datetime",
      *     "archiv_ab": "datetime",
-     *     "media": [],
+     *     "media": [{
+     *       "id": integer,
+     *       "uuid": "string",
+     *       "collection": "string",
+     *       "name": "string",
+     *       "file_name": "string",
+     *       "mime_type": "string",
+     *       "size": integer,
+     *       "order": integer,
+     *       "url": "string",
+     *       "url_by_id": "string"
+     *     }],
      *     "reactions": {
      *       "enabled": boolean,
      *       "reactions": {"like": 0, "love": 0, "celebrate": 0}
@@ -101,7 +112,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -129,7 +140,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -153,7 +164,7 @@ class NachrichtenController extends Controller
                         $query->select('id', 'name');
                     }])
                     ->with(['media' => function ($query) {
-                        return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk');
+                        return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
                     }])
                     ->with(['reactions' => function ($query) {
                         return $query->select('name');
@@ -193,6 +204,24 @@ class NachrichtenController extends Controller
         foreach ($nachrichten as $nachricht) {
             $nachricht->author = (is_null($nachricht->autor)) ? 'Fehler bei Nachricht '.$nachricht->id : $nachricht->autor->name;
             unset($nachricht->autor);
+
+            // Format media with download URLs
+            if ($nachricht->media) {
+                $nachricht->media = $nachricht->media->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'uuid' => $media->uuid,
+                        'collection' => $media->collection_name,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'mime_type' => $media->mime_type,
+                        'size' => $media->size,
+                        'order' => $media->order_column,
+                        'url' => url('/api/file/' . $media->uuid),
+                        'url_by_id' => url('/api/image/' . $media->id),
+                    ];
+                })->values()->all();
+            }
 
             // Format reactions - initialisiere mit 0 für alle verfügbaren Reaktionen
             $reactions = [];
@@ -460,7 +489,7 @@ class NachrichtenController extends Controller
                 $query->select('id', 'name');
             },
             'media' => function ($query) {
-                return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+                return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
             },
             'reactions' => function ($query) {
                 return $query->select('name');
@@ -487,6 +516,24 @@ class NachrichtenController extends Controller
         // Format author
         $post->author = (is_null($post->autor)) ? 'Fehler bei Nachricht '.$post->id : $post->autor->name;
         unset($post->autor);
+
+        // Format media with download URLs
+        if ($post->media) {
+            $post->media = $post->media->map(function ($media) {
+                return [
+                    'id' => $media->id,
+                    'uuid' => $media->uuid,
+                    'collection' => $media->collection_name,
+                    'name' => $media->name,
+                    'file_name' => $media->file_name,
+                    'mime_type' => $media->mime_type,
+                    'size' => $media->size,
+                    'order' => $media->order_column,
+                    'url' => url('/api/file/' . $media->uuid),
+                    'url_by_id' => url('/api/image/' . $media->id),
+                ];
+            })->values()->all();
+        }
 
         // Format reactions - initialize with 0 for all available reactions
         $reactions = [];
