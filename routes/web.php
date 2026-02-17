@@ -237,7 +237,7 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
 
         // Dashboard
-        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index']);
         Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
         // show posts
