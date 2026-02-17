@@ -6,26 +6,41 @@ use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\ProviderInterface;
+use Laravel\Socialite\Two\User;
 
 class KeycloakService extends AbstractProvider implements ProviderInterface
 {
+    /**
+     * The scopes being requested.
+     *
+     * @var array
+     */
+    protected $scopes = ['openid', 'profile', 'email'];
+
+    /**
+     * The separating character for the requested scopes.
+     *
+     * @var string
+     */
+    protected $scopeSeparator = ' ';
+
     protected function getAuthUrl($state)
     {
         return $this->buildAuthUrlFromBase(
-            config('services.keycloak.base_url'),
+            $this->getKeycloakUrl('/protocol/openid-connect/auth'),
             $state
         );
     }
 
     protected function getTokenUrl()
     {
-        return config('services.keycloak.base_url');
+        return $this->getKeycloakUrl('/protocol/openid-connect/token');
     }
 
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get(
-            config('services.keycloak.base_url'),
+            $this->getKeycloakUrl('/protocol/openid-connect/userinfo'),
             [
                 'headers' => [
                     'Accept' => 'application/json',
@@ -39,49 +54,59 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
 
     protected function mapUserToObject(array $user)
     {
-        return [
-            'id' => $user['sub'],
-            'name' => $user['name'],
-            'email' => $user['email'],
-        ];
+        return (new User)->setRaw($user)->map([
+            'id' => $user['sub'] ?? null,
+            'name' => $user['name'] ?? $user['preferred_username'] ?? null,
+            'email' => $user['email'] ?? null,
+            'nickname' => $user['preferred_username'] ?? null,
+            'givenName' => $user['given_name'] ?? null,
+            'sn' => $user['family_name'] ?? null,
+        ]);
     }
 
     protected function getTokenFields($code)
     {
         return [
             'grant_type' => 'authorization_code',
-            'client_id' => config('services.keycloak.client_id'),
-            'client_secret' => config('services.keycloak.client_secret'),
-            'redirect_uri' => config('services.keycloak.redirect'),
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri' => $this->redirectUrl,
             'code' => $code,
         ];
     }
 
     protected function getCodeFields($state = null)
     {
-        return array_merge(
-            parent::getCodeFields($state),
-            ['response_mode' => 'query']
-        );
+        $fields = parent::getCodeFields($state);
+
+        return array_merge($fields, [
+            'response_type' => 'code',
+        ]);
     }
 
-    public function user()
+    /**
+     * Get the Keycloak URL with realm.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    protected function getKeycloakUrl($path)
     {
-        if ($this->hasInvalidState()) {
-            throw new InvalidStateException;
-        }
+        $baseUrl = rtrim($this->getConfig('base_url'), '/');
+        $realm = $this->getConfig('realm', 'master');
 
-        $response = $this->getAccessTokenResponse($this->getCode());
+        return $baseUrl . '/realms/' . $realm . $path;
+    }
 
-        $user = $this->mapUserToObject($this->getUserByToken(
-            $token = Arr::get($response, 'access_token')
-        ));
-
-        return array_merge($user, [
-            'access_token' => $token,
-            'refresh_token' => Arr::get($response, 'refresh_token'),
-            'expires_in' => Arr::get($response, 'expires_in'),
-        ]);
-
+    /**
+     * Get a config value.
+     *
+     * @param  string  $key
+     * @param  mixed  $default
+     * @return mixed
+     */
+    protected function getConfig($key, $default = null)
+    {
+        return $this->config[$key] ?? config('services.keycloak.' . $key, $default);
     }
 }
