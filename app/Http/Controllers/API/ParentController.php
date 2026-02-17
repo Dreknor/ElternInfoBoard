@@ -275,8 +275,8 @@ class ParentController extends Controller implements HasMiddleware
      * @responseField data.*.check_ins.*.should_be boolean Whether the child should be present.
      * @responseField data.*.check_ins.*.lock_at string The date when the check-in is locked.
      * @responseField data.*.check_ins.*.comment string Comment for the check-in.
-     * @responseField data.*.check_ins.*.check_in_time string The timestamp when the child was checked in (ISO 8601 format).
-     * @responseField data.*.check_out_time string The timestamp when the child was checked out (ISO 8601 format).
+     * @responseField data.*.check_ins.*.checked_in_at string The timestamp when the child was checked in (ISO 8601 format).
+     * @responseField data.*.check_ins.*.checked_out_at string The timestamp when the child was checked out (ISO 8601 format).
      * @responseField data.*.check_ins.*.can_edit boolean Whether the parent can still edit this check-in.
      */
     public function getChildrenCheckInStatus(Request $request): JsonResponse
@@ -322,7 +322,7 @@ class ParentController extends Controller implements HasMiddleware
             ->whereIn('child_id', $childIds)
             ->where('date', '>=', today())
             ->orderBy('date')
-            ->select('id', 'child_id', 'date', 'checked_in', 'checked_out', 'should_be', 'lock_at', 'comment', 'created_at', 'updated_at')
+            ->select('id', 'child_id', 'date', 'checked_in', 'checked_out', 'should_be', 'lock_at', 'comment', 'checked_in_at', 'checked_out_at', 'created_at', 'updated_at')
             ->get()
             ->groupBy('child_id');
 
@@ -342,22 +342,6 @@ class ParentController extends Controller implements HasMiddleware
                     // can_edit is true if either action is possible
                     $canEdit = $canConfirm || $canDecline;
 
-                    // Determine check-in and check-out timestamps
-                    // When checked_in changes to true, created_at or updated_at represents the check-in time
-                    // When checked_out changes to true, updated_at represents the check-out time
-                    $checkInTime = null;
-                    $checkOutTime = null;
-
-                    if ($checkIn->checked_in) {
-                        // Use created_at as initial check-in time
-                        $checkInTime = $checkIn->created_at?->toIso8601String();
-                    }
-
-                    if ($checkIn->checked_out) {
-                        // Use updated_at as check-out time (when status changed to checked_out)
-                        $checkOutTime = $checkIn->updated_at?->toIso8601String();
-                    }
-
                     return [
                         'id' => $checkIn->id,
                         'date' => $checkIn->date->toDateString(),
@@ -366,8 +350,8 @@ class ParentController extends Controller implements HasMiddleware
                         'should_be' => $checkIn->should_be,
                         'lock_at' => $checkIn->lock_at?->toDateString(),
                         'comment' => $checkIn->comment,
-                        'check_in_time' => $checkInTime,
-                        'check_out_time' => $checkOutTime,
+                        'checked_in_at' => $checkIn->checked_in_at?->toIso8601String(),
+                        'checked_out_at' => $checkIn->checked_out_at?->toIso8601String(),
                         'can_edit' => $canEdit,
                         'can_confirm' => $canConfirm,
                         'can_decline' => $canDecline,
@@ -437,6 +421,8 @@ class ParentController extends Controller implements HasMiddleware
                 'should_be' => $checkIn->should_be,
                 'checked_in' => $checkIn->checked_in,
                 'checked_out' => $checkIn->checked_out,
+                'checked_in_at' => $checkIn->checked_in_at?->toIso8601String(),
+                'checked_out_at' => $checkIn->checked_out_at?->toIso8601String(),
             ],
         ], 200);
     }
@@ -507,6 +493,8 @@ class ParentController extends Controller implements HasMiddleware
                 'should_be' => $checkIn->should_be,
                 'checked_in' => $checkIn->checked_in,
                 'checked_out' => $checkIn->checked_out,
+                'checked_in_at' => $checkIn->checked_in_at?->toIso8601String(),
+                'checked_out_at' => $checkIn->checked_out_at?->toIso8601String(),
             ],
         ], 200);
     }
