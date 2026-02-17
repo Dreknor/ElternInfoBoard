@@ -14,6 +14,8 @@ class StundenplanSetting extends Settings
 
     public bool $allow_api_import;
 
+    public bool $show_absent_teachers;
+
     public static function group(): string
     {
         return 'stundenplan';

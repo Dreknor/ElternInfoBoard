@@ -302,11 +302,13 @@ class SettingsController extends Controller implements HasMiddleware
                 $validated = $request->validate([
                     'allow_web_import' => 'nullable|boolean',
                     'allow_api_import' => 'nullable|boolean',
+                    'show_absent_teachers' => 'nullable|boolean',
                 ]);
 
                 $stundenplanSetting = new StundenplanSetting;
                 $stundenplanSetting->allow_web_import = $request->has('allow_web_import');
                 $stundenplanSetting->allow_api_import = $request->has('allow_api_import');
+                $stundenplanSetting->show_absent_teachers = $request->has('show_absent_teachers');
                 $stundenplanSetting->save();
 
                 // Clear cache
