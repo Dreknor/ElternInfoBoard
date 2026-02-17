@@ -8,7 +8,6 @@ use App\Model\User;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use function PHPUnit\Framework\returnArgument;
 
 /**
@@ -186,8 +185,6 @@ class NachrichtenController extends Controller
 
         $nachrichten = $nachrichten->unique('id');
 
-        Log::debug($nachrichten);
-
         // Lade alle verfügbaren Reaktionstypen aus der Datenbank
         $availableReactions = Reaction::query()
             ->select('id', 'name')
@@ -357,18 +354,8 @@ class NachrichtenController extends Controller
             ], 404);
         }
 
-        Log::debug('Reaktion: ' . $reaction);
-        Log::debug('Post: ' . $post);
-        Log::debug('oldReaction: ' . $post->getReactionsSummary());
-
         $user = $request->user();
-
-        Log::debug('User '.$user->id.' reacts to post '.$post->id.' with reaction '.$reaction->name);
-
-
         $user->reactTo($post, $reaction);
-
-        Log::debug($post->getReactionsSummary());
 
         return response()->json([
             'success' => true,
