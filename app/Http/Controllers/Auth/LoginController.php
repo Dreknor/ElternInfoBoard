@@ -172,11 +172,21 @@ class LoginController extends Controller implements HasMiddleware
             // Remove passwordless login marker for Keycloak login
             request()->session()->forget('passwordless_login');
 
+            Log::info('Keycloak login successful for existing user', [
+                'user_id' => $existingUser->id,
+                'email' => $existingUser->email,
+                'intended' => session('url.intended'),
+            ]);
+
         } else {
 
             $domain = explode('@', $user->email)[1];
 
-            $mailDomains = $keycloakSetting->maildomain;
+            $mailDomains = $this->getKeycloakConfigValue(
+                $keycloakSetting->maildomain ?? null,
+                'KEYCLOAK_MAILDOMAIN',
+                '*'
+            );
             $mailDomains = explode(',', $mailDomains);
             $mailDomains = array_map('trim', $mailDomains);
 
@@ -222,9 +232,18 @@ class LoginController extends Controller implements HasMiddleware
             auth()->login($newUser);
             // Remove passwordless login marker for Keycloak login
             request()->session()->forget('passwordless_login');
+
+            Log::info('Keycloak login successful for new user', [
+                'user_id' => $newUser->id,
+                'email' => $newUser->email,
+                'intended' => session('url.intended'),
+            ]);
         }
 
-        return redirect()->intended('/home');
+        // Clear any intended URL from session that might redirect to unwanted locations
+        session()->forget('url.intended');
+
+        return redirect('/home');
     }
 
     /**
@@ -238,5 +257,24 @@ class LoginController extends Controller implements HasMiddleware
     {
         // Remove passwordless login marker for regular email/password login
         $request->session()->forget('passwordless_login');
+    }
+
+    /**
+     * Get Keycloak configuration value with fallback to .env
+     *
+     * @param mixed $settingValue
+     * @param string $envKey
+     * @param mixed $default
+     * @return mixed
+     */
+    protected function getKeycloakConfigValue($settingValue, string $envKey, $default = null)
+    {
+        // If setting value exists and is not empty, use it
+        if (!empty($settingValue) && $settingValue !== null) {
+            return $settingValue;
+        }
+
+        // Otherwise fallback to .env
+        return env($envKey, $default);
     }
 }
