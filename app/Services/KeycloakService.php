@@ -26,15 +26,23 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
 
     protected function getAuthUrl($state)
     {
-        return $this->buildAuthUrlFromBase(
+        $url = $this->buildAuthUrlFromBase(
             $this->getKeycloakUrl('/protocol/openid-connect/auth'),
             $state
         );
+
+        Log::info('Keycloak Auth URL', ['url' => $url]);
+
+        return $url;
     }
 
     protected function getTokenUrl()
     {
-        return $this->getKeycloakUrl('/protocol/openid-connect/token');
+        $url = $this->getKeycloakUrl('/protocol/openid-connect/token');
+
+        Log::info('Keycloak Token URL', ['url' => $url]);
+
+        return $url;
     }
 
     protected function getUserByToken($token)
@@ -95,7 +103,16 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
         $baseUrl = rtrim($this->getConfig('base_url'), '/');
         $realm = $this->getConfig('realm', 'ucs');
 
-        return $baseUrl . '/realms/' . $realm . $path;
+        $url = $baseUrl . '/realms/' . $realm . $path;
+
+        Log::debug('Keycloak URL constructed', [
+            'base_url' => $baseUrl,
+            'realm' => $realm,
+            'path' => $path,
+            'full_url' => $url,
+        ]);
+
+        return $url;
     }
 
     /**

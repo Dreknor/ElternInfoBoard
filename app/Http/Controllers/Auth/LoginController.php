@@ -146,15 +146,30 @@ class LoginController extends Controller implements HasMiddleware
         }
 
         try {
+            Log::info('Keycloak callback received', [
+                'query_params' => request()->query(),
+                'has_code' => request()->has('code'),
+                'has_state' => request()->has('state'),
+            ]);
+
             $user = Socialite::driver('keycloak')->user();
-            Log::debug('Keycloak user data', [
+
+            Log::info('Keycloak user data received', [
                 'user' => $user,
-                'attributes' => $user->user,
+                'email' => $user->email ?? 'N/A',
+                'name' => $user->name ?? 'N/A',
             ]);
         } catch (\Exception $e) {
+            Log::error('Keycloak callback error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Login fehlgeschlagen.',
+                'Meldung' => 'Login fehlgeschlagen: ' . $e->getMessage(),
             ]);
         }
 
