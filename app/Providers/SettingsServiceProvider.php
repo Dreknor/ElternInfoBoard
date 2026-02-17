@@ -65,19 +65,5 @@ class SettingsServiceProvider extends ServiceProvider
             // Bei Fehler werden die Werte aus ENV bzw. Defaults verwendet
         }
 
-        try {
-            $keyCloakSetting = app(KeyCloakSetting::class);
-            app('config')->set([
-                'keycloak.client_id' => $keyCloakSetting->client_id,
-                'keycloak.client_secret' => $keyCloakSetting->client_secret,
-                'keycloak.realm' => $keyCloakSetting->realm,
-                'keycloak.redirect_uri' => $keyCloakSetting->redirect_uri != null ? $keyCloakSetting->redirect_uri : config('app.url').'/login/keycloak/callback',
-                'keycloak.base_url' => $keyCloakSetting->base_url != null ? $keyCloakSetting->base_url : 'https://keycloak.example.com',
-                'keycloak.enabled' => $keyCloakSetting->enabled ?? false,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Setting Keycloak failed: '.$e->getMessage());
-        }
-
     }
 }

@@ -14,7 +14,6 @@ return [
         GeneralSetting::class,
         EmailSetting::class,
         CareSetting::class,
-        \App\Settings\KeyCloakSetting::class,
         \App\Settings\NotifySetting::class,
         \App\Settings\PflichtstundenSetting::class,
         \App\Settings\SchickzeitenSetting::class,
