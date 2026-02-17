@@ -93,7 +93,7 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
     protected function getKeycloakUrl($path)
     {
         $baseUrl = rtrim($this->getConfig('base_url'), '/');
-        $realm = $this->getConfig('realm', 'master');
+        $realm = $this->getConfig('realm', 'ucs');
 
         return $baseUrl . '/realms/' . $realm . $path;
     }

@@ -6,14 +6,15 @@ return new class extends SettingsMigration
 {
     public function up(): void
     {
+        // Enabled flag - default false
+        $this->migrator->add('keycloak.enabled', env('KEYCLOAK_ENABLED', false));
 
-        $this->migrator->add('keycloak.enabled', false) ?? false;
-        $this->migrator->add('keycloak.client_id', config('app.keycloak.client_id') ?? 'client_id');
-        $this->migrator->add('keycloak.client_secret', config('app.keycloak.client_secret')) ?? now()->timestamp;
-        $this->migrator->add('keycloak.realm', config('app.keycloak.realm', 'master')) ?? 'master';
-        $this->migrator->add('keycloak.redirect_uri', config('app.keycloak.url', config('app.url', 'http://localhost'))) ?? 'http://localhost';
-        $this->migrator->add('keycloak.base_url', config('app.keycloak.base_url', 'KeyCloack-Url')) ?? 'KeyCloack-Url';
-        $this->migrator->add('keycloak.maildomain', config('app.keycloak.maildomain', 'maildomain.com')) ?? 'maildomain.com';
-
+        // Use null as default to fallback to .env values
+        $this->migrator->add('keycloak.client_id', env('KEYCLOAK_CLIENT_ID'));
+        $this->migrator->add('keycloak.client_secret', env('KEYCLOAK_CLIENT_SECRET'));
+        $this->migrator->add('keycloak.realm', env('KEYCLOAK_REALM', 'master'));
+        $this->migrator->add('keycloak.redirect_uri', env('KEYCLOAK_REDIRECT_URI'));
+        $this->migrator->add('keycloak.base_url', env('KEYCLOAK_BASE_URL'));
+        $this->migrator->add('keycloak.maildomain', env('KEYCLOAK_MAILDOMAIN', '*'));
     }
 };
