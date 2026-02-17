@@ -206,10 +206,6 @@ class LoginController extends Controller implements HasMiddleware
             auth()->login($existingUser);
             request()->session()->forget('passwordless_login');
 
-            Log::info('Keycloak login successful (existing user)', [
-                'user_id' => $existingUser->id,
-                'email' => $existingUser->email,
-            ]);
 
         } else {
             // Check email domain whitelist
