@@ -118,16 +118,36 @@ class LoginController extends Controller implements HasMiddleware
             return redirect()->route('home');
         }
 
-        $keycloakSetting = new \App\Settings\KeyCloakSetting;
+        try {
+            $keycloakSetting = new \App\Settings\KeyCloakSetting;
 
-        if ($keycloakSetting->enabled == false) {
+            if ($keycloakSetting->enabled == false) {
+                Log::warning('Keycloak login attempt but Keycloak is disabled');
+                return redirect()->route('login')->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Keycloak ist nicht aktiviert.',
+                ]);
+            }
+
+            Log::info('Redirecting to Keycloak', [
+                'client_id' => $keycloakSetting->client_id ?? env('KEYCLOAK_CLIENT_ID'),
+                'base_url' => $keycloakSetting->base_url ?? env('KEYCLOAK_BASE_URL'),
+                'realm' => $keycloakSetting->realm ?? env('KEYCLOAK_REALM'),
+                'redirect_uri' => $keycloakSetting->redirect_uri ?? env('KEYCLOAK_REDIRECT_URI'),
+            ]);
+
+            return Socialite::driver('keycloak')->redirect();
+        } catch (\Exception $e) {
+            Log::error('Error redirecting to Keycloak', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return redirect()->route('login')->with([
                 'type' => 'danger',
-                'Meldung' => 'Keycloak ist nicht aktiviert.',
+                'Meldung' => 'Keycloak-Verbindung fehlgeschlagen: ' . $e->getMessage(),
             ]);
         }
-
-        return Socialite::driver('keycloak')->redirect();
     }
 
     /**

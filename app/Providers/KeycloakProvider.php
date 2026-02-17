@@ -17,6 +17,14 @@ class KeycloakProvider extends ServiceProvider
         Socialite::extend('keycloak', function ($app) {
             $config = $this->getKeycloakConfig();
 
+            \Log::info('KeycloakProvider - Building provider with config', [
+                'client_id' => $config['client_id'] ?? 'not set',
+                'redirect' => $config['redirect'] ?? 'not set',
+                'base_url' => $config['base_url'] ?? 'not set',
+                'realm' => $config['realm'] ?? 'not set',
+                'has_client_secret' => !empty($config['client_secret']),
+            ]);
+
             return Socialite::buildProvider(KeycloakSocialiteProvider::class, $config);
         });
     }

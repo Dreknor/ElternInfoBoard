@@ -75,13 +75,22 @@ class KeycloakService extends AbstractProvider implements ProviderInterface
 
     protected function getTokenFields($code)
     {
-        return [
+        $fields = [
             'grant_type' => 'authorization_code',
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'redirect_uri' => $this->redirectUrl,
             'code' => $code,
         ];
+
+        Log::info('Keycloak Token Request Fields', [
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUrl,
+            'has_client_secret' => !empty($this->clientSecret),
+            'code_length' => strlen($code),
+        ]);
+
+        return $fields;
     }
 
     protected function getCodeFields($state = null)
