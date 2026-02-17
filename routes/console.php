@@ -65,6 +65,15 @@ try {
 
         // Alte Logs automatisch löschen (alle 7 Tage, Logs älter als 90 Tage)
         Schedule::command('logs:cleanup --days=90')->weeklyOn(1, '02:00');
+
+        // Alte CheckIns automatisch löschen (täglich, CheckIns älter als 3 Monate)
+        Schedule::command('checkins:cleanup --months=3')->dailyAt('03:00');
+
+        // Alte Schickzeiten mit spezifischem Datum löschen (täglich, älter als 2 Wochen)
+        Schedule::command('schickzeiten:cleanup --weeks=2')->dailyAt('03:30');
+
+        // Alte Child Notices automatisch löschen (täglich, Child Notices älter als 3 Monate)
+        Schedule::command('child-notices:cleanup --months=3')->dailyAt('03:45');
     }
 } catch (\Exception $e) {
     // Silently catch exceptions during migration/setup
