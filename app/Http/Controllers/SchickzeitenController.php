@@ -8,8 +8,10 @@ use App\Http\Requests\SchickzeitRequest;
 use App\Mail\SchickzeitenReminder;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
+use App\Model\Notification;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Notifications\AttendanceQueryNotification;
 use App\Settings\CareSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
@@ -1022,36 +1024,96 @@ class SchickzeitenController extends Controller implements HasMiddleware
             'date_start' => 'required|date',
             'date_end' => 'nullable|date',
             'child_id' => 'required|exists:children,id',
+            'lock_at' => 'nullable|date',
         ]);
 
         $date_start = Carbon::parse($request->date_start);
         $date_end = Carbon::parse($request->date_end);
+        $lock_at = $request->lock_at ? Carbon::parse($request->lock_at) : null;
 
         $child = Child::find($request->child_id);
 
         $child->load(['checkIns' => fn ($query) => $query->where('date', '>=', $date_start)->where('date', '<=', $date_end)]);
 
         $checkIn = [];
+        $newCheckInsCreated = false;
 
         for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
             if ($date->isWeekend()) {
                 continue;
             }
+
+            // Prüfe ob ein neuer CheckIn erstellt wird
+            $existingCheckIn = $child->checkIns()->where('date', $date->toDateString())->first();
+
             $child->checkIns()->updateOrCreate([
                 'date' => $date->toDateString(),
             ], [
                 'checked_in' => false,
                 'checked_out' => false,
-                'should_be' => true,
+                'should_be' => null, // null bedeutet, dass noch keine Rückmeldung erfolgt ist
+                'lock_at' => $lock_at,
+                'comment' => $request->comment ?? null,
             ]);
+
+            if (!$existingCheckIn) {
+                $newCheckInsCreated = true;
+            }
         }
 
         ChildCheckIn::query()->insert($checkIn);
+
+        // Benachrichtige die Eltern, wenn neue Anwesenheitsabfragen erstellt wurden
+        if ($newCheckInsCreated) {
+            $this->notifyParentsAboutNewAttendanceQuery($child, $date_start, $date_end, $lock_at);
+        }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Gespeichert',
         ]);
+    }
+
+    /**
+     * Benachrichtigt die Eltern eines Kindes über eine neue Anwesenheitsabfrage
+     */
+    private function notifyParentsAboutNewAttendanceQuery(Child $child, Carbon $dateStart, Carbon $dateEnd, ?Carbon $lockAt)
+    {
+        $parents = $child->parents;
+
+        foreach ($parents as $parent) {
+            $title = 'Neue Anwesenheitsabfrage';
+
+            $dateRange = $dateStart->format('d.m.Y');
+            if ($dateStart->toDateString() !== $dateEnd->toDateString()) {
+                $dateRange .= ' bis ' . $dateEnd->format('d.m.Y');
+            }
+
+            $body = "Für {$child->first_name} {$child->last_name} liegt eine neue Anwesenheitsabfrage vor ({$dateRange}).";
+
+            if ($lockAt) {
+                $body .= " Bitte antworten Sie bis zum " . $lockAt->format('d.m.Y') . ".";
+            } else {
+                $body .= " Bitte geben Sie Ihre Rückmeldung.";
+            }
+
+            // Erstelle Datenbank-Notification
+            Notification::create([
+                'user_id' => $parent->id,
+                'message' => $body,
+                'title' => $title,
+                'url' => url('schickzeiten'),
+                'type' => 'Anwesenheitsabfrage',
+            ]);
+
+            // Sende Push-Notification
+            try {
+                $parent->notify(new AttendanceQueryNotification($title, $body));
+                Log::info("Neue Anwesenheitsabfrage-Benachrichtigung an {$parent->name} (ID: {$parent->id}) gesendet");
+            } catch (\Exception $e) {
+                Log::error("Fehler beim Senden der Anwesenheitsabfrage-Benachrichtigung an {$parent->name}: " . $e->getMessage());
+            }
+        }
     }
 
     public function updateAnwesenheitComment(Request $request)

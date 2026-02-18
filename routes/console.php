@@ -60,6 +60,9 @@ try {
 
         Schedule::call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->weeklyOn(6, '00:00');
 
+        // Anwesenheitsabfragen-Erinnerungen - täglich um 08:00 Uhr
+        Schedule::job(new \App\Jobs\SendAttendanceQueryReminderJob)->dailyAt('08:00');
+
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 
