@@ -9,10 +9,12 @@ use App\Model\ChildMandate;
 use App\Model\ChildNotice;
 use App\Model\Schickzeiten;
 use App\Settings\CareSetting;
+use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -1022,11 +1024,13 @@ class ParentController extends Controller implements HasMiddleware
      *
      * @group Parent
      *
-     * @bodyParam child_id int required The ID of the child. Example: 5
-     * @bodyParam weekday int optional The day of the week (1=Montag, 5=Freitag). Required if specific_date is not set. Example: 1
+     * @bodyParam child_id int optional The ID of the child. Example: 5
+     * @bodyParam weekday string optional The day of the week (Montag, Dienstag, Mittwoch, Donnerstag, Freitag). Required if specific_date is not set. Example: Montag
      * @bodyParam specific_date string optional A specific date (YYYY-MM-DD). Required if weekday is not set. Example: 2026-03-15
-     * @bodyParam type string required The type of time (genau, ab, bis). Example: genau
-     * @bodyParam time string required The time (HH:MM). Example: 08:00
+     * @bodyParam type string required The type of time (genau, ab, spät.). Example: genau
+     * @bodyParam time string optional The time for type "genau" (HH:MM). Example: 08:00
+     * @bodyParam time_ab string optional The "from" time for type "ab" or "spät." (HH:MM). Example: 08:00
+     * @bodyParam time_spaet string optional The "latest" time for type "spät." (HH:MM). Example: 09:00
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField message string A message describing the result.
@@ -1036,13 +1040,37 @@ class ParentController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
-        // Validate input
+        // Validate input with same rules as web implementation
         $validator = Validator::make($request->all(), [
-            'child_id' => 'required|integer|exists:children,id',
-            'weekday' => 'nullable|integer|min:1|max:5',
-            'specific_date' => 'nullable|date|after_or_equal:today',
-            'type' => 'required|string|in:genau,ab,bis',
-            'time' => 'required|date_format:H:i',
+            'time' => [
+                'sometimes',
+                'date_format:H:i',
+                'nullable',
+            ],
+            'type' => [
+                'required',
+                'string',
+                'in:genau,ab',
+            ],
+            'weekday' => [
+                'nullable',
+                'string',
+                'in:Montag,Dienstag,Mittwoch,Donnerstag,Freitag',
+            ],
+            'specific_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:'.now()->toDateString(),
+            ],
+            'time_ab' => [
+                'nullable',
+                'date_format:H:i',
+            ],
+            'time_spaet' => [
+                'nullable',
+                'date_format:H:i',
+            ],
+            'child_id' => 'sometimes|exists:children,id',
         ]);
 
         if ($validator->fails()) {
@@ -1053,11 +1081,11 @@ class ParentController extends Controller implements HasMiddleware
             ], 422);
         }
 
-        // Check that either weekday or specific_date is provided
-        if (!$request->has('weekday') && !$request->has('specific_date')) {
+        // Check that child_id is provided
+        if (!$request->has('child_id')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Entweder weekday oder specific_date muss angegeben werden.',
+                'message' => 'Kein Kind ausgewählt.',
             ], 422);
         }
 
@@ -1074,6 +1102,30 @@ class ParentController extends Controller implements HasMiddleware
             ], 403);
         }
 
+        // Check that either weekday or specific_date is provided
+        $weekdayString = $request->input('weekday');
+        $specificDate = $request->input('specific_date');
+
+        if (!$weekdayString && !$specificDate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sie müssen entweder einen Wochentag oder ein spezifisches Datum angeben.',
+            ], 422);
+        }
+
+        // Convert weekday name to number
+        $weekday = null;
+        if ($weekdayString) {
+            $weekdayMap = [
+                'Montag' => 1,
+                'Dienstag' => 2,
+                'Mittwoch' => 3,
+                'Donnerstag' => 4,
+                'Freitag' => 5,
+            ];
+            $weekday = $weekdayMap[$weekdayString] ?? null;
+        }
+
         // Check if child is in care module
         $careSettings = new CareSetting;
         $careGroups = $careSettings->groups_list ?? [];
@@ -1088,14 +1140,95 @@ class ParentController extends Controller implements HasMiddleware
             ], 422);
         }
 
-        // Create Schickzeit
-        $schickzeit = Schickzeiten::create([
-            'child_id' => $childId,
-            'weekday' => $request->input('weekday'),
-            'specific_date' => $request->input('specific_date'),
-            'type' => $request->input('type'),
-            'time' => $request->input('time'),
-        ]);
+        // Get Schickzeiten settings for validation
+        $schickenzeitenSetting = new SchickzeitenSetting;
+        $settings_ab = Carbon::createFromFormat('H:i', $schickenzeitenSetting->schicken_ab);
+        $settings_bis = Carbon::createFromFormat('H:i', $schickenzeitenSetting->schicken_bis);
+
+        // Create Schickzeit based on type
+        try {
+            if ($request->type == 'genau') {
+                // Type "genau" requires time field
+                if (!$request->filled('time')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bitte geben Sie eine Zeit an.',
+                    ], 422);
+                }
+
+                $time = Carbon::createFromFormat('H:i', $request->time);
+
+                if ($time->lt($settings_ab) || $time->gt($settings_bis)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Ungültige Zeit. Erlaubt ist zwischen '.$schickenzeitenSetting->schicken_ab.' und '.$schickenzeitenSetting->schicken_bis.'.',
+                    ], 422);
+                }
+
+                // Delete existing Schickzeit for this weekday/date
+                if ($weekday) {
+                    $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
+                } else {
+                    $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
+                }
+
+                $schickzeit = $child->schickzeiten()->create([
+                    'weekday' => $weekday,
+                    'specific_date' => $specificDate,
+                    'type' => $request->type,
+                    'time' => $request->time,
+                    'changedBy' => $user->id,
+                    'users_id' => $user->id,
+                ]);
+            } else {
+                // Type "ab" or "spät." requires time_ab
+                if (!$request->filled('time_ab')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bitte geben Sie an, ab wann das Kind gehen darf.',
+                    ], 422);
+                }
+
+                $time_ab = Carbon::createFromFormat('H:i', $request->time_ab);
+                $time_spaet = $request->filled('time_spaet') ? Carbon::createFromFormat('H:i', $request->time_spaet) : null;
+
+                if ($time_ab->lt($settings_ab) || $time_ab->gt($settings_bis) ||
+                    ($time_spaet && ($time_spaet->lt($settings_ab) || $time_spaet->gt($settings_bis)))) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Ungültige Zeit. Erlaubt ist zwischen '.$schickenzeitenSetting->schicken_ab.' und '.$schickenzeitenSetting->schicken_bis.'.',
+                    ], 422);
+                }
+
+                // Delete existing Schickzeit for this weekday/date
+                if ($weekday) {
+                    $child->schickzeiten()->where('weekday', '=', $weekday)->delete();
+                } else {
+                    $child->schickzeiten()->where('specific_date', '=', $specificDate)->delete();
+                }
+
+                $schickzeit = $child->schickzeiten()->create([
+                    'weekday' => $weekday,
+                    'specific_date' => $specificDate,
+                    'type' => 'ab',
+                    'time_ab' => $request->time_ab,
+                    'time_spaet' => $time_spaet ? $request->time_spaet : null,
+                    'changedBy' => $user->id,
+                    'users_id' => $user->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Fehler beim Erstellen der Schickzeit', [
+                'status' => 500,
+                'body' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Erstellen der Schickzeit.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
 
         $weekdayNames = [
             1 => 'Montag',
@@ -1116,6 +1249,8 @@ class ParentController extends Controller implements HasMiddleware
                 'specific_date' => $schickzeit->specific_date?->toDateString(),
                 'type' => $schickzeit->type,
                 'time' => $schickzeit->time,
+                'time_ab' => $schickzeit->time_ab,
+                'time_spaet' => $schickzeit->time_spaet,
                 'created_at' => $schickzeit->created_at?->toIso8601String(),
             ],
         ], 201);
