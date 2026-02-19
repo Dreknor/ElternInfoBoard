@@ -518,6 +518,8 @@ class ParentController extends Controller implements HasMiddleware
      * @responseField data.*.schickzeiten.*.specific_date string The specific date (if set).
      * @responseField data.*.schickzeiten.*.type string The type of time (genau, ab, etc.).
      * @responseField data.*.schickzeiten.*.time string The time.
+     * @responseField data.*.schickzeiten.*.time_ab string The "from" time for type "ab" or "spät." (HH:MM).
+     * @responseField data.*.schickzeiten.*.time_spaet string The "latest" time for type "spät." (HH:MM).
      */
     public function getSchickzeiten(Request $request): JsonResponse
     {
@@ -574,7 +576,9 @@ class ParentController extends Controller implements HasMiddleware
                         'weekday_name' => $weekdayNames[$schickzeit->weekday] ?? null,
                         'specific_date' => $schickzeit->specific_date?->toDateString(),
                         'type' => $schickzeit->type,
-                        'time' => $schickzeit->time,
+                        'time' => $schickzeit->time?->format('H:i'),
+                        'time_ab' => $schickzeit->time_ab?->format('H:i'),
+                        'time_spaet' => $schickzeit->time_spaet?->format('H:i'),
                     ];
                 })->values(),
             ];

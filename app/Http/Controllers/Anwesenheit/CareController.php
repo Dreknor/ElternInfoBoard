@@ -482,19 +482,9 @@ class CareController extends Controller implements HasMiddleware
                 $body .= " Bitte geben Sie Ihre Rückmeldung.";
             }
 
-            // Erstelle Datenbank-Notification
-            Notification::create([
-                'user_id' => $parent->id,
-                'message' => $body,
-                'title' => $title,
-                'url' => url('schickzeiten'),
-                'type' => 'Anwesenheitsabfrage',
-            ]);
-
-            // Sende Push-Notification
+            // Sende Notification (enthält bereits 'database' und WebPush Channels)
             try {
-                $parent->notify(new AttendanceQueryNotification($title, $body));
-                Log::info("Neue Anwesenheitsabfrage-Benachrichtigung an {$parent->name} (ID: {$parent->id}) gesendet");
+                $parent->notify(new AttendanceQueryNotification($title, $body, url('schickzeiten')));
             } catch (\Exception $e) {
                 Log::error("Fehler beim Senden der Anwesenheitsabfrage-Benachrichtigung an {$parent->name}: " . $e->getMessage());
             }

@@ -46,7 +46,7 @@ class Schickzeiten extends Model implements Auditable
 
     public function getTimeAttribute()
     {
-        if ($this->attributes['time']) {
+        if (isset($this->attributes['time']) && $this->attributes['time']) {
             if (strlen($this->attributes['time']) < 6) {
                 $time = Carbon::createFromFormat('H:i', $this->attributes['time']);
             } else {
@@ -55,5 +55,7 @@ class Schickzeiten extends Model implements Auditable
 
             return $time;
         }
+
+        return null;
     }
 }

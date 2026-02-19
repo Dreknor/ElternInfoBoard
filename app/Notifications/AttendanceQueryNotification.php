@@ -2,11 +2,9 @@
 
 namespace App\Notifications;
 
-use Carbon\Carbon;
+use App\Model\Notification as NotificationModel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushChannel;
-use NotificationChannels\WebPush\WebPushMessage;
 
 class AttendanceQueryNotification extends Notification
 {
@@ -32,45 +30,26 @@ class AttendanceQueryNotification extends Notification
 
     /**
      * Get the notification's delivery channels.
+     * Wir verwenden einen benutzerdefinierten Channel, der direkt das Notification-Model erstellt.
      *
      * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable): array
     {
-        return [WebPushChannel::class, 'database'];
-    }
-
-    /**
-     * Get the array representation of the notification.
-     *
-     * @param mixed $notifiable
-     * @return array
-     */
-    public function toArray($notifiable): array
-    {
-        return [
+        // Erstelle direkt eine Notification im Model, das dann per Event WebPush auslöst
+        NotificationModel::create([
+            'user_id' => $notifiable->id,
+            'type' => 'Anwesenheitsabfrage',
             'title' => $this->title,
-            'body' => $this->body,
+            'message' => $this->body,
             'url' => $this->url,
-            'created' => Carbon::now()->toIso8601String(),
-        ];
-    }
+            'read' => false,
+            'important' => false,
+        ]);
 
-    /**
-     * Get the web push representation of the notification.
-     *
-     * @param mixed $notifiable
-     * @param mixed $notification
-     * @return WebPushMessage
-     */
-    public function toWebPush($notifiable, $notification): WebPushMessage
-    {
-        return (new WebPushMessage)
-            ->title($this->title)
-            ->icon(asset('img/'.config('app.favicon')))
-            ->body($this->body)
-            ->data(['url' => $this->url]);
+        // Gebe leeres Array zurück, da wir die Notification bereits erstellt haben
+        return [];
     }
 }
 
