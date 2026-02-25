@@ -270,6 +270,7 @@ Route::middleware('auth')->group(function () {
         Route::get('listen', [ListenController::class, 'index']);
         Route::post('listen', [ListenController::class, 'store']);
         Route::get('listen/create', [ListenController::class, 'create']);
+        Route::match(['get', 'post'], 'listen/search', [ListenController::class, 'search'])->name('listen.search');
         Route::get('listen/{terminListe}', [ListenController::class, 'show']);
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
@@ -280,7 +281,6 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
-        Route::match(['get', 'post'], 'listen/search', [ListenController::class, 'search'])->name('listen.search');
 
         // TerminListe
         Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
