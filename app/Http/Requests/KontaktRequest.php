@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class KontaktRequest extends FormRequest
 {
@@ -42,7 +43,6 @@ class KontaktRequest extends FormRequest
                 'file',
                 'max:8000',
             ],
-
         ];
     }
 }

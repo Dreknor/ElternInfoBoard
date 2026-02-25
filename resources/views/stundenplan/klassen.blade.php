@@ -66,7 +66,7 @@
     @endif
 
     <!-- Absences Section -->
-    @if($absences && $absences->count() > 0)
+    @if(isset($showAbsentTeachers) && $showAbsentTeachers && $absences && $absences->count() > 0)
         <div class="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-md shadow">
             <div class="flex">
                 <div class="flex-shrink-0">
@@ -189,7 +189,17 @@
                                         @php
                                             $entry = $timetable[$tag][$slot['Stunde']];
                                             $fach = $entry['PlFa'] ?? '';
-                                            $lehrer = implode(', ', $entry['PlLe'] ?? []);
+                                            $lehrerArray = $entry['PlLe'] ?? [];
+
+                                            // Filter out absent teachers if setting is disabled
+                                            if (isset($showAbsentTeachers) && !$showAbsentTeachers && isset($absences) && $absences->count() > 0) {
+                                                $absentTeacherNames = $absences->pluck('name')->toArray();
+                                                $lehrerArray = array_filter($lehrerArray, function($teacher) use ($absentTeacherNames) {
+                                                    return !in_array($teacher, $absentTeacherNames);
+                                                });
+                                            }
+
+                                            $lehrer = implode(', ', $lehrerArray);
                                             $raum = implode(', ', $entry['PlRa'] ?? []);
 
                                             // Color coding based on subject

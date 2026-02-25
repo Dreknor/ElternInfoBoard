@@ -8,7 +8,6 @@ use App\Model\User;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use function PHPUnit\Framework\returnArgument;
 
 /**
@@ -43,7 +42,18 @@ class NachrichtenController extends Controller
      *     "created_at": "datetime",
      *     "updated_at": "datetime",
      *     "archiv_ab": "datetime",
-     *     "media": [],
+     *     "media": [{
+     *       "id": integer,
+     *       "uuid": "string",
+     *       "collection": "string",
+     *       "name": "string",
+     *       "file_name": "string",
+     *       "mime_type": "string",
+     *       "size": integer,
+     *       "order": integer,
+     *       "url": "string",
+     *       "url_by_id": "string"
+     *     }],
      *     "reactions": {
      *       "enabled": boolean,
      *       "reactions": {"like": 0, "love": 0, "celebrate": 0}
@@ -53,7 +63,38 @@ class NachrichtenController extends Controller
      *     "feedback": {
      *       "type": "string|null",
      *       "has_feedback": boolean,
-     *       "user_has_responded": boolean
+     *       "user_has_responded": boolean,
+     *       "is_required": boolean,
+     *       "is_active": boolean,
+     *       "deadline": "datetime|null",
+     *       "allows_multiple": boolean,
+     *       "is_commentable": boolean,
+     *       "text": "string|null",
+     *       "max_answers": "integer|null",
+     *       "options": [
+     *         {
+     *           "id": integer,
+     *           "type": "string",
+     *           "option": "string",
+     *           "required": boolean
+     *         }
+     *       ],
+     *       "user_responses": [
+     *         {
+     *           "id": integer,
+     *           "text": "string|null",
+     *           "rueckmeldung_number": "integer|null",
+     *           "created_at": "datetime",
+     *           "answers": [
+     *             {
+     *               "option_id": integer,
+     *               "option_text": "string|null",
+     *               "option_type": "string|null",
+     *               "answer": "string|null"
+     *             }
+     *           ]
+     *         }
+     *       ]
      *     },
      *     "poll": {
      *       "has_poll": boolean,
@@ -101,7 +142,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -112,8 +153,9 @@ class NachrichtenController extends Controller
                 ->with(['userRueckmeldung' => function ($query) use ($user) {
                     return $query->where([
                         'users_id' => $user->id,
-                    ]);
+                    ])->with('answers.option');
                 }])
+                ->with(['rueckmeldung.options'])
 
                 ->get();
 
@@ -129,7 +171,7 @@ class NachrichtenController extends Controller
                     $query->select('id', 'name');
                 }])
                 ->with(['media' => function ($query) {
-                    return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+                    return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
                 }])
                 ->with(['reactions' => function ($query) {
                     return $query->select('name');
@@ -140,8 +182,9 @@ class NachrichtenController extends Controller
                 ->with(['userRueckmeldung' => function ($query) use ($user) {
                     return $query->where([
                         'users_id' => $user->id,
-                    ]);
+                    ])->with('answers.option');
                 }])
+                ->with(['rueckmeldung.options'])
                 ->get();
 
             if ($user->hasPermissionTo('create posts', 'web')) {
@@ -153,7 +196,7 @@ class NachrichtenController extends Controller
                         $query->select('id', 'name');
                     }])
                     ->with(['media' => function ($query) {
-                        return $query->select('id', 'model_id', 'model_type', 'collection_name', 'file_name', 'mime_type', 'disk');
+                        return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
                     }])
                     ->with(['reactions' => function ($query) {
                         return $query->select('name');
@@ -164,8 +207,9 @@ class NachrichtenController extends Controller
                     ->with(['userRueckmeldung' => function ($query) use ($user) {
                         return $query->where([
                             'users_id' => $user->id,
-                        ]);
+                        ])->with('answers.option');
                     }])
+                    ->with(['rueckmeldung.options'])
                     ->get();
 
                 $nachrichten = $nachrichten->concat($eigenePosts);
@@ -174,8 +218,6 @@ class NachrichtenController extends Controller
         }
 
         $nachrichten = $nachrichten->unique('id');
-
-        Log::debug($nachrichten);
 
         // Lade alle verfügbaren Reaktionstypen aus der Datenbank
         $availableReactions = Reaction::query()
@@ -193,6 +235,24 @@ class NachrichtenController extends Controller
         foreach ($nachrichten as $nachricht) {
             $nachricht->author = (is_null($nachricht->autor)) ? 'Fehler bei Nachricht '.$nachricht->id : $nachricht->autor->name;
             unset($nachricht->autor);
+
+            // Format media with download URLs
+            if ($nachricht->media) {
+                $nachricht->media = $nachricht->media->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'uuid' => $media->uuid,
+                        'collection' => $media->collection_name,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'mime_type' => $media->mime_type,
+                        'size' => $media->size,
+                        'order' => $media->order_column,
+                        'url' => url('/api/file/' . $media->uuid),
+                        'url_by_id' => url('/api/image/' . $media->id),
+                    ];
+                })->values()->all();
+            }
 
             // Format reactions - initialisiere mit 0 für alle verfügbaren Reaktionen
             $reactions = [];
@@ -223,23 +283,71 @@ class NachrichtenController extends Controller
                 'has_feedback' => false,
                 'user_has_responded' => false,
                 'is_required' => false,
+                'is_active' => false,
                 'deadline' => null,
                 'allows_multiple' => false,
+                'is_commentable' => false,
+                'text' => null,
+                'options' => [],
+                'user_responses' => [],
             ];
 
             if ($nachricht->rueckmeldung) {
                 $feedbackInfo['has_feedback'] = true;
                 $feedbackInfo['type'] = $nachricht->rueckmeldung->type;
                 $feedbackInfo['is_required'] = (bool) $nachricht->rueckmeldung->pflicht;
+                $feedbackInfo['is_active'] = $nachricht->rueckmeldung->active;
                 $feedbackInfo['deadline'] = $nachricht->rueckmeldung->ende;
                 $feedbackInfo['allows_multiple'] = (bool) $nachricht->rueckmeldung->multiple;
                 $feedbackInfo['is_commentable'] = (bool) $nachricht->rueckmeldung->commentable;
+                $feedbackInfo['text'] = $nachricht->rueckmeldung->text;
+                $feedbackInfo['max_answers'] = $nachricht->rueckmeldung->max_answers;
 
-                $userFeedback = $nachricht->userRueckmeldung()
+                // Füge Optionen hinzu (für Abfragen)
+                if ($nachricht->rueckmeldung->type === 'abfrage' && $nachricht->rueckmeldung->options) {
+                    $feedbackInfo['options'] = $nachricht->rueckmeldung->options->map(function ($option) {
+                        return [
+                            'id' => $option->id,
+                            'type' => $option->type,
+                            'option' => $option->option,
+                            'required' => (bool) $option->required,
+                        ];
+                    })->toArray();
+                }
+
+                // Füge Benutzer-Antworten hinzu
+                $userFeedbacks = $nachricht->userRueckmeldung()
                     ->where('users_id', $user->id)
-                    ->first();
+                    ->with('answers.option')
+                    ->get();
 
-                $feedbackInfo['user_has_responded'] = !is_null($userFeedback);
+                $feedbackInfo['user_has_responded'] = $userFeedbacks->isNotEmpty();
+
+                if ($userFeedbacks->isNotEmpty()) {
+                    $feedbackInfo['user_responses'] = $userFeedbacks->map(function ($userFeedback) {
+                        $response = [
+                            'id' => $userFeedback->id,
+                            'text' => $userFeedback->text,
+                            'rueckmeldung_number' => $userFeedback->rueckmeldung_number,
+                            'created_at' => $userFeedback->created_at,
+                            'answers' => [],
+                        ];
+
+                        // Füge Abfrage-Antworten hinzu
+                        if ($userFeedback->answers && $userFeedback->answers->isNotEmpty()) {
+                            $response['answers'] = $userFeedback->answers->map(function ($answer) {
+                                return [
+                                    'option_id' => $answer->option_id,
+                                    'option_text' => $answer->option->option ?? null,
+                                    'option_type' => $answer->option->type ?? null,
+                                    'answer' => $answer->answer,
+                                ];
+                            })->toArray();
+                        }
+
+                        return $response;
+                    })->toArray();
+                }
             }
 
             $nachricht->feedback = $feedbackInfo;
@@ -328,18 +436,8 @@ class NachrichtenController extends Controller
             ], 404);
         }
 
-        Log::debug('Reaktion: ' . $reaction);
-        Log::debug('Post: ' . $post);
-        Log::debug('oldReaction: ' . $post->getReactionsSummary());
-
         $user = $request->user();
-
-        Log::debug('User '.$user->id.' reacts to post '.$post->id.' with reaction '.$reaction->name);
-
-
         $user->reactTo($post, $reaction);
-
-        Log::debug($post->getReactionsSummary());
 
         return response()->json([
             'success' => true,
@@ -382,7 +480,38 @@ class NachrichtenController extends Controller
      *     "feedback": {
      *       "type": "string|null",
      *       "has_feedback": boolean,
-     *       "user_has_responded": boolean
+     *       "user_has_responded": boolean,
+     *       "is_required": boolean,
+     *       "is_active": boolean,
+     *       "deadline": "datetime|null",
+     *       "allows_multiple": boolean,
+     *       "is_commentable": boolean,
+     *       "text": "string|null",
+     *       "max_answers": "integer|null",
+     *       "options": [
+     *         {
+     *           "id": integer,
+     *           "type": "string",
+     *           "option": "string",
+     *           "required": boolean
+     *         }
+     *       ],
+     *       "user_responses": [
+     *         {
+     *           "id": integer,
+     *           "text": "string|null",
+     *           "rueckmeldung_number": "integer|null",
+     *           "created_at": "datetime",
+     *           "answers": [
+     *             {
+     *               "option_id": integer,
+     *               "option_text": "string|null",
+     *               "option_type": "string|null",
+     *               "answer": "string|null"
+     *             }
+     *           ]
+     *         }
+     *       ]
      *     },
      *     "poll": {
      *       "has_poll": boolean,
@@ -460,7 +589,7 @@ class NachrichtenController extends Controller
                 $query->select('id', 'name');
             },
             'media' => function ($query) {
-                return $query->select('id', 'collection_name', 'file_name', 'mime_type', 'uuid');
+                return $query->select('id', 'model_id', 'model_type', 'collection_name', 'name', 'file_name', 'mime_type', 'size', 'uuid', 'order_column', 'disk');
             },
             'reactions' => function ($query) {
                 return $query->select('name');
@@ -469,8 +598,10 @@ class NachrichtenController extends Controller
                 return $query->where('user_id', $user->id);
             },
             'userRueckmeldung' => function ($query) use ($user) {
-                return $query->where('users_id', $user->id);
-            }
+                return $query->where('users_id', $user->id)
+                    ->with('answers.option');
+            },
+            'rueckmeldung.options'
         ]);
 
         // Load all available reactions
@@ -487,6 +618,24 @@ class NachrichtenController extends Controller
         // Format author
         $post->author = (is_null($post->autor)) ? 'Fehler bei Nachricht '.$post->id : $post->autor->name;
         unset($post->autor);
+
+        // Format media with download URLs
+        if ($post->media) {
+            $post->media = $post->media->map(function ($media) {
+                return [
+                    'id' => $media->id,
+                    'uuid' => $media->uuid,
+                    'collection' => $media->collection_name,
+                    'name' => $media->name,
+                    'file_name' => $media->file_name,
+                    'mime_type' => $media->mime_type,
+                    'size' => $media->size,
+                    'order' => $media->order_column,
+                    'url' => url('/api/file/' . $media->uuid),
+                    'url_by_id' => url('/api/image/' . $media->id),
+                ];
+            })->values()->all();
+        }
 
         // Format reactions - initialize with 0 for all available reactions
         $reactions = [];
@@ -517,23 +666,71 @@ class NachrichtenController extends Controller
             'has_feedback' => false,
             'user_has_responded' => false,
             'is_required' => false,
+            'is_active' => false,
             'deadline' => null,
             'allows_multiple' => false,
+            'is_commentable' => false,
+            'text' => null,
+            'options' => [],
+            'user_responses' => [],
         ];
 
         if ($post->rueckmeldung) {
             $feedbackInfo['has_feedback'] = true;
             $feedbackInfo['type'] = $post->rueckmeldung->type;
             $feedbackInfo['is_required'] = (bool) $post->rueckmeldung->pflicht;
+            $feedbackInfo['is_active'] = $post->rueckmeldung->active;
             $feedbackInfo['deadline'] = $post->rueckmeldung->ende;
             $feedbackInfo['allows_multiple'] = (bool) $post->rueckmeldung->multiple;
             $feedbackInfo['is_commentable'] = (bool) $post->rueckmeldung->commentable;
+            $feedbackInfo['text'] = $post->rueckmeldung->text;
+            $feedbackInfo['max_answers'] = $post->rueckmeldung->max_answers;
 
-            $userFeedback = $post->userRueckmeldung()
+            // Füge Optionen hinzu (für Abfragen)
+            if ($post->rueckmeldung->type === 'abfrage' && $post->rueckmeldung->options) {
+                $feedbackInfo['options'] = $post->rueckmeldung->options->map(function ($option) {
+                    return [
+                        'id' => $option->id,
+                        'type' => $option->type,
+                        'option' => $option->option,
+                        'required' => (bool) $option->required,
+                    ];
+                })->toArray();
+            }
+
+            // Füge Benutzer-Antworten hinzu
+            $userFeedbacks = $post->userRueckmeldung()
                 ->where('users_id', $user->id)
-                ->first();
+                ->with('answers.option')
+                ->get();
 
-            $feedbackInfo['user_has_responded'] = !is_null($userFeedback);
+            $feedbackInfo['user_has_responded'] = $userFeedbacks->isNotEmpty();
+
+            if ($userFeedbacks->isNotEmpty()) {
+                $feedbackInfo['user_responses'] = $userFeedbacks->map(function ($userFeedback) {
+                    $response = [
+                        'id' => $userFeedback->id,
+                        'text' => $userFeedback->text,
+                        'rueckmeldung_number' => $userFeedback->rueckmeldung_number,
+                        'created_at' => $userFeedback->created_at,
+                        'answers' => [],
+                    ];
+
+                    // Füge Abfrage-Antworten hinzu
+                    if ($userFeedback->answers && $userFeedback->answers->isNotEmpty()) {
+                        $response['answers'] = $userFeedback->answers->map(function ($answer) {
+                            return [
+                                'option_id' => $answer->option_id,
+                                'option_text' => $answer->option->option ?? null,
+                                'option_type' => $answer->option->type ?? null,
+                                'answer' => $answer->answer,
+                            ];
+                        })->toArray();
+                    }
+
+                    return $response;
+                })->toArray();
+            }
         }
 
         $post->feedback = $feedbackInfo;

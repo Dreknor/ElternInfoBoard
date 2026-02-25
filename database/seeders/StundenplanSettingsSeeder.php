@@ -38,6 +38,12 @@ class StundenplanSettingsSeeder extends Seeder
                 'locked' => 0,
                 'payload' => json_encode(true),
             ],
+            [
+                'group' => 'stundenplan',
+                'name' => 'show_absent_teachers',
+                'locked' => 0,
+                'payload' => json_encode(true),
+            ],
         ];
 
         foreach ($settings as $setting) {

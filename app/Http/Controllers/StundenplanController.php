@@ -153,8 +153,10 @@ class StundenplanController extends Controller
             $news = collect();
         }
 
+        $stundenplanSettings = new StundenplanSetting;
+
         try {
-            // Get absences for this week
+            // Always get absences for this week (needed for filtering even when not displayed)
             $absences = VertretungsplanAbsence::where('start_date', '<=', $endDate)
                 ->where(function($query) use ($startDate) {
                     $query->where('end_date', '>=', $startDate)
@@ -174,6 +176,7 @@ class StundenplanController extends Controller
             $currentWeek = null;
         }
 
+
         return view('stundenplan.lehrer', [
             'teacher' => $teacher,
             'timetable' => $timetable,
@@ -184,6 +187,7 @@ class StundenplanController extends Controller
             'absences' => $absences,
             'currentWeek' => $currentWeek,
             'startDate' => $startDate,
+            'showAbsentTeachers' => $stundenplanSettings->show_absent_teachers,
         ]);
     }
 
@@ -280,8 +284,10 @@ class StundenplanController extends Controller
 
         }
 
+        $stundenplanSettings = new StundenplanSetting;
+
         try {
-            // Get absences for this week
+            // Always get absences for this week (needed for filtering even when not displayed)
             $absences = VertretungsplanAbsence::where('start_date', '<=', $endDate)
                 ->where(function($query) use ($startDate) {
                     $query->where('end_date', '>=', $startDate)
@@ -289,7 +295,7 @@ class StundenplanController extends Controller
                 })
                 ->get();
         } catch (\Exception $e) {
-
+            $absences = collect();
         }
 
         try {
@@ -301,6 +307,7 @@ class StundenplanController extends Controller
 
         }
 
+
         return view('stundenplan.klassen', [
             'class' => $class,
             'timetable' => $timetable,
@@ -311,6 +318,7 @@ class StundenplanController extends Controller
             'absences' => $absences,
             'currentWeek' => $currentWeek,
             'startDate' => $startDate,
+            'showAbsentTeachers' => $stundenplanSettings->show_absent_teachers,
         ]);
     }
 

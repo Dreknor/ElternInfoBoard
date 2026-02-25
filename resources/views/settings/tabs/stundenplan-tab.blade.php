@@ -12,6 +12,21 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
+                    <input type="checkbox" name="show_absent_teachers" value="1"
+                           {{ $stundenplanSettings->show_absent_teachers ? 'checked' : '' }}>
+                    Abwesende Lehrer anzeigen
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, werden abwesende Lehrer im Stundenplan angezeigt. Wenn deaktiviert, werden die Namen abwesender Lehrer ausgeblendet.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
                     <input type="checkbox" name="allow_web_import" value="1"
                            {{ $stundenplanSettings->allow_web_import ? 'checked' : '' }}>
                     Web-Import aktivieren
@@ -73,13 +88,10 @@
                         </div>
                     </div>
                 </label>
-                <form action="{{ url('settings/stundenplan/regenerate-key') }}" method="POST" class="d-inline"
-                      onsubmit="return confirm('Sind Sie sicher, dass Sie einen neuen API-Key generieren möchten? Der alte Key wird ungültig!')">
-                    @csrf
-                    <button type="submit" class="btn btn-warning btn-sm mt-2">
-                        <i class="fas fa-sync-alt"></i> Neuen API-Key generieren
-                    </button>
-                </form>
+                <button type="button" class="btn btn-warning btn-sm mt-2"
+                        onclick="document.getElementById('regenerate-key-form').submit()">
+                    <i class="fas fa-sync-alt"></i> Neuen API-Key generieren
+                </button>
             </div>
             <div class="col-md-6 col-sm-12 m-auto">
                 <div class="small">
@@ -151,6 +163,12 @@ Content-Type: application/json
                 </button>
             </div>
         </div>
+    </form>
+
+    <!-- Regenerate API Key Form (separate from main form) -->
+    <form id="regenerate-key-form" action="{{ url('settings/stundenplan/regenerate-key') }}" method="POST" style="display: none;"
+          onsubmit="return confirm('Sind Sie sicher, dass Sie einen neuen API-Key generieren möchten? Der alte Key wird ungültig!')">
+        @csrf
     </form>
 
     <!-- Import Status -->

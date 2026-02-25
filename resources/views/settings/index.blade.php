@@ -65,7 +65,6 @@
                             @include('settings.tabs.notify-tab')
                             @include('settings.tabs.schickzeiten-tab')
                             @include('settings.tabs.care-tab')
-                            @include('settings.tabs.keycloak-tab')
                             @include('settings.tabs.schoolyear-tab')
                             @include('settings.tabs.pflichtstunden-tab')
                             @include('settings.tabs.stundenplan-tab')

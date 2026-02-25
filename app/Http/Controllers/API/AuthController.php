@@ -47,19 +47,56 @@ class AuthController extends Controller implements HasMiddleware
      */
     public function login(Request $request)
     {
+        Log::debug('Login attempt', ['email' => $request->email, 'device_name' => $request->device_name]);
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
             'device_name' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // Normalize email (trim whitespace, convert to lowercase)
+        $email = strtolower(trim($request->email));
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        // Try to find user (including soft-deleted ones)
+        $user = User::withTrashed()->whereRaw('LOWER(email) = ?', [$email])->first();
+
+        Log::debug('User lookup result', [
+            'email' => $email,
+            'original_email' => $request->email,
+            'user_found' => $user !== null,
+            'user_id' => $user?->id,
+            'user_deleted' => $user?->trashed(),
+            'password_hash_length' => $user ? strlen($user->password) : 0
+        ]);
+
+        if (! $user) {
+            Log::warning('Login failed: User not found', ['email' => $email]);
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+
+        if ($user->trashed()) {
+            Log::warning('Login failed: User is soft-deleted', [
+                'email' => $email,
+                'user_id' => $user->id
+            ]);
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        if (! Hash::check($request->password, $user->password)) {
+            Log::warning('Login failed: Invalid password', [
+                'email' => $email,
+                'user_id' => $user->id
+            ]);
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        Log::info('Login successful', ['email' => $email, 'user_id' => $user->id]);
 
         return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
     }

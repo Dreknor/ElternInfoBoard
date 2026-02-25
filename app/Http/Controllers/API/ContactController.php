@@ -7,6 +7,7 @@ use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -70,18 +71,97 @@ class ContactController extends Controller implements HasMiddleware
      */
     public function send(KontaktRequest $request)
     {
+        // Log entry point BEFORE anything else
+        \Illuminate\Support\Facades\Log::channel('single')->info('=== CONTACT CONTROLLER SEND METHOD CALLED ===', [
+            'timestamp' => now()->toDateTimeString(),
+            'user_id' => auth()->id(),
+            'ip' => request()->ip(),
+            'all_input' => $request->all(),
+        ]);
+
+        Log::info('ContactController: send() method called', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'text_length' => strlen($request->input('text')),
+            'betreff' => $request->input('betreff'),
+            'mitarbeiterId' => $request->input('mitarbeiter'),
+            'has_files' => $request->hasFile('files'),
+            'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
+        ]);
+
+        // Determine recipient email
         if ($request->input('mitarbeiter') != 0) {
             $email = User::query()->where('id', $request->input('mitarbeiter'))->value('email');
+            if (!$email) {
+                Log::warning('User email not found for mitarbeiter ID: ' . $request->input('mitarbeiter'));
+                return response()->json(['error' => 'Empfänger nicht gefunden'], 404);
+            }
         } else {
             $email = config('mail.from.address');
         }
 
+        Log::info('Target email address: ' . $email);
+
+        // Prepare attachments data
+        $attachmentsData = [];
+        if ($request->hasFile('files')) {
+            $files = $request->file('files');
+            Log::info('Processing ' . count($files) . ' file attachment(s)');
+
+            foreach ($files as $index => $file) {
+                if ($file && $file->isValid()) {
+                    Log::info('File attachment ' . ($index + 1) . ':', [
+                        'original_name' => $file->getClientOriginalName(),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ]);
+
+                    // Store file temporarily for email attachment
+                    $attachmentsData[] = [
+                        'path' => $file->getRealPath(),
+                        'name' => $file->getClientOriginalName(),
+                        'mime' => $file->getMimeType(),
+                    ];
+                } else {
+                    Log::warning('Invalid file at index ' . $index);
+                }
+            }
+        }
+
         try {
-            Mail::to($email)->send(new SendFeedback($request->input('text'), $request->input('betreff')));
+            $user = $request->user();
+
+            Log::info('Attempting to send email', [
+                'to' => $email,
+                'from_user' => $user?->name,
+                'reply_to' => $user?->email,
+                'attachment_count' => count($attachmentsData),
+            ]);
+
+            // Send email synchronously (not queued)
+            Mail::to($email)->send(new SendFeedback(
+                $request->input('text'),
+                $request->input('betreff'),
+                ['attachments' => $attachmentsData],
+                $user?->name,
+                $user?->email,  // replyToEmail
+                $user?->name    // replyToName
+            ));
+
+            Log::info('Email sent successfully to: ' . $email);
 
             return response()->json(['success' => 'Mail sent'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Mail not sent'], 500);
+            Log::error('Failed to send email', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'to' => $email,
+            ]);
+
+            return response()->json([
+                'error' => 'Mail not sent',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

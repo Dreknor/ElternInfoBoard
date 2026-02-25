@@ -184,6 +184,8 @@ class AbfragenController extends Controller implements HasMiddleware
             'data.*.value' => 'required',
         ]);
 
+        Log::warning('API: Storing answer for post '.$post.' with data: '.json_encode($request->data));
+
         $post = Post::query()->where('id', $post)->firstOrFail();
 
         if ($post == null) {
@@ -247,14 +249,21 @@ class AbfragenController extends Controller implements HasMiddleware
                         ], 400);
                     }
 
+                    // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
+                    $answerValue = is_bool($value['value']) || is_int($value['value'])
+                        ? (string)$value['value']
+                        : $value['value'];
+
                     $data[] = [
                         'rueckmeldung_id' => $userRueckmeldung->id,
                         'user_id' => request()->user()->id,
                         'option_id' => $value['id'],
-                        'answer' => $value['value'],
+                        'answer' => $answerValue,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
+                    Log::debug('API: Prepared answer data for option_id '.$value['id'].' with value '.$answerValue);
+                    Log::debug($data);
 
                 } else {
                     return response()->json([
@@ -291,11 +300,16 @@ class AbfragenController extends Controller implements HasMiddleware
                         ], 400);
                     }
 
+                    // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
+                    $answerValue = is_bool($value['value']) || is_int($value['value'])
+                        ? (string)$value['value']
+                        : $value['value'];
+
                     $data[] = [
                         'rueckmeldung_id' => $userRueckmeldung->id,
                         'user_id' => request()->user()->id,
                         'option_id' => $value['id'],
-                        'answer' => $value['value'],
+                        'answer' => $answerValue,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

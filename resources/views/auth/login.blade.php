@@ -7,6 +7,7 @@
             <div class="row">
                 <div class="col-12">
                     <div class="alert alert-{{session('type')}} alert-dismissible" role="alert" x-data="{ show: true }" x-show="show" x-cloak>
+                        {{session('Meldung')}}
                         <button type="button" class="close" @click.prevent="show = false" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -109,7 +110,7 @@
                     <div class="row">
                         <div class="col-12">
                             <a  href="{{route('login.keycloak')}}" class="btn btn-success">
-                                Login mit SSO
+                                {{ $keycloakButtonText ?? 'Login mit SSO' }}
                             </a>
                         </div>
                     </div>

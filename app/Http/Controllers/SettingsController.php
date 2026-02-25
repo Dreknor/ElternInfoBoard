@@ -10,7 +10,6 @@ use App\Model\User;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
-use App\Settings\KeyCloakSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
@@ -41,7 +40,6 @@ class SettingsController extends Controller implements HasMiddleware
         $settings = new GeneralSetting;
         $mailSettings = new EmailSetting;
         $notifySettings = new NotifySetting;
-        $KeyCloakSetting = new KeyCloakSetting;
         $schickzeitenSetting = new SchickzeitenSetting;
         $careSettings = new CareSetting;
         $pflichtstundenSetting = new PflichtstundenSetting;
@@ -61,7 +59,6 @@ class SettingsController extends Controller implements HasMiddleware
             'settings' => $settings,
             'mailSettings' => $mailSettings,
             'notifySettings' => $notifySettings,
-            'KeyCloakSetting' => $KeyCloakSetting,
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
             'pflichtstundenSettings' => $pflichtstundenSetting,
@@ -75,28 +72,6 @@ class SettingsController extends Controller implements HasMiddleware
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
-            case 'keycloak':
-                $validated = $request->validate([
-                    'enabled' => 'nullable|boolean',
-                    'client_id' => 'required|string',
-                    'client_secret' => 'required|string',
-                    'realm' => 'required|string',
-                    'base_url' => 'required|string',
-                    'maildomain' => 'required|string',
-
-                ]);
-
-                $keyCloakSetting = new KeyCloakSetting;
-                $keyCloakSetting->enabled = $validated['enabled'] ?? false;
-                $keyCloakSetting->client_id = $validated['client_id'];
-                $keyCloakSetting->client_secret = $validated['client_secret'];
-                $keyCloakSetting->realm = $validated['realm'];
-                $keyCloakSetting->redirect_uri = url('/login/keycloak/callback');
-                $keyCloakSetting->base_url = $validated['base_url'];
-                $keyCloakSetting->maildomain = $validated['maildomain'];
-                $keyCloakSetting->save();
-
-                break;
 
             case 'care':
                 $validated = $request->validate([
@@ -327,11 +302,13 @@ class SettingsController extends Controller implements HasMiddleware
                 $validated = $request->validate([
                     'allow_web_import' => 'nullable|boolean',
                     'allow_api_import' => 'nullable|boolean',
+                    'show_absent_teachers' => 'nullable|boolean',
                 ]);
 
                 $stundenplanSetting = new StundenplanSetting;
                 $stundenplanSetting->allow_web_import = $request->has('allow_web_import');
                 $stundenplanSetting->allow_api_import = $request->has('allow_api_import');
+                $stundenplanSetting->show_absent_teachers = $request->has('show_absent_teachers');
                 $stundenplanSetting->save();
 
                 // Clear cache
