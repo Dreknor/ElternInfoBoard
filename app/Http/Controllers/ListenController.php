@@ -38,13 +38,22 @@ class ListenController extends Controller
             ]);
         }
 
-        $query = $request->input('query');
+        // Bei POST-Request die Suchanfrage in Session speichern
+        if ($request->isMethod('post')) {
+            $query = $request->input('query');
+            session(['listen_search_query' => $query]);
+        } else {
+            // Bei GET-Request (Paginierung) die Suchanfrage aus Session holen
+            $query = session('listen_search_query', '');
+        }
+
         $archiv = Liste::where('ende', '<', now())
             ->where('listenname', 'LIKE', "%{$query}%")
             ->paginate(10);
 
         return view('listen.search', [
             'archiv' => $archiv,
+            'query' => $query,
         ]);
     }
 

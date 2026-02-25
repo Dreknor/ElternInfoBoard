@@ -280,7 +280,7 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
-        Route::post('listen/search', [ListenController::class, 'search'])->name('listen.search');
+        Route::match(['get', 'post'], 'listen/search', [ListenController::class, 'search'])->name('listen.search');
 
         // TerminListe
         Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
