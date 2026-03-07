@@ -56,12 +56,12 @@ Route::get('home/{post_id}', function () {
 
 Route::post('/token/create', [AuthController::class, 'login']);
 
-Route::get('files/{media_uuid}/download', [ImageController::class, 'getFileByUuid'])->name('api.files.download');
-
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('me', [AuthController::class, 'me']);
     Route::post('/token/logout', [AuthController::class, 'logout']);
+
+    Route::get('files/{media_uuid}/download', [ImageController::class, 'getFileByUuid'])->name('api.files.download');
 
     /**
      * Notifications
