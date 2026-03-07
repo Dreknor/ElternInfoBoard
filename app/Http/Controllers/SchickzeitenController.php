@@ -849,17 +849,44 @@ class SchickzeitenController extends Controller implements HasMiddleware
     }
 
     /**
+     * Sendet wöchentliche Schickzeiten-Übersicht per E-Mail.
+     * Nur Eltern, deren Kinder im Care-Modul (konfigurierte Gruppen & Klassen) sind, erhalten die E-Mail.
+     *
      * @return void
      */
     public function sendReminder()
     {
+        $allowedGroups = $this->careSettings->groups_list;
+        $allowedClasses = $this->careSettings->class_list;
+
+        if (empty($allowedGroups) || empty($allowedClasses)) {
+            Log::warning('Schickzeiten Reminder: Keine Gruppen oder Klassen im Care-Modul konfiguriert – keine E-Mails versendet.');
+            return;
+        }
+
+        // Nur User mit Schickzeiten laden
         $users = User::has('schickzeiten')->get();
 
-        Log::debug('Sende Schickzeiten Reminder an '.count($users).' Nutzer');
+        $sent = 0;
+        $skipped = 0;
 
         foreach ($users as $user) {
-            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, $user->children()));
+            // Kinder des Users filtern: nur Care-Kinder berücksichtigen
+            $careChildren = $user->children()->filter(function ($child) use ($allowedGroups, $allowedClasses) {
+                return in_array($child->group_id, $allowedGroups)
+                    && in_array($child->class_id, $allowedClasses);
+            });
+
+            if ($careChildren->isEmpty()) {
+                $skipped++;
+                continue;
+            }
+
+            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, collect($careChildren)));
+            $sent++;
         }
+
+        Log::debug("Sende Schickzeiten Reminder: {$sent} versendet, {$skipped} übersprungen (keine Care-Kinder).");
     }
 
     /**

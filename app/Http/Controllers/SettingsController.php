@@ -99,6 +99,43 @@ class SettingsController extends Controller implements HasMiddleware
 
                 $careSettings->save();
 
+                // Schickzeiten von Kindern löschen, die durch die neue Konfiguration
+                // nicht mehr im Care-Modul sind
+                $newGroups = $careSettings->groups_list;
+                $newClasses = $careSettings->class_list;
+
+                if (! empty($newGroups) && ! empty($newClasses)) {
+                    $nonCareChildren = \App\Model\Child::query()
+                        ->where(function ($query) use ($newGroups, $newClasses) {
+                            $query->whereNotIn('group_id', $newGroups)
+                                ->orWhereNotIn('class_id', $newClasses)
+                                ->orWhereNull('group_id')
+                                ->orWhereNull('class_id');
+                        })
+                        ->whereHas('schickzeiten')
+                        ->get();
+
+                    $deletedTotal = 0;
+                    foreach ($nonCareChildren as $nonCareChild) {
+                        $count = \App\Model\Schickzeiten::where('child_id', $nonCareChild->id)->count();
+                        \App\Model\Schickzeiten::where('child_id', $nonCareChild->id)->each(function ($sz) {
+                            $sz->delete();
+                        });
+                        $deletedTotal += $count;
+                        \Illuminate\Support\Facades\Log::info(
+                            "Schickzeiten für Kind {$nonCareChild->first_name} {$nonCareChild->last_name} (ID: {$nonCareChild->id}) gelöscht – Care-Einstellungen geändert.",
+                            ['deleted_count' => $count]
+                        );
+                    }
+
+                    if ($deletedTotal > 0) {
+                        return redirect()->back()->with([
+                            'Meldung' => "Einstellungen gespeichert. Es wurden {$deletedTotal} Schickzeit(en) von " . $nonCareChildren->count() . " Kind(ern) gelöscht, die nicht mehr im Care-Modul sind.",
+                            'type' => 'warning',
+                        ]);
+                    }
+                }
+
                 break;
             case 'schickzeiten':
                 $validated = $request->validate([

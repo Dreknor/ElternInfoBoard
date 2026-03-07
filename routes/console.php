@@ -75,6 +75,9 @@ try {
         // Alte Schickzeiten mit spezifischem Datum löschen (täglich, älter als 2 Wochen)
         Schedule::command('schickzeiten:cleanup --weeks=2')->dailyAt('03:30');
 
+        // Schickzeiten von Kindern löschen, die nicht mehr im Care-Modul sind
+        Schedule::command('schickzeiten:cleanup-non-care')->dailyAt('03:35');
+
         // Alte Child Notices automatisch löschen (täglich, Child Notices älter als 3 Monate)
         Schedule::command('child-notices:cleanup --months=3')->dailyAt('03:45');
     }
