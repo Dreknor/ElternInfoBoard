@@ -553,9 +553,11 @@ Route::middleware('auth')->group(function () {
             ->name('arbeitsgemeinschaften.anmelden');
     });
 
-});
+    // Schuljahreswechsel im Settings-Bereich (erfordert Auth + Berechtigung)
+    Route::middleware(['password_expired', 'permission:schoolyear.change'])->group(function () {
+        Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
+        Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
+        Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+    });
 
-// Schuljahreswechsel im Settings-Bereich
-Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
-Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
-Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+});
