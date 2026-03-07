@@ -1,21 +1,160 @@
 # Security Audit – Elterninfo Laravel-Anwendung
 **Erstellt:** 2026-03-07  
+**Zuletzt aktualisiert:** 2026-03-07  
 **Auditor:** GitHub Copilot (automatisiertes Audit)  
 **Basis:** Vollständige Code-Analyse + `composer audit`
 
 ---
 
-## Zusammenfassung
+## Status-Übersicht
 
-| Priorität | Anzahl Befunde |
-|-----------|---------------|
-| 🔴 KRITISCH | 5 |
-| 🟠 HOCH | 7 |
-| 🟡 MITTEL | 8 |
-| 🔵 NIEDRIG / INFO | 5 |
-| **Total** | **25** |
+| ID | Titel | Priorität | Status |
+|----|-------|-----------|--------|
+| KRIT-1 | Unauthentifizierter Datei-Download | 🔴 KRITISCH | ✅ Behoben |
+| KRIT-2 | API-Key Timing-Attack + Rate-Limiting | 🔴 KRITISCH | ✅ Behoben |
+| KRIT-3 | Stundenplan-Import Rate-Limiting | 🔴 KRITISCH | ✅ Behoben |
+| KRIT-4 | SchoolYear außerhalb Auth-Middleware | 🔴 KRITISCH | ✅ Behoben |
+| KRIT-5 | CVE-2025-64500 Symfony HTTP Foundation | 🔴 KRITISCH | ✅ Bereits auf v7.4.7 |
+| HOCH-1 | Magic-Login-Links once-use + Rate-Limit | 🟠 HOCH | ✅ Behoben |
+| HOCH-2 | Sanctum Token-Expiration + Prefix | 🟠 HOCH | ✅ Behoben |
+| HOCH-3 | E-Mail-Passwort Klartext in DB | 🟠 HOCH | ✅ Behoben (encrypted()) |
+| HOCH-4 | XSS in Blade-Templates ({!! !!}) | 🟠 HOCH | ⚠️ OFFEN – manuelle Prüfung nötig |
+| HOCH-5 | Sentry SQL-Bindings (DSGVO) | 🟠 HOCH | ✅ Behoben |
+| HOCH-6 | Import-Passwörter = aktuelles Datum | 🟠 HOCH | ✅ Behoben |
+| HOCH-7 | loginAsUser GET→POST + Middleware | 🟠 HOCH | ✅ Behoben |
+| MITTEL-1 | public/docs/ öffentlich | 🟡 MITTEL | ✅ Behoben (Auth-Schutz) |
+| MITTEL-2 | iCal Rate-Limiting | 🟡 MITTEL | ✅ Behoben |
+| MITTEL-3 | Sucheingabe ohne max-Länge | 🟡 MITTEL | ✅ Behoben (max:100) |
+| MITTEL-4 | FileController::delete() ohne Ownership | 🟡 MITTEL | ✅ Behoben |
+| MITTEL-5 | Log-Level debug in Produktion | 🟡 MITTEL | ✅ Behoben (password_hash_length entfernt) |
+| MITTEL-6 | Keycloak-Config in Logs | 🟡 MITTEL | ✅ Behoben |
+| MITTEL-7 | CVE-2026-30838 league/commonmark | 🟡 MITTEL | ✅ Behoben (2.8.1) |
+| MITTEL-8 | Passwort-Validierung schwach | 🟡 MITTEL | ✅ Behoben (confirmed + mixedCase) |
+| INFO-1 | Abandoned Packages | 🔵 INFO | ⚠️ OFFEN – langfristig migrieren |
+| INFO-2 | AWS SDK CVE-2025-14761 | 🔵 INFO | ⚠️ OFFEN – bei Bedarf updaten |
+| INFO-3 | Audit-Log sensitive Felder | 🔵 INFO | ✅ Behoben |
+| INFO-4 | loginAsUser ohne Audit-Log | 🔵 INFO | ✅ Behoben |
+| INFO-5 | me()-Endpoint Datensparsamkeit | 🔵 INFO | ✅ Behoben |
+
+**Behobene Befunde: 21 von 25**
 
 ---
+
+## ⚠️ Noch offene Punkte
+
+---
+
+### [HOCH-4] XSS durch unescaped Ausgabe von Nutzerdaten (`{!! !!}`) – MANUELL PRÜFEN
+
+**Dateien:** Mehrere Blade-Templates  
+**Status:** Offen – erfordert Entscheidung ob HTML bewusst erlaubt ist
+
+**Kritische Stellen:**
+
+| Datei | Inhalt | Empfehlung |
+|-------|--------|------------|
+| `nachrichten/nachricht.blade.php` L153,239,255 | `{!! $nachricht->news !!}` | Rich-Text → HTMLPurifier |
+| `rueckmeldungen/show.blade.php` L46 | `{!! $userRueckmeldung->text !!}` | Kein HTML nötig → `{{ }}` |
+| `pdf/krankmeldungen.blade.php` L34 | `{!! $Meldung->kommentar !!}` | Kein HTML nötig → `{{ }}` |
+| `userrueckmeldung/editAbfrage.blade.php` L57 | `{!! $userRueckmeldung->answers->...->answer !!}` | Kein HTML nötig → `{{ }}` |
+| `schickzeiten/infos.blade.php` L2 | `{!! $vorgaben->schicken_text !!}` | Admin-Input → HTMLPurifier |
+| `nachrichten/edit.blade.php` L94 | `{!! $post->news !!}` | Rich-Text → HTMLPurifier |
+| `listen/listenEintragExport.blade.php` L29 | `{!! $liste->comment !!}` | Kein HTML nötig → `{{ }}` |
+
+**Empfohlene Maßnahmen:**
+```bash
+composer require ezyang/htmlpurifier
+```
+
+Für alle Stellen wo kein HTML nötig ist (Kommentare, Nutzerantworten):
+```blade
+{{-- Vorher: --}}
+{!! $rueckmeldung->text !!}
+{{-- Nachher: --}}
+{{ $rueckmeldung->text }}
+```
+
+Für Rich-Text-Inhalte (Nachrichten-Body):
+```php
+// app/Helpers/HtmlHelper.php
+use HTMLPurifier;
+use HTMLPurifier_Config;
+
+function purify(string $html): string {
+    $config = HTMLPurifier_Config::createDefault();
+    $config->set('HTML.Allowed', 'b,i,u,strong,em,p,br,ul,ol,li,a[href],h1,h2,h3');
+    return (new HTMLPurifier($config))->purify($html);
+}
+```
+
+```blade
+{{-- In nachrichten/nachricht.blade.php: --}}
+{!! purify($nachricht->news) !!}
+```
+
+---
+
+### [INFO-1] Abandoned Packages – langfristig migrieren
+
+| Package | Empfohlener Ersatz |
+|---------|--------------------|
+| `spatie/data-transfer-object` | `spatie/laravel-data` |
+| `web-token/jwt-*` (5 Pakete) | `web-token/jwt-library` |
+| `fgrosse/phpasn1` | Kein direkter Ersatz |
+
+---
+
+### [INFO-2] AWS SDK CVE-2025-14761
+
+Nur relevant wenn S3-Verschlüsselung (`SseC` oder `CSE`) eingesetzt wird.
+
+```bash
+composer update aws/aws-sdk-php  # Ziel: >= 3.368.0
+```
+
+---
+
+## Notwendige .env-Einstellungen für Produktion
+
+Diese Einstellungen **müssen** auf dem Produktionsserver gesetzt sein:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+LOG_LEVEL=warning
+
+SESSION_SECURE_COOKIE=true
+SESSION_SAME_SITE=lax
+
+LPL_USE_ONCE=true
+
+# Sanctum
+SANCTUM_TOKEN_EXPIRATION=43200
+SANCTUM_TOKEN_PREFIX=elterninfo_
+
+# Sentry
+SENTRY_SQL_BINDINGS=false
+
+# Import-Passwörter – MÜSSEN gesetzt werden (kein Fallback mehr)!
+PW_IMPORT_ELTERN=<random-64-char-string>
+PW_IMPORT_AUFNAHME=<random-64-char-string>
+PW_IMPORT_MITARBEITER=<random-64-char-string>
+PW_IMPORT_VEREIN=<random-64-char-string>
+```
+
+---
+
+## Notwendige DB-Migration ausführen
+
+Nach dem Deployment muss folgende Migration ausgeführt werden, um das bestehende E-Mail-Passwort zu verschlüsseln:
+
+```bash
+php artisan migrate
+```
+
+Die Migration `2026_03_07_085230_encrypt_mail_password_in_settings` verschlüsselt das SMTP-Passwort in der `settings`-Tabelle automatisch.
+
+
 
 ## 🔴 KRITISCH – Sofortiger Handlungsbedarf
 
