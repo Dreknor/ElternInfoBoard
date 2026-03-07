@@ -8,10 +8,9 @@ return [
     // 'release' => trim(exec('git --git-dir ' . base_path('.git') . ' log --pretty="%h" -n1 HEAD')),
 
     'breadcrumbs' => [
-
-        // Capture bindings on SQL queries logged in breadcrumbs
-        'sql_bindings' => true,
-
+        // SQL-Parameter NICHT an Sentry senden (DSGVO: enthalten E-Mails, Namen, etc.)
+        // Nur bei lokalem Debugging aktivieren: SENTRY_SQL_BINDINGS=true in .env setzen
+        'sql_bindings' => env('SENTRY_SQL_BINDINGS', false),
     ],
 
 ];

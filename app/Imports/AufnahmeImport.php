@@ -7,6 +7,7 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -20,6 +21,17 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
     {
         $this->header = $header;
         $this->groups = Group::all();
+    }
+
+    /** Gibt das konfigurierte Import-Passwort zurück oder ein zufälliges, falls ENV nicht gesetzt. */
+    private function getImportPassword(): string
+    {
+        $pw = config('app.import_aufnahme');
+        if (empty($pw)) {
+            \Illuminate\Support\Facades\Log::warning('PW_IMPORT_AUFNAHME ist nicht gesetzt – zufälliges Passwort wird verwendet');
+            return Str::password(16);
+        }
+        return $pw;
     }
 
     public function collection(Collection $collection): void
@@ -60,7 +72,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'email' => $row[$this->header['S1Email']],
                         'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
                         'changePassword' => 1,
-                        'password' => Hash::make(config('app.import_aufnahme')),
+                        'password' => Hash::make($this->getImportPassword()),
                         'lastEmail' => Carbon::now(),
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
@@ -94,7 +106,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'email' => $row[$this->header['S2Email']],
                         'name' => $row[$this->header['S2Vorname']].' '.$row[$this->header['S2Nachname']],
                         'changePassword' => 1,
-                        'password' => Hash::make(config('app.import_aufnahme')),
+                        'password' => Hash::make($this->getImportPassword()),
                         'lastEmail' => Carbon::now(),
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),

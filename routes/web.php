@@ -66,8 +66,22 @@ Route::post('login', [LoginController::class, 'login'])->middleware('throttle:lo
 
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
-Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
+Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
+
+// API-Dokumentation nur für Admins zugänglich (enthält alle Endpunkte, Auth-Details etc.)
+Route::middleware(['auth', 'permission:edit settings'])->group(function () {
+    Route::get('docs', function () {
+        return response()->file(public_path('docs/index.html'));
+    })->name('docs.index');
+    Route::get('docs/{any}', function (string $any) {
+        $path = public_path('docs/' . $any);
+        if (file_exists($path) && is_file($path)) {
+            return response()->file($path);
+        }
+        abort(404);
+    })->where('any', '.*');
+});
 
 // Apple Touch Icon
 Route::get('apple-touch-icon-precomposed.png', function () {

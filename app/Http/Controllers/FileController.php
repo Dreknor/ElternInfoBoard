@@ -44,6 +44,8 @@ class FileController extends Controller implements HasMiddleware
      */
     public function delete(Media $file)
     {
+        $this->authorizeFileAccess($file);
+
         $file->delete();
 
         return response()->json([
@@ -56,6 +58,8 @@ class FileController extends Controller implements HasMiddleware
      */
     public function destroy(Media $file)
     {
+        $this->authorizeFileAccess($file);
+
         $file->delete();
 
         return redirect()->back()->with([
@@ -251,5 +255,29 @@ class FileController extends Controller implements HasMiddleware
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * Prüft ob der eingeloggte User die angegebene Mediendatei löschen darf.
+     * Admins (upload files) dürfen alle Dateien löschen.
+     */
+    private function authorizeFileAccess(Media $file): void
+    {
+        $user = auth()->user();
+
+        if ($user->can('upload files')) {
+            return; // Admins dürfen alles löschen
+        }
+
+        $model = $file->model;
+
+        if ($model instanceof Post) {
+            // Datei gehört einem Post – User muss den Post erstellt haben
+            if ($model->author === $user->id) {
+                return;
+            }
+        }
+
+        abort(403, 'Keine Berechtigung zum Löschen dieser Datei.');
     }
 }
