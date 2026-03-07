@@ -60,6 +60,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('login/keycloak', [LoginController::class, 'redirectToKeycloak'])->name('login.keycloak');
 Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCallback']);
+
+// POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam)
+Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
+
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal']);

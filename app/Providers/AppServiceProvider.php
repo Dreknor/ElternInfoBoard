@@ -194,6 +194,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($request->ip());
         });
 
+        // Rate-Limit für Login-Endpunkt (Magic-Link-Anfragen + Passwort-Login).
+        // Verhindert E-Mail-Bombing und Brute-Force auf Passwörter.
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
         Route::model('event', \App\Model\ElternratEvent::class);
         Route::model('task', \App\Model\ElternratTask::class);
 
