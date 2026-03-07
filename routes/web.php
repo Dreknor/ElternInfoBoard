@@ -413,8 +413,9 @@ Route::middleware('auth')->group(function () {
 
         });
 
-        Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
-            Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
+        // loginAsUser: POST statt GET (CSRF-Schutz), korrekte middleware-Syntax
+        Route::middleware('permission:loginAsUser')->group(function () {
+            Route::post('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
         // Seitenverwaltung und -anzeige

@@ -315,11 +315,28 @@ class UserController extends Controller implements HasMiddleware
     public function loginAsUser(Request $request, $id)
     {
         if (! $request->user()->can('loginAsUser')) {
+            Log::warning('loginAsUser: Zugriff verweigert (Berechtigung fehlt)', [
+                'requestor_id' => $request->user()->id,
+                'requestor_email' => $request->user()->email,
+                'target_user_id' => $id,
+                'ip' => $request->ip(),
+            ]);
             return redirect()->back()->with([
                 'Meldung' => 'Berechtigung fehlt',
                 'type' => 'danger',
             ]);
         }
+
+        $targetUser = User::find($id);
+        Log::warning('loginAsUser: Admin meldet sich als anderer User an', [
+            'admin_id' => $request->user()->id,
+            'admin_email' => $request->user()->email,
+            'target_user_id' => $id,
+            'target_user_email' => $targetUser?->email,
+            'ip' => $request->ip(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
         session(['ownID' => Crypt::encryptString($request->user()->id)]);
 
         Auth::loginUsingId($id);
