@@ -188,6 +188,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).
+        // Verhindert Brute-Force-Angriffe auf den API-Key.
+        RateLimiter::for('external-api', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
+
         Route::model('event', \App\Model\ElternratEvent::class);
         Route::model('task', \App\Model\ElternratTask::class);
 
