@@ -21,8 +21,10 @@ return new class extends Migration
             $payload = json_decode($row->payload, true);
 
             // Nur verschlüsseln wenn noch nicht verschlüsselt (kein 'eyJ'-Prefix von Laravel Crypt)
+
+            // Crypt::encrypt() statt encryptString() verwenden, da Spatie Settings intern unserialize() nutzt
             if (is_string($payload) && ! str_starts_with($payload, 'eyJ')) {
-                $encrypted = Crypt::encryptString($payload);
+                $encrypted = Crypt::encrypt($payload);
                 DB::table('settings')
                     ->where('group', 'email')
                     ->where('name', 'mail_password')
@@ -45,7 +47,7 @@ return new class extends Migration
             // Entschlüsseln wenn verschlüsselt
             if (is_string($payload) && str_starts_with($payload, 'eyJ')) {
                 try {
-                    $decrypted = Crypt::decryptString($payload);
+                    $decrypted = Crypt::decrypt($payload);
                     DB::table('settings')
                         ->where('group', 'email')
                         ->where('name', 'mail_password')
