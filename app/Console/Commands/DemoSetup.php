@@ -79,7 +79,6 @@ class DemoSetup extends Command
         $this->newLine();
         $this->line('╔══════════════════════════════════════════════════════════╗');
         $this->line('║   ElternInfoBoard – Demo-Setup                          ║');
-        $this->line('║   Ev. Schulzentrum Radebeul                             ║');
         $this->line('╚══════════════════════════════════════════════════════════╝');
         $this->newLine();
 
@@ -853,7 +852,7 @@ class DemoSetup extends Command
             [
                 'empfaenger' => $lehrerinId,
                 'ende' => Carbon::now()->addWeeks(2),
-                'text' => 'Mein Kind nimmt am Ausflug teil.',
+                'text' => 'Nimmt ihr Kind am Ausflug teil?',
                 'pflicht' => true,
                 'type' => 'abfrage',
                 'commentable' => false,
@@ -864,23 +863,15 @@ class DemoSetup extends Command
         AbfrageOptions::firstOrCreate(['rueckmeldung_id' => $rueck2->id, 'option' => 'Nein, mein Kind nimmt nicht teil'],
             ['type' => 'checkbox', 'required' => false]);
         AbfrageOptions::firstOrCreate(['rueckmeldung_id' => $rueck2->id, 'option' => 'Ich benötige mehr Informationen'],
-            ['type' => 'checkbox', 'required' => false]);
+            ['type' => 'text', 'required' => false]);
         // Demo-Rückmeldungen
-        foreach (['koch', 'wagner'] as $parentKey) {
-            if (isset($this->users[$parentKey])) {
-                UserRueckmeldungen::firstOrCreate(
-                    ['post_id' => $post2->id, 'users_id' => $this->users[$parentKey]->id],
-                    ['text' => 'Ja, mein Kind nimmt teil', 'rueckmeldung_number' => 1]
-                );
-            }
-        }
 
         // Post 3: Elternabend – mit einfacher Rückmeldung
         $post3 = Post::firstOrCreate(
             ['header' => 'Elternabend Klasse 1a – ' . Carbon::now()->addWeeks(2)->format('d.m.Y')],
             [
                 'news' => '<p>Liebe Eltern der Klasse 1a,</p><p>wir laden Sie herzlich zum Elternabend am <strong>' . Carbon::now()->addWeeks(2)->format('d.m.Y') . ' um 19:00 Uhr</strong> in den Konferenzraum der Schule ein.</p><p>Auf der Tagesordnung stehen:</p><ul><li>Rückblick auf das erste Schulhalbjahr</li><li>Informationen zum Förderunterricht</li><li>Planung des Sommerfestes</li><li>Verschiedenes</li></ul><p>Bitte melden Sie Ihre Teilnahme bis ' . Carbon::now()->addWeeks(1)->format('d.m.Y') . ' zurück.</p>',
-                'released' => true,
+                'released' => false,
                 'author' => $this->users['lehrer2']->id,
                 'type' => 'post',
                 'reactable' => false,
@@ -895,19 +886,11 @@ class DemoSetup extends Command
                 'ende' => Carbon::now()->addWeeks(1),
                 'text' => 'Ich nehme am Elternabend teil.',
                 'pflicht' => false,
-                'type' => 'simple',
+                'type' => 'text',
                 'commentable' => true,
             ]
         );
-        // Demo-Rückmeldungen
-        foreach (['mueller', 'bauer'] as $parentKey) {
-            if (isset($this->users[$parentKey])) {
-                UserRueckmeldungen::firstOrCreate(
-                    ['post_id' => $post3->id, 'users_id' => $this->users[$parentKey]->id],
-                    ['text' => 'Ich nehme teil.', 'rueckmeldung_number' => 1]
-                );
-            }
-        }
+
 
         // Post 4: Datenschutz – mit Lesequittung
         $post4 = Post::firstOrCreate(
@@ -921,6 +904,7 @@ class DemoSetup extends Command
                 'external' => false,
                 'read_receipt' => true,
                 'read_receipt_deadline' => Carbon::now()->addWeeks(2),
+                'archived_at' => Carbon::now()->addWeeks(2),
             ]
         );
         $this->attachGroupToPost($post4, 'gesamtelternschaft');

@@ -73,6 +73,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                         {"adm-rights":["see logs"],"name":"logs","link":"logs","icon":"fas fa-stream"}
                     }',
             ], [
+                'id'  => 2000,
                 'setting' => 'Seiten',
                 'description' => 'Erlaubt das Anlegen und Verwalten von Seiten',
                 'category' => 'module',
@@ -93,6 +94,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                     ],
                 ]),
             ],  [
+                'id' => 3000,
                 'setting' => 'Settings',
                 'description' => 'Einstellungen für die Anwendung',
                 'category' => 'module',
@@ -108,6 +110,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                     ],
                 ]),
             ], [
+                'id'  => 4000,
                 'setting' => 'Anwesenheitsliste',
                 'description' => 'digitale Anwesenheitsliste der Kinder',
                 'category' => 'module',
@@ -123,6 +126,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                 ]),
                 'created_at' => now(),
             ], [
+                'id'  => 4500,
                 'setting' => 'Kinderverwaltung',
                 'description' => 'Verwaltung der angelegten Kinder',
                 'category' => 'module',
