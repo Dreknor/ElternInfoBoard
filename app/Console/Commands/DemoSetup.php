@@ -721,33 +721,45 @@ class DemoSetup extends Command
     // =========================================================================
     private function createKrankmeldungen(): void
     {
-        $disease = Disease::first();
-        if (!$disease || !isset($this->children['paul_koch'])) {
+        if (!isset($this->children['paul_koch'])) {
             return;
         }
+
+        // Prüfen ob disease_id-Spalte existiert (ältere Installationen ohne Migration)
+        $hasDiseaseId = \Illuminate\Support\Facades\Schema::hasColumn('krankmeldungen', 'disease_id');
+        $disease = $hasDiseaseId ? Disease::first() : null;
+
+        $krankmeldung1 = [
+            'name' => 'Paul Koch',
+            'kommentar' => 'Paul hat Fieber und Halsschmerzen. Wir melden ihn für heute und morgen krank.',
+            'ende' => today()->addDays(2),
+            'users_id' => $this->users['koch']->id,
+        ];
+        if ($hasDiseaseId && $disease) {
+            $krankmeldung1['disease_id'] = $disease->id;
+        }
+
         // 1 aktive Krankmeldung
         Krankmeldungen::firstOrCreate(
             ['child_id' => $this->children['paul_koch']->id, 'start' => today()],
-            [
-                'name' => 'Paul Koch',
-                'kommentar' => 'Paul hat Fieber und Halsschmerzen. Wir melden ihn für heute und morgen krank.',
-                'ende' => today()->addDays(2),
-                'users_id' => $this->users['koch']->id,
-                'disease_id' => $disease->id,
-            ]
+            $krankmeldung1
         );
 
         // 1 vergangene Krankmeldung
         if (isset($this->children['lena_mueller'])) {
+            $krankmeldung2 = [
+                'name' => 'Lena Müller',
+                'kommentar' => 'Lena hatte eine Erkältung.',
+                'ende' => today()->subDays(12),
+                'users_id' => $this->users['mueller']->id,
+            ];
+            if ($hasDiseaseId && $disease) {
+                $krankmeldung2['disease_id'] = $disease->id;
+            }
+
             Krankmeldungen::firstOrCreate(
                 ['child_id' => $this->children['lena_mueller']->id, 'start' => today()->subDays(14)],
-                [
-                    'name' => 'Lena Müller',
-                    'kommentar' => 'Lena hatte eine Erkältung.',
-                    'ende' => today()->subDays(12),
-                    'users_id' => $this->users['mueller']->id,
-                    'disease_id' => $disease->id,
-                ]
+                $krankmeldung2
             );
         }
     }
