@@ -78,19 +78,19 @@ class UpdateModuleSettingsSeeder extends Seeder
                 'category' => 'module',
                 'options' => json_encode([
                     'active' => '0',
-                    'rights' => json_encode(['view sites']),
-                    'nav' => json_encode([
+                    'rights' => ['view sites'],
+                    'nav' => [
                         'name' => 'Seiten',
                         'link' => 'sites',
                         'icon' => 'fa fa-file',
                         'bottom-nav' => 'false',
-                    ]),
-                    'adm-nav' => json_encode([
-                        'adm-rights' => json_encode(['create sites']),
+                    ],
+                    'adm-nav' => [
+                        'adm-rights' => ['create sites'],
                         'name' => 'neue Seite',
                         'link' => 'sites/create',
                         'icon' => 'fa fa-file-pen',
-                    ]),
+                    ],
                 ]),
             ],  [
                 'setting' => 'Settings',
@@ -98,16 +98,14 @@ class UpdateModuleSettingsSeeder extends Seeder
                 'category' => 'module',
                 'options' => json_encode([
                     'active' => '1',
-                    'rights' => json_encode([]),
-                    'adm-nav' => json_encode([
-                        'adm-rights' => [
-                            '0' => 'edit settings',
-                        ],
+                    'rights' => [],
+                    'adm-nav' => [
+                        'adm-rights' => ['edit settings'],
                         'name' => 'Einstellungen',
                         'link' => 'settings',
                         'icon' => 'fas fa-cogs',
                         'permission' => 'edit settings',
-                    ]),
+                    ],
                 ]),
             ], [
                 'setting' => 'Anwesenheitsliste',
