@@ -1198,7 +1198,7 @@ class DemoSetup extends Command
                 'visible_for_all' => true,
                 'active' => true,
                 'ende' => Carbon::now()->addMonths(2),
-                'duration' => null,
+                'duration' => 0,
                 'multiple' => false,
                 'make_new_entry' => true,
                 'creates_pflichtstunden' => true,
