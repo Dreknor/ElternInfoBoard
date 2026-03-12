@@ -17,7 +17,7 @@
             @endif
 
 
-            @if(array_key_exists('nav-user', $module->options) and  is_array($module->options['nav-user']) )
+            @if(array_key_exists('nav-user', $module->options) and  is_array($module->options['nav-user']) and !empty($module->options['nav-user']) and isset($module->options['nav-user']['name'], $module->options['nav-user']['link']) )
                 @push('nav-user')
                     <a href="{{url($module->options['nav-user']['link'])}}"
                        class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
@@ -28,7 +28,7 @@
                     </a>
                 @endpush
             @endif
-            @if(array_key_exists('nav', $module->options) and  is_array($module->options['nav']))
+            @if(array_key_exists('nav', $module->options) and  is_array($module->options['nav']) and !empty($module->options['nav']) and isset($module->options['nav']['name'], $module->options['nav']['link'], $module->options['nav']['icon']))
 
                 @push('nav')
                     <li class="nav-item"
