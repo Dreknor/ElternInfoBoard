@@ -12,6 +12,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use App\Model\Liste;
+use App\Policies\TerminListenPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -44,6 +47,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSetting $settings): void
     {
+        // Policy-Registrierung
+        Gate::policy(Liste::class, TerminListenPolicy::class);
+
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
