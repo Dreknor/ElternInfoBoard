@@ -1,8 +1,12 @@
 @auth
     @if(isset($modules) && is_iterable($modules))
         @foreach($modules as $module)
-
-            @if(count($module->options['rights']) == 0 or auth()->user()->hasAnyPermission($module->options['rights']))
+            @php
+                $moduleRights = $module->options['rights'] ?? [];
+                if (is_string($moduleRights)) { $moduleRights = json_decode($moduleRights, true) ?? []; }
+                if (!is_array($moduleRights)) { $moduleRights = array_values((array) $moduleRights); }
+            @endphp
+            @if(count($moduleRights) == 0 or auth()->user()->hasAnyPermission($moduleRights))
 
             @if(array_key_exists('home-view',$module->options) and $module->options['home-view']!="" and (request()->segment(1) ==""  or request()->segment(1) =="home"))
                 @push('home-view')
