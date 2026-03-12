@@ -1314,7 +1314,7 @@ class DemoSetup extends Command
                 'location' => 'Schulküche',
                 'created_by' => $elternratUser->id,
                 'send_reminder' => false,
-                'reminder_hours' => null,
+                'reminder_hours' => 0,
             ]
         );
 
@@ -1341,7 +1341,7 @@ class DemoSetup extends Command
                 'description' => 'Das Protokoll der letzten Sitzung muss bis Ende der Woche fertig sein und an alle Mitglieder verschickt werden.',
                 'assigned_to' => $this->users['mueller']->id ?? null,
                 'created_by' => $elternratUser->id,
-                'status' => 'pending',
+                'status' => 'open',
                 'priority' => 'high',
                 'due_date' => Carbon::now()->addDays(5)->toDateString(),
             ],
@@ -1369,7 +1369,7 @@ class DemoSetup extends Command
                 'description' => 'Anschreiben an die Stadt Radebeul bezüglich der Verkehrssituation vor der Schule verfassen.',
                 'assigned_to' => $elternratUser->id,
                 'created_by' => $elternratUser->id,
-                'status' => 'pending',
+                'status' => 'open',
                 'priority' => 'high',
                 'due_date' => Carbon::now()->addWeeks(3)->toDateString(),
             ],
@@ -1523,7 +1523,7 @@ class DemoSetup extends Command
 
         foreach ($losungen as $losung) {
             Losung::firstOrCreate(
-                ['date' => $losung['date']->toDateTimeString()],
+                ['date' => $losung['date']->toDateString()],
                 $losung
             );
         }
@@ -1545,6 +1545,7 @@ class DemoSetup extends Command
                 'bereich' => 'Schulfest',
                 'approved' => true,
                 'approved_by' => $admin->id,
+                'rejected' => false,
             ],
             [
                 'user' => 'bauer',
@@ -1554,6 +1555,7 @@ class DemoSetup extends Command
                 'bereich' => 'Reinigung',
                 'approved' => true,
                 'approved_by' => $this->users['sekretariat']->id ?? $admin->id,
+                'rejected' => false,
             ],
             [
                 'user' => 'schulz',
@@ -1561,8 +1563,9 @@ class DemoSetup extends Command
                 'end' => Carbon::now()->subDays(3)->setTime(19, 0),
                 'description' => 'Teilnahme am Elternabend und Protokollführung',
                 'bereich' => 'Elternabend',
-                'approved' => null,
+                'approved' => false,
                 'approved_by' => null,
+                'rejected' => false,
             ],
             [
                 'user' => 'fischer',
@@ -1570,8 +1573,9 @@ class DemoSetup extends Command
                 'end' => Carbon::now()->subWeeks(3)->setTime(10, 0),
                 'description' => 'Buchsortierung in der Schulbibliothek',
                 'bereich' => 'Bibliothek',
-                'approved' => null,
+                'approved' => false,
                 'approved_by' => null,
+                'rejected' => false,
             ],
             [
                 'user' => 'wagner',
@@ -1581,6 +1585,7 @@ class DemoSetup extends Command
                 'bereich' => 'Arbeitseinsatz',
                 'approved' => false,
                 'approved_by' => $admin->id,
+                'rejected' => true,
             ],
         ];
 
@@ -1603,10 +1608,10 @@ class DemoSetup extends Command
                     'approved' => $pd['approved'],
                     'approved_at' => $pd['approved'] ? now()->subDays(1) : null,
                     'approved_by' => $pd['approved_by'],
-                    'rejected' => $pd['approved'] === false ? true : false,
-                    'rejected_at' => $pd['approved'] === false ? now()->subDays(1) : null,
-                    'rejected_by' => $pd['approved'] === false ? $admin->id : null,
-                    'rejection_reason' => $pd['approved'] === false ? 'Angabe nicht ausreichend dokumentiert, bitte erneut einreichen.' : null,
+                    'rejected' => $pd['rejected'],
+                    'rejected_at' => $pd['rejected'] ? now()->subDays(1) : null,
+                    'rejected_by' => $pd['rejected'] ? $admin->id : null,
+                    'rejection_reason' => $pd['rejected'] ? 'Angabe nicht ausreichend dokumentiert, bitte erneut einreichen.' : null,
                 ]);
             }
         }
