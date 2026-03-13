@@ -12,6 +12,7 @@ class EmailSetting extends Settings
 
     public ?string $mail_username = null;
 
+    /** Wird verschlüsselt in der Datenbank gespeichert (AES via Laravel encrypt()) */
     public ?string $mail_password = null;
 
     public ?string $mail_encryption = null;
@@ -27,5 +28,16 @@ class EmailSetting extends Settings
     public static function group(): string
     {
         return 'email';
+    }
+
+    /**
+     * Felder, die verschlüsselt in der Datenbank gespeichert werden.
+     * Spatie Laravel Settings ver- und entschlüsselt automatisch.
+     */
+    public static function encrypted(): array
+    {
+        return [
+            'mail_password',
+        ];
     }
 }

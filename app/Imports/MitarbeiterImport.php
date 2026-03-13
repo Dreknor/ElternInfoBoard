@@ -6,11 +6,23 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class MitarbeiterImport implements ToCollection, WithHeadingRow
 {
+    private function getImportPassword(): string
+    {
+        $pw = config('app.import_mitarbeiter');
+        if (empty($pw)) {
+            Log::warning('PW_IMPORT_MITARBEITER ist nicht gesetzt – zufälliges Passwort wird verwendet');
+            return Str::password(16);
+        }
+        return $pw;
+    }
+
     public function collection(Collection $collection)
     {
         foreach ($collection as $row) {
@@ -20,7 +32,7 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 ], [
                     'name' => $row['vorname'].' '.$row['nachname'],
                     'changePassword' => 1,
-                    'password' => Hash::make(config('app.import_mitarbeiter')),
+                    'password' => Hash::make($this->getImportPassword()),
                     'lastEmail' => Carbon::now(),
                 ]);
 

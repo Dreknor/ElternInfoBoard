@@ -62,11 +62,10 @@ class AuthController extends Controller implements HasMiddleware
 
         Log::debug('User lookup result', [
             'email' => $email,
-            'original_email' => $request->email,
             'user_found' => $user !== null,
             'user_id' => $user?->id,
             'user_deleted' => $user?->trashed(),
-            'password_hash_length' => $user ? strlen($user->password) : 0
+            // password_hash_length wurde entfernt (keine Sicherheitsrelevanz, aber Info-Leak)
         ]);
 
         if (! $user) {
@@ -132,6 +131,20 @@ class AuthController extends Controller implements HasMiddleware
      */
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+
+        // Nur die für die App tatsächlich benötigten Felder zurückgeben (DSGVO Datensparsamkeit).
+        // Interne Felder wie changePassword, track_login, lastEmail etc. werden nicht exponiert.
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'uuid' => $user->uuid,
+            'benachrichtigung' => $user->benachrichtigung,
+            'publicMail' => $user->publicMail,
+            'publicPhone' => $user->publicPhone,
+            'releaseCalendar' => $user->releaseCalendar,
+            'calendar_prefix' => $user->calendar_prefix,
+        ]);
     }
 }

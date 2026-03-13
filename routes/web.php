@@ -60,10 +60,28 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('login/keycloak', [LoginController::class, 'redirectToKeycloak'])->name('login.keycloak');
 Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCallback']);
+
+// POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam)
+Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
+
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
-Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
+Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
+
+// API-Dokumentation nur für Admins zugänglich (enthält alle Endpunkte, Auth-Details etc.)
+Route::middleware(['auth', 'permission:edit settings'])->group(function () {
+    Route::get('docs', function () {
+        return response()->file(public_path('docs/index.html'));
+    })->name('docs.index');
+    Route::get('docs/{any}', function (string $any) {
+        $path = public_path('docs/' . $any);
+        if (file_exists($path) && is_file($path)) {
+            return response()->file($path);
+        }
+        abort(404);
+    })->where('any', '.*');
+});
 
 // Apple Touch Icon
 Route::get('apple-touch-icon-precomposed.png', function () {
@@ -409,8 +427,9 @@ Route::middleware('auth')->group(function () {
 
         });
 
-        Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
-            Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
+        // loginAsUser: POST statt GET (CSRF-Schutz), korrekte middleware-Syntax
+        Route::middleware('permission:loginAsUser')->group(function () {
+            Route::post('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
         // Seitenverwaltung und -anzeige
@@ -553,9 +572,11 @@ Route::middleware('auth')->group(function () {
             ->name('arbeitsgemeinschaften.anmelden');
     });
 
-});
+    // Schuljahreswechsel im Settings-Bereich (erfordert Auth + Berechtigung)
+    Route::middleware(['password_expired', 'permission:schoolyear.change'])->group(function () {
+        Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
+        Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
+        Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+    });
 
-// Schuljahreswechsel im Settings-Bereich
-Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
-Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
-Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+});

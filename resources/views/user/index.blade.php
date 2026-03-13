@@ -136,9 +136,12 @@
                                         </div>
                                         <div class="col-auto mt-2">
                                             @can('loginAsUser')
-                                                <a href="{{url("showUser/$user->id")}}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
+                                                <form method="POST" action="{{ url('showUser/'.$user->id) }}" style="display:inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-info" title="Als dieser User anmelden">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </form>
                                             @endcan
                                         </div>
                                         <div class="col-auto mt-2">

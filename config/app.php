@@ -27,13 +27,16 @@ return [
 
     'api_key' => env('API_KEY'),
 
-    'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
+    // WICHTIG: Diese Werte müssen in der .env gesetzt sein!
+    // Kein Fallback auf das Datum mehr (war trivial vorhersagbar: dmY-Format).
+    // Wenn nicht gesetzt → Import wird im Controller mit einem Fehler abgebrochen.
+    'import_eltern' => env('PW_IMPORT_ELTERN'),
 
-    'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),
+    'import_aufnahme' => env('PW_IMPORT_AUFNAHME'),
 
-    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', Carbon::now()->format('dmY')),
+    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER'),
 
-    'import_verein' => env('PW_IMPORT_VEREIN', Carbon::now()->format('dmY')),
+    'import_verein' => env('PW_IMPORT_VEREIN'),
 
     'enable_reactions' => env('ENABLE_REACTIONS', true),
 

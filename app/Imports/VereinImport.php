@@ -7,6 +7,7 @@ use App\Model\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -20,6 +21,16 @@ class VereinImport implements ToCollection, WithHeadingRow
     public function __construct(Group $group)
     {
         $this->Gruppe = $group;
+    }
+
+    private function getImportPassword(): string
+    {
+        $pw = config('app.import_verein');
+        if (empty($pw)) {
+            Log::warning('PW_IMPORT_VEREIN ist nicht gesetzt – zufälliges Passwort wird verwendet');
+            return Str::password(16);
+        }
+        return $pw;
     }
 
     public function collection(Collection $collection): void
@@ -53,7 +64,7 @@ class VereinImport implements ToCollection, WithHeadingRow
                     [
                         'name' => $row['person_vorname_nachname'],
                         'changePassword' => 1,
-                        'password' => Hash::make(config('app.import_verein')),
+                        'password' => Hash::make($this->getImportPassword()),
                         'lastEmail' => Carbon::now(),
                     ]);
 

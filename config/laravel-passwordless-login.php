@@ -10,7 +10,7 @@ return [
     'login_route_name' => env('LPL_LOGIN_ROUTE_NAME', 'magic-login'),
     'login_route_expires' => intval(env('LPL_LOGIN_ROUTE_EXPIRES', 30)),
     'redirect_on_success' => env('LPL_REDIRECT_ON_LOGIN', '/'),
-    'login_use_once' => env('LPL_USE_ONCE', false),
+    'login_use_once' => env('LPL_USE_ONCE', true),
     'invalid_signature_message' => env('LPL_INVALID_SIGNATURE_MESSAGE', ''),
     'middleware' => env('LPL_MIDDLEWARE', ['web', HandleAuthenticatedUsers::class, 'mark_passwordless_login']),
 ];

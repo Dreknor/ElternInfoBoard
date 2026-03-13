@@ -130,11 +130,8 @@ class LoginController extends Controller implements HasMiddleware
         }
 
         try {
-            Log::info('Redirecting to Keycloak', [
-                'client_id' => env('KEYCLOAK_CLIENT_ID'),
-                'base_url' => env('KEYCLOAK_BASE_URL'),
-                'realm' => env('KEYCLOAK_REALM'),
-            ]);
+            // Nur unkritische Infos loggen, keine Konfigurationsdetails
+            Log::info('Redirecting to Keycloak');
 
             return Socialite::driver('keycloak')->redirect();
         } catch (\Exception $e) {

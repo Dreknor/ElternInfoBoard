@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesApiKey;
 use App\Settings\StundenplanSetting;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ApiImportStundenplanRequest extends FormRequest
 {
+    use ValidatesApiKey;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -19,40 +22,22 @@ class ApiImportStundenplanRequest extends FormRequest
             return false;
         }
 
-        // Check API key from multiple sources (in order of preference):
-        // 1. Query parameter: ?key=xxx
-        // 2. Header: X-API-Key
-        // 3. Bearer token
-        // 4. JSON body (legacy support)
-
-        $apiKey = null;
-
-        // Try query parameter
-        if ($this->query('key')) {
-            $apiKey = $this->query('key');
-        }
-        // Try header
-        elseif ($this->header('X-API-Key')) {
-            $apiKey = $this->header('X-API-Key');
-        }
-        // Try Bearer token
-        elseif ($this->bearerToken()) {
-            $apiKey = $this->bearerToken();
-        }
-        // Try JSON body (legacy)
-        else {
-            $data = json_decode($this->getContent(), true);
-            if (isset($data['key'])) {
-                $apiKey = $data['key'];
+        // Konfigurierter Key aus den Settings überschreibt app.api_key
+        $configuredKey = $settings->import_api_key;
+        if (!empty($configuredKey)) {
+            $apiKey = $this->header('X-API-Key') ?? $this->bearerToken();
+            // Legacy: Key im JSON-Body (rückwärtskompatibel)
+            if (empty($apiKey)) {
+                $body = json_decode($this->getContent(), true);
+                $apiKey = $body['key'] ?? null;
             }
+            if (empty($apiKey)) {
+                return false;
+            }
+            return hash_equals($configuredKey, $apiKey);
         }
 
-        // Validate the API key
-        if ($apiKey && $apiKey === $settings->import_api_key) {
-            return true;
-        }
-
-        return false;
+        return $this->isValidApiKey();
     }
 
     /**
@@ -76,6 +61,4 @@ class ApiImportStundenplanRequest extends FormRequest
         // Additional validation will be done by StundenplanDataAdapter::validate()
     }
 }
-
-
 

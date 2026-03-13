@@ -73,43 +73,44 @@ class UpdateModuleSettingsSeeder extends Seeder
                         {"adm-rights":["see logs"],"name":"logs","link":"logs","icon":"fas fa-stream"}
                     }',
             ], [
+                'id'  => 2000,
                 'setting' => 'Seiten',
                 'description' => 'Erlaubt das Anlegen und Verwalten von Seiten',
                 'category' => 'module',
                 'options' => json_encode([
                     'active' => '0',
-                    'rights' => json_encode(['view sites']),
-                    'nav' => json_encode([
+                    'rights' => ['view sites'],
+                    'nav' => [
                         'name' => 'Seiten',
                         'link' => 'sites',
                         'icon' => 'fa fa-file',
                         'bottom-nav' => 'false',
-                    ]),
-                    'adm-nav' => json_encode([
-                        'adm-rights' => json_encode(['create sites']),
+                    ],
+                    'adm-nav' => [
+                        'adm-rights' => ['create sites'],
                         'name' => 'neue Seite',
                         'link' => 'sites/create',
                         'icon' => 'fa fa-file-pen',
-                    ]),
+                    ],
                 ]),
             ],  [
+                'id' => 3000,
                 'setting' => 'Settings',
                 'description' => 'Einstellungen für die Anwendung',
                 'category' => 'module',
                 'options' => json_encode([
                     'active' => '1',
-                    'rights' => json_encode([]),
-                    'adm-nav' => json_encode([
-                        'adm-rights' => [
-                            '0' => 'edit settings',
-                        ],
+                    'rights' => [],
+                    'adm-nav' => [
+                        'adm-rights' => ['edit settings'],
                         'name' => 'Einstellungen',
                         'link' => 'settings',
                         'icon' => 'fas fa-cogs',
                         'permission' => 'edit settings',
-                    ]),
+                    ],
                 ]),
             ], [
+                'id'  => 4000,
                 'setting' => 'Anwesenheitsliste',
                 'description' => 'digitale Anwesenheitsliste der Kinder',
                 'category' => 'module',
@@ -125,6 +126,7 @@ class UpdateModuleSettingsSeeder extends Seeder
                 ]),
                 'created_at' => now(),
             ], [
+                'id'  => 4500,
                 'setting' => 'Kinderverwaltung',
                 'description' => 'Verwaltung der angelegten Kinder',
                 'category' => 'module',

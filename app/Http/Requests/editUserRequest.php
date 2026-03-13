@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 
 class editUserRequest extends FormRequest
 {
@@ -73,10 +74,9 @@ class editUserRequest extends FormRequest
             'password' => [
                 'nullable',
                 'sometimes',
-                'string',
-                'min:8',
+                'confirmed',
+                Password::min(8)->mixedCase()->numbers(),
             ],
-
         ];
     }
 }
