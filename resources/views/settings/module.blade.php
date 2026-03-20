@@ -42,7 +42,7 @@
                                                     <label class="switch">
                                                         <input type="checkbox" class="bottomMenuButton"
                                                                id="{{$modul->setting}}"
-                                                               @if(is_array($modul->options['nav']) && array_key_exists('bottom-nav' , $modul->options['nav']) and $modul->options['nav']['bottom-nav']== "true") checked @endif>
+                                                                @if(is_array($modul->options['nav']) && ($modul->options['nav']['bottom-nav'] ?? null) == "true") checked @endif>
                                                         <span class="slider round"></span>
                                                     </label>
                                                 @else
