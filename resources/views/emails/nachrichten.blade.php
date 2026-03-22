@@ -36,7 +36,9 @@
                                 @foreach($nachrichten as $nachricht)
                                 <tr>
                                     <td style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0;">
-                                        <div style="font-weight: 500; color: #2d3748; margin-bottom: 5px;">{{$nachricht->header}}</div>
+                                        <div style="font-weight: 500; color: #2d3748; margin-bottom: 5px;">
+                                            <a href="{{ url('post/'.$nachricht->id) }}" target="_blank" style="color: #667eea; text-decoration: none;">{{$nachricht->header}}</a>
+                                        </div>
                                         @if(isset($nachricht->created_at))
                                         <div style="font-size: 14px; color: #718096;">{{ \Carbon\Carbon::parse($nachricht->created_at)->format('d.m.Y H:i') }} Uhr</div>
                                         @endif
@@ -57,7 +59,9 @@
                                 @foreach($nachrichten_extern as $nachricht)
                                 <tr>
                                     <td style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0;">
-                                        <div style="font-weight: 500; color: #2d3748; margin-bottom: 5px;">{{$nachricht->header}}</div>
+                                        <div style="font-weight: 500; color: #2d3748; margin-bottom: 5px;">
+                                            <a href="{{ url('post/'.$nachricht->id) }}" target="_blank" style="color: #667eea; text-decoration: none;">{{$nachricht->header}}</a>
+                                        </div>
                                         @if(isset($nachricht->created_at))
                                         <div style="font-size: 14px; color: #718096;">{{ \Carbon\Carbon::parse($nachricht->created_at)->format('d.m.Y H:i') }} Uhr</div>
                                         @endif
@@ -154,7 +158,7 @@
                                         <table border="0" cellpadding="0" cellspacing="0" align="center">
                                             <tr>
                                                 <td bgcolor="#667eea" style="padding: 14px 32px; text-align: center;">
-                                                    <a href="{{config('app.url')}}" target="_blank" style="font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; display: inline-block;">Jetzt anmelden</a>
+                                                    <a href="{{url('/nachrichten')}}" target="_blank" style="font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; display: inline-block;">Alle Nachrichten ansehen</a>
                                                 </td>
                                             </tr>
                                         </table>

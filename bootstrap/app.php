@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web([
             \App\Http\Middleware\CheckNewsForUser::class,
             \App\Http\Middleware\LastOnlineAt::class,
+            \App\Http\Middleware\CheckUserActive::class,
         ]);
 
         $middleware->throttleApi();

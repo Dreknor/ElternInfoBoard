@@ -136,7 +136,7 @@ class RueckmeldungenController extends Controller
 
         AbfrageOptions::insert($options);
 
-        return redirect(url('/home#'.$rueckmeldung->post->id))->with([
+        return redirect(url('/post/'.$rueckmeldung->post->id))->with([
             'type' => 'success',
             'Meldung' => 'Abfrage wurde geändert.',
         ]);
@@ -448,7 +448,7 @@ class RueckmeldungenController extends Controller
         $rueckmeldung->empfaenger = auth()->user()->email;
         $rueckmeldung->save();
 
-        return redirect()->to(url('/home#'.$posts_id))->with([
+        return redirect()->to(url('post/'.$posts_id))->with([
             'type' => 'success',
             'Meldung' => 'Terminlisten-Rückmeldung erstellt.',
         ]);
@@ -602,7 +602,7 @@ class RueckmeldungenController extends Controller
                                     'users_id' => $User->id,
                                     'type' => 'Erinnerung',
                                     'text' => 'Rückmeldung für '.$Rueckmeldung->post->header.' fehlt',
-                                    'link' => url('home#'.$Rueckmeldung->post->id),
+                                    'link' => url('post/'.$Rueckmeldung->post->id),
                                 ]
                             );
                             $notify->save();

@@ -39,7 +39,7 @@ class ReadReceiptReminderNotification extends Notification
             'post_id' => $this->post->id,
             'post_header' => $this->post->header,
             'deadline' => $this->deadline,
-            'action_url' => url('#'.$this->post->id),
+            'action_url' => url('post/'.$this->post->id),
             'created' => Carbon::now()->toIso8601String(),
         ];
     }
@@ -50,6 +50,6 @@ class ReadReceiptReminderNotification extends Notification
             ->title('Lesebestätigung fehlt')
             ->icon(asset('img/'.config('app.favicon')))
             ->body('Bitte bestätigen Sie die Nachricht "'.$this->post->header.'" bis zum '.$this->deadline)
-            ->action('Zur Nachricht', url('#'.$this->post->id));
+            ->action('Zur Nachricht', url('post/'.$this->post->id));
     }
 }

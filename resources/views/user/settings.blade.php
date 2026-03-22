@@ -140,18 +140,37 @@
                                             <i class="fas fa-lock text-blue-600 mr-2"></i>
                                             Sicherheit & Passwort
                                         </h6>
-                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-lock text-blue-600 mr-1"></i>
+                                                    Aktuelles Passwort
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Zur Bestätigung erforderlich</span>
+                                                </label>
+                                                <input class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       name="current_password"
+                                                       type="password"
+                                                       autocomplete="current-password"
+                                                       placeholder="••••••••">
+                                                @error('current_password')
+                                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                @enderror
+                                            </div>
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                                     <i class="fas fa-key text-blue-600 mr-1"></i>
                                                     Neues Passwort
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Mindestens 8 Zeichen</span>
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Mindestens 10 Zeichen, Groß-/Kleinbuchstaben und Zahl</span>
                                                 </label>
                                                 <input class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                        name="password"
                                                        type="password"
-                                                       minlength="8"
+                                                       minlength="10"
+                                                       autocomplete="new-password"
                                                        placeholder="••••••••">
+                                                @error('password')
+                                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                @enderror
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -163,7 +182,6 @@
                                                        type="password"
                                                        class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                        name="password_confirmation"
-                                                       required
                                                        autocomplete="new-password"
                                                        placeholder="••••••••">
                                             </div>

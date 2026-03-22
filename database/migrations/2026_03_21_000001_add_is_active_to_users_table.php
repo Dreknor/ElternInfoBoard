@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('password_changed_at')->nullable()->after('password');
+            $table->boolean('is_active')->default(true)->after('email');
+            $table->timestamp('deactivated_at')->nullable()->after('is_active');
         });
     }
 
@@ -22,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('password_changed_at');
+            $table->dropColumn(['is_active', 'deactivated_at']);
         });
     }
 };
+

@@ -27,9 +27,9 @@ class PostObserver
      */
     public function updated(Post $post): void
     {
-        $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
+        $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')?->options['active'] ?? false;
 
-        if ($wp_push_is_enabled == 1 and $post->published_wp_id != null and auth()->user()->can('push to wordpress')) {
+        if ($wp_push_is_enabled == 1 and $post->published_wp_id != null and auth()->user()?->can('push to wordpress')) {
             PushPostToWordpress::dispatch($post);
         }
 

@@ -156,7 +156,7 @@ class FileController extends Controller implements HasMiddleware
                     ->usingName($request->name)
                     ->toMediaCollection('images'));
 
-            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
+            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header, $posts->id));
         } else {
             return redirect()->to(url('home/'))->with([
                 'type' => 'warning',
@@ -164,7 +164,7 @@ class FileController extends Controller implements HasMiddleware
             ]);
         }
 
-        return redirect(url('home/#'.$posts->id))->with([
+        return redirect(url('post/'.$posts->id))->with([
             'type' => 'success',
             'Meldung' => 'Bild erfolgreich hinzugefügt',
         ]);

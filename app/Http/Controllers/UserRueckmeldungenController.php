@@ -96,7 +96,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
                 ->queue(new UserRueckmeldungMail($Rueckmeldung));
         }
 
-        return redirect(url('/home#'.$post_id->id))->with([
+        return redirect(url('post/'.$post_id->id))->with([
             'id' => $post_id->id,
             'type' => 'success',
             'Meldung' => 'Die Rückmeldung wurde der Schule gesendet',
@@ -194,7 +194,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
                 break;
         }
 
-        return redirect(url('/home#'.$userRueckmeldungen->post_id))->with([
+        return redirect(url('post/'.$userRueckmeldungen->post_id))->with([
             'type' => 'success',
             'Meldung' => 'Rückmeldung versendet',
             'RueckmeldungCheck' => $userRueckmeldungen->post_id,

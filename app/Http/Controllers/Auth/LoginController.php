@@ -10,7 +10,9 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends Controller implements HasMiddleware
@@ -210,7 +212,7 @@ class LoginController extends Controller implements HasMiddleware
             $newUser = User::create([
                 'name' => $name,
                 'email' => $user->email,
-                'password' => bcrypt(now()->format('YmdHis')),
+                'password' => Hash::make(Str::random(64)), // TODO-1.7: Sicheres Zufallspasswort
                 'created_at' => now(),
                 'updated_at' => now(),
                 'changePassword' => 0,

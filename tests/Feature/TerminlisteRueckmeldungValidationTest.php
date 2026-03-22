@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class TerminlisteRueckmeldungValidationTest extends TestCase
@@ -27,7 +28,10 @@ class TerminlisteRueckmeldungValidationTest extends TestCase
     {
         parent::setUp();
 
-        Permission::create(['name' => 'create posts', 'guard_name' => 'web']);
+        // Cache leeren damit keine PermissionAlreadyExists-Fehler bei wiederholten Tests auftreten
+        $this->app[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        Permission::firstOrCreate(['name' => 'create posts', 'guard_name' => 'web']);
 
         $this->user = User::factory()->create();
         $this->user->givePermissionTo('create posts');

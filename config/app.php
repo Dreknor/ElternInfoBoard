@@ -1,13 +1,10 @@
 <?php
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Facade;
-
 return [
 
     'timezone' => 'Europe/Berlin',
 
-    'aliases' => Facade::defaultAliases()->merge([
+    'aliases' => \Illuminate\Support\Facades\Facade::defaultAliases()->merge([
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Redis' => Illuminate\Support\Facades\Redis::class,
@@ -26,14 +23,6 @@ return [
     'mitarbeiterboard_api_key' => env('API_KEY_MITARBEITERBOARD'),
 
     'api_key' => env('API_KEY'),
-
-    'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
-
-    'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),
-
-    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', Carbon::now()->format('dmY')),
-
-    'import_verein' => env('PW_IMPORT_VEREIN', Carbon::now()->format('dmY')),
 
     'enable_reactions' => env('ENABLE_REACTIONS', true),
 

@@ -241,7 +241,7 @@
 
         <!-- Footer -->
         <div class="email-footer">
-            <a href="{{config('app.url')}}/#{{'post-'.$post->id}}" class="footer-button">
+            <a href="{{url('post/'.$post->id)}}" class="footer-button">
                 Nachricht online ansehen
             </a>
             <div class="footer-text">
