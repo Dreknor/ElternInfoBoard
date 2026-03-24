@@ -82,7 +82,7 @@ class Rueckmeldungen extends Model
     {
         static::saved(function ($rueckmeldung) {
             $post = $rueckmeldung->post;
-            if (is_null($post->archiv_ab) || $rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+            if ($post && $rueckmeldung->ende && ($post->archiv_ab === null || $rueckmeldung->ende->greaterThan($post->archiv_ab))) {
                 $post->update([
                     'archiv_ab' => $rueckmeldung->ende,
                 ]);
@@ -91,7 +91,7 @@ class Rueckmeldungen extends Model
 
         static::updated(function ($rueckmeldung) {
             $post = $rueckmeldung->post;
-            if (is_null($post->archiv_ab) || $rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+            if ($post && $rueckmeldung->ende && ($post->archiv_ab === null || $rueckmeldung->ende->greaterThan($post->archiv_ab))) {
                 $post->update([
                     'archiv_ab' => $rueckmeldung->ende,
                 ]);

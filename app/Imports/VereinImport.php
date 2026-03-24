@@ -2,12 +2,15 @@
 
 namespace App\Imports;
 
+use App\Mail\NewUserPasswordMail;
 use App\Model\Group;
 use App\Model\User;
+use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -58,13 +61,16 @@ class VereinImport implements ToCollection, WithHeadingRow
                     $email = $row['person_e_mail_privat'];
                 }
 
+                // TODO-1.1: Sicheres Zufallspasswort generieren
+                $password = Str::password(12, true, true, true, false);
+
                 $user1 = User::firstOrCreate([
                     'email' => "$email",
                 ],
                     [
                         'name' => $row['person_vorname_nachname'],
                         'changePassword' => 1,
-                        'password' => Hash::make($this->getImportPassword()),
+                        'password' => Hash::make($password),
                         'lastEmail' => Carbon::now(),
                     ]);
 
@@ -74,8 +80,19 @@ class VereinImport implements ToCollection, WithHeadingRow
                     ]);
                 }
 
+                // TODO-1.2: Willkommens-E-Mail für neue Benutzer versenden
+                if ($user1->wasRecentlyCreated) {
+                    try {
+                        $emailSettings = app(EmailSetting::class);
+                        Mail::to($user1->email)->queue(new NewUserPasswordMail($user1, $password, $emailSettings->new_user_welcome_text));
+                    } catch (\Exception $e) {
+                        Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user1->email.': '.$e->getMessage());
+                    }
+                }
+
                 $user1->assignRole('Vereinsmitglied');
-                $user1->groups()->attach($this->Gruppe);
+                // TODO-1.12: syncWithoutDetaching statt attach() um Duplikate zu vermeiden
+                $user1->groups()->syncWithoutDetaching([$this->Gruppe->id]);
 
             }
         }

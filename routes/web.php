@@ -264,7 +264,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv']);
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
-        Route::get('post/{post}', [NachrichtenController::class, 'findPost']);
+        Route::get('post/{post}', [NachrichtenController::class, 'findPost'])->name('post.find');
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         Route::post('post/{post}/readReceipt/{user}', [ReadReceiptsController::class, 'confirmForUser'])
             ->middleware('permission:manage rueckmeldungen')

@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Mail\NewUserPasswordMail;
 use App\Model\Group;
 use App\Model\User;
+use App\Scopes\GetGroupsScope;
 use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -24,7 +25,8 @@ class UsersImport implements ToCollection, WithHeadingRow
     public function __construct(array $header)
     {
         $this->header = $header;
-        $this->groups = Group::all();
+        // TODO-1.10: GetGroupsScope umgehen, damit alle Gruppen geladen werden
+        $this->groups = Group::withoutGlobalScope(GetGroupsScope::class)->get();
     }
 
     public function collection(Collection $collection)
@@ -47,7 +49,8 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $gruppen[$Lerngruppe->id] = $Lerngruppe->id;
             }
 
-            foreach (explode($row[$this->header['gruppen']], ';') as $user_group) {
+            // TODO-1.9: Parameterreihenfolge korrigiert (Separator zuerst)
+            foreach (explode(';', $row[$this->header['gruppen']]) as $user_group) {
                 $group = $this->groups->firstWhere('name', $user_group);
                 if (! is_null($group)) {
                     $gruppen[$group->id] = $group->id;

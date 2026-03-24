@@ -12,15 +12,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schritt 1: Duplikate bereinigen
-        // Behalte nur den ältesten Eintrag pro (post_id, user_id)-Kombination
-        DB::statement('
-            DELETE t1 FROM read_receipts t1
-            INNER JOIN read_receipts t2
-            WHERE t1.id > t2.id
-            AND t1.post_id = t2.post_id
-            AND t1.user_id = t2.user_id
-        ');
+        $driver = DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            DB::statement('
+                DELETE FROM read_receipts
+                WHERE id NOT IN (
+                    SELECT MIN(id)
+                    FROM read_receipts
+                    GROUP BY post_id, user_id
+                )
+            ');
+        } else {
+            DB::statement('
+                DELETE t1 FROM read_receipts t1
+                INNER JOIN read_receipts t2
+                WHERE t1.id > t2.id
+                AND t1.post_id = t2.post_id
+                AND t1.user_id = t2.user_id
+            ');
+        }
 
         // Schritt 2: Unique-Index hinzufügen
         Schema::table('read_receipts', function (Blueprint $table) {

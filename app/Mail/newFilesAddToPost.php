@@ -17,13 +17,16 @@ class newFilesAddToPost extends Mailable
 
     public string $Betreff;
 
+    public int $postId;
+
     /**
      * newFilesAddToPost constructor.
      */
-    public function __construct(string $von, string $Betreff)
+    public function __construct(string $von, string $Betreff, int $postId)
     {
         $this->von = $von;
         $this->Betreff = $Betreff;
+        $this->postId = $postId;
     }
 
     /**
@@ -38,6 +41,7 @@ class newFilesAddToPost extends Mailable
             ->view('emails.newImageToPost', [
                 'von' => $this->von,
                 'betreff' => $this->Betreff,
+                'postId' => $this->postId,
             ]);
     }
 }

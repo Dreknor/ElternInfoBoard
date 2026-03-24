@@ -1,13 +1,10 @@
 <?php
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Facade;
-
 return [
 
     'timezone' => 'Europe/Berlin',
 
-    'aliases' => Facade::defaultAliases()->merge([
+    'aliases' => \Illuminate\Support\Facades\Facade::defaultAliases()->merge([
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Redis' => Illuminate\Support\Facades\Redis::class,
@@ -28,8 +25,7 @@ return [
     'api_key' => env('API_KEY'),
 
     // WICHTIG: Diese Werte müssen in der .env gesetzt sein!
-    // Kein Fallback auf das Datum mehr (war trivial vorhersagbar: dmY-Format).
-    // Wenn nicht gesetzt → Import wird im Controller mit einem Fehler abgebrochen.
+
     'import_eltern' => env('PW_IMPORT_ELTERN'),
 
     'import_aufnahme' => env('PW_IMPORT_AUFNAHME'),

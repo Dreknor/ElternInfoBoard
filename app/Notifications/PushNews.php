@@ -32,7 +32,7 @@ class PushNews extends Notification
     public function toArray($notifiable): array
     {
         return [
-            'action_url' => url('#'.$this->post->id),
+            'action_url' => url('post/'.$this->post->id),
             'created' => Carbon::now()->toIso8601String(),
         ];
     }
@@ -42,7 +42,7 @@ class PushNews extends Notification
         return (new WebPushMessage)
             ->title('Neue Mitteilung im '.config('app.name'))
             ->icon(asset('img/'.config('app.favicon')))
-            ->body('Neue Mitteilung:'.$this->post->header);
-        // ->action('Zeige Nachricht', url("#".$this->post->id))
+            ->body('Neue Mitteilung:'.$this->post->header)
+            ->action('Zeige Nachricht', url('post/'.$this->post->id));
     }
 }

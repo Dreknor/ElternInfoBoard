@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTokenRequest;
-use App\Http\Requests\editUserRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
@@ -41,11 +41,12 @@ class BenutzerController extends Controller implements HasMiddleware
     /**
      * @return RedirectResponse
      */
-    public function update(editUserRequest $request)
+    public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
+        // TODO-1.5: $request->safe()->only() statt $request->only() verwenden
         $user->update(
-            $request->only([
+            $request->safe()->only([
                 'name',
                 'email',
                 'benachrichtigung',
@@ -58,9 +59,11 @@ class BenutzerController extends Controller implements HasMiddleware
             ])
         );
 
-        if ($request->input('password') != '' && $request->password == $request->password_confirmation) {
+        // TODO-1.14: Passwort-Änderung – Prüfung via FormRequest (current_password + confirmed)
+        if ($request->filled('password')) {
             $user->update([
                 'password' => Hash::make($request->password),
+                'changePassword' => false,
             ]);
         }
 

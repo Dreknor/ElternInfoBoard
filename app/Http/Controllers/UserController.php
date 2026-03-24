@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\createUserRequest;
-use App\Http\Requests\verwaltungEditUserRequest;
+use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Mail\NewUserPasswordMail;
 use App\Model\Discussion;
 use App\Model\Group;
@@ -15,6 +15,7 @@ use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
+use App\Services\UserService;
 use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +24,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -35,10 +37,12 @@ class UserController extends Controller implements HasMiddleware
 {
     private $groupsRepository;
 
-    public function __construct(GroupsRepository $groupsRepository)
+    private UserService $userService;
+
+    public function __construct(GroupsRepository $groupsRepository, UserService $userService)
     {
         $this->groupsRepository = $groupsRepository;
-
+        $this->userService = $userService;
     }
 
     public static function middleware(): array
@@ -53,11 +57,31 @@ class UserController extends Controller implements HasMiddleware
      *
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('user.index', [
-            'users' => User::all()->load('groups', 'permissions', 'sorgeberechtigter2', 'roles'),
+        // TODO-2.7: Serverseitige Paginierung statt User::all() für bessere Performance
+        $query = User::query()->with(['groups', 'permissions', 'sorgeberechtigter2', 'roles']);
 
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($role = $request->input('role')) {
+            $query->whereHas('roles', fn ($q) => $q->where('name', $role));
+        }
+
+        if ($group = $request->input('group')) {
+            $query->whereHas('groups', fn ($q) => $q->where('groups.id', $group));
+        }
+
+        return view('user.index', [
+            'users' => $query->orderBy('name')->paginate(50)->withQueryString(),
+            'roles' => Role::all(),
+            // TODO-2.7: WICHTIG – GetGroupsScope umgehen damit Admin alle Gruppen im Filter sieht
+            'groups' => Group::withoutGlobalScope(\App\Scopes\GetGroupsScope::class)->orderBy('name')->get(),
         ]);
     }
 
@@ -92,57 +116,18 @@ class UserController extends Controller implements HasMiddleware
      *
      * @return RedirectResponse
      */
-    public function store(createUserRequest $request)
+    public function store(CreateUserRequest $request)
     {
-        // Generiere ein zufälliges Passwort (12 Zeichen: Buchstaben, Zahlen und Sonderzeichen)
-        $generatedPassword = Str::password(12, true, true, true, false);
+        // TODO-2.2: Erstellung über UserService delegieren
+        $result = $this->userService->createUser($request->safe()->only(['name', 'email']));
+        $user = $result['user'];
 
-        $user = new User($request->all());
-        $user->password = Hash::make($generatedPassword);
-        $user->changePassword = true;
-        $user->lastEmail = Carbon::now();
-        $user->save();
-
-        $gruppen = $request->input('gruppen');
-        if (isset($gruppen)) {
-            if ($gruppen[0] == 'all') {
-                $gruppen = Group::where('protected', 0)->get();
-            } elseif ($gruppen[0] == 'Grundschule' or $gruppen[0] == 'Oberschule') {
-                $gruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
-                $gruppen = $gruppen->unique();
-            } else {
-                $gruppen = Group::find($gruppen);
-            }
-            $user->groups()->sync($gruppen);
-        }
-
-        if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-            if (auth()->user()->can('edit permission') && ! is_null($request->roles)) {
-                $roles = Role::whereIn('name', $request->roles)->get();
-                $user->roles()->sync($roles);
-            } elseif (auth()->user()->can('assign roles to users')) {
-                if (! is_null($request->roles)) {
-                    $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
-                        $query->where('name', 'role is assignable');
-                    })->get();
-                    $user->roles()->sync($roles);
-                }
-            }
-        }
-
-        // Sende E-Mail mit dem Startkennwort
-        try {
-            $emailSettings = app(EmailSetting::class);
-            Mail::to($user->email)->send(new NewUserPasswordMail($user, $generatedPassword, $emailSettings->new_user_welcome_text));
-            $emailStatus = 'E-Mail mit Startkennwort wurde erfolgreich versendet.';
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            $emailStatus = 'Warnung: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
-        }
+        $this->userService->syncGroups($user, $request->input('gruppen'));
+        $this->userService->syncRoles($user, $request->input('roles'), $request->user());
 
         return redirect(url("users/$user->id"))->with([
             'type' => 'success',
-            'Meldung' => 'Benutzer wurde angelegt. '.$emailStatus,
+            'Meldung' => 'Benutzer wurde angelegt. '.$result['emailStatus'],
         ]);
     }
 
@@ -184,66 +169,34 @@ class UserController extends Controller implements HasMiddleware
      *
      * @return RedirectResponse
      */
-    public function update(verwaltungEditUserRequest $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $user->fill($request->validated());
-        $gruppen = $request->input('gruppen');
-
-        if (! is_null($gruppen)) {
-
-            $gruppen = $this->groupsRepository->getGroups($gruppen);
-            $user->groups()->sync($gruppen);
-        }
+        // TODO-2.2: Update über UserService delegieren
+        $this->userService->updateUser($user, $request->validated());
+        $this->userService->syncGroups($user, $request->input('gruppen'));
 
         if ($request->user()->can('edit permission')) {
-            $permissions = $request->input('permissions');
-            $user->syncPermissions($permissions);
+            $this->userService->syncPermissions($user, $request->input('permissions'));
         }
 
         if (! is_null($request->roles)) {
-            if (auth()->user()->can('edit permission') or auth()->user()->can('assign roles to users')) {
-                if (auth()->user()->can('edit permission') and ! is_null($request->roles)) {
-                    $roles = Role::whereIn('name', $request->roles)->get();
-                    $roles->unique();
-                    $user->roles()->sync($roles);
-                } elseif (auth()->user()->can('assign roles to users') and ! is_null($request->roles)) {
-                    $roles = Role::whereIn('name', $request->roles)->whereHas('permissions', function ($query) {
-                        $query->where('name', 'role is assignable');
-                    })->get();
-                    $roles->unique();
-
-                    $old_roles = $user->roles()->whereDoesntHave('permissions', function ($query) {
-                        $query->where('name', 'role is assignable');
-                    })->get();
-
-                    $user->roles()->sync($roles);
-                    $user->roles()->attach($old_roles);
-                }
-            }
+            $this->userService->syncRoles($user, $request->input('roles'), $request->user());
         }
 
-        if ($request->user()->can('set password') and $request->input('new-password') != '') {
-            $user->password = Hash::make($request->input('new-password'));
+        if ($request->user()->can('set password') && $request->filled('new-password')) {
+            $this->userService->setPassword($user, $request->input('new-password'));
         }
 
-        if ($request->sorg2 != '') {
-            User::where('id', $request->sorg2)->update([
-                'sorg2' => $user->id,
-            ]);
-        }
-
-        if ($user->save()) {
-            return redirect()->back()->with([
-                'type' => 'success',
-                'Meldung' => 'Daten gespeichert.',
-            ]);
+        if ($request->filled('sorg2')) {
+            $this->userService->linkSorgeberechtigte($user, (int) $request->input('sorg2'));
         }
 
         return redirect()->back()->with([
-            'type' => 'danger',
-            'Meldung' => 'Update fehlgeschlagen',
+            'type' => 'success',
+            'Meldung' => 'Daten gespeichert.',
         ]);
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -252,51 +205,8 @@ class UserController extends Controller implements HasMiddleware
      */
     public function destroy(int $id, $redirect = true)
     {
-        try {
-            $user = User::findOrFail($id);
-            $user->groups()->detach();
-
-            if ($user->sorg2 != null) {
-                $sorg2 = User::where('id', '=', $user->sorg2)->first();
-                if (! is_null($sorg2)) {
-                    $sorg2->update([
-                        'sorg2' => null,
-                    ]
-                    );
-                }
-
-                $user->update([
-                    'sorg2' => null,
-                ]);
-            }
-
-            $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
-
-            Listen_Eintragungen::where('created_by', $user->id)->delete();
-            Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
-            Discussion::where('owner', $user->id)->update(['owner' => null]);
-            listen_termine::where('reserviert_fuer', $user->id)->delete();
-            Poll::where('author_id', $user->id)->update(['author_id' => null]);
-            Poll_Votes::where('author_id', $user->id)->delete();
-
-            Liste::query()->where('besitzer', $user->id)->update(['besitzer' => null]);
-
-            $user->listen_termine()->delete();
-            $user->userRueckmeldung()->delete();
-            $user->reinigung()->delete();
-
-            $user->schickzeiten_own()->delete();
-            $user->krankmeldungen()->withTrashed()->forceDelete();
-            $user->comments()->delete();
-
-            Post::query()->where('author', $user->id)->update(['author' => null]);
-
-            $user->delete();
-
-            $Fehler = '';
-        } catch (\Exception $exception) {
-            $Fehler = $exception;
-        }
+        $user = User::find($id);
+        $Fehler = $user ? $this->userService->deleteUser($user) : 'Benutzer nicht gefunden.';
 
         if ($redirect) {
             return redirect()->back()->with([
@@ -327,14 +237,14 @@ class UserController extends Controller implements HasMiddleware
             ]);
         }
 
-        $targetUser = User::find($id);
-        Log::warning('loginAsUser: Admin meldet sich als anderer User an', [
+        $targetUser = User::findOrFail($id);
+
+        Log::warning('Impersonation gestartet', [
             'admin_id' => $request->user()->id,
-            'admin_email' => $request->user()->email,
-            'target_user_id' => $id,
-            'target_user_email' => $targetUser?->email,
+            'admin_name' => $request->user()->name,
+            'target_id' => $targetUser->id,
+            'target_name' => $targetUser->name,
             'ip' => $request->ip(),
-            'timestamp' => now()->toIso8601String(),
         ]);
 
         session(['ownID' => Crypt::encryptString($request->user()->id)]);
@@ -386,33 +296,13 @@ class UserController extends Controller implements HasMiddleware
 
     public function massDelete(Request $request)
     {
-        // Die geschützten Rollen sind fest im Code definiert und NICHT über die Settings änderbar
-        $protectedRoles = ['Mitarbeiter', 'Vereinsmitglieder', 'Administrator'];
+        // TODO-2.2: Massenlöschung über UserService delegieren
         $userIds = $request->input('user_ids', []);
-        $fehler = '';
-        $deleted = 0;
-
-        foreach ($userIds as $userId) {
-            $user = User::find($userId);
-            if (! $user) {
-                continue;
-            }
-            if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
-                $fehler .= ($fehler ? ', ' : 'Nicht gelöscht: ').$user->name;
-
-                continue;
-            }
-            $ergebnis = $this->destroy($userId, false);
-            if ($ergebnis != '') {
-                $fehler .= ($fehler ? ', ' : 'Fehler bei: ').$user->name;
-            } else {
-                $deleted++;
-            }
-        }
+        $result = $this->userService->massDeleteUsers($userIds);
 
         return redirect()->back()->with([
-            'type' => ($fehler == '') ? 'success' : 'danger',
-            'Meldung' => ($deleted ? "$deleted Benutzer gelöscht. " : '').$fehler,
+            'type' => ($result['errors'] == '') ? 'success' : 'danger',
+            'Meldung' => ($result['deleted'] ? "{$result['deleted']} Benutzer gelöscht. " : '').$result['errors'],
         ]);
     }
 
