@@ -70,6 +70,10 @@ class UpdateUserRequest extends FormRequest
                 'string',
                 Password::min(10)->mixedCase()->numbers(),
             ],
+            'is_active' => [
+                'nullable',
+                'boolean',
+            ],
         ];
     }
 }

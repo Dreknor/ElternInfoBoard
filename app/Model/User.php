@@ -318,6 +318,11 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
 
+    public function pollVotes(): HasMany
+    {
+        return $this->hasMany(Poll_Votes::class, 'author_id');
+    }
+
     public function pflichtstunden(): HasMany
     {
         if ($this->sorg2 != null) {

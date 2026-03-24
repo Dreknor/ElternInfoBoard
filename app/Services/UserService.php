@@ -53,7 +53,7 @@ class UserService
             Mail::to($user->email)->send(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
             $emailSent = true;
             $emailStatus = 'E-Mail mit Startkennwort wurde erfolgreich versendet.';
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
             $emailStatus = 'Warnung: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
         }
@@ -63,9 +63,23 @@ class UserService
 
     /**
      * Benutzer-Stammdaten aktualisieren.
+     * Setzt deactivated_at automatisch bei Deaktivierung/Reaktivierung.
      */
     public function updateUser(User $user, array $data): bool
     {
+        // is_active: deactivated_at automatisch pflegen
+        if (array_key_exists('is_active', $data)) {
+            $isActive = filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+            if (! $isActive && $user->is_active !== false) {
+                // Wird gerade deaktiviert
+                $data['deactivated_at'] = now();
+            } elseif ($isActive) {
+                // Wird reaktiviert
+                $data['deactivated_at'] = null;
+            }
+            $data['is_active'] = $isActive;
+        }
+
         return $user->fill($data)->save();
     }
 

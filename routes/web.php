@@ -140,6 +140,8 @@ Route::middleware('auth')->group(function () {
 
         // Datenschutz
         Route::get('datenschutz', [DatenschutzController::class, 'show']);
+        Route::get('datenschutz/export/json', [DatenschutzController::class, 'exportJson'])->name('datenschutz.export.json');
+        Route::get('datenschutz/export/pdf', [DatenschutzController::class, 'exportPdf'])->name('datenschutz.export.pdf');
 
         // Kinderverwaltung
         Route::get('care/children', [\App\Http\Controllers\ChildController::class, 'index'])->name('child.index');
