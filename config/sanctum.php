@@ -48,7 +48,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Token-Ablaufzeit: 30 Tage (in Minuten). null = kein Ablauf.
+    // Gestohlene Tokens werden automatisch ungültig.
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------
@@ -63,7 +65,7 @@ return [
     |
     */
 
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', 'elterninfo_'),
 
     /*
     |--------------------------------------------------------------------------

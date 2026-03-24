@@ -49,8 +49,21 @@ class TerminController extends Controller implements HasMiddleware
         $termine->unique('id');
         $termine = $termine->sortBy('start');
 
+        $data=[];
+
+        foreach ($termine as $key => $termin) {
+            $data[] = [
+                'id' => $termin->id,
+                'start' => $termin->start->format('Y-m-d H:i:s'),
+                'ende' => $termin->ende->format('Y-m-d H:i:s'),
+                'terminname' => $termin->terminname,
+                'fullDay' => $termin->fullDay,
+            ];
+        }
+
+
         return response()->json([
             'anzahl' => $termine->count(),
-            'termine' => $termine], 200);
+            'termine' => $data], 200);
     }
 }

@@ -9,6 +9,7 @@ use App\Model\listen_termine;
 use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Log;
 
 class ListenController extends Controller implements HasMiddleware
 {
@@ -42,10 +43,66 @@ class ListenController extends Controller implements HasMiddleware
 
         $liste = Liste::findOrFail($eintrag->listen_id);
 
-        if ($liste->type != 'eintrag' or $liste->active == 0 or $liste->ende < now() or $eintrag->user_id != null) {
-            return response()->json(['message' => 'Not allowed'], 403);
+        // Prüfe, ob der User Zugriff auf die Liste hat
+        if ($liste->users->contains($user->id) == false && !$user->hasPermissionTo('edit terminliste', 'web')) {
+            Log::warning('Reserviere eintrag - User hat keinen Zugriff auf Liste', [
+                'eintrag_id' => $eintrag->id,
+                'user_id' => $user->id,
+                'liste_id' => $liste->id,
+                'liste_name' => $liste->listenname,
+                'reason' => 'User not in liste.users'
+            ]);
+            return response()->json(['message' => 'Not allowed - no access to list'], 403);
         }
 
+        // Prüfe den Typ der Liste
+        if ($liste->type != 'eintrag') {
+            Log::warning('Reserviere eintrag - Falscher Listentyp', [
+                'eintrag_id' => $eintrag->id,
+                'user_id' => $user->id,
+                'liste_id' => $liste->id,
+                'liste_type' => $liste->type,
+                'reason' => 'Wrong list type'
+            ]);
+            return response()->json(['message' => 'Not allowed - wrong list type'], 403);
+        }
+
+        // Prüfe, ob die Liste aktiv ist
+        if ($liste->active == 0) {
+            Log::warning('Reserviere eintrag - Liste ist inaktiv', [
+                'eintrag_id' => $eintrag->id,
+                'user_id' => $user->id,
+                'liste_id' => $liste->id,
+                'reason' => 'List inactive'
+            ]);
+            return response()->json(['message' => 'Not allowed - list inactive'], 403);
+        }
+
+        // Prüfe, ob die Liste abgelaufen ist
+        if ($liste->ende < now()) {
+            Log::warning('Reserviere eintrag - Liste ist abgelaufen', [
+                'eintrag_id' => $eintrag->id,
+                'user_id' => $user->id,
+                'liste_id' => $liste->id,
+                'liste_ende' => $liste->ende,
+                'reason' => 'List expired'
+            ]);
+            return response()->json(['message' => 'Not allowed - list expired'], 403);
+        }
+
+        // Prüfe, ob der Eintrag bereits vergeben ist
+        if ($eintrag->user_id != null) {
+            Log::warning('Reserviere eintrag - Eintrag bereits vergeben', [
+                'eintrag_id' => $eintrag->id,
+                'user_id' => $user->id,
+                'liste_id' => $liste->id,
+                'eintrag_user_id' => $eintrag->user_id,
+                'reason' => 'Entry already taken'
+            ]);
+            return response()->json(['message' => 'Not allowed - entry already taken'], 403);
+        }
+
+        // Prüfe, ob der User bereits einen Eintrag hat (wenn multiple = false)
         if ($liste->multiple == false) {
             $eintragungen = Listen_Eintragungen::query()
                 ->where('listen_id', $liste->id)
@@ -53,12 +110,25 @@ class ListenController extends Controller implements HasMiddleware
                 ->count();
 
             if ($eintragungen > 0) {
-                return response()->json(['message' => 'Not allowed'], 403);
+                Log::warning('Reserviere eintrag - User hat bereits einen Eintrag', [
+                    'eintrag_id' => $eintrag->id,
+                    'user_id' => $user->id,
+                    'liste_id' => $liste->id,
+                    'existing_entries' => $eintragungen,
+                    'reason' => 'User already has entry'
+                ]);
+                return response()->json(['message' => 'Not allowed - already has entry'], 403);
             }
         }
 
         $eintrag->user_id = $user->id;
         $eintrag->save();
+
+        Log::info('Eintrag erfolgreich reserviert', [
+            'eintrag_id' => $eintrag->id,
+            'user_id' => $user->id,
+            'liste_id' => $liste->id,
+        ]);
 
         return response()->json([
             'message' => 'Eintrag reserved'], 200);
@@ -177,7 +247,20 @@ class ListenController extends Controller implements HasMiddleware
 
             $listen = Liste::query()
                 ->whereDate('ende', '>=', now())
-                ->get();
+                ->get([
+                    'id',
+                    'listenname',
+                    'type',
+                    'comment',
+                    'besitzer',
+                    'visible_for_all',
+                    'active',
+                    'ende',
+                    'duration',
+                    'multiple',
+                    'make_new_entry',
+                    'creates_pflichtstunden',
+                ]);
         } else {
             $listen = $user->listen()
                 ->whereDate('ende', '>=', now())
@@ -196,6 +279,12 @@ class ListenController extends Controller implements HasMiddleware
 
         $result = [];
         foreach ($listen as $key => $liste) {
+            // Stelle sicher, dass keine Relationen geladen wurden
+            $liste->unsetRelation('users');
+            $liste->unsetRelation('groups');
+            $liste->unsetRelation('ersteller');
+            $liste->unsetRelation('eintragungen');
+            $liste->unsetRelation('termine');
 
             $result[] = $liste;
 
@@ -206,25 +295,18 @@ class ListenController extends Controller implements HasMiddleware
     }
 
     /**
-     * liefert die Eintragungen einer Liste
+     * Get the entries of a list.
      *
-     * Liefert die Eintragungen einer Liste.
-     * Wenn der User die Berechtigung hat, die Liste zu bearbeiten, werden die Namen der User angezeigt die die Eintragungen gemacht oder reserviert haben.
-     * Ansonsten wird nur angezeigt, ob die Eintragung vergeben ist oder nicht.
+     * Retrieves the entries of a list.
+     * If the user has permission to edit the list, the names of the users who made or reserved the entries are displayed.
+     * Otherwise, it only shows whether the entry is taken or not.
      *
-     * @group Listen
-     *
-     * @urlParam liste required ID der Liste
-     *
-     * @responseField eintragungen array Eintragungen
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @param  User  $user
+     * @param  Liste  $liste
+     * @return mixed
      */
-    public function getEintrag(Request $request, $liste)
+    private function getEintrag($user, $liste)
     {
-
-        $user = $request->user();
-
         $eintragungen = Listen_Eintragungen::query()
             ->where('listen_id', $liste->id)
             ->get();
@@ -236,20 +318,27 @@ class ListenController extends Controller implements HasMiddleware
                     $eintragungen[$key]->user_id = 'own';
                 } else {
                     if ($liste->visible_for_all == true or $user->hasPermissionTo('edit terminliste', 'web')) {
-                        $eintragungen[$key]->user_id = $eintragung->user->name;
+                        // Nur den Namen des Users zurückgeben, nicht das komplette User-Objekt
+                        $userName = $eintragung->user ? $eintragung->user->name : 'unbekannt';
+                        $eintragungen[$key]->user_id = $userName;
                     } else {
                         $eintragungen[$key]->user_id = 'vergeben';
                     }
                 }
             }
+
             if ($eintragung->created_by == $user->id) {
                 $eintragungen[$key]->created_by = 'own';
             } else {
                 $eintragungen[$key]->created_by = 'not own';
             }
+
+            // Entferne alle geladenen Relationen, um zu verhindern, dass User-Objekte zurückgegeben werden
+            $eintragungen[$key]->unsetRelation('user');
+            $eintragungen[$key]->unsetRelation('createdBy');
         }
 
-        return response()->json(['eintragungen' => $eintragungen], 200);
+        return $eintragungen;
     }
 
     /**
@@ -300,14 +389,17 @@ class ListenController extends Controller implements HasMiddleware
                     $termine[$key]->reserviert_fuer = 'own';
                 } else {
                     if ($liste->visible_for_all == true or $user->hasPermissionTo('edit terminliste', 'web')) {
-                        $termine[$key]->reserviert_fuer = $termin->eingetragenePerson->name;
-
+                        // Nur den Namen des Users zurückgeben, nicht das komplette User-Objekt
+                        $userName = $termin->eingetragenePerson ? $termin->eingetragenePerson->name : 'unbekannt';
+                        $termine[$key]->reserviert_fuer = $userName;
                     } else {
                         $termine[$key]->reserviert_fuer = 'vergeben';
                     }
                 }
             }
 
+            // Entferne die eingetragenePerson-Relation, um zu verhindern, dass User-Objekte zurückgegeben werden
+            $termine[$key]->unsetRelation('eingetragenePerson');
         }
 
         return $termine;

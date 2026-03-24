@@ -1,0 +1,353 @@
+{
+  "info": {
+    "name": "Elterninfo - Files API",
+    "description": "Collection für die Files API Endpunkte",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "elterninfo-files-api"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Get All Files",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?page=1&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Items per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by file name",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "created_at",
+                  "description": "Sort by: name, size, created_at",
+                  "disabled": true
+                },
+                {
+                  "key": "order",
+                  "value": "desc",
+                  "description": "Order: asc, desc",
+                  "disabled": true
+                },
+                {
+                  "key": "mime_type",
+                  "value": "",
+                  "description": "Filter by MIME type",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Files - With Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?search=document&sort=name&order=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "document"
+                },
+                {
+                  "key": "sort",
+                  "value": "name"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Files - Filter by MIME Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?mime_type=application/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "mime_type",
+                  "value": "application/pdf"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single File by UUID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files/{{file_uuid}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "{{file_uuid}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get MIME Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files/mime-types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "mime-types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get File Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/files/{{file_uuid}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "{{file_uuid}}", "download"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Examples",
+      "item": [
+        {
+          "name": "Example: Get PDF Files Sorted by Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?mime_type=application/pdf&sort=name&order=asc&per_page=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "mime_type",
+                  "value": "application/pdf"
+                },
+                {
+                  "key": "sort",
+                  "value": "name"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Example: Get Largest Files",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?sort=size&order=desc&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "size"
+                },
+                {
+                  "key": "order",
+                  "value": "desc"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Example: Search for Contract Files",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?search=vertrag",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "vertrag"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Example: Get Images Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files?mime_type=image/jpeg",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files"],
+              "query": [
+                {
+                  "key": "mime_type",
+                  "value": "image/jpeg",
+                  "description": "Can also use: image/png, image/gif, etc."
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://your-domain.com",
+      "type": "string"
+    },
+    {
+      "key": "api_token",
+      "value": "your-api-token-here",
+      "type": "string"
+    },
+    {
+      "key": "file_uuid",
+      "value": "example-uuid-here",
+      "type": "string"
+    }
+  ]
+}
+
+

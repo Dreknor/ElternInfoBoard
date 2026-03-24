@@ -29,6 +29,17 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
         $this->groups = Group::withoutGlobalScope(GetGroupsScope::class)->get();
     }
 
+    /** Gibt das konfigurierte Import-Passwort zurück oder ein zufälliges, falls ENV nicht gesetzt. */
+    private function getImportPassword(): string
+    {
+        $pw = config('app.import_aufnahme');
+        if (empty($pw)) {
+            \Illuminate\Support\Facades\Log::warning('PW_IMPORT_AUFNAHME ist nicht gesetzt – zufälliges Passwort wird verwendet');
+            return Str::password(16);
+        }
+        return $pw;
+    }
+
     public function collection(Collection $collection): void
     {
         foreach ($collection as $row) {

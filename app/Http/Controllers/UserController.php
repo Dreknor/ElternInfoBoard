@@ -225,6 +225,12 @@ class UserController extends Controller implements HasMiddleware
     public function loginAsUser(Request $request, $id)
     {
         if (! $request->user()->can('loginAsUser')) {
+            Log::warning('loginAsUser: Zugriff verweigert (Berechtigung fehlt)', [
+                'requestor_id' => $request->user()->id,
+                'requestor_email' => $request->user()->email,
+                'target_user_id' => $id,
+                'ip' => $request->ip(),
+            ]);
             return redirect()->back()->with([
                 'Meldung' => 'Berechtigung fehlt',
                 'type' => 'danger',
@@ -233,7 +239,6 @@ class UserController extends Controller implements HasMiddleware
 
         $targetUser = User::findOrFail($id);
 
-        // TODO-2.3: Audit-Log für Impersonation (sicherheitsrelevante Aktion)
         Log::warning('Impersonation gestartet', [
             'admin_id' => $request->user()->id,
             'admin_name' => $request->user()->name,

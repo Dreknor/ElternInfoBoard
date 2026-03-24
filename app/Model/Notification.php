@@ -40,7 +40,14 @@ class Notification extends Model
     protected static function booted(): void
     {
         static::created(function (Notification $notification) {
-            $notification->user->notify(new Push($notification->title, $notification->message));
+            try {
+                // Sende WebPush-Notification nur wenn Benutzer WebPush-Subscriptions hat
+                if ($notification->user && $notification->user->pushSubscriptions()->exists()) {
+                    $notification->user->notify(new Push($notification->title, $notification->message));
+                }
+            } catch (\Exception $e) {
+                \Log::warning("Fehler beim Senden der WebPush-Notification für Benutzer {$notification->user_id}: " . $e->getMessage());
+            }
         });
     }
 }

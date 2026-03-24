@@ -60,10 +60,28 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('login/keycloak', [LoginController::class, 'redirectToKeycloak'])->name('login.keycloak');
 Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCallback']);
+
+// POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam)
+Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
+
 Auth::routes(['register' => false]);
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
-Route::get('{uuid}/ical', [ICalController::class, 'createICal']);
+Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
+
+// API-Dokumentation nur für Admins zugänglich (enthält alle Endpunkte, Auth-Details etc.)
+Route::middleware(['auth', 'permission:edit settings'])->group(function () {
+    Route::get('docs', function () {
+        return response()->file(public_path('docs/index.html'));
+    })->name('docs.index');
+    Route::get('docs/{any}', function (string $any) {
+        $path = public_path('docs/' . $any);
+        if (file_exists($path) && is_file($path)) {
+            return response()->file($path);
+        }
+        abort(404);
+    })->where('any', '.*');
+});
 
 // Apple Touch Icon
 Route::get('apple-touch-icon-precomposed.png', function () {
@@ -98,6 +116,13 @@ Route::middleware('auth')->group(function () {
 
         // Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
+
+        // Stundenplan
+        Route::get('stundenplan', [\App\Http\Controllers\StundenplanController::class, 'index'])->middleware('can:view stundenplan')->name('stundenplan.index');
+        Route::get('stundenplan/klassen/{class}', [\App\Http\Controllers\StundenplanController::class, 'klassenAnsicht'])->middleware('can:view stundenplan')->name('stundenplan.klassen');
+        Route::get('stundenplan/lehrer/{teacher}', [\App\Http\Controllers\StundenplanController::class, 'lehrerAnsicht'])->middleware('can:view stundenplan teacher')->name('stundenplan.lehrer');
+        Route::get('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'showImport'])->middleware('permission:edit settings')->name('stundenplan.import');
+        Route::post('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'processImport'])->middleware('permission:edit settings')->name('stundenplan.import.process');
 
         Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
         Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
@@ -230,7 +255,7 @@ Route::middleware('auth')->group(function () {
         Route::get('rueckmeldungen/{posts_id}/createDiskussion', [RueckmeldungenController::class, 'createDiskussionRueckmeldung']);
 
         // Dashboard
-        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index']);
         Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
         // show posts
@@ -263,6 +288,7 @@ Route::middleware('auth')->group(function () {
         Route::get('listen', [ListenController::class, 'index']);
         Route::post('listen', [ListenController::class, 'store']);
         Route::get('listen/create', [ListenController::class, 'create']);
+        Route::match(['get', 'post'], 'listen/search', [ListenController::class, 'search'])->name('listen.search');
         Route::get('listen/{terminListe}', [ListenController::class, 'show']);
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
@@ -273,7 +299,6 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport']);
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
-        Route::post('listen/search', [ListenController::class, 'search'])->name('listen.search');
 
         // TerminListe
         Route::post('listen/termine/{liste}/store', [ListenTerminController::class, 'store']);
@@ -398,11 +423,13 @@ Route::middleware('auth')->group(function () {
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
             Route::get('settings', [SettingsController::class, 'index']);
             Route::put('settings/{group}', [SettingsController::class, 'update']);
+            Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
 
         });
 
-        Route::group(['middlewareGroups' => ['can:loginAsUser']], function () {
-            Route::get('showUser/{id}', [UserController::class, 'loginAsUser']);
+        // loginAsUser: POST statt GET (CSRF-Schutz), korrekte middleware-Syntax
+        Route::middleware('permission:loginAsUser')->group(function () {
+            Route::post('showUser/{id}', [UserController::class, 'loginAsUser']);
         });
 
         // Seitenverwaltung und -anzeige
@@ -545,9 +572,11 @@ Route::middleware('auth')->group(function () {
             ->name('arbeitsgemeinschaften.anmelden');
     });
 
-});
+    // Schuljahreswechsel im Settings-Bereich (erfordert Auth + Berechtigung)
+    Route::middleware(['password_expired', 'permission:schoolyear.change'])->group(function () {
+        Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
+        Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
+        Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+    });
 
-// Schuljahreswechsel im Settings-Bereich
-Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
-Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
-Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+});

@@ -13,7 +13,6 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\IcalendarGenerator\Components\Calendar;
@@ -38,13 +37,22 @@ class ListenController extends Controller
             ]);
         }
 
-        $query = $request->input('query');
+        // Bei POST-Request die Suchanfrage in Session speichern
+        if ($request->isMethod('post')) {
+            $query = $request->input('query');
+            session(['listen_search_query' => $query]);
+        } else {
+            // Bei GET-Request (Paginierung) die Suchanfrage aus Session holen
+            $query = session('listen_search_query', '');
+        }
+
         $archiv = Liste::where('ende', '<', now())
             ->where('listenname', 'LIKE', "%{$query}%")
             ->paginate(10);
 
         return view('listen.search', [
             'archiv' => $archiv,
+            'query' => $query,
         ]);
     }
 
@@ -53,11 +61,11 @@ class ListenController extends Controller
      *
      * @return View
      *
-     * @throws AuthorizationException
+     *
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', Liste::class);
+
 
         if ($request->user()->can('edit terminliste')) {
             $listen = Liste::where('ende', '>=', Carbon::today())->get();
@@ -104,7 +112,12 @@ class ListenController extends Controller
      */
     public function create()
     {
-        Gate::authorize('create', Liste::class);
+        if (!auth()->user()->can('create terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
 
         return view('listen.create', [
             'gruppen' => Group::all(),
@@ -120,7 +133,14 @@ class ListenController extends Controller
      */
     public function store(CreateListeRequest $request)
     {
-        Gate::authorize('create', Liste::class);
+
+        if (!auth()->user()->can('create terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
         $gruppen = $request->input('gruppen');
         if (is_null($gruppen)) {
             return redirect()->back()->with([
@@ -158,6 +178,13 @@ class ListenController extends Controller
      */
     public function show(Liste $terminListe)
     {
+        if (!auth()->user()->listen()->where('listen.id', $terminListe->id)->exists() and !auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
         if ($terminListe->type == 'termin') {
             $terminListe->load('termine');
             $terminListe->termine->sortBy('termin');
@@ -183,7 +210,12 @@ class ListenController extends Controller
      */
     public function edit(Liste $terminListe)
     {
-        Gate::authorize('editListe', $terminListe);
+        if (!auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
 
         return view('listen.edit', [
             'liste' => $terminListe,
@@ -201,7 +233,12 @@ class ListenController extends Controller
      */
     public function update(UpdateListenRequest $request, Liste $terminListe)
     {
-        Gate::authorize('editListe', $terminListe);
+        if (!auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
 
         $terminListe->update($request->validated());
 
@@ -221,6 +258,14 @@ class ListenController extends Controller
      */
     public function activate($liste)
     {
+        if (!auth()->user()->can('edit terminliste') and !$liste->besitzer == auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+
+        }
+
         $liste = Liste::find($liste);
         $liste->update([
             'active' => 1,
@@ -236,6 +281,14 @@ class ListenController extends Controller
      */
     public function deactivate($liste)
     {
+        if (!auth()->user()->can('edit terminliste') and !$liste->besitzer == auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+
+        }
+
         $liste = Liste::find($liste);
         $liste->update([
             'active' => 0,
@@ -281,7 +334,12 @@ class ListenController extends Controller
      */
     public function refresh(Liste $liste)
     {
-        Gate::authorize('editListe', $liste);
+        if (!auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
 
         $liste->update([
             'ende' => Carbon::now()->addWeeks(2),
@@ -302,7 +360,12 @@ class ListenController extends Controller
      */
     public function archiv(Liste $liste)
     {
-        Gate::authorize('editListe', $liste);
+        if (!auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
 
         $liste->update([
             'ende' => Carbon::now()->subDay(),
@@ -358,6 +421,13 @@ class ListenController extends Controller
 
     public function exportExcelTermine($id)
     {
+        if (! auth()->user()->can('edit terminliste')) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
         $liste = Liste::findOrFail($id);
 
         if ($liste->type == 'termin') {

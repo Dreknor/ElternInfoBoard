@@ -10,10 +10,10 @@ use App\Model\User;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
-use App\Settings\KeyCloakSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
+use App\Settings\StundenplanSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -40,10 +40,10 @@ class SettingsController extends Controller implements HasMiddleware
         $settings = new GeneralSetting;
         $mailSettings = new EmailSetting;
         $notifySettings = new NotifySetting;
-        $KeyCloakSetting = new KeyCloakSetting;
         $schickzeitenSetting = new SchickzeitenSetting;
         $careSettings = new CareSetting;
         $pflichtstundenSetting = new PflichtstundenSetting;
+        $stundenplanSettings = new StundenplanSetting;
 
         $groups = Group::all();
         $roles = Role::all();
@@ -59,10 +59,10 @@ class SettingsController extends Controller implements HasMiddleware
             'settings' => $settings,
             'mailSettings' => $mailSettings,
             'notifySettings' => $notifySettings,
-            'KeyCloakSetting' => $KeyCloakSetting,
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
             'pflichtstundenSettings' => $pflichtstundenSetting,
+            'stundenplanSettings' => $stundenplanSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -72,28 +72,6 @@ class SettingsController extends Controller implements HasMiddleware
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
-            case 'keycloak':
-                $validated = $request->validate([
-                    'enabled' => 'nullable|boolean',
-                    'client_id' => 'required|string',
-                    'client_secret' => 'required|string',
-                    'realm' => 'required|string',
-                    'base_url' => 'required|string',
-                    'maildomain' => 'required|string',
-
-                ]);
-
-                $keyCloakSetting = new KeyCloakSetting;
-                $keyCloakSetting->enabled = $validated['enabled'] ?? false;
-                $keyCloakSetting->client_id = $validated['client_id'];
-                $keyCloakSetting->client_secret = $validated['client_secret'];
-                $keyCloakSetting->realm = $validated['realm'];
-                $keyCloakSetting->redirect_uri = url('/login/keycloak/callback');
-                $keyCloakSetting->base_url = $validated['base_url'];
-                $keyCloakSetting->maildomain = $validated['maildomain'];
-                $keyCloakSetting->save();
-
-                break;
 
             case 'care':
                 $validated = $request->validate([
@@ -120,6 +98,43 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->end_time = $validated['end_time'] ?? null;
 
                 $careSettings->save();
+
+                // Schickzeiten von Kindern löschen, die durch die neue Konfiguration
+                // nicht mehr im Care-Modul sind
+                $newGroups = $careSettings->groups_list;
+                $newClasses = $careSettings->class_list;
+
+                if (! empty($newGroups) && ! empty($newClasses)) {
+                    $nonCareChildren = \App\Model\Child::query()
+                        ->where(function ($query) use ($newGroups, $newClasses) {
+                            $query->whereNotIn('group_id', $newGroups)
+                                ->orWhereNotIn('class_id', $newClasses)
+                                ->orWhereNull('group_id')
+                                ->orWhereNull('class_id');
+                        })
+                        ->whereHas('schickzeiten')
+                        ->get();
+
+                    $deletedTotal = 0;
+                    foreach ($nonCareChildren as $nonCareChild) {
+                        $count = \App\Model\Schickzeiten::where('child_id', $nonCareChild->id)->count();
+                        \App\Model\Schickzeiten::where('child_id', $nonCareChild->id)->each(function ($sz) {
+                            $sz->delete();
+                        });
+                        $deletedTotal += $count;
+                        \Illuminate\Support\Facades\Log::info(
+                            "Schickzeiten für Kind {$nonCareChild->first_name} {$nonCareChild->last_name} (ID: {$nonCareChild->id}) gelöscht – Care-Einstellungen geändert.",
+                            ['deleted_count' => $count]
+                        );
+                    }
+
+                    if ($deletedTotal > 0) {
+                        return redirect()->back()->with([
+                            'Meldung' => "Einstellungen gespeichert. Es wurden {$deletedTotal} Schickzeit(en) von " . $nonCareChildren->count() . " Kind(ern) gelöscht, die nicht mehr im Care-Modul sind.",
+                            'type' => 'warning',
+                        ]);
+                    }
+                }
 
                 break;
             case 'schickzeiten':
@@ -319,11 +334,43 @@ class SettingsController extends Controller implements HasMiddleware
                 $pflichtstundenSetting->pflichtstunden_bereiche = $bereiche;
                 $pflichtstundenSetting->save();
                 break;
+
+            case 'stundenplan':
+                $validated = $request->validate([
+                    'allow_web_import' => 'nullable|boolean',
+                    'allow_api_import' => 'nullable|boolean',
+                    'show_absent_teachers' => 'nullable|boolean',
+                ]);
+
+                $stundenplanSetting = new StundenplanSetting;
+                $stundenplanSetting->allow_web_import = $request->has('allow_web_import');
+                $stundenplanSetting->allow_api_import = $request->has('allow_api_import');
+                $stundenplanSetting->show_absent_teachers = $request->has('show_absent_teachers');
+                $stundenplanSetting->save();
+
+                // Clear cache
+                Cache::forget('stundenplan_data');
+                break;
         }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Einstellungen gespeichert',
+        ]);
+    }
+
+    /**
+     * Regenerate Stundenplan API Key
+     */
+    public function regenerateStundenplanApiKey(Request $request): RedirectResponse
+    {
+        $stundenplanSetting = new StundenplanSetting;
+        $stundenplanSetting->import_api_key = \Illuminate\Support\Str::random(64);
+        $stundenplanSetting->save();
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Neuer API-Key erfolgreich generiert',
         ]);
     }
 

@@ -163,6 +163,29 @@ class ChildController extends Controller implements HasMiddleware
             ])
         );
 
+        // Nach dem Update prüfen, ob das Kind noch im Care-Modul ist.
+        // Falls nicht, werden alle Schickzeiten des Kindes automatisch gelöscht.
+        $careSettings = new \App\Settings\CareSetting;
+        $isInCare = in_array($child->group_id, $careSettings->groups_list)
+            && in_array($child->class_id, $careSettings->class_list);
+
+        if (! $isInCare) {
+            $deletedCount = \App\Model\Schickzeiten::where('child_id', $child->id)->count();
+            if ($deletedCount > 0) {
+                \App\Model\Schickzeiten::where('child_id', $child->id)->each(function ($sz) {
+                    $sz->delete();
+                });
+                \Illuminate\Support\Facades\Log::info(
+                    "Schickzeiten für Kind {$child->first_name} {$child->last_name} (ID: {$child->id}) automatisch gelöscht – Kind ist nicht mehr im Care-Modul.",
+                    ['deleted_count' => $deletedCount]
+                );
+                return redirect()->back()->with([
+                    'Meldung' => "Kind wurde erfolgreich bearbeitet. Da das Kind nicht mehr im Care-Modul ist, wurden {$deletedCount} Schickzeit(en) automatisch gelöscht.",
+                    'type' => 'warning',
+                ]);
+            }
+        }
+
         return redirect()->back()->with([
             'Meldung' => 'Kind wurde erfolgreich bearbeitet',
             'type' => 'success',

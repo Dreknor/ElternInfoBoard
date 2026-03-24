@@ -14,10 +14,10 @@ return [
         GeneralSetting::class,
         EmailSetting::class,
         CareSetting::class,
-        \App\Settings\KeyCloakSetting::class,
         \App\Settings\NotifySetting::class,
         \App\Settings\PflichtstundenSetting::class,
         \App\Settings\SchickzeitenSetting::class,
+        \App\Settings\StundenplanSetting::class,
 
     ],
 
@@ -49,7 +49,7 @@ return [
             'type' => Spatie\LaravelSettings\SettingsRepositories\DatabaseSettingsRepository::class,
             'model' => null,
             'table' => null,
-            'connection' => null,
+            'connection' => env('DB_CONNECTION', 'mysql'),
         ],
         'redis' => [
             'type' => Spatie\LaravelSettings\SettingsRepositories\RedisSettingsRepository::class,

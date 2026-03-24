@@ -60,11 +60,26 @@ try {
 
         Schedule::call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->weeklyOn(6, '00:00');
 
+        // Anwesenheitsabfragen-Erinnerungen - täglich um 08:00 Uhr
+        Schedule::job(new \App\Jobs\SendAttendanceQueryReminderJob)->dailyAt('08:00');
+
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 
         // Alte Logs automatisch löschen (alle 7 Tage, Logs älter als 90 Tage)
         Schedule::command('logs:cleanup --days=90')->weeklyOn(1, '02:00');
+
+        // Alte CheckIns automatisch löschen (täglich, CheckIns älter als 3 Monate)
+        Schedule::command('checkins:cleanup --months=3')->dailyAt('03:00');
+
+        // Alte Schickzeiten mit spezifischem Datum löschen (täglich, älter als 2 Wochen)
+        Schedule::command('schickzeiten:cleanup --weeks=2')->dailyAt('03:30');
+
+        // Schickzeiten von Kindern löschen, die nicht mehr im Care-Modul sind
+        Schedule::command('schickzeiten:cleanup-non-care')->dailyAt('03:35');
+
+        // Alte Child Notices automatisch löschen (täglich, Child Notices älter als 3 Monate)
+        Schedule::command('child-notices:cleanup --months=3')->dailyAt('03:45');
     }
 } catch (\Exception $e) {
     // Silently catch exceptions during migration/setup

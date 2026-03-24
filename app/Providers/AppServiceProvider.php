@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Model\PersonalAccessToken;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -11,12 +12,16 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use App\Model\Liste;
+use App\Policies\TerminListenPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,11 +47,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSetting $settings): void
     {
+        // Policy-Registrierung
+        Gate::policy(Liste::class, TerminListenPolicy::class);
+
+        // Use custom PersonalAccessToken model with explicit MySQL connection
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
         Paginator::useBootstrap();
 
         View::share('settings', $settings);
 
         Schema::defaultStringLength(191);
+
+        // Set Laravel locale
+        app()->setLocale('de');
 
         setlocale(LC_TIME, 'de_DE');
         Carbon::setLocale('de_DE');
@@ -178,6 +192,18 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('global', function (Request $request) {
             return Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).
+        // Verhindert Brute-Force-Angriffe auf den API-Key.
+        RateLimiter::for('external-api', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
+
+        // Rate-Limit für Login-Endpunkt (Magic-Link-Anfragen + Passwort-Login).
+        // Verhindert E-Mail-Bombing und Brute-Force auf Passwörter.
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
         });
 
         Route::model('event', \App\Model\ElternratEvent::class);

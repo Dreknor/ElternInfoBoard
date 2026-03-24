@@ -26,6 +26,16 @@ class VereinImport implements ToCollection, WithHeadingRow
         $this->Gruppe = $group;
     }
 
+    private function getImportPassword(): string
+    {
+        $pw = config('app.import_verein');
+        if (empty($pw)) {
+            Log::warning('PW_IMPORT_VEREIN ist nicht gesetzt – zufälliges Passwort wird verwendet');
+            return Str::password(16);
+        }
+        return $pw;
+    }
+
     public function collection(Collection $collection): void
     {
 
