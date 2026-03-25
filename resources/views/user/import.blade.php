@@ -131,6 +131,30 @@
                             <input type="file" name="file" id="customFile" accept=".xls,.xlsx" class="form-control-file" required>
                         </div>
                     </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-group w-100">
+                            <label class="font-weight-bold text-muted">
+                                <i class="fas fa-download mr-1"></i> Import-Vorlage herunterladen
+                            </label>
+                            <div>
+                                <a x-show="importTyp === 'eltern'"
+                                   href="{{ route('users.vorlage.eltern') }}"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Eltern (.ods)
+                                </a>
+                                <a x-show="importTyp === 'aufnahme'"
+                                   href="{{ route('users.vorlage.aufnahme') }}"
+                                   class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Aufnahme (.ods)
+                                </a>
+                                <a x-show="importTyp === 'mitarbeiter'"
+                                   href="{{ route('users.vorlage.mitarbeiter') }}"
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Mitarbeiter (.ods)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Eltern-Import: Sicherheitsbestätigung --}}

@@ -384,6 +384,11 @@ Route::middleware('auth')->group(function () {
             Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
             Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 
+            Route::get('users/vorlage/eltern', [ImportController::class, 'downloadElternVorlage'])->middleware(['permission:import user'])->name('users.vorlage.eltern');
+            Route::get('users/vorlage/aufnahme', [ImportController::class, 'downloadAufnahmeVorlage'])->middleware(['permission:import user'])->name('users.vorlage.aufnahme');
+            Route::get('users/vorlage/mitarbeiter', [ImportController::class, 'downloadMitarbeiterVorlage'])->middleware(['permission:import user'])->name('users.vorlage.mitarbeiter');
+            Route::get('users/vorlage/verein', [ImportController::class, 'downloadVereinVorlage'])->middleware(['permission:import user'])->name('users.vorlage.verein');
+
             Route::delete('users/{id}', [UserController::class, 'destroy']);
             Route::get('users/mass/delete', [UserController::class, 'showMassDelete']);
             Route::delete('users/mass/delete', [UserController::class, 'massDelete'])->name('users.massDelete');

@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AufnahmeImportVorlage;
+use App\Exports\ElternImportVorlage;
+use App\Exports\MitarbeiterImportVorlage;
+use App\Exports\VereinImportVorlage;
 use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
@@ -14,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 
@@ -91,6 +96,30 @@ class ImportController extends Controller implements HasMiddleware
             ]);
         }
     }
+
+    // ─── Vorlagen-Downloads ───────────────────────────────────────────────────
+
+    public function downloadElternVorlage()
+    {
+        return Excel::download(new ElternImportVorlage(), 'eltern-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    public function downloadAufnahmeVorlage()
+    {
+        return Excel::download(new AufnahmeImportVorlage(), 'aufnahme-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    public function downloadMitarbeiterVorlage()
+    {
+        return Excel::download(new MitarbeiterImportVorlage(), 'mitarbeiter-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    public function downloadVereinVorlage()
+    {
+        return Excel::download(new VereinImportVorlage(), 'verein-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     public function importVereinForm()
     {
