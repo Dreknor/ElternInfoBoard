@@ -73,7 +73,6 @@ class SettingsController extends Controller implements HasMiddleware
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
-
             case 'care':
                 $validated = $request->validate([
                     'view_detailed_care' => 'nullable|boolean',

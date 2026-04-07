@@ -6,6 +6,7 @@ return new class extends SettingsMigration
 {
     public function up(): void
     {
+
         $this->migrator->add('care.bundesland', 'SN');
     }
 };
