@@ -7,6 +7,7 @@ use App\Model\Group;
 use App\Model\Groups;
 use App\Model\Module;
 use App\Model\User;
+use App\Services\HolidayService;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
@@ -106,9 +107,23 @@ class SettingsController extends Controller implements HasMiddleware
                     'days_before_lock' => 'integer|min:1',
                     'info_to' => 'nullable|exists:users,id',
                     'end_time' => 'nullable|date_format:H:i',
+                    'bundesland' => 'required|string|in:' . implode(',', array_keys(HolidayService::bundeslaender())),
                 ]);
 
                 $careSettings = new CareSetting;
+
+                // Wenn Bundesland geändert wurde, Ferien-Cache invalidieren und alte Daten löschen
+                $oldBundesland = $careSettings->bundesland;
+                $newBundesland = $validated['bundesland'];
+                if ($oldBundesland !== $newBundesland) {
+                    // Alten Cache entfernen
+                    $oldService = new HolidayService($oldBundesland);
+                    $oldService->clearCache();
+
+                    // Holidays des alten Bundeslandes löschen damit neue geladen werden
+                    \App\Model\Holiday::where('bundesland', $oldBundesland)->delete();
+                }
+
                 $careSettings->view_detailed_care = $validated['view_detailed_care'] ?? false;
                 $careSettings->hide_childs_when_absent = $validated['hide_childs_when_absent'] ?? false;
                 $careSettings->groups_list = $validated['groups_list'] ?? [];
@@ -118,6 +133,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->days_before_lock = $validated['days_before_lock'] ?? 7;
                 $careSettings->info_to = $validated['info_to'] ?? null;
                 $careSettings->end_time = $validated['end_time'] ?? null;
+                $careSettings->bundesland = $newBundesland;
 
                 $careSettings->save();
 

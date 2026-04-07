@@ -12,6 +12,7 @@ class Holiday extends Model
 
     protected $fillable = [
         'year',
+        'bundesland',
         'name',
         'start',
         'end',

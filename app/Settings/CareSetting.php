@@ -22,6 +22,8 @@ class CareSetting extends Settings
 
     public ?int $info_to;
 
+    public string $bundesland;
+
     public static function group(): string
     {
         return 'Care';

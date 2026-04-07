@@ -115,7 +115,7 @@
                                                             @endif
                                                         @endforeach
                                                     @endif
-                                                        @if($child->arbeitsgemeinschaften_today()->isNotEmpty())
+                                                        @if(!($isFerientag ?? false) && $child->arbeitsgemeinschaften_today()->isNotEmpty())
                                                                 @foreach($child->arbeitsgemeinschaften_today() as $ag)
                                                                     <span class="badge badge-primary ml-1">
                                                                 <i class="fas fa-users"></i> AG
