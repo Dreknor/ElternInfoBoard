@@ -2,8 +2,8 @@
 
 namespace App\Mail;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Bus\Queueable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -12,6 +12,7 @@ class AktuelleInformationen extends Mailable
     use Queueable, SerializesModels;
 
     protected Collection|array $news;
+
     protected Collection|array $news_external;
 
     protected string $name;
@@ -20,9 +21,9 @@ class AktuelleInformationen extends Mailable
 
     protected Collection|array $termine;
 
-    protected  Collection|array $gta;
+    protected Collection|array $gta;
 
-    //protected $files;
+    // protected $files;
 
     protected Collection|array $listen;
 
@@ -31,19 +32,17 @@ class AktuelleInformationen extends Mailable
      *
      * @return void
      */
-    public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine,  Collection|array $gta)
+    public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine, Collection|array $gta)
     {
-            $news = new Collection($news);
+        $news = new Collection($news);
 
-
-        $this->news = $news->filter(function ($post){
-           return $post->external == 0;
+        $this->news = $news->filter(function ($post) {
+            return $post->external == 0;
         });
 
-        $this->news_external = $news->filter(function ($post){
-           return $post->external != 0;
+        $this->news_external = $news->filter(function ($post) {
+            return $post->external != 0;
         });
-
 
         $this->name = $name;
         $this->diskussionen = $diskussionen;

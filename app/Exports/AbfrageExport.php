@@ -8,18 +8,14 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-
-/**
- *
- */
-class AbfrageExport implements withHeadings, withMapping, FromCollection, ShouldAutoSize
+class AbfrageExport implements FromCollection, ShouldAutoSize, withHeadings, withMapping
 {
-
     public $rueckmeldungen;
+
     public $options;
 
     /**
-     * @param $rueckmeldung
+     * @param  $rueckmeldung
      */
     public function __construct($options, $rueckmeldungen)
     {
@@ -27,18 +23,16 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
         $this->options = $options;
     }
 
-
     public function headings(): array
     {
-        $options = ['Benutzer', 'Email','Zeitpunkt'];
+        $options = ['Benutzer', 'Email', 'Zeitpunkt'];
 
         foreach ($this->options as $option) {
             $options[] = "$option->option";
-        };
+        }
 
         return $options;
     }
-
 
     public function map($userrueckmeldung): array
     {
@@ -59,7 +53,7 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
             $answer = Str::replace('<br />', '', $answer);
 
             $row[] = $answer;
-        };
+        }
 
         return $row;
 
@@ -67,10 +61,7 @@ class AbfrageExport implements withHeadings, withMapping, FromCollection, Should
 
     public function collection()
     {
-        //dump($this->rueckmeldungen);
+        // dump($this->rueckmeldungen);
         return $this->rueckmeldungen;
     }
-
-
-
 }

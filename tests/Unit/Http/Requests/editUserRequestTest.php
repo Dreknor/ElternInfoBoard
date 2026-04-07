@@ -18,13 +18,13 @@ class editUserRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new editUserRequest();
+        $this->subject = new editUserRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -41,7 +41,7 @@ class editUserRequestTest extends TestCase
     /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);

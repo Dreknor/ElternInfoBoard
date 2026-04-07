@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Model\User;
 
 class ElternratEvent extends Model
 {
@@ -23,11 +22,14 @@ class ElternratEvent extends Model
         'reminder_hours',
     ];
 
-    protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'send_reminder' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_time' => 'datetime',
+            'end_time' => 'datetime',
+            'send_reminder' => 'boolean',
+        ];
+    }
 
     /**
      * Get the creator of the event
@@ -93,4 +95,3 @@ class ElternratEvent extends Model
         return $this->start_time->isFuture();
     }
 }
-

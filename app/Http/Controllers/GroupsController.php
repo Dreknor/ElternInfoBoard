@@ -16,7 +16,6 @@ use Illuminate\View\View;
 
 class GroupsController extends Controller
 {
-
     /**
      * @return View
      */
@@ -30,7 +29,7 @@ class GroupsController extends Controller
         } else {
             return redirect(url('/'))->with([
                 'type' => 'warning',
-                'Meldung' => 'Berechtigung fehlt'
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
@@ -42,7 +41,6 @@ class GroupsController extends Controller
     /**
      * erstellt neue Gruppe
      *
-     * @param CreateGroupRequest $createGroupRequest
      * @return RedirectResponse
      */
     public function store(CreateGroupRequest $createGroupRequest)
@@ -74,7 +72,6 @@ class GroupsController extends Controller
         $group->owner_id = auth()->user()->id;
         $group->save();
 
-
         Cache::forget('groups');
 
         return redirect()->back()->with([
@@ -92,7 +89,6 @@ class GroupsController extends Controller
                 'Meldung' => 'Berechtigung fehlt.',
             ]);
         }
-
 
         return view('groups.addUser')->with([
             'group' => $group,
@@ -128,7 +124,7 @@ class GroupsController extends Controller
             ]);
         }
 
-        if (!$group->users->contains($request->user_id)) {
+        if (! $group->users->contains($request->user_id)) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Benutzer ist nicht in der Gruppe.',
@@ -144,16 +140,13 @@ class GroupsController extends Controller
     }
 
     /**
-     *
      * Löscht die angegebene Gruppe
      *
-     * @param Request $request
-     * @param Group $group
      * @return RedirectResponse|void
      */
     public function delete(Request $request, Group $group)
     {
-        if (!auth()->user()->can('delete groups') and $group->owner_id !== auth()->id()) {
+        if (! auth()->user()->can('delete groups') and $group->owner_id !== auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt.',

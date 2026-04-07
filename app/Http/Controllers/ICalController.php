@@ -12,7 +12,6 @@ use Spatie\IcalendarGenerator\Components\Event;
 class ICalController extends Controller
 {
     /**
-     * @param $uuid
      * @return Response
      */
     public function createICal($uuid)
@@ -24,19 +23,19 @@ class ICalController extends Controller
                 return response('Kalender nicht gefunden', 404);
             }
 
-            $prefix = ($user->calendar_prefix != null) ? '(' . $user->calendar_prefix . ') ' : '';
+            $prefix = ($user->calendar_prefix != null) ? '('.$user->calendar_prefix.') ' : '';
 
             if ($user->releaseCalendar) {
                 $Termine = $user->termine;
 
-                //Termine aus Listen holen
+                // Termine aus Listen holen
                 $listen_termine = $user->listen_termine()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
 
-                //Ergänze Listeneintragungen
+                // Ergänze Listeneintragungen
                 if (! is_null($listen_termine) and count($listen_termine) > 0) {
                     foreach ($listen_termine as $termin) {
                         $newTermin = new Termin([
-                            'terminname' => $prefix . '' . $termin->liste->listenname,
+                            'terminname' => $prefix.''.$termin->liste->listenname,
                             'start' => $termin->termin->timezone('Europe/Berlin'),
                             'ende' => $termin->termin->copy()->addMinutes($termin->liste->duration),
                             'fullDay' => null,
@@ -45,11 +44,11 @@ class ICalController extends Controller
                     }
                 }
 
-                //Listentermine von Sorg2
+                // Listentermine von Sorg2
                 if (! is_null($user->sorgeberechtigter2)) {
                     foreach ($user->sorgeberechtigter2->listen_termine()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
                         $newTermin = new Termin([
-                            'terminname' => $prefix . '' . $termin->liste->listenname,
+                            'terminname' => $prefix.''.$termin->liste->listenname,
                             'start' => $termin->termin->timezone('Europe/Berlin'),
                             'ende' => $termin->termin->copy()->addMinutes($termin->liste->duration),
                             'fullDay' => null,
@@ -67,7 +66,7 @@ class ICalController extends Controller
                 foreach ($Termine as $event) {
                     if ($event->fullDay) {
                         $icalObject->event(Event::create()
-                            ->name($prefix . '' . $event->terminname)
+                            ->name($prefix.''.$event->terminname)
                             ->uniqueIdentifier(($event->id) ?: uuid_create())
                             ->startsAt($event->start->timezone('Europe/Berlin'))
                             ->endsAt($event->ende->timezone('Europe/Berlin'))
@@ -75,7 +74,7 @@ class ICalController extends Controller
                             ->fullDay());
                     } else {
                         $icalObject->event(Event::create()
-                            ->name($prefix . '' . $event->terminname)
+                            ->name($prefix.''.$event->terminname)
                             ->startsAt($event->start->timezone('Europe/Berlin'))
                             ->endsAt($event->ende->timezone('Europe/Berlin'))
                             ->uniqueIdentifier(($event->id) ?: uuid_create())
@@ -105,7 +104,7 @@ class ICalController extends Controller
         $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');
 
-        //ICAL erstellen
+        // ICAL erstellen
 
         $icalObject = Calendar::create(config('app.name'));
 

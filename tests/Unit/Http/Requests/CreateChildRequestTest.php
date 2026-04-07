@@ -3,9 +3,6 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\CreateChildRequest;
-
-use App\Model\User;
-
 use Tests\TestCase;
 
 /**
@@ -20,16 +17,16 @@ class CreateChildRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateChildRequest();
+        $this->subject = new CreateChildRequest;
     }
 
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         // Test ohne authentifizierten Benutzer
         $actual = $this->subject->authorize();
@@ -45,10 +42,10 @@ class CreateChildRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

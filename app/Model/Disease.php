@@ -4,22 +4,22 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Disease extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer'
-    ];
-    protected $visible = [
-        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer', 'id'
+        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer',
     ];
 
-    public function activeDiseases()
+    protected $visible = [
+        'name', 'reporting', 'wiederzulassung_durch', 'wiederzulassung_wann', 'aushang_dauer', 'id',
+    ];
+
+    public function activeDiseases(): HasMany
     {
         return $this->hasMany(ActiveDisease::class);
     }
-
-
 }

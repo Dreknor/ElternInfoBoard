@@ -18,7 +18,7 @@ class SettingsControllerTest extends TestCase
     /**
      * @test
      */
-    public function module_returns_an_ok_response_for_authorized_user()
+    public function module_returns_an_ok_response_for_authorized_user(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'edit settings']);
@@ -35,14 +35,11 @@ class SettingsControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthorized_user_cannot_access_settings()
+    public function unauthorized_user_cannot_access_settings(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $response = $this->actingAs($user)->get('settings');
 
         $response->assertForbidden();
     }
-
 }
-
-

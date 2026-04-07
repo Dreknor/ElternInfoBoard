@@ -19,13 +19,13 @@ class CreateListeRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateListeRequest();
+        $this->subject = new CreateListeRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('create terminliste');
@@ -39,10 +39,10 @@ class CreateListeRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

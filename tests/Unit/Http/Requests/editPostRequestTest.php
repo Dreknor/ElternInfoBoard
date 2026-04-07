@@ -3,9 +3,8 @@
 namespace Tests\Unit\Http\Requests;
 
 use App\Http\Requests\editPostRequest;
-use App\Model\User;
 use App\Model\Post;
-use Spatie\Permission\Models\Permission;
+use App\Model\User;
 use Tests\TestCase;
 
 /**
@@ -20,13 +19,13 @@ class editPostRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new editPostRequest();
+        $this->subject = new editPostRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         $post = Post::factory()->create(['author' => $user->id]);
@@ -54,7 +53,7 @@ class editPostRequestTest extends TestCase
     /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 
@@ -62,4 +61,3 @@ class editPostRequestTest extends TestCase
         // Validierungsregeln werden durch die Request-Klasse definiert
     }
 }
-

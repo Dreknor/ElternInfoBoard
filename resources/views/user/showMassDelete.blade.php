@@ -37,26 +37,26 @@
                 </div>
             </div>
             <div class="card-body">
-                <table class="table" id="userTable">
-                    <thead>
-                    <tr>
-                        <td></td>
-                        <th>Name</th>
-                        <th>E-Mail</th>
-                        <th>Gruppen</th>
-                        <th>Rechte</th>
-                        <th>Verknüpft</th>
-                        <th>letzte E-Mail</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <form action="{{url('users/mass/delete')}}" method="post" class="form-horizontal">
-                        @csrf
-                        @method('delete')
+                <form action="{{url('users/mass/delete')}}" method="post">
+                    @csrf
+                    @method('delete')
+                    <table class="table" id="userTable">
+                        <thead>
+                        <tr>
+                            <td></td>
+                            <th>Name</th>
+                            <th>E-Mail</th>
+                            <th>Gruppen</th>
+                            <th>Rechte</th>
+                            <th>Verknüpft</th>
+                            <th>letzte E-Mail</th>
+                        </tr>
+                        </thead>
+                        <tbody>
                         @foreach($users as $user)
                             <tr>
                                 <td>
-                                    <input type="checkbox" name="users[]" value="{{$user->id}}" checked
+                                    <input type="checkbox" name="user_ids[]" value="{{$user->id}}" checked
                                            class="custom-checkbox">
                                 </td>
                                 <td>
@@ -96,17 +96,12 @@
                                 </td>
                             </tr>
                         @endforeach
-                        <tr>
-                            <td colspan="7">
-                                <button type="submit" class="btn btn-danger btn-block">
-                                    Ausgewählte löschen
-                                </button>
-                            </td>
-                        </tr>
-                    </form>
-
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                    <button type="submit" class="btn btn-danger btn-block mt-3">
+                        Ausgewählte löschen
+                    </button>
+                </form>
             </div>
         </div>
     </div>

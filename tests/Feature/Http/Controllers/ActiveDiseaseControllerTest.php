@@ -19,13 +19,13 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_view_create_disease_form()
+    public function authorized_user_can_view_create_disease_form(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
         $user->givePermissionTo('manage diseases');
 
-        $response = $this->actingAs($user)->get('/diseases/create');
+        $response = $this->actingAs($user)->get(route('active-diseases.create'));
 
         $response->assertStatus(200);
         $response->assertViewIs('krankmeldung.createDisease');
@@ -34,7 +34,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_create_active_disease()
+    public function authorized_user_can_create_active_disease(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
@@ -42,7 +42,7 @@ class ActiveDiseaseControllerTest extends TestCase
 
         $disease = Disease::factory()->create();
 
-        $response = $this->actingAs($user)->post('/diseases/create', [
+        $response = $this->actingAs($user)->post(route('active-diseases.store'), [
             'disease_id' => $disease->id,
             'start' => now()->format('Y-m-d'),
             'end' => now()->addDays(7)->format('Y-m-d'),
@@ -62,7 +62,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function authorized_user_can_deactivate_disease()
+    public function authorized_user_can_deactivate_disease(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         Permission::create(['name' => 'manage diseases']);
@@ -83,12 +83,12 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthorized_user_cannot_manage_diseases()
+    public function unauthorized_user_cannot_manage_diseases(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         $disease = Disease::factory()->create();
 
-        $response = $this->actingAs($user)->post('/diseases/create', [
+        $response = $this->actingAs($user)->post(route('active-diseases.store'), [
             'disease_id' => $disease->id,
             'start' => now()->format('Y-m-d'),
             'end' => now()->addDays(7)->format('Y-m-d'),
@@ -100,7 +100,7 @@ class ActiveDiseaseControllerTest extends TestCase
     /**
      * @test
      */
-    public function active_diseases_can_be_created_and_retrieved()
+    public function active_diseases_can_be_created_and_retrieved(): void
     {
         $user = User::factory()->create();
 
@@ -112,4 +112,3 @@ class ActiveDiseaseControllerTest extends TestCase
         $this->assertEquals(2, $activeCount);
     }
 }
-

@@ -38,11 +38,11 @@
                                                 {{$modul->description}}
                                             </td>
                                             <td>
-                                                @if(array_key_exists('nav', $modul->options))
+                                                @if(is_array($modul->options) && array_key_exists('nav', $modul->options))
                                                     <label class="switch">
                                                         <input type="checkbox" class="bottomMenuButton"
                                                                id="{{$modul->setting}}"
-                                                               @if(array_key_exists('bottom-nav' , $modul->options['nav']) and $modul->options['nav']['bottom-nav']== "true") checked @endif>
+                                                                @if(is_array($modul->options['nav']) && ($modul->options['nav']['bottom-nav'] ?? null) == "true") checked @endif>
                                                         <span class="slider round"></span>
                                                     </label>
                                                 @else
@@ -53,7 +53,7 @@
                                                 <!-- Rounded switch -->
                                                 <label class="switch">
                                                     <input type="checkbox" class="activButton" id="{{$modul->setting}}"
-                                                           @if($modul->options['active'] ==1) checked @endif>
+                                                           @if(is_array($modul->options) && ($modul->options['active'] ?? 0) == 1) checked @endif>
                                                     <span class="slider round"></span>
                                                 </label>
                                             </td>

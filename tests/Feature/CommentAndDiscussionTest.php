@@ -19,7 +19,7 @@ class CommentAndDiscussionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_comment()
+    public function user_can_create_comment(): void
     {
         $user = User::factory()->create();
         $post = Post::factory()->create();
@@ -42,7 +42,7 @@ class CommentAndDiscussionTest extends TestCase
     /**
      * @test
      */
-    public function comment_belongs_to_user()
+    public function comment_belongs_to_user(): void
     {
         $user = User::factory()->create();
         $comment = Comment::factory()->create([
@@ -57,7 +57,7 @@ class CommentAndDiscussionTest extends TestCase
     /**
      * @test
      */
-    public function post_can_have_multiple_comments()
+    public function post_can_have_multiple_comments(): void
     {
         $post = Post::factory()->create();
         $comments = Comment::factory()->count(5)->create([
@@ -71,7 +71,7 @@ class CommentAndDiscussionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_discussion()
+    public function user_can_create_discussion(): void
     {
         $user = User::factory()->create();
 
@@ -90,7 +90,7 @@ class CommentAndDiscussionTest extends TestCase
     /**
      * @test
      */
-    public function discussion_can_have_comments()
+    public function discussion_can_have_comments(): void
     {
         $discussion = Discussion::factory()->create();
         $comments = Comment::factory()->count(10)->create([
@@ -104,7 +104,7 @@ class CommentAndDiscussionTest extends TestCase
     /**
      * @test
      */
-    public function user_can_delete_own_comment()
+    public function user_can_delete_own_comment(): void
     {
         $user = User::factory()->create();
         $comment = Comment::factory()->create([
@@ -119,4 +119,3 @@ class CommentAndDiscussionTest extends TestCase
         ]);
     }
 }
-

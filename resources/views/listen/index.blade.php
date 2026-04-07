@@ -2,7 +2,7 @@
 @section('title') - Listen @endsection
 
 @section('content')
-    <div class="w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div class="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-6">
         <!-- Aktuelle Listen Section -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <!-- Header -->

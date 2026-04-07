@@ -4,19 +4,21 @@ namespace App\Model;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class VertretungsplanNews extends Model
 {
-
     protected $table = 'vertretungsplan_news';
-    protected $fillable = ['start', 'ende', 'news'];
 
-    protected $casts = [
-        'start' => 'date',
-        'ende' => 'date',
-    ];
+    protected $fillable = ['start', 'end', 'news'];
+
+    protected function casts(): array
+    {
+        return [
+            'start' => 'date',
+            'end' => 'date',
+        ];
+    }
 
     protected static function booted(): void
     {
@@ -25,12 +27,12 @@ class VertretungsplanNews extends Model
             $startDate = Carbon::today();
             $targetDate = Carbon::today()->addDays(3);
 
-            $builder->where(function ($query) use ($targetDate, $startDate) {
+            $builder->where(function ($query) use ($targetDate) {
                 $query->whereDate('start', '<=', $targetDate);
                 $query->whereDate('end', '<=', $targetDate);
                 $query->whereDate('end', '>=', Carbon::today());
             })
-                ->orWhere(function ($query) use ($targetDate, $startDate) {
+                ->orWhere(function ($query) use ($targetDate) {
                     $query->whereDate('start', '<=', $targetDate);
                     $query->whereDate('end', '>=', Carbon::today());
                 })
@@ -42,5 +44,4 @@ class VertretungsplanNews extends Model
 
         });
     }
-
 }

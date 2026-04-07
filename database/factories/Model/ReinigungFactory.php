@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Reinigung;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ReinigungFactory extends Factory
 {
@@ -16,10 +16,8 @@ class ReinigungFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'users_id' => \App\Model\User::factory(),

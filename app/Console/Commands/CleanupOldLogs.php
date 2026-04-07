@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use danielme85\LaravelLogToDB\LogToDB;
 use Carbon\Carbon;
+use danielme85\LaravelLogToDB\LogToDB;
 use Illuminate\Console\Command;
 
 class CleanupOldLogs extends Command
@@ -28,7 +28,7 @@ class CleanupOldLogs extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $days = (int) $this->option('days');
         $level = $this->option('level');
@@ -43,7 +43,7 @@ class CleanupOldLogs extends Command
         }
 
         if ($dryRun) {
-            $this->warn("⚠️  DRY-RUN Modus: Es werden keine Daten gelöscht!");
+            $this->warn('⚠️  DRY-RUN Modus: Es werden keine Daten gelöscht!');
         }
 
         // Build query
@@ -58,6 +58,7 @@ class CleanupOldLogs extends Command
 
         if ($count === 0) {
             $this->info('✓ Keine Logs zum Löschen gefunden.');
+
             return Command::SUCCESS;
         }
 
@@ -77,9 +78,10 @@ class CleanupOldLogs extends Command
         $this->table(['Level', 'Anzahl'], $table);
 
         // Confirm deletion
-        if (!$dryRun) {
-            if (!$this->confirm("Möchten Sie {$count} Log-Einträge wirklich löschen?", true)) {
+        if (! $dryRun) {
+            if (! $this->confirm("Möchten Sie {$count} Log-Einträge wirklich löschen?", true)) {
                 $this->warn('Abgebrochen.');
+
                 return Command::FAILURE;
             }
 
@@ -93,7 +95,7 @@ class CleanupOldLogs extends Command
             while (true) {
                 $chunk = LogToDB::model()
                     ->where('created_at', '<', $date)
-                    ->when($level, function($q) use ($level) {
+                    ->when($level, function ($q) use ($level) {
                         return $q->where('level_name', strtoupper($level));
                     })
                     ->limit(1000)

@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\group_user;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class group_userFactory extends Factory
 {
@@ -16,10 +16,8 @@ class group_userFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'group_id' => \App\Model\Group::factory(),

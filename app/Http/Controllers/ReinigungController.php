@@ -14,18 +14,20 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class ReinigungController extends Controller
+class ReinigungController extends Controller implements HasMiddleware
 {
-
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     public function autoCreateStart($bereich)
@@ -34,7 +36,7 @@ class ReinigungController extends Controller
 
         $bereich = Group::where('bereich', $bereich)->get();
 
-        if (!auth()->user()->can('edit reinigung')) {
+        if (! auth()->user()->can('edit reinigung')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -55,11 +57,10 @@ class ReinigungController extends Controller
         ]);
     }
 
-
     public function autoCreate(CreateAutoReinigungRequest $request, $bereich)
     {
 
-        if (!auth()->user()->can('edit reinigung')) {
+        if (! auth()->user()->can('edit reinigung')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
@@ -69,8 +70,7 @@ class ReinigungController extends Controller
         $start = Carbon::createFromFormat('Y-m-d', $request->start)->startOfWeek();
         $ende = Carbon::createFromFormat('Y-m-d', $request->end)->endOfWeek();
 
-
-        if (!is_null($request->exclude) and count($request->exclude) > 0 and $request->exclude[0] != 0) {
+        if (! is_null($request->exclude) and count($request->exclude) > 0 and $request->exclude[0] != 0) {
             $excludeGroups = $request->exclude;
         } else {
             $excludeGroups = [];
@@ -82,30 +82,27 @@ class ReinigungController extends Controller
                 ->where('bereich', '=', $bereich);
         }, '<', 1)->get();
 
-
         $users_all = $users->shuffle();
-        Log::info('Nutzer:' . $users_all->count());
+        Log::info('Nutzer:'.$users_all->count());
         $users_all = $users_all->unique('id');
-        Log::info('Nutzer unique:' . $users_all->count());
-
+        Log::info('Nutzer unique:'.$users_all->count());
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
         $date = $start->copy();
-
 
         while ($date->lte($ende)) {
             if ($users_all->count() > 0) {
                 foreach ($tasks as $task) {
                     $user = $users_all->shift();
-                    if (!is_null($user)) {
-                        $reinigung = new Reinigung();
+                    if (! is_null($user)) {
+                        $reinigung = new Reinigung;
                         $reinigung->bereich = $bereich;
                         $reinigung->datum = $date;
                         $reinigung->users_id = $user->id;
                         $reinigung->aufgabe = $task->task;
                         $reinigung->save();
 
-                        //Sorgeberechtigter 2 entfernen
+                        // Sorgeberechtigter 2 entfernen
                         if ($user->sorg2 != null) {
                             $key = $users_all->search(function ($item) use ($user) {
                                 return $item->id == $user->sorg2;
@@ -138,15 +135,13 @@ class ReinigungController extends Controller
 
         }
 
-
-                return redirect()->to(url('reinigung'))->with([
-                    'type' => 'success',
-                    'Meldung' => 'Plan aktualisiert',
-                ]);
+        return redirect()->to(url('reinigung'))->with([
+            'type' => 'success',
+            'Meldung' => 'Plan aktualisiert',
+        ]);
     }
 
     /**
-     * @param $bereich
      * @return RedirectResponse|BinaryFileResponse
      */
     public function export($bereich)
@@ -162,8 +157,6 @@ class ReinigungController extends Controller
     }
 
     /**
-     * @param $Bereich
-     * @param Reinigung $reinigung
      * @return RedirectResponse|void
      */
     public function destroy($Bereich, Reinigung $reinigung)
@@ -194,7 +187,6 @@ class ReinigungController extends Controller
             $ende = Carbon::createFromFormat('d.m', '30.8');
             $ende->addYear();
         }
-
 
         if (! $user->can('edit reinigung') and ! $user->can('view reinigung')) {
             $user->load('groups');
@@ -255,12 +247,11 @@ class ReinigungController extends Controller
 
         $newusers = $newusers->sortBy('familie_name');
 
-
         $Reinigung = Reinigung::query()
-                ->where('bereich', $Bereich)
-                ->whereDate('datum', '>=', $datum->copy()->subWeek())
-                ->orderBy('datum')
-                ->get();
+            ->where('bereich', $Bereich)
+            ->whereDate('datum', '>=', $datum->copy()->subWeek())
+            ->orderBy('datum')
+            ->get();
 
         $Aufgaben = ReinigungsTask::all();
 
@@ -277,8 +268,6 @@ class ReinigungController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param $Bereich
-     * @param  ReinigungsRequest  $request
      * @return RedirectResponse
      */
     public function store($Bereich, ReinigungsRequest $request)

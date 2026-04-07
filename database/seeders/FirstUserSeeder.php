@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,10 +12,8 @@ class FirstUserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         try {
             DB::table('users')->insert([
@@ -27,7 +24,7 @@ class FirstUserSeeder extends Seeder
                 'updated_at' => Carbon::now(),
             ]);
         } catch (\Exception $e) {
-            Log::alert('FirstUserSeeder: ' . $e->getMessage());
+            Log::alert('FirstUserSeeder: '.$e->getMessage());
         }
 
     }

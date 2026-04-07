@@ -2,8 +2,8 @@
 
 namespace App\Model;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -25,7 +25,7 @@ class Listen_Eintragungen extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function scopeUser(Builder $query, $user): null|Builder
+    public function scopeUser(Builder $query, $user): ?Builder
     {
         if ($user != null) {
             return $query->where('user_id', $user);

@@ -2,10 +2,10 @@
 
 namespace App\Model;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Model\User;
 
 class ElternratTask extends Model
 {
@@ -22,10 +22,13 @@ class ElternratTask extends Model
         'completed_at',
     ];
 
-    protected $casts = [
-        'due_date' => 'date',
-        'completed_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'date',
+            'completed_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get the user assigned to the task
@@ -73,7 +76,8 @@ class ElternratTask extends Model
     /**
      * Scope for open tasks
      */
-    public function scopeOpen($query)
+    #[Scope]
+    protected function open($query)
     {
         return $query->where('status', 'open');
     }
@@ -81,7 +85,8 @@ class ElternratTask extends Model
     /**
      * Scope for in progress tasks
      */
-    public function scopeInProgress($query)
+    #[Scope]
+    protected function inProgress($query)
     {
         return $query->where('status', 'in_progress');
     }
@@ -89,7 +94,8 @@ class ElternratTask extends Model
     /**
      * Scope for completed tasks
      */
-    public function scopeCompleted($query)
+    #[Scope]
+    protected function completed($query)
     {
         return $query->where('status', 'completed');
     }
@@ -97,10 +103,10 @@ class ElternratTask extends Model
     /**
      * Scope for overdue tasks
      */
-    public function scopeOverdue($query)
+    #[Scope]
+    protected function overdue($query)
     {
         return $query->where('due_date', '<', now())
             ->where('status', '!=', 'completed');
     }
 }
-

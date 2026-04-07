@@ -19,13 +19,13 @@ class ReinigsungsTaskRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new ReinigsungsTaskRequest();
+        $this->subject = new ReinigsungsTaskRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('edit reinigung');
@@ -39,10 +39,10 @@ class ReinigsungsTaskRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\group_post;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class group_postFactory extends Factory
 {
@@ -16,10 +16,8 @@ class group_postFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'group_id' => \App\Model\Group::factory(),

@@ -17,7 +17,7 @@ class SchickzeitenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_create_schickzeit()
+    public function user_can_create_schickzeit(): void
     {
         $user = User::factory()->create();
 
@@ -34,7 +34,7 @@ class SchickzeitenTest extends TestCase
     /**
      * @test
      */
-    public function schickzeit_belongs_to_user()
+    public function schickzeit_belongs_to_user(): void
     {
         $user = User::factory()->create();
         $schickzeit = Schickzeiten::factory()->create(['users_id' => $user->id]);
@@ -46,7 +46,7 @@ class SchickzeitenTest extends TestCase
     /**
      * @test
      */
-    public function user_can_update_schickzeit()
+    public function user_can_update_schickzeit(): void
     {
         $user = User::factory()->create();
         $schickzeit = Schickzeiten::factory()->create([
@@ -62,4 +62,3 @@ class SchickzeitenTest extends TestCase
         ]);
     }
 }
-

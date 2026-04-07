@@ -7,7 +7,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-
 class RemindReadReceiptMail extends Mailable
 {
     use Queueable, SerializesModels;
@@ -17,7 +16,9 @@ class RemindReadReceiptMail extends Mailable
     public string $name;
 
     public string $thema;
+
     public string $ende;
+
     public int $theme_id;
 
     /**
@@ -42,13 +43,13 @@ class RemindReadReceiptMail extends Mailable
     public function build(): static
     {
         return $this
-            ->subject('Rückmeldung fehlt: ' . $this->thema)
+            ->subject('Rückmeldung fehlt: '.$this->thema)
             ->view('emails.ReadReceiptFehlt')->with([
                 'name' => $this->name,
                 'thema' => $this->thema,
                 'ende' => $this->ende,
                 'theme_id' => $this->theme_id,
-                'BoardName' => (new GeneralSetting())->app_name,
+                'BoardName' => (new GeneralSetting)->app_name,
             ]);
     }
 }

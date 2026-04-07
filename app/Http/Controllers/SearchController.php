@@ -5,23 +5,20 @@ namespace App\Http\Controllers;
 use App\Http\Requests\searchRequest;
 use App\Model\Group;
 use App\Model\Post;
-use App\Model\Site;
 use App\Support\Collection;
-use http\Client\Curl\User;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\View\View;
 
-class SearchController extends Controller
+class SearchController extends Controller implements HasMiddleware
 {
-    /**
-     *
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['auth', 'password_expired']);
+        return [
+            ['auth', 'password_expired'],
+        ];
     }
 
     /**
-     * @param searchRequest $request
      * @return View
      */
     public function search(searchRequest $request)
@@ -71,7 +68,7 @@ class SearchController extends Controller
 
         $searchString = $request->input('suche');
         $sites = auth()->user()->sites()
-        ->where('sites.name', 'like', '%'.$searchString.'%')
+            ->where('sites.name', 'like', '%'.$searchString.'%')
             ->with(['blocks' => function ($query) use ($searchString) {
                 $query->when($searchString, function ($query, $searchString) {
                     $query
@@ -82,7 +79,7 @@ class SearchController extends Controller
                             });
                         }]);
                 });
-        }])->get();
+            }])->get();
 
         return view('search.result', [
             'nachrichten' => $Nachrichten,

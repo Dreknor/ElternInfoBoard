@@ -8,12 +8,10 @@ class UpdateSiteBlockTextRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return auth()->user()->can('create sites') ;
+        return auth()->user()->can('create sites');
     }
 
     /**
@@ -21,10 +19,10 @@ class UpdateSiteBlockTextRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'title' => 'required|string',
+            'title' => 'nullable|string',
             'content' => 'required|string',
         ];
     }

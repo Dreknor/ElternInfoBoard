@@ -19,13 +19,13 @@ class CreateTerminRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateTerminRequest();
+        $this->subject = new CreateTerminRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('edit termin');
@@ -39,10 +39,10 @@ class CreateTerminRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

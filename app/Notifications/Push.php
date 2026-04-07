@@ -23,7 +23,7 @@ class Push extends Notification
         $this->title = $title;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
@@ -32,9 +32,8 @@ class Push extends Notification
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
             'created' => Carbon::now()->toIso8601String(),
@@ -43,7 +42,8 @@ class Push extends Notification
 
     public function toWebPush($notifiable, $notification): WebPushMessage
     {
-        Log::info('toWebPush' . $this->title);
+        Log::info('toWebPush'.$this->title);
+
         return (new WebPushMessage)
             ->title($this->title)
             ->icon(asset('img/'.config('app.favicon')))

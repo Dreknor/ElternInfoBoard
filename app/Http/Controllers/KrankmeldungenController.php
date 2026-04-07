@@ -45,12 +45,11 @@ class KrankmeldungenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param KrankmeldungRequest $request
      * @return RedirectResponse
      */
     public function store(KrankmeldungRequest $request)
     {
-        if (!$request->name && !$request->child_id) {
+        if (! $request->name && ! $request->child_id) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Bitte geben Sie einen Namen oder ein Kind an',
@@ -58,22 +57,22 @@ class KrankmeldungenController extends Controller
         }
 
         try {
-            $krankmeldung = new Krankmeldungen();
+            $krankmeldung = new Krankmeldungen;
             $krankmeldung->fill($request->validated());
 
             if ($request->child_id) {
                 $child = Child::find($request->child_id);
-                $krankmeldung->name = $child->first_name . ' ' . $child->last_name;
+                $krankmeldung->name = $child->first_name.' '.$child->last_name;
 
                 $group = $child->group?->name;
                 $class = $child->class?->name;
 
-                if ($group == $class){
+                if ($group == $class) {
                     $class = null;
                 }
 
                 if ($group || $class) {
-                    $krankmeldung->name .= ' (' . $group . ' ' . $class . ')';
+                    $krankmeldung->name .= ' ('.$group.' '.$class.')';
                 }
             } else {
 
@@ -82,7 +81,7 @@ class KrankmeldungenController extends Controller
                 $krankmeldung->name .= ' (';
 
                 foreach ($gruppen as $gruppe) {
-                    $krankmeldung->name .= $gruppe->name . ' ';
+                    $krankmeldung->name .= $gruppe->name.' ';
                 }
 
                 $krankmeldung->name .= ')';
@@ -95,7 +94,7 @@ class KrankmeldungenController extends Controller
             // If files were uploaded, store them with Spatie MediaLibrary on this model
             if ($request->hasFile('files')) {
                 $krankmeldung->addAllMediaFromRequest(['files'])
-                    ->each(fn($fileAdder) => $fileAdder->toMediaCollection('files'));
+                    ->each(fn ($fileAdder) => $fileAdder->toMediaCollection('files'));
             }
 
             // collect attachments (Spatie media models) to pass to the Mailable
@@ -104,7 +103,7 @@ class KrankmeldungenController extends Controller
                 $attachments[] = $media;
             }
 
-            $meldung = "Krankmeldung wurde erfolgreich eingetragen";
+            $meldung = 'Krankmeldung wurde erfolgreich eingetragen';
 
             if ($request->disease_id != 0) {
 
@@ -118,9 +117,9 @@ class KrankmeldungenController extends Controller
                     'active' => false,
                 ]);
 
-                $meldung .= "Bitte beachten Sie folgende Hinweise: Wiederzulassung durch: " . $disease->wiederzulassung_durch . "
+                $meldung .= 'Bitte beachten Sie folgende Hinweise: Wiederzulassung durch: '.$disease->wiederzulassung_durch.'
 
-                Wiederzulassung wann: " . $disease->wiederzulassung_wann;
+                Wiederzulassung wann: '.$disease->wiederzulassung_wann;
                 Cache::forget('active_diseases');
             }
 
@@ -134,7 +133,7 @@ class KrankmeldungenController extends Controller
             ]);
         } catch (\Exception $e) {
 
-            Log::error('Krankmeldung: Fehler beim Erstellen der Krankmeldung: ' . $e->getMessage());
+            Log::error('Krankmeldung: Fehler beim Erstellen der Krankmeldung: '.$e->getMessage());
 
             return redirect()->back()->with([
                 'type' => 'danger',
@@ -142,12 +141,11 @@ class KrankmeldungenController extends Controller
             ]);
         }
 
-
-
     }
 
     /**
      * versendet täglich die derzeit erkrankten SuS
+     *
      * @return void
      */
     public function dailyReport()
@@ -167,13 +165,12 @@ class KrankmeldungenController extends Controller
                 'meldungen' => Krankmeldungen::query()->whereDate('start', '<=', Carbon::today()->format('Y-m-d'))->whereDate('ende', '>=', Carbon::today()->format('Y-m-d'))->get(),
             ]);
 
-            return $pdf->download(Carbon::now()->format('Y-m-d') . '_Krankmeldungen.pdf');
+            return $pdf->download(Carbon::now()->format('Y-m-d').'_Krankmeldungen.pdf');
         }
 
         return redirect()->back()->with([
             'type' => 'warning',
-            'Meldung' => "Berechtigung fehlt"
+            'Meldung' => 'Berechtigung fehlt',
         ]);
     }
-
 }

@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\listen_termine;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class listen_termineFactory extends Factory
 {
@@ -16,10 +16,8 @@ class listen_termineFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'listen_id' => \App\Model\Liste::factory(),

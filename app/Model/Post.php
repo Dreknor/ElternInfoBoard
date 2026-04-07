@@ -2,14 +2,18 @@
 
 namespace App\Model;
 
+use App\Observers\PostObserver;
+use App\Traits\HasCommentsWithOptionalParent;
 use App\Traits\NotificationTrait;
 use Artisanry\Commentable\Traits\HasComments;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Bkwld\Cloner\Cloneable;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Contracts\ReactableInterface;
 use DevDojo\LaravelReactions\Traits\Reactable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,33 +25,38 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
-class Post extends Model implements HasMedia, ReactableInterface, Auditable
+#[ObservedBy([PostObserver::class])]
+class Post extends Model implements Auditable, HasMedia, ReactableInterface
 {
-    use InteractsWithMedia;
-    use HasFactory;
-    use SoftDeletes;
     use Cloneable;
-    use HasComments;
+    use HasComments, HasCommentsWithOptionalParent {
+        HasCommentsWithOptionalParent::comment insteadof HasComments;
+    }
+    use HasFactory;
     use HasRelationships;
-    use Reactable;
+    use InteractsWithMedia;
     use NotificationTrait;
     use \OwenIt\Auditing\Auditable;
-
+    use Reactable;
+    use SoftDeletes;
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'no_header'];
-
-    protected $casts = [
-        'archiv_ab' => 'datetime',
-        'read_receipt_deadline' => 'datetime',
-        'reactable' => 'boolean',
-        'external' => 'boolean',
-        'read_receipt' => 'boolean',
-        'no_header' => 'boolean',
-    ];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
 
     protected $with = ['rueckmeldung'];
+
+    protected function casts(): array
+    {
+        return [
+            'archiv_ab' => 'datetime',
+            'read_receipt_deadline' => 'datetime',
+            'reactable' => 'boolean',
+            'external' => 'boolean',
+            'read_receipt' => 'boolean',
+            'no_header' => 'boolean',
+        ];
+    }
 
     public function groups(): BelongsToMany
     {
@@ -83,22 +92,24 @@ class Post extends Model implements HasMedia, ReactableInterface, Auditable
 
     public function getIsArchivedAttribute(): bool
     {
-        return !($this->archiv_ab > Carbon::now());
+        return ! ($this->archiv_ab > Carbon::now());
     }
 
-    public function scopeNotArchived(Builder $query): Builder
+    #[Scope]
+    protected function notArchived(Builder $query): Builder
     {
         return $query->where('archiv_ab', '>', now());
     }
 
-    public function scopeReleased(Builder $query): Builder
+    #[Scope]
+    protected function released(Builder $query): Builder
     {
         return $query->where('released', 1);
     }
 
-    public function getSendAttribute(): Carbon|null
+    public function getSendAttribute(): ?Carbon
     {
-        if (!is_null($this->send_at)) {
+        if (! is_null($this->send_at)) {
             return Carbon::createFromFormat('Y-m-d H:i:s', $this->send_at);
         }
 
@@ -110,14 +121,14 @@ class Post extends Model implements HasMedia, ReactableInterface, Auditable
         return $this->hasMany(ReadReceipts::class);
     }
 
-       public function userReaction(User $user = null)
+    public function userReaction(?User $user = null)
     {
         if (is_null($user)) {
             $user = auth()->user();
         }
 
         return $this->reactions()
-                ->where('responder_id', $user->id)
-                ->where('responder_type', get_class($user))->first()?->name;
+            ->where('responder_id', $user->id)
+            ->where('responder_type', get_class($user))->first()?->name;
     }
 }

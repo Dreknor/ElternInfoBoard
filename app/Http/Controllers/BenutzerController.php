@@ -3,32 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateTokenRequest;
-use App\Http\Requests\editUserRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Hash;
 
-/**
- *
- */
-class BenutzerController extends Controller
+class BenutzerController extends Controller implements HasMiddleware
 {
-
-
-    /**
-     *
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
-
+        return [
+            'auth',
+        ];
     }
 
     /**
-     * @param Request $request
      * @return Application|View
      */
     public function show(Request $request)
@@ -46,14 +39,14 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param editUserRequest $request
      * @return RedirectResponse
      */
-    public function update(editUserRequest $request)
+    public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
+        // TODO-1.5: $request->safe()->only() statt $request->only() verwenden
         $user->update(
-            $request->only([
+            $request->safe()->only([
                 'name',
                 'email',
                 'benachrichtigung',
@@ -66,9 +59,11 @@ class BenutzerController extends Controller
             ])
         );
 
-        if ($request->input('password') != '' && $request->password == $request->password_confirmation) {
+        // TODO-1.14: Passwort-Änderung – Prüfung via FormRequest (current_password + confirmed)
+        if ($request->filled('password')) {
             $user->update([
                 'password' => Hash::make($request->password),
+                'changePassword' => false,
             ]);
         }
 
@@ -79,7 +74,6 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param CreateTokenRequest $request
      * @return RedirectResponse
      */
     public function createToken(CreateTokenRequest $request)
@@ -95,10 +89,8 @@ class BenutzerController extends Controller
     }
 
     /**
-     * @param
      * @return RedirectResponse
      */
-
     public function deleteToken($token)
     {
         $user = auth()->user();
@@ -109,8 +101,4 @@ class BenutzerController extends Controller
             'Meldung' => 'Token gelöscht.',
         ]);
     }
-
-
-
-
 }

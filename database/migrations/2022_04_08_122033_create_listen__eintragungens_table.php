@@ -8,8 +8,6 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
@@ -29,8 +27,6 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down(): void
     {
@@ -40,8 +36,6 @@ return new class extends Migration
             $table->dropForeign(['user_id']);
             $table->dropForeign(['created_by']);
         });
-
-
 
         Schema::dropIfExists('listen_eintragungen');
     }

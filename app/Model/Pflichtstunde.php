@@ -8,20 +8,23 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([PflichtstundenObserver::class])]
 class Pflichtstunde extends Model
 {
-    use SoftDeletes, HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'pflichtstunden';
 
     protected $fillable = [
         'user_id',
+        'listen_termin_id',
         'start',
         'end',
         'description',
+        'bereich',
         'approved',
         'approved_at',
         'approved_by',
@@ -31,31 +34,34 @@ class Pflichtstunde extends Model
         'rejection_reason',
     ];
 
-    protected $casts =[
-        'start' => 'datetime',
-        'end' => 'datetime',
-        'approved' => 'boolean',
-        'approved_at' => 'datetime',
-        'rejected' => 'boolean',
-        'rejected_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start' => 'datetime',
+            'end' => 'datetime',
+            'approved' => 'boolean',
+            'approved_at' => 'datetime',
+            'rejected' => 'boolean',
+            'rejected_at' => 'datetime',
+        ];
+    }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function approver()
+    public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function rejector()
+    public function rejector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
     }
 
-    public function listenTermin()
+    public function listenTermin(): BelongsTo
     {
         return $this->belongsTo(listen_termine::class, 'listen_termin_id');
     }
@@ -66,10 +72,9 @@ class Pflichtstunde extends Model
     }
 
     protected static function booted(): void
-
     {
         static::addGlobalScope('aktuellerZeitraum', function ($query) {
-            $setting = (new PflichtstundenSetting());
+            $setting = (new PflichtstundenSetting);
             $start = Carbon::createFromFormat('m-d', $setting->pflichtstunden_start)->startOfDay();
             if ($start->isFuture()) {
                 $start->subYear();
@@ -79,7 +84,6 @@ class Pflichtstunde extends Model
                 $end->addYear();
             }
             $query->whereBetween('start', [$start, $end]);
-
 
         });
     }

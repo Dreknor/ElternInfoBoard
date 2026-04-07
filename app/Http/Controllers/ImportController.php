@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AufnahmeImportVorlage;
+use App\Exports\ElternImportVorlage;
+use App\Exports\MitarbeiterImportVorlage;
+use App\Exports\VereinImportVorlage;
 use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\UsersImport;
@@ -13,17 +17,18 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 
-class ImportController extends Controller
+class ImportController extends Controller implements HasMiddleware
 {
-    /**
-     * Permission to import user is required
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:import user']);
+        return [
+            ['permission:import user'],
+        ];
     }
 
     /**
@@ -35,14 +40,13 @@ class ImportController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function import(Request $request)
     {
         if ($request->hasFile('file')) {
             if ($request->input('type') == 'eltern') {
-                //group_user::truncate();
+                // group_user::truncate();
 
                 foreach (Group::where('protected', 0)->get() as $group) {
                     $group->users()->detach();
@@ -77,7 +81,7 @@ class ImportController extends Controller
                 Excel::import(new AufnahmeImport($header), $request->file('file'));
                 $Meldung = 'Aufnahme-Import abgeschlossen';
             } else {
-                Excel::import(new MitarbeiterImport(), $request->file('file'));
+                Excel::import(new MitarbeiterImport, $request->file('file'));
                 $Meldung = 'Mitarbeiter-Import abgeschlossen';
             }
 
@@ -93,6 +97,30 @@ class ImportController extends Controller
         }
     }
 
+    // ─── Vorlagen-Downloads ───────────────────────────────────────────────────
+
+    public function downloadElternVorlage()
+    {
+        return Excel::download(new ElternImportVorlage(), 'eltern-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    public function downloadAufnahmeVorlage()
+    {
+        return Excel::download(new AufnahmeImportVorlage(), 'aufnahme-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    public function downloadMitarbeiterVorlage()
+    {
+        return Excel::download(new MitarbeiterImportVorlage(), 'mitarbeiter-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    public function downloadVereinVorlage()
+    {
+        return Excel::download(new VereinImportVorlage(), 'verein-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function importVereinForm()
     {
         return view('user.importVerein');
@@ -104,20 +132,18 @@ class ImportController extends Controller
 
             $group = Group::firstOrCreate(['name' => 'Vereinsmitglied'], [
                 'protected' => 1,
-                'bereich' => "Verein"
+                'bereich' => 'Verein',
             ]);
-
 
             group_user::where('group_id', $group->id)->delete();
 
             $role = Role::firstOrCreate(['name' => 'Vereinsmitglied'], [
-                'guard_name' => "web",
+                'guard_name' => 'web',
             ]);
 
             foreach ($role->users as $user) {
                 $user->removeRole($role);
             }
-
 
             Excel::import(new VereinImport($group), $request->file('file'));
             $Meldung = 'Mitglieder wurden importiert';

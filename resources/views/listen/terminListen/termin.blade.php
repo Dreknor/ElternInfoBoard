@@ -1,5 +1,4 @@
-<div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200 hover:border-teal-300 @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hidden @endif"
-     style="@if($eintrag->termin->lessThan(\Carbon\Carbon::now())) display: none; @endif">
+<div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200 hover:border-teal-300 @if($eintrag->termin->lessThan(\Carbon\Carbon::now())) hide d-none @endif">
 
     <!-- Header Row -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3 pb-3 border-b border-gray-200">

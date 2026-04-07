@@ -42,11 +42,14 @@
                                 </h4>
                                 <div class="space-y-3">
                                     @foreach($monthTermine as $termin)
-                                        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200">
+                                        @php
+                                            $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
+                                        @endphp
+                                        <div class="p-4 border @if($isMultiDay) border-orange-400 bg-orange-50 @else border-gray-200 @endif rounded-lg hover:shadow-md transition-all duration-200">
                                             <div class="row">
                                                 <div class="col-md-2 text-center mb-3 mb-md-0">
                                                     <div class="d-inline-block" style="min-width: 80px;">
-                                                        <div class="bg-green-600 text-white rounded-t px-3 py-1">
+                                                        <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
                                                             <small class="font-bold">{{ $termin->start->format('M') }}</small>
                                                         </div>
                                                         <div class="bg-white border border-gray-200 rounded-b px-3 py-2">
@@ -56,23 +59,42 @@
                                                             {{ $termin->start->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
+                                                    @if($isMultiDay)
+                                                    -
+                                                    <div class="d-inline-block" style="min-width: 80px;">
+                                                        <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
+                                                            <small class="font-bold">{{ $termin->ende->format('M') }}</small>
+                                                        </div>
+                                                        <div class="bg-white border border-gray-200 rounded-b px-3 py-2">
+                                                            <span class="text-3xl font-bold text-gray-800">{{ $termin->ende->format('d') }}</span>
+                                                        </div>
+                                                        <small class="text-gray-600 d-block mt-1">
+                                                            {{ $termin->ende->locale('de')->isoFormat('dddd') }}
+                                                        </small>
+                                                    </div>
+                                                    @endif
                                                 </div>
                                                 <div class="col-md-10">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <h5 class="font-bold text-gray-800 mb-0">
                                                             {{ $termin->terminname }}
+                                                            @if($isMultiDay)
+                                                                <span class="badge badge-warning ml-2" title="Mehrtägiger Termin">
+                                                                    <i class="fas fa-calendar-week"></i> Mehrtägig
+                                                                </span>
+                                                            @endif
                                                             @if(auth()->user()->can('view all') && ($termin->public ?? false))
                                                                 <span class="badge badge-success ml-2" title="Dieser Termin ist öffentlich">Öffentlich</span>
                                                             @endif
                                                         </h5>
                                                         <div class="d-flex align-items-center gap-2">
                                                             <!-- Calendar Links -->
-                                                            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->ics()}}"
+                                                            <a href="{{$termin->link(auth()->user()?->calendar_prefix)->ics()}}"
                                                                class="btn btn-sm btn-outline-secondary"
                                                                title="ICS-Download für Apple und Windows">
                                                                 <img src="{{asset('img/ics-icon.png')}}" style="width: 16px; height: 16px;" alt="ICS">
                                                             </a>
-                                                            <a href="{{$termin->link(optional(auth()->user())->calendar_prefix)->google()}}"
+                                                            <a href="{{$termin->link(auth()->user()?->calendar_prefix)->google()}}"
                                                                class="btn btn-sm btn-outline-secondary"
                                                                target="_blank"
                                                                title="Google-Kalender-Link">
@@ -90,7 +112,25 @@
                                                     <div class="row mt-3">
                                                         <div class="col-md-6 mb-2">
                                                             <p class="text-gray-600 mb-0">
-                                                                @if($termin->fullDay)
+                                                                @php
+                                                                    $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
+                                                                    $daysDiff = $isMultiDay ? $termin->start->diffInDays($termin->ende) + 1 : 0;
+                                                                @endphp
+
+                                                                @if($isMultiDay)
+                                                                    <i class="fas fa-calendar-week text-blue-600"></i>
+                                                                    <strong>Zeitraum:</strong>
+                                                                    {{ $termin->start->locale('de')->isoFormat('D. MMM') }}
+                                                                    @if(!$termin->fullDay)
+                                                                        {{ $termin->start->format('H:i') }}
+                                                                    @endif
+                                                                    -
+                                                                    {{ $termin->ende->locale('de')->isoFormat('D. MMM') }}
+                                                                    @if(!$termin->fullDay)
+                                                                        {{ $termin->ende->format('H:i') }}
+                                                                    @endif
+                                                                    <span class="badge badge-info ml-2">{{ floor($daysDiff) }} Tage</span>
+                                                                @elseif($termin->fullDay)
                                                                     <i class="far fa-calendar text-blue-600"></i>
                                                                     <strong>Ganztägig</strong>
                                                                 @else
@@ -144,6 +184,15 @@
 <style>
     .space-y-3 > * + * {
         margin-top: 0.75rem;
+    }
+    .border-orange-400 {
+        border-color: #fb923c !important;
+    }
+    .bg-orange-50 {
+        background-color: #fff7ed !important;
+    }
+    .bg-orange-600 {
+        background-color: #ea580c !important;
     }
 </style>
 @endsection

@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Changelog;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ChangelogFactory extends Factory
 {
@@ -16,10 +16,8 @@ class ChangelogFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'header' => $this->faker->word(),

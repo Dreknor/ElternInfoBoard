@@ -19,13 +19,13 @@ class StorePollRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new StorePollRequest();
+        $this->subject = new StorePollRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('create polls');
@@ -39,10 +39,10 @@ class StorePollRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

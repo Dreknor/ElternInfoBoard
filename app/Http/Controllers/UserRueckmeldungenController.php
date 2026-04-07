@@ -12,23 +12,20 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
-class UserRueckmeldungenController extends Controller
+class UserRueckmeldungenController extends Controller implements HasMiddleware
 {
-    /**
-     *
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['auth', 'password_expired']);
+        return [
+            ['auth', 'password_expired'],
+        ];
     }
 
     /**
-     * @param Request $request
-     * @param Rueckmeldungen $rueckmeldung
      * @return RedirectResponse
      */
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
@@ -48,7 +45,6 @@ class UserRueckmeldungenController extends Controller
         ]);
         $userRueckmeldung->save();
 
-
         $this->generateAnswerModels($request, $userRueckmeldung);
 
         return redirect()->back()->with([
@@ -58,8 +54,6 @@ class UserRueckmeldungenController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param $post_id
      * @return Application|RedirectResponse|Redirector
      */
     public function sendRueckmeldung(Request $request, $post_id)
@@ -102,7 +96,7 @@ class UserRueckmeldungenController extends Controller
                 ->queue(new UserRueckmeldungMail($Rueckmeldung));
         }
 
-        return redirect(url('/home#'.$post_id->id))->with([
+        return redirect(url('post/'.$post_id->id))->with([
             'id' => $post_id->id,
             'type' => 'success',
             'Meldung' => 'Die Rückmeldung wurde der Schule gesendet',
@@ -110,7 +104,6 @@ class UserRueckmeldungenController extends Controller
     }
 
     /**
-     * @param UserRueckmeldungen $userRueckmeldungen
      * @return Application|Factory|View|RedirectResponse
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
@@ -147,8 +140,6 @@ class UserRueckmeldungenController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param UserRueckmeldungen $userRueckmeldungen
      * @return Application|RedirectResponse|Redirector
      */
     public function update(Request $request, UserRueckmeldungen $userRueckmeldungen)
@@ -203,18 +194,13 @@ class UserRueckmeldungenController extends Controller
                 break;
         }
 
-        return redirect(url('/home#'.$userRueckmeldungen->post_id))->with([
+        return redirect(url('post/'.$userRueckmeldungen->post_id))->with([
             'type' => 'success',
             'Meldung' => 'Rückmeldung versendet',
             'RueckmeldungCheck' => $userRueckmeldungen->post_id,
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @param UserRueckmeldungen $userRueckmeldung
-     * @return void
-     */
     public function generateAnswerModels(Request $request, UserRueckmeldungen $userRueckmeldung): void
     {
         $answers = [];

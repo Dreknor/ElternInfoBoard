@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Model\Post;
 use App\Model\Module;
+use App\Model\Post;
 use CURLFile;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -11,7 +11,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class WordpressRepository
 {
     private string $url;
+
     private string $user;
+
     private string $password;
 
     public function __construct()
@@ -21,35 +23,36 @@ class WordpressRepository
         $this->password = config('wordpress.wp_password');
     }
 
-    public function remote_post($slug, $title, $content, $status, $post_id = null, $media_id = null) {
+    public function remote_post($slug, $title, $content, $status, $post_id = null, $media_id = null)
+    {
 
         // the standard end point for posts in an initialised Curl
         $process = curl_init('https://'.$this->url.'/wp-json/wp/v2/posts/'.$post_id);
 
         // create an array of data to use, this is basic - see other examples for more complex inserts
         $data = [
-            'slug' => $slug ,
-            'title' => $title ,
+            'slug' => $slug,
+            'title' => $title,
             'content' => $content,
-            'status' => ($status == 1)? 'publish' : 'draft',
-            'featured_media' => ($media_id != null)? $media_id : null
-            ];
+            'status' => ($status == 1) ? 'publish' : 'draft',
+            'featured_media' => ($media_id != null) ? $media_id : null,
+        ];
         $data_string = json_encode($data);
 
         // create the options starting with basic authentication
-            curl_setopt($process, CURLOPT_USERPWD, $this->user . ":" . $this->password);
-            curl_setopt($process, CURLOPT_TIMEOUT, 30);
-            curl_setopt($process, CURLOPT_POST, 1);
+        curl_setopt($process, CURLOPT_USERPWD, $this->user.':'.$this->password);
+        curl_setopt($process, CURLOPT_TIMEOUT, 30);
+        curl_setopt($process, CURLOPT_POST, 1);
         // make sure we are POSTing
-        curl_setopt($process, CURLOPT_CUSTOMREQUEST,  ($post_id != null)? "PUT" : "POST");
+        curl_setopt($process, CURLOPT_CUSTOMREQUEST, ($post_id != null) ? 'PUT' : 'POST');
         // this is the data to insert to create the post
         curl_setopt($process, CURLOPT_POSTFIELDS, $data_string);
         // allow us to use the returned data from the request
-        curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($process, CURLOPT_RETURNTRANSFER, true);
         // we are sending json
         curl_setopt($process, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string)]
+            'Content-Type: application/json',
+            'Content-Length: '.strlen($data_string)]
         );
 
         // process the request
@@ -60,10 +63,11 @@ class WordpressRepository
         return $return;
     }
 
-    public function should_post($post){
+    public function should_post($post)
+    {
         $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
 
-        if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')){
+        if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')) {
             $this->pushPost($post);
         }
     }
@@ -81,7 +85,7 @@ class WordpressRepository
         // Nur die ID setzen, wenn es ein neuer Post ist
         if ($post->published_wp_id == null) {
             $post->update([
-                'published_wp_id' => $return->id
+                'published_wp_id' => $return->id,
             ]);
         }
 
@@ -98,7 +102,7 @@ class WordpressRepository
             // Wenn kein Header-Bild vorhanden ist, verwende das erste angehängte Bild
             $allImages = $post->getMedia('images');
             if ($allImages->isEmpty()) {
-                $allImages = $post->getMedia('files')->filter(function($file) {
+                $allImages = $post->getMedia('files')->filter(function ($file) {
                     return Str::contains($file->mime_type, 'image');
                 });
             }
@@ -119,28 +123,30 @@ class WordpressRepository
         $wp_call = $this->remote_post(Str::slug($post->header), $post->header, $content, $post->released, $post->published_wp_id, $media_id);
     }
 
-    public function push_image(Post $post, Media $image){
+    public function push_image(Post $post, Media $image)
+    {
         if ($post->published_wp_id != null and Str::contains($image->mime_type, 'image')) {
 
             $url = 'https://'.$this->url.'/wp-json/wp/v2/media/';
             $ch = curl_init($url);
 
-            curl_setopt($ch, CURLOPT_USERPWD, $this->user . ":" . $this->password);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+            curl_setopt($ch, CURLOPT_USERPWD, $this->user.':'.$this->password);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
 
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt( $ch, CURLOPT_POSTFIELDS, [
+            curl_setopt($ch, CURLOPT_POSTFIELDS, [
                 'file' => new CURLFILE($image->getPath()),
-                'post' => $post->published_wp_id ,
+                'post' => $post->published_wp_id,
             ]);
 
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt( $ch, CURLOPT_HTTPHEADER, [
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Disposition: form-data; filename='.$image->file_name,
-            ] );
-            $result = curl_exec( $ch );
-            curl_close( $ch );
+            ]);
+            $result = curl_exec($ch);
+            curl_close($ch);
+
             return $result;
         }
 
@@ -158,7 +164,7 @@ class WordpressRepository
         $images = $post->getMedia('images');
 
         // Auch Bilder aus der 'files' Collection berücksichtigen (falls sie Bilder sind)
-        $files = $post->getMedia('files')->filter(function($file) {
+        $files = $post->getMedia('files')->filter(function ($file) {
             return Str::contains($file->mime_type, 'image');
         });
 
@@ -182,7 +188,7 @@ class WordpressRepository
                             $uploadedImages[] = [
                                 'url' => $imageData->source_url,
                                 'alt' => $image->name ?? '',
-                                'caption' => $image->custom_properties['caption'] ?? ''
+                                'caption' => $image->custom_properties['caption'] ?? '',
                             ];
                         }
                     }
@@ -194,9 +200,9 @@ class WordpressRepository
                 $imageHtml = "\n\n<!-- wp:gallery -->\n<figure class=\"wp-block-gallery\">\n";
 
                 foreach ($uploadedImages as $imgData) {
-                    $caption = !empty($imgData['caption']) ? '<figcaption>' . htmlspecialchars($imgData['caption']) . '</figcaption>' : '';
+                    $caption = ! empty($imgData['caption']) ? '<figcaption>'.htmlspecialchars($imgData['caption']).'</figcaption>' : '';
                     $imageHtml .= sprintf(
-                        '<figure class="wp-block-image"><img src="%s" alt="%s" />%s</figure>' . "\n",
+                        '<figure class="wp-block-image"><img src="%s" alt="%s" />%s</figure>'."\n",
                         htmlspecialchars($imgData['url']),
                         htmlspecialchars($imgData['alt']),
                         $caption
@@ -212,5 +218,4 @@ class WordpressRepository
 
         return $content;
     }
-
 }

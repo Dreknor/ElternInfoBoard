@@ -14,29 +14,38 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache  as CacheAlias;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Cache as CacheAlias;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class FileController extends Controller
+class FileController extends Controller implements HasMiddleware
 {
     private GroupsRepository $grousRepository;
 
     public function __construct(GroupsRepository $groupsRepository)
     {
-        $this->middleware('password_expired');
+
         $this->grousRepository = $groupsRepository;
     }
 
+    public static function middleware(): array
+    {
+        return [
+            'password_expired',
+        ];
+    }
+
     /**
-     * @param Media $file
      * @return JsonResponse
      */
     public function delete(Media $file)
     {
+        $this->authorizeFileAccess($file);
+
         $file->delete();
 
         return response()->json([
@@ -45,11 +54,12 @@ class FileController extends Controller
     }
 
     /**
-     * @param Media $file
      * @return RedirectResponse
      */
     public function destroy(Media $file)
     {
+        $this->authorizeFileAccess($file);
+
         $file->delete();
 
         return redirect()->back()->with([
@@ -78,7 +88,7 @@ class FileController extends Controller
             ]);
         } else {
             $gruppen = $user->groups()->with('media')->get();
-            $media = new Collection();
+            $media = new Collection;
 
             foreach ($gruppen as $gruppe) {
                 $gruppenMedien = $gruppe->getMedia();
@@ -107,7 +117,6 @@ class FileController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return RedirectResponse
      */
     public function store(Request $request)
@@ -129,7 +138,6 @@ class FileController extends Controller
                     ->toMediaCollection();
             }
 
-
         }
 
         return redirect()->to('/files')->with([
@@ -139,9 +147,8 @@ class FileController extends Controller
     }
 
     /**
-     * @param Request $request
-     * @param Post $posts
      * @return RedirectResponse
+     *
      * @throws FileDoesNotExist
      * @throws FileIsTooBig
      */
@@ -149,11 +156,11 @@ class FileController extends Controller
     {
         if ($request->hasFile('files')) {
             $posts->addAllMediaFromRequest()
-                ->each(fn($fileAdder) => $fileAdder
+                ->each(fn ($fileAdder) => $fileAdder
                     ->usingName($request->name)
                     ->toMediaCollection('images'));
 
-            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header));
+            @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header, $posts->id));
         } else {
             return redirect()->to(url('home/'))->with([
                 'type' => 'warning',
@@ -161,7 +168,7 @@ class FileController extends Controller
             ]);
         }
 
-        return redirect(url('home/#'.$posts->id))->with([
+        return redirect(url('post/'.$posts->id))->with([
             'type' => 'success',
             'Meldung' => 'Bild erfolgreich hinzugefügt',
         ]);
@@ -182,7 +189,7 @@ class FileController extends Controller
                 continue;
             }
 
-            $MediaModel = $Media->filter(fn($item) => $item->id == $dir)->first();
+            $MediaModel = $Media->filter(fn ($item) => $item->id == $dir)->first();
 
             if ($MediaModel == null) {
                 $scan = scandir(storage_path().'/app/'.$dir);
@@ -237,7 +244,6 @@ class FileController extends Controller
     }
 
     /**
-     * @param DeleteFilesRequest $request
      * @return RedirectResponse
      */
     public function removeOldFiles(DeleteFilesRequest $request)
@@ -249,5 +255,29 @@ class FileController extends Controller
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * Prüft ob der eingeloggte User die angegebene Mediendatei löschen darf.
+     * Admins (upload files) dürfen alle Dateien löschen.
+     */
+    private function authorizeFileAccess(Media $file): void
+    {
+        $user = auth()->user();
+
+        if ($user->can('upload files')) {
+            return; // Admins dürfen alles löschen
+        }
+
+        $model = $file->model;
+
+        if ($model instanceof Post) {
+            // Datei gehört einem Post – User muss den Post erstellt haben
+            if ($model->author === $user->id) {
+                return;
+            }
+        }
+
+        abort(403, 'Keine Berechtigung zum Löschen dieser Datei.');
     }
 }

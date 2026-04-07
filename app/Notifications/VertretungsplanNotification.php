@@ -22,7 +22,7 @@ class VertretungsplanNotification extends Notification
         $this->title = $title;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
@@ -30,10 +30,9 @@ class VertretungsplanNotification extends Notification
     /**
      * Get the array representation of the notification.
      *
-     * @param mixed $notifiable
-     * @return array
+     * @param  mixed  $notifiable
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
             'created' => Carbon::now()->toIso8601String(),
@@ -44,7 +43,7 @@ class VertretungsplanNotification extends Notification
     {
         return (new WebPushMessage)
             ->title($this->title)
-            ->icon(asset('img/' . config('app.favicon')))
+            ->icon(asset('img/'.config('app.favicon')))
             ->body($this->body);
     }
 }

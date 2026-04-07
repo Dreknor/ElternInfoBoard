@@ -8,105 +8,168 @@
                 Benutzer importieren
             </h6>
         </div>
-        <div class="card-body">
-            <p class="text-info">Hinweis Elternimport: Der Import bezieht sich auf eine Individuelle Auswertung der Schulsoftware.
-                Ausgehend von den Schülern werden Namen und E-Mail-Adresse sowie Klassenstufe und Lerngruppe der Schüler exportiert.
-                Bitte prüfen, ob die Spaltenangabe zur Überschrift passt und ggf. korrigieren.
-            </p>
-            <p class="text-info">Hinweis Mitarbeiterimport: Es werden die Spalten 'e_mail', 'vorname', 'nachname' benötigt. Auch muss die Rolle 'Mitarbeiter' angelegt sein.
-            </p>
 
-        </div>
-        <div class="card-body">
-            <form action="{{url('/users/import')}}" method="post" class="form form-horizontal" enctype="multipart/form-data">
+        <div class="card-body" x-data="{ importTyp: 'eltern' }">
+
+            {{-- Flash-Meldungen --}}
+            @if(session('Meldung'))
+                <div class="alert alert-{{ session('type', 'info') }} alert-dismissible fade show" role="alert">
+                    {{ session('Meldung') }}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            {{-- Dynamischer Hinweisblock je Typ --}}
+            <div x-show="importTyp === 'eltern'" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <strong>Achtung Eltern-Import:</strong>
+                Alle nicht-geschützten Gruppen werden vor dem Import <strong>geleert</strong> (Zuordnungen werden entfernt).
+                Neue Benutzer erhalten ein zufälliges Passwort per E-Mail.
+                Bitte prüfe, ob die Spaltennummern zur Excel-Überschrift passen.
+            </div>
+            <div x-show="importTyp === 'aufnahme'" class="alert alert-info">
+                <i class="fas fa-info-circle mr-1"></i>
+                <strong>Aufnahme-Import:</strong>
+                Neue Benutzer werden angelegt und erhalten ein zufälliges Passwort per E-Mail.
+                Bereits vorhandene Konten (gleiche E-Mail) werden nicht verändert.
+            </div>
+            <div x-show="importTyp === 'mitarbeiter'" class="alert alert-info">
+                <i class="fas fa-info-circle mr-1"></i>
+                <strong>Mitarbeiter-Import:</strong>
+                Benötigte Spalten: <code>e_mail</code>, <code>vorname</code>, <code>nachname</code>.
+                Die Rolle <em>Mitarbeiter</em> muss angelegt sein.
+                Neue Benutzer erhalten ein zufälliges Passwort per E-Mail.
+            </div>
+
+            <form action="{{ url('/users/import') }}" method="post" class="form form-horizontal mt-3" enctype="multipart/form-data">
                 @csrf
-                <div class="row">
-                    <div class="col">
+
+                {{-- Import-Typ zuerst wählen --}}
+                <div class="row mb-3">
+                    <div class="col-md-4">
                         <div class="form-group">
-                            <label>Bildung: Klassenstufe</label>
-                            <input type="number" name="klassenstufe" step="1" value="2" class="form-control border-input">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>Bildung: Klassengruppe</label>
-                            <input type="number" name="lerngruppe" step="1" value="3" class="form-control border-input">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>Gruppenliste</label>
-                            <input type="number" name="gruppen" step="1" value="1" class="form-control border-input">
+                            <label class="font-weight-bold">Import-Typ</label>
+                            <select class="custom-select" name="type" x-model="importTyp">
+                                <option value="eltern">Eltern-Import</option>
+                                <option value="aufnahme">Aufnahme-Import</option>
+                                <option value="mitarbeiter">Mitarbeiter-Import</option>
+                            </select>
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label>S1: Vorname</label>
-                            <input type="number" name="S1Vorname" step="1" value="4" class="form-control border-input">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>S1: Nachname</label>
-                            <input type="number" name="S1Nachname" step="1" value="5" class="form-control border-input">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>S1: E-Mail Privat</label>
-                            <input type="number" name="S1Email" step="1" value="6" class="form-control border-input">
-                        </div>
-                    </div>
 
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label>S2: Vorname</label>
-                            <input type="number" name="S2Vorname" step="1" value="7" class="form-control border-input">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>S2: Nachname</label>
-                            <input type="number" name="S2Nachname" step="1" value="8" class="form-control border-input">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>S2: E-Mail Privat</label>
-                            <input type="number" name="S2Email" step="1" value="9" class="form-control border-input">
-                        </div>
-                    </div>
-
-                </div>
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <div class="">
-                                <input type="file"  name="file" id="customFile" accept=".xls,.xlsx">
-                            </div>
-
-                        </div>
-                    </div>
-
-                <div class="row">
-                    <div class="col">
+                {{-- Spaltenangaben (nur bei Eltern/Aufnahme relevant) --}}
+                <div x-show="importTyp !== 'mitarbeiter'">
+                    <h6 class="font-weight-bold text-muted mb-2">Spaltenzuordnung (1-basiert)</h6>
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
                             <div class="form-group">
-                                <label>Import-Typ</label>
-                                <select class="custom-select" name="type">
-                                    <option value="eltern" selected>Eltern-Import</option>
-                                    <option value="mitarbeiter">Mitarbeiter-Import</option>
-                                    <option value="aufnahme">Aufnahme-Import</option>
-                                </select>
+                                <label>Klassenstufe</label>
+                                <input type="number" name="klassenstufe" step="1" value="2" min="1" class="form-control border-input">
                             </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>Klassen&shy;gruppe</label>
+                                <input type="number" name="lerngruppe" step="1" value="3" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>Gruppenliste</label>
+                                <input type="number" name="gruppen" step="1" value="1" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>S1: Vorname</label>
+                                <input type="number" name="S1Vorname" step="1" value="4" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>S1: Nachname</label>
+                                <input type="number" name="S1Nachname" step="1" value="5" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>S1: E-Mail</label>
+                                <input type="number" name="S1Email" step="1" value="6" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>S2: Vorname</label>
+                                <input type="number" name="S2Vorname" step="1" value="7" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>S2: Nachname</label>
+                                <input type="number" name="S2Nachname" step="1" value="8" min="1" class="form-control border-input">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label>S2: E-Mail</label>
+                                <input type="number" name="S2Email" step="1" value="9" min="1" class="form-control border-input">
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {{-- Datei-Upload --}}
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Excel-Datei (.xls / .xlsx)</label>
+                            <input type="file" name="file" id="customFile" accept=".xls,.xlsx" class="form-control-file" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-group w-100">
+                            <label class="font-weight-bold text-muted">
+                                <i class="fas fa-download mr-1"></i> Import-Vorlage herunterladen
+                            </label>
+                            <div>
+                                <a x-show="importTyp === 'eltern'"
+                                   href="{{ route('users.vorlage.eltern') }}"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Eltern (.ods)
+                                </a>
+                                <a x-show="importTyp === 'aufnahme'"
+                                   href="{{ route('users.vorlage.aufnahme') }}"
+                                   class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Aufnahme (.ods)
+                                </a>
+                                <a x-show="importTyp === 'mitarbeiter'"
+                                   href="{{ route('users.vorlage.mitarbeiter') }}"
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Mitarbeiter (.ods)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Eltern-Import: Sicherheitsbestätigung --}}
+                <div x-show="importTyp === 'eltern'" class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirmEltern"
+                           :required="importTyp === 'eltern'">
+                    <label class="form-check-label text-danger font-weight-bold" for="confirmEltern">
+                        Ich bestätige, dass alle nicht-geschützten Gruppenverknüpfungen vor dem Import gelöscht werden.
+                    </label>
+                </div>
+
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-4">
                         <button type="submit" class="btn btn-primary btn-block">
-                            Import starten
+                            <i class="fas fa-file-import mr-1"></i> Import starten
                         </button>
                     </div>
                 </div>
@@ -117,46 +180,13 @@
 
 @endsection
 
-@push('css')
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
-
-@endpush
-
 @push('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
-
-
-
-    <!-- piexif.min.js is needed for auto orienting image files OR when restoring exif data in resized images and when you
-        wish to resize images before upload. This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/piexif.min.js" type="text/javascript"></script>
-    <!-- sortable.min.js is only needed if you wish to sort / rearrange files in initial preview.
-        This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/sortable.min.js" type="text/javascript"></script>
-    <!-- purify.min.js is only needed if you wish to purify HTML content in your preview for
-        HTML files. This must be loaded before fileinput.min.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/plugins/purify.min.js" type="text/javascript"></script>
-    <!-- popper.min.js below is needed if you use bootstrap 4.x (for popover and tooltips). You can also use the bootstrap js
-       3.3.x versions without popper.min.js. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/js/fileinput.min.js"></script>
-    <!-- following theme script is needed to use the Font Awesome 5.x theme (`fas`) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.1/themes/fas/theme.min.js"></script>
-
     <script>
-        // initialize with defaults
-
-        $("#customFile").fileinput({
-            'showUpload':false,
-            'previewFileType':'any',
-            maxFileSize: 3000,
-            'theme': "fas",
-            "allowedFileExtensions": ['xls', 'xlsx']
+        // Einfacher Dateiname-Anzeiger
+        document.getElementById('customFile')?.addEventListener('change', function () {
+            const label = this.nextElementSibling;
+            if (label) label.textContent = this.files[0]?.name || 'Datei wählen';
         });
     </script>
-
 
 @endpush

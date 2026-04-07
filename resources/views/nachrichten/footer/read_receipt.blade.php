@@ -58,8 +58,8 @@
 
 @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $post->author)
     @php
-        // Build buckets
-        $allUsers = $post->users->filter(fn($u) => !is_null($u));
+        // Build buckets - Filter unique users to avoid duplicates from multiple groups
+        $allUsers = $post->users->filter(fn($u) => !is_null($u))->unique('id');
         $receipts = $post->receipts->keyBy('user_id');
         $confirmed = collect();
         $reminded = collect();

@@ -4,11 +4,11 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Carbon\Carbon;
 
 class ListenExport implements FromCollection, WithHeadings
 {
     protected $listentermine;
+
     protected $liste;
 
     public function __construct($listentermine, $liste)
@@ -25,18 +25,18 @@ class ListenExport implements FromCollection, WithHeadings
                 return [
                     'Name' => $eintrag->user?->name,
                     'Email' => $eintrag->user?->email,
-                    'Eintrag' => $eintrag->eintragung
-                    ];
+                    'Eintrag' => $eintrag->eintragung,
+                ];
             });
         } else {
             return collect($this->listentermine)->map(function ($eintrag) {
                 return [
                     'Datum' => $eintrag->termin->format('d.m.Y'),
-                    'Uhrzeit' => $eintrag->termin->format('H:i') . ' - ' .
+                    'Uhrzeit' => $eintrag->termin->format('H:i').' - '.
                         $eintrag->termin->copy()->addMinutes($this->liste->duration)->format('H:i'),
                     'Familie' => $eintrag->eingetragenePerson?->name,
                     'Email' => $eintrag->eingetragenePerson?->email,
-                    'Bemerkungen' => $eintrag->comment
+                    'Bemerkungen' => $eintrag->comment,
                 ];
             });
         }
@@ -50,7 +50,7 @@ class ListenExport implements FromCollection, WithHeadings
             return [
                 'Name',
                 'Email',
-                'Eintrag'
+                'Eintrag',
             ];
         } else {
             return [
@@ -58,7 +58,7 @@ class ListenExport implements FromCollection, WithHeadings
                 'Uhrzeit',
                 'Familie',
                 'Email',
-                'Bemerkungen'
+                'Bemerkungen',
             ];
         }
     }

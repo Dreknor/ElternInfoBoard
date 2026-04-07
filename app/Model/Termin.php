@@ -3,10 +3,9 @@
 namespace App\Model;
 
 use App\Traits\NotificationTrait;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
@@ -15,12 +14,11 @@ use Spatie\CalendarLinks\Link;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
-
 class Termin extends Model implements Auditable
 {
     use HasFactory;
-    use NotificationTrait;
     use HasRelationships;
+    use NotificationTrait;
     use \OwenIt\Auditing\Auditable;
 
     protected $table = 'termine';
@@ -29,13 +27,16 @@ class Termin extends Model implements Auditable
 
     protected $visible = ['start', 'ende', 'terminname', 'fullDay', 'public', 'id'];
 
-    protected $casts = [
-        'creted_at' => 'datetime',
-        'start' => 'datetime',
-        'ende' => 'datetime',
-        'fullDay' => 'boolean',
-        'public' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'creted_at' => 'datetime',
+            'start' => 'datetime',
+            'ende' => 'datetime',
+            'fullDay' => 'boolean',
+            'public' => 'boolean',
+        ];
+    }
 
     public function getfullDayAttribute($value): bool
     {
@@ -67,8 +68,8 @@ class Termin extends Model implements Auditable
 
     public function link($prefix = null): Link
     {
-        if (!is_null($prefix)) {
-            $terminname = '(' . $prefix . ') ' . $this->terminname;
+        if (! is_null($prefix)) {
+            $terminname = '('.$prefix.') '.$this->terminname;
         } else {
             $terminname = $this->terminname;
         }
@@ -86,5 +87,4 @@ class Termin extends Model implements Auditable
     {
         return $this->hasManyDeep(User::class, ['group_termine', Group::class, 'group_user']);
     }
-
 }

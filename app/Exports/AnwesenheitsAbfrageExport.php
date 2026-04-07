@@ -4,16 +4,17 @@ namespace App\Exports;
 
 use App\Model\ChildCheckIn;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class AnwesenheitsAbfrageExport implements FromCollection, WithMapping, WithHeadings, ShouldAutoSize
+class AnwesenheitsAbfrageExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
     protected $date_start;
+
     protected $date_end;
+
     public $days = [];
 
     public function __construct($date_start, $date_end, $days)
@@ -21,7 +22,6 @@ class AnwesenheitsAbfrageExport implements FromCollection, WithMapping, WithHead
         $this->date_start = Carbon::parse($date_start);
         $this->date_end = Carbon::parse($date_end);
         $this->days = $days;
-
 
     }
 
@@ -44,22 +44,18 @@ class AnwesenheitsAbfrageExport implements FromCollection, WithMapping, WithHead
 
         return [
             $childCheckIns->first()->child->last_name.', '.$childCheckIns->first()->child->first_name,
-            ...$days
+            ...$days,
         ];
     }
 
     public function headings(): array
     {
-            $headings = ['Name'];
+        $headings = ['Name'];
 
+        foreach ($this->days as $day) {
+            $headings[] = $day->format('d.m.Y');
+        }
 
-
-            foreach ($this->days as $day) {
-                $headings[] = $day->format('d.m.Y');
-            }
-
-            return $headings;
+        return $headings;
     }
-
-
 }

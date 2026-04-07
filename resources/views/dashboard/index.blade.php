@@ -11,6 +11,67 @@
                 <p class="text-blue-100">{{ $datum->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</p>
             </div>
 
+            <!-- Aktive meldepflichtige Erkrankungen -->
+            @if($activeDiseases && count($activeDiseases) > 0)
+                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg shadow p-3 mb-4">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-red-500" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h6 class="font-bold text-red-800 mb-2">
+                                <i class="fas fa-virus"></i> Aktive meldepflichtige Erkrankungen
+                            </h6>
+                            <div class="space-y-2">
+                                @foreach($activeDiseases as $activeDisease)
+                                    <div class="bg-white border border-red-200 rounded p-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="font-semibold text-red-900 text-sm">
+                                                <i class="fas fa-disease"></i> {{ $activeDisease->disease->name }}
+                                            </span>
+                                            <span class="text-xs text-gray-600">
+                                                <i class="far fa-calendar"></i>
+                                                {{ $activeDisease->start->format('d.m.Y') }}
+                                                @if($activeDisease->end)
+                                                    - {{ $activeDisease->end->format('d.m.Y') }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-red-600 mt-2 mb-0">
+                                <i class="fas fa-info-circle"></i> Bitte beachten Sie die entsprechenden Hygienemaßnahmen.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Hinweis auf offene Anwesenheitsabfragen -->
+            @if($openAttendanceSurveys)
+                <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg shadow p-3 mb-4">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-clipboard-check text-orange-500" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h6 class="font-bold text-orange-800 mb-2">
+                                <i class="fas fa-user-clock"></i> Offene Anwesenheitsabfragen
+                            </h6>
+                            <p class="text-sm text-orange-800 mb-2">
+                                Es gibt noch offene Anwesenheitsabfragen für Ihre Kinder. Bitte geben Sie diese zeitnah ab.
+                            </p>
+                            <a href="{{ url('/schickzeiten#anwesenheitsabfrage') }}"
+                               class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200">
+                                <i class="fas fa-arrow-right"></i>
+                                Zu den Anwesenheitsabfragen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Losung des Tages -->
             @if($losung)
                 @include('include.losung')
@@ -115,7 +176,25 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            @if(!$termin->fullDay)
+                                            @php
+                                                $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
+                                                $daysDiff = $isMultiDay ? $termin->start->diffInDays($termin->ende) + 1 : 0;
+                                            @endphp
+                                            @if($isMultiDay)
+                                                <p class="text-sm text-gray-600 mb-0">
+                                                    <i class="fas fa-calendar-week"></i>
+                                                    {{ $termin->start->locale('de')->isoFormat('D. MMM') }}
+                                                    @if(!$termin->fullDay)
+                                                        {{ $termin->start->format('H:i') }}
+                                                    @endif
+                                                    -
+                                                    {{ $termin->ende->locale('de')->isoFormat('D. MMM') }}
+                                                    @if(!$termin->fullDay)
+                                                        {{ $termin->ende->format('H:i') }}
+                                                    @endif
+                                                    <span class="badge badge-info badge-sm ml-1">{{ floor($daysDiff) }} Tage</span>
+                                                </p>
+                                            @elseif(!$termin->fullDay)
                                                 <p class="text-sm text-gray-600 mb-0">
                                                     <i class="far fa-clock"></i> {{ $termin->start->format('H:i') }} Uhr
                                                     @if($termin->ende && $termin->start->format('Y-m-d') == $termin->ende->format('Y-m-d'))

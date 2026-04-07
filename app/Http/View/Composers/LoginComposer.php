@@ -2,17 +2,15 @@
 
 namespace App\Http\View\Composers;
 
-use App\Model\Losung;
-use App\Settings\GeneralSetting;
-use App\Settings\KeyCloakSetting;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
-
 class LoginComposer
 {
     public function compose($view): void
     {
-        $keycloak = (new KeyCloakSetting())->enabled;
+        // Use ENV variable only
+        $keycloak = env('KEYCLOAK_ENABLED', false);
+        $buttonText = env('KEYCLOAK_BUTTON_TEXT', 'Login mit SSO');
+
         $view->with('keycloak', $keycloak);
+        $view->with('keycloakButtonText', $buttonText);
     }
 }

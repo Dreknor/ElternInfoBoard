@@ -11,7 +11,6 @@ class ReinigungsTaskController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param ReinigsungsTaskRequest $request
      * @return RedirectResponse
      */
     public function store(ReinigsungsTaskRequest $request)
@@ -28,7 +27,7 @@ class ReinigungsTaskController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param ReinigungsTask $reinigungsTask
+     * @param  ReinigungsTask  $reinigungsTask
      * @return RedirectResponse
      */
     public function destroy(ReinigungsTask $task)

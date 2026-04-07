@@ -9,10 +9,8 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         // Hole das Nachrichten-Modul
         $nachrichtenModule = Module::query()->where('setting', 'Nachrichten')->first();
@@ -52,12 +50,12 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
             }
 
             // Füge Navigation hinzu, falls nicht vorhanden
-            if (!isset($options['nav'])) {
+            if (! isset($options['nav'])) {
                 $options['nav'] = [
                     'name' => 'Termine',
                     'link' => 'termin',
                     'icon' => 'far fa-calendar-alt',
-                    'bottom-nav' => 'true'
+                    'bottom-nav' => 'true',
                 ];
             } else {
                 $options['nav']['link'] = 'termin';
@@ -71,4 +69,3 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
         }
     }
 }
-

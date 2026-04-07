@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Mail;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MailFactory extends Factory
 {
@@ -16,10 +16,8 @@ class MailFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'senders_id' => \App\Model\User::factory(),

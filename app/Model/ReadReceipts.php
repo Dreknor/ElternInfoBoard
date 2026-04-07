@@ -4,6 +4,7 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReadReceipts extends Model
 {
@@ -11,18 +12,21 @@ class ReadReceipts extends Model
 
     protected $fillable = ['post_id', 'user_id', 'reminded_at', 'final_reminder_sent_at', 'confirmed_at'];
 
-    protected $casts = [
-        'reminded_at' => 'datetime',
-        'final_reminder_sent_at' => 'datetime',
-        'confirmed_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'reminded_at' => 'datetime',
+            'final_reminder_sent_at' => 'datetime',
+            'confirmed_at' => 'datetime',
+        ];
+    }
 
-    public function post()
+    public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

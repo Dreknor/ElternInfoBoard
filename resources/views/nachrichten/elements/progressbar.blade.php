@@ -58,7 +58,7 @@
             <div class="mt-3 flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-lg">
                 <i class="fas fa-exclamation-triangle text-red-600"></i>
                 <p class="text-xs text-red-700 font-medium mb-0">
-                    Frist endet in {{$nachricht->rueckmeldung->ende->diffInDays(\Carbon\Carbon::now())}} Tag(en)!
+                    Frist endet in {{ceil(\Carbon\Carbon::now()->diffInDays($nachricht->rueckmeldung->ende))}} Tag(en)!
                 </p>
             </div>
         @endif

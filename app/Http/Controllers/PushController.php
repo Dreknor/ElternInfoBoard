@@ -3,54 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Model\User;
+use App\Notifications\Push;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\Push;
 
-use Illuminate\Http\JsonResponse;
-use Minishlink\WebPush\WebPush;
-
-class PushController extends Controller
+class PushController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
-
 
     /**
      * Testen der Push-Benachrichtigung
-     * @return \Illuminate\Http\RedirectResponse
      *
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function testPush(){
+    public function testPush()
+    {
 
-        if(auth()->user()->can('testing')){
-            Log::info('PushController:testPush: Benachrichtigung wird gesendet an ' . auth()->user()->name);
+        if (auth()->user()->can('testing')) {
+            Log::info('PushController:testPush: Benachrichtigung wird gesendet an '.auth()->user()->name);
             auth()->user()->notify(new Push('Testbenachrichtigung', 'Dies ist eine Testbenachrichtigung'));
+
             return redirect()->back()->with([
                 'Meldung' => 'Benachrichtigung wurde gesendet',
-                'type' => 'success'
+                'type' => 'success',
             ]);
         }
+
         return redirect()->back()->with([
             'Meldung' => 'Keine Berechtigung',
-            'type' => 'danger'
+            'type' => 'danger',
         ]);
 
     }
 
-
     /**
      * Store the PushSubscription.
      *
-     * @param \Illuminate\Http\Request $request
      * @return JsonResponse
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
+        $request->validate([
             'endpoint' => 'required',
             'keys.auth' => 'required',
             'keys.p256dh' => 'required',
@@ -69,18 +70,19 @@ class PushController extends Controller
     {
 
         if (auth()->user()->can('testing')) {
-            Log::info('PushController:push: Benachrichtigung wird gesendet an ' . $user->name);
+            Log::info('PushController:push: Benachrichtigung wird gesendet an '.$user->name);
             Notification::send($user, new Push('Testbenachrichtigung', 'Dies ist eine Testbenachrichtigung'));
+
             return redirect()->back()->with([
                 'Meldung' => 'Benachrichtigung wurde gesendet',
-                'type' => 'success'
+                'type' => 'success',
             ]);
         }
+
         return redirect()->back()->with([
             'Meldung' => 'Keine Berechtigung',
-            'type' => 'danger'
+            'type' => 'danger',
         ]);
 
     }
-
 }

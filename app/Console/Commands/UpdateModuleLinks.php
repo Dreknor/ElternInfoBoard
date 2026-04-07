@@ -23,10 +23,8 @@ class UpdateModuleLinks extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         // Update Nachrichten Module
         $nachrichtenModule = Module::query()->where('setting', 'Nachrichten')->first();
@@ -68,12 +66,12 @@ class UpdateModuleLinks extends Command
             }
 
             // Add or update navigation
-            if (!isset($options['nav'])) {
+            if (! isset($options['nav'])) {
                 $options['nav'] = [
                     'name' => 'Termine',
                     'link' => 'termin',
                     'icon' => 'far fa-calendar-alt',
-                    'bottom-nav' => 'true'
+                    'bottom-nav' => 'true',
                 ];
                 $this->info('Added nav to Termine module');
             } else {
@@ -97,4 +95,3 @@ class UpdateModuleLinks extends Command
         return 0;
     }
 }
-

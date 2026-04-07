@@ -16,13 +16,12 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class GTAController extends Controller
 {
-
     protected $weekdays = [
         1 => 'Montag',
         2 => 'Dienstag',
         3 => 'Mittwoch',
         4 => 'Donnerstag',
-        5 => 'Freitag'
+        5 => 'Freitag',
     ];
 
     /**
@@ -34,15 +33,12 @@ class GTAController extends Controller
             ->where('end_date', '>', now())
             ->get();
 
-
-
         return view('arbeitsgemeinschaften.verwaltung')
             ->with([
                 'arbeitsgemeinschaften' => $arbeitsgemeinschaften,
-                'weekdays' => $this->weekdays
+                'weekdays' => $this->weekdays,
             ]);
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -52,12 +48,11 @@ class GTAController extends Controller
         $managers = User::role('Mitarbeiter')->orderBy('name')->get();
         $groups = Group::all();
 
-
         return view('arbeitsgemeinschaften.create')
             ->with([
                 'managers' => $managers,
                 'groups' => $groups,
-                'weekdays' => $this->weekdays
+                'weekdays' => $this->weekdays,
             ]);
 
     }
@@ -83,9 +78,8 @@ class GTAController extends Controller
             ->route('verwaltung.arbeitsgemeinschaften.index')
             ->with([
                 'type' => 'success',
-                'Meldung' => 'Die Arbeitsgemeinschaft wurde erfolgreich erstellt.'
+                'Meldung' => 'Die Arbeitsgemeinschaft wurde erfolgreich erstellt.',
             ]);
-
 
     }
 
@@ -105,13 +99,12 @@ class GTAController extends Controller
         $managers = User::role('Mitarbeiter')->orderBy('name')->get();
         $groups = Group::all();
 
-
         return view('arbeitsgemeinschaften.edit')
             ->with([
                 'arbeitsgemeinschaft' => $arbeitsgemeinschaft,
                 'managers' => $managers,
                 'groups' => $groups,
-                'weekdays' => $this->weekdays
+                'weekdays' => $this->weekdays,
             ]);
 
     }
@@ -129,10 +122,8 @@ class GTAController extends Controller
             ->route('verwaltung.arbeitsgemeinschaften.index')
             ->with([
                 'type' => 'success',
-                'Meldung' => 'Die Arbeitsgemeinschaft wurde erfolgreich aktualisiert.'
+                'Meldung' => 'Die Arbeitsgemeinschaft wurde erfolgreich aktualisiert.',
             ]);
-
-
 
     }
 
@@ -142,15 +133,14 @@ class GTAController extends Controller
     public function destroy(Request $request, Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
 
-        if (!auth()->user()->can('edit GTA')){
+        if (! auth()->user()->can('edit GTA')) {
             return redirect()
-               ->back()
+                ->back()
                 ->with([
                     'type' => 'error',
-                    'Meldung' => 'Sie haben keine Berechtigung, diese Arbeitsgemeinschaft zu löschen.'
+                    'Meldung' => 'Sie haben keine Berechtigung, diese Arbeitsgemeinschaft zu löschen.',
                 ]);
         }
-
 
         $group = Group::query()
             ->where('name', $arbeitsgemeinschaft->name)
@@ -167,7 +157,7 @@ class GTAController extends Controller
             ->route('verwaltung.arbeitsgemeinschaften.index')
             ->with([
                 'type' => 'success',
-                'Meldung' => 'Die Arbeitsgemeinschaft wurde erfolgreich gelöscht.'
+                'Meldung' => 'Die Arbeitsgemeinschaft wurde erfolgreich gelöscht.',
             ]);
     }
 
@@ -200,7 +190,7 @@ class GTAController extends Controller
     {
 
         $validated = $request->validate([
-            'child_id' => 'required|exists:children,id'
+            'child_id' => 'required|exists:children,id',
         ]);
 
         if ($arbeitsgemeinschaft->participants()->count() >= $arbeitsgemeinschaft->max_participants) {
@@ -214,11 +204,11 @@ class GTAController extends Controller
                 ->route('verwaltung.arbeitsgemeinschaften.teilnehmer', $arbeitsgemeinschaft)
                 ->with([
                     'type' => 'error',
-                    'Meldung' => 'Das Kind ist bereits Teilnehmer dieser Arbeitsgemeinschaft.'
+                    'Meldung' => 'Das Kind ist bereits Teilnehmer dieser Arbeitsgemeinschaft.',
                 ]);
         } else {
             $arbeitsgemeinschaft->participants()->attach($validated['child_id'], [
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
         }
 
@@ -229,15 +219,14 @@ class GTAController extends Controller
         // Nur die automatisch erstellte AG-Gruppe verwenden
         $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
 
-
         if ($agGroup) {
             foreach ($parents as $parent) {
                 // Prüfen, ob der Elternteil bereits in der Gruppe ist
-                if (!$agGroup->users()->where('users.id', $parent->id)->exists()) {
+                if (! $agGroup->users()->where('users.id', $parent->id)->exists()) {
                     $agGroup->users()->attach($parent->id);
                 }
 
-                if ($parent->sorg2 != null && !$agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
+                if ($parent->sorg2 != null && ! $agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
                     // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
                     $agGroup->users()->attach($parent->sorg2);
                 }
@@ -272,12 +261,10 @@ class GTAController extends Controller
             ->with('success', 'Teilnehmer wurde entfernt.');
     }
 
-
     public function exportParticipants(Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
-        $fileName = 'teilnehmer_' . Str::slug($arbeitsgemeinschaft->name) . '_' . date('Y-m-d') . '.xlsx';
+        $fileName = 'teilnehmer_'.Str::slug($arbeitsgemeinschaft->name).'_'.date('Y-m-d').'.xlsx';
 
         return Excel::download(new ParticipantsExport($arbeitsgemeinschaft), $fileName);
     }
-
 }

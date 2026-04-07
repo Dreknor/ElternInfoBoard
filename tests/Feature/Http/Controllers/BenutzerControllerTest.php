@@ -18,7 +18,7 @@ class BenutzerControllerTest extends TestCase
     /**
      * @test
      **/
-    public function show_returns_an_ok_response()
+    public function show_returns_an_ok_response(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
 
@@ -33,7 +33,7 @@ class BenutzerControllerTest extends TestCase
     /**
      * @test
      **/
-    public function show_displays_changelog_when_changeSettings_is_true()
+    public function show_displays_changelog_when_change_settings_is_true(): void
     {
         $user = User::factory()->create(['changeSettings' => true, 'changePassword' => false]);
         $changelog = Changelog::factory()->create(['changeSettings' => true]);
@@ -54,7 +54,7 @@ class BenutzerControllerTest extends TestCase
     /**
      * @test
      **/
-    public function unauthenticated_user_cannot_access_settings()
+    public function unauthenticated_user_cannot_access_settings(): void
     {
         $response = $this->get('einstellungen');
 
@@ -64,7 +64,7 @@ class BenutzerControllerTest extends TestCase
     /**
      * @test
      **/
-    public function update_returns_a_redirect_response()
+    public function update_returns_a_redirect_response(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
         $response = $this->actingAs($user)->put('einstellungen', [
@@ -92,9 +92,13 @@ class BenutzerControllerTest extends TestCase
     /**
      * @test
      **/
-    public function update_changes_password_when_provided()
+    public function update_changes_password_when_provided(): void
     {
-        $user = User::factory()->create(['changePassword' => false]);
+        $currentPassword = 'AktuellesPasswort1!';
+        $user = User::factory()->create([
+            'changePassword' => false,
+            'password' => Hash::make($currentPassword),
+        ]);
         $response = $this->actingAs($user)->put('einstellungen', [
             'name' => $user->name,
             'email' => $user->email,
@@ -105,33 +109,34 @@ class BenutzerControllerTest extends TestCase
             'publicPhone' => '',
             'calendar_prefix' => '',
             'releaseCalendar' => 0,
-            'password' => 'newpassword123',
-            'password_confirmation' => 'newpassword123',
+            'current_password' => $currentPassword,
+            'password' => 'NeuesPasswort1!',
+            'password_confirmation' => 'NeuesPasswort1!',
         ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('type', 'success');
 
         $user->refresh();
-        $this->assertTrue(Hash::check('newpassword123', $user->password));
+        $this->assertTrue(Hash::check('NeuesPasswort1!', $user->password));
     }
 
     /**
      * @test
      **/
-    public function update_validates_with_a_form_request()
+    public function update_validates_with_a_form_request(): void
     {
         $this->assertActionUsesFormRequest(
             \App\Http\Controllers\BenutzerController::class,
             'update',
-            \App\Http\Requests\editUserRequest::class
+            \App\Http\Requests\UpdateProfileRequest::class
         );
     }
 
     /**
      * @test
      **/
-    public function create_token_generates_new_api_token()
+    public function create_token_generates_new_api_token(): void
     {
         $user = User::factory()->create(['changePassword' => false]);
 

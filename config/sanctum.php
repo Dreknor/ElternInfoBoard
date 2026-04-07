@@ -19,7 +19,8 @@ return [
     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s',
         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort()
+        Sanctum::currentApplicationUrlWithPort(),
+        // Sanctum::currentRequestHost(),
     ))),
 
     /*
@@ -47,7 +48,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Token-Ablaufzeit: 30 Tage (in Minuten). null = kein Ablauf.
+    // Gestohlene Tokens werden automatisch ungültig.
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------
@@ -62,7 +65,7 @@ return [
     |
     */
 
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', 'elterninfo_'),
 
     /*
     |--------------------------------------------------------------------------

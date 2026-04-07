@@ -5,19 +5,19 @@ namespace App\Http\Middleware;
 use App\Model\Changelog;
 use App\Support\Collection;
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckNewsForUser
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         if (auth()->guest()) {
             return $next($request);
@@ -56,7 +56,7 @@ class CheckNewsForUser
 
                 foreach ($posts as $post) {
                     $news[] = [
-                        'link' => url('home#'.$post->id),
+                        'link' => url('post/'.$post->id),
                         'title' => '<i class="far fa-newspaper"></i> '.$post->header,
                     ];
                 }
@@ -72,7 +72,7 @@ class CheckNewsForUser
                 }
 
                 $gruppen = auth()->user()->groups->load('media');
-                $media = new Collection();
+                $media = new Collection;
 
                 foreach ($gruppen as $gruppe) {
                     $gruppenMedien = $gruppe->getMedia();

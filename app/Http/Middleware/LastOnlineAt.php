@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 class LastOnlineAt
 {
@@ -12,10 +13,9 @@ class LastOnlineAt
      * Handle an incoming request.
      *
      * @param  Illuminate\Support\Facades\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         if (auth()->guest() or session()->has('ownID')) {
             return $next($request);

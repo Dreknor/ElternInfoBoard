@@ -9,62 +9,46 @@ class UserRueckmeldungenObserver
 {
     /**
      * Handle the Post "created" event.
-     *
-     * @param UserRueckmeldungen $rueckmeldungen
-     * @return void
      */
-    public function created(UserRueckmeldungen $rueckmeldungen)
+    public function created(UserRueckmeldungen $rueckmeldungen): void
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
     /**
      * Handle the Post "updated" event.
-     *
-     * @param UserRueckmeldungen $rueckmeldungen
-     * @return void
      */
-    public function updated(UserRueckmeldungen $rueckmeldungen)
+    public function updated(UserRueckmeldungen $rueckmeldungen): void
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
-
     /**
      * Handle the Post "deleted" event.
-     *
-     * @param UserRueckmeldungen $rueckmeldungen
-     * @return void
      */
-    public function deleted(UserRueckmeldungen $rueckmeldungen)
+    public function deleted(UserRueckmeldungen $rueckmeldungen): void
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
     /**
      * Handle the Post "restored" event.
-     *
-     * @param UserRueckmeldungen $rueckmeldungen
-     * @return void
      */
-    public function restored(UserRueckmeldungen $rueckmeldungen)
+    public function restored(UserRueckmeldungen $rueckmeldungen): void
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 
     /**
      * Handle the Post "force deleted" event.
-     *
-     * @param UserRueckmeldungen $rueckmeldungen
-     * @return void
      */
-    public function forceDeleted(UserRueckmeldungen $rueckmeldungen)
+    public function forceDeleted(UserRueckmeldungen $rueckmeldungen): void
     {
-        Cache::forget('posts_' . auth()->id());
+        Cache::forget('posts_'.auth()->id());
 
     }
 }

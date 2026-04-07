@@ -19,13 +19,13 @@ class CreateChangelogRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CreateChangelogRequest();
+        $this->subject = new CreateChangelogRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('add changelog');
@@ -39,10 +39,10 @@ class CreateChangelogRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

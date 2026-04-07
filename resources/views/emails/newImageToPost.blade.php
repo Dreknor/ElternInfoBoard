@@ -8,9 +8,14 @@
     {{$von}} hat ein neues Bild hochgeladen
 </h2>
 
-Das Bild wurde der Nachricht "{{$betreff}}" hinzugefügt
+<p>Das Bild wurde der Nachricht "{{$betreff}}" hinzugefügt.</p>
 
+<p>
+    <a href="{{url('post/'.$postId)}}">Nachricht direkt ansehen</a>
+</p>
 
-<a href="{{config('app.url')}}">{{config('app.name')}}</a>
+<p>
+    <a href="{{config('app.url')}}">{{config('app.name')}}</a>
+</p>
 </body>
 </html>

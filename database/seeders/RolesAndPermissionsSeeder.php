@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Model\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -11,10 +10,8 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
 
         $tableNames = config('permission.table_names');
@@ -165,7 +162,7 @@ class RolesAndPermissionsSeeder extends Seeder
             [
                 'permission_id' => 1,
                 'model_type' => User::class,
-                'model_id' => 1,],
+                'model_id' => 1, ],
             [
                 'permission_id' => 2,
                 'model_type' => User::class,

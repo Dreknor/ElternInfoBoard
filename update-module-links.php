@@ -51,12 +51,12 @@ if ($termineModule) {
     }
 
     // Add or update navigation
-    if (!isset($options['nav'])) {
+    if (! isset($options['nav'])) {
         $options['nav'] = [
             'name' => 'Termine',
             'link' => 'termin',
             'icon' => 'far fa-calendar-alt',
-            'bottom-nav' => 'true'
+            'bottom-nav' => 'true',
         ];
         echo "  - Added navigation\n";
     } else {
@@ -74,4 +74,3 @@ if ($termineModule) {
 }
 
 echo "Done! Please clear cache with: php artisan cache:clear\n";
-

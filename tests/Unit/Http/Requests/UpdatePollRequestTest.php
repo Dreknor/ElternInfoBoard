@@ -19,13 +19,13 @@ class UpdatePollRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new UpdatePollRequest();
+        $this->subject = new UpdatePollRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('create polls');
@@ -39,10 +39,10 @@ class UpdatePollRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

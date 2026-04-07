@@ -27,4 +27,3 @@ class DiseaseFactory extends Factory
         ]);
     }
 }
-

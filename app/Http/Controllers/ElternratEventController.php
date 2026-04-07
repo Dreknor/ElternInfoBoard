@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EventReminderMail;
 use App\Model\ElternratEvent;
 use App\Model\EventAttendee;
-use App\Mail\EventReminderMail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
-class ElternratEventController extends Controller
+class ElternratEventController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(['permission:view elternrat']);
+        return [
+            ['permission:view elternrat'],
+        ];
     }
 
     /**
@@ -105,6 +108,7 @@ class ElternratEventController extends Controller
     {
         if (auth()->user()->can('delete elternrat file') || $event->created_by === auth()->id()) {
             $event->delete();
+
             return redirect()->route('elternrat.events.index')->with([
                 'type' => 'success',
                 'meldung' => 'Termin gelöscht',
@@ -150,11 +154,11 @@ class ElternratEventController extends Controller
                     if ($user->email) {
                         try {
                             Mail::to($user->email)->send(
-                                new EventReminderMail($event, (int)$hoursUntilEvent)
+                                new EventReminderMail($event, (int) $hoursUntilEvent)
                             );
                             $sentCount++;
                         } catch (\Exception $e) {
-                            Log::error('Event Reminder Mail failed: ' . $e->getMessage());
+                            Log::error('Event Reminder Mail failed: '.$e->getMessage());
                         }
                     }
                 }

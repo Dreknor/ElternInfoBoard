@@ -8,8 +8,6 @@ class SchickzeitRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -18,8 +16,6 @@ class SchickzeitRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
@@ -42,7 +38,7 @@ class SchickzeitRequest extends FormRequest
             'specific_date' => [
                 'nullable',
                 'date',
-                'after_or_equal:' . now()->toDateString(),
+                'after_or_equal:'.now()->toDateString(),
             ],
             'time_ab' => [
                 'nullable',
@@ -52,7 +48,7 @@ class SchickzeitRequest extends FormRequest
                 'nullable',
                 'date_format:H:i',
             ],
-            'child_id' => 'sometimes|exists:children,id'
+            'child_id' => 'sometimes|exists:children,id',
         ];
     }
 }

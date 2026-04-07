@@ -2,31 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesApiKey;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 
 class ApiDeleteVertretungsNewsRequest extends FormRequest
 {
+    use ValidatesApiKey;
+
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-
-        $vertretung = json_decode(
-            $this->getContent(),
-            true
-        );
-
-        if ($vertretung['key'] == config('app.api_key')) {
-
-            return true;
-
-        }
-
-        return false;
+        return $this->isValidApiKey();
     }
 
     /**
@@ -34,7 +22,7 @@ class ApiDeleteVertretungsNewsRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             //

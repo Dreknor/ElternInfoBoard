@@ -2,7 +2,14 @@
 @section('title') - Hort-Modul @endsection
 
 @section('content')
-    <div class="container-fluid px-4 py-6" x-data="{ activeTab: 'anwesenheit', showTypeForm: 'genau' }">
+    <div class="container-fluid px-4 py-6" x-data="{
+        activeTab: (function() {
+            const hash = window.location.hash.substring(1);
+            const validTabs = ['anwesenheit', 'schickzeiten', 'anwesenheitsabfrage', 'vollmacht'];
+            return validTabs.includes(hash) ? hash : 'anwesenheit';
+        })(),
+        showTypeForm: 'genau'
+    }" x-init="window.location.hash && setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100)">
         <!-- Header -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-2">Hort-Modul</h1>

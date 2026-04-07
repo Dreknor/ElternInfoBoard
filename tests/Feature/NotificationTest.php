@@ -17,7 +17,7 @@ class NotificationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_receive_notification()
+    public function user_can_receive_notification(): void
     {
         $user = User::factory()->create();
 
@@ -36,7 +36,7 @@ class NotificationTest extends TestCase
     /**
      * @test
      */
-    public function notification_can_be_marked_as_read()
+    public function notification_can_be_marked_as_read(): void
     {
         $notification = Notification::factory()->unread()->create();
 
@@ -51,7 +51,7 @@ class NotificationTest extends TestCase
     /**
      * @test
      */
-    public function user_can_get_unread_notifications()
+    public function user_can_get_unread_notifications(): void
     {
         $user = User::factory()->create();
 
@@ -68,7 +68,7 @@ class NotificationTest extends TestCase
     /**
      * @test
      */
-    public function notification_belongs_to_user()
+    public function notification_belongs_to_user(): void
     {
         $user = User::factory()->create();
         $notification = Notification::factory()->create(['user_id' => $user->id]);
@@ -80,7 +80,7 @@ class NotificationTest extends TestCase
     /**
      * @test
      */
-    public function user_with_notification_setting_receives_notifications()
+    public function user_with_notification_setting_receives_notifications(): void
     {
         $userWithNotifications = User::factory()->create(['benachrichtigung' => true]);
         $userWithoutNotifications = User::factory()->create(['benachrichtigung' => false]);
@@ -89,4 +89,3 @@ class NotificationTest extends TestCase
         $this->assertFalse($userWithoutNotifications->benachrichtigung);
     }
 }
-

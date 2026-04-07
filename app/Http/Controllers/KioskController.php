@@ -4,21 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Model\Group;
 use Carbon\Carbon;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Collection;
 
-class KioskController extends Controller
+class KioskController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     public function kioskView($bereich = '')
     {
 
-        //Elterninfos
-        $Nachrichten = new Collection();
-        $Listen = new Collection();
+        // Elterninfos
+        $Nachrichten = new Collection;
+        $Listen = new Collection;
 
         $Gruppen = Group::where('protected', 0)->with(
             ['posts' => function ($query) {

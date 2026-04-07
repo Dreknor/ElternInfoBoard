@@ -9,21 +9,19 @@ use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-    /** Class VertretungsplanController
-     *
-     * Controller for handling Vertretungsplan (substitution plan) related API requests.
-     **/
-class VertretungsplanController extends Controller
+/** Class VertretungsplanController
+ *
+ * Controller for handling Vertretungsplan (substitution plan) related API requests.
+ **/
+class VertretungsplanController extends Controller implements HasMiddleware
 {
-    /**
-     * VertretungsplanController constructor.
-     *
-     * Apply authentication middleware.
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
     /**
@@ -41,6 +39,7 @@ class VertretungsplanController extends Controller
      * The method returns a 403 response if the user does not have the permission to view the Vertretungsplan.
      *
      * @authenticated
+     *
      * @group Vertretungsplan
      *
      * @responseField vertretungen array The Vertretungsplan entries.
@@ -48,25 +47,23 @@ class VertretungsplanController extends Controller
      * @responseField week object The current week.
      * @responseField absences array The absences for the current week.
      *
-     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
         $user = $request->user();
-        if (!$user){
+        if (! $user) {
             return response()->json([
-                'message' => 'Sie sind nicht angemeldet.'
+                'message' => 'Sie sind nicht angemeldet.',
             ], 401);
 
         }
 
-        if (!$user->hasPermissionTo('view vertretungsplan', 'web')) {
+        if (! $user->hasPermissionTo('view vertretungsplan', 'web')) {
             return response()->json([
-                'message' => 'Sie haben keine Berechtigung, den Vertretungsplan anzuzeigen.'
+                'message' => 'Sie haben keine Berechtigung, den Vertretungsplan anzuzeigen.',
             ], 403);
         }
-
 
         if ($user->hasPermissionTo('view vertretungsplan all', 'web')) {
             $vertretungen = Vertretung::orderBy('date', 'desc')->orderBy('stunde')->get([
@@ -76,7 +73,7 @@ class VertretungsplanController extends Controller
                 'altFach',
                 'neuFach',
                 'lehrer',
-                'comment'
+                'comment',
             ]);
         } else {
             $vertretungen = $user->vertretungen()->orderBy('stunde', 'asc')->get([
@@ -86,7 +83,7 @@ class VertretungsplanController extends Controller
                 'altFach',
                 'neuFach',
                 'lehrer',
-                'comment'
+                'comment',
             ]);
         }
 
@@ -101,15 +98,14 @@ class VertretungsplanController extends Controller
                 'name',
                 'start_date',
                 'end_date',
-                'reason'
+                'reason',
             ]);
-
 
         return response()->json([
             'vertretungen' => $vertretungen,
             'news' => $news,
             'week' => $week,
-            'absences' => $absences
+            'absences' => $absences,
         ], 200);
     }
 }

@@ -5,32 +5,46 @@ namespace App\Http\Controllers;
 use App\Http\Requests\createActiveDiseaseRequest;
 use App\Model\ActiveDisease;
 use App\Model\Disease;
-use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class ActiveDiseaseController extends Controller
+class ActiveDiseaseController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
-        $this->middleware('permission:manage diseases');
+        return [
+            'auth',
+            'permission:manage diseases',
+        ];
     }
 
     public function extend(ActiveDisease $disease)
     {
         $disease->update(['end' => $disease->end->addDays($disease->disease->aushang_dauer)]);
+
         return redirect()->back()->with([
             'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
             'type' => 'success',
         ]);
     }
+
     public function activate(ActiveDisease $disease)
     {
 
-        $disease->update(['active' => true]);
+        if ($disease->active) {
+            $disease->update(['active' => false]);
+
             return redirect()->back()->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich aktiviert',
-                'type' => 'success',
+                'Meldung' => 'Diese Krankmeldung wurde deaktiviert',
+                'type' => 'warning',
             ]);
+        }
+
+        $disease->update(['active' => true]);
+
+        return redirect()->back()->with([
+            'Meldung' => 'Krankmeldung wurde erfolgreich aktiviert',
+            'type' => 'success',
+        ]);
 
     }
 
@@ -51,11 +65,12 @@ class ActiveDiseaseController extends Controller
         if ($activeDisease) {
             $activeDisease->update(['end' => $activeDisease->end->addDays($disease->aushang_dauer)]);
 
-            return redirect(url('/'))->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
-                'type' => 'success',
-            ]);
-
+            return redirect()
+                ->back()
+                ->with([
+                    'Meldung' => 'Krankmeldung wurde erfolgreich verlängert',
+                    'type' => 'success',
+                ]);
 
         } else {
             ActiveDisease::insert([
@@ -66,18 +81,19 @@ class ActiveDiseaseController extends Controller
                 'active' => false,
             ]);
 
-            return redirect(url('/'))->with([
-                'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen',
-                'type' => 'success',
-            ]);
+            return redirect()
+                ->back()
+                ->with([
+                    'Meldung' => 'Krankmeldung wurde erfolgreich eingetragen, muss nun aktiviert werden',
+                    'type' => 'success',
+                ]);
         }
-
 
     }
 
     public function destroy(ActiveDisease $disease)
     {
-        if (!auth()->user()->can('manage diseases')) {
+        if (! auth()->user()->can('manage diseases')) {
             return redirect()->back()->with([
                 'Meldung' => 'Du hast keine Berechtigung diese Krankmeldung zu löschen',
                 'type' => 'danger',
@@ -92,12 +108,13 @@ class ActiveDiseaseController extends Controller
         }
 
         $disease->delete();
+
         return redirect()->back();
     }
 
     public function update(ActiveDisease $disease)
     {
-        if (!auth()->user()->can('manage diseases')) {
+        if (! auth()->user()->can('manage diseases')) {
             return redirect()->back()->with([
                 'Meldung' => 'Du hast keine Berechtigung diese Krankmeldung zu löschen',
                 'type' => 'danger',
@@ -105,6 +122,7 @@ class ActiveDiseaseController extends Controller
         }
 
         $disease->update(['active' => false]);
+
         return redirect()->back();
     }
 }

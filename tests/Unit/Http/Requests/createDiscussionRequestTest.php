@@ -19,13 +19,13 @@ class createDiscussionRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new createDiscussionRequest();
+        $this->subject = new createDiscussionRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         $user = User::factory()->create();
         Permission::findOrCreate('view elternrat');
@@ -39,10 +39,10 @@ class createDiscussionRequestTest extends TestCase
     /**
      * @test
      */
-        /**
+    /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 

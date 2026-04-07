@@ -18,13 +18,13 @@ class CommentPostRequestTest extends TestCase
     {
         parent::setUp();
 
-        $this->subject = new CommentPostRequest();
+        $this->subject = new CommentPostRequest;
     }
 
     /**
      * @test
      */
-    public function authorize()
+    public function authorize(): void
     {
         // Test ohne authentifizierten Benutzer
         $actual = $this->subject->authorize();
@@ -40,7 +40,7 @@ class CommentPostRequestTest extends TestCase
     /**
      * @test
      */
-    public function rules()
+    public function rules(): void
     {
         $actual = $this->subject->rules();
 
@@ -51,5 +51,4 @@ class CommentPostRequestTest extends TestCase
             ],
         ], $actual);
     }
-
 }

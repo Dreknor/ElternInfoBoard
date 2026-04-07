@@ -9,8 +9,6 @@ class editPostRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -25,14 +23,12 @@ class editPostRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
         return [
-            'header'    => [
-                'required', 'max:120'
+            'header' => [
+                'required', 'max:120',
             ],
             'news' => [
                 'news' => [
@@ -64,13 +60,13 @@ class editPostRequest extends FormRequest
                 'nullable', 'date',
             ],
             'external' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
             'wp_push' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
             'no_header' => [
-                'nullable', 'sometimes','boolean',
+                'nullable', 'sometimes', 'boolean',
             ],
 
         ];

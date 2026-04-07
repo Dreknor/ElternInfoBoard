@@ -16,7 +16,7 @@ class LosungTest extends TestCase
     /**
      * @test
      */
-    public function losung_can_be_created()
+    public function losung_can_be_created(): void
     {
         $losung = Losung::factory()->create([
             'date' => now()->format('Y-m-d'),
@@ -32,7 +32,7 @@ class LosungTest extends TestCase
     /**
      * @test
      */
-    public function losung_for_today_can_be_retrieved()
+    public function losung_for_today_can_be_retrieved(): void
     {
         $todayLosung = Losung::factory()->create([
             'date' => now()->format('Y-m-d'),
@@ -53,7 +53,7 @@ class LosungTest extends TestCase
     /**
      * @test
      */
-    public function losung_has_unique_date()
+    public function losung_has_unique_date(): void
     {
         $date = now()->format('Y-m-d');
 

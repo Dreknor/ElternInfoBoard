@@ -1,6 +1,6 @@
-<div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 hover:border-blue-300 flex flex-col" x-data="{ showInfo: false, showMenu: false }">
+<div class="border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 hover:border-blue-300 flex flex-col" x-data="{ showInfo: false, showMenu: false }">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 @if($liste->active == 0) from-cyan-500 to-cyan-600 @endif">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 rounded-t-lg @if($liste->active == 0) from-cyan-500 to-cyan-600 @endif">
         <div class="flex items-start justify-between gap-3">
             <div class="flex-1">
                 <h3 class="text-base font-bold text-white flex items-start gap-2 mb-0 flex-wrap">
@@ -41,7 +41,7 @@
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50"
+                             class="absolute right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50"
                              x-cloak>
                             <a href="{{ url("listen/$liste->id/edit") }}"
                                class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150">
@@ -139,7 +139,7 @@
     </div>
 
     <!-- Footer -->
-    <div class="bg-gray-50 border-t border-gray-200 px-4 py-2 flex items-center justify-between text-xs">
+    <div class="bg-gray-50 border-t border-gray-200 px-4 py-2 flex items-center justify-between text-xs rounded-b-lg">
         <small class="text-gray-600">
             <i class="fas fa-calendar-alt mr-1"></i>
             <strong>{{ $liste->ende->format('d.m.Y') }}</strong>

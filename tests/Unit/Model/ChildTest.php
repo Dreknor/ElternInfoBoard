@@ -3,8 +3,6 @@
 namespace Tests\Unit\Model;
 
 use App\Model\Child;
-use App\Model\Group;
-use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +16,7 @@ class ChildTest extends TestCase
     /**
      * @test
      */
-    public function child_can_be_created_with_factory()
+    public function child_can_be_created_with_factory(): void
     {
         $child = Child::factory()->create();
 
@@ -29,24 +27,21 @@ class ChildTest extends TestCase
     /**
      * @test
      */
-    public function child_has_name_attribute()
+    public function child_has_name_attribute(): void
     {
         $child = Child::factory()->create([
             'first_name' => 'Test',
             'last_name' => 'Child',
         ])->fresh();
 
-        $this->assertEquals('Test Child', $child->first_name . ' ' . $child->last_name);
-
+        $this->assertEquals('Test Child', $child->first_name.' '.$child->last_name);
 
     }
-
-
 
     /**
      * @test
      */
-    public function child_auto_check_in_is_boolean()
+    public function child_auto_check_in_is_boolean(): void
     {
         $child = Child::factory()->create([
             'auto_check_in' => true,
@@ -54,8 +49,4 @@ class ChildTest extends TestCase
 
         $this->assertTrue(is_bool($child->auto_check_in));
     }
-
-
-
 }
-

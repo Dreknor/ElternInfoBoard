@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Model\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Spatie\Permission\Models\Role;
 
-class NotificationController extends Controller
+class NotificationController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     public function read(Request $request)
@@ -19,7 +22,7 @@ class NotificationController extends Controller
             'id' => 'required|integer',
         ]);
 
-        if (!auth()->user()->notifications()->where('id', $request->id)->exists()) {
+        if (! auth()->user()->notifications()->where('id', $request->id)->exists()) {
             return response()->json(['success' => false]);
         }
 
@@ -33,6 +36,7 @@ class NotificationController extends Controller
     public function readAll()
     {
         auth()->user()->notifications()->update(['read' => true]);
+
         return redirect()->back();
     }
 
@@ -45,8 +49,6 @@ class NotificationController extends Controller
         auth()->user()->notifications()->where('type', $request->type)->update(['read' => true]);
 
     }
-
-
 
     public function clean_up()
     {
@@ -62,7 +64,6 @@ class NotificationController extends Controller
                 'important' => false,
                 'type' => 'Admin',
             ]);
-
 
             $notification->save();
         }

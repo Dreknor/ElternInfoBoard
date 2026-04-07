@@ -25,7 +25,7 @@ class PflichtstundenObserver
             $notification = new Notification([
                 'user_id' => $pflichtstunde->user_id,
                 'title' => 'Pflichtstunde genehmigt',
-                'message' => 'Deine Pflichtstunde vom ' . $pflichtstunde->start->format('d.m.Y H:i') . ' bis ' . $pflichtstunde->end->format('d.m.Y H:i') . ' wurde genehmigt.',
+                'message' => 'Deine Pflichtstunde vom '.$pflichtstunde->start->format('d.m.Y H:i').' bis '.$pflichtstunde->end->format('d.m.Y H:i').' wurde genehmigt.',
                 'type' => 'Pflichtstunden',
                 'is_read' => false,
             ]);
@@ -37,7 +37,7 @@ class PflichtstundenObserver
             $notification = new Notification([
                 'user_id' => $pflichtstunde->user_id,
                 'title' => 'Pflichtstunde abgelehnt',
-                'message' => 'Deine Pflichtstunde vom ' . $pflichtstunde->start->format('d.m.Y H:i') . ' bis ' . $pflichtstunde->end->format('d.m.Y H:i') . ' wurde abgelehnt. Grund: ' . $pflichtstunde->rejection_reason,
+                'message' => 'Deine Pflichtstunde vom '.$pflichtstunde->start->format('d.m.Y H:i').' bis '.$pflichtstunde->end->format('d.m.Y H:i').' wurde abgelehnt. Grund: '.$pflichtstunde->rejection_reason,
                 'type' => 'Pflichtstunden',
                 'is_read' => false,
             ]);

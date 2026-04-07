@@ -3,11 +3,13 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Arbeitsgemeinschaft extends Model
 {
-
     protected $table = 'arbeitsgemeinschaften';
+
     protected $fillable = [
         'name',
         'description',
@@ -20,26 +22,28 @@ class Arbeitsgemeinschaft extends Model
         'manager_id',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'start_time' => 'datetime:H:i',
+            'end_time' => 'datetime:H:i',
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
-    protected $casts = [
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
-
-    public function groups()
+    public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'arbeitsgemeinschaften_groups', 'ag_id', 'group_id');
     }
 
-    public function participants()
+    public function participants(): BelongsToMany
     {
         return $this->belongsToMany(Child::class, 'arbeitsgemeinschaften_participants', 'ag_id', 'participant_id');
 
     }
 
-    public function manager()
+    public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
     }

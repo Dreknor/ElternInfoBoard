@@ -14,10 +14,10 @@ return [
         GeneralSetting::class,
         EmailSetting::class,
         CareSetting::class,
-        \App\Settings\KeyCloakSetting::class,
         \App\Settings\NotifySetting::class,
         \App\Settings\PflichtstundenSetting::class,
         \App\Settings\SchickzeitenSetting::class,
+        \App\Settings\StundenplanSetting::class,
 
     ],
 
@@ -49,7 +49,7 @@ return [
             'type' => Spatie\LaravelSettings\SettingsRepositories\DatabaseSettingsRepository::class,
             'model' => null,
             'table' => null,
-            'connection' => null,
+            'connection' => env('DB_CONNECTION', 'mysql'),
         ],
         'redis' => [
             'type' => Spatie\LaravelSettings\SettingsRepositories\RedisSettingsRepository::class,
@@ -72,7 +72,7 @@ return [
      * additional prefix.
      */
     'cache' => [
-        'enabled' => env('SETTINGS_CACHE_ENABLED', true),
+        'enabled' => env('SETTINGS_CACHE_ENABLED', false),
         'store' => null,
         'prefix' => 'settings',
         'ttl' => null,
@@ -85,7 +85,7 @@ return [
     'global_casts' => [
         DateTimeInterface::class => Spatie\LaravelSettings\SettingsCasts\DateTimeInterfaceCast::class,
         DateTimeZone::class => Spatie\LaravelSettings\SettingsCasts\DateTimeZoneCast::class,
-//        Spatie\DataTransferObject\DataTransferObject::class => Spatie\LaravelSettings\SettingsCasts\DtoCast::class,
+        //        Spatie\DataTransferObject\DataTransferObject::class => Spatie\LaravelSettings\SettingsCasts\DtoCast::class,
         Spatie\LaravelData\Data::class => Spatie\LaravelSettings\SettingsCasts\DataCast::class,
     ],
 

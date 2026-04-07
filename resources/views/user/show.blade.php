@@ -93,15 +93,38 @@
                                                     <option value="0" @if(!$user->changePassword)selected @endif>Nein</option>
                                                 </select>
                                             </div>
-
                                         </div>
                                     </div>
+
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <label>
+                                                    Konto-Status
+                                                    @if(!$user->is_active)
+                                                        <span class="badge badge-danger ml-1">Deaktiviert</span>
+                                                        @if($user->deactivated_at)
+                                                            <small class="text-muted d-block">Deaktiviert am: {{ $user->deactivated_at->format('d.m.Y H:i') }}</small>
+                                                        @endif
+                                                    @endif
+                                                </label>
+                                                <select class="custom-select" name="is_active">
+                                                    <option value="1" @if($user->is_active !== false) selected @endif>Aktiv</option>
+                                                    <option value="0" @if($user->is_active === false) selected @endif>Deaktiviert</option>
+                                                </select>
+                                                <small class="form-text text-muted">
+                                                    Deaktivierte Benutzer werden beim nächsten Seitenaufruf automatisch ausgeloggt.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     @can('set password')
                                         <div class="row">
                                             <div class="col-12">
                                                 <div class="form-group">
-                                                    <label>neues Passwort</label>
-                                                    <input class="form-control" name="new-password" type="password" minlength="8">
+                                                    <label>neues Passwort <small class="text-muted">(mind. 10 Zeichen, Groß-/Kleinbuchstaben und Zahl)</small></label>
+                                                    <input class="form-control" name="new-password" type="password" minlength="10" autocomplete="new-password">
                                                 </div>
 
                                             </div>

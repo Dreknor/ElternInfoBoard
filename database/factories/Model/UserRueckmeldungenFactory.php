@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\UserRueckmeldungen;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserRueckmeldungenFactory extends Factory
 {
@@ -16,10 +16,8 @@ class UserRueckmeldungenFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'post_id' => \App\Model\Post::factory(),

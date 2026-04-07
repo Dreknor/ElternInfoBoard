@@ -3,7 +3,6 @@
 namespace Tests\Unit\Model;
 
 use App\Model\Group;
-use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +16,7 @@ class GroupTest extends TestCase
     /**
      * @test
      */
-    public function group_can_be_created_with_factory()
+    public function group_can_be_created_with_factory(): void
     {
         $group = Group::factory()->create();
 
@@ -28,7 +27,7 @@ class GroupTest extends TestCase
     /**
      * @test
      */
-    public function group_has_name_attribute()
+    public function group_has_name_attribute(): void
     {
         $group = Group::factory()->create([
             'name' => 'Test Group',
@@ -40,7 +39,7 @@ class GroupTest extends TestCase
     /**
      * @test
      */
-    public function group_can_have_protected_flag()
+    public function group_can_have_protected_flag(): void
     {
         $group = Group::factory()->create([
             'protected' => true,
@@ -49,4 +48,3 @@ class GroupTest extends TestCase
         $this->assertTrue($group->protected);
     }
 }
-

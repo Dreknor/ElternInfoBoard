@@ -2,20 +2,15 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class UpdatePermissionSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         DB::table('permissions')->insert([
             'name' => 'create polls',
@@ -52,13 +47,13 @@ class UpdatePermissionSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        $permission= [
+        $permission = [
             [
-                'name' => "view external offer",
-                'guard_name' => 'web'
-            ],[
-                'name' => "push to wordpress",
-                'guard_name' => 'web'
+                'name' => 'view external offer',
+                'guard_name' => 'web',
+            ], [
+                'name' => 'push to wordpress',
+                'guard_name' => 'web',
             ], [
                 'name' => 'download krankmeldungen',
                 'guard_name' => 'web',
@@ -88,13 +83,7 @@ class UpdatePermissionSeeder extends Seeder
             ],
         ];
 
-
-
-
         DB::table('permissions')->insert($permission);
-
-
-
 
     }
 }

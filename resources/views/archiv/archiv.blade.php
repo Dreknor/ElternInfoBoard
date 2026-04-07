@@ -56,7 +56,7 @@
                             <!-- Scrollable Content -->
                             <div class="overflow-y-auto" style="max-height: calc(100vh - 160px);">
                                 @php
-                                    $firstPostDate = (!is_null($first_post)) ? $first_post->archiv_ab : \Carbon\Carbon::now();
+                                    $firstPostDate = (!is_null($first_post) && !is_null($first_post->archiv_ab)) ? $first_post->archiv_ab : \Carbon\Carbon::now();
                                     $monthsByYear = [];
 
                                     // Sammle alle Monate gruppiert nach Jahren

@@ -3,35 +3,43 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Model\Notification;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class NotificationController extends Controller
+class NotificationController extends Controller implements HasMiddleware
 {
-
-
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth:sanctum');
+        return [
+            'auth:sanctum',
+        ];
     }
 
-
     /**
-     * readAll
+     * Alle Benachrichtigungen als gelesen markieren
      *
-     * Diese Methode markiert alle eigenen Benachrichtigungen als gelesen
+     * Markiert alle Benachrichtigungen des authentifizierten Benutzers als gelesen.
+     * Diese Aktion betrifft alle Benachrichtigungen unabhängig von ihrem Typ oder Status.
      *
      * @group Benachrichtigungen
-     * @param Request $request
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "message": "success"
+     * }
+     *
+     * @response 404 {
+     *   "message": "User not found"
+     * }
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function readAll(Request $request)
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -42,16 +50,46 @@ class NotificationController extends Controller
         ], 200);
     }
 
-
     /**
-     * index
+     * Benachrichtigungen abrufen
      *
-     * Diese Methode gibt alle Benachrichtigungen des angemeldeten Benutzers zurück
+     * Gibt alle ungelesenen Benachrichtigungen des authentifizierten Benutzers zurück.
+     * Die Benachrichtigungen werden nach Erstellungsdatum absteigend sortiert (neueste zuerst).
      *
      * @group Benachrichtigungen
      *
      * @authenticated
-     * @param Request $request
+     *
+     * @response 200 scenario="Erfolgreiche Abfrage" {
+     *   "notifications": [
+     *     {
+     *       "id": 1,
+     *       "user_id": 42,
+     *       "type": "Nachricht",
+     *       "title": "Neue Nachricht erhalten",
+     *       "message": "Sie haben eine neue Nachricht von Max Mustermann",
+     *       "data": null,
+     *       "read": 0,
+     *       "created_at": "2026-02-19T10:30:00.000000Z",
+     *       "updated_at": "2026-02-19T10:30:00.000000Z"
+     *     },
+     *     {
+     *       "id": 2,
+     *       "user_id": 42,
+     *       "type": "Termin",
+     *       "title": "Terminänderung",
+     *       "message": "Der Termin am 25.02.2026 wurde verschoben",
+     *       "data": null,
+     *       "read": 0,
+     *       "created_at": "2026-02-18T14:15:00.000000Z",
+     *       "updated_at": "2026-02-18T14:15:00.000000Z"
+     *     }
+     *   ]
+     * }
+     *
+     * @response 404 scenario="Benutzer nicht gefunden" {
+     *   "message": "User not found"
+     * }
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -59,40 +97,66 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        $notifications = $user->notifications()->where('read',0)->orderBy('created_at', 'desc')->get();
+        $notifications = $user->notifications()->where('read', 0)->orderBy('created_at', 'desc')->get();
 
         return response()->json([
-            'notifications' => $notifications,
+            'data' => $notifications,
         ], 200);
     }
 
-
     /**
-     * Alle Benachrichtigungen eines bestimmten Typs als gelesen markieren
+     * Benachrichtigungen nach Typ als gelesen markieren
      *
-     * Diese Methode markiert alle Benachrichtigungen eines bestimmten Typs als gelesen. <br>
-     * Es gibt verschiedene Typen von Benachrichtigungen, z.B. 'Admin, Ex. Angebot, Listen Eintragung, Nachricht, Termin, Vertretung'
+     * Markiert alle Benachrichtigungen eines bestimmten Typs für den authentifizierten Benutzer als gelesen.
+     * Dies ermöglicht es, alle Benachrichtigungen einer Kategorie auf einmal zu markieren.
+     *
+     * Verfügbare Benachrichtigungstypen:
+     * - Admin
+     * - Ex. Angebot
+     * - Listen Eintragung
+     * - Nachricht
+     * - Termin
+     * - Vertretung
      *
      * @group Benachrichtigungen
      *
-     * @param Request $request
-     * @required type string Typ der Benachrichtigung
+     * @authenticated
+     *
+     * @bodyParam type string required Der Typ der Benachrichtigungen, die als gelesen markiert werden sollen. Example: Nachricht
+     *
+     * @response 200 scenario="Erfolgreiche Markierung" {
+     *   "message": "success"
+     * }
+     *
+     * @response 404 scenario="Benutzer nicht gefunden" {
+     *   "message": "User not found"
+     * }
+     *
+     * @response 422 scenario="Validierungsfehler" {
+     *   "message": "The type field is required.",
+     *   "errors": {
+     *     "type": [
+     *       "The type field is required."
+     *     ]
+     *   }
+     * }
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function readAllByType (Request $request)
+    public function readAllByType(Request $request)
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
         $request->validate([
-            'type' => 'required|string'
+            'type' => 'required|string',
         ]);
 
         $user->notifications()->where('type', $request->type)->where('user_id', $user->id)->update(['read' => 1]);
@@ -103,16 +167,38 @@ class NotificationController extends Controller
     }
 
     /**
-     * Als gelesen markieren
+     * Einzelne Benachrichtigung als gelesen markieren
      *
-     * Diese Methode markiert eine bestimmte Benachrichtigung als gelesen
+     * Markiert eine bestimmte Benachrichtigung anhand ihrer ID als gelesen.
+     * Diese Methode markiert automatisch alle Benachrichtigungen desselben Typs als gelesen,
+     * um konsistente Gruppenmarkierungen zu gewährleisten.
      *
      * @group Benachrichtigungen
      *
-     * @param Request $request
-     * @required id integer ID der Benachrichtigung
-     *
      * @authenticated
+     *
+     * @bodyParam id integer required Die ID der Benachrichtigung, die als gelesen markiert werden soll. Example: 1
+     *
+     * @response 200 scenario="Erfolgreiche Markierung" {
+     *   "message": "success"
+     * }
+     *
+     * @response 404 scenario="Benutzer nicht gefunden" {
+     *   "message": "User not found"
+     * }
+     *
+     * @response 404 scenario="Benachrichtigung nicht gefunden" {
+     *   "message": "Notification not found"
+     * }
+     *
+     * @response 422 scenario="Validierungsfehler" {
+     *   "message": "The id field is required.",
+     *   "errors": {
+     *     "id": [
+     *       "The id field is required."
+     *     ]
+     *   }
+     * }
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -120,24 +206,21 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-
         $request->validate([
-            'id' => 'required|integer'
+            'id' => 'required|integer',
         ]);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
-
         $notification = $user->notifications()->where('id', $request->id)->first();
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json(['message' => 'Notification not found'], 404);
         }
 
         $user->notifications()->where('type', $notification->type)->where('user_id', $user->id)->update(['read' => 1]);
-
 
         return response()->json([
             'message' => 'success',

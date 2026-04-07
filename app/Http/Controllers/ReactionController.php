@@ -5,20 +5,18 @@ namespace App\Http\Controllers;
 use App\Model\Post;
 use DevDojo\LaravelReactions\Models\Reaction;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class ReactionController extends Controller
+class ReactionController extends Controller implements HasMiddleware
 {
-    /**
-     * Authentifcation required
-     */
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('auth');
+        return [
+            'auth',
+        ];
     }
 
     /**
-     * @param Post $post
-     * @param $reaction
      * @return RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function react(Post $post, $reaction)
@@ -41,36 +39,36 @@ class ReactionController extends Controller
                         'count' => $post->reactions->where('name', 'like')->count(),
                         'percentage' => $post->reactions->count() > 0
                             ? round(($post->reactions->where('name', 'like')->count() / $post->reactions->count()) * 100)
-                            : 0
+                            : 0,
                     ],
                     'love' => [
                         'count' => $post->reactions->where('name', 'love')->count(),
                         'percentage' => $post->reactions->count() > 0
                             ? round(($post->reactions->where('name', 'love')->count() / $post->reactions->count()) * 100)
-                            : 0
+                            : 0,
                     ],
                     'haha' => [
                         'count' => $post->reactions->where('name', 'haha')->count(),
                         'percentage' => $post->reactions->count() > 0
                             ? round(($post->reactions->where('name', 'haha')->count() / $post->reactions->count()) * 100)
-                            : 0
+                            : 0,
                     ],
                     'wow' => [
                         'count' => $post->reactions->where('name', 'wow')->count(),
                         'percentage' => $post->reactions->count() > 0
                             ? round(($post->reactions->where('name', 'wow')->count() / $post->reactions->count()) * 100)
-                            : 0
+                            : 0,
                     ],
                     'sad' => [
                         'count' => $post->reactions->where('name', 'sad')->count(),
                         'percentage' => $post->reactions->count() > 0
                             ? round(($post->reactions->where('name', 'sad')->count() / $post->reactions->count()) * 100)
-                            : 0
+                            : 0,
                     ],
-                ]
+                ],
             ]);
         }
 
-        return redirect(url('nachrichten#' . $post->id));
+        return redirect(url('nachrichten#'.$post->id));
     }
 }

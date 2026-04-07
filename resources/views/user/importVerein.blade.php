@@ -15,6 +15,9 @@
                 Es müssen die Spalten <b>"Person: Vorname Nachname"</b> and <b>"Person: E-Mail Privat"</b> gefiltert
                 werden.
             </p>
+            <a href="{{ route('users.vorlage.verein') }}" class="btn btn-outline-warning btn-sm mb-3">
+                <i class="fas fa-download mr-1"></i> Import-Vorlage herunterladen (.ods)
+            </a>
         </div>
         <div class="card-body">
             <form action="{{url('/users/importVerein')}}" method="post" class="form form-horizontal"

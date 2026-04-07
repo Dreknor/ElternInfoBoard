@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Liste;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ListeFactory extends Factory
 {
@@ -16,10 +16,8 @@ class ListeFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'listenname' => $this->faker->word(),

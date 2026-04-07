@@ -14,6 +14,7 @@ class ReadReceiptReminderNotification extends Notification
     use Queueable;
 
     public Post $post;
+
     public string $deadline;
 
     public function __construct(Post $post, string $deadline)
@@ -22,7 +23,7 @@ class ReadReceiptReminderNotification extends Notification
         $this->deadline = $deadline;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return ['database', WebPushChannel::class];
     }
@@ -31,15 +32,14 @@ class ReadReceiptReminderNotification extends Notification
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
             'post_id' => $this->post->id,
             'post_header' => $this->post->header,
             'deadline' => $this->deadline,
-            'action_url' => url('#'.$this->post->id),
+            'action_url' => url('post/'.$this->post->id),
             'created' => Carbon::now()->toIso8601String(),
         ];
     }
@@ -50,7 +50,6 @@ class ReadReceiptReminderNotification extends Notification
             ->title('Lesebestätigung fehlt')
             ->icon(asset('img/'.config('app.favicon')))
             ->body('Bitte bestätigen Sie die Nachricht "'.$this->post->header.'" bis zum '.$this->deadline)
-            ->action('Zur Nachricht', url("#".$this->post->id));
+            ->action('Zur Nachricht', url('post/'.$this->post->id));
     }
 }
-

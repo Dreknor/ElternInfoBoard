@@ -5,8 +5,6 @@ namespace Tests\Feature\Http\Controllers;
 use App\Model\Child;
 use App\Model\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -19,7 +17,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_view_their_children()
+    public function user_can_view_their_children(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
         \Spatie\Permission\Models\Permission::create(['name' => 'edit Schickzeiten']);
@@ -38,18 +36,16 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      * */
-
-    public function user_can_create_child()
+    public function user_can_create_child(): void
     {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->post(route('child.store'),
             [
-            'first_name' => 'Max',
-            'last_name' => 'Mustermann',
-            'notification' => true,
-        ]);
-
+                'first_name' => 'Max',
+                'last_name' => 'Mustermann',
+                'notification' => true,
+            ]);
 
         $response->assertRedirect();
 
@@ -62,7 +58,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_update_their_child()
+    public function user_can_update_their_child(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -83,10 +79,11 @@ class ChildControllerTest extends TestCase
             'auto_checkIn' => true,
         ]);
     }
+
     /**
      * @test
      */
-    public function user_cannot_update_other_users_child()
+    public function user_cannot_update_other_users_child(): void
     {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
@@ -101,9 +98,9 @@ class ChildControllerTest extends TestCase
         ]);
         $this->assertDatabaseHas('children',
             [
-            'id' => $child->id,
-            'first_name' => 'Hacked Name'
-        ]);
+                'id' => $child->id,
+                'first_name' => 'Hacked Name',
+            ]);
 
         $response->assertRedirect();
 
@@ -116,7 +113,7 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_delete_their_child()
+    public function user_can_delete_their_child(): void
     {
         $user = User::factory()->create();
         $child = Child::factory()->create();
@@ -134,11 +131,10 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function unauthenticated_user_cannot_access_children()
+    public function unauthenticated_user_cannot_access_children(): void
     {
         $response = $this->get(route('child.index'));
 
         $response->assertRedirect(route('login'));
     }
 }
-

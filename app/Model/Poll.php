@@ -10,14 +10,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Poll extends Model
 {
-    use SoftDeletes;
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = ['poll_name', 'description', 'ends', 'post_id', 'author_id', 'max_number'];
 
-    protected $casts = [
-        'ends' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'ends' => 'date',
+        ];
+    }
 
     public function post(): BelongsTo
     {

@@ -8,9 +8,8 @@ return new class extends SettingsMigration
     {
         try {
             $this->migrator->add('email.log_sent_emails', true);
-        }
-        catch (\Throwable $th) {
-                return;
+        } catch (\Throwable $th) {
+            return;
         }
     }
 
@@ -19,4 +18,3 @@ return new class extends SettingsMigration
         $this->migrator->delete('email.log_sent_emails');
     }
 };
-

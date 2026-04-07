@@ -19,7 +19,7 @@ class PushNews extends Notification
         $this->post = $post;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
@@ -28,12 +28,11 @@ class PushNews extends Notification
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [
-            'action_url' => url('#'.$this->post->id),
+            'action_url' => url('post/'.$this->post->id),
             'created' => Carbon::now()->toIso8601String(),
         ];
     }
@@ -44,7 +43,6 @@ class PushNews extends Notification
             ->title('Neue Mitteilung im '.config('app.name'))
             ->icon(asset('img/'.config('app.favicon')))
             ->body('Neue Mitteilung:'.$this->post->header)
-            //->action('Zeige Nachricht', url("#".$this->post->id))
-;
+            ->action('Zeige Nachricht', url('post/'.$this->post->id));
     }
 }

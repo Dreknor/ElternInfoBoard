@@ -8,49 +8,50 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.1 || ^8.2 ",
+        "php": "^8.2",
         "ext-curl": "*",
-        "barryvdh/laravel-dompdf": "^2.2",
-        "bkwld/cloner": "^3.10",
-        "coliving/commentable": "^5.6",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "bkwld/cloner": "^3.14",
+        "coliving/commentable": "^5.7",
         "danielme85/laravel-log-to-db": "^4.1",
         "devdojo/chatter": "0.2.*",
         "devdojo/laravel-reactions": "^1.0",
-        "grosv/laravel-passwordless-login": "^1.10",
-        "guzzlehttp/guzzle": "^7.2",
-        "laravel-notification-channels/webpush": "^8.0",
-        "laravel/framework": "^v11",
+        "ezyang/htmlpurifier": "*",
+        "grosv/laravel-passwordless-login": "dev-main",
+        "laravel-notification-channels/webpush": "^10.0",
+        "laravel/framework": "^12.49",
         "laravel/sanctum": "^4.0",
-        "laravel/socialite": "^5.16",
-        "laravel/tinker": "^2.7",
-        "laravel/ui": "^4.0",
+        "laravel/socialite": "^5.17",
+        "laravel/tinker": "^2.10.1",
+        "laravel/ui": "^4.6",
         "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^3.6",
         "maatwebsite/excel": "^3.1",
         "owen-it/laravel-auditing": "^14.0",
-        "ryangjchandler/blade-cache-directive": "^1.0",
-        "sentry/sentry-laravel": "^4.0",
+        "ryangjchandler/blade-cache-directive": "^1.1",
+        "sentry/sentry-laravel": "^4.13",
         "socialiteproviders/keycloak": "^5.3",
         "spatie/calendar-links": "^1.4",
         "spatie/icalendar-generator": "^2.3",
-        "spatie/laravel-medialibrary": "^11.0",
-        "spatie/laravel-permission": "^6.0",
+        "spatie/laravel-medialibrary": "^11.12",
+        "spatie/laravel-permission": "^6.12",
         "spatie/laravel-settings": "^3.4",
-        "staudenmeir/eloquent-has-many-deep": "^1.20"
+        "staudenmeir/eloquent-has-many-deep": "^1.21"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.6",
-        "beyondcode/laravel-dump-server": "^2.0",
-        "brianium/paratest": "^7.4",
-        "doctrine/dbal": "^3.0",
-        "fakerphp/faker": "^1.9.1",
+        "barryvdh/laravel-debugbar": "^3.15",
+        "beyondcode/laravel-dump-server": "^2.1",
+        "brianium/paratest": "^7.5",
+        "doctrine/dbal": "^3.5",
+        "fakerphp/faker": "^1.23",
         "filp/whoops": "^2.9",
-        "jasonmccreary/laravel-test-assertions": "^2.0",
-        "knuckleswtf/scribe": "^4.31",
-        "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^v8.1",
-        "phpunit/phpunit": "^10.0",
-        "spatie/laravel-ignition": "^2.0"
+        "jasonmccreary/laravel-test-assertions": "^2.5",
+        "knuckleswtf/scribe": "^5.0",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.3",
+        "spatie/laravel-ignition": "^2.9",
+        "laravel/pail": "^1.2.2"
     },
     "config": {
         "optimize-autoloader": true,
@@ -92,6 +93,25 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force",
+            "npm install",
+            "npm run build"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ]
     }
 }

@@ -3,31 +3,32 @@
 namespace App\Model;
 
 use App\Scopes\GetGroupsScope;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Scopes\SortGroupsScope;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ScopedBy([GetGroupsScope::class])]
+#[ScopedBy([SortGroupsScope::class])]
 class Group extends Model implements HasMedia
 {
-    use InteractsWithMedia;
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $fillable = ['name', 'bereich', 'protected', 'owner_id'];
 
     protected $visible = ['name', 'bereich', 'protected', 'owner_id'];
 
-    protected $casts = [
-        'protected' => 'boolean',
-    ];
-
-    protected static function booted()
+    protected function casts(): array
     {
-        static::addGlobalScope(new SortGroupsScope());
-        static::addGlobalScope(new GetGroupsScope());
+        return [
+            'protected' => 'boolean',
+        ];
     }
 
     public function users(): BelongsToMany
@@ -50,15 +51,12 @@ class Group extends Model implements HasMedia
         return $this->belongsToMany(Liste::class, 'group_listen');
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
 
-    public function vertretungen()
+    public function vertretungen(): HasMany
     {
         return $this->hasMany(Vertretung::class, 'klasse');
     }

@@ -5,25 +5,25 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ChildNotificationRequest;
 use App\Http\Requests\CreateChildRequest;
 use App\Model\Child;
-use App\Model\ChildCheckIn;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ChildController extends Controller
+class ChildController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-
+        return [
+            'auth',
+            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit']),
+        ];
     }
 
     public function index()
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
-
         $childs = Child::query()
             ->with(['group', 'class', 'parents'])
             ->get();
@@ -35,7 +35,6 @@ class ChildController extends Controller
 
     public function store(CreateChildRequest $request)
     {
-        $this->middleware('auth');
 
         $child = Child::query()
             ->whereLike('first_name', '%'.$request->first_name.'%')
@@ -50,12 +49,11 @@ class ChildController extends Controller
             ]);
         }
 
-        if (!$request->has('parent_id')) {
+        if (! $request->has('parent_id')) {
             auth()->user()->children_rel()->create($request->validated());
         } else {
             $parent = User::find($request->parent_id);
             $child = $parent->children_rel()->create($request->validated());
-
 
             if (session()->has('schickzeiten')) {
                 $schickzeit = session()->get('schickzeiten');
@@ -69,14 +67,12 @@ class ChildController extends Controller
                         }
                     });
 
-
                 $schickzeitenQuery->update([
                     'child_id' => $child->id,
                 ]);
                 session()->forget('schickzeiten');
             }
         }
-
 
         return redirect()->back()->with([
             'Meldung' => 'Kind wurde erfolgreich erstellt',
@@ -86,8 +82,6 @@ class ChildController extends Controller
 
     public function create($child = null)
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
         $parents = User::query()
             ->whereHas('roles', function ($query) {
@@ -96,7 +90,7 @@ class ChildController extends Controller
             ->get();
 
         return view('child.create', [
-            'child' => $child ?? new Child(),
+            'child' => $child ?? new Child,
             'groups' => Group::all(),
             'parents' => $parents,
         ]);
@@ -105,15 +99,11 @@ class ChildController extends Controller
     public function createFromSchickzeit(Schickzeiten $schickzeiten)
     {
 
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
-
         session()->put('schickzeiten', $schickzeiten);
 
         $parents = $schickzeiten->user;
 
-
-        if (!$parents) {
+        if (! $parents) {
             $parents = User::query()
                 ->whereHas('role', function ($query) {
                     $query->where('name', 'Eltern');
@@ -128,21 +118,18 @@ class ChildController extends Controller
             $parents = collect([$parents]);
         }
 
-
-        $child = new Child();
+        $child = new Child;
         $child->first_name = $schickzeiten->child_name;
 
         return view('child.create', [
             'child' => $child,
             'groups' => $groups,
-            'parents' => $parents
+            'parents' => $parents,
         ]);
     }
 
     public function edit(Child $child)
     {
-        $this->middleware('auth');
-        $this->middleware('can:edit Schickzeiten');
 
         $parents = User::query()
             ->whereHas('roles', function ($query) {
@@ -159,14 +146,12 @@ class ChildController extends Controller
 
     public function update(CreateChildRequest $request, Child $child)
     {
-        $this->middleware('auth');
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
-            if (!$child->parents->contains($request->parent_id)) {
+            if (! $child->parents->contains($request->parent_id)) {
                 $child->parents()->sync($request->parent_id);
             }
         }
-
 
         $child->update(
             $request->only([
@@ -178,6 +163,28 @@ class ChildController extends Controller
             ])
         );
 
+        // Nach dem Update prüfen, ob das Kind noch im Care-Modul ist.
+        // Falls nicht, werden alle Schickzeiten des Kindes automatisch gelöscht.
+        $careSettings = new \App\Settings\CareSetting;
+        $isInCare = in_array($child->group_id, $careSettings->groups_list)
+            && in_array($child->class_id, $careSettings->class_list);
+
+        if (! $isInCare) {
+            $deletedCount = \App\Model\Schickzeiten::where('child_id', $child->id)->count();
+            if ($deletedCount > 0) {
+                \App\Model\Schickzeiten::where('child_id', $child->id)->each(function ($sz) {
+                    $sz->delete();
+                });
+                \Illuminate\Support\Facades\Log::info(
+                    "Schickzeiten für Kind {$child->first_name} {$child->last_name} (ID: {$child->id}) automatisch gelöscht – Kind ist nicht mehr im Care-Modul.",
+                    ['deleted_count' => $deletedCount]
+                );
+                return redirect()->back()->with([
+                    'Meldung' => "Kind wurde erfolgreich bearbeitet. Da das Kind nicht mehr im Care-Modul ist, wurden {$deletedCount} Schickzeit(en) automatisch gelöscht.",
+                    'type' => 'warning',
+                ]);
+            }
+        }
 
         return redirect()->back()->with([
             'Meldung' => 'Kind wurde erfolgreich bearbeitet',
@@ -223,9 +230,8 @@ class ChildController extends Controller
 
     public function storeMandate(Request $request, Child $child)
     {
-        $this->middleware('auth');
 
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung',
                 'type' => 'danger',
@@ -251,9 +257,8 @@ class ChildController extends Controller
 
     public function destroyMandate(Request $request, Child $child, $mandateId)
     {
-        $this->middleware('auth');
 
-        if (!auth()->user()->children()->contains($child)) {
+        if (! auth()->user()->children()->contains($child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
                 'type' => 'danger',
@@ -262,7 +267,7 @@ class ChildController extends Controller
 
         $mandate = $child->mandates()->where('id', $mandateId)->first();
 
-        if (!$mandate) {
+        if (! $mandate) {
             return redirect()->back()->with([
                 'Meldung' => 'Vollmacht nicht gefunden',
                 'type' => 'danger',
@@ -276,5 +281,4 @@ class ChildController extends Controller
             'type' => 'success',
         ]);
     }
-
 }

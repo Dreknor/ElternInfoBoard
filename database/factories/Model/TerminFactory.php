@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Model;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Model\Termin;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TerminFactory extends Factory
 {
@@ -16,10 +16,8 @@ class TerminFactory extends Factory
 
     /**
      * Define the model's default state.
-     *
-     * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'terminname' => $this->faker->word(),

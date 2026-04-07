@@ -2,15 +2,17 @@
 
 namespace App\Http\View\Composers;
 
-use App\Model\Post;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
-
 class NotificationComposer
 {
     public function compose($view): void
     {
-
+        if (!auth()->check()) {
+            $view->with([
+                'notifications' => collect([]),
+                'user' => null,
+            ]);
+            return;
+        }
 
         $notifications = auth()->user()->notifications()->orderBy('important')->get();
         $view->with([

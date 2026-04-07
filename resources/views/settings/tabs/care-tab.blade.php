@@ -102,6 +102,26 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
+                    Bundesland (für Ferienabfrage)
+                    <select name="bundesland" class="form-control">
+                        @foreach(\App\Services\HolidayService::bundeslaender() as $code => $name)
+                            <option value="{{ $code }}" @if($careSettings->bundesland === $code) selected @endif>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wählen Sie das Bundesland aus, anhand dessen die Schulferien abgerufen werden. Dies wird für den automatischen täglichen Check-In und die Anzeige von Arbeitsgemeinschaften in der Anwesenheitsliste berücksichtigt.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
                     Ende der Betreuungszeit
                     <input type="time" class="form-control" name="end_time"
                            value="{{$careSettings->end_time}}" >

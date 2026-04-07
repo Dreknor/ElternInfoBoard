@@ -21,24 +21,22 @@ use Spatie\Permission\Traits\HasRoles;
 use Staudenmeir\EloquentHasManyDeep\HasManyDeep;
 use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
-
 /**
  * Class User
  */
 class User extends Authenticatable implements Auditable
 {
-    use Notifiable;
+    use HasApiTokens;
     use HasFactory;
-    use HasRoles;
     use HasPushSubscriptions;
     use HasRelationships;
-    use Reacts;
-    use HasApiTokens;
-    use SoftDeletes;
+    use HasRoles;
+    use Notifiable;
     use \OwenIt\Auditing\Auditable;
+    use Reacts;
+    use SoftDeletes;
 
-
-    //fill uuid column
+    // fill uuid column
     protected static function booted(): void
     {
         parent::boot();
@@ -52,6 +50,7 @@ class User extends Authenticatable implements Auditable
      */
     protected $fillable = [
         'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
+        'is_active', 'deactivated_at',
     ];
 
     /**
@@ -64,38 +63,36 @@ class User extends Authenticatable implements Auditable
     ];
 
     /**
-     * The attributes that should be cast to native types.
+     * Get the attributes that should be cast.
      *
-     * @var array
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'lastEmail' => 'datetime',
-        'changePassword' => 'boolean',
-        'last_online_at' => 'datetime',
-        'track_login' => 'boolean',
-        'changeSettings' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'lastEmail' => 'datetime',
+            'changePassword' => 'boolean',
+            'last_online_at' => 'datetime',
+            'track_login' => 'boolean',
+            'changeSettings' => 'boolean',
+            'is_active' => 'boolean',        // TODO-2.5
+            'deactivated_at' => 'datetime',  // TODO-2.5
+        ];
+    }
 
-    /**
-     * @return HasMany
-     */
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class, 'user_id');
     }
 
-
-
-    protected function lastEmail(): Attribute {
+    protected function lastEmail(): Attribute
+    {
         return Attribute::make(
-            get: fn ($value) => Carbon::createFromFormat('Y-m-d H:i:s', ($value != null)? $value : $this->created_at),
+            get: fn ($value) => Carbon::createFromFormat('Y-m-d H:i:s', ($value != null) ? $value : $this->created_at),
         );
     }
 
-    /**
-     * @return Collection
-     */
     public function files(): Collection
     {
         return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
@@ -103,10 +100,7 @@ class User extends Authenticatable implements Auditable
 
     /**
      * Verknüpfte Kinder
-     *
-     * @return BelongsToMany
      */
-
     public function children_rel(): BelongsToMany
     {
         return $this->belongsToMany(Child::class, 'child_user');
@@ -119,9 +113,9 @@ class User extends Authenticatable implements Auditable
     public function children()
     {
         $children = $this->children_rel;
-        if (!is_null($this->sorg2)) {
+        if (! is_null($this->sorg2)) {
             $children2 = $this->sorgeberechtigter2?->children_rel;
-            if (!is_null($children2) and !is_null($children)) {
+            if (! is_null($children2) and ! is_null($children)) {
                 return $children->merge($children2);
             } elseif (is_null($children)) {
                 return $children2;
@@ -131,21 +125,14 @@ class User extends Authenticatable implements Auditable
         return $children;
     }
 
-
     /**
      * Verknüpfte Gruppen
-     *
-     * @return BelongsToMany
      */
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)->withTimestamps();
     }
 
-
-    /**
-     * @return HasMany
-     */
     public function ownGroups(): HasMany
     {
         return $this->hasMany(Group::class, 'owner_id');
@@ -153,8 +140,6 @@ class User extends Authenticatable implements Auditable
 
     /**
      * Posts verknüpft über die Gruppen
-     *
-     * @return HasManyDeep
      */
     public function posts(): HasManyDeep
     {
@@ -173,18 +158,15 @@ class User extends Authenticatable implements Auditable
 
     /**
      * Posts verknüpft über die Gruppen
-     *
-     * @return HasManyDeep
      */
     public function postsNotArchived(): HasManyDeep
     {
-        return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])->NotArchived();
+        return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])
+            ->where('archiv_ab', '>', now());
     }
 
     /**
      * Eigene Posts
-     *
-     * @return HasMany
      */
     public function own_posts(): HasMany
     {
@@ -193,25 +175,17 @@ class User extends Authenticatable implements Auditable
 
     /**
      * Termine Verknüpft über Gruppen
-     *
-     * @return HasManyDeep
      */
     public function termine(): HasManyDeep
     {
         return $this->hasManyDeep(Termin::class, ['group_user', Group::class, 'group_termine']);
     }
 
-    /**
-     * @return HasManyDeep
-     */
     public function listen(): HasManyDeep
     {
         return $this->hasManyDeep(Liste::class, ['group_user', Group::class, 'group_listen']);
     }
 
-    /**
-     * @return HasMany
-     */
     public function listen_termine(): HasMany
     {
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
@@ -221,9 +195,9 @@ class User extends Authenticatable implements Auditable
     {
         $eigeneEintragungen = $this->listen_termine;
 
-        if (!is_null($this->sorg2)) {
+        if (! is_null($this->sorg2)) {
             $sorgEintragung = $this->sorgeberechtigter2?->listen_termine;
-            if (!is_null($sorgEintragung) and !is_null($eigeneEintragungen)) {
+            if (! is_null($sorgEintragung) and ! is_null($eigeneEintragungen)) {
                 return $eigeneEintragungen->merge($sorgEintragung);
             } elseif (is_null($eigeneEintragungen)) {
                 return $sorgEintragung;
@@ -234,11 +208,8 @@ class User extends Authenticatable implements Auditable
         return $eigeneEintragungen;
     }
 
-    //Sorgeberechtigter 2
+    // Sorgeberechtigter 2
 
-    /**
-     * @return HasOne
-     */
     public function sorgeberechtigter2(): HasOne
     {
         return $this->hasOne(self::class, 'sorg2');
@@ -246,25 +217,17 @@ class User extends Authenticatable implements Auditable
 
     /**
      * Check if user has an old password that needs to be reset
-     *
-     * @return bool
      */
     public function hasOldPassword(): bool
     {
         return $this->changePassword;
     }
 
-    /**
-     * @return HasMany
-     */
     public function userRueckmeldung(): HasMany
     {
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
     }
 
-    /**
-     * @return mixed
-     */
     public function getRueckmeldung(): mixed
     {
         $eigeneRueckmeldung = $this->userRueckmeldung;
@@ -282,9 +245,6 @@ class User extends Authenticatable implements Auditable
         return $eigeneRueckmeldung;
     }
 
-    /**
-     * @return HasMany
-     */
     public function Reinigung(): HasMany
     {
         return $this->hasMany(Reinigung::class, 'users_id', 'id');
@@ -313,28 +273,27 @@ class User extends Authenticatable implements Auditable
         return Str::of($this->name)->trim();
     }
 
-
     public function getVornameAttribute()
     {
 
         $vorname = Str::before($this->name, ' ');
+
         return $vorname;
     }
 
-
-    public function schickzeiten()
+    public function schickzeiten(): HasMany
     {
         return $this->hasMany(Schickzeiten::class, 'users_id')->orWhere('users_id', $this->sorg2);
     }
 
-    public function schickzeiten_own()
+    public function schickzeiten_own(): HasMany
     {
         return $this->hasMany(Schickzeiten::class, 'users_id');
     }
 
-    //Krankmeldungen
+    // Krankmeldungen
 
-    public function krankmeldungen()
+    public function krankmeldungen(): HasMany
     {
         return $this->hasMany(Krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
     }
@@ -359,13 +318,17 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(ReadReceipts::class, 'user_id');
     }
 
-    public function pflichtstunden()
+    public function pollVotes(): HasMany
     {
-        if ($this->sorg2 !=   null) {
+        return $this->hasMany(Poll_Votes::class, 'author_id');
+    }
+
+    public function pflichtstunden(): HasMany
+    {
+        if ($this->sorg2 != null) {
             return $this->hasMany(Pflichtstunde::class, 'user_id')->orWhere('user_id', $this->sorg2);
         }
 
         return $this->hasMany(Pflichtstunde::class, 'user_id');
     }
-
 }

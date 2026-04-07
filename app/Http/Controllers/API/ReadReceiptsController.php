@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Model\Post;
 use App\Model\ReadReceipts;
-use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -16,8 +15,6 @@ use Illuminate\Support\Facades\Log;
  */
 class ReadReceiptsController extends Controller
 {
-
-
     /**
      * Post: mark a post as read
      *
@@ -25,7 +22,20 @@ class ReadReceiptsController extends Controller
      *
      * @group Nachrichten
      *
-     * @param \Illuminate\Http\Request $request The incoming request instance.
+     * @urlParam post required The ID of the post. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Lesebestätigung gespeichert"
+     * }
+     *
+     * @response 500 {
+     *   "success": false,
+     *   "error": "Die Lesebestätigung konnte nicht verarbeitet werden.",
+     *   "message": "Ein Fehler ist aufgetreten"
+     * }
+     *
+     * @param  \Illuminate\Http\Request  $request  The incoming request instance.
      * @return \Illuminate\Http\JsonResponse JSON response indicating success or failure.
      */
     public function store(Request $request, Post $post)
@@ -35,19 +45,39 @@ class ReadReceiptsController extends Controller
 
         try {
             // Create a new read receipt if it doesn't already exist
-            $receipt = ReadReceipts::firstOrCreate([
-                'post_id' => $post->id,
-                'user_id' => $user->id,
-            ]);
-            if (is_null($receipt->confirmed_at)) {
+            $receipt = ReadReceipts::firstOrCreate(
+                [
+                    'post_id' => $post->id,
+                    'user_id' => $user->id,
+                ],
+                [
+                    'confirmed_at' => now(),
+                ]
+            );
+
+            // Falls der Eintrag bereits existierte, aber noch nicht bestätigt war
+            if ($receipt->wasRecentlyCreated === false && is_null($receipt->confirmed_at)) {
                 $receipt->confirmed_at = now();
                 $receipt->save();
             }
-            return response()->json(['success' => true], 200);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lesebestätigung gespeichert'
+            ], 200);
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
-            Log::error($e->getMessage());
-            return response()->json(['error' => 'Die Lesebestätigung konnte nicht verarbeitet werden.'], 500);
+            Log::error('Fehler beim Speichern der Lesebestätigung: ', [
+                'error' => $e->getMessage(),
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Die Lesebestätigung konnte nicht verarbeitet werden.',
+                'message' => 'Ein Fehler ist aufgetreten'
+            ], 500);
         }
 
     }

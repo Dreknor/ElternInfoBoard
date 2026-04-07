@@ -5,13 +5,11 @@ namespace App\Exports;
 use App\Model\Arbeitsgemeinschaft;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Events\BeforeSheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class ParticipantsExport implements FromCollection, WithHeadings, WithEvents, WithCustomStartCell
-
+class ParticipantsExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings
 {
     protected $arbeitsgemeinschaft;
 
@@ -26,7 +24,7 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithEvents, Wi
             return [
                 'Name' => $participant->last_name,
                 'Vorname' => $participant->first_name,
-                'Klasse/Gruppe' => $participant->class?->name .'( ' . $participant->group?->name . ')',
+                'Klasse/Gruppe' => $participant->class?->name.'( '.$participant->group?->name.')',
             ];
         });
     }
@@ -43,17 +41,17 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithEvents, Wi
     public function registerEvents(): array
     {
         return [
-            BeforeSheet::class => function(BeforeSheet $event) {
+            BeforeSheet::class => function (BeforeSheet $event) {
                 $sheet = $event->sheet;
 
                 // AG-Informationen hinzufügen
-                $sheet->setCellValue('A1', 'Arbeitsgemeinschaft: ' . $this->arbeitsgemeinschaft->name);
-                $sheet->setCellValue('A2', 'Verantwortlich: ' . $this->arbeitsgemeinschaft->manager->name);
-                $sheet->setCellValue('A3', 'Tag: ' . $this->getWeekday());
-                $sheet->setCellValue('A4', 'Zeit: ' . $this->arbeitsgemeinschaft->start_time->format('H:i') .
-                    ' - ' . $this->arbeitsgemeinschaft->end_time->format('H:i'));
-                $sheet->setCellValue('A5', 'Teilnehmer: ' . $this->arbeitsgemeinschaft->participants->count() .
-                    ' / ' . $this->arbeitsgemeinschaft->max_participants);
+                $sheet->setCellValue('A1', 'Arbeitsgemeinschaft: '.$this->arbeitsgemeinschaft->name);
+                $sheet->setCellValue('A2', 'Verantwortlich: '.$this->arbeitsgemeinschaft->manager->name);
+                $sheet->setCellValue('A3', 'Tag: '.$this->getWeekday());
+                $sheet->setCellValue('A4', 'Zeit: '.$this->arbeitsgemeinschaft->start_time->format('H:i').
+                    ' - '.$this->arbeitsgemeinschaft->end_time->format('H:i'));
+                $sheet->setCellValue('A5', 'Teilnehmer: '.$this->arbeitsgemeinschaft->participants->count().
+                    ' / '.$this->arbeitsgemeinschaft->max_participants);
 
                 // Leerzeile vor Teilnehmerliste
                 $sheet->setCellValue('A6', '');
@@ -67,7 +65,7 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithEvents, Wi
                 $sheet->getColumnDimension('B')->setAutoSize(true);
                 $sheet->getColumnDimension('C')->setAutoSize(true);
                 $sheet->getColumnDimension('D')->setAutoSize(true);
-            }
+            },
 
         ];
     }
@@ -81,7 +79,7 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithEvents, Wi
             4 => 'Donnerstag',
             5 => 'Freitag',
             6 => 'Samstag',
-            7 => 'Sonntag'
+            7 => 'Sonntag',
         ];
 
         return $weekdays[$this->arbeitsgemeinschaft->weekday] ?? '';
