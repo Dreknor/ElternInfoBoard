@@ -17,20 +17,39 @@ use App\Http\Controllers\API\ImageController;
 use Illuminate\Support\Facades\Route;
 
 /*
- * Vertretungsplan aus MitarbeiterBoard
+ * Vertretungsplan aus MitarbeiterBoard (API-Key-Auth, Rate-Limit: 30/min)
  */
+Route::middleware('throttle:external-api')->group(function () {
+    Route::post('vertretungen/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'store']);
+    Route::put('vertretungen/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'update']);
+    Route::delete('vertretungen/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'destroy']);
+    Route::post('news/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeNews']);
+    Route::delete('news/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteNews']);
+    Route::post('week/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeWeek']);
+    Route::put('week/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'updateWeek']);
+    Route::delete('week/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteWeek']);
+    Route::post('absences/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeAbsence']);
+    Route::put('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'updateAbsence']);
+    Route::delete('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteAbsence']);
 
-Route::post('vertretungen/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'store']);
-Route::put('vertretungen/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'update']);
-Route::delete('vertretungen/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'destroy']);
-Route::post('news/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeNews']);
-Route::delete('news/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteNews']);
-Route::post('week/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeWeek']);
-Route::put('week/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'updateWeek']);
-Route::delete('week/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteWeek']);
-Route::post('absences/', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'storeAbsence']);
-Route::put('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'updateAbsence']);
-Route::delete('absences/{id}', [\App\Http\Controllers\API\VertretungsplanConnectController::class, 'deleteAbsence']);
+    /*
+     * Stundenplan Import API (API-Key-Auth)
+     */
+    Route::post('stundenplan/import', [\App\Http\Controllers\API\StundenplanImportController::class, 'import']);
+    Route::get('stundenplan/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'status']);
+});
+
+/*
+ * Stundenplan Query API (with authentication)
+ */
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('stundenplan/classes', [\App\Http\Controllers\API\StundenplanController::class, 'getClasses']);
+    Route::get('stundenplan/teachers', [\App\Http\Controllers\API\StundenplanController::class, 'getTeachers']);
+    Route::get('stundenplan/rooms', [\App\Http\Controllers\API\StundenplanController::class, 'getRooms']);
+    Route::get('stundenplan/class/{classId}', [\App\Http\Controllers\API\StundenplanController::class, 'getTimetableByClass']);
+    Route::get('stundenplan/teacher/{teacherId}', [\App\Http\Controllers\API\StundenplanController::class, 'getTimetableByTeacher']);
+    Route::get('stundenplan/room/{roomId}', [\App\Http\Controllers\API\StundenplanController::class, 'getTimetableByRoom']);
+});
 
 Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
@@ -38,12 +57,12 @@ Route::get('home/{post_id}', function () {
 
 Route::post('/token/create', [AuthController::class, 'login']);
 
-Route::get('files/{media_uuid}', [ImageController::class, 'getFileByUuid']);
-
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('me', [AuthController::class, 'me']);
     Route::post('/token/logout', [AuthController::class, 'logout']);
+
+    Route::get('files/{media_uuid}/download', [ImageController::class, 'getFileByUuid'])->name('api.files.download');
 
     /**
      * Notifications
@@ -86,8 +105,12 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * Dateien, Bilder, Downloads
      */
-    Route::get('files', [FilesController::class, 'index']);
+    Route::get('files', [FilesController::class, 'index'])->name('api.files.index');
+    Route::get('files/mime-types', [FilesController::class, 'mimeTypes'])->name('api.files.mime-types');
+    Route::get('files/stats', [FilesController::class, 'stats'])->name('api.files.stats');
+    Route::get('files/{uuid}', [FilesController::class, 'show'])->name('api.files.show');
     Route::get('image/{media_id}', [ImageController::class, 'getImage']);
+
 
     /**
      * Termine
@@ -137,5 +160,45 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('care/present', [\App\Http\Controllers\API\CareController::class, 'getPresentChildren']);
     Route::get('care/sick', [\App\Http\Controllers\API\CareController::class, 'getSickChildren']);
     Route::get('care/overview', [\App\Http\Controllers\API\CareController::class, 'getCareOverview']);
+
+    /**
+     * Parent / Eltern
+     */
+    Route::get('parent/children', [\App\Http\Controllers\API\ParentController::class, 'getChildren']);
+    Route::get('parent/attendance-queries', [\App\Http\Controllers\API\ParentController::class, 'getAttendanceQueries']);
+    Route::get('parent/children/check-in-status', [\App\Http\Controllers\API\ParentController::class, 'getChildrenCheckInStatus']);
+    Route::put('parent/check-in/{checkInId}/confirm', [\App\Http\Controllers\API\ParentController::class, 'confirmAttendance']);
+    Route::put('parent/check-in/{checkInId}/decline', [\App\Http\Controllers\API\ParentController::class, 'declineAttendance']);
+    Route::get('parent/schickzeiten', [\App\Http\Controllers\API\ParentController::class, 'getSchickzeiten']);
+    Route::post('parent/schickzeiten', [\App\Http\Controllers\API\ParentController::class, 'storeSchickzeit']);
+    Route::put('parent/schickzeiten/{schickzeitId}', [\App\Http\Controllers\API\ParentController::class, 'updateSchickzeit']);
+    Route::delete('parent/schickzeiten/{schickzeitId}', [\App\Http\Controllers\API\ParentController::class, 'deleteSchickzeit']);
+    Route::get('parent/child-notices', [\App\Http\Controllers\API\ParentController::class, 'getChildNotices']);
+    Route::post('parent/child-notices', [\App\Http\Controllers\API\ParentController::class, 'storeChildNotice']);
+    Route::delete('parent/child-notices/{noticeId}', [\App\Http\Controllers\API\ParentController::class, 'deleteChildNotice']);
+    Route::get('parent/child-mandates', [\App\Http\Controllers\API\ParentController::class, 'getChildMandates']);
+    Route::post('parent/child-mandates', [\App\Http\Controllers\API\ParentController::class, 'storeChildMandate']);
+    Route::put('parent/child-mandates/{mandateId}', [\App\Http\Controllers\API\ParentController::class, 'updateChildMandate']);
+    Route::delete('parent/child-mandates/{mandateId}', [\App\Http\Controllers\API\ParentController::class, 'deleteChildMandate']);
+    Route::get('parent/krankmeldungen', [\App\Http\Controllers\API\ParentController::class, 'getKrankmeldungen']);
+    Route::get('parent/krankmeldungen/history', [\App\Http\Controllers\API\ParentController::class, 'getKrankmeldungenHistory']);
+
+    /**
+     * Pflichtstunden
+     */
+    Route::get('pflichtstunden', [\App\Http\Controllers\API\PflichtstundeController::class, 'index']);
+    Route::get('pflichtstunden/stats', [\App\Http\Controllers\API\PflichtstundeController::class, 'stats']);
+    Route::post('pflichtstunden', [\App\Http\Controllers\API\PflichtstundeController::class, 'store']);
+    Route::put('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\API\PflichtstundeController::class, 'update']);
+    Route::delete('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\API\PflichtstundeController::class, 'destroy']);
+
+    /**
+     * User Settings (App-specific settings)
+     */
+    Route::get('user/settings', [\App\Http\Controllers\API\UserSettingsController::class, 'index']);
+    Route::post('user/settings', [\App\Http\Controllers\API\UserSettingsController::class, 'store']);
+    Route::patch('user/settings', [\App\Http\Controllers\API\UserSettingsController::class, 'update']);
+    Route::delete('user/settings', [\App\Http\Controllers\API\UserSettingsController::class, 'destroy']);
+    Route::get('user/settings/default', [\App\Http\Controllers\API\UserSettingsController::class, 'defaults']);
 
 });

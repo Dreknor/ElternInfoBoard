@@ -23,6 +23,7 @@ class searchRequest extends FormRequest
             'suche' => [
                 'required',
                 'string',
+                'max:100',
             ],
         ];
     }

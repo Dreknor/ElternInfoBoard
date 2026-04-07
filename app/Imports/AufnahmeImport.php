@@ -2,11 +2,17 @@
 
 namespace App\Imports;
 
+use App\Mail\NewUserPasswordMail;
 use App\Model\Group;
 use App\Model\User;
+use App\Scopes\GetGroupsScope;
+use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -19,7 +25,19 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
     public function __construct(array $header)
     {
         $this->header = $header;
-        $this->groups = Group::all();
+        // TODO-1.10: GetGroupsScope umgehen, damit alle Gruppen geladen werden
+        $this->groups = Group::withoutGlobalScope(GetGroupsScope::class)->get();
+    }
+
+    /** Gibt das konfigurierte Import-Passwort zurück oder ein zufälliges, falls ENV nicht gesetzt. */
+    private function getImportPassword(): string
+    {
+        $pw = config('app.import_aufnahme');
+        if (empty($pw)) {
+            \Illuminate\Support\Facades\Log::warning('PW_IMPORT_AUFNAHME ist nicht gesetzt – zufälliges Passwort wird verwendet');
+            return Str::password(16);
+        }
+        return $pw;
     }
 
     public function collection(Collection $collection): void
@@ -55,12 +73,14 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'deleted_at' => null,
                     ]);
                 } else {
+                    // TODO-1.1: Sicheres Zufallspasswort generieren
+                    $password1 = Str::password(12, true, true, true, false);
 
                     $user1 = User::create([
                         'email' => $row[$this->header['S1Email']],
                         'name' => $row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']],
                         'changePassword' => 1,
-                        'password' => Hash::make(config('app.import_aufnahme')),
+                        'password' => Hash::make($password1),
                         'lastEmail' => Carbon::now(),
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
@@ -68,6 +88,13 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changeSettings' => 1,
                     ]);
 
+                    // TODO-1.2: Willkommens-E-Mail versenden
+                    try {
+                        $emailSettings = app(EmailSetting::class);
+                        Mail::to($user1->email)->queue(new NewUserPasswordMail($user1, $password1, $emailSettings->new_user_welcome_text));
+                    } catch (\Exception $e) {
+                        Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user1->email.': '.$e->getMessage());
+                    }
                 }
 
                 $user1->assignRole('Aufnahme');
@@ -89,12 +116,14 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'deleted_at' => null,
                     ]);
                 } else {
+                    // TODO-1.1: Sicheres Zufallspasswort generieren
+                    $password2 = Str::password(12, true, true, true, false);
 
                     $user2 = User::create([
                         'email' => $row[$this->header['S2Email']],
                         'name' => $row[$this->header['S2Vorname']].' '.$row[$this->header['S2Nachname']],
                         'changePassword' => 1,
-                        'password' => Hash::make(config('app.import_aufnahme')),
+                        'password' => Hash::make($password2),
                         'lastEmail' => Carbon::now(),
                         'created_at' => Carbon::now(),
                         'updated_at' => Carbon::now(),
@@ -102,6 +131,13 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changeSettings' => 1,
                     ]);
 
+                    // TODO-1.2: Willkommens-E-Mail versenden
+                    try {
+                        $emailSettings = app(EmailSetting::class);
+                        Mail::to($user2->email)->queue(new NewUserPasswordMail($user2, $password2, $emailSettings->new_user_welcome_text));
+                    } catch (\Exception $e) {
+                        Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user2->email.': '.$e->getMessage());
+                    }
                 }
 
                 $user2->assignRole('Aufnahme');

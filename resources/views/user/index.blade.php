@@ -62,22 +62,80 @@
                 </div>
             </div>
             <div class="card-body">
+
+                {{-- Such- und Filterformular --}}
+                <form method="get" action="{{ url('users') }}" class="mb-4">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small font-weight-bold">Suche (Name / E-Mail)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" name="search" class="form-control"
+                                       placeholder="Name oder E-Mail…"
+                                       value="{{ request('search') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small font-weight-bold">Rolle</label>
+                            <select name="role" class="custom-select">
+                                <option value="">– Alle Rollen –</option>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->name }}"
+                                        @selected(request('role') === $role->name)>
+                                        {{ $role->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small font-weight-bold">Gruppe</label>
+                            <select name="group" class="custom-select">
+                                <option value="">– Alle Gruppen –</option>
+                                @foreach($groups as $gruppe)
+                                    <option value="{{ $gruppe->id }}"
+                                        @selected(request('group') == $gruppe->id)>
+                                        {{ $gruppe->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-filter"></i> Filtern
+                            </button>
+                            @if(request()->hasAny(['search','role','group']))
+                                <a href="{{ url('users') }}" class="btn btn-outline-secondary btn-block">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+
+                {{-- Ergebnisanzeige --}}
+                <p class="text-muted small mb-2">
+                    {{ $users->total() }} Benutzer gefunden
+                    @if(request()->hasAny(['search','role','group']))
+                        <span class="badge badge-info ml-1">gefiltert</span>
+                    @endif
+                </p>
+
                 <table class="table table-hover" id="userTable">
                     <thead>
                     <tr>
                         <td></td>
                         <th>Name</th>
-                            <th>E-Mail</th>
-                            <th>Gruppen</th>
-                            <th>Rechte</th>
-                            <th>Verknüpft</th>
-                            <th>E-Mail</th>
-                            <td></td>
-                        </tr>
+                        <th>E-Mail</th>
+                        <th>Gruppen</th>
+                        <th>Rechte</th>
+                        <th>Verknüpft</th>
+                        <th>E-Mail</th>
+                        <td></td>
+                    </tr>
                     </thead>
                     <tbody>
                         @foreach($users as $user)
-                            <tr>
+                            <tr @if($user->is_active === false) class="table-warning" title="Konto deaktiviert" @endif>
                                 <td>
                                     <a href="{{url('/users/').'/'.$user->id}}" class="btn-link">
                                         <i class="fas fa-eye"></i>
@@ -85,6 +143,11 @@
                                 </td>
                                 <td>
                                     {{$user->name}}
+                                    @if($user->is_active === false)
+                                        <span class="badge badge-danger ml-1" title="Konto deaktiviert">
+                                            <i class="fas fa-ban"></i> Inaktiv
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     {{$user->email}}
@@ -136,9 +199,12 @@
                                         </div>
                                         <div class="col-auto mt-2">
                                             @can('loginAsUser')
-                                                <a href="{{url("showUser/$user->id")}}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
+                                                <form method="POST" action="{{ url('showUser/'.$user->id) }}" style="display:inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-info" title="Als dieser User anmelden">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </form>
                                             @endcan
                                         </div>
                                         <div class="col-auto mt-2">
@@ -158,6 +224,9 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div class="mt-3">
+                    {{ $users->links() }}
+                </div>
             </div>
         </div>
     </div>
@@ -165,26 +234,6 @@
 @endsection
 
 @push('js')
- <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
- <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
- <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.html5.min.js"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
- <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.print.min.js"></script>
-
-
- <script>
-     $(document).ready( function () {
-         $('#userTable').DataTable( {
-             dom: 'Bfrtip',
-             buttons: [
-                  'csv', 'pdf', 'print'
-             ]
-         } );
-     } );
- </script>
-
-
  @can('edit user')
      <script src="{{asset('js/plugins/sweetalert2.all.min.js')}}"></script>
 
@@ -219,7 +268,4 @@
  @endcan
 @endpush
 
-@section('css')
-    <link href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
 
-@endsection

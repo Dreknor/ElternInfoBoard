@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class Rueckmeldungen
@@ -68,14 +69,11 @@ class Rueckmeldungen extends Model
         return $this->hasMany(UserRueckmeldungen::class, 'post_id', 'post_id');
     }
 
-    public function options(): ?HasMany
+    public function options(): HasMany
     {
-        if ($this->type == 'abfrage') {
-            return $this->hasMany(AbfrageOptions::class, 'rueckmeldung_id');
-        }
-
-        return null;
+        return $this->hasMany(AbfrageOptions::class, 'rueckmeldung_id');
     }
+
 
     /**
      * The "booted" method of the model.
@@ -84,7 +82,7 @@ class Rueckmeldungen extends Model
     {
         static::saved(function ($rueckmeldung) {
             $post = $rueckmeldung->post;
-            if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+            if ($post && $rueckmeldung->ende && ($post->archiv_ab === null || $rueckmeldung->ende->greaterThan($post->archiv_ab))) {
                 $post->update([
                     'archiv_ab' => $rueckmeldung->ende,
                 ]);
@@ -93,7 +91,7 @@ class Rueckmeldungen extends Model
 
         static::updated(function ($rueckmeldung) {
             $post = $rueckmeldung->post;
-            if ($rueckmeldung->ende->greaterThan($post->archiv_ab)) {
+            if ($post && $rueckmeldung->ende && ($post->archiv_ab === null || $rueckmeldung->ende->greaterThan($post->archiv_ab))) {
                 $post->update([
                     'archiv_ab' => $rueckmeldung->ende,
                 ]);

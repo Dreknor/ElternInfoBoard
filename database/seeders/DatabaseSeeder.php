@@ -26,6 +26,10 @@ class DatabaseSeeder extends Seeder
             DiseasesSeeder::class,
             UpdateSeetingsModuleNameSeeder::class,
             CreatePflichtstundenHelpSiteSeeder::class,
+            DeleteLogsPermissionSeeder::class,
+            CreateStundenplanModuleSeeder::class,
+            StundenplanSettingsSeeder::class,
+            UpdateNachrichtenModuleLinkSeeder::class,
         ]);
     }
 }

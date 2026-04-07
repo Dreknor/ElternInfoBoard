@@ -353,7 +353,11 @@
                                        $betrag_gesamt = $pflichtstunden_settings->pflichtstunden_anzahl * $pflichtstunden_settings->pflichtstunden_betrag;
                                        $offener_betrag = $remaining_hours * $pflichtstunden_settings->pflichtstunden_betrag;
                                     @endphp
-                                    {{number_format($offener_betrag, 2)}} €
+                                    @if($offener_betrag<0)
+                                        0.00
+                                    @else
+                                        {{number_format($offener_betrag, 2)}}
+                                    @endif
                                     <span class="text-gray-500 font-normal">von {{$betrag_gesamt}} €</span>
                                 </th>
                             </tr>

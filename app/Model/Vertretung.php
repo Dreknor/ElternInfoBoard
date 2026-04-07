@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Model\Stundenplan\Klasse;
 use App\Observers\VertretungObserver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -18,6 +19,7 @@ class Vertretung extends Model
         'id',
         'date',
         'klasse',
+        'klasse_kurzform',
         'stunde',
         'altFach',
         'neuFach',
@@ -33,8 +35,21 @@ class Vertretung extends Model
 
     }
 
+    /**
+     * Relation zur Gruppe (altes System)
+     * Nullable, wenn stattdessen klasse_kurzform verwendet wird
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'klasse');
+    }
+
+    /**
+     * Relation zur Stundenplan-Klasse (neues System)
+     * Nullable, wenn stattdessen klasse (Group) verwendet wird
+     */
+    public function klasse(): BelongsTo
+    {
+        return $this->belongsTo(Klasse::class, 'klasse_kurzform', 'kurzform');
     }
 }

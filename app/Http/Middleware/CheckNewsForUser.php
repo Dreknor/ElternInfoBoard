@@ -56,7 +56,7 @@ class CheckNewsForUser
 
                 foreach ($posts as $post) {
                     $news[] = [
-                        'link' => url('home#'.$post->id),
+                        'link' => url('post/'.$post->id),
                         'title' => '<i class="far fa-newspaper"></i> '.$post->header,
                     ];
                 }

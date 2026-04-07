@@ -16,6 +16,7 @@
         "danielme85/laravel-log-to-db": "^4.1",
         "devdojo/chatter": "0.2.*",
         "devdojo/laravel-reactions": "^1.0",
+        "ezyang/htmlpurifier": "*",
         "grosv/laravel-passwordless-login": "dev-main",
         "laravel-notification-channels/webpush": "^10.0",
         "laravel/framework": "^12.49",

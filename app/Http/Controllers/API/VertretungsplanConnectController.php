@@ -9,6 +9,7 @@ use App\Http\Requests\ApiImportVertretungsNewsRequest;
 use App\Http\Requests\ApiImportVertretungsRequest;
 use App\Http\Requests\ApiImportVertretungsWeekRequest;
 use App\Model\Group;
+use App\Model\Stundenplan\Klasse;
 use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
@@ -21,20 +22,34 @@ class VertretungsplanConnectController extends Controller
 
     public function store(ApiImportVertretungsRequest $request)
     {
-
-        $group = Group::where('name', $request->get('klasse'))->first();
-
-        if (! $group) {
-            return response()->json([
-                'error' => 'Klasse nicht gefunden',
-            ], 404);
-        }
-
         $data = $request->all();
         $vertretung = new Vertretung;
         $vertretung->id = $data['id'];
         $vertretung->date = $data['date'];
-        $vertretung->klasse = $group->id;
+
+        // Prüfe, ob klasse (Group-Name) oder klasse_kurzform (Klassenkürzel) übergeben wurde
+        if ($request->has('klasse')) {
+            $group = Group::where('name', $request->get('klasse'))->first();
+
+            if (! $group) {
+                return response()->json([
+                    'error' => 'Klasse nicht gefunden',
+                ], 404);
+            }
+
+            $vertretung->klasse = $group->id;
+        } elseif ($request->has('klasse_kurzform')) {
+            $klasse = Klasse::where('kurzform', $request->get('klasse_kurzform'))->first();
+
+            if (! $klasse) {
+                return response()->json([
+                    'error' => 'Klassenkürzel nicht gefunden',
+                ], 404);
+            }
+
+            $vertretung->klasse_kurzform = $klasse->kurzform;
+        }
+
         $vertretung->stunde = $data['stunde'];
         $vertretung->altFach = $data['altFach'];
         $vertretung->neuFach = $data['neuFach'];
@@ -49,14 +64,6 @@ class VertretungsplanConnectController extends Controller
 
     public function update(ApiImportVertretungsRequest $request, $id)
     {
-        $group = Group::where('name', $request->get('klasse'))->first();
-
-        if (! $group) {
-            return response()->json([
-                'error' => 'Klasse nicht gefunden',
-            ], 404);
-        }
-
         $data = $request->all();
         $vertretung = Vertretung::find($id);
 
@@ -67,7 +74,32 @@ class VertretungsplanConnectController extends Controller
         }
 
         $vertretung->date = $data['date'];
-        $vertretung->klasse = $group->id;
+
+        // Prüfe, ob klasse (Group-Name) oder klasse_kurzform (Klassenkürzel) übergeben wurde
+        if ($request->has('klasse')) {
+            $group = Group::where('name', $request->get('klasse'))->first();
+
+            if (! $group) {
+                return response()->json([
+                    'error' => 'Klasse nicht gefunden',
+                ], 404);
+            }
+
+            $vertretung->klasse = $group->id;
+            $vertretung->klasse_kurzform = null; // Alten Wert zurücksetzen
+        } elseif ($request->has('klasse_kurzform')) {
+            $klasse = Klasse::where('kurzform', $request->get('klasse_kurzform'))->first();
+
+            if (! $klasse) {
+                return response()->json([
+                    'error' => 'Klassenkürzel nicht gefunden',
+                ], 404);
+            }
+
+            $vertretung->klasse_kurzform = $klasse->kurzform;
+            $vertretung->klasse = null; // Alten Wert zurücksetzen
+        }
+
         $vertretung->stunde = $data['stunde'];
         $vertretung->altFach = $data['altFach'];
         $vertretung->neuFach = $data['neuFach'];
@@ -123,6 +155,10 @@ class VertretungsplanConnectController extends Controller
         }
 
         $news->delete();
+
+        return response()->json([
+            'success' => 'News erfolgreich gelöscht',
+        ]);
     }
 
     public function storeWeek(ApiImportVertretungsWeekRequest $request)

@@ -1,13 +1,10 @@
 <?php
 
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Facade;
-
 return [
 
     'timezone' => 'Europe/Berlin',
 
-    'aliases' => Facade::defaultAliases()->merge([
+    'aliases' => \Illuminate\Support\Facades\Facade::defaultAliases()->merge([
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
         'Redis' => Illuminate\Support\Facades\Redis::class,
@@ -27,23 +24,17 @@ return [
 
     'api_key' => env('API_KEY'),
 
-    'import_eltern' => env('PW_IMPORT_ELTERN', Carbon::now()->format('dmY')),
+    // WICHTIG: Diese Werte müssen in der .env gesetzt sein!
 
-    'import_aufnahme' => env('PW_IMPORT_AUFNAHME', Carbon::now()->format('dmY')),
+    'import_eltern' => env('PW_IMPORT_ELTERN'),
 
-    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER', Carbon::now()->format('dmY')),
+    'import_aufnahme' => env('PW_IMPORT_AUFNAHME'),
 
-    'import_verein' => env('PW_IMPORT_VEREIN', Carbon::now()->format('dmY')),
+    'import_mitarbeiter' => env('PW_IMPORT_MITARBEITER'),
+
+    'import_verein' => env('PW_IMPORT_VEREIN'),
 
     'enable_reactions' => env('ENABLE_REACTIONS', true),
 
-    'keycloak' => [
-        'enabled' => env('KEYCLOAK_ENABLED', false),
-        'url' => env('KEYCLOAK_URL', 'http://localhost:8080/auth'),
-        'realm' => env('KEYCLOAK_REALM', 'elterninfoboard'),
-        'client_id' => env('KEYCLOAK_CLIENT_ID', 'elterninfoboard'),
-        'client_secret' => env('KEYCLOAK_CLIENT_SECRET', now()->timestamp),
-        'mail_domain' => explode('|', env('KEYCLOAK_MAIL_DOMAIN', explode('@', env('MAIL_FROM_ADDRESS'))[1])),
-    ],
 
 ];

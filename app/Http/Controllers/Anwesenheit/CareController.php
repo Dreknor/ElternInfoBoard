@@ -12,6 +12,7 @@ use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
 use App\Services\HolidayService;
+use App\Notifications\AttendanceQueryNotification;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -356,12 +357,16 @@ class CareController extends Controller implements HasMiddleware
         $children = Child::query()
             ->whereIn('class_id', $careSettings->class_list)
             ->whereIn('group_id', $careSettings->groups_list)
-            ->with(['checkIns' => function ($query) use ($date_start, $date_end) {
-                $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()]);
-            }])
+            ->with([
+                'checkIns' => function ($query) use ($date_start, $date_end) {
+                    $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()]);
+                },
+                'parents'
+            ])
             ->get();
 
         $checkIns = [];
+        $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
 
         for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
             if ($date->isWeekend()) {
@@ -369,7 +374,10 @@ class CareController extends Controller implements HasMiddleware
             }
 
             foreach ($children as $child) {
-                if ($child->checkIns->count() > 0) {
+                // Prüfe, ob bereits ein CheckIn für dieses Datum existiert
+                $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
+
+                if ($existingCheckIn) {
                     continue;
                 }
 
@@ -377,19 +385,61 @@ class CareController extends Controller implements HasMiddleware
                     'child_id' => $child->id,
                     'checked_in' => false,
                     'checked_out' => false,
-                    'date' => $date_start->toDateString(),
-                    'should_be' => false,
+                    'date' => $date->toDateString(),
+                    'should_be' => null, // null = noch nicht beantwortet
                     'lock_at' => $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString(),
                 ];
+
+                // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)
+                foreach ($child->parents as $parent) {
+                    if (!$parentsToNotify->contains('id', $parent->id)) {
+                        $parentsToNotify->push($parent);
+                    }
+                }
             }
         }
 
-        ChildCheckIn::query()->insert($checkIns);
+        if (!empty($checkIns)) {
+            ChildCheckIn::query()->insert($checkIns);
+
+            // Benachrichtige alle betroffenen Eltern einmalig
+            $this->notifyParentsAboutNewAttendanceQuery($parentsToNotify, $date_start, $date_end, $lock_at);
+        }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Die Abfrage wurde erstellt.',
         ]);
+    }
+
+    /**
+     * Benachrichtigt Eltern über eine neue Anwesenheitsabfrage
+     */
+    private function notifyParentsAboutNewAttendanceQuery($parents, Carbon $dateStart, Carbon $dateEnd, ?Carbon $lockAt)
+    {
+        foreach ($parents as $parent) {
+            $title = 'Neue Anwesenheitsabfrage';
+
+            $dateRange = $dateStart->format('d.m.Y');
+            if ($dateStart->toDateString() !== $dateEnd->toDateString()) {
+                $dateRange .= ' bis ' . $dateEnd->format('d.m.Y');
+            }
+
+            $body = "Es liegt eine neue Anwesenheitsabfrage für Ihre Kinder vor ({$dateRange}).";
+
+            if ($lockAt) {
+                $body .= " Bitte antworten Sie bis zum " . $lockAt->format('d.m.Y') . ".";
+            } else {
+                $body .= " Bitte geben Sie Ihre Rückmeldung.";
+            }
+
+            // Sende Notification (enthält bereits 'database' und WebPush Channels)
+            try {
+                $parent->notify(new AttendanceQueryNotification($title, $body, url('schickzeiten')));
+            } catch (\Exception $e) {
+                Log::error("Fehler beim Senden der Anwesenheitsabfrage-Benachrichtigung an {$parent->name}: " . $e->getMessage());
+            }
+        }
     }
 
     public function downloadAbfrageAnwesenheit(Request $request)

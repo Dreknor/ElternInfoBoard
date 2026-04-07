@@ -252,4 +252,157 @@ class UserRueckmeldungenController extends Controller
             'data' => $userRueckmeldung,
         ], 200);
     }
+
+    /**
+     * Update an existing user feedback.
+     *
+     * @group Rückmeldungen
+     *
+     * @urlParam id integer required The ID of the user feedback to update. Example: 1
+     *
+     * @bodyParam text string required The updated feedback text. Example: "Ich nehme doch nicht teil"
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Rückmeldung aktualisiert",
+     *   "data": {
+     *     "id": 1,
+     *     "post_id": 1,
+     *     "users_id": 1,
+     *     "text": "Ich nehme doch nicht teil",
+     *     "created_at": "2026-02-11T10:00:00.000000Z",
+     *     "updated_at": "2026-02-18T14:30:00.000000Z"
+     *   }
+     * }
+     *
+     * @response 404 {
+     *   "success": false,
+     *   "error": "Feedback not found",
+     *   "message": "Rückmeldung nicht gefunden"
+     * }
+     *
+     * @response 403 {
+     *   "success": false,
+     *   "error": "Not authorized",
+     *   "message": "Sie sind nicht berechtigt, diese Rückmeldung zu ändern"
+     * }
+     *
+     * @response 410 {
+     *   "success": false,
+     *   "error": "Feedback deadline passed",
+     *   "message": "Die Frist für Rückmeldungen ist abgelaufen"
+     * }
+     *
+     * @authenticated
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'text' => 'required|string|max:5000',
+        ]);
+
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+                'message' => 'Benutzer nicht gefunden'
+            ], 404);
+        }
+
+        $userRueckmeldung = UserRueckmeldungen::query()
+            ->with('nachricht.rueckmeldung')
+            ->find($id);
+
+        if (!$userRueckmeldung) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Feedback not found',
+                'message' => 'Rückmeldung nicht gefunden'
+            ], 404);
+        }
+
+        // Check if the user owns this feedback or is the sorgeberechtigter2
+        $isOwner = $userRueckmeldung->users_id === $user->id;
+        $isSorgeberechtigter = !is_null($user->sorg2) && $userRueckmeldung->users_id === $user->sorg2;
+
+        if (!$isOwner && !$isSorgeberechtigter) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Not authorized',
+                'message' => 'Sie sind nicht berechtigt, diese Rückmeldung zu ändern'
+            ], 403);
+        }
+
+        $post = $userRueckmeldung->nachricht;
+
+        if (!$post) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Post not found',
+                'message' => 'Beitrag nicht gefunden'
+            ], 404);
+        }
+
+        // Check if user has access to the post
+        if (!$post->users->contains($user)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not allowed',
+                'message' => 'Keine Berechtigung für diesen Beitrag'
+            ], 403);
+        }
+
+        $rueckmeldung = $post->rueckmeldung;
+
+        if (!$rueckmeldung) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Feedback not enabled',
+                'message' => 'Rückmeldung für diesen Beitrag nicht aktiviert'
+            ], 404);
+        }
+
+        // Check if the feedback deadline has passed
+        if ($rueckmeldung->active === false) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Feedback deadline passed',
+                'message' => 'Die Frist für Rückmeldungen ist abgelaufen'
+            ], 410);
+        }
+
+        // Update the feedback
+        $userRueckmeldung->text = $request->text;
+        $userRueckmeldung->updated_at = now();
+        $userRueckmeldung->save();
+
+        // Send notification email about the update
+        $rueckmeldungData = [
+            'email' => $user->email,
+            'name' => $user->name,
+            'text' => $request->text,
+            'subject' => 'Aktualisierte Rückmeldung zu ' . $post->header,
+        ];
+
+        $empfaenger = $rueckmeldung->empfaenger;
+
+        if ($user->sendCopy == 1) {
+            Mail::to($empfaenger)
+                ->cc($user)
+                ->queue(new UserRueckmeldungMail((array) $rueckmeldungData));
+        } else {
+            Mail::to($empfaenger)
+                ->queue(new UserRueckmeldungMail((array) $rueckmeldungData));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rückmeldung aktualisiert',
+            'data' => $userRueckmeldung,
+        ], 200);
+    }
 }

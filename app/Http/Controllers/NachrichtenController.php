@@ -401,7 +401,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ]);
                 $rueckmeldung->save();
 
-                return redirect(url('/home#'.$post->id))->with([
+                return redirect(url('post/'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                 ]);
@@ -417,7 +417,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ]);
                 $rueckmeldung->save();
 
-                return redirect(url('/home#'.$post->id))->with([
+                return redirect(url('post/'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                 ]);
@@ -433,7 +433,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ]);
                 $rueckmeldung->save();
 
-                return redirect(url('/home#'.$post->id))->with([
+                return redirect(url('post/'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht und Rückmeldung angelegt.',
                 ]);
@@ -449,7 +449,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                     ]);
                 }
 
-                return redirect(url('/home#'.$post->id))->with([
+                return redirect(url('post/'.$post->id))->with([
                     'type' => 'success',
                     'Meldung' => 'Nachricht angelegt.',
                 ]);
@@ -554,7 +554,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             return redirect()->to(url('/kiosk'));
         }
 
-        return redirect(url('/home#'.$posts->id))->with([
+        return redirect(url('post/'.$posts->id))->with([
             'type' => 'success',
             'Meldung' => $Meldung,
         ]);
@@ -740,7 +740,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             $this->push($posts);
         }
 
-        return redirect(url('/home#'.$posts->id))->with([
+        return redirect(url('post/'.$posts->id))->with([
             'type' => 'success',
             'Meldung' => 'Nachricht veröffentlicht',
         ]);
@@ -870,7 +870,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             auth()->user()
         );
 
-        return redirect(url('/home#'.$posts->id));
+        return redirect(url('post/'.$posts->id));
     }
 
     // Sendet Push-Nachricht an User
@@ -909,7 +909,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 'user_id' => $user->id,
                 'title' => $header,
                 'message' => $post->header,
-                'url' => ($post->external) ? url('/external#'.$post->id) : url('/home#'.$post->id),
+                'url' => url('post/'.$post->id),
                 'icon' => $icon,
                 'type' => ($post->external) ? 'Ex. Angebot' : 'Nachrichten',
                 'created_at' => Carbon::now(),
@@ -968,10 +968,17 @@ class NachrichtenController extends Controller implements HasMiddleware
 
     public function findPost(Post $post)
     {
-        if ($post->archiv_ab->lte(Carbon::now())) {
-            return redirect(url('/archiv#'.$post->id));
+        if ($post->external) {
+            return redirect(url('/external#'.$post->id));
         }
 
-        return redirect(url('/#'.$post->id));
+        if (! is_null($post->archiv_ab) && $post->archiv_ab->lte(Carbon::now())) {
+            $month = $post->archiv_ab->format('Y-m');
+
+            return redirect(url('/archiv/'.$month.'#'.$post->id));
+        }
+
+        return redirect(url('/nachrichten#'.$post->id));
     }
 }
+

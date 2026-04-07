@@ -50,6 +50,7 @@ class User extends Authenticatable implements Auditable
      */
     protected $fillable = [
         'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
+        'is_active', 'deactivated_at',
     ];
 
     /**
@@ -75,6 +76,8 @@ class User extends Authenticatable implements Auditable
             'last_online_at' => 'datetime',
             'track_login' => 'boolean',
             'changeSettings' => 'boolean',
+            'is_active' => 'boolean',        // TODO-2.5
+            'deactivated_at' => 'datetime',  // TODO-2.5
         ];
     }
 
@@ -313,6 +316,11 @@ class User extends Authenticatable implements Auditable
     public function read_receipts(): HasMany
     {
         return $this->hasMany(ReadReceipts::class, 'user_id');
+    }
+
+    public function pollVotes(): HasMany
+    {
+        return $this->hasMany(Poll_Votes::class, 'author_id');
     }
 
     public function pflichtstunden(): HasMany
