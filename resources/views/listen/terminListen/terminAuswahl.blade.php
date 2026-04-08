@@ -39,6 +39,46 @@
                                 <i class="fas fa-print"></i>
                                 <span class="hidden md:inline">Druck</span>
                             </a>
+
+                            {{-- iCal-Download-Dropdown --}}
+                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                <button @click="open = !open"
+                                        class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
+                                    <i class="fas fa-calendar-download"></i>
+                                    <span class="hidden md:inline">Kalender</span>
+                                    <i class="fas fa-chevron-down text-xs ml-1"></i>
+                                </button>
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                                     style="display: none;">
+                                    <div class="px-4 py-2 border-b border-gray-100">
+                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">iCal herunterladen (.ics)</p>
+                                    </div>
+                                    <a href="{{ route('listen.ical.export', $liste) }}"
+                                       class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-150">
+                                        <i class="fas fa-calendar-day text-teal-500 w-4"></i>
+                                        <div>
+                                            <div class="font-medium">Termine einzeln</div>
+                                            <div class="text-xs text-gray-500">Jeder Termin als eigener Eintrag</div>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('listen.ical.export', $liste) }}?block=1"
+                                       class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-150 rounded-b-lg">
+                                        <i class="fas fa-layer-group text-teal-500 w-4"></i>
+                                        <div>
+                                            <div class="font-medium">Als Blöcke</div>
+                                            <div class="text-xs text-gray-500">Aufeinanderfolgende Termine zusammengefasst</div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+
                             <button type="button" id="showAll"
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-eye"></i>

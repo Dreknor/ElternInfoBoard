@@ -14,6 +14,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
@@ -377,9 +378,16 @@ class ListenController extends Controller
         ]);
     }
 
-    public function icalExport(Liste $liste)
+    /**
+     * Exportiert alle Termine einer Terminliste als iCal-Datei.
+     * Mit ?block=1 werden aufeinanderfolgende Termine zu einem Block zusammengefasst.
+     *
+     * @return \Illuminate\Http\Response|RedirectResponse
+     */
+    public function icalExport(Request $request, Liste $liste)
     {
-        if (! auth()->user()->can('edit terminliste')) {
+        // Listenbesitzer oder Benutzer mit "edit terminliste"-Berechtigung
+        if (auth()->user()->id != $liste->besitzer && ! auth()->user()->can('edit terminliste')) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',
@@ -393,30 +401,76 @@ class ListenController extends Controller
             ]);
         }
 
-        $termine = $liste->termine;
+        $termine = $liste->termine->sortBy('termin')->values();
+        $mergeBlocks = $request->boolean('block', false);
 
-        $icalObject = Calendar::create(config('app.name'));
+        $icalObject = Calendar::create(config('app.name'))
+            ->name($liste->listenname);
 
-        // loop over events
-        foreach ($termine as $termin) {
+        if ($mergeBlocks && $termine->count() > 0) {
+            // Aufeinanderfolgende Termine zu Blöcken zusammenfassen
+            $blocks = [];
+            $blockStart = null;
+            $blockEnd = null;
 
-            if ($termin->reserviert_fuer != null) {
-                $name = $liste->listenname.'-'.$termin->eingetragenePerson?->name;
-            } else {
-                $name = $liste->listenname;
+            foreach ($termine as $termin) {
+                $start = $termin->termin->copy()->timezone('Europe/Berlin');
+                $end   = $termin->termin->copy()->addMinutes($termin->duration)->timezone('Europe/Berlin');
+
+                if ($blockStart === null) {
+                    $blockStart = $start;
+                    $blockEnd   = $end;
+                } elseif ($start->lte($blockEnd)) {
+                    // Termin schließt direkt an oder überschneidet sich → Block verlängern
+                    if ($end->gt($blockEnd)) {
+                        $blockEnd = $end;
+                    }
+                } else {
+                    // Lücke gefunden → Block abschließen, neuen starten
+                    $blocks[] = ['start' => $blockStart, 'end' => $blockEnd];
+                    $blockStart = $start;
+                    $blockEnd   = $end;
+                }
             }
 
-            $icalObject->event(
-                Event::create()
-                    ->name($name)
-                    ->uniqueIdentifier(($termin->id) ?: uuid_create())
-                    ->startsAt($termin->termin->timezone('Europe/Berlin'))
-                    ->endsAt($termin->termin->copy()->addMinutes($termin->duration))
-            );
+            if ($blockStart !== null) {
+                $blocks[] = ['start' => $blockStart, 'end' => $blockEnd];
+            }
+
+            foreach ($blocks as $block) {
+                $icalObject->event(
+                    Event::create()
+                        ->name($liste->listenname)
+                        ->uniqueIdentifier(uuid_create())
+                        ->startsAt($block['start'])
+                        ->endsAt($block['end'])
+                );
+            }
+        } else {
+            // Jeden Termin einzeln exportieren
+            foreach ($termine as $termin) {
+                if ($termin->reserviert_fuer != null) {
+                    $name = $liste->listenname.' – '.$termin->eingetragenePerson?->name;
+                } else {
+                    $name = $liste->listenname;
+                }
+
+                $icalObject->event(
+                    Event::create()
+                        ->name($name)
+                        ->uniqueIdentifier($termin->id ? (string) $termin->id : uuid_create())
+                        ->startsAt($termin->termin->copy()->timezone('Europe/Berlin'))
+                        ->endsAt($termin->termin->copy()->addMinutes($termin->duration)->timezone('Europe/Berlin'))
+                        ->description($termin->comment ?? '')
+                );
+            }
         }
 
-        return response($icalObject->get())->header('Content-Type', 'text/calendar');
+        $filename = Str::slug($liste->listenname, '-').'.ics';
 
+        return response($icalObject->get())
+            ->header('Content-Type', 'text/calendar; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     public function exportExcelTermine($id)
