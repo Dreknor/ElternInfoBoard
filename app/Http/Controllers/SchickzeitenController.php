@@ -157,17 +157,48 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $abfragen = ChildCheckIn::query()
             ->where('date', '>', today())
-            ->get(['date', 'should_be', 'child_id', 'comment']);
+            ->with('child.parents')
+            ->get(['id', 'date', 'should_be', 'child_id', 'comment', 'lock_at']);
 
         $abfragen_daten = [];
+
+        // Alle Care-Kinder mit Eltern für Rücklauf-Zuordnung
+        $careChildren = Child::query()
+            ->whereIn('group_id', $careSettings->groups_list)
+            ->whereIn('class_id', $careSettings->class_list)
+            ->with('parents')
+            ->get();
 
         foreach ($abfragen->groupBy('date') as $datum) {
             $date = $datum->first()->date->format('Y-m-d');
 
-            $abfragen_daten[$date]['count'] = count($datum->where('should_be', true));
-            $abfragen_daten[$date]['comment'] = $datum->first()->comment;
+            $coming = $datum->where('should_be', true);
+            $notComing = $datum->whereStrict('should_be', false);
+            $pending = $datum->whereNull('should_be');
+            $responded = $datum->whereNotNull('should_be');
+            $total = $datum->count();
 
+            // Fehlende Kinder + Eltern ermitteln
+            $pendingChildIds = $pending->pluck('child_id')->toArray();
+            $pendingChildren = $careChildren->whereIn('id', $pendingChildIds);
+            $pendingParents = $pendingChildren->pluck('parents')->flatten()->unique('id');
+
+            $abfragen_daten[$date] = [
+                'count' => $coming->count(),
+                'comment' => $datum->first()->comment,
+                'coming' => $coming->count(),
+                'not_coming' => $notComing->count(),
+                'pending' => $pending->count(),
+                'total' => $total,
+                'response_rate' => $total > 0 ? round($responded->count() / $total * 100) : 0,
+                'pending_children' => $pendingChildren,
+                'pending_parents' => $pendingParents,
+                'lock_at' => $datum->first()->lock_at,
+            ];
         }
+
+        // Nach Datum sortieren
+        ksort($abfragen_daten);
 
         $weekdays = [
             '1' => 'Montag',
@@ -1213,5 +1244,78 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
             }
         }
+    }
+
+    /**
+     * Bulk-Update für Anwesenheitsabfragen.
+     * Ermöglicht es Eltern, mehrere CheckIns auf einmal zu beantworten
+     * und optional direkt Schickzeiten für die Tage mit Anmeldung zu hinterlegen.
+     */
+    public function bulkUpdateAttendance(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'responses' => 'required|array|min:1',
+            'responses.*.check_in_id' => 'required|integer|exists:child_check_ins,id',
+            'responses.*.should_be' => 'required|in:0,1',
+            'responses.*.schickzeit_time' => 'nullable|date_format:H:i',
+            'responses.*.schickzeit_type' => 'nullable|in:genau,ab',
+        ]);
+
+        $user = auth()->user();
+        $userChildIds = $user->children()?->pluck('id')->toArray() ?? [];
+
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($request->responses as $response) {
+            $checkIn = ChildCheckIn::find($response['check_in_id']);
+
+            if (!$checkIn) {
+                $skipped++;
+                continue;
+            }
+
+            // Sicherheitscheck: Kind gehört zum User
+            if (!in_array($checkIn->child_id, $userChildIds)) {
+                $skipped++;
+                continue;
+            }
+
+            // Lock-Prüfung
+            if ($checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now())) {
+                $skipped++;
+                continue;
+            }
+
+            $shouldBe = (bool) $response['should_be'];
+            $checkIn->update(['should_be' => $shouldBe]);
+            $updated++;
+
+            // Wenn Kind kommt UND Schickzeit angegeben → automatisch Schickzeit erstellen
+            if ($shouldBe && !empty($response['schickzeit_time'])) {
+                Schickzeiten::updateOrCreate(
+                    [
+                        'child_id' => $checkIn->child_id,
+                        'specific_date' => $checkIn->date->format('Y-m-d'),
+                    ],
+                    [
+                        'type' => $response['schickzeit_type'] ?? 'genau',
+                        'time' => $response['schickzeit_time'],
+                        'users_id' => $user->id,
+                        'child_name' => $checkIn->child?->first_name . ' ' . $checkIn->child?->last_name,
+                    ]
+                );
+            }
+        }
+
+        $message = "{$updated} Anwesenheitsabfragen aktualisiert.";
+        if ($skipped > 0) {
+            $message .= " ({$skipped} übersprungen)";
+        }
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => $message,
+        ]);
     }
 }

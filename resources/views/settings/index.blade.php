@@ -58,6 +58,11 @@
                                         type="button" role="tab" aria-controls="stundenplan" aria-selected="false">Stundenplan
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="reminder-tab" data-toggle="tab" data-target="#reminder"
+                                        type="button" role="tab" aria-controls="reminder" aria-selected="false">Erinnerungen
+                                </button>
+                            </li>
                         </ul>
                         <div class="tab-content">
                             @include('settings.tabs.home-tab')
@@ -68,6 +73,7 @@
                             @include('settings.tabs.schoolyear-tab')
                             @include('settings.tabs.pflichtstunden-tab')
                             @include('settings.tabs.stundenplan-tab')
+                            @include('settings.tabs.reminder-tab')
                         </div>
                     </div>
                 </div>

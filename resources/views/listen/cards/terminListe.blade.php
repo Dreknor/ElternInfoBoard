@@ -62,17 +62,23 @@
                             </a>
                             <div class="border-t border-gray-200 my-1"></div>
                             @if($liste->active == 0)
-                                <a href="{{ url("listen/$liste->id/activate") }}"
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150">
-                                    <i class="fas fa-eye text-green-600 w-4"></i>
-                                    <span>Veröffentlichen</span>
-                                </a>
+                                <form action="{{ url("listen/$liste->id/activate") }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                       class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 w-full text-left">
+                                        <i class="fas fa-eye text-green-600 w-4"></i>
+                                        <span>Veröffentlichen</span>
+                                    </button>
+                                </form>
                             @else
-                                <a href="{{ url("listen/$liste->id/deactivate") }}"
-                                   class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150">
-                                    <i class="fas fa-eye-slash text-yellow-600 w-4"></i>
-                                    <span>Ausblenden</span>
-                                </a>
+                                <form action="{{ url("listen/$liste->id/deactivate") }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                       class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 w-full text-left">
+                                        <i class="fas fa-eye-slash text-yellow-600 w-4"></i>
+                                        <span>Ausblenden</span>
+                                    </button>
+                                </form>
                             @endif
                             <a href="{{ url("listen/$liste->id/archiv") }}"
                                class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150">

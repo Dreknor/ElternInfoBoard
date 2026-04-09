@@ -1701,6 +1701,80 @@ class ParentController extends Controller implements HasMiddleware
             'message' => 'Abholberechtigung wurde erfolgreich gelöscht.',
         ], 200);
     }
+
+    /**
+     * Bulk-Update für Anwesenheitsabfragen
+     *
+     * Ermöglicht das gleichzeitige Beantworten mehrerer Anwesenheitsabfragen.
+     * Optional kann für jeden Tag mit Anmeldung direkt eine Schickzeit hinterlegt werden.
+     *
+     * @group Parent
+     *
+     * @bodyParam responses array required Array von Antworten.
+     * @bodyParam responses.*.check_in_id int required Die ID des ChildCheckIn.
+     * @bodyParam responses.*.should_be boolean required Ob das Kind kommen soll (true) oder nicht (false).
+     * @bodyParam responses.*.schickzeit_time string optional Abholzeit im Format HH:MM (nur bei should_be=true). Example: 15:30
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "updated": 5,
+     *   "skipped": 0,
+     *   "message": "5 Anwesenheitsabfragen aktualisiert."
+     * }
+     *
+     * @response 422 {
+     *   "message": "The responses field is required."
+     * }
+     */
+    public function bulkUpdateAttendanceQueries(Request $request): JsonResponse
+    {
+        $request->validate([
+            'responses' => 'required|array|min:1',
+            'responses.*.check_in_id' => 'required|integer|exists:child_check_ins,id',
+            'responses.*.should_be' => 'required|boolean',
+            'responses.*.schickzeit_time' => 'nullable|date_format:H:i',
+        ]);
+
+        $user = $request->user();
+        $children = $user->children();
+        $childIds = $children ? $children->pluck('id')->toArray() : [];
+
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($request->responses as $response) {
+            $checkIn = ChildCheckIn::find($response['check_in_id']);
+
+            if (!$checkIn || !in_array($checkIn->child_id, $childIds)) {
+                $skipped++;
+                continue;
+            }
+
+            if ($checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now())) {
+                $skipped++;
+                continue;
+            }
+
+            $checkIn->update(['should_be' => $response['should_be']]);
+            $updated++;
+
+            // Auto-Schickzeit bei Anmeldung
+            if ($response['should_be'] && !empty($response['schickzeit_time'])) {
+                Schickzeiten::updateOrCreate(
+                    ['child_id' => $checkIn->child_id, 'specific_date' => $checkIn->date->format('Y-m-d')],
+                    ['type' => 'genau', 'time' => $response['schickzeit_time'], 'users_id' => $user->id,
+                     'child_name' => $checkIn->child?->first_name . ' ' . $checkIn->child?->last_name]
+                );
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'message' => "{$updated} Anwesenheitsabfragen aktualisiert.",
+        ]);
+    }
 }
 
 

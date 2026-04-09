@@ -102,8 +102,8 @@ Route::middleware('auth')->group(function () {
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
         Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');
-        Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
-        Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
+        Route::delete('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
+        Route::delete('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
 
         // Routen für die Verwaltung der Rückmeldungen
         Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
@@ -111,8 +111,8 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:manage rueckmeldungen')->group(function () {
             Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
             Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
+            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
         });
-        Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
 
         // Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
@@ -181,11 +181,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
         Route::put('anwesenheit/{childCheckIn}/anmelden', [SchickzeitenController::class, 'anwesenheitTrue'])->name('checkIn.anmelden');
         Route::put('anwesenheit/{childCheckIn}/abmelden', [SchickzeitenController::class, 'anwesenheitFalse'])->name('checkIn.abmelden');
+        Route::post('anwesenheit/bulk-update', [SchickzeitenController::class, 'bulkUpdateAttendance'])->name('attendance.bulk-update');
 
         // Schickzeiten Verwaltung
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
 
-        Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::delete('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
         Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
@@ -194,7 +195,7 @@ Route::middleware('auth')->group(function () {
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
         Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
-        Route::get('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
+        Route::post('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
 
         // Redirect old disease create route to new manage page
         Route::get('diseases/create', function () {
@@ -220,7 +221,6 @@ Route::middleware('auth')->group(function () {
         Route::get('active-diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases')->name('active-diseases.extend');
         // Termine
         Route::resource('termine', TerminController::class);
-        Route::resource('termin', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
         // Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
@@ -294,10 +294,10 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{terminListe}', [ListenController::class, 'show']);
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
-        Route::get('listen/{liste}/activate', [ListenController::class, 'activate']);
+        Route::post('listen/{liste}/activate', [ListenController::class, 'activate']);
         Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
         Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
-        Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
+        Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport'])->name('listen.ical.export');
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
@@ -323,11 +323,11 @@ Route::middleware('auth')->group(function () {
 
         Route::middleware('permission:edit reinigung')->group(function () {
             Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
-            Route::get('reinigung/task/{task}/trash', [ReinigungsTaskController::class, 'destroy']);
+            Route::delete('reinigung/task/{task}/trash', [ReinigungsTaskController::class, 'destroy']);
             Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
             Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
             Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
-            Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+            Route::delete('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
             Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
             Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
         });
@@ -339,11 +339,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/touch/{posts}', [NachrichtenController::class, 'touch']);
         Route::get('/posts/release/{posts}', [NachrichtenController::class, 'release']);
         Route::get('/posts/stick/{post}', [NachrichtenController::class, 'stickPost'])->middleware(['permission:make sticky']);
-        Route::get('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
+        Route::post('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
         Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
         Route::post('/posts/', [NachrichtenController::class, 'store']);
         Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts']);
-        Route::get('posts/delete/{post}', [NachrichtenController::class, 'destroy']);
 
         Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
         Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);
@@ -440,7 +439,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // Seitenverwaltung und -anzeige
-        Route::group(['middlewareGroups' => ['can:view sites']], function () {
+        Route::middleware(['can:view sites'])->group(function () {
             Route::resource('sites', SiteController::class);
             Route::get('sites/{site}/active', [SiteController::class, 'activate'])->name('sites.activate');
             Route::post('blocks', [SiteBlockController::class, 'store'])->name('blocks.store');
@@ -508,7 +507,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('feedback/{mail}', [FeedbackController::class, 'deleteMail'])->middleware('can:see mails');
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 
-    Route::group(['middlewareGroups' => ['can:see logs']], function () {
+    Route::middleware(['can:see logs'])->group(function () {
         Route::get('logs', [LogController::class, 'index']);
         Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
         Route::delete('logs/cleanup', [LogController::class, 'cleanup'])->middleware('can:delete logs');

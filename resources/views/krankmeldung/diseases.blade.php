@@ -19,8 +19,10 @@
                                 @can('manage diseases')
                                     @if(!$disease->active)
                                         <div class="col-2">
-                                            <a href="{{url('krankmeldung/disaese/activate/'.$disease->id)}}"
-                                               class="btn btn-success btn-sm">aktivieren</a>
+                                            <form action="{{url('krankmeldung/disaese/activate/'.$disease->id)}}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-success btn-sm">aktivieren</button>
+                                            </form>
                                         </div>
                                     @endif
 

@@ -13,6 +13,7 @@ use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
+use App\Settings\ReminderSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
 use Carbon\Carbon;
@@ -45,6 +46,7 @@ class SettingsController extends Controller implements HasMiddleware
         $careSettings = new CareSetting;
         $pflichtstundenSetting = new PflichtstundenSetting;
         $stundenplanSettings = new StundenplanSetting;
+        $reminderSettings = new ReminderSetting;
 
         $groups = Group::all();
         $roles = Role::all();
@@ -64,6 +66,7 @@ class SettingsController extends Controller implements HasMiddleware
             'careSettings' => $careSettings,
             'pflichtstundenSettings' => $pflichtstundenSetting,
             'stundenplanSettings' => $stundenplanSettings,
+            'reminderSettings' => $reminderSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -365,6 +368,54 @@ class SettingsController extends Controller implements HasMiddleware
 
                 // Clear cache
                 Cache::forget('stundenplan_data');
+                break;
+
+            case 'reminder':
+                $validated = $request->validate([
+                    'send_time' => 'required|date_format:H:i',
+                    'level1_active' => 'nullable|boolean',
+                    'level1_days_before_deadline' => 'required|integer|min:1|max:30',
+                    'level1_in_app' => 'nullable|boolean',
+                    'level1_email' => 'nullable|boolean',
+                    'level1_push' => 'nullable|boolean',
+                    'level2_active' => 'nullable|boolean',
+                    'level2_days_before_deadline' => 'required|integer|min:1|max:30',
+                    'level2_in_app' => 'nullable|boolean',
+                    'level2_email' => 'nullable|boolean',
+                    'level2_push' => 'nullable|boolean',
+                    'level3_active' => 'nullable|boolean',
+                    'level3_days_after_deadline' => 'required|integer|min:0|max:30',
+                    'level3_in_app' => 'nullable|boolean',
+                    'level3_email' => 'nullable|boolean',
+                    'level3_push' => 'nullable|boolean',
+                    'level3_escalate_to_author' => 'nullable|boolean',
+                    'include_rueckmeldungen' => 'nullable|boolean',
+                    'include_read_receipts' => 'nullable|boolean',
+                    'include_attendance_queries' => 'nullable|boolean',
+                ]);
+
+                $reminderSettings = new ReminderSetting;
+                $reminderSettings->send_time = $validated['send_time'];
+                $reminderSettings->level1_active = $request->has('level1_active');
+                $reminderSettings->level1_days_before_deadline = $validated['level1_days_before_deadline'];
+                $reminderSettings->level1_in_app = $request->has('level1_in_app');
+                $reminderSettings->level1_email = $request->has('level1_email');
+                $reminderSettings->level1_push = $request->has('level1_push');
+                $reminderSettings->level2_active = $request->has('level2_active');
+                $reminderSettings->level2_days_before_deadline = $validated['level2_days_before_deadline'];
+                $reminderSettings->level2_in_app = $request->has('level2_in_app');
+                $reminderSettings->level2_email = $request->has('level2_email');
+                $reminderSettings->level2_push = $request->has('level2_push');
+                $reminderSettings->level3_active = $request->has('level3_active');
+                $reminderSettings->level3_days_after_deadline = $validated['level3_days_after_deadline'];
+                $reminderSettings->level3_in_app = $request->has('level3_in_app');
+                $reminderSettings->level3_email = $request->has('level3_email');
+                $reminderSettings->level3_push = $request->has('level3_push');
+                $reminderSettings->level3_escalate_to_author = $request->has('level3_escalate_to_author');
+                $reminderSettings->include_rueckmeldungen = $request->has('include_rueckmeldungen');
+                $reminderSettings->include_read_receipts = $request->has('include_read_receipts');
+                $reminderSettings->include_attendance_queries = $request->has('include_attendance_queries');
+                $reminderSettings->save();
                 break;
         }
 

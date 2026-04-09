@@ -2,17 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesApiKey;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
-class PasswordExpiredRequest extends FormRequest
+class ApiUpdateAbsenceRequest extends FormRequest
 {
+    use ValidatesApiKey;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return $this->isValidApiKey();
     }
 
     /**
@@ -21,14 +23,11 @@ class PasswordExpiredRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_password' => [
-                'required',
-            ],
-            'password' => [
-                'required',
-                'confirmed',
-                Password::min(10)->mixedCase()->numbers(),
-            ],
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'name' => 'required|string',
+            'reason' => 'nullable|string',
         ];
     }
 }
+

@@ -367,9 +367,15 @@ class CareController extends Controller implements HasMiddleware
 
         $checkIns = [];
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
+        $holidayService = new HolidayService();
 
         for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
             if ($date->isWeekend()) {
+                continue;
+            }
+
+            // Feiertage/Ferien überspringen (Feature 6, Verbesserung D)
+            if ($holidayService->isHoliday($date->copy())) {
                 continue;
             }
 

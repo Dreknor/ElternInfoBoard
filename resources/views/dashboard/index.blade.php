@@ -84,6 +84,16 @@
         @include('dashboard.components.checkin-status')
     </div>
 
+    <!-- Offene Rückmeldungen -->
+    <div class="row">
+        @include('dashboard.components.pending-feedback')
+    </div>
+
+    <!-- Rückmeldestatus für Lehrkräfte/Autoren -->
+    <div class="row">
+        @include('dashboard.components.feedback-stats')
+    </div>
+
     <div class="row">
         <!-- Neueste Nachrichten -->
         <div class="col-lg-6 mb-4">

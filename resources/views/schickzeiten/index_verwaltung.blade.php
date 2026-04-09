@@ -132,82 +132,116 @@
                         </div>
                     </div>
 
-                    <!-- Aktuelle Abfragen -->
+                    <!-- Aktuelle Abfragen mit Rücklauf-Dashboard -->
                     <div class="mt-6 bg-white rounded-lg shadow border border-gray-200">
                         <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3">
                             <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
-                                <i class="fas fa-list"></i>
-                                Aktuelle Anwesenheitsabfragen
+                                <i class="fas fa-chart-bar"></i>
+                                Aktuelle Anwesenheitsabfragen – Rücklauf
                             </h3>
                         </div>
                         <div class="p-4">
                             <p class="text-sm text-gray-600 mb-4">
-                                Aktuelle Anwesenheitsabfragen werden hier angezeigt. Kommentare erscheinen bei der Elternansicht und können kurze Hinweise für den Tag sein.
+                                Übersicht aller offenen Anwesenheitsabfragen mit Rücklaufquoten. Klicken Sie auf „Fehlende Antworten", um zu sehen, welche Eltern noch nicht geantwortet haben.
                             </p>
 
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Datum</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Anzahl</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Kommentar</th>
-                                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Aktionen</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        @forelse($abfragen as $date => $abfrage)
-                                            <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <div class="flex items-center gap-2">
-                                                        <i class="fas fa-calendar text-blue-600"></i>
-                                                        <span class="text-sm font-medium text-gray-900">{{$date}}</span>
+                            @forelse($abfragen as $date => $detail)
+                                <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 hover:shadow-md transition-shadow">
+                                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2">
+                                        <h6 class="font-bold text-gray-800 flex items-center gap-2">
+                                            <i class="fas fa-calendar text-blue-600"></i>
+                                            {{ \Carbon\Carbon::parse($date)->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}
+                                        </h6>
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-lg font-bold {{ $detail['response_rate'] >= 80 ? 'text-green-600' : ($detail['response_rate'] >= 50 ? 'text-yellow-600' : 'text-red-600') }}">
+                                                {{ $detail['response_rate'] }}% beantwortet
+                                            </span>
+                                            @if(\Carbon\Carbon::parse($date)->isFuture())
+                                                <div class="flex items-center gap-1">
+                                                    <button type="button"
+                                                            class="edit-comment-button inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                                                            data-date="{{ $date }}"
+                                                            data-comment="{{ $detail['comment'] ?? '' }}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <form action="{{ route('care.abfrage.destroy', ['date' => $date]) }}" method="post" class="delete-form inline">
+                                                        @csrf
+                                                        @method('delete')
+                                                        <button type="button"
+                                                                class="delete-button inline-flex items-center gap-1 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    @if($detail['comment'])
+                                        <p class="text-sm text-gray-500 mb-3 italic">
+                                            <i class="fas fa-comment-alt text-gray-400 mr-1"></i> {{ $detail['comment'] }}
+                                        </p>
+                                    @endif
+
+                                    {{-- Fortschrittsbalken --}}
+                                    @if($detail['total'] > 0)
+                                        <div class="w-full bg-gray-200 rounded-full h-4 mb-3 overflow-hidden">
+                                            <div class="flex h-4">
+                                                <div class="bg-green-500 transition-all" style="width: {{ $detail['coming'] / $detail['total'] * 100 }}%"
+                                                     title="{{ $detail['coming'] }} kommen"></div>
+                                                <div class="bg-red-400 transition-all" style="width: {{ $detail['not_coming'] / $detail['total'] * 100 }}%"
+                                                     title="{{ $detail['not_coming'] }} kommen nicht"></div>
+                                                <div class="bg-gray-300 transition-all" style="width: {{ $detail['pending'] / $detail['total'] * 100 }}%"
+                                                     title="{{ $detail['pending'] }} offen"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex flex-wrap gap-4 text-sm mb-3">
+                                            <span class="text-green-700 font-medium"><i class="fas fa-check"></i> {{ $detail['coming'] }} kommen</span>
+                                            <span class="text-red-600 font-medium"><i class="fas fa-times"></i> {{ $detail['not_coming'] }} kommen nicht</span>
+                                            <span class="text-gray-500 font-medium"><i class="fas fa-question-circle"></i> {{ $detail['pending'] }} offen</span>
+                                            <span class="text-gray-400 text-xs">| Gesamt: {{ $detail['total'] }}</span>
+                                            @if($detail['lock_at'])
+                                                <span class="text-gray-400 text-xs">| Frist: {{ $detail['lock_at']->format('d.m.Y') }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    {{-- Fehlende Eltern aufklappbar --}}
+                                    @if($detail['pending'] > 0 && $detail['pending_children']->count() > 0)
+                                        <details class="mt-2 border border-orange-200 rounded-lg">
+                                            <summary class="cursor-pointer text-sm text-orange-700 font-semibold px-3 py-2 bg-orange-50 rounded-t-lg hover:bg-orange-100 transition-colors">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                {{ $detail['pending_parents']->count() }} {{ $detail['pending_parents']->count() === 1 ? 'Elternteil hat' : 'Eltern haben' }} noch nicht geantwortet
+                                                ({{ $detail['pending_children']->count() }} {{ $detail['pending_children']->count() === 1 ? 'Kind' : 'Kinder' }})
+                                            </summary>
+                                            <div class="px-3 py-2 space-y-1">
+                                                @foreach($detail['pending_children'] as $child)
+                                                    <div class="flex justify-between items-center py-1.5 px-2 bg-orange-50 rounded text-sm border-b border-orange-100 last:border-b-0">
+                                                        <span class="font-medium text-gray-800">
+                                                            <i class="fas fa-child text-gray-400 mr-1"></i>
+                                                            {{ $child->first_name }} {{ $child->last_name }}
+                                                        </span>
+                                                        <span class="text-gray-500 text-xs">
+                                                            {{ $child->parents->pluck('name')->join(', ') }}
+                                                        </span>
                                                     </div>
-                                                </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        {{$abfrage['count']}}
-                                                    </span>
-                                                </td>
-                                                <td class="px-4 py-3">
-                                                    <span class="text-sm text-gray-600">{{$abfrage['comment'] ?? '-'}}</span>
-                                                </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                                    @if(\Carbon\Carbon::parse($date)->isFuture())
-                                                        <div class="flex items-center justify-end gap-2">
-                                                            <button type="button"
-                                                                    class="edit-comment-button inline-flex items-center gap-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors duration-200"
-                                                                    data-date="{{ $date }}"
-                                                                    data-comment="{{$abfrage['comment'] ?? ''}}">
-                                                                <i class="fa fa-edit"></i>
-                                                                Bearbeiten
-                                                            </button>
-                                                            <form action="{{route('care.abfrage.destroy', ['date' => $date])}}" method="post" class="delete-form inline">
-                                                                @csrf
-                                                                @method('delete')
-                                                                <button type="button"
-                                                                        class="delete-button inline-flex items-center gap-1 px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors duration-200">
-                                                                    <i class="fa fa-trash"></i>
-                                                                    Löschen
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="px-4 py-8 text-center">
-                                                    <div class="flex flex-col items-center gap-2 text-gray-500">
-                                                        <i class="fas fa-inbox text-4xl"></i>
-                                                        <p class="text-sm">Keine zukünftigen Anwesenheitsabfragen vorhanden</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    @elseif($detail['pending'] === 0 && $detail['total'] > 0)
+                                        <div class="flex items-center gap-2 text-sm text-green-700 mt-2 bg-green-50 rounded px-3 py-2">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span class="font-medium">Alle Eltern haben geantwortet!</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @empty
+                                <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
+                                    <i class="fas fa-inbox text-4xl"></i>
+                                    <p class="text-sm">Keine zukünftigen Anwesenheitsabfragen vorhanden</p>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
 

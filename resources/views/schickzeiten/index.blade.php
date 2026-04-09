@@ -299,137 +299,130 @@
                      x-transition:enter-start="opacity-0 transform scale-95"
                      x-transition:enter-end="opacity-100 transform scale-100"
                      style="display: none;">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        @foreach($children as $child)
-                            <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-                                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
-                                    <h3 class="text-lg font-bold text-white mb-0">
-                                        {{$child->first_name}} {{$child->last_name}}
-                                    </h3>
-                                </div>
-                                <div class="p-4">
-                                    <!-- Desktop Ansicht -->
-                                    <div class="hidden md:block overflow-x-auto">
-                                        <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
-                                                <tr>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Datum</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Angemeldet?</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Hinweis</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Aktion</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Frist</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-gray-200">
-                                            @forelse($child->checkIns->sortBy('date') as $checkIn)
-                                                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                                    <td class="px-3 py-2 text-sm text-gray-900">{{$checkIn->date->dayName}}, {{$checkIn->date->format('d.m.Y')}}</td>
-                                                    <td class="px-3 py-2">
-                                                        @if($checkIn->should_be)
-                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                <i class="fas fa-check mr-1"></i> Ja
-                                                            </span>
-                                                        @else
-                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                                <i class="fas fa-times mr-1"></i> Nein
-                                                            </span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-3 py-2 text-sm text-gray-600">{{$checkIn->comment}}</td>
-                                                    <td class="px-3 py-2">
-                                                        @if(!$checkIn->should_be)
-                                                            @if(($checkIn->lock_at && $checkIn->lock_at->endOfDay()?->gte(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
-                                                                <form action="{{route('checkIn.anmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                                    @csrf
-                                                                    @method('put')
-                                                                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors duration-150">
-                                                                        <i class="fa fa-check"></i> Anmelden
-                                                                    </button>
-                                                                </form>
-                                                            @else
-                                                                <span class="text-xs text-red-600">Zeitraum abgelaufen</span>
-                                                            @endif
-                                                        @else
-                                                            <form action="{{route('checkIn.abmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                                @csrf
-                                                                @method('PUT')
-                                                                <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-150">
-                                                                    <i class="fa fa-times"></i> Abmelden
-                                                                </button>
-                                                            </form>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-3 py-2 text-sm text-gray-600">
-                                                        @if($checkIn->lock_at != null)
-                                                            {{$checkIn->lock_at?->format('d.m.Y')}}
-                                                        @else
-                                                            <span class="text-gray-400">-</span>
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="px-3 py-4 text-center text-sm text-gray-500">Keine Anwesenheitsabfragen vorhanden</td>
-                                                </tr>
-                                            @endforelse
-                                            </tbody>
-                                        </table>
+
+                    <form action="{{ route('attendance.bulk-update') }}" method="post" id="bulk-attendance-form">
+                        @csrf
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            @foreach($children as $child)
+                                @php
+                                    $openCheckIns = $child->checkIns->filter(function ($ci) {
+                                        return $ci->date->isFuture() || $ci->date->isToday();
+                                    })->sortBy('date');
+                                @endphp
+                                <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden"
+                                     x-data="{
+                                        responses: {
+                                            @foreach($openCheckIns as $checkIn)
+                                                '{{ $checkIn->id }}': {{ $checkIn->should_be === true ? 'true' : ($checkIn->should_be === false ? 'false' : 'null') }},
+                                            @endforeach
+                                        },
+                                        setAll(value) {
+                                            @foreach($openCheckIns as $checkIn)
+                                                @php $locked = $checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now()); @endphp
+                                                @unless($locked)
+                                                    this.responses['{{ $checkIn->id }}'] = value;
+                                                @endunless
+                                            @endforeach
+                                        }
+                                     }">
+                                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <h3 class="text-lg font-bold text-white mb-0">
+                                            <i class="fas fa-child mr-1"></i>
+                                            {{ $child->first_name }} {{ $child->last_name }}
+                                        </h3>
+                                        @if($openCheckIns->count() > 0)
+                                            <div class="flex gap-2">
+                                                <button type="button" @click="setAll(true)"
+                                                        class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-white bg-opacity-20 text-white rounded hover:bg-opacity-30 transition-colors font-semibold">
+                                                    <i class="fas fa-check-double"></i> Alle anmelden
+                                                </button>
+                                                <button type="button" @click="setAll(false)"
+                                                        class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-white bg-opacity-10 text-white rounded hover:bg-opacity-20 transition-colors font-semibold border border-white border-opacity-30">
+                                                    <i class="fas fa-times"></i> Alle abmelden
+                                                </button>
+                                            </div>
+                                        @endif
                                     </div>
-                                    <!-- Mobile Ansicht -->
-                                    <div class="md:hidden space-y-3">
-                                        @forelse($child->checkIns->sortBy('date') as $checkIn)
-                                            <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                                                <div class="mb-2"><strong class="text-gray-700">Datum:</strong> {{$checkIn->date->dayName}}, {{$checkIn->date->format('d.m.Y')}}</div>
-                                                <div class="mb-2">
-                                                    <strong class="text-gray-700">Angemeldet?</strong>
-                                                    @if($checkIn->should_be)
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
-                                                            <i class="fas fa-check mr-1"></i> Ja
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
-                                                            <i class="fas fa-times mr-1"></i> Nein
-                                                        </span>
+                                    <div class="p-4 space-y-2">
+                                        @forelse($openCheckIns as $checkIn)
+                                            @php $locked = $checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now()); @endphp
+                                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 py-2 border-b border-gray-100 last:border-b-0 {{ $locked ? 'opacity-50' : '' }}">
+                                                <input type="hidden" name="responses[{{ $child->id }}_{{ $checkIn->id }}][check_in_id]" value="{{ $checkIn->id }}">
+
+                                                {{-- Hidden input für should_be, gesteuert durch Alpine --}}
+                                                <input type="hidden"
+                                                       name="responses[{{ $child->id }}_{{ $checkIn->id }}][should_be]"
+                                                       :value="responses['{{ $checkIn->id }}'] === true ? '1' : '0'">
+
+                                                {{-- Datum --}}
+                                                <div class="font-medium text-sm text-gray-800" style="min-width: 150px;">
+                                                    {{ $checkIn->date->locale('de')->isoFormat('dd, D. MMM') }}
+                                                    @if($checkIn->comment)
+                                                        <span class="text-xs text-gray-400" title="{{ $checkIn->comment }}">💬</span>
                                                     @endif
                                                 </div>
-                                                @if($checkIn->comment)
-                                                    <div class="mb-2"><strong class="text-gray-700">Hinweis:</strong> {{$checkIn->comment}}</div>
-                                                @endif
-                                                @if($checkIn->lock_at != null)
-                                                    <div class="mb-2"><strong class="text-gray-700">Frist:</strong> {{$checkIn->lock_at?->format('d.m.Y')}}</div>
-                                                @endif
-                                                <div class="mt-3">
-                                                    @if(!$checkIn->should_be)
-                                                        @if(($checkIn->lock_at && $checkIn->lock_at->endOfDay()?->gte(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
-                                                            <form action="{{route('checkIn.anmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                                @csrf
-                                                                @method('put')
-                                                                <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors duration-150">
-                                                                    <i class="fa fa-check"></i> Anmelden
-                                                                </button>
-                                                            </form>
-                                                        @else
-                                                            <span class="text-sm text-red-600">Zeitraum abgelaufen</span>
+
+                                                {{-- Ja/Nein Toggle --}}
+                                                <div class="flex gap-1">
+                                                    <button type="button"
+                                                            @click="responses['{{ $checkIn->id }}'] = true"
+                                                            :class="responses['{{ $checkIn->id }}'] === true ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                            class="px-3 py-1 rounded text-xs font-semibold transition-all"
+                                                            {{ $locked ? 'disabled' : '' }}>
+                                                        <i class="fas fa-check"></i> Ja
+                                                    </button>
+                                                    <button type="button"
+                                                            @click="responses['{{ $checkIn->id }}'] = false"
+                                                            :class="responses['{{ $checkIn->id }}'] === false ? 'bg-red-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                            class="px-3 py-1 rounded text-xs font-semibold transition-all"
+                                                            {{ $locked ? 'disabled' : '' }}>
+                                                        <i class="fas fa-times"></i> Nein
+                                                    </button>
+                                                </div>
+
+                                                {{-- Schickzeit (nur sichtbar bei „Ja") --}}
+                                                <div x-show="responses['{{ $checkIn->id }}'] === true"
+                                                     x-transition
+                                                     class="flex items-center gap-2">
+                                                    <label class="text-xs text-gray-600 whitespace-nowrap">🕐 Abholung:</label>
+                                                    <input type="time"
+                                                           name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_time]"
+                                                           class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                                           style="width: 100px;">
+                                                    <input type="hidden"
+                                                           name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_type]"
+                                                           value="genau">
+                                                </div>
+
+                                                {{-- Frist --}}
+                                                @if($checkIn->lock_at)
+                                                    <small class="text-gray-400 ml-auto whitespace-nowrap">
+                                                        bis {{ $checkIn->lock_at->format('d.m.') }}
+                                                        @if($locked)
+                                                            <span class="text-red-500">🔒</span>
                                                         @endif
-                                                    @else
-                                                        <form action="{{route('checkIn.abmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-150">
-                                                                <i class="fa fa-times"></i> Abmelden
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
+                                                    </small>
+                                                @endif
                                             </div>
                                         @empty
-                                            <div class="text-center py-4 text-gray-500">Keine Anwesenheitsabfragen vorhanden</div>
+                                            <div class="text-center py-4 text-gray-500">
+                                                <i class="fas fa-inbox text-2xl text-gray-300 mb-2"></i>
+                                                <p class="text-sm">Keine offenen Anwesenheitsabfragen</p>
+                                            </div>
                                         @endforelse
                                     </div>
                                 </div>
+                            @endforeach
+                        </div>
+
+                        @if($children->flatMap(fn($c) => $c->checkIns->filter(fn($ci) => $ci->date->isFuture() || $ci->date->isToday()))->count() > 0)
+                            <div class="text-center mt-6">
+                                <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                                    <i class="fas fa-save"></i> Alle Antworten speichern
+                                </button>
                             </div>
-                        @endforeach
-                    </div>
+                        @endif
+                    </form>
                 </div>
 
                 <!-- Vollmacht Tab -->

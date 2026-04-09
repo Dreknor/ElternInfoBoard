@@ -114,10 +114,13 @@
                                                                     @endcan
                                                                     @can('edit reinigung')
                                                                         <div class="pull-right">
-                                                                            <a class="link text-danger"
-                                                                               href="{{url('reinigung/'.$Bereich.'/'.$reinigung->id.'/trash')}}">
-                                                                                <i class="fa fa-trash"></i>
-                                                                            </a>
+                                                                            <form action="{{url('reinigung/'.$Bereich.'/'.$reinigung->id.'/trash')}}" method="POST" class="inline">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit" class="link text-danger">
+                                                                                    <i class="fa fa-trash"></i>
+                                                                                </button>
+                                                                            </form>
                                                                         </div>
                                                                     @endcan
                                                                 </h6>
@@ -173,10 +176,13 @@
 
                                                                     @can('edit reinigung')
                                                                         <div class="pull-right">
-                                                                            <a class="link text-danger"
-                                                                               href="{{url('reinigung/'.$Bereich.'/'.$reinigung->id.'/trash')}}">
-                                                                                <i class="fa fa-trash"></i>
-                                                                            </a>
+                                                                            <form action="{{url('reinigung/'.$Bereich.'/'.$reinigung->id.'/trash')}}" method="POST" class="inline">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit" class="link text-danger">
+                                                                                    <i class="fa fa-trash"></i>
+                                                                                </button>
+                                                                            </form>
                                                                         </div>
                                                                     @endcan
                                                                 </h6>
@@ -220,7 +226,13 @@
                                 <li class="list-group-item">
                                     {{$task->task}}
                                     <div class="d-inline float-right">
-                                        <a href="{{url('reinigung/task/'.$task->id.'/trash')}}" class="text-danger">
+                                        <form action="{{url('reinigung/task/'.$task->id.'/trash')}}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                             <i class="fa fa-trash"></i>
                                         </a>
                                     </div>

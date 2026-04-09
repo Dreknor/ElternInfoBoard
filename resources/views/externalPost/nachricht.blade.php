@@ -27,10 +27,13 @@
                         </a>
                     @endif
                     @if($nachricht->released == 1 and !$nachricht->is_archived)
-                        <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-md"
-                           data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
-                            <i class="fas fa-archive"></i>
-                        </a>
+                        <form action="{{url('/posts/archiv/'.$nachricht->id)}}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-md"
+                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                <i class="fas fa-archive"></i>
+                            </button>
+                        </form>
                     @endif
 
                 </div>
@@ -115,10 +118,13 @@
                             </a>
                         @endif
                         @if($nachricht->released == 1 and !$nachricht->is_archived)
-                            <a href="{{url('/posts/archiv/'.$nachricht->id)}}" class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-md"
-                               data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
-                                <i class="fas fa-archive"></i>
-                            </a>
+                            <form action="{{url('/posts/archiv/'.$nachricht->id)}}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-md"
+                                   data-toggle="tooltip" data-placement="top" title="Nachricht ins Archiv">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                            </form>
                         @endif
                     </div>
                 @endif

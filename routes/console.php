@@ -2,6 +2,7 @@
 
 use App\Model\Module;
 use App\Settings\NotifySetting;
+use App\Settings\ReminderSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -60,8 +61,17 @@ try {
 
         Schedule::call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->weeklyOn(6, '00:00');
 
-        // Anwesenheitsabfragen-Erinnerungen - täglich um 08:00 Uhr
-        Schedule::job(new \App\Jobs\SendAttendanceQueryReminderJob)->dailyAt('08:00');
+        // Anwesenheitsabfragen-Erinnerungen – DEAKTIVIERT: wird jetzt durch ProcessRemindersJob (Feature 3, Teil C) abgedeckt
+        // Schedule::job(new \App\Jobs\SendAttendanceQueryReminderJob)->dailyAt('08:00');
+
+        // ── Neues Erinnerungssystem (Feature 3) ──────────────────
+        // Unified Reminder Pipeline: Rückmeldungen + ReadReceipts + Anwesenheitsabfragen
+        try {
+            $reminderSetting = new ReminderSetting;
+            Schedule::job(new \App\Jobs\ProcessRemindersJob)->dailyAt($reminderSetting->send_time);
+        } catch (\Exception $e) {
+            // Settings-Tabelle noch nicht migriert – Job wird nicht eingeplant
+        }
 
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();

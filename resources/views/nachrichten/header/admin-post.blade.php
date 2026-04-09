@@ -53,11 +53,14 @@
         @endif
 
         @if($nachricht->released == 1 and !$nachricht->is_archived)
-            <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
-               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                <i class="fas fa-archive text-orange-500"></i>
-                <span>Archivieren</span>
-            </a>
+            <form action="{{url('/posts/archiv/'.$nachricht->id)}}" method="POST" class="inline">
+                @csrf
+                <button type="submit"
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left">
+                    <i class="fas fa-archive text-orange-500"></i>
+                    <span>Archivieren</span>
+                </button>
+            </form>
         @endif
 
         @if(auth()->user()->can('make sticky'))
@@ -71,11 +74,15 @@
 
         @if($nachricht->released != 1 and (auth()->user()->can('delete posts') or auth()->id() == $nachricht->author))
             <div class="border-t border-gray-200 my-1"></div>
-            <a href="{{url('/posts/delete/'.$nachricht->id)}}"
-               class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                <i class="fas fa-trash"></i>
-                <span>Löschen</span>
-            </a>
+            <form action="{{url('/posts/'.$nachricht->id)}}" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left">
+                    <i class="fas fa-trash"></i>
+                    <span>Löschen</span>
+                </button>
+            </form>
         @endif
     </div>
 </div>

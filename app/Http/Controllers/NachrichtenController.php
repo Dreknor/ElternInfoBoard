@@ -98,6 +98,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         if (auth()->user()->can('view all')) {
             $nachrichten = Post::query()
                 ->whereNull('archiv_ab')
+                ->with(['autor', 'groups', 'media'])
                 ->orderBy('sticky', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -111,6 +112,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ->whereHas('groups', function ($query) {
                     $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
                 })
+                ->with(['autor', 'groups', 'media'])
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -323,17 +325,6 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         // Dateien verarbeiten
         if ($request->hasFile('files')) {
-            if (auth()->user()->can('upload great files')) {
-                try {
-                    @ini_set('upload_max_filesize', '300M');
-                    @ini_set('post_max_size', '300M');
-                } catch (Exception $exception) {
-                    redirect()->back()->with([
-                        'type' => 'danger',
-                        'Meldung' => $exception,
-                    ]);
-                }
-            }
 
             if ($request->input('collection') == 'files') {
                 $post->addAllMediaFromRequest()
@@ -507,11 +498,6 @@ class NachrichtenController extends Controller implements HasMiddleware
         $posts->groups()->attach($gruppen);
 
         if ($request->hasFile('files')) {
-            if (auth()->user()->can('upload great files')) {
-                @ini_set('upload_max_filesize', '300M');
-                @ini_set('post_max_size', '300M');
-                @ini_set('upload_max_size', '300M');
-            }
 
             if ($request->input('collection') == 'files') {
                 $posts->addAllMediaFromRequest()

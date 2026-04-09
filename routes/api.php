@@ -166,6 +166,7 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::get('parent/children', [\App\Http\Controllers\API\ParentController::class, 'getChildren']);
     Route::get('parent/attendance-queries', [\App\Http\Controllers\API\ParentController::class, 'getAttendanceQueries']);
+    Route::post('parent/attendance-queries/bulk', [\App\Http\Controllers\API\ParentController::class, 'bulkUpdateAttendanceQueries']);
     Route::get('parent/children/check-in-status', [\App\Http\Controllers\API\ParentController::class, 'getChildrenCheckInStatus']);
     Route::put('parent/check-in/{checkInId}/confirm', [\App\Http\Controllers\API\ParentController::class, 'confirmAttendance']);
     Route::put('parent/check-in/{checkInId}/decline', [\App\Http\Controllers\API\ParentController::class, 'declineAttendance']);
