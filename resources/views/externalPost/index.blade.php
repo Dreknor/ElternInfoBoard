@@ -7,7 +7,7 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="text-2xl font-bold text-gray-800">
-                        <i class="far fa-newspaper text-blue-600"></i> Expterne Nachrichten
+                        <i class="far fa-newspaper text-blue-600"></i> Externe Nachrichten
                     </h2>
                     <a href="{{ url('/') }}" class="btn btn-outline-primary">
                         <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
