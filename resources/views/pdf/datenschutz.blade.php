@@ -201,6 +201,7 @@
         @if($user->sorg2)
             <tr><th>Sorgeberechtigter 2</th><td>{{ $user->sorgeberechtigter2?->name }}</td></tr>
         @endif
+        <tr><th>In Messenger-Suche sichtbar</th><td>{{ $user->messenger_discoverable ? 'Ja' : 'Nein' }}</td></tr>
     </tbody>
 </table>
 
@@ -507,6 +508,128 @@
     </table>
 @else
     <div class="empty">Keine Lesebestätigungen vorhanden.</div>
+@endif
+
+{{-- ===== MESSENGER: KONVERSATIONEN ===== --}}
+@php $userConversations = \App\Model\Conversation::forUser($user->id)->with('group')->get(); @endphp
+<div class="section-header" style="background:#0d9488;">Messenger – Konversationen</div>
+@if($userConversations->count())
+    <table>
+        <thead><tr><th>Typ</th><th>Titel / Gruppe</th><th>Erstellt</th></tr></thead>
+        <tbody>
+            @foreach($userConversations as $conv)
+                <tr>
+                    <td>{{ $conv->type === 'group' ? 'Gruppen-Chat' : 'Direktnachricht' }}</td>
+                    <td>{{ $conv->title ?? $conv->group?->name ?? 'Direktnachricht' }}</td>
+                    <td>{{ $conv->created_at->format('d.m.Y H:i') }} Uhr</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <div class="empty">Keine Messenger-Konversationen vorhanden.</div>
+@endif
+
+{{-- ===== MESSENGER: GESENDETE NACHRICHTEN ===== --}}
+@php $sentMessages = \App\Model\Message::where('sender_id', $user->id)->withTrashed()->with('conversation')->orderByDesc('created_at')->get(); @endphp
+<div class="section-header" style="background:#0891b2;">Messenger – Gesendete Nachrichten</div>
+<div style="padding:4px 8px;font-size:8px;background:#ecfeff;color:#155e75;border-bottom:1px solid #a5f3fc;">
+    Nur von Ihnen gesendete Nachrichten. Empfangene Nachrichten anderer Nutzer werden nicht aufgeführt.
+</div>
+@if($sentMessages->count())
+    <table>
+        <thead><tr><th>Konversation</th><th>Nachricht</th><th>Gesendet</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach($sentMessages as $msg)
+                <tr>
+                    <td>{{ $msg->conversation?->title ?? 'ID ' . $msg->conversation_id }}</td>
+                    <td>{{ \Illuminate\Support\Str::limit($msg->body, 80) }}</td>
+                    <td>{{ $msg->created_at->format('d.m.Y H:i') }} Uhr</td>
+                    <td>
+                        @if($msg->deleted_at)
+                            <span class="badge badge-red">gelöscht</span>
+                        @elseif($msg->edited_at)
+                            <span class="badge badge-amber">bearbeitet</span>
+                        @else
+                            –
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <div class="empty">Keine Messenger-Nachrichten gesendet.</div>
+@endif
+
+{{-- ===== MESSENGER: MELDUNGEN ===== --}}
+@php $userReports = \App\Model\MessageReport::where('reporter_id', $user->id)->get(); @endphp
+@if($userReports->count())
+    <div class="section-header" style="background:#ea580c;">Messenger – Ihre Meldungen</div>
+    <table>
+        <thead><tr><th>Grund</th><th>Gemeldet am</th><th>Aufgelöst am</th></tr></thead>
+        <tbody>
+            @foreach($userReports as $report)
+                <tr>
+                    <td>{{ $report->reason }}</td>
+                    <td>{{ $report->created_at->format('d.m.Y H:i') }} Uhr</td>
+                    <td>{{ $report->resolved_at ? \Carbon\Carbon::parse($report->resolved_at)->format('d.m.Y H:i') . ' Uhr' : '–' }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- ===== BEITRAGSMELDUNGEN ===== --}}
+@php $postReports = \App\Model\PostReport::where('reporter_id', $user->id)->with('post')->get(); @endphp
+@if($postReports->count())
+    <div class="section-header" style="background:#dc2626;">Beitragsmeldungen</div>
+    <table>
+        <thead><tr><th>Beitrag</th><th>Grund</th><th>Gemeldet am</th><th>Aufgelöst am</th></tr></thead>
+        <tbody>
+            @foreach($postReports as $report)
+                <tr>
+                    <td>{{ $report->post?->header ?? '[gelöscht]' }}</td>
+                    <td>{{ $report->reason }}</td>
+                    <td>{{ $report->created_at->format('d.m.Y H:i') }} Uhr</td>
+                    <td>{{ $report->resolved_at ? $report->resolved_at->format('d.m.Y H:i') . ' Uhr' : '–' }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- ===== ERINNERUNGSLOGS ===== --}}
+@php $reminderLogs = \App\Model\ReminderLog::where('user_id', $user->id)->with('post')->orderByDesc('sent_at')->get(); @endphp
+@if($reminderLogs->count())
+    <div class="section-header" style="background:#d97706;">Automatische Erinnerungen</div>
+    <div style="padding:4px 8px;font-size:8px;background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;">
+        Protokoll automatisch gesendeter Erinnerungen für Rückmeldungen, Lesebestätigungen und Anwesenheitsabfragen.
+    </div>
+    <table>
+        <thead><tr><th>Typ</th><th>Nachricht</th><th>Stufe</th><th>Kanal</th><th>Gesendet</th></tr></thead>
+        <tbody>
+            @foreach($reminderLogs as $log)
+                <tr>
+                    <td>
+                        @if(str_contains($log->remindable_type, 'Rueckmeldungen'))
+                            Rückmeldung
+                        @elseif(str_contains($log->remindable_type, 'Post'))
+                            Lesebestätigung
+                        @elseif(str_contains($log->remindable_type, 'ChildCheckIn'))
+                            Anwesenheit
+                        @else
+                            {{ class_basename($log->remindable_type) }}
+                        @endif
+                    </td>
+                    <td>{{ $log->post?->header ?? '–' }}</td>
+                    <td>Stufe {{ $log->level }}</td>
+                    <td>{{ $log->channel }}</td>
+                    <td>{{ $log->sent_at->format('d.m.Y H:i') }} Uhr</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 @endif
 
 {{-- ===== ABSCHLUSS ===== --}}

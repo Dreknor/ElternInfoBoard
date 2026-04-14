@@ -20,9 +20,9 @@ class ReminderSetting extends Settings
     public bool $level2_email;
     public bool $level2_push;
 
-    // Stufe 3: Letzte Erinnerung + Eskalation
+    // Stufe 3: Letzte Erinnerung + Eskalation (am Fristtag oder N Tage davor)
     public bool $level3_active;
-    public int $level3_days_after_deadline;
+    public int $level3_days_before_deadline;
     public bool $level3_in_app;
     public bool $level3_email;
     public bool $level3_push;

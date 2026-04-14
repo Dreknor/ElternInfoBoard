@@ -177,11 +177,13 @@ class ProcessRemindersJob implements ShouldQueue
     {
         $count = 0;
 
-        // Alle unbeantworteten Anwesenheitsabfragen mit lock_at in der Zukunft (oder kürzlich abgelaufen)
+        // Alle unbeantworteten Anwesenheitsabfragen innerhalb des Erinnerungsfensters
+        $windowEnd = $now->copy()->addDays($settings->level1_days_before_deadline)->toDateString();
         $openCheckIns = ChildCheckIn::query()
             ->whereNull('should_be')
-            ->where('date', '>', $now->copy()->subDays($settings->level3_days_after_deadline + 1))
             ->whereNotNull('lock_at')
+            ->where('lock_at', '>=', $now->toDateString())
+            ->where('lock_at', '<=', $windowEnd)
             ->with('child.parents')
             ->get()
             ->groupBy(function ($checkIn) {
@@ -235,25 +237,41 @@ class ProcessRemindersJob implements ShouldQueue
 
     /**
      * Bestimmt die aktuelle Erinnerungsstufe basierend auf dem Zeitpunkt.
+     * Alle drei Stufen feuern VOR dem Fristablauf.
      * Gibt null zurück, wenn keine Stufe ausgelöst werden soll.
+     *
+     * Wichtig: Vergleich über startOfDay(), damit date-only Spalten (z.B. `rueckmeldungen.ende`,
+     * `child_check_ins.lock_at`) korrekt behandelt werden. Diese werden als Mitternacht
+     * zurückgegeben, weshalb ein datetime-basierter Vergleich falsche Werte liefern würde.
      */
     private function determineLevel(ReminderSetting $s, Carbon $deadline, Carbon $now): ?int
     {
-        $daysUntilDeadline = (int) $now->diffInDays($deadline, false); // negativ = überschritten
+        // Normalisierung auf Tagesbeginn: verhindert falsche Ergebnisse bei date-only Feldern
+        // (z.B. Ende = "2026-04-10 00:00:00" wenn als date gespeichert, now = "2026-04-09 15:30")
+        $daysUntilDeadline = (int) $now->copy()->startOfDay()->diffInDays(
+            $deadline->copy()->startOfDay(),
+            false  // negativ = Frist bereits überschritten
+        );
 
-        // Stufe 3: Nach Ablauf
-        if ($s->level3_active && $daysUntilDeadline <= -$s->level3_days_after_deadline) {
+        // Nach Fristablauf: keine Erinnerungen mehr
+        if ($daysUntilDeadline < 0) {
+            return null;
+        }
+
+        // Stufe 3: Am Fristtag (oder bis zu N Tage davor) – letzte Erinnerung + Eskalation
+        // Wird zuerst geprüft, damit sie Vorrang vor Stufe 2 hat
+        if ($s->level3_active && $daysUntilDeadline <= $s->level3_days_before_deadline) {
             return 3;
         }
 
         // Stufe 2: Kurz vor Ablauf
-        if ($s->level2_active && $daysUntilDeadline >= 0 && $daysUntilDeadline <= $s->level2_days_before_deadline) {
+        if ($s->level2_active && $daysUntilDeadline <= $s->level2_days_before_deadline) {
             return 2;
         }
 
         // Stufe 1: Einige Tage vor Ablauf (nur wenn Stufe 2 noch nicht greift)
-        if ($s->level1_active && $daysUntilDeadline >= 0 && $daysUntilDeadline <= $s->level1_days_before_deadline) {
-            if (!$s->level2_active || $daysUntilDeadline > $s->level2_days_before_deadline) {
+        if ($s->level1_active && $daysUntilDeadline <= $s->level1_days_before_deadline) {
+            if (! $s->level2_active || $daysUntilDeadline > $s->level2_days_before_deadline) {
                 return 1;
             }
         }
@@ -340,7 +358,7 @@ class ProcessRemindersJob implements ShouldQueue
         $title = match ($level) {
             1 => 'Anwesenheitsabfrage: Rückmeldung benötigt',
             2 => '⚠ Erinnerung: Anwesenheitsabfrage läuft bald ab',
-            3 => '🔴 WICHTIG: Anwesenheitsabfrage – Frist abgelaufen',
+            3 => '🔴 Letzte Chance: Anwesenheitsabfrage – Frist läuft heute ab',
         };
 
         $body = count(explode(', ', $childNames)) > 1
@@ -424,13 +442,13 @@ class ProcessRemindersJob implements ShouldQueue
         $title = match ($level) {
             1 => 'Erinnerung: ' . $typeLabel . ' ausstehend',
             2 => 'Dringend: ' . $typeLabel . ' fehlt',
-            3 => $typeLabel . ' überfällig',
+            3 => 'Letzte Erinnerung: ' . $typeLabel . ' fällig',
         };
 
         $message = match ($level) {
             1 => 'Bitte geben Sie Ihre ' . $typeLabel . ' für ' . $header . ' bis zum ' . $frist . ' ab.',
             2 => 'Die Frist für Ihre ' . $typeLabel . ' zu ' . $header . ' läuft am ' . $frist . ' ab!',
-            3 => 'Die Frist für Ihre ' . $typeLabel . ' zu ' . $header . ' ist abgelaufen! Bitte antworten Sie umgehend.',
+            3 => 'Die Frist für Ihre ' . $typeLabel . ' zu ' . $header . ' läuft heute (' . $frist . ') ab! Bitte antworten Sie jetzt.',
         };
 
         Notification::create([
@@ -476,7 +494,7 @@ class ProcessRemindersJob implements ShouldQueue
         $title = match ($level) {
             1 => "Erinnerung: {$typeLabel} ausstehend",
             2 => "Dringend: {$typeLabel} fehlt",
-            3 => "{$typeLabel} überfällig",
+            3 => "Letzte Erinnerung: {$typeLabel} fällig",
         };
 
         $header = $post->header;
@@ -485,7 +503,7 @@ class ProcessRemindersJob implements ShouldQueue
         $body = match ($level) {
             1 => $typeLabel . ' für „' . $header . '" bis ' . $frist . ' abgeben.',
             2 => 'Frist für ' . $typeLabel . ' zu „' . $header . '" läuft am ' . $frist . ' ab!',
-            3 => 'Frist für ' . $typeLabel . ' zu „' . $header . '" ist abgelaufen!',
+            3 => 'Frist für ' . $typeLabel . ' zu „' . $header . '" läuft heute (' . $frist . ') ab!',
         };
 
         $actionUrl = $type === 'anwesenheit'
@@ -520,8 +538,8 @@ class ProcessRemindersJob implements ShouldQueue
 
         Notification::create([
             'user_id' => $author->id,
-            'message' => $typeLabel . ' von ' . $user->name . ' für ' . $header . ' ist trotz Fristablauf (' . $frist . ') nicht eingegangen.',
-            'title' => 'Eskalation: ' . $typeLabel . ' überfällig',
+            'message' => $typeLabel . ' von ' . $user->name . ' für ' . $header . ' ist trotz mehrfacher Erinnerung bis heute (' . $frist . ') nicht eingegangen.',
+            'title' => 'Eskalation: ' . $typeLabel . ' fällig heute',
             'url' => url('post/' . $post->id),
             'type' => 'Eskalation',
             'important' => true,

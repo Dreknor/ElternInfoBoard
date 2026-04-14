@@ -68,6 +68,12 @@ class UpdateProfileRequest extends FormRequest
                 'min:0',
                 'max:1',
             ],
+            'messenger_discoverable' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:1',
+            ],
             'changePassword' => [
                 'nullable',
                 'integer',

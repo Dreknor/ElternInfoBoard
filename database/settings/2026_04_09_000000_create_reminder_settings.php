@@ -20,9 +20,9 @@ class CreateReminderSettings extends SettingsMigration
         $this->migrator->add('reminder.level2_email', true);
         $this->migrator->add('reminder.level2_push', true);
 
-        // Stufe 3: Letzte Erinnerung + Eskalation
+        // Stufe 3: Letzte Erinnerung + Eskalation (am Fristtag, d.h. 0 Tage vor Ablauf)
         $this->migrator->add('reminder.level3_active', true);
-        $this->migrator->add('reminder.level3_days_after_deadline', 1);
+        $this->migrator->add('reminder.level3_days_before_deadline', 0);  // 0 = am Fristtag selbst
         $this->migrator->add('reminder.level3_in_app', true);
         $this->migrator->add('reminder.level3_email', true);
         $this->migrator->add('reminder.level3_push', true);
@@ -50,7 +50,7 @@ class CreateReminderSettings extends SettingsMigration
         $this->migrator->delete('reminder.level2_push');
 
         $this->migrator->delete('reminder.level3_active');
-        $this->migrator->delete('reminder.level3_days_after_deadline');
+        $this->migrator->delete('reminder.level3_days_before_deadline');
         $this->migrator->delete('reminder.level3_in_app');
         $this->migrator->delete('reminder.level3_email');
         $this->migrator->delete('reminder.level3_push');

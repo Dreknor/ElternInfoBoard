@@ -16,6 +16,10 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GroupsController;
 use App\Http\Controllers\ICalController;
+use App\Http\Controllers\FamilyWeeklyController;
+use App\Http\Controllers\MessengerAdminController;
+use App\Http\Controllers\MessengerController;
+use App\Http\Controllers\PostReportController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\KrankmeldungenController;
@@ -275,6 +279,16 @@ Route::middleware('auth')->group(function () {
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
 
+        // Beitrag melden (alle authentifizierten Nutzer)
+        Route::post('post/{post}/report', [PostReportController::class, 'store'])->name('post.report');
+
+        // Admin: Gemeldete Beiträge verwalten
+        Route::middleware('permission:edit settings')->prefix('verwaltung/beitragsmeldungen')->group(function () {
+            Route::get('/', [PostReportController::class, 'index'])->name('post-reports.index');
+            Route::post('/{report}/resolve', [PostReportController::class, 'resolve'])->name('post-reports.resolve');
+            Route::delete('/{report}/destroy-post', [PostReportController::class, 'destroyPost'])->name('post-reports.destroy-post');
+        });
+
         // Umfragen
         Route::middleware('permission:create polls')->group(function () {
             Route::post('poll/{post}/create', [PollController::class, 'store']);
@@ -411,6 +425,7 @@ Route::middleware('auth')->group(function () {
         Route::get('groups/{group}/add', [GroupsController::class, 'addUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::post('groups/{group}/addUser', [GroupsController::class, 'storeUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
+        Route::post('/groups/{group}/toggle-chat', [GroupsController::class, 'toggleChat'])->name('groups.toggle-chat')->middleware(['permission:edit groups']);
 
         // Routen zur Rechteverwaltung
         Route::middleware('permission:edit permission')->group(function () {
@@ -531,6 +546,10 @@ Route::middleware('auth')->group(function () {
         Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
         Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
 
+        // Feature 6E: Statistiken & Ferienplan-PDF
+        Route::get('care/abfrage/stats', [\App\Http\Controllers\Anwesenheit\CareController::class, 'attendanceStats'])->name('care.abfrage.stats');
+        Route::post('care/abfrage/ferienplan/pdf', [\App\Http\Controllers\Anwesenheit\CareController::class, 'exportFerienplan'])->name('care.abfrage.ferienplan.pdf');
+
         Route::get('/child/{child}/mandates/edit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'editMandates'])->name('child.mandates.edit');
         Route::put('/child/{child}/mandates', [\App\Http\Controllers\Anwesenheit\CareController::class, 'updateMandates'])->name('child.mandates.store');
         Route::delete('child/{child}/mandates/{mandate}/delete', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyMandate'])->name('child.mandates.destroy');
@@ -583,6 +602,31 @@ Route::middleware('auth')->group(function () {
         Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
         Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
         Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+    });
+
+    // ── Feature 4: Persönlicher Wochenplan / Familien-Dashboard ──────────────
+    Route::middleware(['password_expired'])->group(function () {
+        Route::get('wochenplan', [FamilyWeeklyController::class, 'index'])->name('family.weekly');
+        Route::get('wochenplan/pdf', [FamilyWeeklyController::class, 'exportPdf'])->name('family.weekly.pdf');
+    });
+
+    // ── Feature 2: Eltern-Nachrichten (Messenger) ──────────────────────────────
+    Route::middleware(['password_expired', 'permission:use messenger'])->prefix('messenger')->group(function () {
+        Route::get('/',                                     [MessengerController::class, 'index'])->name('messenger.index');
+        Route::get('/users/search',                         [MessengerController::class, 'searchUsers'])->name('messenger.users.search');
+        Route::get('/conversation/{conversation}',          [MessengerController::class, 'show'])->name('messenger.show');
+        Route::post('/conversation/{conversation}/messages',[MessengerController::class, 'sendMessage'])->name('messenger.send');
+        Route::post('/direct/{targetUser}',                       [MessengerController::class, 'startDirect'])->name('messenger.direct');
+        Route::put('/message/{message}',                    [MessengerController::class, 'editMessage'])->name('messenger.edit');
+        Route::delete('/message/{message}',                 [MessengerController::class, 'deleteMessage'])->name('messenger.delete');
+        Route::post('/message/{message}/report',            [MessengerController::class, 'reportMessage'])->name('messenger.report');
+        Route::post('/conversation/{conversation}/mute',    [MessengerController::class, 'toggleMute'])->name('messenger.mute');
+        Route::get('/attachment/{message}',                 [MessengerController::class, 'serveAttachment'])->name('messenger.attachment');
+    });
+    Route::middleware(['password_expired', 'permission:moderate messages'])->prefix('messenger/admin')->group(function () {
+        Route::get('/reports',                   [MessengerAdminController::class, 'reports'])->name('messenger.admin.reports');
+        Route::post('/reports/{report}/resolve', [MessengerAdminController::class, 'resolveReport'])->name('messenger.admin.resolve');
+        Route::post('/user/{user}/mute',         [MessengerAdminController::class, 'muteUser'])->name('messenger.admin.mute');
     });
 
 });

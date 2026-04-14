@@ -202,5 +202,8 @@
         @if(!is_null($nachricht->rueckmeldung) and $nachricht->rueckmeldung->type == 'bild' and $nachricht->rueckmeldung->ende->greaterThan(\Carbon\Carbon::now()))
             @include('nachrichten.footer.imageRueckmeldung')
         @endif
+
+        {{-- Beitrag melden --}}
+        @include('nachrichten.footer.report')
     </div>
 @endif

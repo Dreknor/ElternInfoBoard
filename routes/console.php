@@ -49,9 +49,10 @@ try {
         Schedule::call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':50');
         Schedule::call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':55');
 
-        Schedule::call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
-        Schedule::call('App\Http\Controllers\ReadReceiptsController@remind')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
-        Schedule::call('App\Http\Controllers\ReadReceiptsController@sendFinalReminder')->hourly();
+        // DEAKTIVIERT: Wird jetzt durch ProcessRemindersJob (Feature 3) abgedeckt
+        // Schedule::call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
+        // Schedule::call('App\Http\Controllers\ReadReceiptsController@remind')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
+        // Schedule::call('App\Http\Controllers\ReadReceiptsController@sendFinalReminder')->hourly();
 
         Schedule::call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at($notifySetting->krankmeldungen_report_hour.':'.$notifySetting->krankmeldungen_report_minute);
 
@@ -90,6 +91,15 @@ try {
 
         // Alte Child Notices automatisch löschen (täglich, Child Notices älter als 3 Monate)
         Schedule::command('child-notices:cleanup --months=3')->dailyAt('03:45');
+
+        // ── Feature 2: Messenger-Jobs ──────────────────────────────
+        $messengerModule = Module::where('setting', 'Eltern-Nachrichten')->first();
+        if ($messengerModule && ($messengerModule->options['active'] ?? false)) {
+            // Alte Nachrichten bereinigen (täglich 02:00)
+            Schedule::job(new \App\Jobs\CleanupOldMessagesJob)->dailyAt('02:00');
+            // Wöchentlicher Report ungelöster Meldungen (montags 09:00)
+            Schedule::job(new \App\Jobs\SendUnresolvedReportsDigest)->weeklyOn(1, '09:00');
+        }
     }
 } catch (\Exception $e) {
     // Silently catch exceptions during migration/setup

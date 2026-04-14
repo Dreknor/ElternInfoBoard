@@ -118,9 +118,9 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <label class="small">Tage <strong>nach</strong> Frist</label>
-                    <input type="number" class="form-control form-control-sm" name="level3_days_after_deadline"
-                           value="{{ $reminderSettings->level3_days_after_deadline }}" min="0" max="30">
+                    <label class="small">Tage <strong>vor</strong> Frist</label>
+                    <input type="number" class="form-control form-control-sm" name="level3_days_before_deadline"
+                           value="{{ $reminderSettings->level3_days_before_deadline }}" min="0" max="30">
                 </div>
                 <div class="col-md-6">
                     <label class="small">Kanäle</label>
@@ -150,7 +150,7 @@
                         <input type="checkbox" class="custom-control-input" id="level3_escalate_to_author" name="level3_escalate_to_author" value="1"
                                {{ $reminderSettings->level3_escalate_to_author ? 'checked' : '' }}>
                         <label class="custom-control-label" for="level3_escalate_to_author">
-                            Autor/Lehrkraft per E-Mail benachrichtigen
+                            Autor per E-Mail benachrichtigen
                         </label>
                     </div>
                 </div>

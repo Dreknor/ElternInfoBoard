@@ -11,6 +11,7 @@ use App\Services\HolidayService;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
+use App\Settings\MessengerSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
 use App\Settings\ReminderSetting;
@@ -47,6 +48,7 @@ class SettingsController extends Controller implements HasMiddleware
         $pflichtstundenSetting = new PflichtstundenSetting;
         $stundenplanSettings = new StundenplanSetting;
         $reminderSettings = new ReminderSetting;
+        $messengerSettings = new MessengerSetting;
 
         $groups = Group::all();
         $roles = Role::all();
@@ -67,6 +69,7 @@ class SettingsController extends Controller implements HasMiddleware
             'pflichtstundenSettings' => $pflichtstundenSetting,
             'stundenplanSettings' => $stundenplanSettings,
             'reminderSettings' => $reminderSettings,
+            'messengerSettings' => $messengerSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -370,6 +373,24 @@ class SettingsController extends Controller implements HasMiddleware
                 Cache::forget('stundenplan_data');
                 break;
 
+            case 'messenger':
+                $validated = $request->validate([
+                    'auto_delete_days'      => 'required|integer|min:7|max:3650',
+                    'max_message_length'    => 'required|integer|min:100|max:10000',
+                    'allow_direct_messages' => 'nullable|boolean',
+                    'allow_file_uploads'    => 'nullable|boolean',
+                    'max_file_size_mb'      => 'required|integer|min:1|max:50',
+                ]);
+
+                $messengerSetting = new MessengerSetting;
+                $messengerSetting->auto_delete_days      = $validated['auto_delete_days'];
+                $messengerSetting->max_message_length    = $validated['max_message_length'];
+                $messengerSetting->allow_direct_messages = $request->has('allow_direct_messages');
+                $messengerSetting->allow_file_uploads    = $request->has('allow_file_uploads');
+                $messengerSetting->max_file_size_mb      = $validated['max_file_size_mb'];
+                $messengerSetting->save();
+                break;
+
             case 'reminder':
                 $validated = $request->validate([
                     'send_time' => 'required|date_format:H:i',
@@ -384,7 +405,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'level2_email' => 'nullable|boolean',
                     'level2_push' => 'nullable|boolean',
                     'level3_active' => 'nullable|boolean',
-                    'level3_days_after_deadline' => 'required|integer|min:0|max:30',
+                    'level3_days_before_deadline' => 'required|integer|min:0|max:30',
                     'level3_in_app' => 'nullable|boolean',
                     'level3_email' => 'nullable|boolean',
                     'level3_push' => 'nullable|boolean',
@@ -407,7 +428,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $reminderSettings->level2_email = $request->has('level2_email');
                 $reminderSettings->level2_push = $request->has('level2_push');
                 $reminderSettings->level3_active = $request->has('level3_active');
-                $reminderSettings->level3_days_after_deadline = $validated['level3_days_after_deadline'];
+                $reminderSettings->level3_days_before_deadline = $validated['level3_days_before_deadline'];
                 $reminderSettings->level3_in_app = $request->has('level3_in_app');
                 $reminderSettings->level3_email = $request->has('level3_email');
                 $reminderSettings->level3_push = $request->has('level3_push');

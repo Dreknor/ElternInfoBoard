@@ -206,10 +206,14 @@ class Child extends Model implements HasMedia
 
     public function scopeCare($query)
     {
-        return $query->where(function ($query) {
-            $query->whereIn('group_id', (new CareSetting)->groups_list)
-                ->orWhereIn('class_id', (new CareSetting)->class_list);
-        });
+        $careSettings = new CareSetting;
+
+        if (empty($careSettings->groups_list) && empty($careSettings->class_list)) {
+            return $query;
+        }
+
+        return $query->whereIn('group_id', $careSettings->groups_list)
+            ->whereIn('class_id', $careSettings->class_list);
     }
 
     public function krankmeldungen(): HasMany

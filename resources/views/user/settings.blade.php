@@ -267,6 +267,28 @@
                                                        placeholder="z.B. KITA">
                                             </div>
                                         </div>
+
+                                        {{-- Messenger-Sichtbarkeit --}}
+                                        @if($user->can('use messenger'))
+                                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    <i class="fas fa-user-secret text-blue-600 mr-1"></i>
+                                                    In Messenger-Suche sichtbar
+                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Entscheiden Sie, ob andere Eltern Sie per Direktnachricht finden können</span>
+                                                </label>
+                                                <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                        name="messenger_discoverable">
+                                                    <option value="1" @if($user->messenger_discoverable) selected @endif>Ja, auffindbar für Direktnachrichten</option>
+                                                    <option value="0" @if(!$user->messenger_discoverable) selected @endif>Nein, nicht in der Suche anzeigen</option>
+                                                </select>
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    <i class="fas fa-info-circle mr-0.5"></i>
+                                                    Gruppen-Chats sind davon nicht betroffen. Diese Einstellung gilt nur für neue Direktnachrichten.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @endif
                                     </div>
 
                                     <div class="pt-4 border-t border-gray-200">

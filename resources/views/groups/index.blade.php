@@ -38,6 +38,21 @@
                                             <span>Hinzufügen</span>
                                         </a>
                                     @endcan
+                                    @can('edit groups')
+                                        @php
+                                            $messengerActive = \App\Model\Module::firstWhere('setting', 'Eltern-Nachrichten')?->options['active'] ?? false;
+                                        @endphp
+                                        @if($messengerActive && !$group->owner_id)
+                                            <form action="{{ route('groups.toggle-chat', $group) }}" method="POST">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="flex items-center gap-3 px-4 py-2 text-sm w-full text-left {{ $group->has_chat ? 'text-orange-700 hover:bg-orange-50' : 'text-green-700 hover:bg-green-50' }} transition-colors">
+                                                    <i class="fas {{ $group->has_chat ? 'fa-comment-slash text-orange-500' : 'fa-comments text-green-600' }}"></i>
+                                                    <span>{{ $group->has_chat ? 'Gruppen-Chat deaktivieren' : 'Gruppen-Chat aktivieren' }}</span>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endcan
                                     @if( auth()->user()->can('delete groups') or $group->owner_id == auth()->user()->id)
                                         <div class="border-t border-gray-200 mt-2 pt-2 px-4">
                                             <p class="text-xs text-red-700 font-medium mb-2">
@@ -68,6 +83,9 @@
                             <p class="text-sm text-blue-50 mb-0">
                                 <i class="fas fa-users mr-1"></i>
                                 Es gibt {{$group->users->count()}} Benutzer
+                                @if($group->has_chat)
+                                    &nbsp;·&nbsp;<i class="fas fa-comments mr-1"></i>Chat aktiv
+                                @endif
                             </p>
                         </div>
                     @endcan

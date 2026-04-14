@@ -80,9 +80,9 @@ class ReminderMail extends Mailable
     private function getSubjectLevel3(): string
     {
         return match ($this->type) {
-            'lesebestaetigung' => 'WICHTIG: Lesebestätigung für ' . $this->postTitle . ' - Frist abgelaufen',
-            'anwesenheit' => 'WICHTIG: Anwesenheitsabfrage - Frist abgelaufen',
-            default => 'WICHTIG: Rückmeldung für ' . $this->postTitle . ' - Frist abgelaufen',
+            'lesebestaetigung' => 'Letzte Erinnerung: Lesebestätigung für ' . $this->postTitle . ' - Frist läuft heute ab',
+            'anwesenheit'      => 'Letzte Erinnerung: Anwesenheitsabfrage - Frist läuft heute ab',
+            default            => 'Letzte Erinnerung: Rückmeldung für ' . $this->postTitle . ' - Frist läuft heute ab',
         };
     }
 }

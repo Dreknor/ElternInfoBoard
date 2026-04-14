@@ -38,7 +38,7 @@
                                 </a>
                             @endif
                             @if($nachricht->released == 1 and !$nachricht->is_archived)
-                                
+
                                 <form action="{{url('/posts/archiv/'.$nachricht->id)}}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit"
@@ -92,6 +92,8 @@
                     @endif
                 </div>
             </div>
+            {{-- Beitrag melden --}}
+            @include('nachrichten.footer.report')
         </div>
     @elseif($nachricht->no_header)
         <!-- No Header Type -->
@@ -133,7 +135,7 @@
                                 </a>
                             @endif
                             @if($nachricht->released == 1 and !$nachricht->is_archived)
-                                
+
                                 <form action="{{url('/posts/archiv/'.$nachricht->id)}}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit"
@@ -161,6 +163,8 @@
                     {!! $nachricht->news !!}
                 </div>
             </div>
+            {{-- Beitrag melden --}}
+            @include('nachrichten.footer.report')
         </div>
     @else
         <!-- Standard Nachricht Type -->
@@ -275,6 +279,11 @@
                 <!-- Reactions -->
                 <div class="border-t border-gray-200">
                     @include('nachrichten.footer.reactions')
+                </div>
+
+                <!-- Beitrag melden -->
+                <div class="border-t border-gray-200">
+                    @include('nachrichten.footer.report')
                 </div>
 
                 <!-- Anonymous Poll -->

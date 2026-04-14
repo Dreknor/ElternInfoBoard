@@ -63,6 +63,12 @@
                                         type="button" role="tab" aria-controls="reminder" aria-selected="false">Erinnerungen
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="messenger-tab" data-toggle="tab" data-target="#messenger"
+                                        type="button" role="tab" aria-controls="messenger" aria-selected="false">
+                                    <i class="fas fa-comments mr-1 text-blue-500"></i>Eltern-Nachrichten
+                                </button>
+                            </li>
                         </ul>
                         <div class="tab-content">
                             @include('settings.tabs.home-tab')
@@ -74,6 +80,7 @@
                             @include('settings.tabs.pflichtstunden-tab')
                             @include('settings.tabs.stundenplan-tab')
                             @include('settings.tabs.reminder-tab')
+                            @include('settings.tabs.messenger-tab')
                         </div>
                     </div>
                 </div>

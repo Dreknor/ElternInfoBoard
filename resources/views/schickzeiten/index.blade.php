@@ -330,78 +330,107 @@
                                             <i class="fas fa-child mr-1"></i>
                                             {{ $child->first_name }} {{ $child->last_name }}
                                         </h3>
-                                        @if($openCheckIns->count() > 0)
-                                            <div class="flex gap-2">
-                                                <button type="button" @click="setAll(true)"
-                                                        class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-white bg-opacity-20 text-white rounded hover:bg-opacity-30 transition-colors font-semibold">
-                                                    <i class="fas fa-check-double"></i> Alle anmelden
-                                                </button>
-                                                <button type="button" @click="setAll(false)"
-                                                        class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-white bg-opacity-10 text-white rounded hover:bg-opacity-20 transition-colors font-semibold border border-white border-opacity-30">
-                                                    <i class="fas fa-times"></i> Alle abmelden
-                                                </button>
-                                            </div>
-                                        @endif
+                        @if($openCheckIns->count() > 0)
+                            <div class="flex gap-2">
+                                <button type="button" @click="setAll(true)"
+                                        class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-white/20 text-white rounded hover:bg-white/30 transition-colors font-semibold">
+                                    <i class="fas fa-check-double"></i> Alle anmelden
+                                </button>
+                                <button type="button" @click="setAll(false)"
+                                        class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-white/10 text-white rounded hover:bg-white/20 transition-colors font-semibold border border-white/30">
+                                    <i class="fas fa-times"></i> Alle abmelden
+                                </button>
+                            </div>
+                        @endif
                                     </div>
                                     <div class="p-4 space-y-2">
                                         @forelse($openCheckIns as $checkIn)
-                                            @php $locked = $checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now()); @endphp
-                                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 py-2 border-b border-gray-100 last:border-b-0 {{ $locked ? 'opacity-50' : '' }}">
-                                                <input type="hidden" name="responses[{{ $child->id }}_{{ $checkIn->id }}][check_in_id]" value="{{ $checkIn->id }}">
+                                            @php
+                                                $locked = $checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now());
+                                                $existingSchickzeit = $child->schickzeiten->first(
+                                                    fn($s) => $s->specific_date !== null && $s->specific_date->isSameDay($checkIn->date)
+                                                );
+                                                $prefillTime = null;
+                                                $prefillType = 'genau';
+                                                if ($existingSchickzeit) {
+                                                    $prefillType = $existingSchickzeit->type ?? 'genau';
+                                                    $prefillTime = $prefillType === 'ab'
+                                                        ? $existingSchickzeit->time_ab?->format('H:i')
+                                                        : $existingSchickzeit->time?->format('H:i');
+                                                }
+                                            @endphp
+                                            <div class="flex flex-col gap-1 py-2 border-b border-gray-100 last:border-b-0 {{ $locked ? 'opacity-50' : '' }}">
+                                                {{-- Hauptzeile: Datum | Ja/Nein | Schickzeit | Frist --}}
+                                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                                    <input type="hidden" name="responses[{{ $child->id }}_{{ $checkIn->id }}][check_in_id]" value="{{ $checkIn->id }}">
 
-                                                {{-- Hidden input für should_be, gesteuert durch Alpine --}}
-                                                <input type="hidden"
-                                                       name="responses[{{ $child->id }}_{{ $checkIn->id }}][should_be]"
-                                                       :value="responses['{{ $checkIn->id }}'] === true ? '1' : '0'">
+                                                    {{-- Hidden input für should_be, gesteuert durch Alpine --}}
+                                                    <input type="hidden"
+                                                           name="responses[{{ $child->id }}_{{ $checkIn->id }}][should_be]"
+                                                           :value="responses['{{ $checkIn->id }}'] === true ? '1' : '0'">
 
-                                                {{-- Datum --}}
-                                                <div class="font-medium text-sm text-gray-800" style="min-width: 150px;">
-                                                    {{ $checkIn->date->locale('de')->isoFormat('dd, D. MMM') }}
-                                                    @if($checkIn->comment)
-                                                        <span class="text-xs text-gray-400" title="{{ $checkIn->comment }}">💬</span>
+                                                    {{-- Datum --}}
+                                                    <div class="font-medium text-sm text-gray-800" style="min-width: 150px;">
+                                                        {{ $checkIn->date->locale('de')->isoFormat('dd, D. MMM') }}
+                                                    </div>
+
+                                                    {{-- Ja/Nein Toggle --}}
+                                                    <div class="flex gap-1">
+                                                        <button type="button"
+                                                                @click="responses['{{ $checkIn->id }}'] = true"
+                                                                :class="responses['{{ $checkIn->id }}'] === true ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                                class="px-3 py-1 rounded text-xs font-semibold transition-all"
+                                                                {{ $locked ? 'disabled' : '' }}>
+                                                            <i class="fas fa-check"></i> Ja
+                                                        </button>
+                                                        <button type="button"
+                                                                @click="responses['{{ $checkIn->id }}'] = false"
+                                                                :class="responses['{{ $checkIn->id }}'] === false ? 'bg-red-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                                class="px-3 py-1 rounded text-xs font-semibold transition-all"
+                                                                {{ $locked ? 'disabled' : '' }}>
+                                                            <i class="fas fa-times"></i> Nein
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- Schickzeit (nur sichtbar bei „Ja") --}}
+                                                    <div x-show="responses['{{ $checkIn->id }}'] === true"
+                                                         x-transition
+                                                         class="flex items-center gap-2">
+                                                        <label class="text-xs text-gray-600 whitespace-nowrap">
+                                                            🕐 Schickzeit:{{ $existingSchickzeit ? ' (vorbelegt)' : '' }}
+                                                        </label>
+                                                        <input type="time"
+                                                               name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_time]"
+                                                               class="px-2 py-1 border rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 {{ $existingSchickzeit ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300' }}"
+                                                               style="width: 100px;"
+                                                               value="{{ $prefillTime }}">
+                                                        <input type="hidden"
+                                                               name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_type]"
+                                                               value="{{ $prefillType }}">
+                                                        @if($existingSchickzeit)
+                                                            <span class="text-xs text-indigo-500" title="Bereits hinterlegte Schickzeit">
+                                                                <i class="fas fa-clock"></i>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    {{-- Frist --}}
+                                                    @if($checkIn->lock_at)
+                                                        <small class="text-gray-400 ml-auto whitespace-nowrap">
+                                                            bis {{ $checkIn->lock_at->format('d.m.') }}
+                                                            @if($locked)
+                                                                <span class="text-red-500">🔒</span>
+                                                            @endif
+                                                        </small>
                                                     @endif
                                                 </div>
 
-                                                {{-- Ja/Nein Toggle --}}
-                                                <div class="flex gap-1">
-                                                    <button type="button"
-                                                            @click="responses['{{ $checkIn->id }}'] = true"
-                                                            :class="responses['{{ $checkIn->id }}'] === true ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                                            class="px-3 py-1 rounded text-xs font-semibold transition-all"
-                                                            {{ $locked ? 'disabled' : '' }}>
-                                                        <i class="fas fa-check"></i> Ja
-                                                    </button>
-                                                    <button type="button"
-                                                            @click="responses['{{ $checkIn->id }}'] = false"
-                                                            :class="responses['{{ $checkIn->id }}'] === false ? 'bg-red-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                                            class="px-3 py-1 rounded text-xs font-semibold transition-all"
-                                                            {{ $locked ? 'disabled' : '' }}>
-                                                        <i class="fas fa-times"></i> Nein
-                                                    </button>
-                                                </div>
-
-                                                {{-- Schickzeit (nur sichtbar bei „Ja") --}}
-                                                <div x-show="responses['{{ $checkIn->id }}'] === true"
-                                                     x-transition
-                                                     class="flex items-center gap-2">
-                                                    <label class="text-xs text-gray-600 whitespace-nowrap">🕐 Abholung:</label>
-                                                    <input type="time"
-                                                           name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_time]"
-                                                           class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                                                           style="width: 100px;">
-                                                    <input type="hidden"
-                                                           name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_type]"
-                                                           value="genau">
-                                                </div>
-
-                                                {{-- Frist --}}
-                                                @if($checkIn->lock_at)
-                                                    <small class="text-gray-400 ml-auto whitespace-nowrap">
-                                                        bis {{ $checkIn->lock_at->format('d.m.') }}
-                                                        @if($locked)
-                                                            <span class="text-red-500">🔒</span>
-                                                        @endif
-                                                    </small>
+                                                {{-- Kommentar --}}
+                                                @if($checkIn->comment)
+                                                    <div class="flex items-start gap-2 px-2 py-1.5 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                                                        <i class="fas fa-comment-dots text-amber-500 mt-0.5 shrink-0"></i>
+                                                        <span>{{ $checkIn->comment }}</span>
+                                                    </div>
                                                 @endif
                                             </div>
                                         @empty

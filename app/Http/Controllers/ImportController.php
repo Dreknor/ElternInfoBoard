@@ -6,10 +6,6 @@ use App\Exports\AufnahmeImportVorlage;
 use App\Exports\ElternImportVorlage;
 use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
-use App\Imports\AufnahmeImport;
-use App\Imports\MitarbeiterImport;
-use App\Imports\UsersImport;
-use App\Imports\VereinImport;
 use App\Model\Group;
 use App\Model\group_user;
 use Illuminate\Contracts\Foundation\Application;
@@ -18,9 +14,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 
 class ImportController extends Controller implements HasMiddleware
 {
@@ -32,7 +28,6 @@ class ImportController extends Controller implements HasMiddleware
     }
 
     /**
-     * @return Application|Factory|View
      */
     public function importForm()
     {
@@ -97,6 +92,11 @@ class ImportController extends Controller implements HasMiddleware
         }
     }
 
+    public function importVereinForm()
+    {
+        return view('user.importVerein');
+    }
+
     // ─── Vorlagen-Downloads ───────────────────────────────────────────────────
 
     public function downloadElternVorlage()
@@ -120,11 +120,6 @@ class ImportController extends Controller implements HasMiddleware
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-
-    public function importVereinForm()
-    {
-        return view('user.importVerein');
-    }
 
     public function importVerein(Request $request)
     {

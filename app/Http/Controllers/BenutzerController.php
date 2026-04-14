@@ -56,6 +56,7 @@ class BenutzerController extends Controller implements HasMiddleware
                 'publicPhone',
                 'calendar_prefix',
                 'releaseCalendar',
+                'messenger_discoverable',
             ])
         );
 

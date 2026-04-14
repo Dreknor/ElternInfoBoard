@@ -50,7 +50,7 @@ class User extends Authenticatable implements Auditable
      */
     protected $fillable = [
         'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
-        'is_active', 'deactivated_at',
+        'is_active', 'deactivated_at', 'messenger_discoverable',
     ];
 
     /**
@@ -78,6 +78,7 @@ class User extends Authenticatable implements Auditable
             'changeSettings' => 'boolean',
             'is_active' => 'boolean',        // TODO-2.5
             'deactivated_at' => 'datetime',  // TODO-2.5
+            'messenger_discoverable' => 'boolean',
         ];
     }
 
@@ -330,5 +331,36 @@ class User extends Authenticatable implements Auditable
         }
 
         return $this->hasMany(Pflichtstunde::class, 'user_id');
+    }
+
+    // ── Messenger-Beziehungen ─────────────────────────────────
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user')
+            ->withPivot(['joined_at', 'muted_until', 'last_read_at'])
+            ->withTimestamps();
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function messageReports(): HasMany
+    {
+        return $this->hasMany(MessageReport::class, 'reporter_id');
+    }
+
+    public function postReports(): HasMany
+    {
+        return $this->hasMany(PostReport::class, 'reporter_id');
+    }
+
+    // ── Erinnerungssystem ─────────────────────────────────────
+
+    public function reminderLogs(): HasMany
+    {
+        return $this->hasMany(ReminderLog::class, 'user_id');
     }
 }

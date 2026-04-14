@@ -246,8 +246,6 @@
                     </div>
 
                     <!-- Neue Abfrage erstellen -->
-                    <div class="mt-6 bg-white rounded-lg shadow border border-gray-200">
-                        <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3">
                             <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
                                 <i class="fas fa-plus-circle"></i>
                                 Neue Anwesenheitsabfrage erstellen
@@ -325,8 +323,169 @@
                         </div>
                     </div>
 
-                    <!-- Kinder-Schickzeiten -->
-                    <div class="bg-white rounded-lg shadow border border-gray-200">
+                    <!-- Statistiken & Planungshilfe  -->
+                    <div class="mt-6 bg-white rounded-lg shadow border border-gray-200"
+                         x-data="{
+                             dateStart: '',
+                             dateEnd: '',
+                             stats: null,
+                             loading: false,
+                             error: null,
+                             loadStats() {
+                                 if (!this.dateStart || !this.dateEnd) return;
+                                 this.loading = true;
+                                 this.error = null;
+                                 const url = '{{ route('care.abfrage.stats') }}?date_start=' + this.dateStart + '&date_end=' + this.dateEnd;
+                                 fetch(url, {
+                                     headers: {
+                                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                         'Accept': 'application/json',
+                                     }
+                                 })
+                                 .then(r => r.json())
+                                 .then(data => { this.stats = data; this.loading = false; })
+                                 .catch(() => { this.error = 'Fehler beim Laden der Statistiken.'; this.loading = false; });
+                             }
+                         }">
+                        <div class="bg-gradient-to-r from-orange-500 to-amber-600 px-4 py-3">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                                <i class="fas fa-chart-bar"></i>
+                                Statistiken & Planungshilfe
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-sm text-gray-600 mb-4">
+                                Analysieren Sie Anwesenheitsabfragen eines beliebigen Zeitraums und exportieren Sie einen Ferienplan als PDF.
+                            </p>
+
+                            {{-- Zeitraum-Auswahl --}}
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-alt text-orange-600"></i> Datum von
+                                    </label>
+                                    <input type="date" x-model="dateStart"
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-alt text-orange-600"></i> Datum bis
+                                    </label>
+                                    <input type="date" x-model="dateEnd"
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 outline-none">
+                                </div>
+                                <div class="flex items-end">
+                                    <button @click="loadStats()"
+                                            :disabled="loading || !dateStart || !dateEnd"
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors duration-200">
+                                        <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-chart-line'"></i>
+                                        <span x-text="loading ? 'Lädt...' : 'Statistiken laden'"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Fehlermeldung --}}
+                            <div x-show="error" x-cloak class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                                <i class="fas fa-exclamation-triangle"></i> <span x-text="error"></span>
+                            </div>
+
+                            {{-- Statistik-Karten --}}
+                            <div x-show="stats !== null" x-cloak>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                    <div class="bg-blue-50 rounded-lg p-4 text-center border border-blue-200">
+                                        <div class="text-3xl font-bold text-blue-600" x-text="stats?.forecast_max_children ?? 0"></div>
+                                        <div class="text-sm text-gray-600 mt-1">Max. Kinder an einem Tag</div>
+                                    </div>
+                                    <div class="bg-green-50 rounded-lg p-4 text-center border border-green-200">
+                                        <div class="text-3xl font-bold text-green-600" x-text="(stats?.response_rate ?? 0) + '%'"></div>
+                                        <div class="text-sm text-gray-600 mt-1">Rücklaufquote</div>
+                                    </div>
+                                    <div class="bg-purple-50 rounded-lg p-4 text-center border border-purple-200">
+                                        <div class="text-3xl font-bold text-purple-600" x-text="stats?.avg_per_day ?? 0"></div>
+                                        <div class="text-sm text-gray-600 mt-1">⌀ Kinder pro Tag</div>
+                                    </div>
+                                    <div class="bg-amber-50 rounded-lg p-4 text-center border border-amber-200">
+                                        <div class="text-3xl font-bold text-amber-600" x-text="stats?.pending_count ?? 0"></div>
+                                        <div class="text-sm text-gray-600 mt-1">Noch offen</div>
+                                    </div>
+                                </div>
+
+                                {{-- Balkendiagramm nach Datum --}}
+                                <div class="mb-4">
+                                    <h6 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <i class="fas fa-calendar-week text-orange-600"></i>
+                                        Erwartete Kinder pro Tag
+                                    </h6>
+                                    <template x-for="(dayStat, date) in stats.by_date" :key="date">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <span class="text-xs font-mono text-gray-500 whitespace-nowrap"
+                                                  style="min-width: 100px;"
+                                                  x-text="new Date(date).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })">
+                                            </span>
+                                            <div class="flex-1 bg-gray-100 rounded h-7 relative overflow-hidden">
+                                                <div class="flex h-7 rounded overflow-hidden">
+                                                    <div class="bg-green-500 flex items-center justify-center transition-all"
+                                                         :style="'width:' + (dayStat.total > 0 ? dayStat.coming/dayStat.total*100 : 0) + '%'"
+                                                         :title="dayStat.coming + ' kommen'">
+                                                        <span x-show="dayStat.coming > 0" class="text-xs text-white font-bold px-1" x-text="dayStat.coming"></span>
+                                                    </div>
+                                                    <div class="bg-red-400 flex items-center justify-center transition-all"
+                                                         :style="'width:' + (dayStat.total > 0 ? dayStat.not_coming/dayStat.total*100 : 0) + '%'"
+                                                         :title="dayStat.not_coming + ' kommen nicht'">
+                                                        <span x-show="dayStat.not_coming > 0" class="text-xs text-white font-bold px-1" x-text="dayStat.not_coming"></span>
+                                                    </div>
+                                                    <div class="bg-gray-300 flex items-center justify-center transition-all"
+                                                         :style="'width:' + (dayStat.total > 0 ? dayStat.pending/dayStat.total*100 : 0) + '%'"
+                                                         :title="dayStat.pending + ' offen'">
+                                                        <span x-show="dayStat.pending > 0" class="text-xs text-gray-600 font-bold px-1" x-text="dayStat.pending"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs text-gray-500 whitespace-nowrap" x-text="dayStat.total + ' ges.'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                {{-- Legende --}}
+                                <div class="flex flex-wrap gap-4 text-xs text-gray-600 mb-4">
+                                    <span><span class="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span>kommt</span>
+                                    <span><span class="inline-block w-3 h-3 bg-red-400 rounded mr-1"></span>kommt nicht</span>
+                                    <span><span class="inline-block w-3 h-3 bg-gray-300 rounded mr-1"></span>offen</span>
+                                </div>
+
+                                {{-- PDF-Export --}}
+                                <div class="border-t border-gray-200 pt-4 mt-2">
+                                    <h6 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <i class="fas fa-file-pdf text-red-500"></i>
+                                        Ferienplan als PDF exportieren
+                                    </h6>
+                                    <p class="text-sm text-gray-500 mb-3">
+                                        Exportiert alle Kinder, die sich für den gewählten Zeitraum angemeldet haben (inkl. Schickzeiten).
+                                    </p>
+                                    <form action="{{ route('care.abfrage.ferienplan.pdf') }}" method="post" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="date_start" :value="dateStart">
+                                        <input type="hidden" name="date_end" :value="dateEnd">
+                                        <button type="submit"
+                                                :disabled="!dateStart || !dateEnd"
+                                                class="inline-flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors duration-200">
+                                            <i class="fas fa-file-pdf"></i>
+                                            Ferienplan herunterladen
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {{-- Hinweis vor dem ersten Laden --}}
+                            <div x-show="stats === null && !loading && !error" class="flex flex-col items-center gap-2 text-gray-400 py-6">
+                                <i class="fas fa-chart-bar text-3xl"></i>
+                                <p class="text-sm">Zeitraum wählen und auf „Statistiken laden" klicken.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Neue Abfrage erstellen -->
+                    <div class="mt-6 bg-white rounded-lg shadow border border-gray-200">
                         <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3">
                             <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
                                 <i class="fas fa-users-clock"></i>

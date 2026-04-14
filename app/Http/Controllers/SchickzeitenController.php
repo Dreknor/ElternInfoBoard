@@ -59,9 +59,12 @@ class SchickzeitenController extends Controller implements HasMiddleware
         $allowedClasses = $this->careSettings->class_list;
         $allowedGroups = $this->careSettings->groups_list;
 
-        $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
-            return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
-        });
+        // Nur filtern, wenn beide Listen konfiguriert sind
+        if (! empty($allowedClasses) && ! empty($allowedGroups)) {
+            $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
+                return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
+            });
+        }
 
         // Lade alle benötigten Relationships für die verschiedenen Tabs
         $children = $children->load([
@@ -148,9 +151,15 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $careSettings = new CareSetting;
 
-        $children = Child::query()
-            ->whereIn('group_id', $careSettings->groups_list)
-            ->whereIn('class_id', $careSettings->class_list)
+        $childrenQuery = Child::query();
+
+        // Nur filtern, wenn beide Listen konfiguriert sind
+        if (! empty($careSettings->groups_list) && ! empty($careSettings->class_list)) {
+            $childrenQuery->whereIn('group_id', $careSettings->groups_list)
+                ->whereIn('class_id', $careSettings->class_list);
+        }
+
+        $children = $childrenQuery
             ->with('schickzeiten')
             ->orderBy('last_name')
             ->get();
@@ -163,9 +172,14 @@ class SchickzeitenController extends Controller implements HasMiddleware
         $abfragen_daten = [];
 
         // Alle Care-Kinder mit Eltern für Rücklauf-Zuordnung
-        $careChildren = Child::query()
-            ->whereIn('group_id', $careSettings->groups_list)
-            ->whereIn('class_id', $careSettings->class_list)
+        $careChildrenQuery = Child::query();
+
+        if (! empty($careSettings->groups_list) && ! empty($careSettings->class_list)) {
+            $careChildrenQuery->whereIn('group_id', $careSettings->groups_list)
+                ->whereIn('class_id', $careSettings->class_list);
+        }
+
+        $careChildren = $careChildrenQuery
             ->with('parents')
             ->get();
 

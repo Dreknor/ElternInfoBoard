@@ -14,7 +14,9 @@ use App\Model\User;
 use App\Services\HolidayService;
 use App\Notifications\AttendanceQueryNotification;
 use App\Settings\CareSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
@@ -568,6 +570,12 @@ class CareController extends Controller implements HasMiddleware
         ]);
     }
 
+    /** Alias, der von der Route aufgerufen wird (route-Name: child.mandates.destroy) */
+    public function destroyMandate(Child $child, ChildMandate $childMandate)
+    {
+        return $this->deleteMandates($child, $childMandate);
+    }
+
     public function deleteMandates(Child $child, ChildMandate $childMandate)
     {
         Gate::authorize('edit schickzeiten');
@@ -594,6 +602,101 @@ class CareController extends Controller implements HasMiddleware
             'type' => 'success',
             'Meldung' => 'Die Vollmacht wurde gelöscht.',
         ]);
+    }
 
+    /**
+     * Liefert Statistiken für einen Zeitraum als JSON.
+     * Feature 6E: Verwaltungs-Statistiken & Planungshilfe
+     */
+    public function attendanceStats(Request $request): JsonResponse
+    {
+        Gate::authorize('edit schickzeiten');
+
+        $request->validate([
+            'date_start' => 'required|date',
+            'date_end'   => 'required|date|after_or_equal:date_start',
+        ]);
+
+        $start = Carbon::parse($request->date_start)->startOfDay();
+        $end   = Carbon::parse($request->date_end)->endOfDay();
+
+        $checkIns = ChildCheckIn::query()
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->with('child.group')
+            ->get();
+
+        $byDate = $checkIns
+            ->groupBy(fn ($ci) => $ci->date->format('Y-m-d'))
+            ->map(function ($group) {
+                return [
+                    'total'               => $group->count(),
+                    'coming'              => $group->where('should_be', true)->count(),
+                    'not_coming'          => $group->whereStrict('should_be', false)->count(),
+                    'pending'             => $group->whereNull('should_be')->count(),
+                    'actually_checked_in' => $group->where('checked_in', true)->count(),
+                ];
+            });
+
+        $totalCheckIns = $checkIns->count();
+        $totalComing   = $checkIns->where('should_be', true)->count();
+        $uniqueDays    = $checkIns->pluck('date')->unique()->count();
+
+        return response()->json([
+            'by_date'               => $byDate,
+            'by_group'              => $checkIns
+                ->groupBy(fn ($ci) => $ci->child->group?->name ?? 'Ohne Gruppe')
+                ->map(fn ($g) => [
+                    'total_children'    => $g->pluck('child_id')->unique()->count(),
+                    'avg_coming_per_day' => round(
+                        $g->where('should_be', true)->count()
+                        / max($g->pluck('date')->unique()->count(), 1),
+                        1
+                    ),
+                ]),
+            'response_rate'         => $totalCheckIns > 0
+                ? round($checkIns->whereNotNull('should_be')->count() / $totalCheckIns * 100, 1)
+                : 0,
+            'forecast_max_children' => $byDate->max('coming') ?? 0,
+            'avg_per_day'           => $uniqueDays > 0 ? round($totalComing / $uniqueDays, 1) : 0,
+            'pending_count'         => $checkIns->whereNull('should_be')->count(),
+            'total'                 => $totalCheckIns,
+        ]);
+    }
+
+    /**
+     * Erstellt und lädt einen Ferienplan als PDF herunter.
+     * Feature 6E: PDF-Export für Ferienplan
+     */
+    public function exportFerienplan(Request $request)
+    {
+        Gate::authorize('edit schickzeiten');
+
+        $request->validate([
+            'date_start' => 'required|date',
+            'date_end'   => 'required|date|after_or_equal:date_start',
+        ]);
+
+        $checkIns = ChildCheckIn::query()
+            ->whereBetween('date', [$request->date_start, $request->date_end])
+            ->where('should_be', true)
+            ->with(['child.group', 'child.schickzeiten'])
+            ->orderBy('date')
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.ferienplan', [
+            'checkIns' => $checkIns->groupBy(fn ($ci) => $ci->date->format('Y-m-d')),
+            'start'    => Carbon::parse($request->date_start),
+            'end'      => Carbon::parse($request->date_end),
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        $filename = 'Ferienplan_'
+            . Carbon::parse($request->date_start)->format('d.m.Y')
+            . '_bis_'
+            . Carbon::parse($request->date_end)->format('d.m.Y')
+            . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

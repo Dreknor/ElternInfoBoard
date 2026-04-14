@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Conversation;
+use App\Model\Message;
+use App\Model\MessageReport;
+use App\Model\PostReport;
+use App\Model\ReminderLog;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -102,6 +107,7 @@ class DatenschutzController extends Controller
                 'kalender_freigabe' => (bool) $user->releaseCalendar,
                 'kalender_prefix'   => $user->calendar_prefix,
                 'sorgeberechtigter_2' => $user->sorgeberechtigter2?->name,
+                'messenger_sichtbar' => (bool) $user->messenger_discoverable,
             ],
 
             'gruppen' => $user->groups()->withoutGlobalScopes()->get()
@@ -230,6 +236,74 @@ class DatenschutzController extends Controller
                     'abfrage_titel'  => $v->poll?->poll_name,
                     'teilgenommen'   => $v->created_at->toIso8601String(),
                     'antwort'        => '[anonym gespeichert – keine Benutzerreferenz in der Datenbank]',
+                ])
+                ->values()->toArray(),
+
+            'messenger_konversationen' => Conversation::forUser($user->id)
+                ->with('group')
+                ->get()
+                ->map(fn ($c) => [
+                    'typ'        => $c->type === 'group' ? 'Gruppen-Chat' : 'Direktnachricht',
+                    'titel'      => $c->title ?? $c->group?->name ?? 'Direktnachricht',
+                    'beigetreten' => $c->pivot?->joined_at,
+                    'stummgeschaltet_bis' => $c->pivot?->muted_until,
+                    'zuletzt_gelesen' => $c->pivot?->last_read_at,
+                    'erstellt'   => $c->created_at->toIso8601String(),
+                ])
+                ->values()->toArray(),
+
+            'messenger_nachrichten' => Message::where('sender_id', $user->id)
+                ->withTrashed()
+                ->with('conversation')
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(fn ($m) => [
+                    'konversation'  => $m->conversation?->title ?? 'ID ' . $m->conversation_id,
+                    'nachricht'     => $m->body,
+                    'typ'           => $m->type,
+                    'bearbeitet_am' => $m->edited_at?->toIso8601String(),
+                    'gesendet'      => $m->created_at->toIso8601String(),
+                    'geloescht'     => $m->deleted_at?->toIso8601String(),
+                ])
+                ->values()->toArray(),
+
+            'messenger_meldungen' => MessageReport::where('reporter_id', $user->id)
+                ->with('message')
+                ->get()
+                ->map(fn ($r) => [
+                    'nachricht_id'  => $r->message_id,
+                    'grund'         => $r->reason,
+                    'gemeldet_am'   => $r->created_at->toIso8601String(),
+                    'aufgeloest_am' => $r->resolved_at?->toIso8601String(),
+                ])
+                ->values()->toArray(),
+
+            'beitragsmeldungen' => PostReport::where('reporter_id', $user->id)
+                ->with('post')
+                ->get()
+                ->map(fn ($r) => [
+                    'beitrag'       => $r->post?->header ?? '[gelöscht]',
+                    'grund'         => $r->reason,
+                    'gemeldet_am'   => $r->created_at->toIso8601String(),
+                    'aufgeloest_am' => $r->resolved_at?->toIso8601String(),
+                ])
+                ->values()->toArray(),
+
+            'erinnerungslogs' => ReminderLog::where('user_id', $user->id)
+                ->with('post')
+                ->orderByDesc('sent_at')
+                ->get()
+                ->map(fn ($l) => [
+                    'typ'     => match($l->remindable_type) {
+                        'App\\Model\\Rueckmeldungen' => 'Rückmeldung',
+                        'App\\Model\\Post'            => 'Lesebestätigung',
+                        'App\\Model\\ChildCheckIn'    => 'Anwesenheitsabfrage',
+                        default                       => $l->remindable_type,
+                    },
+                    'nachricht'     => $l->post?->header ?? '–',
+                    'stufe'         => $l->level,
+                    'kanal'         => $l->channel,
+                    'gesendet_am'   => $l->sent_at->toIso8601String(),
                 ])
                 ->values()->toArray(),
         ];
