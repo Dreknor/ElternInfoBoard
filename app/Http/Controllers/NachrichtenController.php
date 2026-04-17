@@ -141,6 +141,9 @@ class NachrichtenController extends Controller implements HasMiddleware
         if ($month == null) {
             $month = Carbon::now();
         } else {
+            if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
+                return redirect(url('/archiv'));
+            }
             $month = Carbon::parse($month);
         }
 

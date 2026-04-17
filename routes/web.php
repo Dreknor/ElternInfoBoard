@@ -268,7 +268,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/home', [NachrichtenController::class, 'index']);
         Route::get('/nachrichten', [NachrichtenController::class, 'index'])->name('nachrichten.index');
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
-        Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv']);
+        Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv'])->where('month', '^\d{4}-\d{2}$');
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost'])->name('post.find');
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
