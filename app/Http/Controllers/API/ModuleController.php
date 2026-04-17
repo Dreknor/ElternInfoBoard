@@ -53,6 +53,9 @@ class ModuleController extends Controller
             ->get()
             ->filter(function (Module $module) use ($user) {
                 $rights = $module->options['rights'] ?? [];
+                if (is_string($rights)) {
+                    $rights = json_decode($rights, true) ?? [];
+                }
 
                 // Kein Recht erforderlich → für jeden sichtbar
                 if (empty($rights)) {

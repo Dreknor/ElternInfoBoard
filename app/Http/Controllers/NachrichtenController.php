@@ -97,7 +97,10 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         if (auth()->user()->can('view all')) {
             $nachrichten = Post::query()
-                ->whereNull('archiv_ab')
+                ->where(function ($query) {
+                    $query->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', Carbon::now());
+                })
                 ->with(['autor', 'groups', 'media'])
                 ->orderBy('sticky', 'desc')
                 ->orderBy('created_at', 'desc')
