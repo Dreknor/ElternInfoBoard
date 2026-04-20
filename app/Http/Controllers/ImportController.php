@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AufnahmeImportVorlage;
+use App\Imports\AufnahmeImport;
 use App\Exports\ElternImportVorlage;
 use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
