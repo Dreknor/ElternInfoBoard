@@ -77,5 +77,27 @@ class Message extends Model implements HasMedia
         return $this->sender_id === $user->id
             || $user->can('moderate messages');
     }
+
+    /**
+     * Prüft, ob diese Nachricht für den User sichtbar ist
+     * (er muss Mitglied sein UND seit vor der Nachricht beigetreten sein).
+     */
+    public function isVisibleTo(User $user): bool
+    {
+        $pivot = \Illuminate\Support\Facades\DB::table('conversation_user')
+            ->where('conversation_id', $this->conversation_id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $pivot) {
+            return false;
+        }
+
+        if ($pivot->joined_at && $this->created_at < \Carbon\Carbon::parse($pivot->joined_at)) {
+            return false;
+        }
+
+        return true;
+    }
 }
 

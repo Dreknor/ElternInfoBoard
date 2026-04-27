@@ -55,6 +55,19 @@ class SchoolYearService
                 ]);
             }
 
+            try {
+                // 6. Messenger-Nachrichten des vergangenen Schuljahres löschen
+                // (Datenschutz: Chats des alten Schuljahres dürfen nicht ins neue mitgenommen werden.)
+                \Illuminate\Support\Facades\Artisan::call('messenger:cleanup-school-year');
+                Log::info('Messenger Schuljahresend-Cleanup ausgeführt', [
+                    'output' => trim(\Illuminate\Support\Facades\Artisan::output()),
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Fehler beim Messenger Schuljahresend-Cleanup', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
         });
         Log::info('Schuljahreswechsel abgeschlossen', [
             'user_id' => auth()->id(),

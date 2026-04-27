@@ -92,6 +92,25 @@ try {
         // Alte Child Notices automatisch löschen (täglich, Child Notices älter als 3 Monate)
         Schedule::command('child-notices:cleanup --months=3')->dailyAt('03:45');
 
+        // ── Datenschutz-Cleanups (DSGVO-Konzept Apr. 2026) ────────
+        // Audit-Trail (IP/User-Agent) auf 12 Monate begrenzen
+        Schedule::command('audits:cleanup --days=365')->weeklyOn(1, '02:30');
+        // Reminder-Logs auf 12 Monate begrenzen
+        Schedule::command('reminder-logs:cleanup --days=365')->dailyAt('02:45');
+        // Lesebestätigungen auf 12 Monate / verwaiste entfernen
+        Schedule::command('read-receipts:cleanup --days=365')->dailyAt('02:50');
+        // Abgelaufene Sanctum-Tokens entfernen
+        Schedule::command('sanctum:prune-expired --hours=24')->dailyAt('02:55');
+        // Krankmeldungen-Cleanup (täglich + zusätzlich harter Run am 1. 8.)
+        Schedule::command('krankmeldungen:cleanup')->dailyAt('01:15');
+        Schedule::command('krankmeldungen:cleanup')->yearlyOn(8, 1, '03:00');
+        // Messenger: Schuljahresend-Löschung am 1. 8.
+        Schedule::command('messenger:cleanup-school-year')->yearlyOn(8, 1, '02:15');
+        // User-Cleanup: Force-Delete soft-gelöschter User nach 90 Tagen
+        Schedule::command('users:cleanup --purge-days=90')->dailyAt('04:00');
+        // Monatlicher Inaktivitätsbericht an Administratoren
+        Schedule::command('users:cleanup --report')->monthlyOn(1, '09:00');
+
         // ── Feature 2: Messenger-Jobs ──────────────────────────────
         $messengerModule = Module::where('setting', 'Eltern-Nachrichten')->first();
         if ($messengerModule && ($messengerModule->options['active'] ?? false)) {

@@ -30,8 +30,11 @@ class Krankmeldungen extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'start' => 'datetime',
-            'ende' => 'datetime',
+            'start'     => 'datetime',
+            'ende'      => 'datetime',
+            // Datenschutz: Freitext-Kommentar enthält ggf. Gesundheitsdaten (Art. 9 DSGVO)
+            // und wird daher AES-verschlüsselt in der DB abgelegt.
+            'kommentar' => 'encrypted',
         ];
     }
 

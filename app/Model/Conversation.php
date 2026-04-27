@@ -78,6 +78,7 @@ class Conversation extends Model
 
     /**
      * Gibt die Anzahl ungelesener Nachrichten für einen User zurück.
+     * Berücksichtigt nur Nachrichten, die NACH dem Beitritt des Users entstanden sind.
      */
     public function unreadCountFor(int $userId): int
     {
@@ -86,9 +87,9 @@ class Conversation extends Model
             return 0;
         }
 
-        $query = $this->messages()->where('sender_id', '!=', $userId);
+        $query = $this->messagesVisibleTo($userId)->where('sender_id', '!=', $userId);
         if ($pivot->last_read_at) {
-            $query->where('created_at', '>', $pivot->last_read_at);
+            $query->where('messages.created_at', '>', $pivot->last_read_at);
         }
 
         return $query->count();

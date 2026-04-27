@@ -176,15 +176,20 @@ class CleanupController extends Controller
         }
 
         try {
-            // delete krankmeldungen older than last august
+            // Krankmeldungen des vergangenen Schuljahres endgültig löschen
+            // (Iteration über das Modell, damit Spatie-Medialibrary die zugehörigen
+            // Anhänge sicher aus dem Storage entfernt – Bulk-Query würde Anhänge zurücklassen.)
+            $date = now()->month < 8
+                ? now()->subYear()->month(8)->day(1)->startOfDay()
+                : now()->month(8)->day(1)->startOfDay();
 
-            if (now()->month < 8) {
-                $date = now()->subYear()->month(8)->day(1)->hour(0)->minute(0)->second(0);
-            } else {
-                $date = now()->month(8)->day(1)->hour(0)->minute(0)->second(0);
-            }
-
-            Krankmeldungen::withTrashed()->where('created_at', '<', $date)->forceDelete();
+            Krankmeldungen::withTrashed()
+                ->where('created_at', '<', $date)
+                ->chunkById(100, function ($items) {
+                    foreach ($items as $k) {
+                        $k->forceDelete();
+                    }
+                });
 
         } catch (\Exception $e) {
             Log::error('Error while cleaning up Krankmeldungen: '.$e->getMessage());

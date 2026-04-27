@@ -53,7 +53,7 @@ class MessengerController extends Controller
 
         $user = auth()->user();
 
-        $messages = $conversation->messages()
+        $messages = $conversation->messagesVisibleTo($user->id)
             ->with(['sender', 'replyTo.sender'])
             ->latest()
             ->paginate(50);
@@ -359,9 +359,8 @@ class MessengerController extends Controller
      */
     public function serveAttachment(Message $message): BinaryFileResponse
     {
-        // Konversation laden und Mitgliedschaft prüfen
-        $conversation = $message->conversation()->with('users')->first();
-        if (! $conversation || ! $conversation->users->contains('id', auth()->id())) {
+        // Sichtbarkeit prüfen: Mitglied + Nachricht nach Beitritt verfasst
+        if (! $message->isVisibleTo(auth()->user())) {
             abort(403, 'Kein Zugriff auf diesen Anhang.');
         }
 

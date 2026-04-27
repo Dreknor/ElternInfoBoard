@@ -62,7 +62,7 @@ class MessengerController extends Controller
 
         $user = auth()->user();
 
-        $messages = $conversation->messages()
+        $messages = $conversation->messagesVisibleTo($user->id)
             ->with(['sender', 'replyTo.sender'])
             ->latest()
             ->paginate(50);
