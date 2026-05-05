@@ -64,6 +64,24 @@ class Conversation extends Model
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
+    // ── Hilfsmethoden (Query) ─────────────────────────────────────
+
+    /**
+     * Gibt einen Query aller Nachrichten zurück, die für den angegebenen User
+     * sichtbar sind (d. h. nach seinem Beitritt zur Konversation erstellt wurden).
+     */
+    public function messagesVisibleTo(int $userId): HasMany
+    {
+        $query = $this->messages();
+
+        $pivot = $this->users->where('id', $userId)->first()?->pivot;
+        if ($pivot && $pivot->joined_at) {
+            $query->where('created_at', '>=', $pivot->joined_at);
+        }
+
+        return $query;
+    }
+
     // ── Scopes ────────────────────────────────────────────────────
 
     /**
@@ -89,7 +107,7 @@ class Conversation extends Model
 
         $query = $this->messagesVisibleTo($userId)->where('sender_id', '!=', $userId);
         if ($pivot->last_read_at) {
-            $query->where('messages.created_at', '>', $pivot->last_read_at);
+            $query->where('created_at', '>', $pivot->last_read_at);
         }
 
         return $query->count();
