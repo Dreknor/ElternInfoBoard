@@ -46,6 +46,7 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -101,6 +102,10 @@ Route::middleware('auth')->group(function () {
         ->name('password.expired');
     Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])
         ->name('password.post_expired');
+
+    // Hilfe & Anleitungen
+    Route::get('hilfe', [HelpController::class, 'index'])->name('help.index');
+    Route::get('hilfe/{slug}', [HelpController::class, 'show'])->name('help.show');
 
     Route::middleware(['password_expired'])->group(function () {
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');

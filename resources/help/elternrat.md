@@ -1,32 +1,39 @@
 # Elternrat-Bereich
 
-Der **Elternrat-Bereich** ist exklusiv für gewählte Elternvertreter:innen.
+Mit der Berechtigung **„view elternrat"** hast du Zugriff auf den geschützten Bereich des Elternrats.
 
-## Funktionen
+## Diskussionen
 
-- **Diskussionen**: Themen mit anderen Elternräten besprechen.
-- **Termine**: Sitzungen planen und Einladungen versenden.
-- **Dateien**: Protokolle, Beschlüsse und Vorlagen ablegen.
-- **Beschlüsse**: Abstimmungen durchführen und dokumentieren.
+- **Diskussion erstellen**: Thema/Frage formulieren und veröffentlichen.
+- **Kommentieren**: andere können auf deine Diskussion antworten.
+- **Abonnieren / Abbestellen**: für eine Diskussion explizit Benachrichtigungen aktivieren oder deaktivieren.
+- **Bearbeiten / Löschen**: deine eigenen Diskussionen jederzeit anpassen.
 
-## Eine Diskussion starten
+## Termine (Events)
 
-1. Klicke auf **„Neues Thema“**.
-2. Vergib einen klaren **Titel**.
-3. Beschreibe den Sachverhalt im Editor.
-4. Optional: Lade unterstützende **Dateien** hoch.
+- **Events anlegen** (z. B. Sitzungen, Aktionen).
+- **Teilnahme** zusagen, absagen oder offenhalten.
+- Vor Sitzungen werden automatisch **Erinnerungen** versendet.
 
-## Sitzungen organisieren
+## Aufgaben (Tasks)
 
-- **Termin anlegen**: Datum, Uhrzeit, Ort und Tagesordnung erfassen.
-- **Einladung versenden**: Alle Elternräte erhalten automatisch eine Benachrichtigung.
-- **Protokoll**: Nach der Sitzung als PDF oder Text-Datei hochladen.
+Für die Organisation des Gremiums gibt es **Aufgaben** mit Status (offen / in Arbeit / erledigt). Aufgaben können dir oder anderen Mitgliedern zugewiesen werden.
 
-## Vertraulichkeit
+## Dateien
 
-> ⚠️ Inhalte des Elternrat-Bereichs sind **vertraulich** und dürfen nicht an Außenstehende weitergegeben werden.
+- **Hochladen**: Protokolle, Agenden, Anhänge etc.
+- **Löschen**: nur mit der Berechtigung „delete elternrat file".
 
-## Dateien & Protokolle
+> **Hinweis:** Eine **Versionierung** von Dateien gibt es nicht – beim erneuten Hochladen lege bitte einen klaren Dateinamen mit Datum an.
 
-- Gemeinsame Vorlagen (Briefe, Anträge) liegen unter **„Dateien“**.
-- Versionen werden automatisch geführt – du kannst auf ältere Stände zugreifen.
+## Filter
+
+In der Übersicht stehen Filter zur Verfügung:
+
+- **Suche** (Volltext),
+- **Angepinnt**,
+- **Meine Beiträge**.
+
+## Was es nicht gibt
+
+- Keine integrierten **Beschluss-/Abstimmungs-Tools** im Elternrat-Bereich (Umfragen sind nur als Rückmeldung an Beiträgen verfügbar).

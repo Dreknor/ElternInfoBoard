@@ -1,32 +1,30 @@
 # Messenger / Direktnachrichten
 
-Mit dem **Messenger** kannst du privat mit anderen Eltern und Mitarbeiter:innen schreiben.
+Wenn die Berechtigung **„use messenger"** für dich aktiv ist, findest du den Messenger im Hauptmenü.
 
-## Eine Unterhaltung starten
+## Unterhaltung starten
 
-1. Öffne den Bereich **Messenger** (Sprechblasen-Symbol).
-2. Klicke auf **„Neue Unterhaltung“**.
-3. Wähle die Person aus der Liste oder durchsuche per Name.
-4. Schreibe deine Nachricht und sende sie ab.
+- **Direktnachricht**: Person über die Suche finden und Konversation eröffnen.
+- **Gruppen-Chats**: einige Gruppen verfügen über einen integrierten Chat (von der Verwaltung aktiviert).
 
-## Funktionen im Chat
+> Du erscheinst in der Suche nur, wenn du in den **Einstellungen** unter „Messenger-Sichtbarkeit" auffindbar bist.
 
-- **Bilder & Dateien** über das -Symbol anhängen.
-- **Reaktionen** auf einzelne Nachrichten geben (lange drücken / Rechtsklick).
-- **Zitieren** – auf eine ältere Nachricht antworten.
+## Nachrichten schreiben
+
+- **Antworten/Zitieren**: Auf eine Nachricht reagieren, indem du sie als Bezug auswählst.
+- **Anhang**: pro Nachricht kann **eine Datei** angehängt werden – sofern in deiner Einrichtung erlaubt und innerhalb der maximal zulässigen Dateigröße.
+- **Bearbeiten / Löschen**: eigene Nachrichten kannst du nachträglich bearbeiten oder löschen.
 
 ## Stummschalten
 
-Wenn dich Benachrichtigungen einer Unterhaltung gerade stören, kannst du sie über das Glocken-Symbol stummschalten – die Unterhaltung bleibt aktiv, du erhältst aber keine Push-Nachricht mehr.
+Über das Menü einer Konversation kannst du diese **stummschalten** – du erhältst dann keine Push-Benachrichtigungen mehr für sie. Du kannst die Stummschaltung jederzeit aufheben.
 
-## Melden / Blockieren
+## Melden
 
-Falls du unangemessene Nachrichten erhältst:
+Unangemessene Nachrichten kannst du über die Aktion **„Melden"** an die Moderation übermitteln. Diese prüft den Fall.
 
-1. Öffne die betreffende Unterhaltung.
-2. Klicke oben auf das **⋮ Menü**.
-3. Wähle **„Melden“** oder **„Blockieren“**.
+## Was es nicht gibt
 
-Gemeldete Inhalte werden von Administrator:innen geprüft.
-
-> ⚠️ **Datenschutz**: Inhalte des Messengers sind privat. Mitarbeiter:innen sehen Unterhaltungen nur nach einer Meldung.
+- Keine Reaktionen/Emojis auf einzelne Nachrichten.
+- Kein Blockieren anderer Nutzer:innen durch dich selbst – nur Moderator:innen können Nutzer stummschalten.
+- Keine Sprachnachrichten oder Video-Anrufe.

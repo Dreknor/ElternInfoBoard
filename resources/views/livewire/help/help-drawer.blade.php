@@ -30,7 +30,7 @@
             {{-- Header --}}
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-circle-question text-2xl"></i>
+                    <i class="fas fa-question-circle text-2xl"></i>
                     <div>
                         <h2 class="font-bold text-lg leading-tight mb-0">Hilfe & Anleitung</h2>
                         <p class="text-xs text-blue-100 mb-0">Erste Anlaufstelle bei Fragen</p>
@@ -38,7 +38,7 @@
                 </div>
                 <button type="button" wire:click="closeDrawer"
                         class="p-2 rounded-lg hover:bg-white/20 transition-colors">
-                    <i class="fas fa-xmark text-xl"></i>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
@@ -59,7 +59,7 @@
                 @if($contextual->isNotEmpty() && $search === '')
                     <section>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-blue-700 mb-2 flex items-center gap-2">
-                            <i class="fas fa-location-crosshairs"></i>
+                            <i class="fas fa-crosshairs"></i>
                             Passend zu dieser Seite
                         </h3>
                         <div class="space-y-2">

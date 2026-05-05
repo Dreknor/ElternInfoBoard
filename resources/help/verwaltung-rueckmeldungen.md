@@ -1,37 +1,44 @@
 # Rückmeldungen verwalten
 
-Als Mitarbeiter:in mit der Berechtigung **„manage rueckmeldungen“** kannst du Abfragen erstellen und auswerten.
+Mit der Berechtigung **„manage rueckmeldungen"** kannst du Rückmeldungen zu Beiträgen erstellen, auswerten und herunterladen.
 
-## Neue Abfrage erstellen
+## Rückmeldung erstellen
 
-1. Gehe in den Bereich **Rückmeldungen** (Verwaltung).
-2. Klicke auf **„Neue Abfrage“**.
-3. Wähle einen passenden **Typ**:
-   - **Ja/Nein** – einfache Zustimmungsabfrage
-   - **Auswahl** – mehrere Antwortoptionen
-   - **Terminliste** – Eltern wählen freie Slots
-   - **Datei-Upload** – Eltern laden Dokumente hoch (z. B. unterschriebene Genehmigungen)
-4. Definiere **Empfänger** (ganze Klassen, Gruppen oder Einzelpersonen).
-5. Setze einen **Stichtag** – danach sind keine Antworten mehr möglich.
-6. Veröffentliche die Abfrage.
+Rückmeldungen werden **am Beitrag** erstellt – nicht im Verwaltungs-Index:
 
-## Auswertung
+1. Beitrag öffnen oder neu erstellen.
+2. Im Bearbeitungsmodus auf den passenden Button klicken:
+   - **Abfrage** (Auswahloptionen)
+   - **E-Mail-Rückmeldung** (Freitext)
+   - **Terminliste** (Slot-Buchung)
+   - **Diskussion** (Kommentare)
+   - **Bilder-Upload** / **Bilder mit Diskussion**
+   - **Umfrage** (Poll, sofern Modul aktiv)
+3. Inhalte/Optionen pflegen, **Stichtag** und ggf. **„Pflicht"-Flag** setzen.
 
-- Im Detailbereich siehst du den **Antwortstand in Echtzeit**.
-- Du kannst die Ergebnisse als **Excel** oder **PDF** exportieren.
-- Antwortdetails sind pro Familie einsehbar.
+Pflicht-Rückmeldungen erscheinen bei allen Empfängern auf dem Dashboard, bis sie beantwortet wurden.
 
-## Erinnerungen senden
+## Übersicht & Auswertung
 
-Wenige Tage vor dem Stichtag kannst du gezielt **alle Eltern, die noch nicht geantwortet haben**, per Push-Nachricht oder E-Mail erinnern:
+Unter **Rückmeldungen verwalten** siehst du eine Liste aller Beiträge mit Rückmeldungen.
 
-1. Öffne die Abfrage.
-2. Klicke auf **„Erinnerung senden“**.
-3. Wähle den Versandweg.
+- Pro Eintrag: Status, Anzahl der Rückmeldungen, Stichtag.
+- Detailansicht: einzelne Antworten je Nutzer:in.
 
-## Abfrage schließen oder verlängern
+## Stichtag verlängern
 
-- **Stichtag verlängern**: über das Bearbeiten-Menü.
-- **Abfrage manuell schließen**: keine weiteren Antworten möglich, Auswertung bleibt erhalten.
+Du kannst den **Stichtag** einer laufenden Rückmeldung **nachträglich verlängern**. Die App informiert die Empfänger automatisch.
 
->  Formuliere Abfragen **kurz und eindeutig** – das erhöht die Antwortquote deutlich.
+## Erinnerungen
+
+Erinnerungen an säumige Empfänger werden **automatisch** vom System versendet (gemäß Einstellungen unter „Erinnerungen"). Einen Knopf zum manuellen Versand gibt es derzeit nicht.
+
+## Export
+
+Pro Rückmeldung kannst du die Antworten als **Excel** herunterladen – einzeln pro Nutzer:in oder gesammelt.
+
+## Was es nicht gibt
+
+- Keinen **PDF-Export** der Rückmeldungen.
+- Kein manuelles **Schließen** einer Rückmeldung vor dem Stichtag (du kannst aber den Stichtag in die Vergangenheit setzen).
+- Keinen generischen **Datei-Upload** als Antwort-Typ – nur Bilder im Rahmen einer Bilder-Rückmeldung.

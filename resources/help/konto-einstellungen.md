@@ -2,41 +2,60 @@
 
 In den **Einstellungen** verwaltest du dein persönliches Konto.
 
-## Profil bearbeiten
+## Persönliche Daten
 
-- **Name & E-Mail**: aktuelle Kontaktdaten pflegen.
-- **Profilbild**: hilft anderen, dich schneller zu erkennen.
-- **Telefonnummer**: nur für Notfälle, optional.
+- **Name**
+- **E-Mail** (für Login und systeminterne Benachrichtigungen)
+- **Öffentliche E-Mail** – optional, sichtbar für andere Eltern in gemeinsamen Gruppen
+- **Öffentliche Telefonnummer** – optional, sichtbar für andere Eltern in gemeinsamen Gruppen
+
+> Öffentliche E-Mail und Telefonnummer kannst du jederzeit leeren.
 
 ## Passwort ändern
 
-1. Gehe zu **Einstellungen → Sicherheit**.
-2. Gib dein **aktuelles Passwort** ein.
-3. Wähle ein **neues, starkes Passwort** (mindestens 10 Zeichen, Buchstaben + Zahlen + Sonderzeichen).
-4. Speichere – du wirst auf allen Geräten neu eingeloggt.
+Direkt auf der Einstellungs-Seite (Sektion „Sicherheit & Passwort"):
 
-> 💡 Verwende für die App ein **eigenes** Passwort, das du sonst nirgends nutzt.
+1. **Aktuelles Passwort** eingeben (Pflicht).
+2. **Neues Passwort** + **Bestätigung** eingeben.
+3. Speichern.
 
-## Push-Benachrichtigungen
-
-Damit du wichtige Nachrichten sofort erhältst:
-
-1. Aktiviere im Browser / Smartphone die **Benachrichtigungen** beim ersten Login.
-2. In den **Einstellungen → Benachrichtigungen** kannst du detailliert wählen, welche Arten du erhalten möchtest:
-   - Neue Beiträge
-   - Direktnachrichten (Messenger)
-   - Rückmeldungs-Erinnerungen
-   - Krankmeldungs-Bestätigungen
+Das neue Passwort wird beim nächsten Login wirksam.
 
 ## E-Mail-Benachrichtigungen
 
-Falls du keine Push-Nachrichten möchtest, kannst du E-Mail-Zusammenfassungen aktivieren (täglich oder wöchentlich).
+Du legst fest, **wie oft** du eine Beitrags-Zusammenfassung per E-Mail bekommst:
 
-## Stille Stunden
+- **täglich**
+- **wöchentlich**
 
-Lege Zeiten fest, in denen du **keine** Push-Benachrichtigungen erhalten möchtest (z. B. 22:00 – 06:00 Uhr).
+Zusätzlich:
 
-## Mehrere Geräte
+- **Kopie eigener Rückmeldungen** an dich selbst senden lassen.
 
-Du kannst die App auf mehreren Geräten gleichzeitig nutzen. Über **„Aktive Sitzungen“** in den Einstellungen siehst du alle eingeloggten Geräte und kannst einzelne abmelden.
+## Push-Benachrichtigungen
 
+Push-Nachrichten richtest du **direkt im Browser** ein:
+
+1. Beim ersten Login bestätigst du die Browser-Abfrage „Benachrichtigungen erlauben".
+2. Du kannst Push pro Gerät erlauben oder verbieten.
+3. Wichtige/dringende Beiträge werden ohne weitere Einstellung sofort als Push gesendet.
+
+## Kalender-Freigabe
+
+- **Termine als Kalender freigeben** (`releaseCalendar`): erzeugt eine **iCal-URL**, die du in Outlook, Google Kalender, Apple Kalender etc. abonnieren kannst.
+- **Termin-Prefix** (max. 8 Zeichen): wird Termin-Titeln im Kalender-Abo vorangestellt – nützlich, um die App-Termine im eigenen Kalender zu erkennen.
+
+## Messenger-Sichtbarkeit
+
+Wenn der Messenger für dich aktiv ist: Über **„Messenger-Sichtbarkeit"** legst du fest, ob du in der Nutzer-Suche des Messengers gefunden werden darfst.
+
+## API-Tokens
+
+Für externe Anwendungen oder Skripte kannst du **API-Tokens** erstellen und einzelne Tokens auch wieder löschen. Bewahre Tokens wie Passwörter sicher auf.
+
+## Was es nicht gibt
+
+- **Kein Profilbild / Avatar-Upload.**
+- **Keine „Stille Stunden"** – Push-Pausen regelt dein Gerät / Browser systemweit.
+- **Keine Übersicht aktiver Sitzungen / Geräte** – nur API-Tokens sind einsehbar.
+- **Keine Pro-Typ-Auswahl** für Benachrichtigungen (z. B. „nur Direktnachrichten") – die Frequenzeinstellung gilt für die Gesamt-Zusammenfassung.

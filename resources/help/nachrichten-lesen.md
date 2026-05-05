@@ -1,34 +1,47 @@
 # Nachrichten lesen
 
-Im Bereich **Nachrichten** findest du alle Beiträge, die für dich oder eine deiner Gruppen bestimmt sind.
+Unter **Nachrichten** findest du alle Beiträge, die für dich freigegeben sind.
 
-## Eine Nachricht öffnen
+## Beiträge öffnen
 
-1. Klicke auf den Beitragstitel oder die Vorschaukarte.
-2. Du siehst nun den vollständigen Text, Anhänge und Reaktionen.
-3. Beim Öffnen wird die Nachricht automatisch als **gelesen** markiert.
+- Auf der Übersicht siehst du Titel, Datum, Verfasser:in und (falls vorhanden) eine Vorschau.
+- **Angeheftete Beiträge** stehen oben in der Liste.
+- Klicke auf einen Beitrag, um ihn vollständig zu lesen, Anhänge zu öffnen oder zu antworten.
 
-## Reaktionen geben
+## Lesebestätigung
 
-Unter jedem Beitrag findest du Reaktions-Buttons (z. B.  ❤️ ). Klicke einfach darauf,
-um deine Reaktion abzugeben. Eine erneute Auswahl entfernt deine Reaktion.
+Manche Beiträge fordern eine **Lesebestätigung**. Sie wird **nicht automatisch** gegeben:
 
-## Lesebestätigungen
+1. Beitrag öffnen.
+2. Auf den Button **„Gelesen"** klicken.
+3. Beiträge mit ausstehender Bestätigung erscheinen weiterhin auf deinem Dashboard.
 
-Bei wichtigen Beiträgen wirst du gebeten, eine **Lesebestätigung** abzugeben:
+## Reagieren
 
-1. Lies den Beitrag vollständig durch.
-2. Klicke auf den Button **„Gelesen“** am Ende des Beitrags.
-3. Die Schule sieht nun, dass du die Information erhalten hast.
+Wenn der Verfasser Reaktionen erlaubt hat, kannst du am Beitrag eine **Reaktion** hinterlassen (z. B. 👍 ❤️). Reaktionen sind keine Antwort und ersetzen keine Rückmeldung.
 
-> ⚠️ Lesebestätigungen sind verbindlich – bestätige nur, was du tatsächlich gelesen hast.
+## Antworten / Rückmeldungen
 
-## Anhänge & Dateien
+Je nach Beitrags-Einstellung kannst du:
 
-- **Bilder** kannst du durch Klick vergrößern.
-- **PDFs und andere Dateien** öffnen sich in einem neuen Fenster oder werden heruntergeladen.
+- bei einer **Abfrage** eine oder mehrere Optionen auswählen,
+- bei einer **Terminliste** einen Slot reservieren,
+- bei einer **E-Mail-Rückmeldung** einen Freitext senden,
+- bei einer **Diskussion** kommentieren,
+- bei einer **Bilder-Rückmeldung** Bilder hochladen,
+- an einer **Umfrage** teilnehmen.
 
-## Filter & Sortierung
+Details siehe Hilfe-Thema **„Rückmeldungen abgeben"**.
 
-- Über den Filter oben kannst du nach **Empfänger** (z. B. Klasse) oder **Datum** sortieren.
-- Mit der **Suche** findest du Beiträge schnell anhand von Stichworten.
+## Beitrag melden
+
+Falls ein Beitrag unangemessen ist, kannst du ihn über die Aktion **„Melden"** an die Verwaltung weitergeben. Dort wird der Fall geprüft.
+
+## Archiv & externe Angebote
+
+- **Archiv** (`/archiv`): ältere Beiträge, optional nach Monat gefiltert.
+- **Externes** (`/external`): Beiträge von externen Stellen (z. B. Vereine).
+
+## Suche
+
+Die **Lupe** in der Kopfzeile durchsucht Beiträge nach Titel und Inhalt.

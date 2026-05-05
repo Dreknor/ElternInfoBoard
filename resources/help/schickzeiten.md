@@ -1,37 +1,32 @@
-# Schickzeiten & Abholung
+# Schickzeiten & Anwesenheit (Hort)
 
-Mit den **Schickzeiten** legst du fest, wann dein Kind die Einrichtung verlassen darf bzw. abgeholt wird.
+Wenn dein Kind den Hort besucht, regelst du im Bereich **Schickzeiten** (auch „Hort-Modul"), wann es nach Hause geht. Die Seite ist in mehrere Tabs gegliedert:
 
-## Schickzeit eintragen
+## Tab „Anwesenheit"
 
-1. Gehe auf **Schickzeiten** im Hauptmenü.
-2. Wähle das **Kind** und den **Wochentag**.
-3. Lege die **Uhrzeit** fest, zu der dein Kind gehen darf.
-4. Wähle die **Abholart**:
-   - **Geht alleine** – das Kind verlässt selbstständig die Einrichtung.
-   - **Wird abgeholt** – wähle dann eine berechtigte Person aus der Liste.
-5. Speichere die Eingabe.
+Tagesübersicht: hier kannst du dein Kind mit einem Klick **anmelden** oder **abmelden** – z. B. wenn es heute später kommt oder früher abgeholt wird.
 
-## Wiederkehrende Zeiten
+## Tab „Schickzeiten"
 
-Du kannst dieselbe Zeit für mehrere Wochentage übernehmen, indem du die Auswahl **„Für alle Tage übernehmen“** aktivierst.
+Hier hinterlegst du die **regelmäßigen Schickzeiten** pro Wochentag.
 
-## Einmalige Änderung
+Pro Wochentag kannst du wählen:
 
-Soll dein Kind ausnahmsweise früher oder später gehen?
+- **Genaue Uhrzeit** – das Kind geht/wird abgeholt zu einer festen Zeit.
+- **Zeitfenster** („von – bis") – das Kind geht/wird in einem Zeitraum abgeholt.
 
-1. Wähle den entsprechenden **Tag**.
-2. Trage die abweichende Zeit als **Ausnahme** ein.
-3. Die regulären Zeiten bleiben für alle anderen Tage erhalten.
+Jeder Tag wird einzeln gespeichert. Bei Bedarf trägst du auch **tagesaktuelle Ausnahmen** für ein konkretes Datum ein – diese überschreiben dann den Wochenrhythmus für diesen einen Tag.
 
-## Abholberechtigte verwalten
+## Tab „Anwesenheitsabfrage"
 
-Im Profil deines Kindes kannst du **abholberechtigte Personen** hinterlegen
-(Großeltern, Tagesmutter, befreundete Eltern). Diese erscheinen dann in der Auswahl.
+Wenn die Einrichtung eine Abfrage (z. B. für Ferien, Brückentage) gestartet hat, beantwortest du sie hier pro Kind und Tag (anwesend / nicht anwesend) und kannst optional einen Kommentar hinterlegen.
 
-> ⚠️ Bitte halte die Liste der Abholberechtigten aktuell – die Einrichtung übergibt dein Kind nur an gelistete Personen.
+## Tab „Vollmacht / Abholberechtigte"
 
-## Krankheit & Abwesenheit
+Hier hinterlegst du **abholberechtigte Personen** (z. B. Großeltern, Nachbarn) für dein Kind. Diese erscheinen auf den Listen der Mitarbeitenden.
 
-Wenn dein Kind krank ist, melde es separat über den Bereich **Krankmeldung** ab.
-Schickzeiten werden in dem Fall automatisch ausgesetzt.
+## Wichtige Hinweise
+
+- Schickzeiten **werden nicht automatisch durch Krankmeldungen ausgesetzt** – bitte zusätzlich krankmelden und ggf. die heutige Anwesenheit ändern.
+- Änderungen sind sofort für die Mitarbeitenden im Hort sichtbar.
+- Die Mitarbeitenden können tagesaktuelle Schickzeiten auch selbst eintragen, wenn du anrufst.

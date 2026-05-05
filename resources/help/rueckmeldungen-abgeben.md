@@ -1,28 +1,36 @@
 # Rückmeldungen abgeben
 
-Die Schule oder der Elternrat erstellt regelmäßig **Abfragen** – z. B. zu Ausflügen, Elternabenden oder Materialbestellungen. Du erhältst eine Benachrichtigung und kannst direkt antworten.
+Beiträge können verschiedene Arten von **Rückmeldungen** anfordern. Welche Form du siehst, entscheidet die Verfasser:in beim Erstellen des Beitrags.
 
-## Eine Rückmeldung beantworten
+## Wo finde ich offene Rückmeldungen?
 
-1. Öffne die Abfrage über die Benachrichtigung oder den Bereich **Rückmeldungen**.
-2. Lies den Beschreibungstext sorgfältig.
-3. Wähle die zutreffende **Option** (Ja/Nein, Anzahl, Termin etc.).
-4. Optional: Hinterlasse einen **Kommentar** oder lade eine **Datei** hoch.
-5. Klicke auf **Antwort senden**.
+- Auf dem **Dashboard** unter „Offene Rückmeldungen / Lesebestätigungen".
+- Direkt im Beitrag selbst.
 
-Du kannst deine Antwort bis zum **Stichtag** noch ändern.
+## Antwort-Typen
 
-## Termin- & Listen-Abfragen
+| Typ | Wie du antwortest |
+|---|---|
+| **Abfrage** | Eine oder mehrere vorgegebene Optionen auswählen |
+| **Terminliste** | Einen verfügbaren Slot/Termin reservieren |
+| **E-Mail-Rückmeldung** | Freitext eintippen und absenden |
+| **Diskussion** | Kommentar zum Beitrag schreiben |
+| **Bilder-Rückmeldung** | Bilder hochladen (z. B. Mal-/Bastelbeitrag) |
+| **Umfrage** | An einer Umfrage teilnehmen (Stimmen sind anonym) |
 
-Bei Terminlisten (z. B. Elterngespräche) wählst du einen freien **Zeitslot**.
-Bereits vergebene Slots sind ausgegraut.
+> **Datei-Uploads** (z. B. unterschriebene Genehmigungen) sind nur möglich, wenn die Verfasser:in den Beitrag explizit als „Bilder-Rückmeldung" angelegt hat.
 
-## Mehrere Kinder
+## Stichtag
 
-Wenn die Abfrage mehrere Kinder betrifft, beantwortest du sie pro Kind separat – die Auswahl erfolgt direkt im Antwortformular.
+Hat eine Rückmeldung einen **Stichtag**, kannst du **bis dahin** deine Antwort jederzeit ändern. Nach Ablauf ist keine Änderung mehr möglich.
 
 ## Erinnerungen
 
-Hast du bis kurz vor dem Stichtag nicht geantwortet, sendet die App automatisch eine Erinnerung.
+Bei Pflicht-Rückmeldungen versendet das System automatisch **Erinnerungen** per E-Mail und/oder Push, wenn du noch nicht geantwortet hast.
 
->  Auch wenn du **„nicht teilnehmen“** auswählst, ist deine Antwort wichtig – so weiß die Schule, mit wie vielen Kindern sie planen kann.
+## Lesebestätigung vs. Rückmeldung
+
+- Eine **Lesebestätigung** sagt nur „Ich habe es gelesen".
+- Eine **Rückmeldung** ist eine inhaltliche Antwort.
+
+Beides ist unabhängig: Manche Beiträge erfordern beides.

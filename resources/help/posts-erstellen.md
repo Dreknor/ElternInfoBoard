@@ -1,30 +1,54 @@
 # Beiträge erstellen
 
-Als Mitarbeiter:in oder Elternrat kannst du Beiträge an Eltern und Gruppen versenden.
+Mit der Berechtigung **„create posts"** kannst du über **Nachrichten → Neuer Beitrag** eigene Beiträge anlegen.
 
-## Neuen Beitrag verfassen
+## Pflichtfelder
 
-1. Gehe in den Bereich **Nachrichten** und klicke auf **„Neuer Beitrag“**.
-2. Wähle die **Empfänger** aus (Gruppen, Klassen oder einzelne Personen).
-3. Vergib einen aussagekräftigen **Titel**.
-4. Schreibe den **Inhalt** – du kannst Formatierungen, Listen und Links nutzen.
-5. Optional: **Anhänge** hochladen (Bilder, PDFs, Word-Dokumente).
+- **Titel** und **Inhalt** (Editor mit Formatierung, Listen, Links, Bild- und Datei-Einbindung).
+- **Empfänger** (eine oder mehrere Gruppen/Klassen).
+- **Archiv ab**: Datum, ab dem der Beitrag automatisch ins Archiv wandert.
 
-## Optionen vor dem Versand
+## Beitragstyp
 
-- **Sticky / Anpinnen**: Der Beitrag bleibt oben in der Liste.
-- **Lesebestätigung anfordern**: Empfänger müssen aktiv bestätigen.
-- **Dringend markieren**: Auslöser für Push-Benachrichtigung (sofern berechtigt).
-- **Veröffentlichungszeitpunkt**: Beitrag für später planen.
+| Typ | Bedeutung |
+|---|---|
+| **info** | Reine Information |
+| **pflicht** | Pflichtinformation – Empfänger müssen Lesebestätigung geben |
+| **wahl** | Wahlpflicht (Bestätigung optional) |
+| **bild** | Beitrag mit Bilder-Schwerpunkt |
 
-## Freigabe-Workflow
+## Optionen
 
-Je nach Rolle wird dein Beitrag vor dem Versand von einer berechtigten Person **freigegeben**.
-Du erhältst eine Benachrichtigung, sobald der Beitrag veröffentlicht wurde.
+- **Lesebestätigungs-Frist**: bis wann die Bestätigung eingehen soll.
+- **Reaktionen erlauben** – Empfänger können niedrigschwellig reagieren.
+- **Überschrift ausblenden** – nur in Sonderfällen (z. B. reine Bilderposts).
+- **Externes Angebot** – kennzeichnet Beiträge externer Stellen.
+- **Dringende Nachricht** (nur mit Permission „send urgent message"): Beitrag wird sofort versendet, ohne Freigabe-Prozess. Erfordert Passwortbestätigung.
 
-## Bearbeiten oder Löschen
+## Anhänge
 
-- Solange ein Beitrag noch nicht freigegeben ist, kannst du ihn **bearbeiten**.
-- Veröffentlichte Beiträge können bei Bedarf **korrigiert** werden – Empfänger sehen dann einen Hinweis.
+Im Editor lassen sich **Bilder** und **Dateien** hochladen. Bilder können als **Header-Bild** ausgezeichnet werden.
 
->  Verwende sprechende Titel und kurze, klare Texte. Das erhöht die Lesequote deutlich.
+## Rückmeldung an den Beitrag hängen
+
+Nach dem Speichern öffnet sich der Beitrag im Bearbeitungsmodus. Dort kannst du eine **Rückmeldung** hinzufügen:
+
+- **Abfrage** (Auswahloptionen)
+- **E-Mail-Rückmeldung** (Freitext)
+- **Terminliste** (Slot-Buchung)
+- **Diskussion** (Kommentare erlaubt)
+- **Bilder-Upload** / **Bilder mit Diskussion**
+- **Umfrage** (Poll, sofern Modul aktiv)
+
+Wenn die Rückmeldung als **Pflicht** markiert ist, erscheint sie bei allen Empfängern auf dem Dashboard, bis sie beantwortet wurde.
+
+## Freigabe & Bearbeiten
+
+- Reguläre Beiträge laufen je nach Konfiguration durch eine **Freigabe** durch die Leitung.
+- Eigene Beiträge kannst du nachträglich **bearbeiten** (Permission „edit posts" vorausgesetzt).
+
+## Beitrag anheften
+
+Mit der Berechtigung **„make sticky"** kannst du einen Beitrag in der Detailansicht über die Aktion **„Anpinnen"** dauerhaft oben halten.
+
+> **Hinweis:** Eine Funktion, Beiträge auf einen späteren Veröffentlichungszeitpunkt zu **planen**, gibt es derzeit nicht.

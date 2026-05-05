@@ -1,27 +1,29 @@
-# Stundenplan ansehen
+# Stundenplan & Vertretungsplan
 
-Im Bereich **Stundenplan** siehst du den aktuellen Plan deines Kindes inklusive Vertretungen.
+Mit der Berechtigung **„view stundenplan"** findest du im Menü den **Stundenplan**. Lehrkräfte mit der Berechtigung „view stundenplan teacher" sehen zusätzlich die Lehreransicht.
 
-## Klassen-Ansicht
+## Klassenansicht
 
-1. Öffne **Stundenplan** im Menü.
-2. Wähle die **Klasse** (bei mehreren Kindern erscheint eine Auswahl).
-3. Du siehst nun den Wochenplan mit Fach, Lehrkraft und Raum.
+- Wähle eine **Klasse** – Eltern sehen automatisch die Klassen ihrer Kinder.
+- Angezeigt wird die **aktuelle Wochenansicht** (Mo–Fr/Sa).
+- Bei A/B-Wochen-Plan ist die jeweilige Wochen-Variante hinterlegt.
 
-## Vertretungen erkennen
+## Lehreransicht
 
-- **Gelbe Markierung**: Vertretungslehrkraft
-- **Rote Markierung**: Stunde fällt aus
-- **Blaue Markierung**: Raumänderung
+Lehrkräfte können ihre eigenen Stunden in einer eigenen Wochenansicht aufrufen.
 
-Beim Antippen einer Stunde erscheinen alle Detail-Informationen.
+## Vertretungsinformationen
 
-## Filter
+In den Plan eingebettet finden sich die aktuellen **Vertretungen** (z. B. Vertretungslehrkraft, ausgefallene Stunden, Raumänderungen). Die Hervorhebung folgt dem Layout deiner Einrichtung.
 
-- Nach **Tag** wechseln über die Pfeil-Buttons oben.
-- **„Heute“**-Button springt schnell zum aktuellen Tag.
-- Mit **„Druckansicht“** erstellst du eine PDF-Version für den Schulranzen.
+Zusätzlich werden – falls von der Schule freigegeben – angezeigt:
 
-## Fragen zum Plan?
+- **News/Mitteilungen** zum Vertretungsplan,
+- die **Liste abwesender Lehrkräfte**.
 
-Wende dich bei Unstimmigkeiten direkt an das **Sekretariat** – nicht an die einzelnen Lehrkräfte.
+## Was es nicht gibt
+
+- Keine **PDF-Druckansicht** des Stundenplans direkt aus der App.
+- Keine **Tagesnavigation** mit Pfeil-Buttons – die App zeigt immer die aktuelle Woche.
+
+> **Tipp:** Bei Unklarheiten zu Plan-Änderungen ist das **Sekretariat** die richtige Anlaufstelle.

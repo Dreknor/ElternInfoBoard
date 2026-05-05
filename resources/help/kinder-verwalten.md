@@ -1,31 +1,37 @@
 # Kinder verwalten
 
-Im Bereich **Kinder** pflegst du die Profile deiner Kinder.
+Deine Kinder findest du in den **Einstellungen** in einem eigenen Block.
 
-## Neues Kind anlegen
+## Kind anlegen
 
-1. Klicke auf **„Kind hinzufügen“**.
-2. Trage **Vorname**, **Nachname** und **Geburtsdatum** ein.
-3. Wähle die **Klasse / Gruppe**.
-4. Speichere – das Kind erscheint nun in deiner Familienübersicht.
+Über das Formular **„Kind hinzufügen"** in den Einstellungen trägst du folgende Daten ein:
 
-## Profil bearbeiten
+- **Vorname**
+- **Nachname**
+- **Gruppe** (z. B. Kita-Gruppe, Hortgruppe)
+- **Klassenstufe** (sofern relevant)
 
-- Klicke auf den Namen des Kindes.
-- Du kannst hier u. a. bearbeiten:
-  - Klasse / Gruppe (bei Schuljahreswechsel)
-  - Allergien & Besonderheiten
-  - Notfallkontakte
-  - Abholberechtigte Personen
+> In manchen Einrichtungen werden Kinder ausschließlich von Mitarbeitenden angelegt. Falls dir das Formular nicht angezeigt wird oder das Speichern fehlschlägt, wende dich bitte an das Sekretariat.
 
-## Benachrichtigungen pro Kind
+## Kind bearbeiten
 
-Über das **Glocken-Symbol** beim Kind kannst du steuern, ob du Benachrichtigungen
-für die jeweilige Klasse/Gruppe erhalten möchtest.
+- **Eltern** sehen ihre Kinder in der Liste; Änderungen an den Stammdaten (Name, Gruppe, Klasse) erfolgen i. d. R. durch Mitarbeitende.
+- **Mitarbeitende** mit der Berechtigung „edit schickzeiten" können Kinder bearbeiten.
 
-## Kind entfernen
+Beim **Wechsel der Gruppe oder Klasse** in einen Bereich ohne Hort-Modul werden bestehende Schickzeiten automatisch entfernt – das ist gewollt.
 
-Wenn dein Kind die Einrichtung verlässt, kannst du es aus deinem Profil entfernen.
-Die Schule erhält automatisch eine Information.
+## Glocken-Symbol (Benachrichtigungen)
 
->  **Datenschutz**: Die hinterlegten Daten sind nur für dich und die Mitarbeiter:innen der Einrichtung sichtbar.
+Mit dem Glocken-Symbol neben einem Kind steuerst du die **kindbezogene Benachrichtigung**:
+
+- **An**: du erhältst Benachrichtigungen, die dieses Kind betreffen (z. B. Hort-Hinweise).
+- **Aus**: keine Benachrichtigungen für dieses Kind. Allgemeine Beiträge kommen weiterhin über deine Gruppen-Mitgliedschaft.
+
+## Abholberechtigte
+
+Abholberechtigte werden **nicht** im Kind-Profil gepflegt, sondern im Hort-Bereich unter dem Tab **„Vollmacht"** – siehe Hilfe-Thema **„Schickzeiten & Anwesenheit"**.
+
+## Was es nicht gibt
+
+- Felder wie **Geburtsdatum**, **Allergien** oder **Notfallkontakte** werden in der App nicht erfasst – diese gehören in das Stammdatenformular der Einrichtung.
+- Eltern können Kinder in der Regel **nicht selbst löschen** – das übernimmt die Verwaltung.

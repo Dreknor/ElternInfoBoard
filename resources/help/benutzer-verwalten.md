@@ -1,39 +1,40 @@
 # Benutzer & Rollen
 
-Als Administrator:in oder Mitarbeiter:in mit der Berechtigung **„edit user“** verwaltest du hier die Benutzerkonten.
+Mit den Berechtigungen **„edit user"** und **„import user"** kannst du Benutzerkonten anlegen und verwalten.
 
-## Neuen Benutzer anlegen
+## Benutzer anlegen
 
-1. Gehe zu **Benutzer → Neuer Benutzer**.
-2. Trage **Vor- und Nachname**, **E-Mail** sowie ggf. die **Klasse(n) der Kinder** ein.
-3. Wähle die **Rolle(n)**:
-   - **Eltern** – Standardrolle für Erziehungsberechtigte
-   - **Mitarbeiter** – Lehrkräfte und Erzieher:innen
-   - **Sekretariat** – verwaltende Funktion mit erweiterten Rechten
-   - **Elternrat** – gewählte Elternvertreter:innen
-   - **Administrator** – volle Systemrechte
-4. Speichere – der Benutzer erhält automatisch eine **Einladungs-E-Mail**.
+- **Einzeln**: über **Benutzer → Neu** Kontaktdaten erfassen. Bei der Anlage wird ein Initial-Passwort per E-Mail an den/die neue:n Nutzer:in versendet.
+- **Import (ODS-Vorlage)**: Vier vorbereitete Vorlagen stehen zum Download bereit:
+  - **Eltern** (Bestandseltern)
+  - **Aufnahme** (neue Aufnahmen)
+  - **Mitarbeiter**
+  - **Verein** (Vereinsmitglieder)
 
-## Rollen & Permissions
+  Die Vorlagen herunterladen, ausfüllen, hochladen – die App importiert die Datensätze und versendet Initial-Passwörter.
 
-Rollen bündeln **Permissions** (Einzelberechtigungen). Du kannst:
+## Rollen zuweisen
 
-- Einer Rolle weitere Permissions zuweisen.
-- Einzelnen Benutzern zusätzlich zu ihrer Rolle weitere Permissions geben.
+Im Bearbeitungsformular eines Benutzers wählst du eine oder mehrere **Rollen** aus. Standardmäßig ausgelieferte Rollen sind z. B. **Administrator**, **Mitarbeiter**, **Sekretariat**, **Elternrat** sowie eine **Eltern**-Rolle. Weitere Rollen lassen sich frei anlegen.
 
-> ⚠️ Vergib Administrator-Rechte nur an wenige, vertrauenswürdige Personen.
+## Rollen & Rechte verwalten
 
-## Benutzer bearbeiten
+Mit der Berechtigung **„edit permission"** kannst du unter **Rollen** neue Rollen anlegen und einzelne Rechte (Permissions) detailliert pro Rolle setzen.
 
-- **Profil ändern**: Name, E-Mail, Klassenzuordnung
-- **Passwort zurücksetzen**: sendet einen Reset-Link
-- **Aktivieren / Deaktivieren**: gesperrte Konten können sich nicht einloggen
-- **Login als Benutzer**: erlaubt Support – wird vollständig protokolliert
+## Massenlöschung
 
-## Import per Excel
+Über **Benutzer → Massenlöschung** kannst du mehrere Konten anhand von Filtern (z. B. Rolle, Klasse) auf einmal entfernen. Vorsicht: Aktion ist endgültig.
 
-Über **„Benutzer importieren“** kannst du eine Excel-Liste mit mehreren Benutzern auf einmal anlegen. Eine Vorlage steht im Import-Dialog zum Download bereit.
+## Vereinsmitglieder
 
-## Datenschutz
+- **Nicht-Mitglieder anzeigen**: Eltern, die noch keine Vereins-Rolle haben.
+- **Zur Vereinsmitgliedschaft hinzufügen** mit einem Klick.
+- **Rolle synchronisieren**.
 
-Alle Änderungen an Benutzerkonten werden im **Audit-Log** protokolliert.
+## Login als Nutzer:in
+
+Mit der Berechtigung **„loginAsUser"** kannst du dich kurzfristig in einen Account einloggen, um ein Problem nachzuvollziehen. Dies wird im Audit-Log festgehalten. Über **„zum eigenen Account zurück"** in der Kopfzeile kehrst du zurück.
+
+## E-Mail-Vorschau
+
+Über **Mail → daily** kannst du dir die tägliche/wöchentliche Beitrags-Zusammenfassung anschauen, wie sie an einen bestimmten Nutzer versendet werden würde.

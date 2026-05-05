@@ -1,36 +1,34 @@
 # Kind krankmelden
 
-Wenn dein Kind krank ist, kannst du es schnell und unkompliziert über die App entschuldigen.
+Über den Menüpunkt **Krankmeldung** kannst du dein Kind in wenigen Schritten krankmelden.
 
-## Schritt-für-Schritt
+## So gehst du vor
 
-1. Öffne den Bereich **Krankmeldung** über das Hauptmenü.
-2. Wähle das betroffene **Kind** aus (bei mehreren Kindern erscheint eine Auswahl).
-3. Gib den **Zeitraum** an (von – bis). Bei nur einem Tag wähle bei beiden Datumsfeldern den gleichen Tag.
-4. Optional: Wähle die **Erkrankung / den Grund** (z. B. Erkältung, Magen-Darm) – das hilft der Schule bei der Übersicht.
-5. Falls du eine **Bemerkung** ergänzen möchtest, nutze das Textfeld.
-6. Klicke auf **Krankmeldung absenden**.
+1. Im Menü auf **Krankmeldung** klicken.
+2. **Kind auswählen** – alternativ Name eintragen, falls keins gespeichert ist.
+3. **Beginn** und **Ende** der Erkrankung wählen. Der Beginn darf maximal **3 Tage** in der Vergangenheit liegen.
+4. Optional einen **Kommentar** eingeben (z. B. Symptome, „Arzttermin am …").
+5. Optional **Anhänge** (Attest, Foto eines Schreibens) hochladen – erlaubt sind PDF, PNG und JPG.
+6. **Absenden**.
 
-Die Schule und die Lehrkräfte werden automatisch informiert. Du erhältst eine Bestätigung per E-Mail
-oder Push-Benachrichtigung.
+## Meldepflichtige Erkrankungen
 
-## Mehrere Kinder gleichzeitig
+Wenn das Modul **„meldepfl. Erkrankungen"** aktiv ist, kannst du beim Krankmelden zusätzlich eine konkrete Erkrankung (z. B. Magen-Darm) auswählen. Dadurch werden:
 
-Wenn alle deine Kinder gleichzeitig krank sind, kannst du im Auswahlfeld **mehrere Kinder** markieren
-und mit einer einzigen Meldung alle entschuldigen.
+- Hinweise zur **Wiederzulassung** angezeigt (durch wen, ab wann),
+- die Information automatisch für Aushänge in der Einrichtung erfasst.
 
-## Krankmeldung verlängern
+## Bestätigung
 
-Falls dein Kind länger ausfällt:
+- Du erhältst die Krankmeldung **per E-Mail** als Kopie.
+- Die Einrichtung wird automatisch informiert.
 
-- Öffne die bestehende Krankmeldung.
-- Passe das **Bis-Datum** an und speichere.
+## Liste deiner Krankmeldungen
 
-## Zurückziehen
+Auf der Seite **Krankmeldung** siehst du unten eine Übersicht aller von dir abgegebenen Krankmeldungen.
 
-Sollte sich herausstellen, dass dein Kind doch zur Schule kommen kann:
+## Was es nicht gibt
 
-- Öffne die Krankmeldung.
-- Klicke auf **Krankmeldung zurückziehen**.
-
-> ⚠️ Bitte denke daran, dass für längere Erkrankungen ggf. ein **ärztliches Attest** in Papierform bei der Schule eingereicht werden muss.
+- **Keine** Mehrfachauswahl mehrerer Kinder in einer Krankmeldung – pro Kind eine Meldung.
+- **Kein** Bearbeiten oder Verlängern einer bestehenden Krankmeldung. Bei Verlängerung legst du bitte eine **neue Krankmeldung** mit dem neuen Zeitraum an.
+- **Kein** Zurückziehen einer abgesendeten Krankmeldung – wende dich bei Fehlern an die Einrichtung.

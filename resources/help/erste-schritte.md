@@ -1,24 +1,24 @@
 # Willkommen!
 
-Schön, dass du da bist. Diese Anleitung gibt dir einen schnellen Überblick über die wichtigsten Funktionen der Elterninfo-App.
+Diese Anleitung gibt dir einen schnellen Überblick über die wichtigsten Funktionen der App.
 
 ## Die wichtigsten Bereiche
 
-- **Dashboard**: Deine Startseite mit den neuesten Nachrichten und Schnellzugriffen.
-- **Nachrichten**: Hier findest du alle Beiträge der Schule und des Elternrats.
-- **Familie**: Verwalte deine Kinder, Krankmeldungen und Schickzeiten.
-- **Hilfe**: Klicke jederzeit oben rechts auf das **?**-Symbol, wenn du Unterstützung brauchst.
+- **Dashboard** (Startseite): aktuelle Beiträge, kommende Termine, offene Rückmeldungen, Tageslosung und – für Hort-Eltern – die heutige Anwesenheit deiner Kinder.
+- **Nachrichten**: alle Beiträge der Schule/Einrichtung, Archiv und externe Angebote.
+- **Einstellungen**: persönliches Profil, Kinder, Kalender-Freigaben, API-Tokens.
+- **Hilfe**: über das **?**-Symbol oben rechts (Desktop) oder in der unteren Leiste (Mobile) erreichbar.
 
-## So findest du dich zurecht
+## Navigation
 
-1. Über die **Seitenleiste** (Symbol oben links) erreichst du alle Bereiche.
-2. Auf dem Smartphone nutzt du die **untere Navigationsleiste** für Schnellzugriffe.
-3. Mit der **Suche** im Kopfbereich findest du Inhalte schnell wieder.
+- **Desktop**: Seitenmenü links über den **☰**-Button in der Kopfzeile öffnen/schließen.
+- **Smartphone**: untere Navigationsleiste für Schnellzugriffe (Home, Hilfe, Menü).
+- **Suche**: Lupe in der Kopfzeile – durchsucht Beiträge.
 
-## Erste Schritte
+## Erste Schritte nach dem Login
 
-1. Prüfe dein **Profil** und die **Benachrichtigungseinstellungen**.
-2. Lege deine **Kinder** an, falls noch nicht geschehen.
-3. Aktiviere **Push-Benachrichtigungen**, damit du keine wichtigen Nachrichten verpasst.
+1. Unter **Einstellungen** Name, E-Mail und – falls gewünscht – öffentliche Kontaktdaten prüfen.
+2. **Push-Benachrichtigungen** im Browser erlauben, wenn der Hinweis erscheint, damit du dringende Nachrichten sofort bekommst.
+3. Verbindliche **Rückmeldungen** und unbestätigte **Lesebestätigungen** findest du jederzeit auf dem Dashboard.
 
->  **Tipp**: Über das **?**-Symbol oben rechts erhältst du immer Hilfe – passend zur aktuellen Seite.
+> **Tipp:** Über das **?**-Symbol bekommst du auf jeder Seite passende Hilfe-Themen angezeigt.

@@ -1,28 +1,36 @@
-# Gruppen / Klassen verwalten
+# Gruppen / Klassen
 
-Mit der Berechtigung **„edit groups“** verwaltest du Klassen und Gruppen.
+In **Gruppen** verwaltest du die Zuordnung von Nutzer:innen zu Klassen, Hortgruppen, Arbeitsgruppen oder eigenen Gruppen.
 
-## Neue Gruppe anlegen
+## Übersicht
 
-1. Gehe in den Bereich **Gruppen → Neue Gruppe**.
-2. Vergib einen **Namen** (z. B. „Klasse 3a“, „Hort Bären“).
-3. Wähle den **Gruppentyp** (Klasse, Hortgruppe, AG …).
-4. Optional: Beschreibung und Farbe für bessere Übersicht.
-5. Speichere die Gruppe.
+- **Gruppen anzeigen**: Berechtigung „view groups".
+- **Gruppe anlegen**: Berechtigung „edit groups" (System-Gruppen) oder „create own group" (eigene private Gruppen).
+- **Mitglieder hinzufügen / entfernen**: in der Detailansicht einer Gruppe.
 
-## Mitglieder zuordnen
+## Eigene Gruppen
 
-- Klicke auf die Gruppe → **„Mitglieder“**.
-- Füge Eltern und Mitarbeiter:innen über die Suche hinzu.
-- Mitglieder können verschiedene Rollen innerhalb der Gruppe haben (z. B. Klassenlehrer:in, Elternsprecher:in).
+Mit der Berechtigung **„create own group"** kannst du **eigene Gruppen** anlegen (z. B. AG, Klassenpflegschaft) und selbst Mitglieder hinzufügen oder entfernen.
 
-## Berechtigungen pro Gruppe
+## Gruppen-Chat
 
-Manche Gruppen können eigene Berechtigungen haben (z. B. nur Mitglieder dürfen Beiträge schreiben).
-Konfiguriere dies unter **„Berechtigungen“** in der Gruppen-Detailansicht.
+Wenn das Messenger-Modul aktiv ist und du die Berechtigung **„edit groups"** besitzt, kannst du pro Gruppe einen **Gruppen-Chat aktivieren**. Die Mitglieder sehen die Konversation dann automatisch in ihrem Messenger.
 
-## Gruppe archivieren
+## Geschützte Gruppen
 
-Am Schuljahresende kannst du Gruppen **archivieren** – sie verschwinden aus der Hauptansicht, bleiben aber für historische Auswertungen erhalten.
+Manche Gruppen sind als **geschützt** markiert (z. B. Lehrer-Kollegium). Diese können nicht von beliebigen Personen gelöscht oder geändert werden.
 
->  **Tipp**: Lege für jeden neuen Jahrgang frühzeitig die Klassen-Gruppen an, damit Beiträge zugeordnet werden können.
+## Gruppe löschen
+
+Mit der Berechtigung **„delete groups"** kannst du eine Gruppe löschen. Aus Sicherheitsgründen ist eine **Passwortbestätigung** erforderlich.
+
+## Schuljahreswechsel
+
+Klassen-/Jahrgangswechsel laufen nicht über das Gruppen-Modul, sondern über den eigenen Bereich **Einstellungen → Schuljahreswechsel** (Berechtigung „schoolyear.change").
+
+## Was es nicht gibt
+
+- Keine **Gruppen-Typen** (Klasse / AG / Hort) als Auswahlfeld.
+- Keine **Beschreibung / Farbe** pro Gruppe.
+- Keine **Berechtigungen pro Gruppe** – Rechte werden über Rollen am Benutzer gesteuert.
+- Keine **Archivierung** von Gruppen.

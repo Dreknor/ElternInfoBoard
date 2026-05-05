@@ -1,45 +1,46 @@
 # Datenschutz & Datenexport
 
-Wir nehmen den Schutz deiner Daten ernst. Hier siehst du, welche Daten gespeichert werden und wie du sie verwalten kannst.
+Unter **Datenschutz** findest du Informationen darüber, welche personenbezogenen Daten wir speichern, und kannst sie als Datei herunterladen (Recht auf Auskunft, DSGVO Art. 15/20).
 
-## Welche Daten werden gespeichert?
+## Dein Datenexport
 
-- **Stammdaten**: Name, E-Mail, ggf. Telefonnummer
-- **Kinder**: Name, Geburtsdatum, Klasse, Allergien (sofern eingetragen)
-- **Aktivitäten**: gelesene Beiträge, gegebene Reaktionen, Antworten auf Abfragen
-- **Krankmeldungen & Schickzeiten**: Daten zum Schul- bzw. Hortbesuch
-- **Technische Daten**: Login-Zeitpunkte, IP-Adresse (nur kurzfristig zu Sicherheitszwecken)
+Im Bereich **Datenschutz** stehen dir zwei Buttons zur Verfügung:
 
-## Daten exportieren
+- **Export als JSON** – maschinenlesbar (zur Weitergabe).
+- **Export als PDF** – druckfähige Übersicht.
 
-Du hast jederzeit das Recht, eine Kopie deiner Daten zu erhalten.
+Die Datei enthält u. a.:
 
-1. Gehe zu **Datenschutz**.
-2. Wähle das gewünschte Format:
-   - **JSON** – maschinenlesbar (für eigene Auswertungen)
-   - **PDF** – druck- und lesefreundlich
+- Stammdaten deines Benutzerkontos
+- Zugehörige Gruppen, Rollen und direkte Berechtigungen
+- Deine Kinder
+- API-Tokens
+- Push-Subscriptions (anonymisiert)
+- Krankmeldungen, Schickzeiten (auch gelöschte), Reinigungstermine, Pflichtstunden
+- Listeneintragungen und Anwesenheitsabfragen
+- Eigene Beiträge und Kommentare, Lesebestätigungen, abgegebene Rückmeldungen, Umfrage-Stimmen (anonym)
+- Messenger-Konversationen, -Nachrichten und -Meldungen
+- Beitragsmeldungen
+- Erinnerungs-Logs
 
-Der Download enthält alle zu deinem Konto gespeicherten Informationen.
+## Welche Daten andere Eltern sehen
 
-## Daten löschen
+Andere Eltern in **gemeinsamen Gruppen** sehen:
 
-Wenn du dein Konto und alle Daten löschen möchtest:
+- deinen **Namen**,
+- deine **Öffentliche E-Mail** (`publicMail`), sofern du sie hinterlegt hast,
+- deine **Öffentliche Telefonnummer** (`publicPhone`), sofern du sie hinterlegt hast.
 
-1. Wende dich an die **Verwaltung der Einrichtung**.
-2. Nach Bestätigung wird dein Konto innerhalb von 30 Tagen gelöscht.
-3. Bestimmte Daten (z. B. Pflichtstunden-Belege) müssen aus rechtlichen Gründen ggf. archiviert werden.
+Beide öffentlichen Felder kannst du jederzeit in den **Einstellungen** löschen oder ändern.
 
-## Wer sieht welche Daten?
+## Login-Tracking
 
-| Rolle | Sicht auf deine Daten |
-|-------|----------------------|
-| **Du selbst** | Alle eigenen Daten |
-| **Mitarbeiter:innen** | Stammdaten + Kinder-Profile + Krankmeldungen |
-| **Andere Eltern** | Nur Name (im Verzeichnis, sofern aktiviert) |
-| **Administrator:innen** | Vollzugriff aus technischen Gründen, protokolliert |
+In den Einstellungen kannst du **„Login aufzeichnen"** aktivieren. Nur dann werden Anmelde-Zeitstempel und IP-Adresse für deinen Account gespeichert. Standardmäßig ist das Tracking deaktiviert.
 
-> ️ Alle Zugriffe auf personenbezogene Daten werden im **Audit-Log** protokolliert.
+## Audit-Log
 
-## Fragen zum Datenschutz?
+Bestimmte sensible Aktionen werden geräuscharm protokolliert (z. B. Änderungen an Benutzerkonten, Schickzeiten, Beiträgen, Notizen, Vollmachten, Anwesenheits-Check-ins). Reine Lesezugriffe werden **nicht** geloggt.
 
-Wende dich an den/die **Datenschutzbeauftragte(n)** deiner Einrichtung. Die Kontaktdaten findest du in den Einstellungen.
+## Konto löschen
+
+Wende dich für die Löschung deines Kontos an die Einrichtung. Wir entfernen personenbezogene Inhalte und anonymisieren Beiträge dort, wo eine vollständige Löschung pädagogische Inhalte zerstören würde.

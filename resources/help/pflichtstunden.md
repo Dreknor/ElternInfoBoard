@@ -1,31 +1,43 @@
 # Pflichtstunden erfassen
 
-In vielen Einrichtungen leisten Eltern eine festgelegte Anzahl an **Pflichtstunden** (auch „Elternstunden“). Hier trägst du deine geleisteten Stunden ein.
+Wenn deine Einrichtung mit Pflichtstunden für Eltern arbeitet, findest du den Bereich **Pflichtstunden** im Menü (Berechtigung „view Pflichtstunden").
 
 ## Stunden eintragen
 
-1. Öffne **Pflichtstunden** im Menü.
-2. Klicke auf **„Stunden hinzufügen“**.
-3. Wähle das **Datum** und die **Tätigkeit** (z. B. Hoffest, Renovierung, Begleitung).
-4. Trage die geleistete **Stundenzahl** ein.
-5. Optional: Füge eine **Bemerkung** hinzu.
-6. Speichere – dein Eintrag steht nun auf **„zur Prüfung“**.
+1. Im Menü auf **Pflichtstunden** klicken.
+2. **Beginn** (Datum + Uhrzeit) und **Ende** (Datum + Uhrzeit) deiner Tätigkeit eintragen.
+3. **Tätigkeit / Bereich** auswählen oder beschreiben.
+4. **Speichern**.
 
-## Status verstehen
+Die Dauer in Stunden wird automatisch aus dem Zeitraum berechnet.
+
+## Status deiner Einträge
 
 | Status | Bedeutung |
-|--------|-----------|
-|  Zur Prüfung | Eintrag wartet auf Freigabe durch die Verwaltung |
-|  Genehmigt | Stunden zählen auf dein Kontingent |
-|  Abgelehnt | Bitte Bemerkung beachten und ggf. neu eintragen |
+|---|---|
+| **ausstehend** | Eingetragen, wartet auf Prüfung durch die Verwaltung |
+| **genehmigt** | Anerkannt, zählt zu deinem Konto |
+| **abgelehnt** | Nicht anerkannt, ggf. mit Begründung |
 
-## Übersicht & Saldo
+## Bearbeiten / Löschen
 
-Oben siehst du dein **aktuelles Saldo**: bereits geleistete Stunden vs. Soll-Stunden.
-Mehrere Kinder werden separat geführt, sofern dies in eurer Einrichtung so festgelegt ist.
+- **Ausstehende** Einträge kannst du selbst noch bearbeiten oder löschen.
+- **Genehmigte oder abgelehnte** Einträge sind gesperrt – wende dich bei Fehlern an die Verwaltung.
 
-## Eintrag bearbeiten
+## Familienkonto
 
-Solange ein Eintrag noch **„zur Prüfung“** ist, kannst du ihn bearbeiten oder löschen. Genehmigte Einträge nicht mehr – wende dich dafür an die Verwaltung.
+Pflichtstunden werden **pro Familie** geführt: Wenn du eine:n zweite:n Sorgeberechtigte:n verknüpft hast, addieren sich eure Stunden.
 
->  Bewahre **Belege** (z. B. Fotos vom Einsatz) auf, falls die Verwaltung Rückfragen hat.
+## Fortschritt & Statistik
+
+Je nach Einstellung deiner Einrichtung siehst du:
+
+- **Fortschrittsbalken** zu deinem persönlichen Soll.
+- **Vergleich** zu Durchschnittswerten anderer Familien (anonym).
+- **Ranking** unter allen Familien (anonym).
+
+## Wenn das Soll nicht erreicht wird
+
+In manchen Einrichtungen ist ein **Geldbeitrag** für nicht erbrachte Stunden festgelegt. Die genaue Höhe steht in den Vereins-/Einrichtungsregeln.
+
+> **Hinweis:** Belege/Fotos können nicht direkt am Eintrag hinterlegt werden – reiche solche Nachweise bitte separat ein.

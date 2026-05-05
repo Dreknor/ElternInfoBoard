@@ -39,13 +39,13 @@
     <link rel="shortcut icon" href="{{$faviconUrl}}?v={{$faviconVersion}}" type="image/x-icon">
     <title>{{$settings->app_name}} @yield('title')</title>
 
-    <!-- Alpine.js x-cloak styling to prevent FOUC - MUST be before Alpine.js -->
+    <!-- Alpine.js x-cloak styling to prevent FOUC -->
     <style>
         [x-cloak] { display: none !important; }
     </style>
 
-    <!-- Alpine.js for Dropdown functionality -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- Alpine.js wird von Livewire 3 mitgeliefert. Externes Alpine-CDN entfernt,
+         um $wire-Fehler durch zwei parallel laufende Alpine-Instanzen zu vermeiden. --}}
 
     <!-- CSS Files -->
     <link href="{{asset('css/bootstrap.min.css')}}" rel="stylesheet"/>
@@ -86,6 +86,11 @@
             </div>
 
             @stack('bottom-nav')
+
+            <!-- Hilfe-Button (Mobile) -->
+            @auth
+                <x-help-button variant="mobile" />
+            @endauth
 
             <!-- Menu Toggle Icon -->
             <div class="mobile-bottom-nav_item flex-1" id="toogleSidebarButton">
@@ -201,6 +206,12 @@
                     <div class="relative">
                         @include('include.benachrichtigung')
                     </div>
+
+                    <!-- Hilfe-Button (Desktop) -->
+                    @auth
+                        <x-help-button variant="navbar" />
+                    @endauth
+
 
                     @if (Auth::guest())
                         <!-- Guest User -->
@@ -406,6 +417,10 @@
 
 @auth
     <script src="{{asset('js/enable-push.js')}}" defer></script>
+@endauth
+
+@auth
+    @livewire('help.help-drawer')
 @endauth
 </body>
 </html>
