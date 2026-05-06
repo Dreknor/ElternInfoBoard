@@ -6,6 +6,7 @@ use App\Model\Conversation;
 use App\Model\Group;
 use App\Model\Message;
 use App\Model\MessageReport;
+use App\Model\Notification;
 use App\Model\User;
 use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
@@ -58,10 +59,17 @@ class MessengerController extends Controller
             ->latest()
             ->paginate(50);
 
-        // Als gelesen markieren
+        // Als gelesen markieren (Pivot)
         $conversation->users()->updateExistingPivot($user->id, [
             'last_read_at' => now(),
         ]);
+
+        // In-App-Benachrichtigungen (Glocke) für diese Konversation als gelesen markieren
+        Notification::where('user_id', $user->id)
+            ->where('type', 'messenger')
+            ->where('url', route('messenger.show', $conversation))
+            ->where('read', false)
+            ->update(['read' => true]);
 
         $display_name = $conversation->displayNameFor($user->id);
 
@@ -317,7 +325,18 @@ class MessengerController extends Controller
             ->where('id', '!=', $sender->id)
             ->filter(function ($user) {
                 $pivot = $user->pivot;
-                return ! ($pivot->muted_until && now()->lessThan($pivot->muted_until));
+
+                // Stumm geschaltete Nutzer überspringen
+                if ($pivot->muted_until && now()->lessThan($pivot->muted_until)) {
+                    return false;
+                }
+
+                // Nutzer überspringen, die den Chat gerade aktiv lesen (last_read_at < 30 Sek.)
+                if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
+                    return false;
+                }
+
+                return true;
             });
 
         if ($participants->isEmpty()) {

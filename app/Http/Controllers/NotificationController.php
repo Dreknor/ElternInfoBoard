@@ -48,6 +48,7 @@ class NotificationController extends Controller implements HasMiddleware
 
         auth()->user()->notifications()->where('type', $request->type)->update(['read' => true]);
 
+        return response()->json(['success' => true]);
     }
 
     public function clean_up()

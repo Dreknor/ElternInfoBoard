@@ -4,8 +4,11 @@ namespace App\Livewire\Messenger;
 
 use App\Model\Conversation;
 use App\Model\Message;
+use App\Model\Notification;
+use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class ChatWindow extends Component
@@ -126,8 +129,22 @@ class ChatWindow extends Component
             return;
         }
 
+        $user         = auth()->user();
         $conversation = Conversation::find($this->conversationId);
-        $conversation?->users()->updateExistingPivot(auth()->id(), ['last_read_at' => now()]);
+        if (! $conversation) {
+            return;
+        }
+
+        // Pivot aktualisieren (Messenger-Ungelesen-Zähler)
+        $conversation->users()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+
+        // In-App-Benachrichtigungen (Glocke) für diese Konversation als gelesen markieren
+        $url = route('messenger.show', $conversation);
+        Notification::where('user_id', $user->id)
+            ->where('type', 'messenger')
+            ->where('url', $url)
+            ->where('read', false)
+            ->update(['read' => true]);
     }
 
     private function notifyParticipants(Conversation $conversation, ?Message $message): void
@@ -142,11 +159,24 @@ class ChatWindow extends Component
             return;
         }
 
+        $url = route('messenger.show', $conversation);
+
         $recipients = $conversation->users
             ->where('id', '!=', $sender->id)
-            ->filter(function ($u) {
+            ->filter(function ($u) use ($url) {
                 $pivot = $u->pivot;
-                return ! ($pivot->muted_until && now()->lessThan($pivot->muted_until));
+
+                // Stumm geschaltete Nutzer überspringen
+                if ($pivot->muted_until && now()->lessThan($pivot->muted_until)) {
+                    return false;
+                }
+
+                // Nutzer überspringen, die den Chat gerade aktiv lesen (last_read_at < 30 Sek.)
+                if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
+                    return false;
+                }
+
+                return true;
             });
 
         if ($recipients->isEmpty()) {
@@ -155,9 +185,22 @@ class ChatWindow extends Component
 
         $title   = 'Neue Nachricht: ' . $conversation->displayNameFor($sender->id);
         $snippet = mb_substr($message->body, 0, 80);
-        $url     = route('messenger.show', $conversation);
 
-        $conversation->notify($recipients, $title, "{$sender->name}: {$snippet}", false, $url, 'info', 'fas fa-comments');
+        // In-App-Benachrichtigung (Typ 'messenger' — konsistent mit MessengerController)
+        $conversation->notify($recipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments');
+
+        // WebPush für Nutzer mit aktiven Push-Subscriptions
+        foreach ($recipients as $participant) {
+            try {
+                if ($participant->pushSubscriptions()->exists()) {
+                    $participant->notify(
+                        new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
+                    );
+                }
+            } catch (\Exception $e) {
+                Log::warning("Messenger WebPush fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
+            }
+        }
     }
 }
 

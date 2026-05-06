@@ -15,7 +15,8 @@
                 class="relative p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
             <i class="far fa-bell text-xl"></i>
             @if($notifications->where('read', 0)->count() > 0)
-                <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                <span data-notification-badge
+                      class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
                     {{$notifications->where('read', 0)->count()}}
                 </span>
             @endif
@@ -143,18 +144,22 @@
                 },
                 success: function (data) {
                     if (data.success) {
-                        // Fade out the notification smoothly
-                        $('#notification-' + id).fadeOut(300, function() {
+                        var $item = $('#notification-' + id);
+                        // Ungelesenen Stil entfernen, bevor wir ausblenden
+                        $item.find('a').removeClass('bg-blue-50 border-l-4 border-l-blue-500').addClass('opacity-60');
+                        $item.fadeOut(300, function () {
                             $(this).remove();
 
-                            // Update badge count if needed
-                            var badge = $('.animate-pulse');
-                            if (badge.length) {
-                                var currentCount = parseInt(badge.text());
+                            // Badge-Zähler aktualisieren
+                            var $badge = $('[data-notification-badge]');
+                            if ($badge.length) {
+                                var currentCount = parseInt($badge.text()) || 0;
                                 if (currentCount > 1) {
-                                    badge.text(currentCount - 1);
+                                    $badge.text(currentCount - 1);
                                 } else {
-                                    badge.closest('button').html('<i class="fas fa-bell text-xl"></i>');
+                                    // Kein ungelesener Eintrag mehr → Badge entfernen
+                                    $badge.closest('button').find('i').attr('class', 'fas fa-bell text-xl');
+                                    $badge.remove();
                                 }
                             }
                         });
