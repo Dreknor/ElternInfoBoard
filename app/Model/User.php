@@ -234,7 +234,8 @@ class User extends Authenticatable implements Auditable
         $eigeneRueckmeldung = $this->userRueckmeldung;
 
         if (! is_null($this->sorg2)) {
-            $sorgRueckmeldung = $this->sorgeberechtigter2?->userRueckmeldung;
+            $sorgPartner = self::find($this->sorg2);
+            $sorgRueckmeldung = $sorgPartner?->userRueckmeldung;
             if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
                 return $eigeneRueckmeldung->merge($sorgRueckmeldung);
             } elseif (is_null($eigeneRueckmeldung)) {

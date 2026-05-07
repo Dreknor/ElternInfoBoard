@@ -85,6 +85,13 @@ class ProcessRemindersJob implements ShouldQueue
                     ->where('users_id', $user->id)
                     ->exists();
 
+                // Prüfe ob Sorg2-Partner bereits geantwortet hat
+                if (!$hasResponded && $user->sorg2) {
+                    $hasResponded = UserRueckmeldungen::where('post_id', $post->id)
+                        ->where('users_id', $user->sorg2)
+                        ->exists();
+                }
+
                 if ($hasResponded) {
                     continue;
                 }
@@ -143,6 +150,11 @@ class ProcessRemindersJob implements ShouldQueue
 
             foreach ($allUsers as $user) {
                 if (in_array($user->id, $confirmedUserIds)) {
+                    continue;
+                }
+
+                // Prüfe ob Sorg2-Partner bereits bestätigt hat
+                if ($user->sorg2 && in_array($user->sorg2, $confirmedUserIds)) {
                     continue;
                 }
 
