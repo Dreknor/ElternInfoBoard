@@ -1,6 +1,24 @@
 @php
     $receipt = $user->read_receipts()->where('post_id', $post->id)->first();
-    $isConfirmed = $receipt && $receipt->confirmed_at;
+
+    // Sorg2-Partner-Bestätigung prüfen
+    $sorg2Receipt = null;
+    $sorg2ConfirmedUser = null;
+    if ($user->sorg2) {
+        $sorg2Receipt = \App\Model\ReadReceipts::where('post_id', $post->id)
+            ->where('user_id', $user->sorg2)
+            ->first();
+        if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
+            $sorg2ConfirmedUser = \App\Model\User::find($user->sorg2);
+        }
+    }
+
+    // Bestätigt wenn eigene ODER Sorg2-Bestätigung vorhanden
+    $confirmedReceipt = ($receipt && $receipt->confirmed_at)
+        ? $receipt
+        : (($sorg2Receipt && $sorg2Receipt->confirmed_at) ? $sorg2Receipt : null);
+    $isConfirmed = !is_null($confirmedReceipt);
+    $confirmedBySorg2 = $isConfirmed && !($receipt && $receipt->confirmed_at);
 @endphp
 
 @if($isConfirmed)
@@ -15,14 +33,19 @@
             <div class="flex-1">
                 <p class="text-sm font-semibold text-green-900 mb-0">{{ __('Nachricht gelesen und bestätigt') }}</p>
                 <p class="text-xs text-green-700 mb-0">
-                    Bestätigt am {{ $receipt->confirmed_at->format('d.m.Y H:i') }} Uhr
+                    @if($confirmedBySorg2 && $sorg2ConfirmedUser)
+                        Bestätigt von {{ $sorg2ConfirmedUser->name }} am {{ $confirmedReceipt->confirmed_at->format('d.m.Y H:i') }} Uhr
+                    @else
+                        Bestätigt am {{ $confirmedReceipt->confirmed_at->format('d.m.Y H:i') }} Uhr
+                    @endif
                 </p>
             </div>
         </div>
     </div>
 @else
     @php
-        $wasReminded = $receipt && $receipt->reminded_at && !$receipt->confirmed_at;
+        $wasReminded = ($receipt && $receipt->reminded_at && !$receipt->confirmed_at)
+            || ($sorg2Receipt && $sorg2Receipt->reminded_at && !$sorg2Receipt->confirmed_at);
     @endphp
     <!-- Read Receipt Not Confirmed / Reminded -->
     <div class="bg-gradient-to-r {{ $wasReminded ? 'from-yellow-50 to-amber-50 border-yellow-500' : 'from-red-50 to-orange-50 border-red-500' }} border-l-4 rounded-lg p-4">

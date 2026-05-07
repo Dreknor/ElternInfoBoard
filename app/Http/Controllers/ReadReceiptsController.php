@@ -109,14 +109,27 @@ class ReadReceiptsController extends Controller
                     continue;
                 }
 
+                // Überspringe wenn Sorg2-Partner bereits bestätigt hat
+                if ($user->sorg2) {
+                    $sorg2Receipt = $receipts->where('user_id', $user->sorg2)->first();
+                    if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
+                        continue;
+                    }
+                }
+
+                // Überspringe bereits erinnerte Nutzer – Erinnerung wird nur einmal versendet
+                if ($existingReceipt && $existingReceipt->reminded_at) {
+                    continue;
+                }
+
                 if (! $existingReceipt) {
                     // Erstelle einen Eintrag ausschließlich zum Tracken der Erinnerung
-                    $existingReceipt = ReadReceipts::create([
+                    ReadReceipts::create([
                         'post_id' => $post->id,
                         'user_id' => $user->id,
                         'reminded_at' => now(),
                     ]);
-                } elseif (is_null($existingReceipt->reminded_at)) {
+                } else {
                     $existingReceipt->update(['reminded_at' => now()]);
                 }
 
@@ -181,6 +194,14 @@ class ReadReceiptsController extends Controller
 
                 // Nur wenn Nutzer nicht bestätigt hat (confirmed_at null) und bereits erinnert wurde
                 if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && ! $existingReceipt->final_reminder_sent_at) {
+
+                    // Überspringe wenn Sorg2-Partner bereits bestätigt hat
+                    if ($user->sorg2) {
+                        $sorg2Receipt = $receipts->where('user_id', $user->sorg2)->first();
+                        if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
+                            continue;
+                        }
+                    }
 
                     // Hole die E-Mail-Adresse des Autors
                     $authorEmail = $post->autor?->email ?? config('mail.from.address');
