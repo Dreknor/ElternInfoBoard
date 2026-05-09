@@ -132,7 +132,15 @@
                 })->sortBy('termin') as $eintragung)
                     <div class="flex items-center justify-between bg-gray-50 rounded p-2">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-700">Ihr Termin:</p>
+                            <p class="text-sm font-medium text-gray-700">
+                                Ihr Termin:
+                                @if(auth()->user()->sorg2 !== null)
+                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $eintragung->reserviert_fuer == auth()->id() ? 'bg-teal-100 text-teal-800' : 'bg-purple-100 text-purple-800' }}">
+                                        <i class="fas fa-user mr-1"></i>{{ $eintragung->eingetragenePerson?->name ?? '–' }}
+                                    </span>
+                                @endif
+                            </p>
                             <p class="text-sm text-gray-600">{{ $eintragung->termin->format('d.m.Y H:i') }} Uhr</p>
                         </div>
                         <div class="flex items-center gap-1 ml-2">

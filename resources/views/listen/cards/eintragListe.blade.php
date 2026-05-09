@@ -116,7 +116,15 @@
                 @foreach($eintragungen->where('listen_id', $liste->id)->sortBy('termin')->all() as $eintragung)
                     <div class="flex items-center justify-between bg-gray-50 rounded p-2">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-700">Ihre Eintragung:</p>
+                            <p class="text-sm font-medium text-gray-700">
+                                Ihre Eintragung:
+                                @if(auth()->user()->sorg2 !== null)
+                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $eintragung->user_id == auth()->id() ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                        <i class="fas fa-user mr-1"></i>{{ $eintragung->user?->name ?? '–' }}
+                                    </span>
+                                @endif
+                            </p>
                             <p class="text-sm text-gray-600">{{ $eintragung->eintragung }}</p>
                         </div>
                         <form action="{{ url('eintragungen/absagen/' . $eintragung->id) }}" method="post" class="ml-2">

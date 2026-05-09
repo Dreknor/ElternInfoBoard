@@ -348,6 +348,7 @@ class MessengerController extends Controller
         $url     = route('messenger.show', $conversation);
 
         // In-App-Benachrichtigung (Glocke im Menü)
+
         $conversation->notify(
             $participants,
             $title,
@@ -355,7 +356,8 @@ class MessengerController extends Controller
             false,
             $url,
             'messenger',
-            'fas fa-comments'
+            'fas fa-comments',
+            true
         );
 
         // WebPush für User mit aktiven Push-Subscriptions

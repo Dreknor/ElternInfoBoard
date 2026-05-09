@@ -7,31 +7,54 @@ use Illuminate\Database\Eloquent\Collection;
 
 trait NotificationTrait
 {
-    public function notify(Collection $users, string $title, string $message, bool $important = false, ?string $url = null, string $type = 'info', string $icon = ''): void
+    /**
+     * @param bool $updateExisting  Wenn true: bestehende ungelesene Benachrichtigungen
+     *                              mit derselben URL/Typ werden aktualisiert statt übersprungen.
+     *                              Sinnvoll z. B. für den Messenger, damit die neueste Nachricht
+     *                              immer in der Glocke erscheint.
+     */
+    public function notify(Collection $users, string $title, string $message, bool $important = false, ?string $url = null, string $type = 'info', string $icon = '', bool $updateExisting = false): void
     {
         if ($users->isEmpty()) {
             return;
         }
 
-        // Nutzer herausfiltern, die bereits eine ungelesene Benachrichtigung
-        // mit demselben Typ und derselben URL haben (Deduplizierung).
+        $usersToCreate = $users;
+
         if ($url !== null) {
-            $alreadyNotified = Notification::where('type', $type)
+            // Nutzer ermitteln, die bereits eine ungelesene Benachrichtigung haben.
+            $existingNotifications = Notification::where('type', $type)
                 ->where('url', $url)
                 ->where('read', false)
                 ->whereIn('user_id', $users->pluck('id'))
-                ->pluck('user_id')
-                ->flip();
+                ->get()
+                ->keyBy('user_id');
 
-            $users = $users->filter(fn ($user) => ! $alreadyNotified->has($user->id));
+            $alreadyNotifiedIds = $existingNotifications->keys()->flip();
+
+            if ($updateExisting && $existingNotifications->isNotEmpty()) {
+                // Bestehende ungelesene Benachrichtigungen auf neuesten Stand bringen.
+                Notification::where('type', $type)
+                    ->where('url', $url)
+                    ->where('read', false)
+                    ->whereIn('user_id', $alreadyNotifiedIds->keys()->all())
+                    ->update([
+                        'title'      => $title,
+                        'message'    => $message,
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            // Nur Nutzer ohne bestehende Benachrichtigung neu anlegen.
+            $usersToCreate = $users->filter(fn ($user) => ! $alreadyNotifiedIds->has($user->id));
         }
 
-        if ($users->isEmpty()) {
+        if ($usersToCreate->isEmpty()) {
             return;
         }
 
         $notifications = [];
-        $users->each(function ($user) use ($title, $message, $url, $type, $icon, $important, &$notifications) {
+        $usersToCreate->each(function ($user) use ($title, $message, $url, $type, $icon, $important, &$notifications) {
             $notifications[] = [
                 'user_id'    => $user->id,
                 'title'      => $title,

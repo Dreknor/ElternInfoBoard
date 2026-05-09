@@ -187,7 +187,10 @@ class ChatWindow extends Component
         $snippet = mb_substr($message->body, 0, 80);
 
         // In-App-Benachrichtigung (Typ 'messenger' — konsistent mit MessengerController)
-        $conversation->notify($recipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments');
+        // updateExisting=true: bestehende ungelesene Benachrichtigung für diese Konversation wird
+        // aktualisiert statt übersprungen, damit der Nutzer auch bei mehreren ungelesenen Nachrichten
+        // immer die neueste Vorschau sieht und der Benachrichtigungs-Zähler korrekt bleibt.
+        $conversation->notify($recipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments', true);
 
         // WebPush für Nutzer mit aktiven Push-Subscriptions
         foreach ($recipients as $participant) {
