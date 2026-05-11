@@ -210,6 +210,7 @@ class DashboardController extends Controller implements HasMiddleware
             if (!empty($userGroupIds)) {
                 $pflichtRueckmeldungen = Rueckmeldungen::where('pflicht', true)
                     ->whereNotNull('ende')
+                    ->whereDate('ende', '>=', now()->startOfDay())
                     ->whereHas('post', function ($q) use ($userGroupIds) {
                         $q->where('released', 1)
                             ->where(function ($q2) {
