@@ -284,7 +284,7 @@ class DashboardController extends Controller implements HasMiddleware
                 ->where('released', 1)
                 ->where(function ($q) {
                     $q->whereNull('archiv_ab')
-                        ->orWhere('archiv_ab', '>', now()->subDays(14));
+                        ->orWhere('archiv_ab', '>', now()->subDays(7));
                 })
                 ->whereHas('rueckmeldung', fn ($q) => $q->where('pflicht', true))
                 ->with(['rueckmeldung', 'userRueckmeldung', 'users'])
