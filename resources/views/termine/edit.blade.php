@@ -29,7 +29,7 @@
                                             <div class="form-group">
                                                 <label for="start">Start</label>
                                                 <input type="datetime-local"
-                                                       value="{{old('start',$termin->start->toDateTimeLocalString())}}"
+                                                       value="{{old('start',$termin->start?->toDateTimeLocalString())}}"
                                                        id="start" class="form-control border-input date-input"
                                                        name="start" required>
                                             </div>
@@ -38,7 +38,7 @@
                                             <div class="form-group">
                                                 <label for="ende">Ende</label>
                                                 <input type="datetime-local"
-                                                       value="{{old('ende',$termin->ende->toDateTimeLocalString())}}"
+                                                       value="{{old('ende',$termin->ende?->toDateTimeLocalString())}}"
                                                        id="ende" class="form-control border-input date-input"
                                                        name="ende" required>
                                             </div>
