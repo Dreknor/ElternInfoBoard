@@ -283,16 +283,16 @@ class TerminController extends Controller implements HasMiddleware
      *
      * @throws AuthorizationException
      */
-    public function destroy(Termin $termin)
+    public function destroy(Termin $termine)
     {
-        Gate::authorize('delete', $termin);
+        Gate::authorize('delete', $termine);
 
-        $termin->groups()->detach();
-        $termin->delete();
+        $termine->groups()->detach();
+        $termine->delete();
 
         Cache::forget('termine'.auth()->id());
 
-        return redirect()->back()->with([
+        return redirect(url('/termine'))->with([
             'type' => 'success',
             'Meldung' => 'Termin gelöscht.',
         ]);
