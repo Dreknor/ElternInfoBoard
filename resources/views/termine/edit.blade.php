@@ -98,7 +98,7 @@
                 <div class="row">
                     <div class="col-12">
                         @can('delete', $termin)
-                            <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
+                            <form action="{{url("termine/$termin->id")}}" method="post" class="form-inline">
                                 @csrf
                                 @method('delete')
                                 <button type="submit" class="btn-link text-danger">
