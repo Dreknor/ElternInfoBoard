@@ -68,11 +68,16 @@ class TerminController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function edit(Termin $termin)
+    public function edit(Termin $termine)
     {
+
+        $groups = Cache::remember('groups', now()->addDay(), function () {
+            return Group::all();
+        });
+
         return view('termine.edit', [
-            'gruppen' => Group::all(),
-            'termin' => $termin,
+            'gruppen' => $groups,
+            'termin' => $termine,
         ]);
     }
 

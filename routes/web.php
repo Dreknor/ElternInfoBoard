@@ -231,7 +231,6 @@ Route::middleware('auth')->group(function () {
         // Termine
         Route::resource('termine', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
-        // Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
         // Rückmeldungen
 
