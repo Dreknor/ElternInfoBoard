@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Model\ActiveDisease;
 use App\Model\Child;
+use App\Model\Conversation;
 use App\Model\Losung;
 use App\Model\Post;
 use App\Model\ReadReceipts;
@@ -180,6 +181,12 @@ class DashboardController extends Controller implements HasMiddleware
             $authorFeedbackStats = $this->getAuthorFeedbackStats($userId);
         }
 
+        // ── Ungelesene Chat-Nachrichten ──────────────────────────
+        $unreadConversations = collect();
+        if (auth()->user()->can('use messenger')) {
+            $unreadConversations = $this->getUnreadConversations($userId);
+        }
+
         return view('dashboard.index', [
             'nachrichten' => $nachrichten,
             'termine' => $termine,
@@ -190,6 +197,7 @@ class DashboardController extends Controller implements HasMiddleware
             'openAttendanceSurveys' => $openAttendanceSurveys,
             'pendingFeedback' => $pendingFeedback,
             'authorFeedbackStats' => $authorFeedbackStats,
+            'unreadConversations' => $unreadConversations,
         ]);
     }
 
@@ -210,6 +218,7 @@ class DashboardController extends Controller implements HasMiddleware
             if (!empty($userGroupIds)) {
                 $pflichtRueckmeldungen = Rueckmeldungen::where('pflicht', true)
                     ->whereNotNull('ende')
+                    ->whereDate('ende', '>=', now()->startOfDay())
                     ->whereHas('post', function ($q) use ($userGroupIds) {
                         $q->where('released', 1)
                             ->where(function ($q2) {
@@ -283,7 +292,7 @@ class DashboardController extends Controller implements HasMiddleware
                 ->where('released', 1)
                 ->where(function ($q) {
                     $q->whereNull('archiv_ab')
-                        ->orWhere('archiv_ab', '>', now()->subDays(14));
+                        ->orWhere('archiv_ab', '>', now()->subDays(7));
                 })
                 ->whereHas('rueckmeldung', fn ($q) => $q->where('pflicht', true))
                 ->with(['rueckmeldung', 'userRueckmeldung', 'users'])
@@ -310,6 +319,46 @@ class DashboardController extends Controller implements HasMiddleware
                     'deadline' => $deadline,
                 ];
             })->filter(fn ($s) => $s['total'] > 0);
+        });
+    }
+
+    /**
+     * Holt Konversationen mit ungelesenen Nachrichten für den Benutzer.
+     */
+    private function getUnreadConversations(int $userId): \Illuminate\Support\Collection
+    {
+        return Cache::remember("unread_conversations_{$userId}", 60, function () use ($userId) {
+            $conversations = Conversation::forUser($userId)
+                ->where('is_active', true)
+                ->with([
+                    'users' => fn ($q) => $q->select('users.id', 'users.name'),
+                    'latestMessage' => fn ($q) => $q->select(
+                        'messages.id',
+                        'messages.conversation_id',
+                        'messages.body',
+                        'messages.created_at',
+                        'messages.sender_id',
+                    ),
+                ])
+                ->get();
+
+            return $conversations
+                ->map(function (Conversation $conv) use ($userId) {
+                    $unread = $conv->unreadCountFor($userId);
+                    if ($unread === 0) {
+                        return null;
+                    }
+                    return [
+                        'id'           => $conv->id,
+                        'name'         => $conv->displayNameFor($userId),
+                        'unread'       => $unread,
+                        'last_message' => $conv->latestMessage?->body,
+                        'last_at'      => $conv->latestMessage?->created_at,
+                    ];
+                })
+                ->filter()
+                ->sortByDesc('unread')
+                ->values();
         });
     }
 }

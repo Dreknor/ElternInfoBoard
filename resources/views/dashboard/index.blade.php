@@ -89,6 +89,11 @@
         @include('dashboard.components.pending-feedback')
     </div>
 
+    <!-- Ungelesene Chat-Nachrichten -->
+    <div class="row">
+        @include('dashboard.components.unread-messages')
+    </div>
+
     <!-- Rückmeldestatus für Lehrkräfte/Autoren -->
     <div class="row">
         @include('dashboard.components.feedback-stats')
