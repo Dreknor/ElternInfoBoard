@@ -102,7 +102,7 @@
                                                             </a>
 
                                                             @can('edit termin')
-                                                                <a href="{{ url('/termin/'.$termin->id.'/edit') }}" class="btn btn-sm btn-outline-primary">
+                                                                <a href="{{ url('/termine/'.$termin->id.'/edit') }}" class="btn btn-sm btn-outline-primary">
                                                                     <i class="fas fa-edit"></i>
                                                                 </a>
                                                             @endcan
