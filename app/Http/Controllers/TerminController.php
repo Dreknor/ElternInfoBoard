@@ -136,7 +136,7 @@ class TerminController extends Controller implements HasMiddleware
 
         Cache::forget('termine'.auth()->id());
 
-        return redirect(url('/'))->with([
+        return redirect(url('/termine'))->with([
             'type' => 'success',
             'Meldung' => 'Termin aktualisiert.',
         ]);
