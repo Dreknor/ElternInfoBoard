@@ -81,7 +81,7 @@ class TerminController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function update(CreateTerminRequest $request, Termin $termin)
+    public function update(CreateTerminRequest $request, Termin $termine)
     {
         if (! auth()->user()->can('edit termin')) {
             return redirect()->back()->with([
@@ -101,7 +101,7 @@ class TerminController extends Controller implements HasMiddleware
         }
 
         try {
-            $termin->update(
+            $termine->update(
                 [
                     'terminname' => $request->terminname,
                     'start' => $start,
@@ -122,7 +122,7 @@ class TerminController extends Controller implements HasMiddleware
 
         try {
             $gruppen = $this->grousRepository->getGroups($request->input('gruppen'));
-            $termin->groups()->sync($gruppen);
+            $termine->groups()->sync($gruppen);
 
         } catch (\Exception $e) {
 

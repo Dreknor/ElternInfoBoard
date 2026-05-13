@@ -7,7 +7,7 @@
                 Termin bearbeiten
             </div>
             <div class="card-body">
-                <form action="{{url('/termin/'.$termin->id)}}" method="post" class="form form-horizontal"
+                <form action="{{url('/termine/'.$termin->id)}}" method="post" class="form form-horizontal"
                       id="terminForm">
                     @csrf
                     @method('put')
