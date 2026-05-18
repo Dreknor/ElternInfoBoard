@@ -161,9 +161,10 @@ class ChatWindow extends Component
 
         $url = route('messenger.show', $conversation);
 
-        $recipients = $conversation->users
+        // Alle Teilnehmer außer dem Sender und stummgeschalteten Nutzern
+        $potentialRecipients = $conversation->users
             ->where('id', '!=', $sender->id)
-            ->filter(function ($u) use ($url) {
+            ->filter(function ($u) {
                 $pivot = $u->pivot;
 
                 // Stumm geschaltete Nutzer überspringen
@@ -171,29 +172,36 @@ class ChatWindow extends Component
                     return false;
                 }
 
-                // Nutzer überspringen, die den Chat gerade aktiv lesen (last_read_at < 30 Sek.)
-                if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
-                    return false;
-                }
-
                 return true;
             });
 
-        if ($recipients->isEmpty()) {
+        if ($potentialRecipients->isEmpty()) {
             return;
         }
 
         $title   = 'Neue Nachricht: ' . $conversation->displayNameFor($sender->id);
         $snippet = mb_substr($message->body, 0, 80);
 
-        // In-App-Benachrichtigung (Typ 'messenger' — konsistent mit MessengerController)
+        // In-App-Benachrichtigung für ALLE nicht-stummgeschalteten Teilnehmer erstellen.
         // updateExisting=true: bestehende ungelesene Benachrichtigung für diese Konversation wird
         // aktualisiert statt übersprungen, damit der Nutzer auch bei mehreren ungelesenen Nachrichten
         // immer die neueste Vorschau sieht und der Benachrichtigungs-Zähler korrekt bleibt.
-        $conversation->notify($recipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments', true);
+        // Der last_read_at-Filter wird hier NICHT angewendet, damit Nutzer, die den Chat
+        // kurz zuvor gelesen haben (keine ungelesenen Benachrichtigungen), trotzdem eine
+        // neue In-App-Benachrichtigung erhalten.
+        $conversation->notify($potentialRecipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments', true);
 
-        // WebPush für Nutzer mit aktiven Push-Subscriptions
-        foreach ($recipients as $participant) {
+        // WebPush nur für Nutzer, die den Chat NICHT gerade aktiv lesen (last_read_at > 30 Sek.).
+        // Wer gerade aktiv im Chat ist, sieht die Nachricht direkt – kein Push-Spam nötig.
+        $pushRecipients = $potentialRecipients->filter(function ($u) {
+            $pivot = $u->pivot;
+            if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
+                return false;
+            }
+            return true;
+        });
+
+        foreach ($pushRecipients as $participant) {
             try {
                 if ($participant->pushSubscriptions()->exists()) {
                     $participant->notify(
