@@ -9,11 +9,6 @@
                         <h5 class="card-title m-0">
                             Einstellungen
                         </h5>
-                        @can('edit settings')
-                            <a href="{{ route('settings.system-update') }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-cloud-download-alt mr-1"></i>System-Update
-                            </a>
-                        @endcan
                     </div>
                     <div class="card-body border-bottom">
                         <ul class="nav nav-tabs" id="SettingsTab" role="tablist">
