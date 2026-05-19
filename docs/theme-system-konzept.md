@@ -1063,3 +1063,107 @@ public/
 
 *Dieses Konzept liegt auf Branch `feature/theme-system` und ist bereit zur Diskussion und Umsetzung.*
 
+---
+
+## 21. Bootstrap-Ablösung & Tailwind Dark Mode (Ergänzung)
+
+> **Status:** Foundational Changes implementiert (Commit 2)
+
+### 21.1 Warum Bootstrap vollständig ersetzen?
+
+| Problem mit Bootstrap | Tailwind-Lösung |
+|---|---|
+| Bootstrap CSS & Tailwind kollidieren oft bei Klassennamen | Einheitliches Utility-System |
+| Bootstrap Dark Mode nicht nativ | Tailwind `dark:` Prefix nativ |
+| `bootstrap.min.css` ~30kB ungenutzter CSS | PurgeCSS eliminiert ungenutzte Klassen |
+| Bootstrap JS (Modal, Tab, Popover) = jQuery-Abhängigkeit | Alpine.js = deutlich leichter |
+| `paper-dashboard.css` = veraltetes Design-Framework | Tailwind Components = moderner, wartbarer |
+
+### 21.2 Tailwind Dark Mode Konfiguration
+
+```js
+// tailwind.config.js
+darkMode: 'class',  // <html class="dark"> aktiviert Dark Mode
+```
+
+Das `class`-Strategie bedeutet:
+- Dark Mode wird durch `dark`-Klasse am `<html>`-Element gesteuert
+- Nutzer-Theme `dark` setzt diese Klasse serverseitig (PHP in `layouts/app.blade.php`)
+- Alle Tailwind `dark:*` Utilities funktionieren sofort
+
+### 21.3 Bootstrap-zu-Tailwind Compatibility Layer
+
+Implementiert in `resources/css/app.css` als `@layer components`:
+
+**Abgedeckte Bootstrap-Komponenten:**
+- ✅ Grid System (`.container`, `.row`, `.col-*`, `.col-md-*`, `.col-lg-*` etc.)
+- ✅ Cards (`.card`, `.card-header`, `.card-body`, `.card-footer`, `.card-title`)
+- ✅ Forms (`.form-control`, `.form-group`, `.form-select`, `.input-group`, `.form-check`)
+- ✅ Buttons (`.btn`, `.btn-primary/danger/success/...`, `.btn-outline-*`, `.btn-sm/lg/block`)
+- ✅ Alerts (`.alert`, `.alert-success/danger/warning/info`)
+- ✅ Badges (`.badge`, `.badge-primary/...`, `.badge-pill`)
+- ✅ Navigation / Tabs (`.nav`, `.nav-tabs`, `.nav-pills`, `.nav-link`, `.tab-pane`, `.tab-content`)
+- ✅ Modals (`.modal`, `.modal-dialog`, `.modal-content`, `.modal-header/body/footer`)
+- ✅ Tables (`.table`, `.table-hover`, `.table-striped`, `.table-responsive`)
+- ✅ Pagination (`.pagination`, `.page-item`, `.page-link`)
+- ✅ Dropdowns (`.dropdown-menu`, `.dropdown-item`)
+- ✅ List Groups (`.list-group`, `.list-group-item`)
+- ✅ Progress (`.progress`, `.progress-bar`)
+- ✅ Utility Shims (`.d-flex`, `.d-none`, `.align-items-center`, `.justify-content-between` etc.)
+- ✅ **Alle haben `dark:` Varianten eingebaut**
+
+### 21.4 Bootstrap JS Ersatz-Strategie
+
+| Bootstrap JS-Feature | Ersatz | Status |
+|---|---|---|
+| `.modal('show'/'hide')` | Alpine.js Modal-Shim in `app.blade.php` | ✅ Implementiert |
+| `data-toggle="tab"` | Alpine.js x-data Tab-Komponente | ✅ implementiert (`settings/index`) |
+| `data-dismiss="modal"` | Alpine.js Modal-Shim (global) | ✅ Implementiert |
+| `data-toggle="modal"` | Alpine.js Modal-Shim (global) | ✅ Implementiert |
+| `.popover()` | No-op Shim (schrittweise) | ✅ Shim vorhanden |
+| `.tooltip()` | Alpine.js + custom (nächste Phase) | 📋 Geplant |
+| Popper.js | Nicht mehr benötigt | ✅ Entfernt |
+| `paper-dashboard.min.js` | Reine CSS + Inline JS | ✅ Entfernt |
+
+### 21.5 Entfernte Abhängigkeiten
+
+Aus `layouts/app.blade.php` entfernt:
+- `bootstrap.min.css` (→ Tailwind compat layer)
+- `paper-dashboard.css` (→ Tailwind utilities)
+- `bootstrap.min.js` (→ Alpine.js shim)
+- `popper.min.js` (→ nicht mehr benötigt)
+- `paper-dashboard.min.js` (→ inline JS)
+- `perfect-scrollbar.jquery.min.js` (→ CSS scrollbar styling)
+- `bootstrap-notify.js` (→ native Alpine.js alerts)
+
+Behalten (noch benötigt):
+- `jquery.min.js` (viele bestehende Inline-Scripts, graduelle Migration)
+- Livewire (lädt Alpine.js automatisch)
+
+### 21.6 CSS-Variablen + Dark Mode = vollständiges Theme-System
+
+```css
+/* Beispiel: Dark Theme setzt diese Variablen */
+:root {
+  --app-bg: #0f172a;
+  --app-text: #f1f5f9;
+  --color-navbar-bg: #1e293b;
+  /* ... */
+}
+
+/* html.dark aktiviert zusätzlich Tailwind dark: Klassen */
+```
+
+Damit haben Views zwei Werkzeuge:
+1. **CSS-Variablen** für theme-spezifische Farben: `style="color: var(--color-primary)"`
+2. **Tailwind Dark Mode** für strukturelle Anpassungen: `class="bg-white dark:bg-gray-800"`
+
+### 21.7 Offene Migrationspunkte (nächste Phase)
+
+- [ ] jQuery schrittweise durch Alpine.js / fetch() ersetzen
+- [ ] Verbleibende `form-group` / `col-*` in weiteren Views prüfen
+- [ ] `.tooltip()` Shim implementieren
+- [ ] `layout.blade.php` (zweites Layout) vollständig migrieren
+- [ ] Auth-Views (`auth/`) prüfen und migrieren
+- [ ] Livewire-Komponenten auf Dark-Mode-Klassen prüfen
+

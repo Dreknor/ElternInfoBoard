@@ -584,84 +584,133 @@
     </div> <!-- Ende card -->
 </div> <!-- Ende container-fluid -->
 
-    <!-- Modal zum Bearbeiten von Kindern -->
-    <div class="modal fade" id="editChildModal" tabindex="-1" role="dialog" aria-labelledby="editChildModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content rounded-lg shadow-xl">
-                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 rounded-t-lg">
+    {{-- Alpine.js Modal "Kind bearbeiten" – kein Bootstrap JS mehr nötig --}}
+    <div x-data="{
+            open: false,
+            childId: null,
+            firstName: '',
+            lastName: '',
+            groupId: '',
+            classId: '',
+            openModal(child) {
+                this.childId = child.id;
+                this.firstName = child.first_name;
+                this.lastName = child.last_name;
+                this.groupId = child.group_id;
+                this.classId = child.class_id;
+                this.open = true;
+                document.body.style.overflow = 'hidden';
+            },
+            closeModal() {
+                this.open = false;
+                document.body.style.overflow = '';
+            }
+         }"
+         id="editChildModalWrapper"
+         @open-edit-child.window="openModal($event.detail)">
+
+        <!-- Modal Backdrop -->
+        <div x-show="open"
+             x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/50 z-40"
+             @click="closeModal()">
+        </div>
+
+        <!-- Modal Dialog -->
+        <div x-show="open"
+             x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             @keydown.escape.window="closeModal()">
+
+            <div class="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden" @click.stop>
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
                     <div class="flex items-center justify-between">
-                        <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2" id="editChildModalLabel">
+                        <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
                             <i class="fas fa-edit"></i>
                             Kind bearbeiten
                         </h5>
-                        <button type="button" class="text-white hover:text-gray-200 transition-colors" data-dismiss="modal" aria-label="Close">
+                        <button type="button"
+                                @click="closeModal()"
+                                class="text-white hover:text-gray-200 transition-colors rounded-lg p-1 hover:bg-white/10">
                             <i class="fas fa-times text-xl"></i>
                         </button>
                     </div>
                 </div>
-                <div class="p-4">
-                    <form id="editChildForm" method="POST" class="space-y-3">
+
+                <!-- Modal Body -->
+                <div class="p-5">
+                    <form id="editChildForm" method="POST" class="space-y-4" :action="'/child/' + childId">
                         @csrf
                         @method('PUT')
+
                         <div>
-                            <label for="editFirstName" class="block text-sm font-medium text-gray-700 mb-1">
-                                <i class="fas fa-user text-blue-600 mr-1"></i>
-                                Vorname
+                            <label for="editFirstName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <i class="fas fa-user text-blue-600 mr-1"></i>Vorname
                             </label>
                             <input type="text"
-                                   class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                   class="form-control"
                                    id="editFirstName"
                                    name="first_name"
+                                   x-model="firstName"
                                    required>
                         </div>
+
                         <div>
-                            <label for="editLastName" class="block text-sm font-medium text-gray-700 mb-1">
-                                <i class="fas fa-user text-blue-600 mr-1"></i>
-                                Nachname
+                            <label for="editLastName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <i class="fas fa-user text-blue-600 mr-1"></i>Nachname
                             </label>
                             <input type="text"
-                                   class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                   class="form-control"
                                    id="editLastName"
                                    name="last_name"
+                                   x-model="lastName"
                                    required>
                         </div>
+
                         <div>
-                            <label for="editGroup" class="block text-sm font-medium text-gray-700 mb-1">
-                                <i class="fas fa-users text-blue-600 mr-1"></i>
-                                Gruppe
+                            <label for="editGroup" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <i class="fas fa-users text-blue-600 mr-1"></i>Gruppe
                             </label>
-                            <select class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
-                                    id="editGroup"
-                                    name="group_id"
-                                    required>
+                            <select class="form-control" id="editGroup" name="group_id" x-model="groupId" required>
                                 @foreach(auth()->user()->groups as $group)
                                     <option value="{{ $group->id }}">{{ $group->name }}</option>
                                 @endforeach
                             </select>
                         </div>
+
                         <div>
-                            <label for="editClass" class="block text-sm font-medium text-gray-700 mb-1">
-                                <i class="fas fa-graduation-cap text-blue-600 mr-1"></i>
-                                Klassenstufe
+                            <label for="editClass" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <i class="fas fa-graduation-cap text-blue-600 mr-1"></i>Klassenstufe
                             </label>
-                            <select class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
-                                    id="editClass"
-                                    name="class_id"
-                                    required>
+                            <select class="form-control" id="editClass" name="class_id" x-model="classId" required>
                                 @foreach(auth()->user()->groups as $group)
                                     <option value="{{ $group->id }}">{{ $group->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex gap-2 pt-3">
+
+                        <div class="flex gap-3 pt-2">
                             <button type="submit"
-                                    class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200">
+                                    class="btn btn-primary flex-1">
                                 <i class="fas fa-save"></i>
-                                <span>Speichern</span>
+                                Speichern
                             </button>
                             <button type="button"
-                                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors duration-200"
-                                    data-dismiss="modal">
+                                    @click="closeModal()"
+                                    class="btn btn-light">
                                 Abbrechen
                             </button>
                         </div>
@@ -730,19 +779,12 @@
 
     <script>
         $(document).ready(function() {
-            // Open the modal and populate the form with the child's data
+            // Edit-Kind-Button: Alpine.js CustomEvent statt Bootstrap modal('show')
             $('.edit-child-btn').click(function(e) {
                 e.preventDefault();
-                var childId = $(this).data('child-id');
                 var child = $(this).data('child');
-
-                $('#editChildForm').attr('action', '/child/' + childId);
-                $('#editFirstName').val(child.first_name);
-                $('#editLastName').val(child.last_name);
-                $('#editGroup').val(child.group_id);
-                $('#editClass').val(child.class_id);
-
-                $('#editChildModal').modal('show');
+                // Alpine.js Custom Event dispatchen
+                window.dispatchEvent(new CustomEvent('open-edit-child', { detail: child }));
             });
         });
     </script>

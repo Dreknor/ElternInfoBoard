@@ -1,88 +1,102 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header border-bottom d-flex align-items-center justify-content-between">
-                        <h5 class="card-title m-0">
-                            Einstellungen
-                        </h5>
-                    </div>
-                    <div class="card-body border-bottom">
-                        <ul class="nav nav-tabs" id="SettingsTab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="home-tab" data-toggle="tab" data-target="#home"
-                                        type="button" role="tab" aria-controls="home" aria-selected="true">Home
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="Email-tab" data-toggle="tab" data-target="#email"
-                                        type="button" role="tab" aria-controls="profile" aria-selected="false">Email
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="notify-tab" data-toggle="tab" data-target="#notify"
-                                        type="button" role="tab" aria-controls="notify" aria-selected="false">Benachrichtigungen
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="schickzeiten-tab" data-toggle="tab" data-target="#schickzeiten"
-                                        type="button" role="tab" aria-controls="schicken" aria-selected="false">Schickzeiten
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="care-tab" data-toggle="tab" data-target="#care"
-                                        type="button" role="tab" aria-controls="care" aria-selected="false">Care
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="keycloak-tab" data-toggle="tab" data-target="#keycloak"
-                                        type="button" role="tab" aria-controls="care" aria-selected="false">OIDC
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="pflichtstunden-tab" data-toggle="tab" data-target="#pflichtstunden"
-                                        type="button" role="tab" aria-controls="pflichtstunden" aria-selected="false">Pflichtstunden
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="schoolyear-tab" data-toggle="tab" data-target="#schoolyear"
-                                        type="button" role="tab" aria-controls="schoolyear" aria-selected="false">Schuljahreswechsel
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="stundenplan-tab" data-toggle="tab" data-target="#stundenplan"
-                                        type="button" role="tab" aria-controls="stundenplan" aria-selected="false">Stundenplan
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="reminder-tab" data-toggle="tab" data-target="#reminder"
-                                        type="button" role="tab" aria-controls="reminder" aria-selected="false">Erinnerungen
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="messenger-tab" data-toggle="tab" data-target="#messenger"
-                                        type="button" role="tab" aria-controls="messenger" aria-selected="false">
-                                    <i class="fas fa-comments mr-1 text-blue-500"></i>Eltern-Nachrichten
-                                </button>
-                            </li>
+    <div class="container-fluid px-4 py-3">
+        <div class="card">
+            <div class="card-header flex items-center justify-between">
+                <h5 class="card-title flex items-center gap-2">
+                    <i class="fas fa-cog text-blue-600"></i>
+                    Einstellungen
+                </h5>
+            </div>
+            <div class="card-body p-0">
+
+                {{-- Alpine.js Tab-System (ersetzt Bootstrap data-toggle="tab") --}}
+                <div x-data="{
+                    activeTab: window.location.hash ? window.location.hash.replace('#', '') : 'home',
+                    setTab(tab) {
+                        this.activeTab = tab;
+                        window.location.hash = tab;
+                    }
+                }">
+                    {{-- Tab Navigation --}}
+                    <div class="border-b border-gray-200 dark:border-gray-700 px-4 overflow-x-auto">
+                        <ul class="flex gap-1 min-w-max" role="tablist">
+                            @php
+                                $tabs = [
+                                    ['id' => 'home',         'label' => 'Home',                'icon' => 'fas fa-home'],
+                                    ['id' => 'email',        'label' => 'Email',               'icon' => 'fas fa-envelope'],
+                                    ['id' => 'notify',       'label' => 'Benachrichtigungen',  'icon' => 'fas fa-bell'],
+                                    ['id' => 'schickzeiten', 'label' => 'Schickzeiten',        'icon' => 'fas fa-clock'],
+                                    ['id' => 'care',         'label' => 'Care',                'icon' => 'fas fa-heart'],
+                                    ['id' => 'keycloak',     'label' => 'OIDC',                'icon' => 'fas fa-key'],
+                                    ['id' => 'pflichtstunden','label' => 'Pflichtstunden',     'icon' => 'fas fa-tasks'],
+                                    ['id' => 'schoolyear',   'label' => 'Schuljahreswechsel', 'icon' => 'fas fa-graduation-cap'],
+                                    ['id' => 'stundenplan',  'label' => 'Stundenplan',         'icon' => 'fas fa-calendar-alt'],
+                                    ['id' => 'reminder',     'label' => 'Erinnerungen',        'icon' => 'fas fa-alarm-clock'],
+                                    ['id' => 'messenger',    'label' => 'Eltern-Nachrichten',  'icon' => 'fas fa-comments'],
+                                ];
+                            @endphp
+
+                            @foreach($tabs as $tab)
+                                <li role="presentation">
+                                    <button type="button"
+                                            role="tab"
+                                            :aria-selected="activeTab === '{{ $tab['id'] }}'"
+                                            @click="setTab('{{ $tab['id'] }}')"
+                                            :class="activeTab === '{{ $tab['id'] }}'
+                                                ? 'border-b-2 border-blue-600 text-blue-700 dark:text-blue-400 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20'
+                                                : 'border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300'"
+                                            class="inline-flex items-center gap-1.5 px-3 py-3 text-sm font-medium transition-all duration-150 whitespace-nowrap cursor-pointer focus:outline-none">
+                                        <i class="{{ $tab['icon'] }} text-xs opacity-75"></i>
+                                        {{ $tab['label'] }}
+                                    </button>
+                                </li>
+                            @endforeach
                         </ul>
-                        <div class="tab-content">
+                    </div>
+
+                    {{-- Tab Content --}}
+                    <div class="p-4">
+                        <div x-show="activeTab === 'home'" x-cloak>
                             @include('settings.tabs.home-tab')
+                        </div>
+                        <div x-show="activeTab === 'email'" x-cloak>
                             @include('settings.tabs.email-tab')
+                        </div>
+                        <div x-show="activeTab === 'notify'" x-cloak>
                             @include('settings.tabs.notify-tab')
+                        </div>
+                        <div x-show="activeTab === 'schickzeiten'" x-cloak>
                             @include('settings.tabs.schickzeiten-tab')
+                        </div>
+                        <div x-show="activeTab === 'care'" x-cloak>
                             @include('settings.tabs.care-tab')
-                            @include('settings.tabs.schoolyear-tab')
+                        </div>
+                        <div x-show="activeTab === 'keycloak'" x-cloak>
+                            {{-- Keycloak/OIDC Tab falls vorhanden --}}
+                            @if(View::exists('settings.tabs.keycloak-tab'))
+                                @include('settings.tabs.keycloak-tab')
+                            @endif
+                        </div>
+                        <div x-show="activeTab === 'pflichtstunden'" x-cloak>
                             @include('settings.tabs.pflichtstunden-tab')
+                        </div>
+                        <div x-show="activeTab === 'schoolyear'" x-cloak>
+                            @include('settings.tabs.schoolyear-tab')
+                        </div>
+                        <div x-show="activeTab === 'stundenplan'" x-cloak>
                             @include('settings.tabs.stundenplan-tab')
+                        </div>
+                        <div x-show="activeTab === 'reminder'" x-cloak>
                             @include('settings.tabs.reminder-tab')
+                        </div>
+                        <div x-show="activeTab === 'messenger'" x-cloak>
                             @include('settings.tabs.messenger-tab')
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -94,31 +108,20 @@
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/langs/de.js')}}"></script>
-    <script>tinymce.init({
+    <script>
+        tinymce.init({
             selector: 'textarea:not(.no-tinymce)',
-            lang:'de',
+            lang: 'de',
             height: 500,
             menubar: true,
             plugins: [
-                'advlist autolink  link charmap',
+                'advlist autolink link charmap',
                 'searchreplace visualblocks code',
-                'insertdatetime  paste code wordcount',
+                'insertdatetime paste code wordcount',
                 'contextmenu textcolor',
             ],
-
-            toolbar: 'undo redo | formatselect | bold italic ',
-            contextmenu: " link  inserttable | cell row column deletetable",
-
-        });
-
-
-        $(document).ready(function () {
-            $('#SettingsTab a').on('click', function (e) {
-                e.preventDefault()
-                console.log('clicked')
-                console.log($(this))
-                $(this).tab('show')
-            })
+            toolbar: 'undo redo | formatselect | bold italic',
+            contextmenu: "link inserttable | cell row column deletetable",
         });
     </script>
 @endpush
