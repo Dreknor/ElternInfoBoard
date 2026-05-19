@@ -442,6 +442,7 @@ Route::middleware('auth')->group(function () {
         // Routen zur Rechteverwaltung
         Route::middleware('permission:edit settings')->group(function () {
             Route::get('modules', [SettingsController::class, 'module']);
+            Route::post('modules/reorder', [SettingsController::class, 'reorder'])->name('modules.reorder');
             Route::get('modules/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
             Route::get('modules/modul/{modul}', [SettingsController::class, 'change_status']);
             Route::get('settings/losungen/import', [LosungController::class, 'importView']);

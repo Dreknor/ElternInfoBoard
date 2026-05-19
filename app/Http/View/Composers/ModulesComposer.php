@@ -16,7 +16,7 @@ class ModulesComposer
 
         $modules = Cache::remember('modules', 30, function () {
             // Lade alle Module der Kategorie 'module' und filtere dann nach active
-            $allModules = Module::where('category', 'module')->get();
+            $allModules = Module::where('category', 'module')->orderBy('sort_order')->orderBy('id')->get();
 
             return $allModules->filter(function ($module) {
                 // Prüfe ob options existiert und active = 1 ist

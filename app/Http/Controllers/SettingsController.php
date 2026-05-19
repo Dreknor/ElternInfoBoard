@@ -466,11 +466,32 @@ class SettingsController extends Controller implements HasMiddleware
      */
     public function module()
     {
-        $module = Module::all();
+        $module = Module::orderBy('sort_order')->orderBy('id')->get();
 
         return view('settings.module', [
             'module' => $module,
         ]);
+    }
+
+    /**
+     * Reihenfolge der Module speichern (AJAX)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'order'   => 'required|array',
+            'order.*' => 'integer|exists:settings_modules,id',
+        ]);
+
+        foreach ($request->order as $position => $id) {
+            Module::where('id', $id)->update(['sort_order' => $position + 1]);
+        }
+
+        Cache::forget('modules');
+
+        return response()->json(['success' => true]);
     }
 
     /**
