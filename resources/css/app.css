@@ -117,9 +117,38 @@ html, body {
   z-index: 1030;
 }
 
-/* Adjust main content to account for fixed navbar */
+/* ═══ Haupt-Layout (ersetzt paper-dashboard.css Regeln) ══════ */
+
+/**
+ * .main-panel
+ * Früher: paper-dashboard.css verwendete float: right; width: calc(100% - 260px)
+ * Jetzt: position: relative + margin-left für Desktop (kein Float mehr nötig).
+ * position: relative ist wichtig damit absolute positionierte Kinder korrekt ragen.
+ */
 .main-panel {
-  padding-top: 70px;
+  position: relative;
+  min-height: 100vh;
+  padding-top: 70px; /* Höhe der fixed Navbar */
+  background-color: var(--color-body-bg, #f3f4f6);
+  transition: margin-left 0.3s cubic-bezier(0.685, 0.0473, 0.346, 1);
+}
+
+/**
+ * .content (direktes Kind von .main-panel)
+ * paper-dashboard.css hatte: padding: 0 30px 30px; margin-top: 93px;
+ * margin-top: 93px war nötig weil paper-dashboard.css kein padding-top auf .main-panel hatte.
+ * Da wir jetzt padding-top: 70px auf .main-panel haben, entfällt der margin-top.
+ */
+.main-panel > .content {
+  padding: 0 20px 40px;
+  min-height: calc(100vh - 130px);
+}
+
+@media (max-width: 767px) {
+  .main-panel > .content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }
 
 /* Sidebar styling */
@@ -150,8 +179,7 @@ html, body {
   transition: transform 0.3s ease;
 }
 
-.sidebar .nav-link.bg-blue-600::before,
-.sidebar .nav-link.bg-purple-600::before {
+.sidebar .nav-link.sidebar-active::before {
   transform: translateX(0);
 }
 
@@ -312,6 +340,9 @@ html, body {
 
   .main-panel {
     margin-left: 0;
+    /* Explizit float und width zurücksetzen (paper-dashboard.css Überreste) */
+    float: none;
+    width: auto;
   }
 
   .sidebar .sidebar-wrapper {
@@ -326,13 +357,16 @@ html, body {
 
   .main-panel {
     margin-left: 260px;
+    /* Explizit float und width zurücksetzen (paper-dashboard.css Überreste) */
+    float: none;
+    width: auto;
   }
 
   .sidebar-overlay {
     display: none;
   }
 
-  /* Hide mobile toggle button on desktop */
+  /* Sidebar Toggle nur auf Mobile */
   .navbar-toggler {
     display: none !important;
   }
@@ -524,14 +558,18 @@ html, body {
            dark:focus:border-blue-400 dark:focus:ring-blue-800
            dark:placeholder-gray-400;
   }
-  .form-control[readonly] { @apply bg-gray-100 cursor-not-allowed dark:bg-gray-800; }
+  .form-control[readonly] { background-color: #f3f4f6; cursor: not-allowed; }
   .form-select {
-    @apply form-control cursor-pointer pr-10 appearance-none
-           bg-no-repeat bg-right;
+    display: block; width: 100%; padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    font-size: 0.875rem; border: 1px solid #d1d5db; border-radius: 0.375rem;
+    background-color: #fff; color: #111827; cursor: pointer; outline: none;
+    appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-    background-size: 1.25rem;
+    background-repeat: no-repeat; background-size: 1.25rem;
     background-position: right 0.5rem center;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
+  .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
   .form-group     { @apply mb-4; }
   .form-row       { @apply flex flex-wrap -mx-2; }
   .form-row > .col,
@@ -568,45 +606,92 @@ html, body {
   .invalid-feedback { @apply text-xs text-red-600 mt-1; }
 
   /* ── Buttons ──────────────────────────────────────────────── */
+  /* WICHTIG: btn-* Klassen definieren NUR die Farb-/Varianten-Regeln.
+     Die Basis-Styles kommen von .btn (per Klassen-Stacking in HTML: class="btn btn-primary").
+     KEIN @apply btn in Subklassen – vermeidet circular dependencies in Tailwind v3! */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold
-           rounded-md border border-transparent cursor-pointer
-           transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-offset-1
-           disabled:opacity-60 disabled:cursor-not-allowed
-           select-none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    user-select: none;
+    text-decoration: none;
   }
-  .btn-primary   { @apply btn bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white focus:ring-blue-500; }
-  .btn-secondary { @apply btn bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white focus:ring-gray-400; }
-  .btn-success   { @apply btn bg-green-600 hover:bg-green-700 active:bg-green-800 text-white focus:ring-green-500; }
-  .btn-danger    { @apply btn bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus:ring-red-500; }
-  .btn-warning   { @apply btn bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white focus:ring-yellow-400; }
-  .btn-info      { @apply btn bg-cyan-500 hover:bg-cyan-600 active:bg-cyan-700 text-white focus:ring-cyan-400; }
-  .btn-light {
-    @apply btn bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 border-gray-200
-           dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 dark:border-gray-600;
+  .btn:focus { box-shadow: 0 0 0 3px rgba(59,130,246,0.4); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn-primary   { background-color: #2563eb; color: #fff; border-color: #2563eb; }
+  .btn-primary:hover:not(:disabled)   { background-color: #1d4ed8; border-color: #1d4ed8; }
+  .btn-primary:focus  { box-shadow: 0 0 0 3px rgba(37,99,235,0.4); }
+
+  .btn-secondary { background-color: #6b7280; color: #fff; border-color: #6b7280; }
+  .btn-secondary:hover:not(:disabled) { background-color: #4b5563; }
+
+  .btn-success   { background-color: #16a34a; color: #fff; border-color: #16a34a; }
+  .btn-success:hover:not(:disabled)   { background-color: #15803d; }
+  .btn-success:focus  { box-shadow: 0 0 0 3px rgba(22,163,74,0.4); }
+
+  .btn-danger    { background-color: #dc2626; color: #fff; border-color: #dc2626; }
+  .btn-danger:hover:not(:disabled)    { background-color: #b91c1c; }
+  .btn-danger:focus   { box-shadow: 0 0 0 3px rgba(220,38,38,0.4); }
+
+  .btn-warning   { background-color: #d97706; color: #fff; border-color: #d97706; }
+  .btn-warning:hover:not(:disabled)   { background-color: #b45309; }
+
+  .btn-info      { background-color: #0891b2; color: #fff; border-color: #0891b2; }
+  .btn-info:hover:not(:disabled)      { background-color: #0e7490; }
+
+  .btn-light     { background-color: #f3f4f6; color: #1f2937; border-color: #e5e7eb; }
+  .btn-light:hover:not(:disabled)     { background-color: #e5e7eb; }
+
+  .btn-dark      { background-color: #1f2937; color: #fff; border-color: #1f2937; }
+  .btn-dark:hover:not(:disabled)      { background-color: #111827; }
+
+  .btn-link {
+    background: none; border-color: transparent;
+    color: #2563eb; text-decoration: none; padding: 0.25rem 0.5rem;
+    font-weight: 400;
   }
-  .btn-dark  { @apply btn bg-gray-900 hover:bg-gray-800 active:bg-black text-white focus:ring-gray-700; }
-  .btn-link  {
-    @apply inline-flex items-center gap-1 px-1 py-1 text-sm text-blue-600 hover:text-blue-800
-           hover:underline bg-transparent border-transparent cursor-pointer
-           dark:text-blue-400 dark:hover:text-blue-300 font-normal;
-  }
-  .btn-outline-primary  { @apply btn border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-500; }
-  .btn-outline-secondary{ @apply btn border-gray-500 text-gray-600 hover:bg-gray-500 hover:text-white; }
-  .btn-outline-success  { @apply btn border-green-600 text-green-600 hover:bg-green-600 hover:text-white focus:ring-green-500; }
-  .btn-outline-danger   { @apply btn border-red-600 text-red-600 hover:bg-red-600 hover:text-white focus:ring-red-500; }
-  .btn-outline-info     { @apply btn border-cyan-500 text-cyan-600 hover:bg-cyan-500 hover:text-white; }
-  .btn-outline-warning  { @apply btn border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white; }
-  .btn-outline-dark     { @apply btn border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white dark:border-gray-300 dark:text-gray-300; }
-  .btn-sm  { @apply px-3 py-1 text-xs; }
-  .btn-lg  { @apply px-6 py-3 text-base; }
-  .btn-block { @apply w-full; }
+  .btn-link:hover { text-decoration: underline; color: #1d4ed8; }
+
+  .btn-outline-primary  { background: transparent; border-color: #2563eb; color: #2563eb; }
+  .btn-outline-primary:hover:not(:disabled)  { background-color: #2563eb; color: #fff; }
+
+  .btn-outline-secondary { background: transparent; border-color: #6b7280; color: #6b7280; }
+  .btn-outline-secondary:hover:not(:disabled) { background-color: #6b7280; color: #fff; }
+
+  .btn-outline-success  { background: transparent; border-color: #16a34a; color: #16a34a; }
+  .btn-outline-success:hover:not(:disabled)  { background-color: #16a34a; color: #fff; }
+
+  .btn-outline-danger   { background: transparent; border-color: #dc2626; color: #dc2626; }
+  .btn-outline-danger:hover:not(:disabled)   { background-color: #dc2626; color: #fff; }
+
+  .btn-outline-info     { background: transparent; border-color: #0891b2; color: #0891b2; }
+  .btn-outline-info:hover:not(:disabled)     { background-color: #0891b2; color: #fff; }
+
+  .btn-outline-warning  { background: transparent; border-color: #d97706; color: #d97706; }
+  .btn-outline-warning:hover:not(:disabled)  { background-color: #d97706; color: #fff; }
+
+  .btn-outline-dark     { background: transparent; border-color: #1f2937; color: #1f2937; }
+  .btn-outline-dark:hover:not(:disabled)     { background-color: #1f2937; color: #fff; }
+
+  .btn-sm   { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+  .btn-lg   { padding: 0.75rem 1.5rem; font-size: 1rem; }
+  .btn-block { width: 100%; }
 
   /* Button group */
-  .btn-group { @apply inline-flex rounded-md overflow-hidden; }
-  .btn-group .btn:not(:first-child) { @apply rounded-l-none border-l-0; }
-  .btn-group .btn:not(:last-child)  { @apply rounded-r-none; }
+  .btn-group { display: inline-flex; border-radius: 0.375rem; overflow: hidden; }
+  .btn-group .btn:not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; }
+  .btn-group .btn:not(:last-child)  { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 
   /* ── Alerts ───────────────────────────────────────────────── */
   .alert {
@@ -725,9 +810,9 @@ html, body {
     @apply flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200
            dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50;
   }
-  .modal-sm  .modal-dialog { @apply max-w-sm; }
-  .modal-lg  .modal-dialog { @apply max-w-2xl; }
-  .modal-xl  .modal-dialog { @apply max-w-5xl; }
+  .modal-sm  .modal-dialog { max-width: 384px; }
+  .modal-lg  .modal-dialog { max-width: 672px; }
+  .modal-xl  .modal-dialog { max-width: 1280px; }
   .modal-header .close {
     @apply ml-auto p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100
            rounded transition-colors text-xl bg-transparent border-none cursor-pointer
@@ -850,167 +935,220 @@ html, body {
   .display-4 { @apply text-3xl font-bold; }
 
   /* ── Utility shims (Bootstrap → Tailwind naming) ──────────── */
-  .d-none           { @apply hidden; }
-  .d-block          { @apply block; }
-  .d-inline         { @apply inline; }
-  .d-inline-block   { @apply inline-block; }
-  .d-flex           { @apply flex; }
-  .d-inline-flex    { @apply inline-flex; }
-  .d-grid           { @apply grid; }
+  /* WICHTIG: Nur Bootstrap-EIGENE Klassen die in Tailwind nicht existieren!
+     Tailwind-native Klassen (.text-center, .overflow-hidden etc.) werden NICHT
+     redefiniert, da @layer components niedrigere Priorität als @layer utilities hat. */
+  .d-none           { display: none; }
+  .d-block          { display: block; }
+  .d-inline         { display: inline; }
+  .d-inline-block   { display: inline-block; }
+  .d-flex           { display: flex; }
+  .d-inline-flex    { display: inline-flex; }
+  .d-grid           { display: grid; }
 
   /* Responsive display */
-  .d-sm-none    { @apply sm:hidden; }
-  .d-sm-block   { @apply sm:block; }
-  .d-sm-flex    { @apply sm:flex; }
-  .d-md-none    { @apply md:hidden; }
-  .d-md-block   { @apply md:block; }
-  .d-md-flex    { @apply md:flex; }
-  .d-lg-none    { @apply lg:hidden; }
-  .d-lg-block   { @apply lg:block; }
-  .d-lg-flex    { @apply lg:flex; }
+  @media (min-width: 576px)  { .d-sm-none  { display: none; } .d-sm-block { display: block; } .d-sm-flex { display: flex; } }
+  @media (min-width: 768px)  { .d-md-none  { display: none; } .d-md-block { display: block; } .d-md-flex { display: flex; } }
+  @media (min-width: 992px)  { .d-lg-none  { display: none; } .d-lg-block { display: block; } .d-lg-flex { display: flex; } }
+  @media (min-width: 1200px) { .d-xl-none  { display: none; } .d-xl-block { display: block; } .d-xl-flex { display: flex; } }
 
-  .flex-column    { @apply flex-col; }
-  .flex-row       { @apply flex-row; }
-  .flex-wrap      { @apply flex-wrap; }
-  .flex-nowrap    { @apply flex-nowrap; }
-  .flex-fill      { @apply flex-1; }
-  .flex-grow-1    { @apply grow; }
-  .flex-shrink-0  { @apply shrink-0; }
+  .flex-column    { flex-direction: column; }
+  .flex-row       { flex-direction: row; }
+  .flex-fill      { flex: 1 1 auto; }
+  .flex-grow-1    { flex-grow: 1; }
+  .flex-shrink-0  { flex-shrink: 0; }
+  .flex-wrap      { flex-wrap: wrap; }
+  .flex-nowrap    { flex-wrap: nowrap; }
 
-  .justify-content-start   { @apply justify-start; }
-  .justify-content-end     { @apply justify-end; }
-  .justify-content-center  { @apply justify-center; }
-  .justify-content-between { @apply justify-between; }
-  .justify-content-around  { @apply justify-around; }
-  .justify-content-evenly  { @apply justify-evenly; }
-  .align-items-start       { @apply items-start; }
-  .align-items-center      { @apply items-center; }
-  .align-items-end         { @apply items-end; }
-  .align-items-baseline    { @apply items-baseline; }
-  .align-items-stretch     { @apply items-stretch; }
-  .align-self-center       { @apply self-center; }
-  .align-self-start        { @apply self-start; }
-  .align-self-end          { @apply self-end; }
-  .align-self-stretch      { @apply self-stretch; }
-  .align-content-start     { @apply content-start; }
-  .align-content-center    { @apply content-center; }
-  .align-content-end       { @apply content-end; }
-  .align-content-between   { @apply content-between; }
+  .justify-content-start   { justify-content: flex-start; }
+  .justify-content-end     { justify-content: flex-end; }
+  .justify-content-center  { justify-content: center; }
+  .justify-content-between { justify-content: space-between; }
+  .justify-content-around  { justify-content: space-around; }
+  .justify-content-evenly  { justify-content: space-evenly; }
+  .align-items-start       { align-items: flex-start; }
+  .align-items-center      { align-items: center; }
+  .align-items-end         { align-items: flex-end; }
+  .align-items-baseline    { align-items: baseline; }
+  .align-items-stretch     { align-items: stretch; }
+  .align-self-center       { align-self: center; }
+  .align-self-start        { align-self: flex-start; }
+  .align-self-end          { align-self: flex-end; }
+  .align-self-stretch      { align-self: stretch; }
 
-  .text-left    { @apply text-left; }
-  .text-center  { @apply text-center; }
-  .text-right   { @apply text-right; }
-  .text-justify { @apply text-justify; }
+  .w-100   { width: 100%; }
+  .h-100   { height: 100%; }
+  .w-50    { width: 50%; }
+  .w-25    { width: 25%; }
+  .w-75    { width: 75%; }
+  .w-auto  { width: auto; }
+  .mw-100  { max-width: 100%; }
+  .vw-100  { width: 100vw; }
+  .vh-100  { height: 100vh; }
+  .min-vh-100 { min-height: 100vh; }
 
-  .w-100   { @apply w-full; }
-  .h-100   { @apply h-full; }
-  .w-50    { @apply w-1/2; }
-  .w-25    { @apply w-1/4; }
-  .w-75    { @apply w-3/4; }
-  .w-auto  { @apply w-auto; }
-  .mw-100  { @apply max-w-full; }
-  .min-vw-100 { @apply min-w-full; }
-  .vw-100  { @apply w-screen; }
-  .vh-100  { @apply h-screen; }
-  .min-vh-100 { @apply min-h-screen; }
+  .position-static   { position: static; }
+  .position-relative { position: relative; }
+  .position-absolute { position: absolute; }
+  .position-fixed    { position: fixed; }
+  .position-sticky   { position: sticky; }
 
-  .overflow-hidden { @apply overflow-hidden; }
-  .overflow-auto   { @apply overflow-auto; }
-  .overflow-scroll { @apply overflow-scroll; }
+  .text-muted     { color: #6b7280; }
+  .text-left      { text-align: left; }
+  .text-center    { text-align: center; }
+  .text-right     { text-align: right; }
+  .text-uppercase { text-transform: uppercase; }
+  .text-lowercase { text-transform: lowercase; }
+  .text-capitalize { text-transform: capitalize; }
+  .text-truncate  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .text-nowrap    { white-space: nowrap; }
+  .text-break     { word-break: break-word; word-wrap: break-word; }
+  .text-decoration-none { text-decoration: none; }
 
-  .position-static   { @apply static; }
-  .position-relative { @apply relative; }
-  .position-absolute { @apply absolute; }
-  .position-fixed    { @apply fixed; }
-  .position-sticky   { @apply sticky; }
-  .fixed-top    { @apply fixed top-0 left-0 right-0 z-[1030]; }
-  .fixed-bottom { @apply fixed bottom-0 left-0 right-0 z-[1030]; }
+  .font-weight-bold   { font-weight: 700; }
+  .font-weight-bolder { font-weight: 800; }
+  .font-weight-normal { font-weight: 400; }
+  .font-weight-light  { font-weight: 300; }
+  .font-italic        { font-style: italic; }
 
-  .border-0      { @apply border-0; }
-  .border        { @apply border border-gray-200 dark:border-gray-700; }
-  .border-top    { @apply border-t border-gray-200 dark:border-gray-700; }
-  .border-bottom { @apply border-b border-gray-200 dark:border-gray-700; }
-  .border-left   { @apply border-l border-gray-200 dark:border-gray-700; }
-  .border-right  { @apply border-r border-gray-200 dark:border-gray-700; }
-  .rounded-0     { @apply rounded-none; }
-  .rounded       { @apply rounded; }
-  .rounded-lg    { @apply rounded-lg; }
-  .rounded-pill  { @apply rounded-full; }
-  .rounded-circle { @apply rounded-full; }
+  .bg-transparent { background-color: transparent; }
 
-  .shadow     { @apply shadow-md; }
-  .shadow-sm  { @apply shadow-sm; }
-  .shadow-lg  { @apply shadow-lg; }
-  .shadow-none { @apply shadow-none; }
+  .cursor-pointer   { cursor: pointer; }
+  .user-select-none { user-select: none; }
+  .list-unstyled    { list-style: none; padding-left: 0; margin-top: 0; margin-bottom: 0; }
+  .list-inline      { list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .list-inline-item { display: inline-flex; }
 
-  .text-muted     { @apply text-gray-500 dark:text-gray-400; }
-  .text-primary   { @apply text-blue-600 dark:text-blue-400; }
-  .text-secondary { @apply text-gray-600 dark:text-gray-400; }
-  .text-success   { @apply text-green-600 dark:text-green-400; }
-  .text-danger    { @apply text-red-600 dark:text-red-400; }
-  .text-warning   { @apply text-yellow-600 dark:text-yellow-400; }
-  .text-info      { @apply text-cyan-600 dark:text-cyan-400; }
-  .text-white     { @apply text-white; }
-  .text-dark      { @apply text-gray-900 dark:text-gray-100; }
-  .text-body      { @apply text-gray-800 dark:text-gray-200; }
-  .text-light     { @apply text-gray-400 dark:text-gray-500; }
-
-  .font-weight-bold    { @apply font-bold; }
-  .font-weight-bolder  { @apply font-extrabold; }
-  .font-weight-normal  { @apply font-normal; }
-  .font-weight-light   { @apply font-light; }
-  .font-italic         { @apply italic; }
-  .text-uppercase      { @apply uppercase; }
-  .text-lowercase      { @apply lowercase; }
-  .text-capitalize     { @apply capitalize; }
-  .text-decoration-none { @apply no-underline; }
-  .text-truncate       { @apply truncate; }
-  .text-break          { @apply break-words; }
-  .text-nowrap         { @apply whitespace-nowrap; }
-  .text-wrap           { @apply whitespace-normal; }
-
-  .bg-white       { @apply bg-white dark:bg-gray-800; }
-  .bg-light       { @apply bg-gray-100 dark:bg-gray-700; }
-  .bg-dark        { @apply bg-gray-900 dark:bg-gray-950; }
-  .bg-primary     { @apply bg-blue-600; }
-  .bg-secondary   { @apply bg-gray-500; }
-  .bg-success     { @apply bg-green-600; }
-  .bg-danger      { @apply bg-red-600; }
-  .bg-warning     { @apply bg-yellow-500; }
-  .bg-info        { @apply bg-cyan-500; }
-  .bg-transparent { @apply bg-transparent; }
-
-  .cursor-pointer { @apply cursor-pointer; }
-  .user-select-none { @apply select-none; }
-
-  .list-unstyled { @apply list-none p-0 m-0; }
-  .list-inline   { @apply list-none p-0 m-0 flex flex-wrap gap-2; }
-  .list-inline-item { @apply inline-flex; }
-
-  .small  { @apply text-sm text-gray-600 dark:text-gray-400; }
-  .lead   { @apply text-lg text-gray-700 dark:text-gray-300; }
-  .initialism { @apply text-xs uppercase tracking-wider; }
+  .small  { font-size: 0.875em; }
+  .lead   { font-size: 1.125rem; line-height: 1.6; }
 
   .sr-only {
-    @apply absolute w-px h-px p-0 overflow-hidden whitespace-nowrap border-0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
     margin: -1px;
+    overflow: hidden;
     clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
-  .sr-only-focusable:focus { @apply not-sr-only; }
+  .sr-only-focusable:focus { clip: auto; height: auto; margin: 0; overflow: visible; position: static; white-space: normal; width: auto; }
 
-  .visible   { @apply visible; }
-  .invisible { @apply invisible; }
+  .float-left  { float: left; }
+  .float-right { float: right; }
+  .float-none  { float: none; }
+  .clearfix::after { display: block; clear: both; content: ""; }
 
-  /* m-auto and mx-auto */
-  .m-auto { @apply m-auto; }
-  .mx-auto { @apply mx-auto; }
+  /* Bootstrap Spacing: m-0..m-5, p-0..p-5 – nur die, die Tailwind nicht hat */
+  /* Tailwind verwendet 4=1rem, Bootstrap 5 verwendet spacing units:
+     0=0, 1=0.25rem, 2=0.5rem, 3=1rem, 4=1.5rem, 5=3rem */
+  /* mt-*, mb-*, ml-*, mr-*, mx-*, my-* px-*, py-* etc. → Tailwind native (0,1,2,3,4,5,6...) */
+  /* Bootstrap .mt-1 = 0.25rem = Tailwind .mt-1, .mt-2 = 0.5rem = Tailwind .mt-2 etc. compatible */
 
-  /* ── Dark Mode global overrides ───────────────────────────── */
-  /* Wenn die Seite im Dark-Mode ist, werden Standard-Bootstrap-Farben überschrieben. */
-}
+  .m-auto  { margin: auto; }
+  .mx-auto { margin-left: auto; margin-right: auto; }
+  .ml-auto { margin-left: auto; }
+  .mr-auto { margin-right: auto; }
+
+  /* Divider */
+  .dropdown-divider { height: 0; margin: 0.5rem 0; overflow: hidden; border-top: 1px solid #e5e7eb; }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex; flex-wrap: wrap; padding: 0.5rem 0; margin-bottom: 1rem;
+    list-style: none; background-color: transparent;
+    font-size: 0.875rem; color: #6b7280;
+  }
+  .breadcrumb-item + .breadcrumb-item::before { content: '/'; padding: 0 0.25rem; color: #9ca3af; }
+  .breadcrumb-item.active { color: #374151; }
+
+  /* Progress */
+  .progress {
+    display: flex; height: 0.75rem; background-color: #e5e7eb;
+    border-radius: 9999px; overflow: hidden;
+  }
+  .progress-bar {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background-color: #2563eb; color: #fff; font-size: 0.75rem; white-space: nowrap;
+    transition: width 0.3s ease;
+  }
+  .progress-bar-striped {
+    background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+    background-size: 1rem 1rem;
+  }
+
+  /* Spinner */
+  .spinner-border {
+    display: inline-block; width: 2rem; height: 2rem;
+    border: 0.25em solid currentColor; border-right-color: transparent;
+    border-radius: 50%; animation: spin 0.75s linear infinite;
+  }
+  .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.2em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Dark Mode Varianten für Bootstrap-Compat-Klassen ──────── */
+  /* Nur für Bootstrap-spezifische Klassen, NICHT für Tailwind-native Klassen */
+  html.dark .card                { background-color: #1e293b; border-color: #334155; }
+  html.dark .card-header         { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
+  html.dark .card-body           { color: #cbd5e1; }
+  html.dark .card-footer         { background-color: #1e293b; border-color: #334155; }
+  html.dark .card-title          { color: #f1f5f9; }
+
+  html.dark .form-control {
+    background-color: #374151; border-color: #4b5563;
+    color: #f9fafb;
+  }
+  html.dark .form-control::placeholder { color: #9ca3af; }
+  html.dark .form-control:focus  { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,0.3); }
+  html.dark .form-control[readonly] { background-color: #1f2937; }
+
+  html.dark .btn-light           { background-color: #374151; color: #f9fafb; border-color: #4b5563; }
+  html.dark .btn-light:hover     { background-color: #4b5563; }
+
+  html.dark .alert-success       { background-color: rgba(6,78,59,0.3); border-color: #065f46; color: #6ee7b7; }
+  html.dark .alert-danger        { background-color: rgba(127,29,29,0.3); border-color: #991b1b; color: #fca5a5; }
+  html.dark .alert-warning       { background-color: rgba(120,53,15,0.3); border-color: #92400e; color: #fcd34d; }
+  html.dark .alert-info,
+  html.dark .alert-primary       { background-color: rgba(30,58,138,0.3); border-color: #1e3a8a; color: #93c5fd; }
+  html.dark .alert-secondary     { background-color: rgba(55,65,81,0.3); border-color: #4b5563; color: #d1d5db; }
+
+  html.dark .table               { color: #d1d5db; }
+  html.dark .table thead th      { background-color: #374151; color: #e2e8f0; border-color: #4b5563; }
+  html.dark .table td,
+  html.dark .table th            { border-color: #374151; }
+  html.dark .table-hover tbody tr:hover { background-color: rgba(55,65,81,0.4); }
+  html.dark .table-striped tbody tr:nth-child(even) { background-color: rgba(55,65,81,0.2); }
+
+  html.dark .nav-tabs             { border-color: #374151; }
+  html.dark .nav-tabs .nav-link.active { background-color: #1e293b; border-color: #374151; color: #60a5fa; }
+
+  html.dark .modal-content        { background-color: #1e293b; color: #e2e8f0; }
+  html.dark .modal-header,
+  html.dark .modal-footer         { border-color: #374151; }
+  html.dark .modal-footer         { background-color: rgba(255,255,255,0.03); }
+
+  html.dark .list-group-item      { background-color: #1e293b; border-color: #334155; color: #cbd5e1; }
+  html.dark .list-group-item:hover { background-color: #334155; }
+
+  html.dark .dropdown-menu        { background-color: #1e293b; border-color: #334155; }
+  html.dark .dropdown-item        { color: #cbd5e1; }
+  html.dark .dropdown-item:hover  { background-color: #334155; color: #f1f5f9; }
+
+  html.dark .pagination .page-link { background-color: #1e293b; border-color: #334155; color: #93c5fd; }
+  html.dark .pagination .page-item.active .page-link { background-color: #2563eb; border-color: #2563eb; color: #fff; }
+
+  html.dark .progress             { background-color: #374151; }
+
+  html.dark .text-muted           { color: #9ca3af; }
+  html.dark .small                { color: #9ca3af; }
+  html.dark .badge-light          { background-color: #374151; color: #f9fafb; }
+
+} /* END @layer components */
 
 /* ═══════════════════════════════════════════════════════════════
    DARK MODE – Globale Stile wenn <html class="dark"> gesetzt ist
+   Nur strukturelle Overrides – Komponenten-Overrides sind in @layer components
    ═══════════════════════════════════════════════════════════════ */
 
 /* Body-Hintergrund im Dark Mode */
@@ -1020,7 +1158,12 @@ html.dark #app-layout {
   color: var(--app-text, #f1f5f9);
 }
 
-/* Paper Dashboard Sidebar im Dark Mode (falls noch vorhanden) */
+/* Main Panel Background im Dark Mode */
+html.dark .main-panel {
+  background-color: var(--color-body-bg, #0f172a);
+}
+
+/* Sidebar im Dark Mode */
 html.dark .sidebar {
   background: linear-gradient(
     to bottom,
@@ -1036,24 +1179,21 @@ html.dark nav.fixed-top {
   border-color: var(--color-navbar-border, #334155) !important;
 }
 
-/* Links im Dark Mode */
-html.dark a {
+/* Allgemeine Links im Dark Mode */
+html.dark a:not([class]) {
   color: var(--color-primary, #3b82f6);
 }
-html.dark a:hover {
+html.dark a:not([class]):hover {
   color: var(--color-primary-dark, #2563eb);
-}
-
-/* Standard-Input im Dark Mode */
-html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
-html.dark textarea,
-html.dark select {
-  background-color: #374151;
-  border-color: #4b5563;
-  color: #f9fafb;
 }
 
 /* TinyMCE Dark Mode Anpassung */
 html.dark .tox-tinymce {
   border-color: #4b5563 !important;
+}
+
+/* Mobile Bottom Nav im Dark Mode */
+html.dark nav.mobile-bottom-nav {
+  background: var(--color-mobile-nav-bg, rgba(15,23,42,0.95)) !important;
+  border-top-color: #334155 !important;
 }

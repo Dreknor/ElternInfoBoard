@@ -135,7 +135,7 @@
             <li class="nav-item">
                 <a href="{{url('/dashboard')}}"
                    class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group
-                          @if(request()->path() == 'dashboard' || request()->path() == '/') bg-blue-600 text-white shadow-lg @else text-gray-300 hover:bg-blue-600 hover:text-white @endif">
+                          @if(request()->path() == 'dashboard' || request()->path() == '/') bg-blue-600 text-white shadow-lg sidebar-active @else text-gray-300 hover:bg-blue-600 hover:text-white @endif">
                     <i class="fas fa-home text-base group-hover:scale-110 transition-transform"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
