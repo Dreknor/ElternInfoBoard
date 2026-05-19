@@ -203,15 +203,5 @@ class CleanupController extends Controller
                 $notification->save();
             }
         }
-
-        foreach ($admins as $admin) {
-            $notification = new Notification([
-                'user_id' => $admin->id,
-                'title' => 'Clean up Success',
-                'message' => 'Clean up was successful.',
-                'type' => 'success',
-            ]);
-            $notification->save();
-        }
     }
 }
