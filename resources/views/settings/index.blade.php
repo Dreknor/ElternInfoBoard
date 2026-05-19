@@ -11,12 +11,15 @@
             </div>
             <div class="card-body p-0">
 
-                {{-- Alpine.js Tab-System (ersetzt Bootstrap data-toggle="tab") --}}
+                {{-- Alpine.js Tab-System --}}
                 <div x-data="{
-                    activeTab: window.location.hash ? window.location.hash.replace('#', '') : 'home',
+                    activeTab: (function(){
+                        var h = window.location.hash.replace('#','');
+                        var valid = ['home','email','notify','schickzeiten','care','keycloak','pflichtstunden','schoolyear','stundenplan','reminder','messenger'];
+                        return valid.indexOf(h) !== -1 ? h : 'home';
+                    })(),
                     setTab(tab) {
                         this.activeTab = tab;
-                        window.location.hash = tab;
                     }
                 }">
                     {{-- Tab Navigation --}}
@@ -58,40 +61,40 @@
 
                     {{-- Tab Content --}}
                     <div class="p-4">
-                        <div x-show="activeTab === 'home'" x-cloak>
+                        <div x-show="activeTab === 'home'">
                             @include('settings.tabs.home-tab')
                         </div>
-                        <div x-show="activeTab === 'email'" x-cloak>
+                        <div x-show="activeTab === 'email'" style="display:none">
                             @include('settings.tabs.email-tab')
                         </div>
-                        <div x-show="activeTab === 'notify'" x-cloak>
+                        <div x-show="activeTab === 'notify'" style="display:none">
                             @include('settings.tabs.notify-tab')
                         </div>
-                        <div x-show="activeTab === 'schickzeiten'" x-cloak>
+                        <div x-show="activeTab === 'schickzeiten'" style="display:none">
                             @include('settings.tabs.schickzeiten-tab')
                         </div>
-                        <div x-show="activeTab === 'care'" x-cloak>
+                        <div x-show="activeTab === 'care'" style="display:none">
                             @include('settings.tabs.care-tab')
                         </div>
-                        <div x-show="activeTab === 'keycloak'" x-cloak>
+                        <div x-show="activeTab === 'keycloak'" style="display:none">
                             {{-- Keycloak/OIDC Tab falls vorhanden --}}
                             @if(View::exists('settings.tabs.keycloak-tab'))
                                 @include('settings.tabs.keycloak-tab')
                             @endif
                         </div>
-                        <div x-show="activeTab === 'pflichtstunden'" x-cloak>
+                        <div x-show="activeTab === 'pflichtstunden'" style="display:none">
                             @include('settings.tabs.pflichtstunden-tab')
                         </div>
-                        <div x-show="activeTab === 'schoolyear'" x-cloak>
+                        <div x-show="activeTab === 'schoolyear'" style="display:none">
                             @include('settings.tabs.schoolyear-tab')
                         </div>
-                        <div x-show="activeTab === 'stundenplan'" x-cloak>
+                        <div x-show="activeTab === 'stundenplan'" style="display:none">
                             @include('settings.tabs.stundenplan-tab')
                         </div>
-                        <div x-show="activeTab === 'reminder'" x-cloak>
+                        <div x-show="activeTab === 'reminder'" style="display:none">
                             @include('settings.tabs.reminder-tab')
                         </div>
-                        <div x-show="activeTab === 'messenger'" x-cloak>
+                        <div x-show="activeTab === 'messenger'" style="display:none">
                             @include('settings.tabs.messenger-tab')
                         </div>
                     </div>
