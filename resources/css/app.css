@@ -30,6 +30,26 @@
 :root {
   --app-bg: #ffffff;
   --app-text: #111827;
+
+  /* Default Light Theme – Sidebar */
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-bg-mid: #f8fafc;
+  --color-sidebar-border: #e2e8f0;
+  --color-sidebar-text: #374151;
+  --color-sidebar-text-muted: #9ca3af;
+  --color-sidebar-footer-bg: #f1f5f9;
+  --color-sidebar-footer-border: #e2e8f0;
+  --color-sidebar-logo-bg: #f8fafc;
+  --color-sidebar-logo-border: #e2e8f0;
+
+  /* Default Light Theme – Navbar */
+  --color-navbar-bg: #ffffff;
+  --color-navbar-border: #e5e7eb;
+  --color-navbar-text: #1f2937;
+
+  /* Default Light Theme – Body */
+  --color-body-bg: #f3f4f6;
+  --color-mobile-nav-bg: rgba(255, 255, 255, 0.95);
 }
 
 html, body {
@@ -140,7 +160,7 @@ html, body {
  * Da wir jetzt padding-top: 70px auf .main-panel haben, entfällt der margin-top.
  */
 .main-panel > .content {
-  padding: 0 20px 40px;
+  padding: 1.5rem 20px 40px; /* 1.5rem top = Abstand unter der Navbar */
   min-height: calc(100vh - 130px);
 }
 
@@ -181,6 +201,22 @@ html, body {
 
 .sidebar .nav-link.sidebar-active::before {
   transform: translateX(0);
+}
+
+/* Sidebar Nav Links – helles Standard-Theme */
+.sidebar-nav-link {
+  color: var(--color-sidebar-text, #374151);
+}
+
+.sidebar-nav-link:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.sidebar-nav-link.sidebar-active {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
 }
 
 /* Space utility for nav items */
@@ -346,7 +382,7 @@ html, body {
   }
 
   .sidebar .sidebar-wrapper {
-    margin-top: 70px !important;
+    margin-top: 0 !important; /* Sidebar-Header übernimmt den oberen Block */
   }
 }
 
@@ -360,6 +396,11 @@ html, body {
     /* Explizit float und width zurücksetzen (paper-dashboard.css Überreste) */
     float: none;
     width: auto;
+  }
+
+  /* Navbar erstreckt sich auf Desktop nur über den Main-Panel-Bereich (klassisches Admin-Layout) */
+  .fixed-top {
+    left: 260px;
   }
 
   .sidebar-overlay {

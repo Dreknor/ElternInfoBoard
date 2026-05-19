@@ -126,16 +126,31 @@
 <div class="sidebar shadow-sidebar"
      data-color="white"
      data-active-color="danger"
-     style="background: linear-gradient(to bottom, var(--color-sidebar-bg, #111827), var(--color-sidebar-bg-mid, #1f2937), var(--color-sidebar-bg, #111827)); z-index: 1010;">
+     style="background: var(--color-sidebar-bg, #ffffff); border-right: 1px solid var(--color-sidebar-border, #e2e8f0); z-index: 1010;">
+
+    <!-- Sidebar Header / Logo (obere 70px – entspricht der Navbar-Höhe) -->
+    <div class="sidebar-header flex items-center px-4 border-b"
+         style="height: 70px; background: var(--color-sidebar-logo-bg, #f8fafc); border-color: var(--color-sidebar-logo-border, #e2e8f0);">
+        <a href="{{url('/')}}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div class="h-8 flex items-center">
+                @if($settings->logo == 'logo.png')
+                    <img src="{{asset('img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
+                @else
+                    <img src="{{url('storage/img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
+                @endif
+            </div>
+            <span class="font-semibold text-sm leading-tight truncate max-w-[140px]" style="color: var(--color-sidebar-text, #374151);">{{$settings->app_name}}</span>
+        </a>
+    </div>
 
     <!-- Sidebar Navigation -->
-    <div class="sidebar-wrapper overflow-y-auto" id="sidebar" style="max-height: calc(100vh - 130px); margin-top: 70px;">
+    <div class="sidebar-wrapper overflow-y-auto" id="sidebar" style="max-height: calc(100vh - 130px); margin-top: 0;">
         <ul class="nav flex-column px-2 py-3 space-y-1">
             <!-- Dashboard -->
             <li class="nav-item">
                 <a href="{{url('/dashboard')}}"
-                   class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group
-                          @if(request()->path() == 'dashboard' || request()->path() == '/') bg-blue-600 text-white shadow-lg sidebar-active @else text-gray-300 hover:bg-blue-600 hover:text-white @endif">
+                   class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group sidebar-nav-link
+                          @if(request()->path() == 'dashboard' || request()->path() == '/') sidebar-active @endif">
                     <i class="fas fa-home text-base group-hover:scale-110 transition-transform"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
@@ -144,21 +159,22 @@
             @stack('nav')
 
             <!-- Divider -->
-            <li class="border-t border-gray-700 my-2"></li>
+            <li class="border-t my-2" style="border-color: var(--color-sidebar-border, #e2e8f0);"></li>
 
             @stack('adm-nav')
         </ul>
     </div>
 
     <!-- User Info Footer in Sidebar -->
-    <div class="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gray-950 border-t border-gray-700">
+    <div class="absolute bottom-0 left-0 right-0 px-3 py-2 border-t"
+         style="background: var(--color-sidebar-footer-bg, #f1f5f9); border-color: var(--color-sidebar-footer-border, #e2e8f0);">
         <div class="flex items-center gap-2">
             <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                 {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-white text-xs font-medium truncate mb-0">{{auth()->user()->name ?? 'User'}}</p>
-                <p class="text-gray-400 text-xs truncate mb-0">
+                <p class="text-xs font-medium truncate mb-0" style="color: var(--color-sidebar-text, #374151);">{{auth()->user()->name ?? 'User'}}</p>
+                <p class="text-xs truncate mb-0" style="color: var(--color-sidebar-text-muted, #9ca3af);">
                     <i class="fas fa-circle text-green-500 text-[6px] mr-1"></i>
                     Online
                 </p>
@@ -175,7 +191,7 @@
          style="background: var(--color-navbar-bg, #ffffff); border-color: var(--color-navbar-border, #e5e7eb);"
          x-data="{ mobileSearchOpen: false }">
         <div class="container-fluid">
-            <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center justify-between px-4" style="height: 70px;">
                 <!-- Links: Toggle & Brand -->
                 <div class="flex items-center gap-3">
                     <!-- Sidebar Toggle -->
