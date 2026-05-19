@@ -49,11 +49,6 @@ try {
         Schedule::call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':50');
         Schedule::call('App\Http\Controllers\NachrichtenController@email')->weeklyOn($notifySetting->weekday_send_information_mail, $notifySetting->hour_send_information_mail.':55');
 
-        // DEAKTIVIERT: Wird jetzt durch ProcessRemindersJob (Feature 3) abgedeckt
-        // Schedule::call('App\Http\Controllers\RueckmeldungenController@sendErinnerung')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
-        // Schedule::call('App\Http\Controllers\ReadReceiptsController@remind')->dailyAt($notifySetting->hour_send_reminder_mail.':00');
-        // Schedule::call('App\Http\Controllers\ReadReceiptsController@sendFinalReminder')->hourly();
-
         Schedule::call('App\Http\Controllers\KrankmeldungenController@dailyReport')->weekdays()->at($notifySetting->krankmeldungen_report_hour.':'.$notifySetting->krankmeldungen_report_minute);
 
         Schedule::call('App\Http\Controllers\SchickzeitenController@sendReminder')->weeklyOn($notifySetting->schickzeiten_report_weekday, $notifySetting->schickzeiten_report_hour.':00');
@@ -62,16 +57,13 @@ try {
 
         Schedule::call('App\Http\Controllers\SchickzeitenController@copyWeeklySchickzeitenToNextWeek')->weeklyOn(6, '00:00');
 
-        // Anwesenheitsabfragen-Erinnerungen – DEAKTIVIERT: wird jetzt durch ProcessRemindersJob (Feature 3, Teil C) abgedeckt
-        // Schedule::job(new \App\Jobs\SendAttendanceQueryReminderJob)->dailyAt('08:00');
 
-        // ── Neues Erinnerungssystem (Feature 3) ──────────────────
         // Unified Reminder Pipeline: Rückmeldungen + ReadReceipts + Anwesenheitsabfragen
         try {
             $reminderSetting = new ReminderSetting;
             Schedule::job(new \App\Jobs\ProcessRemindersJob)->dailyAt($reminderSetting->send_time);
         } catch (\Exception $e) {
-            // Settings-Tabelle noch nicht migriert – Job wird nicht eingeplant
+
         }
 
         // Elternrat Event Erinnerungen - stündlich prüfen
@@ -92,7 +84,6 @@ try {
         // Alte Child Notices automatisch löschen (täglich, Child Notices älter als 3 Monate)
         Schedule::command('child-notices:cleanup --months=3')->dailyAt('03:45');
 
-        // ── Datenschutz-Cleanups (DSGVO-Konzept Apr. 2026) ────────
         // Audit-Trail (IP/User-Agent) auf 12 Monate begrenzen
         Schedule::command('audits:cleanup --days=365')->weeklyOn(1, '02:30');
         // Reminder-Logs auf 12 Monate begrenzen
@@ -111,7 +102,6 @@ try {
         // Monatlicher Inaktivitätsbericht an Administratoren
         Schedule::command('users:cleanup --report')->monthlyOn(1, '09:00');
 
-        // ── Feature 2: Messenger-Jobs ──────────────────────────────
         $messengerModule = Module::where('setting', 'Eltern-Nachrichten')->first();
         if ($messengerModule && ($messengerModule->options['active'] ?? false)) {
             // Alte Nachrichten bereinigen (täglich 02:00)
