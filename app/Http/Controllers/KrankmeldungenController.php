@@ -64,28 +64,6 @@ class KrankmeldungenController extends Controller
                 $child = Child::find($request->child_id);
                 $krankmeldung->name = $child->first_name.' '.$child->last_name;
 
-                $group = $child->group?->name;
-                $class = $child->class?->name;
-
-                if ($group == $class) {
-                    $class = null;
-                }
-
-                if ($group || $class) {
-                    $krankmeldung->name .= ' ('.$group.' '.$class.')';
-                }
-            } else {
-
-                $gruppen = auth()->user()?->groups ?? collect();
-
-                $krankmeldung->name .= ' (';
-
-                foreach ($gruppen as $gruppe) {
-                    $krankmeldung->name .= $gruppe->name.' ';
-                }
-
-                $krankmeldung->name .= ')';
-
             }
 
             $krankmeldung->users_id = auth()->id();
@@ -123,9 +101,30 @@ class KrankmeldungenController extends Controller
                 Cache::forget('active_diseases');
             }
 
+            if ($child ?? false) {
+                 $gruppe = $child->gruppe->name;
+                 $class = $child->klassen->name;
+
+                 $name = $krankmeldung->name . ' ('.$gruppe.' - '.$class.')';
+            } else {
+                $name = $krankmeldung->name;
+
+                $gruppen = "(";
+
+                foreach ($krankmeldung->user->groups as $gruppe) {
+                    $gruppen .= $gruppe->name . ", ";
+                }
+                $gruppen .= ")";
+
+                $name .= $gruppen;
+
+
+            }
+
+
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $krankmeldung->name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null, $attachments));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null, $attachments));
 
             return redirect()->back()->with([
                 'type' => 'success',
