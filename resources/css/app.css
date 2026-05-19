@@ -204,7 +204,14 @@ html, body {
 }
 
 /* Sidebar Nav Links – helles Standard-Theme */
+.sidebar .nav-item {
+  display: block; /* .nav-item ist global flex – in der Sidebar muss es block sein */
+}
+
 .sidebar-nav-link {
+  display: block;
+  width: 100%;
+  font-size: 0.9375rem; /* ~15px – überschreibt text-sm (14px) der .nav-link Basisklasse */
   color: var(--color-sidebar-text, #374151);
 }
 
