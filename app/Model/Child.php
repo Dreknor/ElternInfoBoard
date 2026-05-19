@@ -171,6 +171,16 @@ class Child extends Model implements HasMedia
             });
     }
 
+    /**
+     * Gibt die regelmäßigen (wochentagsbasierten) Schickzeiten zurück (specific_date = NULL).
+     */
+    public function regularSchickzeiten(): HasMany
+    {
+        return $this->hasMany(Schickzeiten::class, 'child_id')
+            ->whereNull('specific_date')
+            ->orderBy('weekday');
+    }
+
     public function getSchickzeitenForToday()
     {
         // Wenn die Beziehung bereits geladen ist, auf heute filtern

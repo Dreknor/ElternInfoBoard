@@ -22,6 +22,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -1008,6 +1009,8 @@ class SchickzeitenController extends Controller implements HasMiddleware
             ]);
 
         }
+
+        Cache::forget('schickzeiten_'.$child->id);
 
         return redirect()->back()->with([
             'type' => 'success',

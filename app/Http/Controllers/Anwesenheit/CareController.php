@@ -73,6 +73,7 @@ class CareController extends Controller implements HasMiddleware
                         $query->where('specific_date', today())
                             ->orderBy('specific_date', 'desc');
                     },
+                    'regularSchickzeiten',
                     'krankmeldungen' => function ($query) {
                         $query->whereDate('start', '<=', today())
                             ->whereDate('ende', '>=', today());
@@ -108,6 +109,7 @@ class CareController extends Controller implements HasMiddleware
                         $query->where('specific_date', today())
                             ->orderBy('specific_date', 'desc');
                     },
+                    'regularSchickzeiten',
                     'krankmeldungen' => function ($query) {
                         $query->whereDate('start', '<=', today())
                             ->whereDate('ende', '>=', today());
