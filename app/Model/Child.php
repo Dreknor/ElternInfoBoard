@@ -173,35 +173,34 @@ class Child extends Model implements HasMedia
 
     public function getSchickzeitenForToday()
     {
-        // Wenn die Beziehung bereits geladen ist, verwende sie
+        // Wenn die Beziehung bereits geladen ist, auf heute filtern
         if ($this->relationLoaded('schickzeiten')) {
-            return $this->schickzeiten;
+            return $this->schickzeiten->filter(function ($schickzeit) {
+                // Wochentagsbasierte Einträge (specific_date = null): nur wenn weekday dem heutigen Tag entspricht
+                if (is_null($schickzeit->specific_date)) {
+                    return $schickzeit->weekday == now()->dayOfWeek;
+                }
+                // Datumsspezifische Einträge: nur wenn das Datum heute ist
+                return $schickzeit->specific_date->isToday();
+            })->values();
         }
 
         // Fallback mit Cache für direkte Aufrufe
         $schickzeiten = Cache::remember('schickzeiten_'.$this->id, 300, function () {
             return $this->schickzeiten()
                 ->where(function ($query) {
-                    /*
-                    * alt: Es werden alle Schickzeiten geladen, die entweder heute sind oder für den aktuellen Wochentag gelten.
-                    $query->where('weekday', now()->dayOfWeek)
-                       ->orWhere('specific_date', today());
-                    */
-                    // Neu: Es werden alle Schickzeiten geladen, die für heute sind.
-                    $query->where('specific_date', today());
+                    // Datumsspezifische Einträge für heute ODER wochentagsbasierte Einträge für den heutigen Wochentag
+                    $query->where('specific_date', today())
+                        ->orWhere(function ($q) {
+                            $q->whereNull('specific_date')
+                                ->where('weekday', now()->dayOfWeek);
+                        });
                 })
                 ->orderBy('specific_date', 'desc')
                 ->get();
         });
 
         return $schickzeiten;
-        /*
-            if ($schickzeiten->where('specific_date',  today())->count() > 0) {
-                return $schickzeiten->where('specific_date',  today());
-            } else {
-                return $schickzeiten->where('weekday', now()->dayOfWeek);
-            }
-        */
     }
 
     public function scopeCare($query)
