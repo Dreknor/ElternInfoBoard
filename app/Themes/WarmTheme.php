@@ -43,12 +43,16 @@ class WarmTheme extends AbstractTheme
             '--color-sidebar-active-bg' => '#ea580c',
             '--color-sidebar-hover-bg'  => 'rgba(234,88,12,0.2)',
             '--color-sidebar-hover-text'=> '#fdba74',
+            '--color-sidebar-admin-border' => 'rgba(253,186,116,0.35)', // warmes Orange
+            '--color-sidebar-admin-label'  => '#fdba74',
+            '--color-sidebar-admin-icon'   => '#fdba74',
             '--color-navbar-bg'         => '#fffbeb',
             '--color-navbar-text'       => '#431407',
             '--color-navbar-border'     => '#fed7aa',
             '--color-navbar-user-btn-bg'=> '#fff7ed',
             '--color-navbar-user-btn-hover' => '#ffedd5',
             '--color-body-bg'           => '#fff7ed',
+            '--color-surface-subtle'    => '#fef3e2', // Warmes Beige-Weiß für Tabellen-Header, Footers
             '--color-card-bg'           => '#fffbeb',
             '--color-card-border'       => '#fed7aa',
             '--color-text-primary'      => '#431407',

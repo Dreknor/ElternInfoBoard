@@ -14,7 +14,7 @@
             <div class="p-4">
                 @if(isset($changelog))
                     <div class="mb-6">
-                        <div class="border-2 border-amber-300 rounded-xl shadow-lg overflow-hidden" style="background-color: #fff7ed;">
+                        <div class="border-2 border-amber-300 dark:border-amber-700 rounded-xl shadow-lg overflow-hidden" style="background-color: var(--color-card-bg);">
                             <div class="px-6 py-4" style="background: linear-gradient(to right, #f59e0b, #f97316);">
                                 <div class="flex items-center gap-3">
                                     <div class="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg">
@@ -36,8 +36,8 @@
                                     {!! $changelog->text !!}
                                 </div>
                             </div>
-                            <div class="px-6 py-3 border-t border-amber-200" style="background-color: #fef3c7;">
-                                <p class="text-xs text-amber-800 mb-0 flex items-center gap-2">
+                            <div class="px-6 py-3 border-t border-amber-200 dark:border-amber-800" style="background-color: rgba(254,243,199,0.15);">
+                                <p class="text-xs text-amber-800 dark:text-amber-300 mb-0 flex items-center gap-2">
                                     <i class="fas fa-info-circle"></i>
                                     <span>Bitte beachten Sie die oben genannten Änderungen und Hinweise.</span>
                                 </p>
@@ -57,10 +57,10 @@
 
                     <div class="p-8">
                                 @if ($errors->any())
-                                    <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                                    <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
                                         <div class="flex items-start gap-2">
-                                            <i class="fas fa-exclamation-circle text-red-600 mt-1"></i>
-                                            <ul class="text-sm text-red-700 space-y-1">
+                                            <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-1"></i>
+                                            <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
                                                 @foreach ($errors->all() as $error)
                                                     <li>{{ $error }}</li>
                                                 @endforeach
@@ -74,13 +74,13 @@
 
                                     <!-- Persönliche Daten -->
                                     <div>
-                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                                        <h6 class="text-base font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                                             <i class="fas fa-user-circle text-blue-600 mr-2"></i>
                                             Persönliche Daten
                                         </h6>
                                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-user text-blue-600 mr-1"></i>
                                                     Name
                                                 </label>
@@ -93,7 +93,7 @@
                                             </div>
 
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-envelope text-blue-600 mr-1"></i>
                                                     E-Mail
                                                 </label>
@@ -106,10 +106,10 @@
                                             </div>
 
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-envelope-open text-blue-600 mr-1"></i>
                                                     Öffentliche E-Mail
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Für andere Eltern sichtbar</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Für andere Eltern sichtbar</span>
                                                 </label>
                                                 <input type="email"
                                                        class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
@@ -119,10 +119,10 @@
                                             </div>
 
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-phone text-blue-600 mr-1"></i>
                                                     Öffentliche Telefonnummer
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Für andere Eltern in gleichen Gruppen sichtbar</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Für andere Eltern in gleichen Gruppen sichtbar</span>
                                                 </label>
                                                 <input type="tel"
                                                        class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
@@ -136,16 +136,16 @@
 
                                     <!-- Sicherheit -->
                                     <div>
-                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 mt-4">
+                                        <h6 class="text-base font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700 mt-4">
                                             <i class="fas fa-lock text-blue-600 mr-2"></i>
                                             Sicherheit & Passwort
                                         </h6>
                                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-lock text-blue-600 mr-1"></i>
                                                     Aktuelles Passwort
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Zur Bestätigung erforderlich</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Zur Bestätigung erforderlich</span>
                                                 </label>
                                                 <input class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                        name="current_password"
@@ -153,14 +153,14 @@
                                                        autocomplete="current-password"
                                                        placeholder="••••••••">
                                                 @error('current_password')
-                                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                    <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
                                                 @enderror
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-key text-blue-600 mr-1"></i>
                                                     Neues Passwort
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Mindestens 10 Zeichen, Groß-/Kleinbuchstaben und Zahl</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Mindestens 10 Zeichen, Groß-/Kleinbuchstaben und Zahl</span>
                                                 </label>
                                                 <input class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                        name="password"
@@ -169,14 +169,14 @@
                                                        autocomplete="new-password"
                                                        placeholder="••••••••">
                                                 @error('password')
-                                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                    <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
                                                 @enderror
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-check-double text-blue-600 mr-1"></i>
                                                     Passwort bestätigen
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Passwort wiederholen</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Passwort wiederholen</span>
                                                 </label>
                                                 <input id="password-confirm"
                                                        type="password"
@@ -190,16 +190,16 @@
 
                                     <!-- Benachrichtigungen -->
                                     <div>
-                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 mt-4">
+                                        <h6 class="text-base font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700 mt-4">
                                             <i class="fas fa-bell text-blue-600 mr-2"></i>
                                             Benachrichtigungen
                                         </h6>
                                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-envelope-circle-check text-blue-600 mr-1"></i>
                                                     E-Mail Benachrichtigungen
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Zuletzt: {{$user->lastEmail?->format('d.m.Y H:i') ?? 'Nie'}}</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Zuletzt: {{$user->lastEmail?->format('d.m.Y H:i') ?? 'Nie'}}</span>
                                                 </label>
                                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                         name="benachrichtigung">
@@ -208,10 +208,10 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-copy text-blue-600 mr-1"></i>
                                                     Kopie von Rückmeldungen
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Erhalten Sie eine Kopie Ihrer Rückmeldungen</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Erhalten Sie eine Kopie Ihrer Rückmeldungen</span>
                                                 </label>
                                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                         name="sendCopy">
@@ -224,16 +224,16 @@
 
                                     <!-- Erweiterte Einstellungen -->
                                     <div>
-                                        <h6 class="text-base font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 mt-4">
+                                        <h6 class="text-base font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700 mt-4">
                                             <i class="fas fa-sliders-h text-blue-600 mr-2"></i>
                                             Erweiterte Einstellungen
                                         </h6>
                                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-sign-in-alt text-blue-600 mr-1"></i>
                                                     Login aufzeichnen
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Speicherung des letzten Logins</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Speicherung des letzten Logins</span>
                                                 </label>
                                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                         name="track_login">
@@ -242,10 +242,10 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-calendar-share text-blue-600 mr-1"></i>
                                                     Termine freigeben
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Link für externe Kalender</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Link für externe Kalender</span>
                                                 </label>
                                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                         name="releaseCalendar">
@@ -254,10 +254,10 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-tag text-blue-600 mr-1"></i>
                                                     Termin-Prefix
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Vorangestelltes Kürzel (max. 8 Zeichen)</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Vorangestelltes Kürzel (max. 8 Zeichen)</span>
                                                 </label>
                                                 <input type="text"
                                                        class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
@@ -272,17 +272,17 @@
                                         @if($user->can('use messenger'))
                                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                                     <i class="fas fa-user-secret text-blue-600 mr-1"></i>
                                                     In Messenger-Suche sichtbar
-                                                    <span class="block text-xs text-gray-500 font-normal mt-0.5">Entscheiden Sie, ob andere Eltern Sie per Direktnachricht finden können</span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Entscheiden Sie, ob andere Eltern Sie per Direktnachricht finden können</span>
                                                 </label>
                                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                         name="messenger_discoverable">
                                                     <option value="1" @if($user->messenger_discoverable) selected @endif>Ja, auffindbar für Direktnachrichten</option>
                                                     <option value="0" @if(!$user->messenger_discoverable) selected @endif>Nein, nicht in der Suche anzeigen</option>
                                                 </select>
-                                                <p class="text-xs text-gray-400 mt-1">
+                                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                                     <i class="fas fa-info-circle mr-0.5"></i>
                                                     Gruppen-Chats sind davon nicht betroffen. Diese Einstellung gilt nur für neue Direktnachrichten.
                                                 </p>
@@ -291,7 +291,7 @@
                                         @endif
                                     </div>
 
-                                    <div class="pt-4 border-t border-gray-200">
+                                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
                                         <button type="submit"
                                                 class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg hidden"
                                                 id="btn-save">
@@ -309,7 +309,7 @@
                 <!-- Zweite Reihe: Kinder und Gruppen nebeneinander -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 mt-4">
                     @if(auth()->user()->groups->count() > 0 || auth()->user()->children()?->count() > 0)
-                            <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                            <div class="rounded-lg shadow-md overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
                                 <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 border-b border-green-800">
                                     <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
                                         <i class="fas fa-child"></i>
@@ -317,16 +317,16 @@
                                     </h5>
                                 </div>
                                 <div class="p-5">
-                                    <p class="text-xs text-gray-600 mb-4 leading-relaxed">
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
                                         <i class="fas fa-info-circle text-blue-600 mr-1"></i>
                                         Hier werden die Kinder angezeigt, die mit Ihrem Konto verknüpft sind. Sollte Ihr Kind im Hort betreut werden, können Sie mit der Glocke die Benachrichtigung aktivieren.
                                     </p>
                                     <div class="space-y-3">
                                         @foreach($user->children() as $child)
-                                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-500 hover:shadow-sm transition-all duration-200">
+                                            <div class="border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:border-green-500 dark:hover:border-green-600 hover:shadow-sm transition-all duration-200">
                                                 <div class="flex items-start justify-between gap-3">
                                                     <div class="flex-1 min-w-0">
-                                                        <div class="font-semibold text-gray-800 mb-2">
+                                                        <div class="font-semibold text-gray-800 dark:text-gray-100 mb-2">
                                                             {{$child->first_name}} {{$child->last_name}}
                                                         </div>
                                                         <div class="flex flex-wrap gap-2">
@@ -368,15 +368,15 @@
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="border-t border-gray-200 p-5 bg-gray-50">
-                                    <h6 class="text-sm font-semibold text-gray-800 mb-4">
+                                <div class="border-t p-5" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
+                                    <h6 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-4">
                                         <i class="fas fa-plus-circle text-green-600 mr-1"></i>
                                         Kind hinzufügen
                                     </h6>
                                     <form action="{{url('/child')}}" method="post" class="space-y-3">
                                         @csrf
                                         <div>
-                                            <label for="first_name" class="block text-xs font-semibold text-gray-700 mb-1.5">Vorname <span class="text-red-600">*</span></label>
+                                            <label for="first_name" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Vorname <span class="text-red-600">*</span></label>
                                             <input id="first_name"
                                                    type="text"
                                                    class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
@@ -385,7 +385,7 @@
                                                    required>
                                         </div>
                                         <div>
-                                            <label for="last_name" class="block text-xs font-semibold text-gray-700 mb-1.5">Nachname <span class="text-red-600">*</span></label>
+                                            <label for="last_name" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nachname <span class="text-red-600">*</span></label>
                                             <input id="last_name"
                                                    type="text"
                                                    class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
@@ -394,7 +394,7 @@
                                                    required>
                                         </div>
                                         <div>
-                                            <label for="group" class="block text-xs font-semibold text-gray-700 mb-1.5">Gruppe <span class="text-red-600">*</span></label>
+                                            <label for="group" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Gruppe <span class="text-red-600">*</span></label>
                                             <select id="group"
                                                     class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
                                                     name="group_id"
@@ -406,7 +406,7 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label for="class" class="block text-xs font-semibold text-gray-700 mb-1.5">Klassenstufe <span class="text-red-600">*</span></label>
+                                            <label for="class" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Klassenstufe <span class="text-red-600">*</span></label>
                                             <select id="class"
                                                     class="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
                                                     name="class_id"
@@ -427,7 +427,7 @@
                             </div>
                         @endif
 
-                        <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                        <div class="rounded-lg shadow-md overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
                             <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 border-b border-purple-800">
                                 <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
                                     <i class="fas fa-users"></i>
@@ -437,15 +437,15 @@
                             <div class="p-5">
                                 <div class="flex flex-wrap gap-2.5">
                                     @foreach($user->groups as $gruppe)
-                                        <span class="inline-flex items-center px-3.5 py-2.5 bg-purple-100 text-purple-700 font-medium text-sm rounded-lg border border-purple-300 hover:bg-purple-200 transition-colors">
+                                        <span class="inline-flex items-center px-3.5 py-2.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium text-sm rounded-lg border border-purple-300 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors">
                                             <i class="fas fa-user-friends mr-2"></i>
                                             {{$gruppe->name}}
                                         </span>
                                     @endforeach
                                 </div>
                             </div>
-                            <div class="border-t border-gray-200 p-5 bg-gray-50">
-                                <p class="text-xs text-gray-600 leading-relaxed">
+                            <div class="border-t p-5" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                                     <i class="fas fa-info-circle text-purple-600 mr-1"></i>
                                     Sollte die Lerngruppe und/oder Alterststufe Ihres Kindes nicht korrekt in den Gruppen abgebildet sein, wenden Sie sich bitte an das Sekretariat.
                                 </p>
@@ -456,7 +456,7 @@
                 <!-- Dritte Reihe: ICAL und API-Token -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     @if($user->releaseCalendar == 1)
-                        <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                        <div class="rounded-lg shadow-md overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
                             <div class="bg-gradient-to-r from-cyan-600 to-cyan-700 px-4 py-3 border-b border-cyan-800">
                                 <h6 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
                                     <i class="fas fa-calendar-alt"></i>
@@ -464,18 +464,18 @@
                                 </h6>
                             </div>
                             <div class="p-4">
-                                <p class="text-sm text-gray-700 mb-3">
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
                                     <i class="fas fa-info-circle text-cyan-600 mr-1"></i>
                                     Die angegebene URL kann in den meisten Kalender-Anwendungen hinzugefügt werden, um die Termine direkt einzubinden.
                                 </p>
-                                <div class="p-3 bg-gray-50 border border-gray-300 rounded-lg">
-                                    <code class="text-xs text-gray-800 break-all">{{config('app.url')."/".$user->uuid.'/ical'}}</code>
+                                <div class="p-3 rounded-lg" style="background-color: var(--color-body-bg); border: 1px solid var(--color-card-border);">
+                                    <code class="text-xs text-gray-800 dark:text-gray-200 break-all">{{config('app.url')."/".$user->uuid.'/ical'}}</code>
                                 </div>
                             </div>
                         </div>
                     @endif
 
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+                    <div class="rounded-lg shadow-md overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
                         <div class="bg-gradient-to-r from-orange-600 to-orange-700 px-4 py-3 border-b border-orange-800">
                             <h6 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
                                 <i class="fas fa-key"></i>
@@ -484,15 +484,15 @@
                         </div>
 
                         @if(session()->has('token'))
-                            <div class="p-4 bg-green-50 border-b border-green-200">
+                            <div class="p-4 border-b" style="background-color: rgba(22,163,74,0.08); border-color: var(--color-card-border);">
                                 <div class="flex items-start gap-2">
-                                    <i class="fas fa-check-circle text-green-600 mt-1"></i>
+                                    <i class="fas fa-check-circle text-green-600 dark:text-green-400 mt-1"></i>
                                     <div class="flex-1">
-                                        <p class="text-sm text-green-800 font-medium mb-2">
+                                        <p class="text-sm text-green-800 dark:text-green-300 font-medium mb-2">
                                             Das Token wurde erfolgreich erstellt. Bitte speichern Sie das Token an einem sicheren Ort. Es kann nicht noch einmal angezeigt werden.
                                         </p>
-                                        <div class="p-3 bg-white border border-green-300 rounded-lg">
-                                            <code class="text-xs text-gray-800 break-all">{{session('token')}}</code>
+                                        <div class="p-3 rounded-lg" style="background-color: var(--color-input-bg); border: 1px solid var(--color-input-border);">
+                                            <code class="text-xs text-gray-800 dark:text-gray-200 break-all">{{session('token')}}</code>
                                         </div>
                                     </div>
                                 </div>
@@ -500,7 +500,7 @@
                         @endif
 
                         <div class="p-4">
-                            <p class="text-sm text-gray-700 mb-3">
+                            <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
                                 <i class="fas fa-shield-alt text-orange-600 mr-1"></i>
                                 Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
                             </p>
@@ -508,18 +508,18 @@
                             @if(auth()->user()->tokens->count() > 0)
                                 <div class="overflow-x-auto">
                                     <table class="w-full">
-                                        <thead class="bg-gray-100 border-b border-gray-300">
+                                        <thead class="border-b" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
                                             <tr>
-                                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
-                                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Erstellt am</th>
-                                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-700">Aktionen</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300">Name</th>
+                                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300">Erstellt am</th>
+                                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-700 dark:text-gray-300">Aktionen</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200">
+                                        <tbody style="border-color: var(--color-card-border);">
                                             @foreach(auth()->user()->tokens as $token)
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-3 py-2 text-sm text-gray-800">{{$token->name}}</td>
-                                                    <td class="px-3 py-2 text-sm text-gray-600">{{$token->created_at->format('d.m.Y')}}</td>
+                                                <tr class="border-b hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors" style="border-color: var(--color-card-border);">
+                                                    <td class="px-3 py-2 text-sm text-gray-800 dark:text-gray-200">{{$token->name}}</td>
+                                                    <td class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400">{{$token->created_at->format('d.m.Y')}}</td>
                                                     <td class="px-3 py-2 text-right">
                                                         <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post" class="inline">
                                                             @csrf
@@ -537,15 +537,15 @@
                                     </table>
                                 </div>
                             @else
-                                <div class="flex items-start gap-3 p-3 bg-gray-50 border-l-4 border-gray-400 rounded mb-4">
-                                    <i class="fas fa-info-circle text-gray-600 mt-1"></i>
-                                    <p class="text-gray-700 text-sm mb-0">Keine API-Tokens vorhanden</p>
+                                <div class="flex items-start gap-3 p-3 rounded border-l-4 border-gray-400 dark:border-slate-500 mb-4" style="background-color: var(--color-body-bg);">
+                                    <i class="fas fa-info-circle text-gray-600 dark:text-gray-400 mt-1"></i>
+                                    <p class="text-gray-700 dark:text-gray-300 text-sm mb-0">Keine API-Tokens vorhanden</p>
                                 </div>
                             @endif
                         </div>
 
-                        <div class="border-t border-gray-200 p-4 bg-gray-50">
-                            <h6 class="text-sm font-semibold text-gray-800 mb-3">
+                        <div class="border-t p-4" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
+                            <h6 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">
                                 <i class="fas fa-plus-circle text-orange-600 mr-1"></i>
                                 Neues Token erstellen
                             </h6>
@@ -571,14 +571,102 @@
                 </div>
 
                 @if($user->sorg2 != null)
-                    <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded">
+                    <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded">
                         <div class="flex items-start gap-2">
                             <i class="fas fa-link text-amber-600 mt-1"></i>
-                            <p class="text-sm text-amber-800 mb-0">
+                            <p class="text-sm text-amber-800 dark:text-amber-300 mb-0">
                                 Das Konto ist verknüpft mit <strong>{{$user->sorgeberechtigter2?->name}}</strong>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.
                             </p>
                         </div>
                     </div>
+                @endif
+
+                {{-- Theme-Auswahl – nur wenn vom Admin erlaubt --}}
+                @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
+                <div class="rounded-lg shadow-md overflow-hidden mt-6" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                    <div class="px-6 py-4 border-b" style="background-color: var(--color-primary); border-color: var(--color-primary-dark);">
+                        <h5 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
+                            <i class="fas fa-palette"></i>
+                            Design-Theme
+                        </h5>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm mb-4" style="color: var(--color-text-secondary);">
+                            Wählen Sie ein Design für Ihre persönliche Ansicht. Das Standard-Design wird vom Administrator festgelegt.
+                        </p>
+                        <form action="{{ route('user.theme.update') }}" method="post" id="themeForm">
+                            @csrf
+                            @method('PUT')
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-5" id="themeGrid">
+
+                                {{-- "System-Standard" Option --}}
+                                <label class="cursor-pointer theme-card-label" data-theme-value="">
+                                    <input type="radio" name="theme" value="" class="sr-only"
+                                           @if(empty($userTheme)) checked @endif>
+                                    <div class="theme-card border-2 rounded-xl p-3 text-center transition-all duration-200 relative"
+                                         style="border-color: {{ empty($userTheme) ? 'var(--color-primary)' : 'var(--color-card-border)' }};
+                                                background-color: {{ empty($userTheme) ? 'var(--color-widget-primary-bg)' : 'var(--color-card-bg)' }}">
+                                        @if(empty($userTheme))
+                                        <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs active-check"
+                                             style="background-color: var(--color-primary)">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        @else
+                                        <div class="absolute top-2 right-2 w-5 h-5 rounded-full items-center justify-center text-white text-xs active-check hidden"
+                                             style="background-color: var(--color-primary)">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        @endif
+                                        <i class="fas fa-cog text-2xl mb-2 block" style="color: var(--color-text-secondary);"></i>
+                                        <span class="text-xs font-semibold block" style="color: var(--color-text-primary);">System-Standard</span>
+                                        <span class="text-[10px] block mt-1" style="color: var(--color-text-secondary);">Admin-Vorgabe</span>
+                                    </div>
+                                </label>
+
+                                @foreach($themes as $theme)
+                                    @php $vars = $theme->variables(); $isActive = $userTheme === $theme->id(); @endphp
+                                    <label class="cursor-pointer theme-card-label" data-theme-value="{{ $theme->id() }}">
+                                        <input type="radio" name="theme" value="{{ $theme->id() }}" class="sr-only"
+                                               @if($isActive) checked @endif>
+                                        <div class="theme-card border-2 rounded-xl p-3 text-center transition-all duration-200 relative"
+                                             style="border-color: {{ $isActive ? ($vars['--color-primary'] ?? '#2563eb') : 'var(--color-card-border)' }};
+                                                    background-color: var(--color-card-bg)">
+                                            @if($isActive)
+                                            <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs active-check"
+                                                 style="background-color: {{ $vars['--color-primary'] ?? '#2563eb' }}">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                            @else
+                                            <div class="absolute top-2 right-2 w-5 h-5 rounded-full items-center justify-center text-white text-xs active-check hidden"
+                                                 style="background-color: {{ $vars['--color-primary'] ?? '#2563eb' }}">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                            @endif
+                                            {{-- Farbpaletten-Vorschau --}}
+                                            <div class="flex justify-center gap-1 mb-2">
+                                                <span class="w-5 h-5 rounded-full border border-gray-200 inline-block" style="background: {{ $vars['--color-primary'] ?? '#000' }}"></span>
+                                                <span class="w-5 h-5 rounded-full border border-gray-200 inline-block" style="background: {{ $vars['--color-sidebar-bg'] ?? '#000' }}"></span>
+                                                <span class="w-5 h-5 rounded-full border border-gray-200 inline-block" style="background: {{ $vars['--color-widget-primary-from'] ?? '#000' }}"></span>
+                                            </div>
+                                            <span class="text-xs font-semibold block" style="color: var(--color-text-primary);">{{ $theme->name() }}</span>
+                                            <span class="text-[10px] block mt-1" style="color: var(--color-text-secondary);">{{ $theme->description() }}</span>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            <button type="submit"
+                                    id="themeSaveBtn"
+                                    class="inline-flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-lg transition-colors"
+                                    style="background-color: var(--color-primary)"
+                                    onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                    onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
+                                <i class="fas fa-save"></i>
+                                Theme speichern
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 @endif
         </div> <!-- Ende p-4 -->
     </div> <!-- Ende card -->
@@ -720,67 +808,48 @@
         </div>
     </div>
 
-    {{-- Theme-Auswahl (Nutzer) – nur wenn vom Admin erlaubt --}}
-    @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
-        <div class="container-fluid mt-4">
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="text-base font-bold mb-4 pb-2 border-b" style="color: var(--color-text-primary); border-color: var(--color-card-border);">
-                        <i class="fas fa-palette mr-2" style="color: var(--color-primary);"></i>
-                        Design-Theme
-                    </h6>
-                    <form action="{{ url('/einstellungen/theme') }}" method="post">
-                        @csrf
-                        @method('PUT')
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {{-- "Standard des Systems" Option --}}
-                            <label class="cursor-pointer">
-                                <input type="radio" name="theme" value="" class="sr-only peer"
-                                       @if(empty($userTheme)) checked @endif>
-                                <div class="border-2 rounded-lg p-3 text-center transition-all"
-                                     style="border-color: var(--color-card-border);"
-                                     onmouseover="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
-                                     onmouseout="this.style.borderColor='@if(empty($userTheme))' + getComputedStyle(document.documentElement).getPropertyValue('--color-primary') + '@else' + getComputedStyle(document.documentElement).getPropertyValue('--color-card-border') + '@endif'">
-                                    <i class="fas fa-cog text-2xl mb-2 block" style="color: var(--color-text-secondary);"></i>
-                                    <span class="text-sm font-medium block" style="color: var(--color-text-primary);">System-Standard</span>
-                                    <span class="text-xs block mt-1" style="color: var(--color-text-secondary);">Wie vom Admin festgelegt</span>
-                                </div>
-                            </label>
-
-                            @foreach($themes as $theme)
-                                @php $vars = $theme->variables(); @endphp
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="theme" value="{{ $theme->id() }}" class="sr-only peer"
-                                           @if($userTheme === $theme->id()) checked @endif>
-                                    <div class="border-2 rounded-lg p-3 text-center transition-all"
-                                         style="border-color: {{ $userTheme === $theme->id() ? ($vars['--color-primary'] ?? '#2563eb') : 'var(--color-card-border)' }};">
-                                        <div class="flex justify-center gap-1 mb-2">
-                                            <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background: {{ $vars['--color-primary'] ?? '#000' }};border:1px solid #ccc;"></span>
-                                            <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background: {{ $vars['--color-sidebar-bg'] ?? '#000' }};border:1px solid #ccc;"></span>
-                                            <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background: {{ $vars['--color-body-bg'] ?? '#000' }};border:1px solid #ccc;"></span>
-                                        </div>
-                                        <span class="text-sm font-medium block" style="color: var(--color-text-primary);">{{ $theme->name() }}</span>
-                                        <span class="text-xs block mt-1" style="color: var(--color-text-secondary);">{{ $theme->description() }}</span>
-                                    </div>
-                                </label>
-                            @endforeach
-                        </div>
-                        <button type="submit" class="mt-4 px-6 py-2 text-white rounded-lg text-sm font-semibold transition-colors"
-                                style="background-color: var(--color-primary);"
-                                onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
-                                onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
-                            <i class="fas fa-save mr-1"></i> Theme speichern
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
+    {{-- Theme-Auswahl wurde in den Hauptbereich verschoben --}}
 @endsection
 
 @push('js')
+<script>
+        // Verhindert Doppelsubmit durch globalen app.blade-Handler NUR für das Theme-Formular
+        document.getElementById('themeForm')?.addEventListener('submit', function(e) {
+            e.stopImmediatePropagation();
+        });
 
-    <script>
+        // Visuelles Feedback beim Klick auf Theme-Karte
+        document.querySelectorAll('.theme-card-label').forEach(function(label) {
+            label.addEventListener('click', function() {
+                // Alle Karten zurücksetzen
+                document.querySelectorAll('.theme-card').forEach(function(card) {
+                    card.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--color-card-border').trim();
+                    card.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--color-card-bg').trim();
+                    var check = card.querySelector('.active-check');
+                    if (check) check.classList.add('hidden');
+                    if (check) check.classList.remove('flex');
+                });
+                // Aktive Karte highlighten
+                var card = this.querySelector('.theme-card');
+                var radio = this.querySelector('input[type=radio]');
+                var activeColor = radio.getAttribute('data-primary') ||
+                    getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+                card.style.borderColor = activeColor;
+                card.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--color-widget-primary-bg').trim();
+                var check = card.querySelector('.active-check');
+                if (check) { check.classList.remove('hidden'); check.classList.add('flex'); }
+            });
+        });
+
+        // data-primary auf Radio-Inputs setzen (für JS-Zugriff)
+        document.querySelectorAll('#themeGrid input[type=radio]').forEach(function(radio) {
+            var card = radio.closest('label')?.querySelector('.theme-card');
+            var existingBorder = card?.style.borderColor;
+            if (existingBorder && existingBorder !== '' && !existingBorder.includes('var(')) {
+                radio.setAttribute('data-primary', existingBorder);
+            }
+        });
+
         $(document).ready(function () {
             $("input").keyup(function() {
                 checkChanged();

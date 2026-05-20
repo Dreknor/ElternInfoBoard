@@ -47,6 +47,9 @@ class NatureTheme extends AbstractTheme
             '--color-sidebar-active-bg' => '#4d7c5d',
             '--color-sidebar-hover-bg'  => 'rgba(77,124,93,0.2)',
             '--color-sidebar-hover-text'=> '#a3c4a8',
+            '--color-sidebar-admin-border' => 'rgba(163,196,168,0.35)', // gedämpftes Salbei-Grün
+            '--color-sidebar-admin-label'  => '#a3c4a8',                // Muted-Text
+            '--color-sidebar-admin-icon'   => '#a3c4a8',
 
             // === Navbar ===
             '--color-navbar-bg'         => '#ffffff',
@@ -80,6 +83,7 @@ class NatureTheme extends AbstractTheme
             // === Layout & Global Headers ===
             '--color-main-header-bg'    => '#2d4a36', // Dunkles, edles Tannengrün für die Hauptleiste oben
             '--color-body-bg'           => '#f8fafc', // Absolut ruhiges, hellgraues Off-White für den Hintergrund
+            '--color-surface-subtle'    => '#f2f7f4', // Dezentes Salbeigrün-Weiß für Tabellen-Header, Footers etc.
             '--border-radius-base'      => '0.5rem',  // Etwas reduzierter für einen moderneren, cleanen Look
             '--font-family-base'        => "'Inter', ui-sans-serif, system-ui, sans-serif", // Weg von der Serifenschrift
 

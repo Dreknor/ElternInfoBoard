@@ -25,7 +25,7 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg)">
                 <div class="p-4">
                     @if($termine && count($termine) > 0)
                         @php
@@ -169,8 +169,8 @@
                         @endforeach
                     @else
                         <div class="text-center py-5">
-                            <i class="far fa-calendar-alt text-gray-300" style="font-size: 4rem;"></i>
-                            <p class="text-gray-500 mt-3 text-lg">Keine Termine vorhanden</p>
+                            <i class="far fa-calendar-alt" style="font-size: 4rem; color: var(--color-text-muted)"></i>
+                            <p class="mt-3 text-lg" style="color: var(--color-text-muted)">Keine Termine vorhanden</p>
                             @can('create termine')
                                 <a href="{{ url('/termin/create') }}" class="btn btn-success mt-3">
                                     <i class="fas fa-plus"></i> Ersten Termin erstellen
@@ -189,15 +189,6 @@
 <style>
     .space-y-3 > * + * {
         margin-top: 0.75rem;
-    }
-    .border-orange-400 {
-        border-color: #fb923c !important;
-    }
-    .bg-orange-50 {
-        background-color: #fff7ed !important;
-    }
-    .bg-orange-600 {
-        background-color: #ea580c !important;
     }
 </style>
 @endsection

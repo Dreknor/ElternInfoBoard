@@ -6,7 +6,7 @@
         <div class="space-y-4">
             @foreach($gruppen as $gruppe)
                 @if(!$gruppe->protected or auth()->user()->can('view protected') or auth()->user()->groups->where('name', $gruppe->name)->first() != null)
-                    <div class="bg-white rounded-lg border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <div class="rounded-lg border-2 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200" style="background-color: var(--color-card-bg); border-color: var(--color-card-border)">
                         <div class="px-3 py-2"
                              style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
                             <div class="flex items-center gap-2">
@@ -14,7 +14,7 @@
                             </div>
                         </div>
 
-                        <div class="divide-y divide-gray-200">
+                        <div class="divide-y divide-theme">
                             @forelse($gruppe->getMedia()->sortBy('name') as $medium)
                                 <div class="group transition-colors duration-200"
                                      onmouseover="this.style.backgroundColor='var(--color-primary-light)'"
@@ -68,12 +68,12 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="px-3 py-3 text-sm text-gray-500">Keine Dateien in dieser Gruppe.</div>
+                                <div class="px-3 py-3 text-sm" style="color: var(--color-text-muted)">Keine Dateien in dieser Gruppe.</div>
                             @endforelse
                         </div>
 
-                        <div class="bg-gray-50 px-3 py-2 border-t border-gray-200">
-                            <p class="text-xs text-gray-500 text-center mb-0">
+                        <div class="px-3 py-2 border-t" style="background-color: var(--color-surface-subtle); border-color: var(--color-card-border)">
+                            <p class="text-xs text-center mb-0" style="color: var(--color-text-muted)">
                                 <i class="fas fa-info-circle mr-1" style="color: var(--color-primary)"></i>
                                 Klicken zum Herunterladen
                             </p>

@@ -169,8 +169,6 @@
 
             @stack('nav')
 
-            <!-- Divider -->
-            <li class="border-t my-2" style="border-color: var(--color-sidebar-border, #e2e8f0);"></li>
 
             @stack('adm-nav')
         </ul>

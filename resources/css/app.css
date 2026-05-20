@@ -60,10 +60,12 @@
 
   /* Body & Cards */
   --color-body-bg: #f3f4f6;
+  --color-surface-subtle: #f9fafb; /* bg-gray-50 Äquivalent – theme-aware */
   --color-card-bg: #ffffff;
   --color-card-border: #e5e7eb;
   --color-text-primary: #111827;
   --color-text-secondary: #6b7280;
+  --color-text-muted: #6b7280;
 
   /* Mobile Nav */
   --color-mobile-nav-bg: #ffffff;
@@ -300,10 +302,30 @@ html, body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
+/* Admin-Bereich Links – leicht subtiler Akzent */
+.sidebar-admin-link {
+  opacity: 0.9;
+}
+.sidebar-admin-link:not(.sidebar-active) {
+  border-left: 2px solid var(--color-sidebar-admin-border, rgba(255,255,255,0.15));
+  padding-left: calc(0.75rem - 2px);
+}
+
 /* Space utility for nav items */
 .space-y-1 > * + * {
   margin-top: 0.25rem;
 }
+
+/* === Theme-aware utility helpers === */
+/* Subtile Oberfläche (Ersatz für bg-gray-50 in Tabellen-Headern, Footern, alternierenden Zeilen) */
+.bg-surface-subtle { background-color: var(--color-surface-subtle); }
+
+/* Theme-aware Trennlinien (Ersatz für divide-gray-200) */
+.divide-theme > * + * { border-top: 1px solid var(--color-card-border); }
+
+/* Termin-Zeilen: Hover und alternierend – theme-aware */
+.termin-row:hover { background-color: var(--color-surface-subtle); }
+.termin-row-even  { background-color: color-mix(in srgb, var(--color-surface-subtle) 40%, transparent); }
 
 /* Mobile bottom navigation improvements */
 .mobile-bottom-nav {
@@ -1316,3 +1338,36 @@ html.dark nav.mobile-bottom-nav {
   background: var(--color-mobile-nav-bg, rgba(15,23,42,0.95)) !important;
   border-top-color: #334155 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE – Globale Eingabefelder & Select-Elemente
+   Stellt sicher, dass alle nativen Inputs/Selects im Dark-Theme
+   lesbar sind und nicht als helle Blöcke hervorstechen.
+   ═══════════════════════════════════════════════════════════════ */
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+html.dark select,
+html.dark textarea {
+  background-color: var(--color-input-bg, #0f172a) !important;
+  border-color: var(--color-input-border, #334155) !important;
+  color: var(--color-text-primary, #f8fafc) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--color-input-placeholder, #64748b) !important;
+}
+
+html.dark input:focus:not([type="checkbox"]):not([type="radio"]),
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: var(--color-primary, #3b82f6) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary, #3b82f6) 20%, transparent) !important;
+}
+
+/* Select-Optionen im Dark Mode */
+html.dark select option {
+  background-color: var(--color-input-bg, #0f172a);
+  color: var(--color-text-primary, #f8fafc);
+}
+
