@@ -61,7 +61,7 @@
 
                 <!-- Bearbeiten-Button -->
                 @if($termin->id != null)
-                    <a href="{{url("termin/$termin->id/edit")}}"
+                    <a href="{{url("termine/$termin->id/edit")}}"
                        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors">
                         <i class="fa fa-edit"></i>
                         <span class="hidden lg:inline">Bearbeiten</span>
