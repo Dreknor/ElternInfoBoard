@@ -78,6 +78,7 @@ class ProcessRemindersJob implements ShouldQueue
             }
 
             $allUsers = $post->users->unique('id');
+            $usersToEscalate = [];
 
             foreach ($allUsers as $user) {
                 // Prüfe ob User bereits geantwortet hat
@@ -117,6 +118,16 @@ class ProcessRemindersJob implements ShouldQueue
                 // Erinnerung versenden
                 $this->sendReminder($user, $post, $rueckmeldung, $level, $settings, $deadline, 'rueckmeldung');
                 $count++;
+
+                // Für Stufe 3: User für gebündelte Eskalation vormerken
+                if ($level === 3 && $settings->level3_escalate_to_author) {
+                    $usersToEscalate[] = $user;
+                }
+            }
+
+            // Eine gebündelte Eskalations-E-Mail pro Post an den Autor senden
+            if (!empty($usersToEscalate)) {
+                $this->escalateToAuthorGrouped($post, $usersToEscalate, $deadline, 'rueckmeldung', $rueckmeldung);
             }
         }
 
@@ -148,6 +159,8 @@ class ProcessRemindersJob implements ShouldQueue
                 ->pluck('user_id')
                 ->toArray();
 
+            $usersToEscalate = [];
+
             foreach ($allUsers as $user) {
                 if (in_array($user->id, $confirmedUserIds)) {
                     continue;
@@ -175,6 +188,16 @@ class ProcessRemindersJob implements ShouldQueue
 
                 $this->sendReminder($user, $post, $post, $level, $settings, $deadline, 'lesebestaetigung');
                 $count++;
+
+                // Für Stufe 3: User für gebündelte Eskalation vormerken
+                if ($level === 3 && $settings->level3_escalate_to_author) {
+                    $usersToEscalate[] = $user;
+                }
+            }
+
+            // Eine gebündelte Eskalations-E-Mail pro Post an den Autor senden
+            if (!empty($usersToEscalate)) {
+                $this->escalateToAuthorGrouped($post, $usersToEscalate, $deadline, 'lesebestaetigung', $post);
             }
         }
 
@@ -324,11 +347,6 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'push';
         }
 
-        // Eskalation (nur Stufe 3)
-        if ($level === 3 && $s->level3_escalate_to_author) {
-            $this->escalateToAuthor($post, $user, $deadline, $type);
-            $channels[] = 'escalation';
-        }
 
         // Log erstellen (ein Eintrag pro Kanal)
         foreach ($channels as $channel) {
@@ -531,7 +549,17 @@ class ProcessRemindersJob implements ShouldQueue
         }
     }
 
-    private function escalateToAuthor(Post $post, User $user, Carbon $deadline, string $type): void
+    /**
+     * Sendet eine gebündelte Eskalations-E-Mail an den Autor mit allen fehlenden Personen.
+     * Verhindert, dass der Autor für jeden fehlenden User eine separate E-Mail erhält.
+     *
+     * @param Post   $post
+     * @param User[] $users     Alle User, die noch nicht geantwortet haben
+     * @param Carbon $deadline
+     * @param string $type
+     * @param mixed  $remindable  Das zugehörige Remindable-Objekt (für den ReminderLog)
+     */
+    private function escalateToAuthorGrouped(Post $post, array $users, Carbon $deadline, string $type, $remindable): void
     {
         $author = $post->autor;
 
@@ -539,39 +567,58 @@ class ProcessRemindersJob implements ShouldQueue
             return;
         }
 
-        // In-App-Benachrichtigung an den Autor
         $typeLabel = match ($type) {
             'lesebestaetigung' => 'Lesebestätigung',
             default => 'Rückmeldung',
         };
 
-        $header = $post->header;
+        $count = count($users);
+        $userNames = array_map(fn (User $u) => $u->name, $users);
         $frist = $deadline->format('d.m.Y');
 
+        // In-App-Benachrichtigung an den Autor (eine für alle fehlenden User)
         Notification::create([
             'user_id' => $author->id,
-            'message' => $typeLabel . ' von ' . $user->name . ' für ' . $header . ' ist trotz mehrfacher Erinnerung bis heute (' . $frist . ') nicht eingegangen.',
-            'title' => 'Eskalation: ' . $typeLabel . ' fällig heute',
+            'message' => $count . ' ' . ($count === 1 ? 'Person hat' : 'Personen haben') . ' die ' . $typeLabel
+                . ' für „' . $post->header . '" trotz mehrfacher Erinnerung bis heute (' . $frist . ') nicht eingereicht.',
+            'title' => 'Erinnerung: ' . $typeLabel . ' fällig heute (' . $count . ' ausstehend)',
             'url' => url('post/' . $post->id),
             'type' => 'Eskalation',
             'important' => true,
         ]);
 
-        // E-Mail an den Autor
+        // Eine zusammengefasste E-Mail an den Autor
         try {
             Mail::to($author->email)->send(new ReminderEscalationMail(
                 authorName: $author->name,
                 postTitle: $post->header,
                 postId: $post->id,
-                userName: $user->name,
-                deadline: $deadline->format('d.m.Y'),
+                userNames: $userNames,
+                deadline: $frist,
                 type: $type
             ));
         } catch (\Exception $e) {
-            Log::error("[ProcessRemindersJob] Eskalations-E-Mail-Fehler: " . $e->getMessage());
+            Log::error("[ProcessRemindersJob] Erinnerungs-E-Mail-Fehler: " . $e->getMessage());
+        }
+
+        // ReminderLog-Einträge pro User (damit die Deduplizierung greift)
+        foreach ($users as $user) {
+            ReminderLog::create([
+                'remindable_type' => get_class($remindable),
+                'remindable_id' => $remindable->id,
+                'user_id' => $user->id,
+                'post_id' => $post->id,
+                'level' => 3,
+                'channel' => 'escalation',
+                'sent_at' => now(),
+            ]);
         }
     }
 }
+
+
+
+
 
 
 
