@@ -1,7 +1,7 @@
 <div class="px-3 py-4 space-y-4">
     @for($x=Carbon\Carbon::today(); $x< $targetDate; $x->addDay())
         @if(!$x->isWeekend())
-            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="rounded-lg shadow-md overflow-hidden border" style="background-color: var(--color-card-bg); border-color: var(--color-card-border)">
                 {{-- Header --}}
                 <div class="px-4 py-3"
                      style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
@@ -24,7 +24,7 @@
                 </div>
 
                 {{-- Content --}}
-                <div class="divide-y divide-gray-200">
+                <div class="divide-y" style="border-color: var(--color-card-border)">
                     @php
                         $tagesVertretungen = $vertretungen->filter(function ($vertretung) use ($x) {
                             if (\Carbon\Carbon::make($vertretung->date)->eq($x)){
@@ -34,11 +34,11 @@
                     @endphp
 
                     @forelse($tagesVertretungen as $vertretung)
-                        <div class="p-4" style="{{ ($loop->iteration-1)%2 == 0 ? 'background-color: var(--color-primary-light)' : 'background-color: #ffffff' }}">
+                        <div class="p-4" style="{{ ($loop->iteration-1)%2 == 0 ? 'background-color: var(--color-primary-light)' : 'background-color: var(--color-card-bg)' }}">
                             {{-- Klasse und Stunde --}}
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm font-semibold text-gray-700">
+                                    <span class="text-sm font-semibold" style="color: var(--color-text-secondary)">
                                         Klasse {{$vertretung->group->name}}
                                     </span>
                                 </div>
@@ -50,9 +50,9 @@
 
                             {{-- Fächer --}}
                             <div class="mb-2">
-                                <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Fach</div>
+                                <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-text-muted)">Fach</div>
                                 <div class="flex items-center gap-2 text-sm">
-                                    <span class="font-medium text-gray-800">{{$vertretung->altFach}}</span>
+                                    <span class="font-medium" style="color: var(--color-text-primary)">{{$vertretung->altFach}}</span>
                                     @if($vertretung->neuFach)
                                         <i class="fas fa-arrow-right" style="color: var(--color-primary)"></i>
                                         <span class="font-medium" style="color: var(--color-text-success, #15803d)">{{$vertretung->neuFach}}</span>
@@ -63,9 +63,9 @@
                             {{-- Lehrer --}}
                             @if($vertretung->lehrer)
                                 <div class="mb-2">
-                                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Lehrer</div>
-                                    <div class="flex items-center gap-2 text-sm text-gray-700">
-                                        <i class="fas fa-user text-gray-400"></i>
+                                    <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-text-muted)">Lehrer</div>
+                                    <div class="flex items-center gap-2 text-sm" style="color: var(--color-text-secondary)">
+                                        <i class="fas fa-user" style="color: var(--color-text-muted)"></i>
                                         <span>{{$vertretung->lehrer}}</span>
                                     </div>
                                 </div>
@@ -74,7 +74,7 @@
                             {{-- Kommentar --}}
                             @if($vertretung->comment)
                                 <div>
-                                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Hinweis</div>
+                                    <div class="text-xs uppercase tracking-wide mb-1" style="color: var(--color-text-muted)">Hinweis</div>
                                     <div class="flex items-start gap-2 text-sm text-gray-600 bg-yellow-50 border-l-4 border-yellow-400 p-2 rounded">
                                         <i class="fas fa-comment-dots text-yellow-600 mt-0.5"></i>
                                         <span>{{$vertretung->comment}}</span>
@@ -92,7 +92,7 @@
                                     <div class="text-base font-semibold text-green-700 mb-1">
                                         Keine Vertretungen
                                     </div>
-                                    <div class="text-sm text-gray-500">
+                                    <div class="text-sm" style="color: var(--color-text-muted)">
                                         Der Unterricht findet planmäßig statt.
                                     </div>
                                 </div>

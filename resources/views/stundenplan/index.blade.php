@@ -5,7 +5,7 @@
 @section('content')
 <div class="w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
     <!-- Hauptbereich -->
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
         <!-- Header mit Gradient -->
         <div class="px-6 py-4 border-b"
              style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
@@ -38,20 +38,20 @@
         </div>
 
         <!-- Tab Navigation -->
-        <div class="bg-gray-50 border-b border-gray-200">
+        <div class="border-b" style="background-color: var(--color-surface-subtle); border-color: var(--color-card-border)">
             <div class="px-6" x-data="{ activeTab: '{{ $currentView }}' }">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                     <button @click="activeTab = 'class'"
-                            :class="activeTab === 'class' ? 'border-b-2' : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            :style="activeTab === 'class' ? 'border-color: var(--color-widget-primary-from); color: var(--color-widget-primary-from)' : ''"
+                            :class="activeTab === 'class' ? 'border-b-2' : 'border-b-2 border-transparent hover:border-gray-300'"
+                            :style="activeTab === 'class' ? 'border-color: var(--color-widget-primary-from); color: var(--color-widget-primary-from)' : 'color: var(--color-text-muted)'"
                             class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200 flex items-center gap-2">
                         <i class="fas fa-users"></i>
                         {{ __('stundenplan.view_by_class') }}
                     </button>
                     @if($canViewTeacher)
                     <button @click="activeTab = 'teacher'"
-                            :class="activeTab === 'teacher' ? 'border-b-2' : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            :style="activeTab === 'teacher' ? 'border-color: var(--color-widget-primary-from); color: var(--color-widget-primary-from)' : ''"
+                            :class="activeTab === 'teacher' ? 'border-b-2' : 'border-b-2 border-transparent hover:border-gray-300'"
+                            :style="activeTab === 'teacher' ? 'border-color: var(--color-widget-primary-from); color: var(--color-widget-primary-from)' : 'color: var(--color-text-muted)'"
                             class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200 flex items-center gap-2">
                         <i class="fas fa-chalkboard-teacher"></i>
                         {{ __('stundenplan.view_by_teacher') }}
@@ -59,8 +59,8 @@
                     @endif
                     @if($canViewRoom)
                     <button @click="activeTab = 'room'"
-                            :class="activeTab === 'room' ? 'border-b-2' : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            :style="activeTab === 'room' ? 'border-color: var(--color-widget-primary-from); color: var(--color-widget-primary-from)' : ''"
+                            :class="activeTab === 'room' ? 'border-b-2' : 'border-b-2 border-transparent hover:border-gray-300'"
+                            :style="activeTab === 'room' ? 'border-color: var(--color-widget-primary-from); color: var(--color-widget-primary-from)' : 'color: var(--color-text-muted)'"
                             class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200 flex items-center gap-2">
                         <i class="fas fa-door-open"></i>
                         {{ __('stundenplan.view_by_room') }}
@@ -73,12 +73,13 @@
                     <!-- Class View -->
                     <div x-show="activeTab === 'class'" x-cloak>
                         <div class="mb-6">
-                            <label for="class-select" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="class-select" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
                                 <i class="fas fa-filter mr-2"></i>
                                 {{ __('stundenplan.select_class') }}
                             </label>
                             <select id="class-select"
-                                    class="block w-full md:w-64 px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
+                                    class="block w-full md:w-64 px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                    style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
                                     onchange="loadClassTimetable(this.value)">
                                 <option value="">{{ __('stundenplan.select_class') }}</option>
                                 @foreach($classes as $class)
@@ -88,9 +89,9 @@
                         </div>
 
                         <div id="class-timetable-container">
-                            <div class="bg-gray-50 rounded-lg p-12 text-center">
-                                <i class="fas fa-calendar-alt text-6xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500 text-lg">{{ __('stundenplan.select_class') }}</p>
+                            <div class="rounded-lg p-12 text-center" style="background-color: var(--color-surface-subtle)">
+                                <i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--color-text-muted); opacity: 0.5"></i>
+                                <p class="text-lg" style="color: var(--color-text-muted)">{{ __('stundenplan.select_class') }}</p>
                             </div>
                         </div>
                     </div>
@@ -98,12 +99,13 @@
                     <!-- Teacher View -->
                     <div x-show="activeTab === 'teacher'" x-cloak>
                         <div class="mb-6">
-                            <label for="teacher-select" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="teacher-select" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
                                 <i class="fas fa-filter mr-2"></i>
                                 {{ __('stundenplan.select_teacher') }}
                             </label>
                             <select id="teacher-select"
-                                    class="block w-full md:w-64 px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none">
+                                    class="block w-full md:w-64 px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                    style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
                                 <option value="">{{ __('stundenplan.select_teacher') }}</option>
                                 @foreach($teachers as $teacher)
                                     <option value="{{ $teacher }}">{{ $teacher }}</option>
@@ -112,9 +114,9 @@
                         </div>
 
                         <div id="teacher-timetable-container">
-                            <div class="bg-gray-50 rounded-lg p-12 text-center">
-                                <i class="fas fa-chalkboard-teacher text-6xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500 text-lg">{{ __('stundenplan.select_teacher') }}</p>
+                            <div class="rounded-lg p-12 text-center" style="background-color: var(--color-surface-subtle)">
+                                <i class="fas fa-chalkboard-teacher text-6xl mb-4" style="color: var(--color-text-muted); opacity: 0.5"></i>
+                                <p class="text-lg" style="color: var(--color-text-muted)">{{ __('stundenplan.select_teacher') }}</p>
                             </div>
                         </div>
                     </div>
@@ -122,12 +124,13 @@
                     <!-- Room View -->
                     <div x-show="activeTab === 'room'" x-cloak>
                         <div class="mb-6">
-                            <label for="room-select" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="room-select" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
                                 <i class="fas fa-filter mr-2"></i>
                                 {{ __('stundenplan.select_room') }}
                             </label>
                             <select id="room-select"
-                                    class="block w-full md:w-64 px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none">
+                                    class="block w-full md:w-64 px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                    style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
                                 <option value="">{{ __('stundenplan.select_room') }}</option>
                                 @foreach($rooms as $room)
                                     <option value="{{ $room }}">{{ $room }}</option>
@@ -152,9 +155,9 @@
 function loadClassTimetable(className) {
     if (!className) {
         document.getElementById('class-timetable-container').innerHTML = `
-            <div class="bg-gray-50 rounded-lg p-12 text-center">
-                <i class="fas fa-calendar-alt text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500 text-lg">{{ __('stundenplan.select_class') }}</p>
+            <div class="rounded-lg p-12 text-center" style="background-color: var(--color-surface-subtle)">
+                <i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--color-text-muted); opacity: 0.5"></i>
+                <p class="text-lg" style="color: var(--color-text-muted)">{{ __('stundenplan.select_class') }}</p>
             </div>
         `;
         return;
@@ -175,9 +178,9 @@ function loadClassTimetable(className) {
 function loadTeacherTimetable(teacherName) {
     if (!teacherName) {
         document.getElementById('teacher-timetable-container').innerHTML = `
-            <div class="bg-gray-50 rounded-lg p-12 text-center">
-                <i class="fas fa-chalkboard-teacher text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500 text-lg">{{ __('stundenplan.select_teacher') }}</p>
+            <div class="rounded-lg p-12 text-center" style="background-color: var(--color-surface-subtle)">
+                <i class="fas fa-chalkboard-teacher text-6xl mb-4" style="color: var(--color-text-muted); opacity: 0.5"></i>
+                <p class="text-lg" style="color: var(--color-text-muted)">{{ __('stundenplan.select_teacher') }}</p>
             </div>
         `;
         return;

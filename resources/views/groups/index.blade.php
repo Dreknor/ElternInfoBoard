@@ -4,7 +4,7 @@
 @section('content')
     <div class="container-fluid px-4 py-3 space-y-4">
         @foreach($groups as $group)
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                 <!-- Card Header -->
                 <div class="px-4 py-3 border-b"
                      style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
@@ -31,11 +31,14 @@
                                      x-transition:leave="transition ease-in duration-75"
                                      x-transition:leave-start="transform opacity-100 scale-100"
                                      x-transition:leave-end="transform opacity-0 scale-95"
-                                     class="absolute left-0 md:left-auto md:right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
-                                     style="display: none;">
+                                     class="absolute left-0 md:left-auto md:right-0 mt-2 w-64 rounded-lg shadow-xl border py-2 z-50"
+                                     style="background-color: var(--color-card-bg); border-color: var(--color-card-border); display: none;">
                                     @if(auth()->user()->can('create own group') and $group->owner_id == auth()->user()->id)
-                                        <a href="{{url('groups/'.$group->id.'/add')}}"
-                                           class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                         <a href="{{url('groups/'.$group->id.'/add')}}"
+                                           class="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
+                                           style="color: var(--color-text-secondary)"
+                                           onmouseover="this.style.backgroundColor='var(--color-surface-subtle)'"
+                                           onmouseout="this.style.backgroundColor=''">
                                             <i class="fas fa-user-plus" style="color: var(--color-widget-primary-from)"></i>
                                             <span>Hinzufügen</span>
                                         </a>
@@ -56,7 +59,7 @@
                                         @endif
                                     @endcan
                                     @if( auth()->user()->can('delete groups') or $group->owner_id == auth()->user()->id)
-                                        <div class="border-t border-gray-200 mt-2 pt-2 px-4">
+                                        <div class="border-t mt-2 pt-2 px-4" style="border-color: var(--color-card-border)">
                                             <p class="text-xs text-red-700 font-medium mb-2">
                                                 Soll diese Gruppe gelöscht werden? Dies muss per Passwort bestätigt werden.
                                             </p>
@@ -67,7 +70,8 @@
                                                 @method('delete')
                                                 <input name="passwort" type="password"
                                                        placeholder="Passwort eingeben"
-                                                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none text-sm">
+                                                       class="w-full px-3 py-2 border-2 rounded-lg transition-all duration-200 outline-none text-sm"
+                                                       style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
                                                 <button type="submit"
                                                         class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
                                                     <i class="fas fa-trash"></i>
@@ -96,19 +100,21 @@
                 <div class="p-4">
                     @can('edit groups')
                         <div class="overflow-x-auto">
-                            <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
-                                <thead class="bg-gray-100">
+                            <table class="w-full border rounded-lg overflow-hidden" style="border-color: var(--color-card-border)">
+                                <thead style="background-color: var(--color-surface-subtle)">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">E-Mail</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Telefon</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700"></th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Name</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">E-Mail</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Telefon</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)"></th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody class="divide-y" style="border-color: var(--color-card-border)">
                                     @foreach($group->users as $user)
-                                        <tr class="hover:bg-gray-50 transition-colors">
-                                            <td class="px-4 py-3">
+                                        <tr class="transition-colors"
+                                            onmouseover="this.style.backgroundColor='var(--color-surface-subtle)'"
+                                            onmouseout="this.style.backgroundColor=''">
+                                            <td class="px-4 py-3" style="color: var(--color-text-primary)">
                                                 @can('edit user')
                                                     <a href="{{url('users/'.$user->id)}}"
                                                        class="inline-flex items-center gap-2 font-medium hover:underline"
@@ -161,21 +167,24 @@
                             @foreach($group->users->filter(function ($user){
                                 if ($user->publicMail !="" or $user->publicPhone !=""){ return $user; }
                             }) as $user)
-                                <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200"
-                                     onmouseover="this.style.borderColor='var(--color-widget-primary-from)'"
-                                     onmouseout="this.style.borderColor='#e5e7eb'">
+                                     <div class="border rounded-lg p-3 hover:shadow-md transition-all duration-200"
+                                          style="border-color: var(--color-card-border)"
+                                          onmouseover="this.style.borderColor='var(--color-widget-primary-from)'"
+                                          onmouseout="this.style.borderColor='var(--color-card-border)'">
                                     <div class="flex items-center gap-2 mb-2">
                                         @can('edit user')
                                             <a href="{{url('user/'.$user->id)}}"
-                                               class="inline-flex items-center justify-center p-2 rounded-lg transition-all duration-200 hover:bg-gray-100"
-                                               style="color: var(--color-widget-primary-from)">
+                                               class="inline-flex items-center justify-center p-2 rounded-lg transition-all duration-200"
+                                               style="color: var(--color-widget-primary-from)"
+                                               onmouseover="this.style.backgroundColor='var(--color-surface-subtle)'"
+                                               onmouseout="this.style.backgroundColor=''">
                                                 <i class="fas fa-user-edit"></i>
                                             </a>
                                         @endcan
-                                        <span class="font-semibold text-gray-800">{{$user->name}}</span>
+                                        <span class="font-semibold" style="color: var(--color-text-primary)">{{$user->name}}</span>
                                     </div>
                                     @if($user->publicMail !="")
-                                        <div class="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                        <div class="flex items-center gap-2 text-sm mb-1" style="color: var(--color-text-secondary)">
                                             <i class="fas fa-envelope" style="color: var(--color-widget-primary-from)"></i>
                                             <a href="mailto:{{$user->publicMail}}"
                                                class="hover:underline break-all"
@@ -185,7 +194,7 @@
                                         </div>
                                     @endif
                                     @if($user->publicPhone !="")
-                                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                                        <div class="flex items-center gap-2 text-sm" style="color: var(--color-text-secondary)">
                                             <i class="fas fa-phone" style="color: var(--color-widget-success-from)"></i>
                                             <a href="tel:{{$user->publicPhone}}"
                                                class="hover:underline"
@@ -204,7 +213,7 @@
         @if(auth()->user()->can('edit groups') or auth()->user()->can('create own group'))
             <!-- Eigene Gruppe anlegen -->
             @can('create own group')
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                     @if ($errors->any())
                         <div class="p-4">
                             <div class="flex items-start gap-3 p-3 bg-red-50 border-l-4 border-red-500 rounded">
@@ -227,7 +236,7 @@
                         </h5>
                     </div>
                     <div class="p-4">
-                        <p class="text-gray-600 text-sm mb-4">
+                        <p class="text-sm mb-4" style="color: var(--color-text-secondary)">
                             Eigene Gruppen werden vom Ersteller verwaltet (Personen hinzufügen etc.). Die Gruppe ist
                             nicht öffentlich und kann nur vom Ersteller gesehen und genutzt werden.
                             Persönliche Gruppen werden grundsätzlich
@@ -236,9 +245,10 @@
                         <form action="{{url('groups/own')}}" method="post" class="space-y-4">
                             @csrf
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">Name</label>
                                 <input type="text"
-                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
+                                       class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                       style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
                                        placeholder="Name der Gruppe"
                                        name="name"
                                        value="{{old('name')}}"
@@ -256,7 +266,7 @@
             @endcan
             <!-- Globale Gruppe anlegen -->
             @can('edit groups')
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                     <div class="px-4 py-3 border-b"
                          style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
                         <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
@@ -265,31 +275,33 @@
                         </h5>
                     </div>
                     <div class="p-4">
-                        <p class="text-gray-600 text-sm mb-4">
+                        <p class="text-sm mb-4" style="color: var(--color-text-secondary)">
                             Die hier angelegten Gruppen stehen allen Benutzern zur Verfügung.
                         </p>
                         <form action="{{url('groups')}}" method="post" class="space-y-4">
                             @csrf
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                                 <div class="md:col-span-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">Name</label>
                                     <input type="text"
-                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
+                                           class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                           style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
                                            placeholder="Name der Gruppe"
                                            name="name"
                                            value="{{old('name')}}"
                                            required>
                                 </div>
                                 <div class="md:col-span-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Bereich</label>
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">Bereich</label>
                                     <input type="text"
-                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
+                                           class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                           style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
                                            name="bereich"
                                            placeholder="Bereich der Gruppe"
                                            value="{{old('bereich')}}">
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Geschützt</label>
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">Geschützt</label>
                                     <label class="relative inline-flex items-center cursor-pointer mt-2">
                                         <input type="checkbox" name="protected" value="1"
                                                class="sr-only peer" {{ old('protected') ? 'checked="checked"' : '' }}>
