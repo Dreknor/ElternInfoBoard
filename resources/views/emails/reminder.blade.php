@@ -56,7 +56,7 @@
     @elseif($level === 2)
         <p>Die Frist für die Anwesenheitsabfrage läuft am <strong>{{ $deadline }}</strong> ab. Bitte antworten Sie zeitnah.</p>
     @else
-        <p>Die Frist ist am <strong>{{ $deadline }}</strong> abgelaufen. Bitte geben Sie Ihre Antwort umgehend ab.</p>
+        <p>Die Frist ist am <strong>{{ $deadline }}</strong> abgelaufen. Nachmeldungen sind nicht mehr möglich.</p>
     @endif
 @endif
 
@@ -80,7 +80,7 @@
 
 <p>
     Mit freundlichen Grüßen<br>
-    Ihr Team des Evangelischen Schulzentrum Radebeul
+    <a href="{{ config('app.url') }}" style="color: #2563eb; text-decoration: underline;">{{ config('app.name') }}</a>
 </p>
 
 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
