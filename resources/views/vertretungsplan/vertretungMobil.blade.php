@@ -3,17 +3,18 @@
         @if(!$x->isWeekend())
             <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
                 {{-- Header --}}
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3">
-                    <div class="flex items-center gap-2 text-white">
+                <div class="px-4 py-3"
+                     style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
+                    <div class="flex items-center gap-2" style="color: var(--color-widget-header-text)">
                         <i class="fas fa-calendar-day text-lg"></i>
                         <div class="flex-1">
                             <div class="font-bold text-base">
                                 {{$x->locale('de')->dayName}}
                             </div>
-                            <div class="text-sm text-blue-100">
+                            <div class="text-sm" style="color: rgba(255,255,255,0.75)">
                                 {{$x->format('d.m.Y')}}
                                 @if(count($weeks->where('week', $x->copy()->startOfWeek())) > 0 )
-                                    <span class="text-blue-200">
+                                    <span style="color: rgba(255,255,255,0.6)">
                                         ({{$weeks->where('week', $x->copy()->startOfWeek())->first()?->type}}-Woche)
                                     </span>
                                 @endif
@@ -33,7 +34,7 @@
                     @endphp
 
                     @forelse($tagesVertretungen as $vertretung)
-                        <div class="p-4 @if(($loop->iteration-1)%2 == 0) bg-blue-50 @else bg-white @endif">
+                        <div class="p-4" style="{{ ($loop->iteration-1)%2 == 0 ? 'background-color: var(--color-primary-light)' : 'background-color: #ffffff' }}">
                             {{-- Klasse und Stunde --}}
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-2">
@@ -41,7 +42,8 @@
                                         Klasse {{$vertretung->group->name}}
                                     </span>
                                 </div>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm font-medium">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                      style="background-color: var(--color-primary-light); color: var(--color-primary)">
                                     {{$vertretung->stunde}}. Std.
                                 </span>
                             </div>
@@ -52,8 +54,8 @@
                                 <div class="flex items-center gap-2 text-sm">
                                     <span class="font-medium text-gray-800">{{$vertretung->altFach}}</span>
                                     @if($vertretung->neuFach)
-                                        <i class="fas fa-arrow-right text-blue-600"></i>
-                                        <span class="font-medium text-green-700">{{$vertretung->neuFach}}</span>
+                                        <i class="fas fa-arrow-right" style="color: var(--color-primary)"></i>
+                                        <span class="font-medium" style="color: var(--color-text-success, #15803d)">{{$vertretung->neuFach}}</span>
                                     @endif
                                 </div>
                             </div>

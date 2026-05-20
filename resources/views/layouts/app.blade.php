@@ -2,11 +2,17 @@
 
 @php
     /**
-     * Dark Mode: Prüft ob der eingeloggte Nutzer "dark" als Theme gewählt hat.
-     * Setzt die "dark"-Klasse auf dem <html>-Element für Tailwind Dark Mode.
+     * Dark Mode: Setzt die "dark"-Klasse auf dem <html>-Element für Tailwind Dark Mode,
+     * wenn der aktive Theme ein Dark-Theme ist (Theme-ID 'dark' oder bodyClasses enthält 'dark-mode').
+     * $activeTheme wird durch die ApplyTheme-Middleware bereitgestellt.
      */
     $htmlDarkClass = '';
-    if (auth()->check()) {
+    if (isset($activeTheme)) {
+        if ($activeTheme->id() === 'dark' || str_contains($activeTheme->bodyClasses(), 'dark-mode')) {
+            $htmlDarkClass = 'dark';
+        }
+    } elseif (auth()->check()) {
+        // Fallback (sollte nie eintreten, da Middleware $activeTheme setzt)
         $us = \App\Model\UserAppSettings::where('user_id', auth()->id())->first();
         $userTheme = data_get($us?->settings, 'theme', '');
         if ($userTheme === 'dark') {
@@ -71,27 +77,30 @@
     <!-- Vite Assets (Tailwind CSS + Bootstrap-Compat-Layer) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- Theme CSS Custom Properties (NACH allen Stylesheets, damit Theme-Werte die Defaults in app.css überschreiben) --}}
+    <x-theme-vars />
+
     @yield('css')
     @stack('css')
 </head>
 
-{{-- Body: dark: prefix für Tailwind Dark Mode, bg via CSS-Var --}}
-<body id="app-layout" class="bg-[var(--app-bg)] text-[var(--app-text)]">
+{{-- Body: dark: prefix für Tailwind Dark Mode, bg via CSS-Var. Body-Klasse vom Theme angehängt. --}}
+<body id="app-layout" class="bg-[var(--app-bg)] text-[var(--app-text)] {{ isset($activeTheme) ? $activeTheme->bodyClasses() : '' }}">
 
 <!-- Sidebar Overlay für Mobile -->
 <div class="sidebar-overlay"></div>
 
 <!-- Mobile Bottom Navigation -->
 <div class="lg:hidden">
-    <nav class="mobile-bottom-nav fixed bottom-0 left-0 right-0 border-t-2 border-gray-200 dark:border-gray-700 shadow-2xl"
-         style="z-index: 1040; background: var(--color-mobile-nav-bg, rgba(255,255,255,0.95)); backdrop-filter: blur(10px);">
+    <nav class="mobile-bottom-nav fixed bottom-0 left-0 right-0 border-t-2 shadow-2xl"
+         style="z-index: 1040; border-color: var(--color-card-border); background: var(--color-mobile-nav-bg, rgba(255,255,255,0.95)); backdrop-filter: blur(10px);">
         <div class="flex items-center justify-around h-16 px-2 safe-area-inset-bottom">
             <!-- Dashboard Icon -->
             <div class="mobile-bottom-nav_item flex-1 @if(request()->path() == 'dashboard' || request()->path() == '/' || request()->path() == '') mobile-bottom-nav_item--active @endif">
                 <div class="mobile-bottom-nav_item-content">
                     <a href="{{url('/dashboard')}}"
-                       class="flex flex-col items-center justify-center gap-0.5 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 active:text-blue-700 transition-all duration-200 group
-                              @if(request()->path() == 'dashboard' || request()->path() == '/' || request()->path() == '') text-blue-600 dark:text-blue-400 @endif">
+                       class="flex flex-col items-center justify-center gap-0.5 py-2 transition-all duration-200 group"
+                       style="color: @if(request()->path() == 'dashboard' || request()->path() == '/' || request()->path() == '') var(--color-primary) @else var(--color-mobile-nav-text) @endif;">
                         <div class="relative">
                             <i class="fas fa-home text-2xl group-hover:scale-110 transition-transform duration-200"></i>
                         </div>
@@ -110,7 +119,8 @@
             <!-- Menu Toggle Icon -->
             <div class="mobile-bottom-nav_item flex-1" id="toogleSidebarButton">
                 <div class="mobile-bottom-nav_item-content">
-                    <a href="#" class="flex flex-col items-center justify-center gap-0.5 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-all duration-200 group">
+                    <a href="#" class="flex flex-col items-center justify-center gap-0.5 py-2 transition-all duration-200 group"
+                       style="color: var(--color-mobile-nav-text);" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-mobile-nav-text')">
                         <div class="relative">
                             <i class="fas fa-bars text-2xl group-hover:scale-110 transition-transform duration-200"></i>
                         </div>
@@ -126,10 +136,10 @@
 <div class="sidebar shadow-sidebar"
      data-color="white"
      data-active-color="danger"
-     style="background: var(--color-sidebar-bg, #ffffff); border-right: 1px solid var(--color-sidebar-border, #e2e8f0); z-index: 1010;">
+     style="background: linear-gradient(to bottom, var(--color-sidebar-bg, #ffffff), var(--color-sidebar-bg-mid, #f8fafc), var(--color-sidebar-bg, #ffffff)); border-right: 1px solid var(--color-sidebar-border, #e2e8f0); z-index: 1010;">
 
-    <!-- Sidebar Header / Logo (obere 70px – entspricht der Navbar-Höhe) -->
-    <div class="sidebar-header flex items-center px-4 border-b"
+    <!-- Sidebar Header / Logo (obere 70px – entspricht der Navbar-Höhe, nur Desktop) -->
+    <div class="sidebar-header hidden lg:flex items-center px-4 border-b"
          style="height: 70px; background: var(--color-sidebar-logo-bg, #f8fafc); border-color: var(--color-sidebar-logo-border, #e2e8f0);">
         <a href="{{url('/')}}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div class="h-8 flex items-center">
@@ -144,7 +154,8 @@
     </div>
 
     <!-- Sidebar Navigation -->
-    <div class="sidebar-wrapper overflow-y-auto" id="sidebar" style="max-height: calc(100vh - 130px); margin-top: 0;">
+    {{-- Desktop: 70px Logo-Header + ~60px Footer = 130px abziehen; Mobile: Logo-Header ausgeblendet, nur ~60px Footer --}}
+    <div class="sidebar-wrapper overflow-y-auto sidebar-nav-scroll" id="sidebar">
         <ul class="nav flex-column px-2 py-3 space-y-1">
             <!-- Dashboard -->
             <li class="nav-item">
@@ -169,13 +180,14 @@
     <div class="absolute bottom-0 left-0 right-0 px-3 py-2 border-t"
          style="background: var(--color-sidebar-footer-bg, #f1f5f9); border-color: var(--color-sidebar-footer-border, #e2e8f0);">
         <div class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                 style="background-color: var(--color-avatar-bg);">
                 {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-xs font-medium truncate mb-0" style="color: var(--color-sidebar-text, #374151);">{{auth()->user()->name ?? 'User'}}</p>
-                <p class="text-xs truncate mb-0" style="color: var(--color-sidebar-text-muted, #9ca3af);">
-                    <i class="fas fa-circle text-green-500 text-[6px] mr-1"></i>
+                        <p class="text-xs truncate mb-0" style="color: var(--color-sidebar-text-muted, #9ca3af);">
+                    <i class="fas fa-circle text-[6px] mr-1" style="color: #22c55e;"></i>
                     Online
                 </p>
             </div>
@@ -204,16 +216,16 @@
                         </svg>
                     </button>
 
-                    <!-- Brand / Logo -->
-                    <a href="{{url('/')}}" class="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
-                        <div class="h-10 flex items-center">
+                    <!-- Brand / Logo: nur auf Mobile sichtbar (auf Desktop zeigt die Sidebar das Brand) -->
+                    <a href="{{url('/')}}" class="lg:hidden flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
+                        <div class="h-8 flex items-center">
                             @if($settings->logo == 'logo.png')
-                                <img src="{{asset('img/'.$settings->logo)}}" class="h-10 w-auto" alt="{{$settings->app_name}}">
+                                <img src="{{asset('img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
                             @else
-                                <img src="{{url('storage/img/'.$settings->logo)}}" class="h-10 w-auto" alt="{{$settings->app_name}}">
+                                <img src="{{url('storage/img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
                             @endif
                         </div>
-                        <span class="hidden md:inline text-lg font-bold" style="color: var(--color-navbar-text, #1f2937)">{{$settings->app_name}}</span>
+                        <span class="text-base font-bold" style="color: var(--color-navbar-text, #1f2937)">{{$settings->app_name}}</span>
                     </a>
                 </div>
 
@@ -226,12 +238,15 @@
                                    name="suche"
                                    id="suchInput"
                                    placeholder="Suchen..."
-                                   class="w-full pl-4 pr-12 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg
-                                          focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none
-                                          bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                                          placeholder-gray-400 dark:placeholder-gray-500">
+                                   class="w-full pl-4 pr-12 py-2 rounded-lg border-2 transition-all duration-200 outline-none"
+                                   style="background-color: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                   onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                   onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')">
                             <button type="submit"
-                                    class="absolute right-1 top-1 bottom-1 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200">
+                                    class="absolute right-1 top-1 bottom-1 px-4 rounded-md transition-colors duration-200 text-white"
+                                    style="background-color: var(--color-primary);"
+                                    onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                    onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -243,7 +258,10 @@
                     <!-- Mobile Search Toggle -->
                     <button type="button"
                             @click="mobileSearchOpen = !mobileSearchOpen"
-                            class="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-200">
+                            class="md:hidden inline-flex items-center justify-center p-2 rounded-lg transition-all duration-200"
+                            style="color: var(--color-mobile-nav-text);"
+                            onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-primary');this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-light')"
+                            onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-mobile-nav-text');this.style.backgroundColor=''">
                         <i class="fas fa-search text-lg"></i>
                     </button>
 
@@ -259,7 +277,10 @@
 
                     @if (Auth::guest())
                         <a href="{{ url('/login') }}"
-                           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                           class="inline-flex items-center gap-2 px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200"
+                           style="background-color: var(--color-primary);"
+                           onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                           onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
                             <i class="fas fa-sign-in-alt"></i>
                             <span class="hidden sm:inline">Login</span>
                         </a>
@@ -269,13 +290,16 @@
                             <button type="button"
                                     @click="open = !open"
                                     @click.away="open = false"
-                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200
-                                           bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200"
+                                    style="background-color: var(--color-navbar-user-btn-bg);"
+                                    onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-navbar-user-btn-hover')"
+                                    onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-navbar-user-btn-bg')">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                                     style="background-color: var(--color-avatar-bg);">
                                     {{ substr(auth()->user()->name, 0, 1) }}
                                 </div>
-                                <span class="hidden md:inline font-medium text-gray-800 dark:text-gray-100">{{auth()->user()->name}}</span>
-                                <i class="fas fa-chevron-down text-gray-600 dark:text-gray-400 text-sm transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                                <span class="hidden md:inline font-medium" style="color: var(--color-navbar-text);">{{auth()->user()->name}}</span>
+                                <i class="fas fa-chevron-down text-sm transition-transform duration-200" style="color: var(--color-text-secondary);" :class="{ 'rotate-180': open }"></i>
                             </button>
 
                             <!-- Dropdown Menu -->
@@ -286,24 +310,26 @@
                                  x-transition:leave="transition ease-in duration-75"
                                  x-transition:leave-start="transform opacity-100 scale-100"
                                  x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="absolute right-0 mt-2 w-64 rounded-lg shadow-xl border py-2 z-50
-                                        bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                                 style="display: none;"
+                                 class="absolute right-0 mt-2 w-64 rounded-lg shadow-xl border py-2 z-50"
+                                  style="background-color: var(--color-card-bg); border-color: var(--color-card-border); display: none;"
                                  @click.away="open = false">
 
-                                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-0">{{auth()->user()->name}}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">{{auth()->user()->email}}</p>
+                                <div class="px-4 py-3 border-b" style="border-color: var(--color-card-border);">
+                                    <p class="text-sm font-semibold mb-0" style="color: var(--color-text-primary);">{{auth()->user()->name}}</p>
+                                    <p class="text-xs mb-0" style="color: var(--color-text-secondary);">{{auth()->user()->email}}</p>
                                 </div>
 
                                 <div class="py-1">
                                     @stack('nav-user')
                                 </div>
 
-                                <div class="border-t border-gray-200 dark:border-gray-700 mt-1 pt-1">
+                                <div class="border-t mt-1 pt-1" style="border-color: var(--color-card-border);">
                                     <a href="#"
                                        onclick="event.preventDefault();document.getElementById('logout-form').submit();"
-                                       class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                       class="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
+                                       style="color: #dc2626;"
+                                       onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-navbar-user-btn-bg')"
+                                       onmouseout="this.style.backgroundColor=''">
                                         <i class="fas fa-sign-out-alt"></i>
                                         <span>Logout</span>
                                     </a>
@@ -332,12 +358,16 @@
                     <div class="relative">
                         <input type="text"
                                name="suche"
-                               placeholder="Suchen..."
-                               class="w-full pl-4 pr-12 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg
-                                      focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none
-                                      bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                         placeholder="Suchen..."
+                                class="w-full pl-4 pr-12 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                style="background-color: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')">
                         <button type="submit"
-                                class="absolute right-1 top-1 bottom-1 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200">
+                                class="absolute right-1 top-1 bottom-1 px-4 rounded-md transition-colors duration-200 text-white"
+                                style="background-color: var(--color-primary);"
+                                onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>

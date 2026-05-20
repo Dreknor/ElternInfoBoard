@@ -8,9 +8,8 @@
     @can('download krankmeldungen')
         <div class="mb-6">
             <a href="{{ url('krankmeldung/download') }}"
-               class="inline-flex items-center gap-2 w-full md:w-auto px-4 py-2
-                      bg-blue-600 hover:bg-blue-700 text-white font-medium
-                      rounded-lg transition-colors duration-200 justify-center md:justify-start">
+               class="inline-flex items-center gap-2 w-full md:w-auto px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200 justify-center md:justify-start"
+               style="background-color: var(--color-widget-primary-from)">
                 <i class="fas fa-download"></i>
                 <span>aktuelle Krankmeldung herunterladen</span>
             </a>
@@ -20,8 +19,9 @@
     <!-- Krankmeldung erstellen -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
         <!-- Card Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800">
-            <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+        <div class="px-4 py-3 border-b"
+             style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
+            <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                 <i class="fas fa-clipboard-list"></i>
                 Neue Krankmeldung erstellen
             </h5>
@@ -45,9 +45,7 @@
                             <div>
                                 <label for="child" class="block text-sm text-gray-600 mb-2">Kind auswählen:</label>
                                 <select name="child_id" id="child"
-                                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                               focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                               transition-all duration-200 outline-none">
+                                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none">
                                     <option value="">Bitte wählen</option>
                                     @foreach(auth()->user()->children() as $child)
                                         <option value="{{ $child->id }}">{{ $child->first_name }}</option>
@@ -61,9 +59,7 @@
                                 <input type="text"
                                        id="name"
                                        name="name"
-                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                              transition-all duration-200 outline-none"
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                        autofocus>
                                 @error('name')
                                     <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
@@ -76,9 +72,7 @@
                         <input type="text"
                                id="name"
                                name="name"
-                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                      focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                      transition-all duration-200 outline-none"
+                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                value="{{ old('name', $krankmeldungen->count() > 0 ? $krankmeldungen->first()->name : '') }}"
                                @if($krankmeldungen->count() === 0) autofocus @endif>
                         @error('name')
@@ -95,9 +89,7 @@
                         <div class="md:col-span-1">
                             <label for="disease" class="block text-sm font-medium text-gray-700 mb-2">besondere Erkrankung:</label>
                             <select name="disease_id" id="disease"
-                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                           focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                           transition-all duration-200 outline-none">
+                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none">
                                 <option value="0">keine genannte</option>
                                 @foreach($diseases as $disease)
                                     <option value="{{ $disease->id }}"
@@ -117,9 +109,7 @@
                         <input type="date"
                                id="start"
                                name="start"
-                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                      focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                      transition-all duration-200 outline-none"
+                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                min="{{ \Carbon\Carbon::now()->subDays(3)->format('Y-m-d') }}"
                                value="{{ old('start', \Carbon\Carbon::now()->format('Y-m-d')) }}"
                                required>
@@ -138,9 +128,7 @@
                         <input type="date"
                                id="ende"
                                name="ende"
-                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                      focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                      transition-all duration-200 outline-none"
+                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                value="{{ old('ende', \Carbon\Carbon::now()->format('Y-m-d')) }}"
                                required>
                         @error('ende')
@@ -161,9 +149,9 @@
                            id="files"
                            name="files[]"
                            class="w-full text-sm text-gray-600
-                                  file:mr-3 file:px-3 file:py-2 file:bg-blue-50
-                                  file:border-0 file:rounded-lg file:text-blue-600
-                                  file:cursor-pointer hover:file:bg-blue-100"
+                                  file:mr-3 file:px-3 file:py-2 file:bg-gray-100
+                                  file:border-0 file:rounded-lg file:text-gray-700
+                                  file:cursor-pointer hover:file:bg-gray-200"
                            multiple>
                     <p class="mt-1 text-xs text-gray-500">Unterstützte Dateien: PDF, PNG, JPG, JPEG</p>
                     @error('files')
@@ -182,9 +170,7 @@
                     <textarea id="kommentar"
                               name="kommentar"
                               rows="6"
-                              class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg
-                                      focus:border-blue-500 focus:ring-2 focus:ring-blue-200
-                                      transition-all duration-200 outline-none"
+                              class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                               placeholder="Hier können Sie weitere Informationen zur Krankheit eingeben...">{{ old('kommentar') }}</textarea>
                     <p class="mt-1 text-xs text-gray-500">Formatierung möglich (fett, kursiv, etc.)</p>
                     @error('kommentar')
@@ -197,10 +183,8 @@
                 <!-- Button -->
                 <div>
                     <button type="submit"
-                            class="inline-flex items-center justify-center gap-2 w-full md:w-auto
-                                   px-6 py-2.5 bg-green-600 hover:bg-green-700
-                                   text-white font-semibold rounded-lg
-                                   transition-colors duration-200 shadow-md hover:shadow-lg">
+                            class="inline-flex items-center justify-center gap-2 w-full md:w-auto px-6 py-2.5 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                            style="background-color: var(--color-widget-success-from)">
                         <i class="fas fa-check-circle"></i>
                         <span>Krankmeldung senden</span>
                     </button>
@@ -213,8 +197,9 @@
     @if($krankmeldungen && $krankmeldungen->count() > 0)
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <!-- Card Header -->
-            <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 border-b border-teal-700">
-                <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border)">
+                <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                     <i class="fas fa-history"></i>
                     Bisherige Krankmeldungen
                 </h5>
@@ -240,7 +225,8 @@
                         @foreach($krankmeldungen as $krankmeldung)
                             <tr class="hover:bg-gray-50 transition-colors duration-200">
                                 <td class="px-4 py-3 align-top">
-                                    <span class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full"
+                                          style="background-color: var(--color-widget-body-bg); color: var(--color-widget-primary-border); border: 1px solid var(--color-widget-primary-border)">
                                         <i class="fas fa-child"></i>
                                         {{ $krankmeldung->name }}
                                     </span>
@@ -284,9 +270,10 @@
             </div>
         </div>
     @else
-        <div class="flex items-start gap-3 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg">
-            <i class="fas fa-info-circle text-amber-600 mt-0.5 flex-shrink-0"></i>
-            <p class="text-amber-800 text-sm mb-0">
+        <div class="flex items-start gap-3 p-4 border-l-4 rounded-lg"
+             style="background-color: var(--color-widget-body-bg); border-color: var(--color-widget-warning-from)">
+            <i class="fas fa-info-circle mt-0.5 flex-shrink-0" style="color: var(--color-widget-warning-from)"></i>
+            <p class="text-sm mb-0" style="color: var(--color-widget-warning-border)">
                 Es existieren noch keine bisherigen Krankmeldungen. Diese werden hier nach der ersten Meldung angezeigt.
             </p>
         </div>

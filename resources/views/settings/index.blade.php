@@ -27,6 +27,7 @@
                                 ['id' => 'stundenplan',   'label' => 'Stundenplan',        'icon' => 'fas fa-calendar-alt'],
                                 ['id' => 'reminder',      'label' => 'Erinnerungen',       'icon' => 'fas fa-alarm-clock'],
                                 ['id' => 'messenger',     'label' => 'Eltern-Nachrichten', 'icon' => 'fas fa-comments'],
+                                ['id' => 'design',        'label' => 'Design',             'icon' => 'fas fa-palette'],
                             ];
                         @endphp
                         @foreach($tabs as $i => $tab)
@@ -82,6 +83,9 @@
                     </div>
                     <div class="tab-pane fade" id="settings-messenger" role="tabpanel">
                         @include('settings.tabs.messenger-tab')
+                    </div>
+                    <div class="tab-pane fade" id="settings-design" role="tabpanel">
+                        @include('settings.tabs.design-tab')
                     </div>
                 </div>
 

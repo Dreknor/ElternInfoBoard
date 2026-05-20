@@ -4,8 +4,8 @@
 @section('content')
 
     <div class="container-fluid px-4 py-3">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 border-b border-indigo-800">
+        <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg);">
+            <div class="px-4 py-3 border-b" style="background-color: var(--color-primary); border-color: var(--color-primary-dark);">
                 <h5 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
                     <i class="fas fa-user-cog"></i>
                     {{$user->name}}
@@ -14,8 +14,8 @@
             <div class="p-4">
                 @if(isset($changelog))
                     <div class="mb-6">
-                        <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl shadow-lg overflow-hidden">
-                            <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+                        <div class="border-2 border-amber-300 rounded-xl shadow-lg overflow-hidden" style="background-color: #fff7ed;">
+                            <div class="px-6 py-4" style="background: linear-gradient(to right, #f59e0b, #f97316);">
                                 <div class="flex items-center gap-3">
                                     <div class="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg">
                                         <i class="fas fa-bullhorn text-2xl text-white"></i>
@@ -32,11 +32,11 @@
                                 </div>
                             </div>
                             <div class="px-6 py-5">
-                                <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed changelog-content">
+                                <div class="prose prose-sm max-w-none leading-relaxed changelog-content" style="color: var(--color-text-secondary);">
                                     {!! $changelog->text !!}
                                 </div>
                             </div>
-                            <div class="px-6 py-3 bg-gradient-to-r from-amber-100 to-orange-100 border-t border-amber-200">
+                            <div class="px-6 py-3 border-t border-amber-200" style="background-color: #fef3c7;">
                                 <p class="text-xs text-amber-800 mb-0 flex items-center gap-2">
                                     <i class="fas fa-info-circle"></i>
                                     <span>Bitte beachten Sie die oben genannten Änderungen und Hinweise.</span>
@@ -47,8 +47,8 @@
                 @endif
 
                 <!-- Hauptbereich: Einstellungen -->
-                <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden mb-6">
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 border-b border-blue-800">
+                <div class="rounded-lg shadow-md overflow-hidden mb-6" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                    <div class="px-6 py-4 border-b" style="background-color: var(--color-primary); border-color: var(--color-primary-dark);">
                         <h5 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
                             <i class="fas fa-cog"></i>
                             Einstellungen
@@ -719,6 +719,63 @@
             </div>
         </div>
     </div>
+
+    {{-- Theme-Auswahl (Nutzer) – nur wenn vom Admin erlaubt --}}
+    @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
+        <div class="container-fluid mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-base font-bold mb-4 pb-2 border-b" style="color: var(--color-text-primary); border-color: var(--color-card-border);">
+                        <i class="fas fa-palette mr-2" style="color: var(--color-primary);"></i>
+                        Design-Theme
+                    </h6>
+                    <form action="{{ url('/einstellungen/theme') }}" method="post">
+                        @csrf
+                        @method('PUT')
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {{-- "Standard des Systems" Option --}}
+                            <label class="cursor-pointer">
+                                <input type="radio" name="theme" value="" class="sr-only peer"
+                                       @if(empty($userTheme)) checked @endif>
+                                <div class="border-2 rounded-lg p-3 text-center transition-all"
+                                     style="border-color: var(--color-card-border);"
+                                     onmouseover="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                     onmouseout="this.style.borderColor='@if(empty($userTheme))' + getComputedStyle(document.documentElement).getPropertyValue('--color-primary') + '@else' + getComputedStyle(document.documentElement).getPropertyValue('--color-card-border') + '@endif'">
+                                    <i class="fas fa-cog text-2xl mb-2 block" style="color: var(--color-text-secondary);"></i>
+                                    <span class="text-sm font-medium block" style="color: var(--color-text-primary);">System-Standard</span>
+                                    <span class="text-xs block mt-1" style="color: var(--color-text-secondary);">Wie vom Admin festgelegt</span>
+                                </div>
+                            </label>
+
+                            @foreach($themes as $theme)
+                                @php $vars = $theme->variables(); @endphp
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="theme" value="{{ $theme->id() }}" class="sr-only peer"
+                                           @if($userTheme === $theme->id()) checked @endif>
+                                    <div class="border-2 rounded-lg p-3 text-center transition-all"
+                                         style="border-color: {{ $userTheme === $theme->id() ? ($vars['--color-primary'] ?? '#2563eb') : 'var(--color-card-border)' }};">
+                                        <div class="flex justify-center gap-1 mb-2">
+                                            <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background: {{ $vars['--color-primary'] ?? '#000' }};border:1px solid #ccc;"></span>
+                                            <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background: {{ $vars['--color-sidebar-bg'] ?? '#000' }};border:1px solid #ccc;"></span>
+                                            <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background: {{ $vars['--color-body-bg'] ?? '#000' }};border:1px solid #ccc;"></span>
+                                        </div>
+                                        <span class="text-sm font-medium block" style="color: var(--color-text-primary);">{{ $theme->name() }}</span>
+                                        <span class="text-xs block mt-1" style="color: var(--color-text-secondary);">{{ $theme->description() }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                        <button type="submit" class="mt-4 px-6 py-2 text-white rounded-lg text-sm font-semibold transition-colors"
+                                style="background-color: var(--color-primary);"
+                                onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
+                            <i class="fas fa-save mr-1"></i> Theme speichern
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('js')

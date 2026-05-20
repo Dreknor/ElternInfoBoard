@@ -1,47 +1,65 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2>Teilnehmerverwaltung: {{ $arbeitsgemeinschaft->name }}</h2>
-                <a href="{{ route('verwaltung.arbeitsgemeinschaften.index') }}"
-                   class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i>
-                    <span class="button-text">Zurück</span>
-                </a>
+    <div class="container-fluid px-4 py-3">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <h4 class="text-xl font-bold mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text)">
+                        <i class="fas fa-users"></i>
+                        Teilnehmerverwaltung: {{ $arbeitsgemeinschaft->name }}
+                    </h4>
+                    <a href="{{ route('verwaltung.arbeitsgemeinschaften.index') }}"
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                       style="color: var(--color-widget-accent-from)">
+                        <i class="fas fa-arrow-left"></i>
+                        Zurück
+                    </a>
+                </div>
             </div>
-            <div class="card-body">
+
+            <div class="p-4 space-y-4">
                 <!-- Info-Box -->
-                <div class="alert alert-info">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>Maximale Teilnehmer:</strong> {{ $arbeitsgemeinschaft->max_participants }}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Aktuelle Teilnehmer:</strong> {{ $participants->count() }}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Freie Plätze:</strong>
-                            {{ $arbeitsgemeinschaft->max_participants - $participants->count() }}
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg border-l-4"
+                     style="background-color: var(--color-widget-accent-bg); border-color: var(--color-widget-accent-from)">
+                    <div class="text-sm">
+                        <span class="font-semibold text-gray-700">Maximale Teilnehmer:</span>
+                        <span class="ml-2 font-bold" style="color: var(--color-widget-accent-from)">{{ $arbeitsgemeinschaft->max_participants }}</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-semibold text-gray-700">Aktuelle Teilnehmer:</span>
+                        <span class="ml-2 font-bold" style="color: var(--color-widget-accent-from)">{{ $participants->count() }}</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-semibold text-gray-700">Freie Plätze:</span>
+                        <span class="ml-2 font-bold text-green-600">{{ $arbeitsgemeinschaft->max_participants - $participants->count() }}</span>
                     </div>
                 </div>
 
                 <!-- Teilnehmer hinzufügen -->
                 @if($arbeitsgemeinschaft->participants()->count() < $arbeitsgemeinschaft->max_participants)
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h3>Teilnehmer hinzufügen</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="px-4 py-3 border-b"
+                             style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border)">
+                            <h5 class="text-base font-bold mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text)">
+                                <i class="fas fa-user-plus"></i>
+                                Teilnehmer hinzufügen
+                            </h5>
                         </div>
-                        <div class="card-body">
+                        <div class="p-4">
                             <form action="{{ route('verwaltung.arbeitsgemeinschaften.teilnehmer.add', $arbeitsgemeinschaft) }}"
                                   method="POST"
-                                  class="row g-3 align-items-end">
+                                  class="flex flex-col sm:flex-row gap-3 items-end">
                                 @csrf
-                                <div class="col-md-10">
-                                    <label for="child_id" class="form-label">Kind auswählen</label>
-                                    <select name="child_id" id="child_id" class="custom-select" required>
+                                <div class="flex-1">
+                                    <label for="child_id" class="block text-sm font-medium text-gray-700 mb-2">Kind auswählen</label>
+                                    <select name="child_id" id="child_id"
+                                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200"
+                                            onfocus="this.style.borderColor='var(--color-widget-success-from)'"
+                                            onblur="this.style.borderColor='#d1d5db'"
+                                            required>
                                         <option value="">Bitte wählen...</option>
                                         @foreach($availableChildren->sortBy('last_name') as $child)
                                             <option value="{{ $child->id }}">
@@ -50,59 +68,76 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-success w-100">
-                                        <i class="bi bi-plus-circle"></i>
-                                        <span class="button-text">Hinzufügen</span>
-                                    </button>
-                                </div>
+                                <button type="submit"
+                                        class="inline-flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                                        style="background-color: var(--color-widget-success-from)"
+                                        onmouseover="this.style.backgroundColor='var(--color-widget-success-to)'"
+                                        onmouseout="this.style.backgroundColor='var(--color-widget-success-from)'">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Hinzufügen
+                                </button>
                             </form>
                         </div>
                     </div>
                 @endif
 
                 <!-- Teilnehmerliste -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Aktuelle Teilnehmer</h3>
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="px-4 py-3 border-b bg-gray-50">
+                        <h5 class="text-base font-bold mb-0 text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-list" style="color: var(--color-widget-accent-from)"></i>
+                            Aktuelle Teilnehmer
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="p-4">
                         @if($participants->isEmpty())
-                            <div class="alert alert-info">
-                                Noch keine Teilnehmer vorhanden.
+                            <div class="flex items-start gap-3 p-4 rounded border-l-4"
+                                 style="background-color: var(--color-widget-accent-bg); border-color: var(--color-widget-accent-from)">
+                                <i class="fas fa-info-circle mt-1" style="color: var(--color-widget-accent-from)"></i>
+                                <p class="text-sm mb-0 text-gray-700">Noch keine Teilnehmer vorhanden.</p>
                             </div>
                         @else
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Gruppen</th>
-                                        <th>Hinzugefügt von</th>
-                                        <th>Aktionen</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    @foreach($participants as $participant)
+                            <div class="overflow-x-auto">
+                                <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
+                                    <thead class="bg-gray-100">
                                         <tr>
-                                            <td>{{ $participant->last_name }}, {{$participant->first_name}}</td>
-                                            <td>{{ $participant->group->name }} @if($participant->class->id != $participant->group->id) , {{$participant->class->name}} @endif</td>
-                                            <td>{{ $participant->pivot->user->name ?? 'Unbekannt' }}</td>
-                                            <td>
-                                                <form action="{{ route('verwaltung.arbeitsgemeinschaften.teilnehmer.remove', [$arbeitsgemeinschaft, $participant]) }}"
-                                                      method="POST"
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('Soll dieser Teilnehmer wirklich entfernt werden?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="bi bi-trash"></i>
-                                                        <span class="button-text">Entfernen</span>
-                                                    </button>
-                                                </form>
-                                            </td>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Gruppen</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Hinzugefügt von</th>
+                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Aktionen</th>
                                         </tr>
-                                    @endforeach
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @foreach($participants as $participant)
+                                            <tr class="hover:bg-gray-50 transition-colors">
+                                                <td class="px-4 py-3 text-sm text-gray-800 font-medium">
+                                                    {{ $participant->last_name }}, {{ $participant->first_name }}
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-gray-700">
+                                                    {{ $participant->group->name }}
+                                                    @if($participant->class->id != $participant->group->id)
+                                                        , {{ $participant->class->name }}
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-gray-700">
+                                                    {{ $participant->pivot->user->name ?? 'Unbekannt' }}
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <form action="{{ route('verwaltung.arbeitsgemeinschaften.teilnehmer.remove', [$arbeitsgemeinschaft, $participant]) }}"
+                                                          method="POST"
+                                                          class="inline"
+                                                          onsubmit="return confirm('Soll dieser Teilnehmer wirklich entfernt werden?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
+                                                            <i class="fas fa-trash"></i>
+                                                            <span class="hidden sm:inline">Entfernen</span>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
@@ -112,55 +147,4 @@
             </div>
         </div>
     </div>
-
-    @push('styles')
-        <style>
-            @media (max-width: 768px) {
-                .button-text {
-                    display: none;
-                }
-
-                .bi {
-                    font-size: 1.2rem;
-                }
-
-                /* Tabellen-Anpassung für mobile Ansicht */
-                .table-responsive table {
-                    display: block;
-                }
-
-                .table-responsive tr {
-                    display: block;
-                    margin-bottom: 1rem;
-                    border: 1px solid #dee2e6;
-                    border-radius: 0.25rem;
-                }
-
-                .table-responsive td {
-                    display: block;
-                    position: relative;
-                    padding-left: 50%;
-                    text-align: left;
-                    border: none;
-                    border-bottom: 1px solid #dee2e6;
-                }
-
-                .table-responsive td:before {
-                    content: attr(data-label);
-                    position: absolute;
-                    left: 0.75rem;
-                    width: 45%;
-                    font-weight: bold;
-                }
-
-                .table-responsive td:last-child {
-                    border-bottom: none;
-                }
-
-                .table-responsive thead {
-                    display: none;
-                }
-            }
-        </style>
-    @endpush
 @endsection

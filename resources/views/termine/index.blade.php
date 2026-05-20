@@ -6,8 +6,8 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    <i class="far fa-calendar-alt text-green-600"></i> Alle Termine
+                <h2 class="text-2xl font-bold" style="color: var(--color-text-primary);">
+                    <i class="far fa-calendar-alt" style="color: var(--color-widget-success-from);"></i> Alle Termine
                 </h2>
                 <div>
                     <a href="{{ url('/') }}" class="btn btn-outline-primary">
@@ -36,7 +36,7 @@
 
                         @foreach($terminsByMonth as $month => $monthTermine)
                             <div class="mb-4">
-                                <h4 class="text-lg font-bold text-gray-700 mb-3 pb-2 border-b">
+                                <h4 class="text-lg font-bold mb-3 pb-2" style="color: var(--color-text-primary); border-bottom: 1px solid var(--color-card-border);">
                                     <i class="far fa-calendar"></i>
                                     {{ \Carbon\Carbon::parse($month.'-01')->locale('de')->isoFormat('MMMM YYYY') }}
                                 </h4>
@@ -45,30 +45,35 @@
                                         @php
                                             $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
                                         @endphp
-                                        <div class="p-4 border @if($isMultiDay) border-orange-400 bg-orange-50 @else border-gray-200 @endif rounded-lg hover:shadow-md transition-all duration-200">
+                                        <div class="p-4 rounded-lg hover:shadow-md transition-all duration-200"
+                                             style="border: 1px solid {{ $isMultiDay ? 'var(--color-widget-warning-from)' : 'var(--color-card-border)' }};
+                                                    background: {{ $isMultiDay ? 'var(--color-widget-body-bg)' : 'var(--color-card-bg)' }};">
                                             <div class="row">
                                                 <div class="col-md-2 text-center mb-3 mb-md-0">
                                                     <div class="d-inline-block" style="min-width: 80px;">
-                                                        <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
+                                                        <div class="text-white rounded-t px-3 py-1"
+                                                             style="background: {{ $isMultiDay ? 'var(--color-widget-warning-from)' : 'var(--color-widget-success-from)' }};">
                                                             <small class="font-bold">{{ $termin->start->format('M') }}</small>
                                                         </div>
-                                                        <div class="bg-white border border-gray-200 rounded-b px-3 py-2">
-                                                            <span class="text-3xl font-bold text-gray-800">{{ $termin->start->format('d') }}</span>
+                                                        <div class="rounded-b px-3 py-2"
+                                                             style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                                                            <span class="text-3xl font-bold" style="color: var(--color-text-primary);">{{ $termin->start->format('d') }}</span>
                                                         </div>
-                                                        <small class="text-gray-600 d-block mt-1">
+                                                        <small class="d-block mt-1" style="color: var(--color-text-secondary);">
                                                             {{ $termin->start->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
                                                     @if($isMultiDay)
                                                     -
                                                     <div class="d-inline-block" style="min-width: 80px;">
-                                                        <div class="@if($isMultiDay) bg-orange-600 @else bg-green-600 @endif text-white rounded-t px-3 py-1">
+                                                        <div class="text-white rounded-t px-3 py-1" style="background: var(--color-widget-warning-from);">
                                                             <small class="font-bold">{{ $termin->ende->format('M') }}</small>
                                                         </div>
-                                                        <div class="bg-white border border-gray-200 rounded-b px-3 py-2">
-                                                            <span class="text-3xl font-bold text-gray-800">{{ $termin->ende->format('d') }}</span>
+                                                        <div class="rounded-b px-3 py-2"
+                                                             style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                                                            <span class="text-3xl font-bold" style="color: var(--color-text-primary);">{{ $termin->ende->format('d') }}</span>
                                                         </div>
-                                                        <small class="text-gray-600 d-block mt-1">
+                                                        <small class="d-block mt-1" style="color: var(--color-text-secondary);">
                                                             {{ $termin->ende->locale('de')->isoFormat('dddd') }}
                                                         </small>
                                                     </div>
@@ -76,7 +81,7 @@
                                                 </div>
                                                 <div class="col-md-10">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <h5 class="font-bold text-gray-800 mb-0">
+                                                        <h5 class="font-bold mb-0" style="color: var(--color-text-primary);">
                                                             {{ $termin->terminname }}
                                                             @if($isMultiDay)
                                                                 <span class="badge badge-warning ml-2" title="Mehrtägiger Termin">
@@ -111,14 +116,14 @@
 
                                                     <div class="row mt-3">
                                                         <div class="col-md-6 mb-2">
-                                                            <p class="text-gray-600 mb-0">
+                                                            <p class="mb-0" style="color: var(--color-text-secondary);">
                                                                 @php
                                                                     $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
                                                                     $daysDiff = $isMultiDay ? $termin->start->diffInDays($termin->ende) + 1 : 0;
                                                                 @endphp
 
                                                                 @if($isMultiDay)
-                                                                    <i class="fas fa-calendar-week text-blue-600"></i>
+                                                                    <i class="fas fa-calendar-week" style="color: var(--color-widget-primary-from);"></i>
                                                                     <strong>Zeitraum:</strong>
                                                                     {{ $termin->start->locale('de')->isoFormat('D. MMM') }}
                                                                     @if(!$termin->fullDay)
@@ -131,10 +136,10 @@
                                                                     @endif
                                                                     <span class="badge badge-info ml-2">{{ floor($daysDiff) }} Tage</span>
                                                                 @elseif($termin->fullDay)
-                                                                    <i class="far fa-calendar text-blue-600"></i>
+                                                                    <i class="far fa-calendar" style="color: var(--color-widget-primary-from);"></i>
                                                                     <strong>Ganztägig</strong>
                                                                 @else
-                                                                    <i class="far fa-clock text-blue-600"></i>
+                                                                    <i class="far fa-clock" style="color: var(--color-widget-primary-from);"></i>
                                                                     <strong>Uhrzeit:</strong> {{ $termin->start->format('H:i') }} Uhr
                                                                     @if($termin->ende && $termin->start->format('Y-m-d') == $termin->ende->format('Y-m-d'))
                                                                         - {{ $termin->ende->format('H:i') }} Uhr
@@ -145,8 +150,8 @@
 
                                                         @if($termin->groups && count($termin->groups) > 0)
                                                             <div class="col-md-6 mb-2">
-                                                                <p class="text-gray-600 mb-0">
-                                                                    <i class="fas fa-users text-purple-600"></i>
+                                                                <p class="mb-0" style="color: var(--color-text-secondary);">
+                                                                    <i class="fas fa-users" style="color: var(--color-widget-accent-from);"></i>
                                                                     <strong>Gruppen:</strong>
                                                                     @foreach($termin->groups as $group)
                                                                         <span class="badge badge-secondary">{{ $group->name }}</span>

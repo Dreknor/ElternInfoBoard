@@ -15,9 +15,10 @@
             <!-- Seiten-Card -->
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800">
+                <div class="px-4 py-3 border-b"
+                     style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <h5 class="text-xl font-bold text-white mb-0">
+                        <h5 class="text-xl font-bold mb-0" style="color: var(--color-widget-header-text)">
                             {{ $site->name }}
                             @if(!$site->is_active)
                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-100 text-red-700 text-sm font-medium rounded-full ml-2">
@@ -30,14 +31,20 @@
                         <div class="flex items-center gap-2">
                             @can('create sites')
                                 <a href="{{ route('sites.edit', $site->id) }}"
-                                   class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-blue-600 font-medium rounded-lg transition-colors duration-200">
+                                   class="inline-flex items-center gap-2 px-4 py-2 bg-white font-medium rounded-lg transition-colors duration-200"
+                                   style="color: var(--color-primary)"
+                                   onmouseover="this.style.backgroundColor='var(--color-primary-light)'"
+                                   onmouseout="this.style.backgroundColor='#ffffff'">
                                     <i class="fas fa-edit"></i>
                                     <span class="hidden md:inline">Bearbeiten</span>
                                 </a>
 
                                 @if(!$site->is_active)
                                     <a href="{{ route('sites.activate', $site->id) }}"
-                                       class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                       class="inline-flex items-center gap-2 px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200"
+                                       style="background-color: var(--color-widget-success-from)"
+                                       onmouseover="this.style.backgroundColor='var(--color-widget-success-to)'"
+                                       onmouseout="this.style.backgroundColor='var(--color-widget-success-from)'">
                                         <i class="fas fa-eye"></i>
                                         <span class="hidden md:inline">Veröffentlichen</span>
                                     </a>
@@ -80,7 +87,9 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @foreach($block->block->getMedia() as $media)
                                         <a href="{{ $media->getUrl() }}" target="_blank"
-                                           class="block border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                                           class="block border border-gray-200 rounded-lg p-4 transition-all duration-200"
+                                           onmouseover="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'"
+                                           onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow=''">
                                             <div class="flex items-center gap-3">
                                                 @switch($media->mime_type)
                                                     @case('application/pdf')

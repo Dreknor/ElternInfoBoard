@@ -6,7 +6,8 @@
 <div class="container mx-auto px-4 py-8">
     <!-- Header with back button -->
     <div class="mb-8">
-        <a href="/stundenplan" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
+        <a href="/stundenplan" class="inline-flex items-center mb-4 hover:underline"
+           style="color: var(--color-widget-primary-from)">
             <i class="fas fa-arrow-left mr-2"></i>
             {{ __('stundenplan.back_to_overview') }}
         </a>
@@ -17,7 +18,8 @@
                     <i class="fas fa-chalkboard-teacher mr-2"></i>
                     {{ __('stundenplan.title') }} - {{ __('stundenplan.teacher') }} {{ $teacher }}
                     @if($currentWeek)
-                        <span class="ml-2 px-3 py-1 text-lg font-semibold rounded-full {{ $currentWeek->type === 'A' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                        <span class="ml-2 px-3 py-1 text-lg font-semibold rounded-full"
+                              style="{{ $currentWeek->type === 'A' ? 'background-color: var(--color-widget-body-bg); color: var(--color-widget-primary-border); border: 1px solid var(--color-widget-primary-border)' : 'background-color: var(--color-widget-body-bg); color: var(--color-widget-success-border); border: 1px solid var(--color-widget-success-border)' }}">
                             {{ $currentWeek->type }}-{{ __('stundenplan.week') }}
                         </span>
                     @endif
@@ -99,7 +101,7 @@
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gradient-to-r from-blue-600 to-indigo-600">
+                <thead style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
                     <tr>
                         <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-20">
                             Zeit

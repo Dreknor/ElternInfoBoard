@@ -377,6 +377,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
 
+        // Nutzer-Theme (Design)
+        Route::put('/einstellungen/theme', [\App\Http\Controllers\User\UserThemeController::class, 'update'])
+            ->name('user.theme.update');
+
         // Downloads
         Route::get('/files', [FileController::class, 'index']);
         Route::post('/files', [FileController::class, 'store'])->middleware(['permission:upload files']);
@@ -448,6 +452,8 @@ Route::middleware('auth')->group(function () {
             Route::get('settings/losungen/import', [LosungController::class, 'importView']);
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
             Route::get('settings', [SettingsController::class, 'index']);
+            Route::put('settings/design', [\App\Http\Controllers\Settings\DesignSettingsController::class, 'update'])
+                ->name('settings.design.update');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
 

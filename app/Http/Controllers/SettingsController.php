@@ -11,12 +11,14 @@ use App\Services\HolidayService;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
+use App\Settings\KeycloakSetting;
 use App\Settings\MessengerSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
 use App\Settings\ReminderSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
+use App\Themes\ThemeRegistry;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -49,9 +51,13 @@ class SettingsController extends Controller implements HasMiddleware
         $stundenplanSettings = new StundenplanSetting;
         $reminderSettings = new ReminderSetting;
         $messengerSettings = new MessengerSetting;
+        $keycloakSettings = new KeycloakSetting;
 
         $groups = Group::all();
         $roles = Role::all();
+
+        // Theme-Liste für Design-Tab
+        $themes = app(ThemeRegistry::class)->all();
 
         $users = User::query()
             ->whereHas('roles', function ($query) {
@@ -70,9 +76,11 @@ class SettingsController extends Controller implements HasMiddleware
             'stundenplanSettings' => $stundenplanSettings,
             'reminderSettings' => $reminderSettings,
             'messengerSettings' => $messengerSettings,
+            'keycloakSettings' => $keycloakSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
+            'themes' => $themes,
         ]);
     }
 
@@ -437,6 +445,31 @@ class SettingsController extends Controller implements HasMiddleware
                 $reminderSettings->include_read_receipts = $request->has('include_read_receipts');
                 $reminderSettings->include_attendance_queries = $request->has('include_attendance_queries');
                 $reminderSettings->save();
+                break;
+
+            case 'keycloak':
+                $validated = $request->validate([
+                    'enabled' => 'nullable|boolean',
+                    'client_id' => 'nullable|string|max:255',
+                    'client_secret' => 'nullable|string|max:255',
+                    'realm' => 'nullable|string|max:255',
+                    'redirect_uri' => 'nullable|string|max:500',
+                    'base_url' => 'nullable|string|max:500',
+                    'maildomain' => 'nullable|string|max:255',
+                ]);
+
+                $keycloakSettings = new KeycloakSetting;
+                $keycloakSettings->enabled = $request->has('enabled');
+                $keycloakSettings->client_id = $validated['client_id'] ?? null;
+                $keycloakSettings->client_secret = $validated['client_secret'] ?? null;
+                $keycloakSettings->realm = $validated['realm'] ?? 'master';
+                $keycloakSettings->redirect_uri = $validated['redirect_uri'] ?? null;
+                $keycloakSettings->base_url = $validated['base_url'] ?? null;
+                $keycloakSettings->maildomain = $validated['maildomain'] ?? '*';
+                $keycloakSettings->save();
+
+                Artisan::call('config:clear');
+                Artisan::call('cache:clear');
                 break;
         }
 

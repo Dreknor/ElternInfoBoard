@@ -10,7 +10,7 @@
                 <a href="{{url('/home')}}" class="btn btn-primary btn-block">Keinen Termin erstellen</a>
             </div>
             <div class="card-body">
-                <form action="{{url('/termin')}}" method="post" class="form form-horizontal" id="terminForm">
+                <form action="{{url('/termine')}}" method="post" class="form form-horizontal" id="terminForm">
                     @csrf
                     <div class="row">
                         <div class="col-l-6 col-md-12 col-sm-12">

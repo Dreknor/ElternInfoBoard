@@ -24,9 +24,10 @@
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="flex items-center gap-3 flex-1 min-w-0">
-            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center
-                {{ $conversation->type === 'group' ? 'bg-blue-100' : 'bg-indigo-100' }}">
-                <i class="{{ $conversation->type === 'group' ? 'fas fa-users text-blue-600' : 'fas fa-user text-indigo-600' }}"></i>
+            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
+                 style="background-color: var(--color-widget-primary-bg)">
+                <i class="{{ $conversation->type === 'group' ? 'fas fa-users' : 'fas fa-user' }}"
+                   style="color: var(--color-primary)"></i>
             </div>
             <div class="min-w-0">
                 <h1 class="text-lg font-bold text-gray-800 truncate">{{ $display_name }}</h1>
@@ -59,7 +60,7 @@
             @if($messages->hasMorePages())
             <div class="text-center mb-4">
                 <a href="?page={{ $messages->currentPage() + 1 }}"
-                   class="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                   class="text-sm transition-colors" style="color: var(--color-primary)">
                     <i class="fas fa-chevron-up mr-1"></i>Ältere Nachrichten laden
                 </a>
             </div>
@@ -76,16 +77,16 @@
 
                     {{-- Antwort-Vorschau --}}
                     @if($message->replyTo)
-                    <div class="mb-1 px-3 py-1.5 rounded-lg border-l-4 {{ $isOwn ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-gray-50' }} text-xs text-gray-600">
+                    <div class="mb-1 px-3 py-1.5 rounded-lg border-l-4 text-xs text-gray-600"
+                         style="{{ $isOwn ? 'border-color: var(--color-primary); background-color: var(--color-widget-primary-bg)' : 'border-color: #d1d5db; background-color: #f9fafb' }}">
                         <span class="font-medium">{{ $message->replyTo->sender?->name }}:</span>
                         {{ $message->replyTo->trashed() ? '[gelöscht]' : Str::limit($message->replyTo->body, 80) }}
                     </div>
                     @endif
 
                     {{-- Nachrichtenblase --}}
-                    <div class="px-4 py-2.5 rounded-2xl {{ $isOwn
-                        ? 'bg-blue-600 text-white rounded-br-sm'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-sm' }}">
+                    <div class="px-4 py-2.5 rounded-2xl {{ $isOwn ? 'text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm' }}"
+                         @if($isOwn) style="background-color: var(--color-primary)" @endif>
                         {{-- Anhang --}}
                         @if($message->type !== 'text')
                         @php $media = $message->getFirstMedia('message-attachments'); @endphp
@@ -102,7 +103,10 @@
                             @else
                             <a href="{{ route('messenger.attachment', $message) }}"
                                download="{{ $media->file_name }}"
-                               class="flex items-center gap-2 p-2 rounded-lg {{ $isOwn ? 'bg-blue-500 hover:bg-blue-400' : 'bg-gray-200 hover:bg-gray-300' }} mb-2 transition-colors">
+                               class="flex items-center gap-2 p-2 rounded-lg mb-2 transition-colors"
+                               style="{{ $isOwn ? 'background-color: var(--color-primary-dark)' : 'background-color: #e5e7eb' }}"
+                               onmouseover="this.style.opacity='0.85'"
+                               onmouseout="this.style.opacity='1'">
                                 @php
                                     $ext = strtolower(pathinfo($media->file_name, PATHINFO_EXTENSION));
                                     $icon = match($ext) {
@@ -137,7 +141,9 @@
                         <div class="hidden group-hover:flex items-center gap-1">
                             {{-- Antworten --}}
                             <button onclick="setReplyTo({{ $message->id }}, '{{ addslashes($message->sender?->name) }}', '{{ addslashes(Str::limit($message->body, 60)) }}')"
-                                    class="text-gray-400 hover:text-blue-600 transition-colors" title="Antworten">
+                                    class="text-gray-400 transition-colors" title="Antworten"
+                                    onmouseover="this.style.color='var(--color-primary)'"
+                                    onmouseout="this.style.color='#9ca3af'">
                                 <i class="fas fa-reply text-xs"></i>
                             </button>
                             @if($isOwn && $message->isEditableBy(auth()->user()))
@@ -178,9 +184,9 @@
         {{-- Antwort-Preview --}}
         <div id="replyPreview" class="hidden border-t border-gray-100 px-4 py-2 bg-gray-50 flex items-center justify-between gap-3">
             <div class="flex items-center gap-2 min-w-0">
-                <div class="w-1 h-8 bg-blue-500 rounded-full flex-shrink-0"></div>
+                <div class="w-1 h-8 rounded-full flex-shrink-0" style="background-color: var(--color-primary)"></div>
                 <div class="min-w-0">
-                    <p id="replyName" class="text-xs font-semibold text-blue-600 truncate"></p>
+                    <p id="replyName" class="text-xs font-semibold truncate" style="color: var(--color-primary)"></p>
                     <p id="replyBody" class="text-xs text-gray-500 truncate"></p>
                 </div>
             </div>
@@ -207,7 +213,10 @@
                                   rows="1"
                                   placeholder="Nachricht eingeben..."
                                   maxlength="{{ app(\App\Settings\MessengerSetting::class)->max_message_length }}"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-sm"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none resize-none text-sm"
+                                  style="transition: border-color 0.2s"
+                                  onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 2px var(--color-primary-light)'"
+                                  onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow=''"
                                   oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
                     </div>
                     @if(app(\App\Settings\MessengerSetting::class)->allow_file_uploads)
@@ -218,7 +227,10 @@
                     </label>
                     @endif
                     <button type="submit"
-                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex-shrink-0">
+                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-white transition-colors flex-shrink-0"
+                            style="background-color: var(--color-primary)"
+                            onmouseover="this.style.backgroundColor='var(--color-primary-dark)'"
+                            onmouseout="this.style.backgroundColor='var(--color-primary)'">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -239,12 +251,17 @@
         <form id="editForm" method="POST" class="p-4">
             @csrf @method('PUT')
             <textarea name="body" id="editBody" rows="4"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none resize-none text-sm mb-3"></textarea>
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none resize-none text-sm mb-3"
+                      onfocus="this.style.borderColor='var(--color-widget-success-from)'; this.style.boxShadow='0 0 0 2px var(--color-widget-success-bg)'"
+                      onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow=''"></textarea>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')"
                         class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition-colors">Abbrechen</button>
                 <button type="submit"
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors">Speichern</button>
+                        class="px-4 py-2 text-white rounded-lg text-sm transition-colors"
+                        style="background-color: var(--color-widget-success-from)"
+                        onmouseover="this.style.backgroundColor='var(--color-widget-success-to)'"
+                        onmouseout="this.style.backgroundColor='var(--color-widget-success-from)'">Speichern</button>
             </div>
         </form>
     </div>

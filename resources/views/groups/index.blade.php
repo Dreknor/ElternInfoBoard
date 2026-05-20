@@ -6,9 +6,10 @@
         @foreach($groups as $group)
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                 <!-- Card Header -->
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800">
+                <div class="px-4 py-3 border-b"
+                     style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
                     <div class="flex items-center justify-between">
-                        <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                        <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                             @if(!$group->protected)
                                 <i class="fas fa-unlock-alt"></i>
                             @else
@@ -19,7 +20,8 @@
                         @canany(['edit groups', 'delete groups'])
                             <div x-data="{ open: false }" class="relative">
                                 <button @click="open = !open" @click.away="open = false"
-                                        class="inline-flex items-center justify-center p-2 rounded-lg text-white hover:bg-white/20 transition-all duration-200">
+                                        class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-white/20 transition-all duration-200"
+                                        style="color: var(--color-widget-header-text)">
                                     <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                                 </button>
                                 <div x-show="open"
@@ -34,7 +36,7 @@
                                     @if(auth()->user()->can('create own group') and $group->owner_id == auth()->user()->id)
                                         <a href="{{url('groups/'.$group->id.'/add')}}"
                                            class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                            <i class="fas fa-user-plus text-blue-600"></i>
+                                            <i class="fas fa-user-plus" style="color: var(--color-widget-primary-from)"></i>
                                             <span>Hinzufügen</span>
                                         </a>
                                     @endcan
@@ -65,7 +67,7 @@
                                                 @method('delete')
                                                 <input name="passwort" type="password"
                                                        placeholder="Passwort eingeben"
-                                                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 outline-none text-sm">
+                                                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none text-sm">
                                                 <button type="submit"
                                                         class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
                                                     <i class="fas fa-trash"></i>
@@ -79,8 +81,8 @@
                         @endcan
                     </div>
                     @canany(['edit groups', 'create own group'])
-                        <div class="mt-2 pt-2 border-t border-blue-500">
-                            <p class="text-sm text-blue-50 mb-0">
+                        <div class="mt-2 pt-2 border-t" style="border-color: rgba(255,255,255,0.3)">
+                            <p class="text-sm mb-0" style="color: rgba(255,255,255,0.85)">
                                 <i class="fas fa-users mr-1"></i>
                                 Es gibt {{$group->users->count()}} Benutzer
                                 @if($group->has_chat)
@@ -109,7 +111,8 @@
                                             <td class="px-4 py-3">
                                                 @can('edit user')
                                                     <a href="{{url('users/'.$user->id)}}"
-                                                       class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
+                                                       class="inline-flex items-center gap-2 font-medium hover:underline"
+                                                       style="color: var(--color-widget-primary-from)">
                                                         <i class="fas fa-user-edit"></i>
                                                         {{$user->name}}
                                                     </a>
@@ -120,7 +123,8 @@
                                             <td class="px-4 py-3">
                                                 @if($user->publicMail !="")
                                                     <a href="mailto:{{$user->publicMail}}"
-                                                       class="text-blue-600 hover:text-blue-700 hover:underline">
+                                                       class="hover:underline"
+                                                       style="color: var(--color-widget-primary-from)">
                                                         {{$user->publicMail}}
                                                     </a>
                                                 @endif
@@ -128,7 +132,8 @@
                                             <td class="px-4 py-3">
                                                 @if($user->publicPhone !="")
                                                     <a href="tel:{{$user->publicPhone}}"
-                                                       class="text-blue-600 hover:text-blue-700 hover:underline">
+                                                       class="hover:underline"
+                                                       style="color: var(--color-widget-primary-from)">
                                                         {{$user->publicPhone}}
                                                     </a>
                                                 @endif
@@ -156,11 +161,14 @@
                             @foreach($group->users->filter(function ($user){
                                 if ($user->publicMail !="" or $user->publicPhone !=""){ return $user; }
                             }) as $user)
-                                <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                                <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200"
+                                     onmouseover="this.style.borderColor='var(--color-widget-primary-from)'"
+                                     onmouseout="this.style.borderColor='#e5e7eb'">
                                     <div class="flex items-center gap-2 mb-2">
                                         @can('edit user')
                                             <a href="{{url('user/'.$user->id)}}"
-                                               class="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
+                                               class="inline-flex items-center justify-center p-2 rounded-lg transition-all duration-200 hover:bg-gray-100"
+                                               style="color: var(--color-widget-primary-from)">
                                                 <i class="fas fa-user-edit"></i>
                                             </a>
                                         @endcan
@@ -168,18 +176,20 @@
                                     </div>
                                     @if($user->publicMail !="")
                                         <div class="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                            <i class="fas fa-envelope text-blue-600"></i>
+                                            <i class="fas fa-envelope" style="color: var(--color-widget-primary-from)"></i>
                                             <a href="mailto:{{$user->publicMail}}"
-                                               class="text-blue-600 hover:text-blue-700 hover:underline break-all">
+                                               class="hover:underline break-all"
+                                               style="color: var(--color-widget-primary-from)">
                                                 {{$user->publicMail}}
                                             </a>
                                         </div>
                                     @endif
                                     @if($user->publicPhone !="")
                                         <div class="flex items-center gap-2 text-sm text-gray-600">
-                                            <i class="fas fa-phone text-green-600"></i>
+                                            <i class="fas fa-phone" style="color: var(--color-widget-success-from)"></i>
                                             <a href="tel:{{$user->publicPhone}}"
-                                               class="text-blue-600 hover:text-blue-700 hover:underline">
+                                               class="hover:underline"
+                                               style="color: var(--color-widget-primary-from)">
                                                 {{$user->publicPhone}}
                                             </a>
                                         </div>
@@ -209,8 +219,9 @@
                             </div>
                         </div>
                     @endif
-                    <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 border-b border-green-800">
-                        <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                    <div class="px-4 py-3 border-b"
+                         style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border)">
+                        <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                             <i class="fas fa-plus-circle"></i>
                             Eigene Gruppe anlegen
                         </h5>
@@ -227,14 +238,15 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
                                 <input type="text"
-                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 outline-none"
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                        placeholder="Name der Gruppe"
                                        name="name"
                                        value="{{old('name')}}"
                                        required>
                             </div>
                             <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200"
+                                    style="background-color: var(--color-widget-success-from)">
                                 <i class="fas fa-save"></i>
                                 Speichern
                             </button>
@@ -245,8 +257,9 @@
             <!-- Globale Gruppe anlegen -->
             @can('edit groups')
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 border-b border-purple-800">
-                        <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                    <div class="px-4 py-3 border-b"
+                         style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
+                        <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                             <i class="fas fa-globe"></i>
                             Globale Gruppe anlegen
                         </h5>
@@ -261,7 +274,7 @@
                                 <div class="md:col-span-6">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
                                     <input type="text"
-                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 outline-none"
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                            placeholder="Name der Gruppe"
                                            name="name"
                                            value="{{old('name')}}"
@@ -270,7 +283,7 @@
                                 <div class="md:col-span-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Bereich</label>
                                     <input type="text"
-                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 outline-none"
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 outline-none"
                                            name="bereich"
                                            placeholder="Bereich der Gruppe"
                                            value="{{old('bereich')}}">
@@ -280,12 +293,13 @@
                                     <label class="relative inline-flex items-center cursor-pointer mt-2">
                                         <input type="checkbox" name="protected" value="1"
                                                class="sr-only peer" {{ old('protected') ? 'checked="checked"' : '' }}>
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                     </label>
                                 </div>
                             </div>
                             <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200"
+                                    style="background-color: var(--color-widget-accent-from)">
                                 <i class="fas fa-save"></i>
                                 Speichern
                             </button>
