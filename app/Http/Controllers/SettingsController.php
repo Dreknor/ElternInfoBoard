@@ -16,6 +16,7 @@ use App\Settings\MessengerSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
 use App\Settings\ReminderSetting;
+use App\Settings\CustomThemeSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
 use App\Themes\ThemeRegistry;
@@ -58,6 +59,7 @@ class SettingsController extends Controller implements HasMiddleware
 
         // Theme-Liste für Design-Tab
         $themes = app(ThemeRegistry::class)->all();
+        $customThemeSettings = new CustomThemeSetting;
 
         $users = User::query()
             ->whereHas('roles', function ($query) {
@@ -80,7 +82,8 @@ class SettingsController extends Controller implements HasMiddleware
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
-            'themes' => $themes,
+            'themes'              => $themes,
+            'customThemeSettings' => $customThemeSettings,
         ]);
     }
 

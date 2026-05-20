@@ -454,6 +454,10 @@ Route::middleware('auth')->group(function () {
             Route::get('settings', [SettingsController::class, 'index']);
             Route::put('settings/design', [\App\Http\Controllers\Settings\DesignSettingsController::class, 'update'])
                 ->name('settings.design.update');
+            Route::put('settings/custom-theme', [\App\Http\Controllers\Settings\CustomThemeController::class, 'update'])
+                ->name('settings.custom-theme.update');
+            Route::post('settings/custom-theme/reset', [\App\Http\Controllers\Settings\CustomThemeController::class, 'reset'])
+                ->name('settings.custom-theme.reset');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
 

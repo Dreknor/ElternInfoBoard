@@ -27,6 +27,16 @@ class ThemeServiceProvider extends ServiceProvider
                 }
             }
         }
+
+        // Datenbankbasiertes eigenes Theme registrieren
+        try {
+            /** @var ThemeRegistry $registry */
+            $registry = $this->app->make(ThemeRegistry::class);
+            $setting  = $this->app->make(\App\Settings\CustomThemeSetting::class);
+            $registry->register(new \App\Themes\CustomTheme($setting));
+        } catch (\Throwable $e) {
+            // DB noch nicht verfügbar (z.B. während Migrationen) – ignorieren
+        }
     }
 }
 
