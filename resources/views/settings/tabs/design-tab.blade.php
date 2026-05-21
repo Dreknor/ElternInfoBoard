@@ -307,25 +307,26 @@
         {{-- Variablen-Gruppen --}}
         <div class="accordion" id="theme-var-accordion">
             @foreach($groups as $group)
-                <div class="card mb-2" style="background-color: var(--color-card-bg); border-color: var(--color-card-border);">
-                    <div class="card-header p-0" id="heading-{{ $group['id'] }}"
+                <div class="card mb-2" style="background-color: var(--color-card-bg); border-color: var(--color-card-border);"
+                     x-data="{ open: false }">
+                    <div class="card-header p-0"
                          style="background-color: var(--color-surface-subtle); border-color: var(--color-card-border);">
-                        <button class="btn btn-link btn-block text-left d-flex align-items-center justify-content-between px-3 py-2 collapsed"
+                        <button class="btn btn-link btn-block text-left d-flex align-items-center justify-content-between px-3 py-2"
                                 type="button"
-                                data-toggle="collapse"
-                                data-target="#collapse-{{ $group['id'] }}"
-                                aria-expanded="false"
+                                @click="open = !open"
+                                :aria-expanded="open.toString()"
                                 style="color: var(--color-text-primary); text-decoration: none;">
                             <span>
                                 <i class="{{ $group['icon'] }} mr-2" style="color: var(--color-primary); width:16px;"></i>
                                 <strong>{{ $group['title'] }}</strong>
                                 <span class="badge badge-secondary ml-2" style="font-size:0.65rem;">{{ count($group['vars']) }}</span>
                             </span>
-                            <i class="fas fa-chevron-down" style="font-size:0.75rem; transition:transform .2s;"></i>
+                            <i class="fas fa-chevron-down"
+                               style="font-size:0.75rem; transition:transform .2s;"
+                               :style="open ? 'transform:rotate(180deg)' : 'transform:rotate(0deg)'"></i>
                         </button>
                     </div>
-                    <div id="collapse-{{ $group['id'] }}" class="collapse"
-                         data-parent="#theme-var-accordion">
+                    <div x-show="open" x-cloak style="display:none;">
                         <div class="card-body p-3">
                             <div class="row">
                                 @foreach($group['vars'] as $varKey => $varLabel)
@@ -451,17 +452,6 @@
         if (el && value) el.style.background = value;
     }
 
-    // Chevron-Rotation beim Akkordeon
-    document.querySelectorAll('[data-toggle="collapse"]').forEach(function (btn) {
-        var target = document.querySelector(btn.getAttribute('data-target'));
-        if (!target) return;
-        target.addEventListener('show.bs.collapse', function () {
-            btn.querySelector('.fa-chevron-down').style.transform = 'rotate(180deg)';
-        });
-        target.addEventListener('hide.bs.collapse', function () {
-            btn.querySelector('.fa-chevron-down').style.transform = 'rotate(0deg)';
-        });
-    });
 
     // Formular auf Default-Werte zurücksetzen (nur Formular, nicht DB)
     document.getElementById('btn-reset-to-default').addEventListener('click', function () {

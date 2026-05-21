@@ -21,7 +21,7 @@ class DarkTheme extends AbstractTheme
 
     public function previewImage(): ?string
     {
-        return '/img/themes/preview-dark.png';
+        return '/img/themes/preview-dark.svg';
     }
 
     public function bodyClasses(): string

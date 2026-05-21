@@ -34,6 +34,11 @@ class CustomTheme extends AbstractTheme
         return $this->themeDescription;
     }
 
+    public function previewImage(): ?string
+    {
+        return '/img/themes/preview-custom.svg';
+    }
+
     public function variables(): array
     {
         // Basis: DefaultTheme als Fallback
@@ -43,4 +48,5 @@ class CustomTheme extends AbstractTheme
         return array_merge($base, $this->customVariables);
     }
 }
+
 

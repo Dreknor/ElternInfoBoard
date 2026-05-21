@@ -110,10 +110,8 @@
                 'advlist autolink link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime paste code wordcount',
-                'contextmenu textcolor',
             ],
             toolbar: 'undo redo | formatselect | bold italic',
-            contextmenu: "link inserttable | cell row column deletetable",
         });
     </script>
 @endpush

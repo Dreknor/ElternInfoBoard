@@ -21,7 +21,7 @@ class WarmTheme extends AbstractTheme
 
     public function previewImage(): ?string
     {
-        return '/img/themes/preview-warm.png';
+        return '/img/themes/preview-warm.svg';
     }
 
     public function variables(): array

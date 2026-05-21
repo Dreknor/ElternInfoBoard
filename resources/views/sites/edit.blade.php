@@ -292,7 +292,7 @@
                 'advlist autolink lists link charmap',
                 'searchreplace visualblocks code',
                 'insertdatetime table paste code wordcount',
-                'contextmenu media textcolor',
+                'media',
             ],
             link_class_list: [
                 {title: 'None', value: ''},
@@ -304,7 +304,6 @@
                 {title: 'Downloads', value: '{{url('files')}}'}
             ],
             toolbar: 'undo redo | formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link | media',
-            contextmenu: " link image inserttable | cell row column deletetable",
             @if(auth()->user()->can('use scriptTag'))
             extended_valid_elements : "script[src|async|defer|type|charset]",
             @endif

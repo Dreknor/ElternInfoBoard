@@ -21,7 +21,7 @@ class NatureTheme extends AbstractTheme
 
     public function previewImage(): ?string
     {
-        return '/img/themes/preview-nature.png';
+        return '/img/themes/preview-nature.svg';
     }
 
     public function variables(): array

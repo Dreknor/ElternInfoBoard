@@ -21,7 +21,7 @@ class DefaultTheme extends AbstractTheme
 
     public function previewImage(): ?string
     {
-        return '/img/themes/preview-default.png';
+        return '/img/themes/preview-default.svg';
     }
 
     public function variables(): array
