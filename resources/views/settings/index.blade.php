@@ -5,21 +5,21 @@
      x-data="adminSettings()"
      x-init="init()">
 
-    <div class="rounded-xl shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+    <div class="rounded-xl shadow-lg overflow-hidden flex flex-col" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
 
-        {{-- Header --}}
-        <div class="px-5 py-3 border-b flex items-center gap-3" style="background-color: var(--color-primary); border-color: var(--color-primary-dark);">
-            <div class="flex items-center justify-center w-9 h-9 bg-white/20 rounded-lg">
-                <i class="fas fa-cog text-white text-lg"></i>
+        {{-- Header – überspannt die gesamte Breite über Sidebar und Inhalt --}}
+        <div class="flex-none w-full px-6 py-4 flex items-center gap-4" style="background-color: var(--color-primary); border-bottom: 3px solid var(--color-primary-dark);">
+            <div class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-xl flex-shrink-0">
+                <i class="fas fa-cog text-white text-xl"></i>
             </div>
             <div>
-                <h5 class="text-lg font-bold text-white mb-0">Einstellungen</h5>
-                <p class="text-xs text-white/70 mb-0">Systemweite Konfiguration</p>
+                <h5 class="text-xl font-bold text-white mb-0">Einstellungen</h5>
+                <p class="text-xs text-white/70 mb-0 mt-0.5">Systemweite Konfiguration</p>
             </div>
         </div>
 
         {{-- Sidebar + Inhalt --}}
-        <div class="flex" style="min-height: 600px;">
+        <div class="flex flex-1" style="min-height: 600px;">
 
             {{-- Sidebar-Navigation --}}
             <nav class="flex-shrink-0 border-r" style="width: 240px; background-color: var(--color-body-bg); border-color: var(--color-card-border);">

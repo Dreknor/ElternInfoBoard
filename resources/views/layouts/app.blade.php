@@ -82,6 +82,21 @@
 
     @yield('css')
     @stack('css')
+
+    {{-- Layout-Override: Header volle Breite, Sidebar beginnt unterhalb des Headers.
+         Diese Regeln überschreiben zuverlässig alle compilierten CSS-Versionen. --}}
+    <style>
+        @media (min-width: 992px) {
+            /* Sidebar beginnt UNTERHALB des Headers (70px = Navbar-Höhe) */
+            .sidebar {
+                top: 70px !important;
+            }
+            /* Navbar/Header erstreckt sich über die VOLLE Breite (inkl. Sidebar-Bereich) */
+            .fixed-top {
+                left: 0 !important;
+            }
+        }
+    </style>
 </head>
 
 {{-- Body: dark: prefix für Tailwind Dark Mode, bg via CSS-Var. Body-Klasse vom Theme angehängt. --}}
@@ -138,20 +153,7 @@
      data-active-color="danger"
      style="background: linear-gradient(to bottom, var(--color-sidebar-bg, #ffffff), var(--color-sidebar-bg-mid, #f8fafc), var(--color-sidebar-bg, #ffffff)); border-right: 1px solid var(--color-sidebar-border, #e2e8f0); z-index: 1010;">
 
-    <!-- Sidebar Header / Logo (obere 70px – entspricht der Navbar-Höhe, nur Desktop) -->
-    <div class="sidebar-header hidden lg:flex items-center px-4 border-b"
-         style="height: 70px; background: var(--color-sidebar-logo-bg, #f8fafc); border-color: var(--color-sidebar-logo-border, #e2e8f0);">
-        <a href="{{url('/')}}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div class="h-8 flex items-center">
-                @if($settings->logo == 'logo.png')
-                    <img src="{{asset('img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
-                @else
-                    <img src="{{url('storage/img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
-                @endif
-            </div>
-            <span class="font-semibold text-sm leading-tight truncate max-w-[140px]" style="color: var(--color-sidebar-text, #374151);">{{$settings->app_name}}</span>
-        </a>
-    </div>
+    {{-- Sidebar-Header / Logo wurde in die Navbar verschoben (volle Breite) --}}
 
     <!-- Sidebar Navigation -->
     {{-- Desktop: 70px Logo-Header + ~60px Footer = 130px abziehen; Mobile: Logo-Header ausgeblendet, nur ~60px Footer --}}
@@ -214,8 +216,8 @@
                         </svg>
                     </button>
 
-                    <!-- Brand / Logo: nur auf Mobile sichtbar (auf Desktop zeigt die Sidebar das Brand) -->
-                    <a href="{{url('/')}}" class="lg:hidden flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
+                    <!-- Brand / Logo: auf allen Viewports sichtbar (Header über volle Breite) -->
+                    <a href="{{url('/')}}" class="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
                         <div class="h-8 flex items-center">
                             @if($settings->logo == 'logo.png')
                                 <img src="{{asset('img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">

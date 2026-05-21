@@ -156,8 +156,9 @@ html, body {
 
 /*
  * Sidebar-Navigations-Scroll-Bereich:
- * Mobile:  kein Logo-Header (versteckt) → nur Footer (~60px) abziehen
- * Desktop: Logo-Header 70px + Footer ~60px = 130px abziehen
+ * Mobile:  Sidebar overlay (top: 0) → nur Footer (~60px) abziehen
+ * Desktop: Sidebar beginnt bei top: 70px (Navbar-Höhe) → nur Footer (~60px) abziehen
+ *          Effektiv: calc(100vh - 70px - 60px) = calc(100vh - 130px)
  * height (nicht max-height) setzen, damit overflow-y: auto zuverlässig greift.
  */
 .sidebar-nav-scroll {
@@ -492,6 +493,7 @@ html, body {
 @media (min-width: 992px) {
   .sidebar {
     transform: translateX(0);
+    top: 70px; /* Sidebar beginnt unterhalb der Navbar */
   }
 
   .main-panel {
@@ -501,9 +503,9 @@ html, body {
     width: auto;
   }
 
-  /* Navbar erstreckt sich auf Desktop nur über den Main-Panel-Bereich (klassisches Admin-Layout) */
+  /* Navbar erstreckt sich über die volle Breite (inkl. Sidebar-Bereich) */
   .fixed-top {
-    left: 260px;
+    left: 0;
   }
 
   .sidebar-overlay {
