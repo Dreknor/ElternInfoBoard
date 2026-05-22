@@ -14,9 +14,11 @@ class ThemeRegistry
     {
         // Standard-Themes registrieren
         $this->register(new DefaultTheme());
+
         $this->register(new DarkTheme());
         $this->register(new NatureTheme());
         $this->register(new WarmTheme());
+        $this->register(new ESZTheme());
     }
 
     public function register(ThemeInterface $theme): void

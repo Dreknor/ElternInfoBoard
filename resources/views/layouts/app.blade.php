@@ -153,7 +153,6 @@
      data-active-color="danger"
      style="background: linear-gradient(to bottom, var(--color-sidebar-bg, #ffffff), var(--color-sidebar-bg-mid, #f8fafc), var(--color-sidebar-bg, #ffffff)); border-right: 1px solid var(--color-sidebar-border, #e2e8f0); z-index: 1010;">
 
-    {{-- Sidebar-Header / Logo wurde in die Navbar verschoben (volle Breite) --}}
 
     <!-- Sidebar Navigation -->
     {{-- Desktop: 70px Logo-Header + ~60px Footer = 130px abziehen; Mobile: Logo-Header ausgeblendet, nur ~60px Footer --}}
@@ -177,22 +176,7 @@
     </div>
 
     <!-- User Info Footer in Sidebar -->
-    <div class="absolute bottom-0 left-0 right-0 px-3 py-2 border-t"
-         style="background: var(--color-sidebar-footer-bg, #f1f5f9); border-color: var(--color-sidebar-footer-border, #e2e8f0);">
-        <div class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                 style="background-color: var(--color-avatar-bg);">
-                {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium truncate mb-0" style="color: var(--color-sidebar-text, #374151);">{{auth()->user()->name ?? 'User'}}</p>
-                        <p class="text-xs truncate mb-0" style="color: var(--color-sidebar-text-muted, #9ca3af);">
-                    <i class="fas fa-circle text-[6px] mr-1" style="color: #22c55e;"></i>
-                    Online
-                </p>
-            </div>
-        </div>
-    </div>
+
 
 </div>
 
