@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             CreateStundenplanModuleSeeder::class,
             StundenplanSettingsSeeder::class,
             UpdateNachrichtenModuleLinkSeeder::class,
+            UcsSyncPermissionSeeder::class,
         ]);
     }
 }
