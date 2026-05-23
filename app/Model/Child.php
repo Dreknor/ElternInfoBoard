@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -17,6 +18,7 @@ class Child extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
+    use SoftDeletes;
 
     protected $fillable = [
         'first_name',
@@ -25,6 +27,11 @@ class Child extends Model implements HasMedia
         'class_id',
         'notification',
         'auto_checkIn',
+        'ucs_username',
+        'ucs_uuid',
+        'ucs_school',
+        'ucs_synced_at',
+        'ucs_source',
     ];
 
     protected function casts(): array
@@ -32,6 +39,7 @@ class Child extends Model implements HasMedia
         return [
             'notification' => 'boolean',
             'auto_checkIn' => 'boolean',
+            'ucs_synced_at' => 'datetime',
         ];
     }
 
@@ -52,7 +60,31 @@ class Child extends Model implements HasMedia
 
     public function parents(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'child_user');
+        return $this->belongsToMany(User::class, 'child_user')
+            ->withPivot(['is_auto_provisioned', 'relation', 'synced_at'])
+            ->withTimestamps();
+    }
+
+    // ── UCS-Scopes ────────────────────────────────────────────────────────────
+
+    /**
+     * Nur Kinder, die aus UCS@school stammen (ucs_source = 'kelvin').
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §4.2
+     */
+    public function scopeFromUcs($query)
+    {
+        return $query->where('ucs_source', 'kelvin');
+    }
+
+    /**
+     * Nur lokal angelegte Kinder (ucs_source = 'local').
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §4.2
+     */
+    public function scopeLocal($query)
+    {
+        return $query->where('ucs_source', 'local');
     }
 
     public function arbeitsgemeinschaften(): BelongsToMany

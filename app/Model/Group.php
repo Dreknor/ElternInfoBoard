@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -19,8 +20,9 @@ class Group extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
+    use SoftDeletes;
 
-    protected $fillable = ['name', 'bereich', 'protected', 'owner_id', 'has_chat'];
+    protected $fillable = ['name', 'bereich', 'protected', 'owner_id', 'has_chat', 'ucs_class_url', 'ucs_source', 'ucs_synced_at'];
 
     protected $visible = ['name', 'bereich', 'protected', 'owner_id', 'has_chat'];
 
@@ -29,6 +31,7 @@ class Group extends Model implements HasMedia
         return [
             'protected' => 'boolean',
             'has_chat'  => 'boolean',
+            'ucs_synced_at' => 'datetime',
         ];
     }
 
@@ -70,5 +73,27 @@ class Group extends Model implements HasMedia
     public function conversation(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Conversation::class)->withoutGlobalScopes();
+    }
+
+    // ── UCS-Scopes ────────────────────────────────────────────────────────────
+
+    /**
+     * Nur Gruppen/Klassen, die aus UCS@school stammen (ucs_source = 'kelvin').
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §4.2
+     */
+    public function scopeFromUcs($query)
+    {
+        return $query->where('ucs_source', 'kelvin');
+    }
+
+    /**
+     * Nur lokal verwaltete Gruppen (ucs_source = 'local').
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §4.2
+     */
+    public function scopeLocal($query)
+    {
+        return $query->where('ucs_source', 'local');
     }
 }

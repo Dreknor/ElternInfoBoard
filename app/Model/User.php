@@ -51,6 +51,7 @@ class User extends Authenticatable implements Auditable
     protected $fillable = [
         'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
         'is_active', 'deactivated_at', 'messenger_discoverable',
+        'ucs_uuid', 'ucs_username', 'ucs_school', 'ucs_synced_at', 'ucs_source',
     ];
 
     /**
@@ -79,6 +80,7 @@ class User extends Authenticatable implements Auditable
             'is_active' => 'boolean',        // TODO-2.5
             'deactivated_at' => 'datetime',  // TODO-2.5
             'messenger_discoverable' => 'boolean',
+            'ucs_synced_at' => 'datetime',
         ];
     }
 
@@ -104,8 +106,9 @@ class User extends Authenticatable implements Auditable
      */
     public function children_rel(): BelongsToMany
     {
-        return $this->belongsToMany(Child::class, 'child_user');
-
+        return $this->belongsToMany(Child::class, 'child_user')
+            ->withPivot(['is_auto_provisioned', 'relation', 'synced_at'])
+            ->withTimestamps();
     }
 
     /**
@@ -131,7 +134,9 @@ class User extends Authenticatable implements Auditable
      */
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(Group::class)->withTimestamps();
+        return $this->belongsToMany(Group::class)
+            ->withPivot(['is_auto_provisioned', 'provisioned_via_child_id', 'synced_at'])
+            ->withTimestamps();
     }
 
     public function ownGroups(): HasMany
