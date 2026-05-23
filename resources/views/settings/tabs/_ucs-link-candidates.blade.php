@@ -67,6 +67,10 @@
                                 $child   = $candidate->child;
                                 $payload = $candidate->payload ?? [];
                             @endphp
+                            @if($child === null)
+                                {{-- Verwaister Kandidat (Kind zwischenzeitlich gelöscht) – überspringen --}}
+                                @continue
+                            @endif
                             <tr>
                                 {{-- Lokales Kind --}}
                                 <td>

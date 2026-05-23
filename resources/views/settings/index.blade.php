@@ -38,6 +38,12 @@
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="keycloak-tab" data-toggle="tab" data-target="#keycloak"
+                                        type="button" role="tab" aria-controls="keycloak" aria-selected="false">
+                                    <i class="fas fa-key mr-1"></i>OIDC / Keycloak
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="ucs-tab" data-toggle="tab" data-target="#ucs"
                                         type="button" role="tab" aria-controls="ucs" aria-selected="false">
                                     <i class="fas fa-school mr-1"></i>UCS@school
@@ -76,6 +82,9 @@
                             @include('settings.tabs.notify-tab')
                             @include('settings.tabs.schickzeiten-tab')
                             @include('settings.tabs.care-tab')
+                            @if(View::exists('settings.tabs.keycloak-tab'))
+                                @include('settings.tabs.keycloak-tab')
+                            @endif
                             @if(View::exists('settings.tabs.ucs-tab'))
                                 @include('settings.tabs.ucs-tab')
                             @endif

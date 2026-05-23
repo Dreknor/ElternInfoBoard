@@ -69,14 +69,14 @@ class KelvinClientTest extends TestCase
     }
 
     // =========================================================================
-    // Kriterium 1: Token-Caching – zweiter Aufruf ruft /auth/ NICHT nochmal auf
+    // Kriterium 1: Token-Caching – zweiter Aufruf ruft /token NICHT nochmal auf
     // =========================================================================
 
     public function test_token_is_cached_and_auth_called_only_once(): void
     {
         // Wildcard am Ende matcht auch URLs mit Query-Parametern
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response($this->schoolsResponse(), 200),
         ]);
 
@@ -86,18 +86,18 @@ class KelvinClientTest extends TestCase
         $client->ping();
         $client->listSchools();
 
-        // /auth/ darf nur einmal aufgerufen worden sein
-        Http::assertSentCount(3); // 1× /auth/, 1× ping, 1× listSchools
+        // /token darf nur einmal aufgerufen worden sein
+        Http::assertSentCount(3); // 1× /token, 1× ping, 1× listSchools
     }
 
     // =========================================================================
-    // Kriterium 2: Nach TTL-Ablauf wird ein neues /auth/ ausgelöst
+    // Kriterium 2: Nach TTL-Ablauf wird ein neues /token ausgelöst
     // =========================================================================
 
     public function test_token_refreshed_after_ttl_expiry(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response($this->schoolsResponse(), 200),
         ]);
 
@@ -109,7 +109,7 @@ class KelvinClientTest extends TestCase
 
         $client->listSchools(); // muss neues Token holen
 
-        Http::assertSentCount(4); // 2× /auth/, 1× ping, 1× listSchools
+        Http::assertSentCount(4); // 2× /token, 1× ping, 1× listSchools
     }
 
     // =========================================================================
@@ -121,7 +121,7 @@ class KelvinClientTest extends TestCase
         $callCount = 0;
 
         Http::fake(function ($request) use (&$callCount) {
-            if (str_contains($request->url(), '/auth/')) {
+            if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse('token-'.(++$callCount)), 200);
             }
             // Erste schools-Anfrage: 401; zweite: 200
@@ -138,13 +138,13 @@ class KelvinClientTest extends TestCase
         $result = $client->listSchools();
 
         $this->assertCount(1, $result);
-        Http::assertSentCount(4); // 1× /auth/, 1× schools (401), 1× /auth/ (re-auth), 1× schools (ok)
+        Http::assertSentCount(4); // 1× /token, 1× schools (401), 1× /token (re-auth), 1× schools (ok)
     }
 
     public function test_401_after_force_refresh_throws_kelvin_auth_exception(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response(['detail' => 'Unauthorized'], 401),
         ]);
 
@@ -160,7 +160,7 @@ class KelvinClientTest extends TestCase
     public function test_server_error_retries_three_times_then_throws_unavailable(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response('Internal Server Error', 500),
         ]);
 
@@ -177,7 +177,7 @@ class KelvinClientTest extends TestCase
     public function test_token_stored_encrypted_in_cache(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse('my-secret-bearer'), 200),
+            '*/token'    => Http::response($this->tokenResponse('my-secret-bearer'), 200),
             '*/schools*' => Http::response($this->schoolsResponse(), 200),
         ]);
 
@@ -194,71 +194,61 @@ class KelvinClientTest extends TestCase
     }
 
     // =========================================================================
-    // Kriterium 6: Pagination – 3 Seiten à 2 Records = 6 Yields
-    // (page_size=2, so 3 Seiten werden benötigt)
+    // Kriterium 6: /users/ liefert alle Einträge in einem Request (kein Pagination)
     // =========================================================================
 
-    public function test_list_parents_paginates_correctly_over_multiple_pages(): void
+    public function test_list_parents_returns_all_users_in_single_request(): void
     {
+        // Die Kelvin API liefert beim /users/-Endpunkt alle Einträge auf einmal.
         $page1 = json_decode(
             file_get_contents(base_path('tests/Fixtures/kelvin/legal_guardian_page1.json')),
             true
         );
 
-        // Seite 1: 2 Records (= page_size), Seite 2: 1 Record, Seite 3: leer → Ende
-        $callCount = 0;
-        Http::fake(function ($request) use ($page1, &$callCount) {
-            if (str_contains($request->url(), '/auth/')) {
+        $usersCalled = 0;
+        Http::fake(function ($request) use ($page1, &$usersCalled) {
+            if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
-            $callCount++;
-
-            return match ($callCount) {
-                1 => Http::response($page1, 200),                           // 2 Records
-                2 => Http::response([$page1[0]], 200),                      // 1 Record < page_size → Ende
-                default => Http::response([], 200),
-            };
+            $usersCalled++;
+            // Liefert alle 2 Datensätze auf einmal (kein Paging)
+            return Http::response($page1, 200);
         });
 
         $client  = $this->makeClient(['kelvin_page_size' => 2]);
         $parents = iterator_to_array($client->listParents('GS-XY'), false);
 
-        $this->assertCount(3, $parents);
+        $this->assertCount(2, $parents, '2 Elternteile aus Single-Request');
         $this->assertContainsOnlyInstancesOf(KelvinUserDto::class, $parents);
+        $this->assertSame(1, $usersCalled, 'Nur 1 HTTP-Anfrage an /users/');
     }
 
-    public function test_list_parents_three_full_pages_yields_correct_count(): void
+    public function test_list_parents_large_response_yields_all_records(): void
     {
-        // Simuliere 3 Seiten à 200 Records (600 Gesamt) + leere 4. Seite
+        // Simuliere 600 Records in einer einzigen Response
         $singleParent = json_decode(
             file_get_contents(base_path('tests/Fixtures/kelvin/legal_guardian_page1.json')),
             true
         )[0];
 
-        $fullPage = array_fill(0, 200, $singleParent);
+        $allUsers = array_fill(0, 600, $singleParent);
 
-        $pageCall = 0;
-        Http::fake(function ($request) use ($fullPage, &$pageCall) {
-            if (str_contains($request->url(), '/auth/')) {
+        Http::fake(function ($request) use ($allUsers) {
+            if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
-            $pageCall++;
-
-            return match (true) {
-                $pageCall <= 3 => Http::response($fullPage, 200),
-                default        => Http::response([], 200),
-            };
+            return Http::response($allUsers, 200);
         });
 
-        $client  = $this->makeClient(['kelvin_page_size' => 200]);
-        $count   = 0;
+        $client = $this->makeClient(['kelvin_page_size' => 200]);
+        $count  = 0;
 
         foreach ($client->listParents('GS-XY') as $dto) {
             $this->assertInstanceOf(KelvinUserDto::class, $dto);
             $count++;
         }
 
-        $this->assertSame(600, $count, '3 Seiten × 200 = 600 Yields erwartet.');
+        $this->assertSame(600, $count, '600 Records aus Single-Response erwartet.');
     }
 
     // =========================================================================
@@ -268,7 +258,7 @@ class KelvinClientTest extends TestCase
     public function test_ping_with_404_throws_kelvin_unavailable_exception(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response(['detail' => 'Not Found'], 404),
         ]);
 
@@ -284,7 +274,7 @@ class KelvinClientTest extends TestCase
     public function test_log_entries_contain_correlation_id(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response($this->schoolsResponse(), 200),
         ]);
 
@@ -311,7 +301,7 @@ class KelvinClientTest extends TestCase
     public function test_find_user_returns_null_on_404(): void
     {
         Http::fake([
-            '*/auth/'             => Http::response($this->tokenResponse(), 200),
+            '*/token'             => Http::response($this->tokenResponse(), 200),
             '*/users/max.mueller' => Http::response(['detail' => 'Not Found'], 404),
         ]);
 
@@ -328,7 +318,7 @@ class KelvinClientTest extends TestCase
         )[0];
 
         Http::fake([
-            '*/auth/'             => Http::response($this->tokenResponse(), 200),
+            '*/token'             => Http::response($this->tokenResponse(), 200),
             '*/users/max.mueller' => Http::response($studentFixture, 200),
         ]);
 
@@ -350,7 +340,7 @@ class KelvinClientTest extends TestCase
         );
 
         Http::fake(function ($request) use ($studentFixture) {
-            if (str_contains($request->url(), '/auth/')) {
+            if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
             // Erste Seite: 3 Einträge (< page_size 200 → kein weiterer Call)
@@ -412,7 +402,7 @@ class KelvinClientTest extends TestCase
     public function test_rate_limit_response_throws_kelvin_rate_limit_exception(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/schools*' => Http::response('Too Many Requests', 429),
         ]);
 
@@ -434,7 +424,7 @@ class KelvinClientTest extends TestCase
         ];
 
         Http::fake(function ($request) use ($classData) {
-            if (str_contains($request->url(), '/auth/')) {
+            if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
             // Erste Seite: 2 Einträge (< page_size 200 → nur ein Call)
@@ -456,7 +446,7 @@ class KelvinClientTest extends TestCase
     public function test_list_classes_returns_empty_collection_when_no_classes(): void
     {
         Http::fake([
-            '*/auth*'    => Http::response($this->tokenResponse(), 200),
+            '*/token'    => Http::response($this->tokenResponse(), 200),
             '*/classes*' => Http::response([], 200),
         ]);
 
@@ -464,5 +454,55 @@ class KelvinClientTest extends TestCase
 
         $this->assertCount(0, $result);
     }
-}
 
+    // =========================================================================
+    // Kriterium: Proxy-Block → KelvinUnavailableException mit Hinweis
+    // =========================================================================
+
+    public function test_proxy_block_connection_exception_throws_kelvin_unavailable_with_hint(): void
+    {
+        // Simuliert einen Proxy-Block beim Token-Abruf (ConnectionException beim /token-Endpunkt)
+        Http::fake(function ($request) {
+            throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
+        });
+
+        try {
+            $this->makeClient()->listSchools();
+            $this->fail('KelvinUnavailableException erwartet');
+        } catch (\App\Services\Ucs\Exceptions\KelvinUnavailableException $e) {
+            $this->assertStringContainsStringIgnoringCase(
+                'Proxy',
+                $e->getMessage(),
+                'Fehlermeldung muss "Proxy-Block?"-Hinweis enthalten.'
+            );
+        }
+    }
+
+    // =========================================================================
+    // Kriterium: Schreibverbots-Architektur – kein PUT/PATCH/DELETE, POST nur /token
+    // =========================================================================
+
+    public function test_kelvin_client_contains_no_write_methods(): void
+    {
+        $source = file_get_contents(app_path('Services/Ucs/KelvinClient.php'));
+
+        // ->post() ist nur für /token erlaubt; andere Schreibmethoden nie
+        $this->assertStringNotContainsString('->put(',    $source, 'KelvinClient darf kein PUT verwenden.');
+        $this->assertStringNotContainsString('->patch(',  $source, 'KelvinClient darf kein PATCH verwenden.');
+        $this->assertStringNotContainsString('->delete(', $source, 'KelvinClient darf kein DELETE verwenden.');
+
+        // ->post() darf nur bei Aufrufen vorkommen, die über tokenUrl() oder $url auf /token zeigen.
+        // Prüfung: kein direktes ->post('irgendwas') mit hartem Pfad außer token-Varianten
+        preg_match_all('/->post\(\s*[\'"]([^\'"]+)[\'"]/', $source, $matches);
+        $allowedPostPaths = ['/auth/', 'auth/', '/ucsschool/kelvin/v1/auth/', '/token', 'token'];
+        foreach ($matches[1] as $path) {
+            $isAllowed = in_array(trim($path), $allowedPostPaths, true)
+                || str_ends_with(trim($path), '/auth/')
+                || str_ends_with(trim($path), '/token');
+            $this->assertTrue(
+                $isAllowed,
+                "Unerlaubter POST-Endpunkt in KelvinClient: {$path}. Schreibzugriff auf UCS verboten (§1/§12)."
+            );
+        }
+    }
+}

@@ -1,5 +1,20 @@
 <div class="tab-pane" id="schoolyear" role="tabpanel" aria-labelledby="schoolyear-tab">
     <div class="container-fluid">
+
+        @php $ucs = $ucsSettings ?? app(\App\Settings\UcsSetting::class); @endphp
+        @if($ucs->enabled)
+            <div class="alert alert-info small mt-3 mb-0">
+                <i class="fas fa-info-circle"></i>
+                <strong>UCS-Sync aktiv:</strong>
+                Klassenwechsel von Kindern aus UCS@school
+                (<code>ucs_source = 'kelvin'</code>) werden beim nächsten
+                Sync automatisch übernommen. Die manuelle Promotion unten
+                betrifft <strong>nur lokal angelegte Kinder</strong>
+                (<code>ucs_source = 'local'</code>) – die bleiben weiterhin
+                in Ihrer Hand.
+            </div>
+        @endif
+
         <div class="card mt-4">
             <div class="card-header bg-warning text-dark">
                 <strong>Achtung!</strong> Der Schuljahreswechsel ist ein kritischer Vorgang. Bitte stellen Sie sicher, dass alle Einstellungen und Gruppen korrekt sind, bevor Sie fortfahren.

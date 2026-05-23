@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 use Throwable;
 
 /**
@@ -465,6 +466,7 @@ class UcsSyncService
     ): array {
         $desiredGroupIds = [];
         $childIdMap      = [];
+        $childLinked     = false; // Wird true, sobald mind. ein Kind verknüpft wurde
 
         foreach ($parentDto->legalWards as $wardUrl) {
             $wardUsername = $this->extractWardUsername($wardUrl);
@@ -500,6 +502,7 @@ class UcsSyncService
                         'synced_at'           => now(),
                     ],
                 ]);
+                $childLinked = true;
             }
 
             // Klassen-Gruppen
@@ -536,6 +539,11 @@ class UcsSyncService
                 $desiredGroupIds[]              = $group->id;
                 $childIdMap[$group->id]         = $child->id;
             }
+        }
+
+        // Eltern-Rolle zuweisen, sobald mind. ein Kind verknüpft wurde
+        if ($childLinked && $user !== null) {
+            $this->ensureElternRole($user);
         }
 
         return [$desiredGroupIds, $childIdMap];
@@ -711,6 +719,10 @@ class UcsSyncService
     /**
      * Bereinigt Datensätze, die nicht mehr in der Kelvin-Antwort auftauchen.
      *
+     * ⚠️  Safety-Guard: Wenn beide Listen leer sind (API lieferte nichts /
+     *     Kelvin hatte einen stillen Fehler), wird der Cleanup ABGEBROCHEN.
+     *     Ziel: kein ungewollter Massen-Soft-Delete bei leerem API-Response.
+     *
      * @param  string[]  $seenParentUuids       Alle record_uid der gesehenen Eltern
      * @param  string[]  $seenStudentUsernames  Alle username der gesehenen Schüler
      * @param  array<string, int>  $counts
@@ -721,6 +733,14 @@ class UcsSyncService
         array  $seenStudentUsernames,
         array  &$counts,
     ): void {
+        // Safety-Guard: Beide Listen leer → Kelvin lieferte kein Ergebnis.
+        // Kein Cleanup durchführen, um ungewollte Massen-Deaktivierung zu verhindern.
+        if (empty($seenParentUuids) && empty($seenStudentUsernames)) {
+            $this->log('warning', 'orphanCleanup: Beide Listen leer – Cleanup übersprungen (Safety-Guard).');
+
+            return;
+        }
+
         // Eltern: deaktivieren (kein Hard-Delete!)
         $orphanParents = User::where('ucs_source', 'kelvin')
             ->where('is_active', true)
@@ -753,11 +773,26 @@ class UcsSyncService
                 ]);
             });
 
+        // Verwaiste Link-Kandidaten bereinigen:
+        // Wenn ein Kind soft-deleted wurde, greift der FK cascadeOnDelete NICHT
+        // (nur hard-delete löst den DB-Cascade aus). Daher werden Kandidaten,
+        // deren Kind nicht mehr existiert oder soft-deleted ist, hier manuell
+        // entfernt. scopeOpen() filtert sie zusätzlich aus der UI heraus.
+        $orphanCandidateCount = UcsLinkCandidate::whereDoesntHave('child')->delete();
+        if ($orphanCandidateCount > 0) {
+            $this->log('info', "Verwaiste Link-Kandidaten gelöscht (Kind soft-deleted)", [
+                'count' => $orphanCandidateCount,
+            ]);
+        }
+
         // Klassen-Gruppen: Auto-Pivots entfernen + SoftDelete
+        // Gruppen, die im aktuellen Sync-Lauf aktualisiert wurden, haben
+        // ucs_synced_at ≈ now(). Als Puffer werden 120 Minuten genutzt,
+        // damit auch langsame Syncs (>10 min) keine gültigen Gruppen löschen.
         Group::withoutGlobalScopes()
             ->withTrashed()
             ->where('ucs_source', 'kelvin')
-            ->where('ucs_synced_at', '<', now()->subMinutes(10)) // nicht frisch angelegte
+            ->where('ucs_synced_at', '<', now()->subMinutes(120)) // konservativer Puffer
             ->each(function (Group $group) {
                 if (! $group->trashed()) {
                     // Auto-Pivots weg (manuelle bleiben erhalten)
@@ -816,6 +851,38 @@ class UcsSyncService
         $base = rtrim($this->settings->kelvin_base_url ?? '', '/');
 
         return "{$base}/classes/".rawurlencode($school).':'.rawurlencode($className);
+    }
+
+    /**
+     * Stellt sicher, dass der User die Rolle 'Eltern' hat.
+     *
+     * Idempotent: hat der User die Rolle bereits, passiert nichts.
+     * Fehlerresistent: existiert die Rolle nicht in der DB, wird nur
+     * eine Warning geloggt (kein Exception-Crash des Sync-Laufs).
+     *
+     * Hintergrund: Jeder per UCS-Sync provisionierte Nutzer, der mindestens
+     * ein Kind verknüpft bekommt, benötigt die Rolle 'Eltern' um die App
+     * vollständig nutzen zu können (Äquivalent zu UsersImport::assignRole('Eltern')).
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §5.2
+     */
+    private function ensureElternRole(User $user): void
+    {
+        if ($user->hasRole('Eltern')) {
+            return;
+        }
+
+        $role = Role::where('name', 'Eltern')->where('guard_name', 'web')->first();
+
+        if ($role === null) {
+            $this->log('warning', 'Eltern-Rolle nicht in der Datenbank gefunden – Rolle nicht zugewiesen', [
+                'user_id' => $user->id,
+            ]);
+            return;
+        }
+
+        $user->assignRole($role);
+        $this->log('info', "Eltern-Rolle zugewiesen", ['user_id' => $user->id]);
     }
 
     /** Wirft, wenn die UCS-Integration deaktiviert oder Schule nicht konfiguriert. */

@@ -20,6 +20,7 @@ use App\Settings\PflichtstundenSetting;
 use App\Settings\ReminderSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
+use App\Settings\KeyCloakSetting;
 use App\Settings\UcsSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -75,6 +76,7 @@ class SettingsController extends Controller implements HasMiddleware
             'reminderSettings' => $reminderSettings,
             'messengerSettings' => $messengerSettings,
             'ucsSettings' => new UcsSetting,
+            'keycloakSettings' => new KeyCloakSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -442,6 +444,35 @@ class SettingsController extends Controller implements HasMiddleware
                 $reminderSettings->include_read_receipts = $request->has('include_read_receipts');
                 $reminderSettings->include_attendance_queries = $request->has('include_attendance_queries');
                 $reminderSettings->save();
+                break;
+
+            case 'keycloak':
+                $validated = $request->validate([
+                    'enabled'      => 'nullable|boolean',
+                    'base_url'     => 'nullable|url|max:255',
+                    'realm'        => 'nullable|string|max:100',
+                    'redirect_uri' => 'nullable|url|max:255',
+                    'client_id'    => 'nullable|string|max:255',
+                    'client_secret'=> 'nullable|string|max:255',
+                    'maildomain'   => 'nullable|string|max:500',
+                ]);
+
+                $keycloakSetting = new KeyCloakSetting;
+                $keycloakSetting->enabled      = $request->has('enabled');
+                $keycloakSetting->base_url     = $validated['base_url']     ?? null;
+                $keycloakSetting->realm        = $validated['realm']        ?? null;
+                $keycloakSetting->redirect_uri = $validated['redirect_uri'] ?? null;
+                $keycloakSetting->maildomain   = $validated['maildomain']   ?? '*';
+
+                // Credentials nur überschreiben, wenn tatsächlich eingegeben
+                if ($request->filled('client_id')) {
+                    $keycloakSetting->client_id = $validated['client_id'];
+                }
+                if ($request->filled('client_secret')) {
+                    $keycloakSetting->client_secret = $validated['client_secret'];
+                }
+
+                $keycloakSetting->save();
                 break;
 
             case 'ucs':

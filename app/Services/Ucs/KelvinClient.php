@@ -27,9 +27,10 @@ use Illuminate\Support\Str;
  * Kelvin REST API kommuniziert. Alle anderen Schichten (UcsSyncService,
  * JIT-Login, Connectivity-Test) nutzen ausschließlich diesen Client.
  *
- * – Bearer-Token-Auth gegen /auth/, verschlüsselt im Cache (§7.5)
+ * – Bearer-Token-Auth gegen /ucsschool/kelvin/token (außerhalb /v1/), verschlüsselt im Cache (§7.5)
  * – TTL-basiertes Re-Auth mit Crypt::encryptString()
- * – Pagination via limit/offset (Hard-Cap: MAX_PAGES Seiten)
+ * – /users/-Endpunkt liefert alle Einträge auf einmal (keine Pagination); Generator für lazy Processing
+ * – /classes/-Endpunkt unterstützt Pagination mit limit/offset (Hard-Cap: MAX_PAGES Seiten)
  * – Retry mit Exponential Backoff für 5xx/429 (Http::retry(3, 500))
  * – TLS-Pflicht (verify=true), kein verify=false in Produktion
  * – Hard-Timeout aus UcsSetting::kelvin_timeout
@@ -243,7 +244,14 @@ class KelvinClient
      * Gibt einen gültigen Bearer-Token zurück.
      *
      * Der Token wird AES-verschlüsselt im Cache gehalten (§7.5 Konzept).
-     * Bei Cache-Miss oder forceRefresh=true: POST /auth/ mit Service-Account-Credentials.
+     * Bei Cache-Miss oder forceRefresh=true:
+     *   POST /ucsschool/kelvin/token  (außerhalb des /v1/-Namespace!)
+     *   Content-Type: application/x-www-form-urlencoded
+     *
+     * ⚠️  Der Token-Endpunkt liegt NICHT unter /v1/. Die baseUrl()
+     *     (= kelvin_base_url, z. B. „…/kelvin/v1") darf hier NICHT
+     *     verwendet werden. Stattdessen liefert tokenUrl() die korrekte
+     *     absolute URL, indem es den Versions-Pfad (/v1) abschneidet.
      *
      * @throws KelvinAuthException
      * @throws KelvinUnavailableException
@@ -256,21 +264,21 @@ class KelvinClient
             return Crypt::decryptString(Cache::get(self::CACHE_KEY));
         }
 
-        $this->log('info', 'Token-Refresh: POST /auth/');
+        $url = $this->tokenUrl();
+        $this->log('info', "Token-Refresh: POST {$url}");
 
         try {
-            $response = Http::baseUrl($this->baseUrl())
-                ->withOptions(['verify' => true])
+            $response = Http::withOptions(['verify' => true])
                 ->timeout($this->settings->kelvin_timeout)
                 ->withHeaders(['X-Correlation-Id' => $this->correlationId])
                 ->asForm()
-                ->post('auth/', [
+                ->post($url, [
                     'username' => $this->settings->kelvin_username,
                     'password' => $this->settings->kelvin_password,
                 ]);
         } catch (ConnectionException $e) {
             throw new KelvinUnavailableException(
-                'Kelvin /auth/ nicht erreichbar: '.$e->getMessage()
+                'Kelvin /token nicht erreichbar: '.$e->getMessage()
                 .' – Proxy-Block? Freigabeliste in docs/kelvin-api-endpunkte.md prüfen.',
                 0,
                 $e
@@ -286,7 +294,7 @@ class KelvinClient
 
         if (! $response->successful()) {
             throw new KelvinUnavailableException(
-                'Kelvin /auth/ antwortete mit HTTP '.$response->status()
+                'Kelvin /token antwortete mit HTTP '.$response->status()
                 .' – Proxy-Block? Freigabeliste in docs/kelvin-api-endpunkte.md prüfen.'
             );
         }
@@ -294,7 +302,7 @@ class KelvinClient
         $token = $response->json('access_token');
 
         if (empty($token)) {
-            throw new KelvinAuthException('Kelvin /auth/ lieferte keinen access_token.');
+            throw new KelvinAuthException('Kelvin /token lieferte keinen access_token.');
         }
 
         $ttl = max(1, $this->settings->kelvin_token_ttl - 60);
@@ -346,7 +354,12 @@ class KelvinClient
     // =========================================================================
 
     /**
-     * Generischer paginierter Generator für GET /users/ mit einer bestimmten Rolle.
+     * Generischer Generator für GET /users/ mit einer bestimmten Rolle.
+     *
+     * Die Kelvin API unterstützt bei /users/ KEINE Pagination.
+     * Der Endpunkt liefert alle Einträge der Rolle auf einmal als großes JSON-Array.
+     * limit/offset-Parameter werden von der API ignoriert und daher NICHT gesendet.
+     *
      *
      * @return Generator<int, KelvinUserDto|KelvinStudentDto>
      *
@@ -355,51 +368,26 @@ class KelvinClient
      */
     private function paginateUsers(string $role, string $school): Generator
     {
-        $offset       = 0;
-        $limit        = $this->settings->kelvin_page_size;
+        $this->log('info', "listUsers: start [{$role}]", ['school' => $school]);
+
+        $response = $this->executeGet('users/', [
+            'role'   => $role,
+            'school' => $school,
+        ]);
+
+        $users        = $response->json() ?? [];
         $totalYielded = 0;
 
-        $this->log('info', "paginateUsers: start [{$role}]", ['school' => $school]);
-
-        for ($page = 0; $page < self::MAX_PAGES; $page++) {
-            $response = $this->executeGet('users/', [
-                'role'   => $role,
-                'school' => $school,
-                'limit'  => $limit,
-                'offset' => $offset,
-            ]);
-
-            $batch = $response->json() ?? [];
-
-            if (empty($batch)) {
-                break;
-            }
-
-            foreach ($batch as $item) {
-                yield $role === 'student'
-                    ? KelvinStudentDto::fromArray($item)
-                    : KelvinUserDto::fromArray($item);
-                $totalYielded++;
-            }
-
-            $offset += $limit;
-
-            if (count($batch) < $limit) {
-                break;
-            }
+        foreach ($users as $item) {
+            yield $role === 'student'
+                ? KelvinStudentDto::fromArray($item)
+                : KelvinUserDto::fromArray($item);
+            $totalYielded++;
         }
 
-        if ($page >= self::MAX_PAGES) {
-            $this->log('warning', "paginateUsers: Hard-Cap erreicht [{$role}]", [
-                'school' => $school,
-                'pages'  => $page,
-            ]);
-        }
-
-        $this->log('info', "paginateUsers: done [{$role}]", [
+        $this->log('info', "listUsers: done [{$role}]", [
             'school' => $school,
             'total'  => $totalYielded,
-            'pages'  => $page,
         ]);
     }
 
@@ -483,9 +471,37 @@ class KelvinClient
     // Hilfsmethoden
     // =========================================================================
 
+    /**
+     * Basis-URL für alle v1-Ressourcen-Endpunkte (/users/, /schools/, /classes/, …).
+     *
+     * Entspricht dem konfigurierten kelvin_base_url, z. B.
+     * „https://ucs-host/ucsschool/kelvin/v1/".
+     */
     private function baseUrl(): string
     {
         return rtrim($this->settings->kelvin_base_url ?? '', '/').'/';
+    }
+
+    /**
+     * Absolute URL des Token-Endpunkts.
+     *
+     * Der Token-Endpunkt liegt AUSSERHALB des /v1/-Namespace:
+     *   POST https://<fqdn>/ucsschool/kelvin/token
+     *
+     * Ableitung: kelvin_base_url ohne den Versions-Pfad (/v1, /v2, …)
+     * plus „/token".
+     *
+     * Beispiel:
+     *   kelvin_base_url = „https://ucs-host/ucsschool/kelvin/v1"
+     *   tokenUrl()      = „https://ucs-host/ucsschool/kelvin/token"
+     */
+    private function tokenUrl(): string
+    {
+        $base = rtrim($this->settings->kelvin_base_url ?? '', '/');
+        // Versions-Suffix /v1, /v2, … entfernen (case-insensitive)
+        $base = preg_replace('#/v\d+$#i', '', $base);
+
+        return $base.'/token';
     }
 
     /**

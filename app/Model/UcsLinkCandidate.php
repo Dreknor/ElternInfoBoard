@@ -60,11 +60,16 @@ class UcsLinkCandidate extends Model
     }
 
     /**
-     * Offene Kandidaten: noch nicht bestätigt und nicht verworfen.
+     * Offene Kandidaten: noch nicht bestätigt, nicht verworfen und
+     * Kind noch vorhanden (nicht soft-deleted).
      *
      * Primär-Filter: confirmed_at IS NULL (reject() setzt confirmed_at immer).
      * Defensiv-Filter: payload->status != 'rejected' schützt vor manuellen
      * DB-Eingriffen, bei denen confirmed_at aus Versehen NULL geblieben ist.
+     * Waisenschutz: whereHas('child') filtert Kandidaten heraus, deren Kind
+     * soft-deleted wurde (cascadeOnDelete greift nur bei hard-delete!).
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §5.2 / §8
      */
     public function scopeOpen($query)
     {
@@ -73,11 +78,12 @@ class UcsLinkCandidate extends Model
             ->where(function ($q) {
                 $q->whereNull('payload->status')
                   ->orWhere('payload->status', '!=', 'rejected');
-            });
+            })
+            ->whereHas('child'); // Kind muss noch existieren (nicht soft-deleted)
     }
 
     /**
-     * Alias für scopeOpen – noch nicht bestätigte Kandidaten.
+     * Alias für scopeOpen – noch nicht bestätigte Kandidaten (Kind vorhanden).
      */
     public function scopePending($query)
     {
@@ -86,7 +92,8 @@ class UcsLinkCandidate extends Model
             ->where(function ($q) {
                 $q->whereNull('payload->status')
                   ->orWhere('payload->status', '!=', 'rejected');
-            });
+            })
+            ->whereHas('child'); // Kind muss noch existieren (nicht soft-deleted)
     }
 
     /**

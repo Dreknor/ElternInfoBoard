@@ -127,6 +127,8 @@ class UcsServiceProvider extends ServiceProvider
                     'services.keycloak.base_url'      => $serviceConfig['base_url'],
                     'services.keycloak.realms'        => $serviceConfig['realms'],
                     'services.keycloak.enabled'       => true,
+                    // maildomain für LoginController::handleKeycloakCallback()
+                    'services.keycloak.mail_domain'   => $kc->maildomain ?: config('services.keycloak.mail_domain', '*'),
                 ]);
             }
         } catch (\Exception $e) {

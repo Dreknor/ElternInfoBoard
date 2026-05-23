@@ -154,7 +154,8 @@ class UcsLoginController extends Controller implements HasMiddleware
 
         // ── Stufe 3: JIT-Sync ─────────────────────────────────────────────────
         if ($user === null && $ucsSetting->on_login_fallback && $username) {
-            $cacheKey = self::JIT_MISS_PREFIX . sha1(strtolower($username));
+            // Cache-Key MUSS mit UcsSyncService::JIT_MISS_PREFIX.$username übereinstimmen
+            $cacheKey = self::JIT_MISS_PREFIX . $username;
 
             if (Cache::has($cacheKey)) {
                 Log::channel('ucs')->info('[UcsLoginController] JIT übersprungen (Negativ-Cache)', [
@@ -181,6 +182,7 @@ class UcsLoginController extends Controller implements HasMiddleware
             }
 
             if ($user === null) {
+                // Cache-Key identisch mit UcsSyncService (kein sha1 – immer plain username)
                 Cache::put($cacheKey, true, now()->addSeconds(self::MISS_TTL));
 
                 return redirect()->route('auth.ucs.pending');
