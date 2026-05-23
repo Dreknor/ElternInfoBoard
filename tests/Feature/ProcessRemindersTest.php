@@ -807,13 +807,13 @@ class ProcessRemindersTest extends TestCase
             authorName: 'Herr Müller',
             postTitle: 'Wichtige Nachricht',
             postId: 42,
-            userName: 'Frau Schmidt',
+            userNames: ['Frau Schmidt', 'Herr Meier'],
             deadline: '10.04.2026',
             type: 'rueckmeldung'
         );
 
         $this->assertEquals('Herr Müller', $mail->authorName);
-        $this->assertEquals('Frau Schmidt', $mail->userName);
+        $this->assertEquals(['Frau Schmidt', 'Herr Meier'], $mail->userNames);
         $this->assertEquals(42, $mail->postId);
         $this->assertStringContainsString('Eskalation', $mail->build()->subject);
     }

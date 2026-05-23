@@ -102,8 +102,8 @@ class KrankmeldungenController extends Controller
             }
 
             if ($child ?? false) {
-                 $gruppe = $child->gruppe->name;
-                 $class = $child->klassen->name;
+                 $gruppe = $child->gruppe?->name;
+                 $class = $child->klassen?->name;
 
                  $name = $krankmeldung->name . ' ('.$gruppe.' - '.$class.')';
             } else {
@@ -124,7 +124,7 @@ class KrankmeldungenController extends Controller
 
             Mail::to(config('mail.from.address'))
                 ->cc($request->user()->email)
-                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease->name ?? null, $attachments));
+                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease?->name, $attachments));
 
             return redirect()->back()->with([
                 'type' => 'success',

@@ -73,7 +73,7 @@
 
                 <!-- Bearbeiten-Button -->
                 @if($termin->id != null)
-                    <a href="{{url("termin/$termin->id/edit")}}"
+                    <a href="{{url("termine/$termin->id/edit")}}"
                        class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded text-white text-xs font-medium transition-colors"
                        style="background-color: var(--color-widget-primary-from)"
                        onmouseover="this.style.backgroundColor='var(--color-widget-primary-border)'"

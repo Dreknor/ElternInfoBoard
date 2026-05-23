@@ -19,7 +19,7 @@
                             <i class="fa fa-ellipsis-v text-sm" aria-hidden="true"></i>
                         </button>
                         <div class="dropdown-menu">
-                            <a href="{{url('termin/create')}}" class="dropdown-item flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-100 transition-colors text-sm">
+                            <a href="{{url('termine/create')}}" class="dropdown-item flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-100 transition-colors text-sm">
                                 <i class="fa fa-plus text-blue-600"></i>
                                 <span>Neuer Termin</span>
                             </a>
