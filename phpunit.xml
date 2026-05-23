@@ -6,6 +6,10 @@
     </testsuite>
     <testsuite name="Feature">
       <directory suffix="Test.php">./tests/Feature</directory>
+      <exclude>./tests/Feature/Performance</exclude>
+    </testsuite>
+    <testsuite name="Performance">
+      <directory suffix="Test.php">./tests/Feature/Performance</directory>
     </testsuite>
   </testsuites>
   <php>
