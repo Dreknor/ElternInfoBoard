@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\SyncUcsSchoolJob;
 use App\Services\Ucs\UcsSyncService;
 use App\Settings\UcsSetting;
 use Illuminate\Console\Command;
@@ -11,15 +10,19 @@ use Illuminate\Support\Facades\Log;
 /**
  * Manueller Auslöser für den UCS@school-Elternsync.
  *
- * – Ohne Optionen: Dispatcht SyncUcsSchoolJob synchron (dispatchSync()),
- *   damit das Ergebnis in der Konsole sichtbar ist.
- * – Mit --dry-run: Ruft UcsSyncService::run(dryRun: true) direkt auf,
+ * – Ohne Optionen: Führt UcsSyncService::run() direkt und synchron aus.
+ *   Kein Queue-Worker / Supervisor erforderlich – funktioniert auf Shared-Hosting.
+ * – Mit --dry-run: Ruft UcsSyncService::run(dryRun: true) auf,
  *   schreibt keine DB-Änderungen und gibt den Counter-Report auf STDOUT aus.
  *
  * Exit-Codes:
  *   0 – Erfolgreich
  *   1 – Fehler beim Sync
  *   2 – Integration oder Sync deaktiviert (keine Mutation)
+ *
+ * Hinweis: SyncUcsSchoolJob bleibt erhalten und kann für manuelles asynchrones
+ *          Dispatching verwendet werden (z. B. SyncUcsSchoolJob::dispatch() aus
+ *          einem Controller). Der Scheduler nutzt diesen Command direkt.
  *
  * @see docs/ucs-kelvin-integration-konzept.md §5.1, §5.4
  */
@@ -28,7 +31,7 @@ class SyncUcsParents extends Command
     protected $signature = 'sync:ucs-parents
         {--dry-run : Nur zählen, keine DB-Änderungen}';
 
-    protected $description = 'UCS@school-Elternsync manuell starten (synchron).';
+    protected $description = 'UCS@school-Elternsync direkt und synchron starten (kein Queue-Worker nötig).';
 
     public function handle(UcsSyncService $svc): int
     {
@@ -67,20 +70,39 @@ class SyncUcsParents extends Command
             return self::SUCCESS;
         }
 
-        // Echter Sync: synchron dispatchen, damit die Konsole das Ergebnis sieht
+        // Echter Sync: direkt synchron, kein Queue-Worker erforderlich
         $this->info('Starte UCS-Elternsync (synchron) …');
-        Log::channel('ucs')->info('[sync:ucs-parents] SyncUcsSchoolJob::dispatchSync().');
+        Log::channel('ucs')->info('[sync:ucs-parents] Starte Bulk-Sync direkt (kein Job-Dispatch).');
 
         try {
-            SyncUcsSchoolJob::dispatchSync();
+            $counts = $svc->run();
         } catch (\Throwable $e) {
-            $this->error('Sync-Job fehlgeschlagen: '.$e->getMessage());
-            Log::channel('ucs')->error('[sync:ucs-parents] Job fehlgeschlagen: '.$e->getMessage());
+            $this->error('Sync fehlgeschlagen: '.$e->getMessage());
+            Log::channel('ucs')->error('[sync:ucs-parents] Bulk-Sync fehlgeschlagen.', [
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fehlerstatus in UcsSetting persistieren (wie SyncUcsSchoolJob::failed())
+            try {
+                $settings->last_sync_status  = 'failed';
+                $settings->last_sync_message = mb_substr($e->getMessage(), 0, 200);
+                $settings->save();
+            } catch (\Throwable) {
+                // Settings-Speicherung darf den Fehlerfluss nicht blockieren
+            }
+
+            // Sentry-Capture (wie SyncUcsSchoolJob::failed())
+            if (app()->bound('sentry')) {
+                app('sentry')->captureException($e);
+            }
 
             return self::FAILURE;
         }
 
-        $this->info('✓ Sync-Job erfolgreich abgeschlossen.');
+        $this->info('✓ Sync erfolgreich abgeschlossen.');
+        Log::channel('ucs')->info('[sync:ucs-parents] Bulk-Sync abgeschlossen.', $counts);
+
+        $this->printCounterReport($counts);
 
         return self::SUCCESS;
     }
@@ -93,21 +115,20 @@ class SyncUcsParents extends Command
     private function printCounterReport(array $counts): void
     {
         $this->line('');
-        $this->line('=== Dry-Run-Report ===');
-        $this->line("Schule:             ".($counts['school'] ?? '–'));
-        $this->line("Dry-Run:            ".($counts['dry_run'] ? 'ja' : 'nein'));
-        $this->line("Eltern verarbeitet: ".($counts['parents_processed'] ?? 0));
-        $this->line("  neu angelegt:     ".($counts['parents_created'] ?? 0));
-        $this->line("  aktualisiert:     ".($counts['parents_updated'] ?? 0));
-        $this->line("  deaktiviert:      ".($counts['parents_deactivated'] ?? 0));
-        $this->line("Kinder neu:         ".($counts['children_created'] ?? 0));
-        $this->line("Kinder aktualisiert:".($counts['children_updated'] ?? 0));
-        $this->line("Kinder lokal skip:  ".($counts['children_skipped_local'] ?? 0));
-        $this->line("Link-Kandidaten:    ".($counts['link_candidates_created'] ?? 0));
+        $this->line('=== Sync-Report ===');
+        $this->line("Schule:               ".($counts['school'] ?? '–'));
+        $this->line("Dry-Run:              ".($counts['dry_run'] ? 'ja' : 'nein'));
+        $this->line("Eltern verarbeitet:   ".($counts['parents_processed'] ?? 0));
+        $this->line("  neu angelegt:       ".($counts['parents_created'] ?? 0));
+        $this->line("  aktualisiert:       ".($counts['parents_updated'] ?? 0));
+        $this->line("  deaktiviert:        ".($counts['parents_deactivated'] ?? 0));
+        $this->line("Kinder neu:           ".($counts['children_created'] ?? 0));
+        $this->line("Kinder aktualisiert:  ".($counts['children_updated'] ?? 0));
+        $this->line("Kinder lokal skip:    ".($counts['children_skipped_local'] ?? 0));
+        $this->line("Link-Kandidaten:      ".($counts['link_candidates_created'] ?? 0));
         $this->line("Gruppen provisioniert:".($counts['groups_provisioned'] ?? 0));
-        $this->line("Fehler (Eltern):    ".($counts['failed_parents'] ?? 0));
-        $this->line("Dauer:              ".($counts['duration_seconds'] ?? 0)." s");
-        $this->line('======================');
+        $this->line("Fehler (Eltern):      ".($counts['failed_parents'] ?? 0));
+        $this->line("Dauer:                ".($counts['duration_seconds'] ?? 0)." s");
+        $this->line('===================');
     }
 }
-

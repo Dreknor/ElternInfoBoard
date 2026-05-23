@@ -1,6 +1,5 @@
 <?php
 
-use App\Jobs\SyncUcsSchoolJob;
 use App\Model\Module;
 use App\Settings\NotifySetting;
 use App\Settings\ReminderSetting;
@@ -105,11 +104,14 @@ try {
         Schedule::command('users:cleanup --report')->monthlyOn(1, '09:00');
 
         // ── UCS@school-Scheduler ─────────────────────────────────────────────
+        // Läuft vollständig über den Scheduler (kein Queue-Worker / Supervisor nötig).
+        // Funktioniert damit auch auf Shared-Hosting, das nur einen Cron-Job erlaubt.
         try {
             $ucsSetting = app(UcsSetting::class);
 
             // Bulk-Sync: Cron aus UcsSetting, Fallback 02:30 Uhr
-            Schedule::job(new SyncUcsSchoolJob)
+            // Wird als Artisan-Command synchron ausgeführt – kein Queue-Worker erforderlich.
+            Schedule::command('sync:ucs-parents')
                 ->cron($ucsSetting->sync_cron ?: '30 2 * * *')
                 ->when(fn () => $ucsSetting->enabled && $ucsSetting->sync_enabled)
                 ->onOneServer()

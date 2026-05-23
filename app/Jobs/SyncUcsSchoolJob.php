@@ -13,11 +13,18 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Asynchroner Bulk-Sync-Job für UCS@school-Daten.
+ * Optionaler asynchroner Bulk-Sync-Job für UCS@school-Daten.
  *
- * – Queueable, idempotent, nur ein gleichzeitig aktives Exemplar (onOneServer/withoutOverlapping
- *   wird über den Scheduler gesetzt, kann aber auch Job-seitig per ShouldBeUnique umgesetzt
- *   werden – hier über ShouldQueue ohne ShouldBeUnique, da withoutOverlapping im Scheduler steht)
+ * HINWEIS: Der reguläre Scheduler nutzt diesen Job NICHT mehr direkt.
+ * Stattdessen ruft der Scheduler `php artisan sync:ucs-parents` auf,
+ * das UcsSyncService::run() synchron ausführt – kein Queue-Worker/Supervisor nötig,
+ * funktioniert auch auf Shared-Hosting.
+ *
+ * Dieser Job bleibt erhalten für:
+ *   – Manuelles asynchrones Dispatching:  SyncUcsSchoolJob::dispatch()
+ *   – Notfall-Trigger aus einem Controller heraus
+ *
+ * – Queueable, idempotent
  * – Parameterfrei: Schule kommt aus UcsSetting
  * – Kein Retry (tries = 1), langer Timeout (900 s)
  * – failed() schreibt Status nach UcsSetting + captured Sentry
@@ -38,10 +45,8 @@ class SyncUcsSchoolJob implements ShouldQueue
      * Konstruktor ohne Parameter – Schule wird aus UcsSetting gelesen.
      *
      * Queue: 'default' (Standard-Queue des Projekts).
-     * Für einen eigenen Worker kann beim Dispatch onQueue('ucs') gesetzt werden:
-     *   SyncUcsSchoolJob::dispatch()->onQueue('ucs')
-     * Dann ist ein eigener Supervisor-Worker für die 'ucs'-Queue
-     * erforderlich (vgl. docs/todos/10-rollout-und-deployment.md).
+     * Für asynchrones Dispatching: SyncUcsSchoolJob::dispatch()
+     * Für synchrones Ausführen (Scheduler/CLI): php artisan sync:ucs-parents
      */
     public function __construct()
     {

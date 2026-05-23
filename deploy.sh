@@ -15,7 +15,7 @@ php artisan migrate --force
 php artisan settings:migrate --force
 # seed UCS permissions (idempotent; legt "manage ucs sync" an + weist Admin zu)
 php artisan db:seed --class=UcsSyncPermissionSeeder --force
-# restart queue workers so the new SyncUcsSchoolJob timeout takes effect
+# restart queue workers (für andere Jobs wie ProcessRemindersJob etc.)
 php artisan queue:restart
 # clear config/route cache so updated settings are picked up
 php artisan config:clear
