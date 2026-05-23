@@ -1,8 +1,9 @@
 @if($careChildren && $careChildren->count() > 0)
     <div class="col-12 mb-4">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 border-b border-teal-800">
-                <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+        <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text);">
                     <i class="fas fa-user-check"></i>
                     CheckIn-Status Ihrer Kinder
                 </h5>
@@ -11,16 +12,16 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($careChildren as $child)
                         @php
-                            // Nutze bereits geladene Relationen für Performance
                             $todayCheckIn = $child->checkIns->first();
                             $isCheckedIn = $todayCheckIn && $todayCheckIn->checked_in && !$todayCheckIn->checked_out;
                             $isCheckedOut = $todayCheckIn && $todayCheckIn->checked_out;
                             $hasKrankmeldung = $child->krankmeldungen->count() > 0;
                             $schickzeitenToday = $child->schickzeiten;
                         @endphp
-                        <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div class="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200" style="border: 1px solid var(--color-card-border);">
                             <!-- Header -->
-                            <div class="@if($isCheckedIn) bg-gradient-to-r from-teal-500 to-teal-600 text-white @else bg-gradient-to-r from-orange-500 to-amber-600 text-white @endif px-4 py-3">
+                            <div class="px-4 py-3 text-white"
+                                 style="background: linear-gradient(to right, {{ $isCheckedIn ? 'var(--color-widget-success-from), var(--color-widget-success-to)' : 'var(--color-widget-warning-from), var(--color-widget-warning-to)' }});">
                                 <h6 class="font-bold text-base mb-0">
                                     {{$child->first_name}} {{$child->last_name}}
                                 </h6>
@@ -30,9 +31,8 @@
                             </div>
 
                             <!-- Body -->
-                            <div class="p-4 bg-gray-50">
+                            <div class="p-4" style="background: var(--color-widget-body-bg);">
                                 @if($hasKrankmeldung)
-                                    <!-- Krankmeldung -->
                                     <div class="flex items-start gap-2 p-3 bg-red-50 border-l-4 border-red-500 rounded">
                                         <i class="fas fa-notes-medical text-red-600 mt-1"></i>
                                         <div>
@@ -41,18 +41,16 @@
                                         </div>
                                     </div>
                                 @elseif($isCheckedOut)
-                                    <!-- Ausgecheckt -->
                                     <div class="flex items-start gap-2 p-3 bg-gray-100 border-l-4 border-gray-400 rounded">
                                         <i class="fas fa-sign-out-alt text-gray-600 mt-1"></i>
                                         <div>
-                                            <p class="text-gray-800 font-semibold text-sm mb-0">Abgemeldet</p>
-                                            <p class="text-gray-600 text-xs mb-0">
+                                            <p class="font-semibold text-sm mb-0" style="color: var(--color-text-primary);">Abgemeldet</p>
+                                            <p class="text-xs mb-0" style="color: var(--color-text-secondary);">
                                                 um {{$todayCheckIn?->updated_at?->format('H:i')}} Uhr
                                             </p>
                                         </div>
                                     </div>
                                 @elseif($isCheckedIn)
-                                    <!-- Eingecheckt -->
                                     <div class="space-y-3">
                                         <div class="flex items-start gap-2 p-3 bg-teal-50 border-l-4 border-teal-500 rounded">
                                             <i class="fas fa-user-check text-teal-600 mt-1"></i>
@@ -62,7 +60,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Schickzeiten -->
                                         @if($schickzeitenToday->count() > 0)
                                             <div class="bg-blue-50 border border-blue-200 rounded p-3">
                                                 <div class="flex items-center gap-2 mb-2">
@@ -76,22 +73,16 @@
                                                             Genau {{$schickzeit->time?->format('H:i')}} Uhr
                                                         @else
                                                             <i class="fas fa-arrow-right text-xs mr-1"></i>
-                                                            @if(!is_null($schickzeit->time_ab))
-                                                                Ab {{$schickzeit->time_ab?->format('H:i')}} Uhr
-                                                            @endif
-                                                            @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet))
-                                                                -
-                                                            @endif
-                                                            @if(!is_null($schickzeit->time_spaet))
-                                                                Spät. {{$schickzeit->time_spaet?->format('H:i')}} Uhr
-                                                            @endif
+                                                            @if(!is_null($schickzeit->time_ab)) Ab {{$schickzeit->time_ab?->format('H:i')}} Uhr @endif
+                                                            @if(!is_null($schickzeit->time_ab) && !is_null($schickzeit->time_spaet)) - @endif
+                                                            @if(!is_null($schickzeit->time_spaet)) Spät. {{$schickzeit->time_spaet?->format('H:i')}} Uhr @endif
                                                         @endif
                                                     </p>
                                                 @endforeach
                                             </div>
                                         @else
-                                            <div class="bg-gray-100 border border-gray-200 rounded p-2">
-                                                <p class="text-gray-600 text-xs mb-0 text-center">
+                                            <div class="rounded p-2" style="background: var(--color-card-border)20; border: 1px solid var(--color-card-border);">
+                                                <p class="text-xs mb-0 text-center" style="color: var(--color-text-secondary);">
                                                     <i class="fas fa-info-circle mr-1"></i>
                                                     Keine Schickzeit für heute hinterlegt
                                                 </p>
@@ -99,12 +90,11 @@
                                         @endif
                                     </div>
                                 @else
-                                    <!-- Nicht eingecheckt -->
                                     <div class="flex items-start gap-2 p-3 bg-gray-100 border-l-4 border-gray-400 rounded">
                                         <i class="fas fa-times-circle text-gray-600 mt-1"></i>
                                         <div>
-                                            <p class="text-gray-800 font-semibold text-sm mb-0">Nicht angemeldet</p>
-                                            <p class="text-gray-600 text-xs mb-0">Heute noch nicht eingecheckt</p>
+                                            <p class="font-semibold text-sm mb-0" style="color: var(--color-text-primary);">Nicht angemeldet</p>
+                                            <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Heute noch nicht eingecheckt</p>
                                         </div>
                                     </div>
                                 @endif
@@ -114,8 +104,12 @@
                 </div>
 
                 @can('view child')
-                    <div class="text-center mt-4 pt-4 border-t border-gray-200">
-                        <a href="{{ url('/care/children') }}" class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
+                    <div class="text-center mt-4 pt-4" style="border-top: 1px solid var(--color-card-border);">
+                        <a href="{{ url('/care/children') }}"
+                           class="inline-flex items-center px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200"
+                           style="background: var(--color-widget-success-from);"
+                           onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-success-to')"
+                           onmouseout="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-success-from')">
                             <i class="fas fa-child mr-2"></i>
                             Zur Kinderübersicht
                         </a>
@@ -125,4 +119,3 @@
         </div>
     </div>
 @endif
-

@@ -6,8 +6,8 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    <i class="far fa-newspaper text-blue-600"></i> Alle Nachrichten
+                <h2 class="text-2xl font-bold" style="color: var(--color-text-primary);">
+                    <i class="far fa-newspaper" style="color: var(--color-widget-primary-from);"></i> Alle Nachrichten
                 </h2>
                 <a href="{{ url('/') }}" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left"></i> Zurück zum Dashboard

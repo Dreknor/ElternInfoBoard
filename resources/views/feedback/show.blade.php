@@ -4,9 +4,10 @@
 @section('content')
 <div class="container-fluid px-4 py-3 space-y-4">
     <!-- Nachricht erstellen Card -->
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800">
-            <h5 class="text-xl font-bold text-white flex items-center gap-2 mb-0">
+    <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
+        <div class="px-4 py-3 border-b"
+             style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
+            <h5 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                 <i class="fas fa-envelope"></i>
                 Nachricht erstellen
             </h5>
@@ -18,13 +19,14 @@
                 @csrf
 
                 <div>
-                    <label for="mitarbeiter" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-user text-blue-600 mr-1"></i>
+                    <label for="mitarbeiter" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
+                        <i class="fas fa-user mr-1" style="color: var(--color-widget-primary-from)"></i>
                         Empfänger
                     </label>
                     <select name="mitarbeiter"
                             id="mitarbeiter"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                            class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                            style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
                         <option value="">Sekretariat</option>
                         @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
                             <option value="{{$Mitarbeiter->id}}" @if($Mitarbeiter->id == $id) selected @endif>
@@ -35,11 +37,12 @@
                 </div>
 
                 <div>
-                    <label for="betreff" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-heading text-blue-600 mr-1"></i>
+                    <label for="betreff" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
+                        <i class="fas fa-heading mr-1" style="color: var(--color-widget-primary-from)"></i>
                         Betreff
                     </label>
-                    <input class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                    <input class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                           style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
                            id="betreff"
                            name="betreff"
                            placeholder="Betreff der Nachricht"
@@ -47,11 +50,12 @@
                 </div>
 
                 <div>
-                    <label for="text" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-align-left text-blue-600 mr-1"></i>
+                    <label for="text" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
+                        <i class="fas fa-align-left mr-1" style="color: var(--color-widget-primary-from)"></i>
                         Nachricht
                     </label>
-                    <textarea class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none"
+                    <textarea class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none resize-none"
+                              style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
                               id="text"
                               name="text"
                               rows="8"
@@ -59,25 +63,28 @@
                 </div>
 
                 <div>
-                    <label for="customFile" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-paperclip text-blue-600 mr-1"></i>
+                    <label for="customFile" class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
+                        <i class="fas fa-paperclip mr-1" style="color: var(--color-widget-primary-from)"></i>
                         Datei anfügen
                     </label>
                     <input type="file"
                            name="files[]"
                            id="customFile"
                            multiple
-                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                           class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                           style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button type="submit"
-                            class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                            class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                            style="background-color: var(--color-widget-primary-from)">
                         <i class="fas fa-paper-plane"></i>
                         <span>Feedback senden</span>
                     </button>
                     <button type="reset"
-                            class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors duration-200">
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-lg transition-colors duration-200"
+                            style="background-color: var(--color-surface-subtle); color: var(--color-text-secondary)">
                         <i class="fas fa-redo"></i>
                         <span class="hidden sm:inline">Zurücksetzen</span>
                     </button>
@@ -88,9 +95,10 @@
 
     <!-- Alte Nachrichten -->
     @can('see mails')
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-gray-600 to-gray-700 px-4 py-3 border-b border-gray-800">
-                <h5 class="text-xl font-bold text-white flex items-center gap-2 mb-0">
+        <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
+                <h5 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                     <i class="fas fa-history"></i>
                     Alte Nachrichten
                 </h5>
@@ -100,14 +108,17 @@
                 @if($mails->count() > 0)
                     <div class="space-y-3">
                         @foreach($mails as $mail)
-                            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                            <div class="border rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                                 style="border-color: var(--color-card-border); transition: border-color 0.2s"
+                                 onmouseover="this.style.borderColor='var(--color-widget-primary-from)'"
+                                 onmouseout="this.style.borderColor='var(--color-card-border)'">
                                 <!-- Mail Header -->
-                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3 pb-3 border-b border-gray-200">
-                                    <h6 class="font-semibold text-gray-800 mb-0">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3 pb-3 border-b" style="border-color: var(--color-card-border)">
+                                    <h6 class="font-semibold mb-0" style="color: var(--color-text-primary)">
                                         {{$mail->subject}}
                                     </h6>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-500">
+                                        <span class="text-sm" style="color: var(--color-text-muted)">
                                             <i class="fas fa-clock mr-1"></i>
                                             {{$mail->created_at->format('d.m.Y H:i')}}
                                         </span>
@@ -125,14 +136,14 @@
                                 </div>
 
                                 <!-- Mail Content -->
-                                <div class="prose max-w-none text-gray-700 mb-3">
+                                <div class="prose max-w-none mb-3" style="color: var(--color-text-secondary)">
                                     {!! $mail->text !!}
                                 </div>
 
                                 <!-- Attachments -->
                                 @if($mail->getMedia('files')->count() > 0)
-                                    <div class="border-t border-gray-200 pt-3">
-                                        <p class="text-sm font-medium text-gray-700 mb-2">
+                                    <div class="border-t pt-3" style="border-color: var(--color-card-border)">
+                                        <p class="text-sm font-medium mb-2" style="color: var(--color-text-secondary)">
                                             <i class="fas fa-paperclip mr-1"></i>
                                             Anhänge:
                                         </p>
@@ -140,9 +151,10 @@
                                             @foreach($mail->getMedia('files') as $file)
                                                 <a href="{{url('/image/'.$file->id)}}"
                                                    target="_blank"
-                                                   class="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-sm">
-                                                    <i class="fas fa-file-download text-blue-600"></i>
-                                                    <span class="text-gray-800">{{$file->name}}</span>
+                                                   class="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm"
+                                                   style="background-color: var(--color-widget-body-bg)">
+                                                    <i class="fas fa-file-download" style="color: var(--color-widget-primary-from)"></i>
+                                                    <span style="color: var(--color-text-primary)">{{$file->name}}</span>
                                                 </a>
                                             @endforeach
                                         </div>
@@ -152,9 +164,10 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="flex items-start gap-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
-                        <i class="fas fa-info-circle text-blue-600 mt-1"></i>
-                        <p class="text-blue-800 text-sm mb-0">Keine Nachrichten vorhanden</p>
+                    <div class="flex items-start gap-3 p-3 border-l-4 rounded"
+                         style="background-color: var(--color-widget-body-bg); border-color: var(--color-widget-primary-from)">
+                        <i class="fas fa-info-circle mt-1" style="color: var(--color-widget-primary-from)"></i>
+                        <p class="text-sm mb-0" style="color: var(--color-widget-primary-border)">Keine Nachrichten vorhanden</p>
                     </div>
                 @endif
             </div>
@@ -167,8 +180,6 @@
 
 @push('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-
-
 
     <script src="{{asset('js/plugins/tinymce/jquery.tinymce.min.js')}}"></script>
     <script src="{{asset('js/plugins/tinymce/tinymce.min.js')}}"></script>

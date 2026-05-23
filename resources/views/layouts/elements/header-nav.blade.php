@@ -11,14 +11,6 @@
                             <span class="navbar-toggler-bar bar3"></span>
                         </button>
                     </div>
-                    <span class="d-md-none">
-                <a class="navbar-brand" href="{{url('/')}}">
-                    <i class="fas fa-home" style="font-size: 1.5rem"></i>
-                </a>
-            </span>
-                    <span class="d-none d-md-block">
-                <a class="navbar-brand" href="{{url('/')}}">{{$settings->app_name}}</a>
-            </span>
 
                 </div>
             </div>

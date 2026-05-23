@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckNewsForUser::class,
             \App\Http\Middleware\LastOnlineAt::class,
             \App\Http\Middleware\CheckUserActive::class,
+            \App\Http\Middleware\ApplyTheme::class,
         ]);
 
         $middleware->throttleApi();

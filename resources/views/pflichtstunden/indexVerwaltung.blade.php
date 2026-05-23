@@ -190,7 +190,8 @@
                 form.submit();
             }
         }">
-            <div class="bg-gradient-to-r from-orange-500 to-amber-600 text-white px-6 py-4 rounded-t-xl">
+            <div class="px-6 py-4 rounded-t-xl text-white"
+                 style="background: linear-gradient(to right, var(--color-widget-warning-from), var(--color-widget-warning-to))">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-bold flex items-center gap-3">
                         <i class="fas fa-clock text-2xl"></i>
@@ -410,7 +411,8 @@
         <!-- Formular: Pflichtstunden für Nutzer erfassen -->
         @can('edit Pflichtstunden')
             <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6">
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl">
+                <div class="rounded-t-xl text-white px-6 py-4"
+                     style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
                     <h3 class="text-xl font-bold flex items-center gap-3">
                         <i class="fas fa-user-clock text-2xl"></i>
                         Pflichtstunden für Nutzer erfassen
@@ -585,14 +587,18 @@
              }"
              x-init="$watch('search', () => currentPage = 1)">
 
-            <div class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
+            <div class="rounded-t-xl flex items-center justify-between text-white px-6 py-4"
+                 style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to))">
                 <h3 class="text-xl font-bold flex items-center gap-3">
                     <i class="fas fa-chart-bar text-2xl"></i>
                     Übersicht der Pflichtstunden
                 </h3>
                 <div x-data="{ showExportMenu: false }" class="relative">
                     <button @click="showExportMenu = !showExportMenu"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-green-600 hover:bg-green-50 font-semibold rounded-lg transition-colors duration-200 shadow-md">
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-white font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                            style="color: var(--color-widget-success-from)"
+                            onmouseover="this.style.backgroundColor='#f0fdf4'"
+                            onmouseout="this.style.backgroundColor='#ffffff'">
                         <i class="fas fa-file-excel"></i>
                         Excel-Export
                         <i class="fas fa-chevron-down text-sm"></i>

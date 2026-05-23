@@ -8,7 +8,7 @@
     <div class="mb-6 flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <i class="fas fa-comments text-blue-600"></i>
+                <i class="fas fa-comments" style="color: var(--color-primary)"></i>
                 Eltern-Nachrichten
             </h1>
             <p class="text-sm text-gray-600 mt-1">Austausch mit anderen Eltern in deinen Gruppen</p>
@@ -16,7 +16,10 @@
         @if($settings->allow_direct_messages ?? true)
         <button type="button"
                 onclick="document.getElementById('newDirectModal').classList.remove('hidden')"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+                class="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium"
+                style="background-color: var(--color-primary)"
+                onmouseover="this.style.backgroundColor='var(--color-primary-dark)'"
+                onmouseout="this.style.backgroundColor='var(--color-primary)'">
             <i class="fas fa-plus"></i>
             Neue Direktnachricht
         </button>
@@ -37,8 +40,9 @@
     @if($conversations->isEmpty())
         <!-- Leer-Zustand -->
         <div class="bg-white rounded-lg shadow-lg p-12 text-center">
-            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-comments text-3xl text-blue-600"></i>
+            <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4"
+                 style="background-color: var(--color-widget-primary-bg)">
+                <i class="fas fa-comments text-3xl" style="color: var(--color-primary)"></i>
             </div>
             <h3 class="text-lg font-semibold text-gray-800 mb-2">Noch keine Konversationen</h3>
             <p class="text-gray-500 text-sm max-w-sm mx-auto">
@@ -50,16 +54,22 @@
         <div class="grid grid-cols-1 gap-4">
             @foreach($conversations as $conv)
             <a href="{{ route('messenger.show', $conv) }}"
-               class="bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-100 hover:border-blue-200 p-4 flex items-center gap-4 group">
+               class="bg-white rounded-lg shadow hover:shadow-md transition-all border border-gray-100 p-4 flex items-center gap-4 group"
+               onmouseover="this.style.borderColor='var(--color-primary)'"
+               onmouseout="this.style.borderColor='#f3f4f6'">
                 <!-- Icon -->
-                <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center
-                    {{ $conv->type === 'group' ? 'bg-blue-100' : 'bg-indigo-100' }}">
-                    <i class="{{ $conv->type === 'group' ? 'fas fa-users text-blue-600' : 'fas fa-user text-indigo-600' }} text-xl"></i>
+                <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
+                     style="background-color: var(--color-widget-primary-bg)">
+                    <i class="{{ $conv->type === 'group' ? 'fas fa-users' : 'fas fa-user' }} text-xl"
+                       style="color: var(--color-primary)"></i>
                 </div>
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2">
-                        <h3 class="font-semibold text-gray-800 truncate group-hover:text-blue-600 transition-colors">
+                        <h3 class="font-semibold text-gray-800 truncate transition-colors"
+                            style="color: inherit"
+                            onmouseover="this.style.color='var(--color-primary)'"
+                            onmouseout="this.style.color=''">
                             {{ $conv->display_name }}
                         </h3>
                         @if($conv->latestMessage)
@@ -94,7 +104,7 @@
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
         <div class="flex items-center justify-between p-5 border-b border-gray-200">
             <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                <i class="fas fa-user-plus text-blue-600"></i>
+                <i class="fas fa-user-plus" style="color: var(--color-primary)"></i>
                 Neue Direktnachricht
             </h3>
             <button onclick="document.getElementById('newDirectModal').classList.add('hidden')"

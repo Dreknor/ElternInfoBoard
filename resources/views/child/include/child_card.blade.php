@@ -3,18 +3,21 @@
      x-data="{ showNoticeForm: false, showSchickzeiten: false }">
 
     <!-- Header mit Status -->
-    <div class="px-4 py-3 @if($child->checkedIn()) bg-gradient-to-r from-teal-500 to-teal-600 @else bg-gradient-to-r from-amber-500 to-orange-500 @endif">
+    <div class="px-4 py-3"
+         style="@if($child->checkedIn()) background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); @else background: linear-gradient(to right, var(--color-widget-warning-from), var(--color-widget-warning-to)); @endif">
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white mb-0">
+            <h3 class="text-lg font-bold mb-0" style="color: var(--color-widget-header-text)">
                 {{$child->first_name}} {{$child->last_name}}
             </h3>
             <div>
                 @if($child->checkedIn())
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white bg-opacity-30 text-green-400">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                          style="background: rgba(255,255,255,0.25); color: var(--color-widget-header-text)">
                         <i class="fas fa-check-circle mr-1"></i> Angemeldet
                     </span>
                 @else
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white bg-opacity-30 text-red-300 ">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                          style="background: rgba(255,255,255,0.25); color: var(--color-widget-header-text)">
                         <i class="fas fa-times-circle mr-1"></i> Abgemeldet
                     </span>
                 @endif
@@ -23,31 +26,31 @@
     </div>
 
     <!-- Status & Schickzeit Info -->
-    <div class="p-4 @if($child->checkedIn()) bg-teal-50 @else bg-orange-50 @endif border-b border-gray-200">
+    <div class="p-4 border-b border-gray-200" style="background-color: var(--color-widget-body-bg)">
         @if(!$child->checkedIn() and $child->checkIns()->where('date', today())->first())
             <div class="flex items-center gap-2 text-sm">
-                <i class="fas fa-clock text-red-600"></i>
+                <i class="fas fa-clock" style="color: var(--color-widget-warning-from)"></i>
                 <span class="text-gray-700">
                     <strong>{{$child->checkIns()->where('date', today())->first()?->updated_at?->format('H:i')}} Uhr</strong> abgemeldet
                 </span>
             </div>
         @elseif($child->checkedIn())
             <div class="space-y-2">
-                <div class="flex items-center gap-2 text-sm text-teal-800">
-                    <i class="fas fa-user-check text-teal-600"></i>
+                <div class="flex items-center gap-2 text-sm" style="color: var(--color-widget-success-border)">
+                    <i class="fas fa-user-check" style="color: var(--color-widget-success-accent)"></i>
                     <span class="font-medium">Derzeit angemeldet</span>
                 </div>
 
                 @if($child->getSchickzeitenForToday()->count() > 0)
-                    <div class="mt-2 pt-2 border-t border-teal-200">
-                        <div class="text-xs font-semibold text-teal-700 mb-1">Heutige Schickzeit:</div>
+                    <div class="mt-2 pt-2 border-t" style="border-color: var(--color-widget-success-accent)">
+                        <div class="text-xs font-semibold mb-1" style="color: var(--color-widget-success-border)">Heutige Schickzeit:</div>
                         @foreach($child->getSchickzeitenForToday() as $schickzeit)
                             <div class="flex items-center gap-2 text-sm text-gray-700">
                                 @if($schickzeit->type == 'genau')
-                                    <i class="fas fa-clock text-green-600"></i>
+                                    <i class="fas fa-clock" style="color: var(--color-widget-success-from)"></i>
                                     <span>Genau <strong>{{$schickzeit->time?->format('H:i')}} Uhr</strong></span>
                                 @else
-                                    <i class="fas fa-hourglass-half text-amber-600"></i>
+                                    <i class="fas fa-hourglass-half" style="color: var(--color-widget-warning-from)"></i>
                                     <span>
                                         @if(!is_null($schickzeit->time_ab))
                                             Ab <strong>{{$schickzeit->time_ab?->format('H:i')}} Uhr</strong>
@@ -61,7 +64,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="flex items-center gap-2 text-xs text-amber-600 mt-2">
+                    <div class="flex items-center gap-2 text-xs mt-2" style="color: var(--color-widget-warning-from)">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span>Keine Schickzeit hinterlegt</span>
                     </div>
@@ -81,9 +84,10 @@
             <button @click="showSchickzeiten = !showSchickzeiten" type="button"
                     class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150">
                 <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <i class="fas fa-calendar-day text-purple-600"></i>
+                    <i class="fas fa-calendar-day" style="color: var(--color-widget-accent-from)"></i>
                     Tagesaktuelle Schickzeiten
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                          style="background-color: var(--color-widget-body-bg); color: var(--color-widget-accent-border); border: 1px solid var(--color-widget-accent-border)">
                         {{$child->schickzeiten->where('specific_date', '!=', NULL)->count()}}
                     </span>
                 </span>
@@ -98,14 +102,15 @@
                  class="px-4 pb-3">
                 <ul class="space-y-2">
                     @foreach($child->schickzeiten->where('specific_date', '!=', NULL) as $schickzeit)
-                        <li class="flex items-start justify-between p-3 bg-purple-50 rounded-lg">
+                        <li class="flex items-start justify-between p-3 rounded-lg"
+                            style="background-color: var(--color-widget-body-bg); border: 1px solid var(--color-widget-accent-border)">
                             <div>
                                 <div class="font-medium text-gray-900 text-sm">{{$schickzeit->specific_date->format('d.m.Y')}}</div>
                                 <div class="text-xs text-gray-600 mt-1">
                                     @if($schickzeit->type =="genau")
-                                        <i class="fas fa-clock text-green-600"></i> Genau {{$schickzeit->time?->format('H:i')}} Uhr
+                                        <i class="fas fa-clock" style="color: var(--color-widget-success-from)"></i> Genau {{$schickzeit->time?->format('H:i')}} Uhr
                                     @else
-                                        <i class="fas fa-hourglass-half text-amber-600"></i>
+                                        <i class="fas fa-hourglass-half" style="color: var(--color-widget-warning-from)"></i>
                                         Ab {{$schickzeit->time_ab?->format('H:i')}} Uhr
                                         @if(!is_null($schickzeit->time_ab) && $schickzeit->time_spaet)
                                             - {{$schickzeit->time_spaet?->format('H:i')}} Uhr
@@ -133,16 +138,18 @@
     <div class="p-4">
         <div class="flex items-center justify-between mb-3">
             <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <i class="fas fa-comment-alt text-blue-600"></i>
+                <i class="fas fa-comment-alt" style="color: var(--color-widget-primary-from)"></i>
                 Nachrichten
                 @if($child->notice()->future()->count() > 0)
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                          style="background-color: var(--color-widget-body-bg); color: var(--color-widget-primary-border); border: 1px solid var(--color-widget-primary-border)">
                         {{$child->notice()->future()->count()}}
                     </span>
                 @endif
             </h4>
             <button @click="showNoticeForm = !showNoticeForm" type="button"
-                    class="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors duration-150">
+                    class="p-2 rounded-full transition-colors duration-150 hover:bg-gray-100"
+                    style="color: var(--color-widget-primary-from)">
                 <i class="fas" :class="showNoticeForm ? 'fa-times' : 'fa-plus'"></i>
             </button>
         </div>
@@ -151,9 +158,11 @@
         @if($child->notice()->future()->count() > 0)
             <div class="space-y-2 mb-3">
                 @foreach($child->notice()->future()->get() as $notice)
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">
-                        <div class="px-3 py-2 bg-blue-100 flex items-center justify-between">
-                            <span class="text-xs font-semibold text-blue-900">
+                    <div class="rounded-lg overflow-hidden border"
+                         style="background-color: var(--color-widget-body-bg); border-color: var(--color-widget-primary-from)">
+                        <div class="px-3 py-2 flex items-center justify-between"
+                             style="background-color: var(--color-widget-body-bg); border-bottom: 1px solid var(--color-widget-primary-from)">
+                            <span class="text-xs font-semibold" style="color: var(--color-widget-primary-border)">
                                 <i class="fas fa-calendar-alt mr-1"></i>
                                 {{$notice->date->format('d.m.Y')}}
                             </span>
@@ -181,10 +190,10 @@
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 transform scale-95"
              x-transition:enter-end="opacity-100 transform scale-100"
-             style="display: none;"
-             class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+             style="display: none; background-color: var(--color-widget-body-bg); border: 1px solid var(--color-widget-primary-from)"
+             class="rounded-lg p-4">
             <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <i class="fas fa-pencil-alt text-blue-600"></i>
+                <i class="fas fa-pencil-alt" style="color: var(--color-widget-primary-from)"></i>
                 Neue Nachricht hinterlegen
             </h5>
             <form class="noticeForm" id="noticeForm_{{$child->id}}">
@@ -193,26 +202,27 @@
 
                 <div class="mb-3">
                     <label class="block text-xs font-medium text-gray-700 mb-1">
-                        <i class="fas fa-calendar-alt text-blue-600"></i> Datum
+                        <i class="fas fa-calendar-alt" style="color: var(--color-widget-primary-from)"></i> Datum
                     </label>
                     <input type="date" name="date"
                            value="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
                            min="{{\Carbon\Carbon::now()->format('Y-m-d')}}"
-                           class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                           class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 transition-all duration-200 outline-none">
                 </div>
 
                 <div class="mb-3">
                     <label class="block text-xs font-medium text-gray-700 mb-1">
-                        <i class="fas fa-comment text-blue-600"></i> Nachricht
+                        <i class="fas fa-comment" style="color: var(--color-widget-primary-from)"></i> Nachricht
                     </label>
                     <textarea name="notice"
-                              class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none"
+                              class="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 transition-all duration-200 outline-none resize-none"
                               rows="3"
                               placeholder="Nachricht hier eingeben...">{{$child->notice->first()?->notice}}</textarea>
                 </div>
 
                 <button type="button"
-                        class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 form_submit">
+                        class="w-full px-4 py-2 text-white font-medium text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 form_submit"
+                        style="background-color: var(--color-widget-primary-from)">
                     <i class="fas fa-save"></i>
                     Nachricht speichern
                 </button>

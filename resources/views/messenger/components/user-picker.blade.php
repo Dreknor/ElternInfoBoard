@@ -5,14 +5,17 @@
                id="userSearchInput"
                placeholder="Name eingeben..."
                autocomplete="off"
-               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm">
+               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg outline-none text-sm"
+               style="transition: border-color 0.2s"
+               onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 2px var(--color-primary-light)'"
+               onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow=''">
         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
     </div>
     <div id="userSearchResults" class="mt-2 rounded-lg border border-gray-200 hidden max-h-48 overflow-y-auto"></div>
 </div>
 
 <p class="text-xs text-gray-400 flex items-center gap-1.5">
-    <i class="fas fa-info-circle text-blue-500"></i>
+    <i class="fas fa-info-circle" style="color: var(--color-primary)"></i>
     Du kannst nur Mitglieder aus deinen gemeinsamen Gruppen anschreiben.
 </p>
 
@@ -20,6 +23,14 @@
 <script>
 const searchInput = document.getElementById('userSearchInput');
 const resultsDiv  = document.getElementById('userSearchResults');
+
+// CSS-Variablen aus dem Theme lesen
+function getPrimaryColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#3b82f6';
+}
+function getPrimaryBg() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--color-widget-primary-bg').trim() || '#eff6ff';
+}
 
 if (searchInput) {
     let timeout;
@@ -37,14 +48,19 @@ if (searchInput) {
             })
             .then(r => r.json())
             .then(data => {
+                const primaryBg = getPrimaryBg();
+                const primary = getPrimaryColor();
                 if (!data.length) {
                     resultsDiv.innerHTML = '<p class="p-3 text-sm text-gray-400">Keine Treffer gefunden</p>';
                 } else {
                     resultsDiv.innerHTML = data.map(u =>
                         `<button type="button"
                             onclick="startDirect(${u.id})"
-                            class="w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            class="w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
+                            onmouseover="this.style.backgroundColor='${primaryBg}'"
+                            onmouseout="this.style.backgroundColor=''">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                                 style="background-color: ${primary}">
                                 ${u.name.charAt(0).toUpperCase()}
                             </div>
                             <span class="text-sm font-medium text-gray-800">${u.name}</span>
@@ -82,4 +98,3 @@ function startDirect(userId) {
 }
 </script>
 @endpush
-

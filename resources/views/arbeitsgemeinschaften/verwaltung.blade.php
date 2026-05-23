@@ -3,14 +3,16 @@
 @section('content')
     <div class="container-fluid px-4 py-3">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 border-b border-purple-800">
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <h4 class="text-xl font-bold text-white mb-0 flex items-center gap-2">
+                    <h4 class="text-xl font-bold mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text)">
                         <i class="fas fa-users"></i>
                         Aktive Arbeitsgemeinschaften
                     </h4>
                     <a href="{{ route('verwaltung.arbeitsgemeinschaften.create') }}"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-purple-700 font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                       style="color: var(--color-widget-accent-from)"
                        data-bs-toggle="tooltip"
                        data-bs-placement="top"
                        title="Neue AG erstellen">
@@ -33,7 +35,9 @@
                 </div>
 
                 @forelse($arbeitsgemeinschaften as $ag)
-                    <div class="border border-gray-200 rounded-lg p-3 mb-3 hover:border-purple-500 hover:shadow-md transition-all duration-200 @if($loop->iteration % 2 == 0) bg-gray-50 @endif">
+                    <div class="border border-gray-200 rounded-lg p-3 mb-3 transition-all duration-200 @if($loop->iteration % 2 == 0) bg-gray-50 @endif"
+                         onmouseover="this.style.borderColor='var(--color-widget-accent-from)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'"
+                         onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow=''">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                             <!-- Name -->
                             <div class="md:col-span-2">
@@ -56,7 +60,8 @@
                             <!-- Teilnehmer -->
                             <div class="md:col-span-1">
                                 <span class="inline md:hidden font-semibold text-gray-700 mr-2">Teilnehmer:</span>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full"
+                                      style="background-color: var(--color-widget-primary-bg); color: var(--color-widget-primary-from)">
                                     <i class="fas fa-users"></i>
                                     {{ $ag->participants->count() }} / {{ $ag->max_participants }}
                                 </span>
@@ -67,7 +72,8 @@
                                 <span class="inline md:hidden font-semibold text-gray-700 mr-2">Gruppen:</span>
                                 <div class="flex flex-wrap gap-1">
                                     @foreach($ag->groups as $group)
-                                        <span class="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded"
+                                              style="background-color: var(--color-widget-accent-bg); color: var(--color-widget-accent-from)">
                                             {{ $group->name }}
                                         </span>
                                     @endforeach
@@ -91,7 +97,10 @@
                                 <span class="inline-block md:hidden font-semibold text-gray-700 mb-2">Aktionen:</span>
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('verwaltung.arbeitsgemeinschaften.teilnehmer', $ag) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium rounded-lg transition-colors"
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors"
+                                       style="background-color: var(--color-widget-accent-from)"
+                                       onmouseover="this.style.backgroundColor='var(--color-widget-accent-to)'"
+                                       onmouseout="this.style.backgroundColor='var(--color-widget-accent-from)'"
                                        data-bs-toggle="tooltip"
                                        title="Teilnehmer verwalten">
                                         <i class="fas fa-users"></i>
@@ -99,7 +108,10 @@
                                     </a>
 
                                     <a href="{{ route('verwaltung.arbeitsgemeinschaften.export', $ag) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors"
+                                       style="background-color: var(--color-widget-success-from)"
+                                       onmouseover="this.style.backgroundColor='var(--color-widget-success-to)'"
+                                       onmouseout="this.style.backgroundColor='var(--color-widget-success-from)'"
                                        data-bs-toggle="tooltip"
                                        title="Teilnehmerliste exportieren">
                                         <i class="fas fa-download"></i>
@@ -107,7 +119,10 @@
                                     </a>
 
                                     <a href="{{ route('verwaltung.arbeitsgemeinschaften.edit', $ag) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors"
+                                       style="background-color: var(--color-widget-primary-from)"
+                                       onmouseover="this.style.backgroundColor='var(--color-widget-primary-to)'"
+                                       onmouseout="this.style.backgroundColor='var(--color-widget-primary-from)'"
                                        data-bs-toggle="tooltip"
                                        title="Bearbeiten">
                                         <i class="fas fa-edit"></i>
@@ -135,16 +150,15 @@
                         </div>
                     </div>
                 @empty
-                    <div class="flex items-start gap-3 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                        <i class="fas fa-info-circle text-blue-600 mt-1"></i>
-                        <p class="text-blue-800 text-sm mb-0">Keine Arbeitsgemeinschaften verfügbar.</p>
+                    <div class="flex items-start gap-3 p-4 rounded border-l-4"
+                         style="background-color: var(--color-widget-primary-bg); border-color: var(--color-widget-primary-from)">
+                        <i class="fas fa-info-circle mt-1" style="color: var(--color-widget-primary-from)"></i>
+                        <p class="text-sm mb-0 text-gray-700">Keine Arbeitsgemeinschaften verfügbar.</p>
                     </div>
                 @endforelse
             </div>
         </div>
     </div>
-
-
 @endsection
 
 @push('js')
@@ -156,62 +170,4 @@
             });
         });
     </script>
-@endpush
-
-@push('css')
-    <style>
-        /* Zebra-Striping für die Zeilen */
-        .card-body .row:nth-of-type(even) {
-            background-color: rgba(0, 0, 0, 0.02);
-        }
-
-        /* Hover-Effekt */
-        .card-body .row:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        /* Optimierungen für mobile Ansicht */
-        @media (max-width: 768px) {
-            /* Mehr Abstand zwischen den Zeilen auf mobil */
-            .card-body .row {
-                margin-bottom: 1rem;
-                padding: 0.5rem;
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                border-radius: 0.25rem;
-            }
-
-            /* Labels auf mobil */
-            .card-body .row [class*="col-"] {
-                margin-bottom: 0.25rem;
-            }
-
-            /* Letzes Element ohne Margin */
-            .card-body .row [class*="col-"]:last-child {
-                margin-bottom: 0;
-            }
-
-            /* Aktionen-Buttons auf mobil */
-            .btn-group {
-                display: flex;
-                gap: 0.5rem;
-            }
-
-            /* Formular für Löschen-Button auf mobil */
-            .btn-group form {
-                margin: 0;
-            }
-        }
-
-        /* Button-Text auf kleinen Bildschirmen ausblenden */
-        @media (max-width: 768px) {
-            .button-text {
-                display: none;
-            }
-
-            .bi {
-                font-size: 1.2rem;
-                margin: 0;
-            }
-        }
-    </style>
 @endpush

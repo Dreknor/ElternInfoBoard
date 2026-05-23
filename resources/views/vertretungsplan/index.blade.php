@@ -5,14 +5,16 @@
     <div class="container-fluid px-4 py-3 hidden lg:block space-y-4">
         @for($x=Carbon\Carbon::today(); $x< $targetDate; $x->addDay())
             @if(!$x->isWeekend())
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800" id="heading{{$x->format('Ymd')}}">
-                        <h6 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
-                            <i class="fas fa-calendar-day"></i>
-                            <span>
-                                Vertretungen für
-                                <span class="text-red-200">{{$x->locale('de')->dayName}}</span>,
-                                den {{$x->format('d.m.Y')}}
+                <div class="rounded-lg shadow-lg overflow-hidden border" style="background-color: var(--color-card-bg); border-color: var(--color-card-border)">
+                <div class="px-4 py-3 border-b"
+                     style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)"
+                     id="heading{{$x->format('Ymd')}}">
+                    <h6 class="text-lg font-bold mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text)">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>
+                            Vertretungen für
+                            <span style="color: rgba(255,255,255,0.75)">{{$x->locale('de')->dayName}}</span>,
+                            den {{$x->format('d.m.Y')}}
                                 @if(count($weeks->where('week', $x->copy()->startOfWeek())) > 0 )
                                     ({{$weeks->where('week', $x->copy()->startOfWeek())->first()?->type}} - Woche)
                                 @endif
@@ -22,16 +24,16 @@
                     <div id="collapse{{$x->format('Ymd')}}" aria-labelledby="heading{{$x->format('Ymd')}}">
                         <div class="overflow-x-auto">
                             <table class="w-full">
-                                <thead class="bg-gray-100 border-b-2 border-gray-300">
+                                <thead style="background-color: var(--color-surface-subtle); border-bottom: 2px solid var(--color-card-border)">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Klasse</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stunde</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fächer</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Lehrer</th>
-                                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Kommentar</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Klasse</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Stunde</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Fächer</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Lehrer</th>
+                                        <th class="px-4 py-3 text-left text-sm font-semibold" style="color: var(--color-text-secondary)">Kommentar</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody class="divide-y" style="border-color: var(--color-card-border)">
                                     @php
                                         $tagesVertretungen = $vertretungen->filter(function ($vertretung) use ($x) {
                                             if (\Carbon\Carbon::make($vertretung->date)->eq($x)){
@@ -41,17 +43,19 @@
                                     @endphp
 
                                     @forelse($tagesVertretungen as $vertretung)
-                                        <tr class="@if(($loop->iteration-1)%2 == 0) bg-blue-50 @else bg-white @endif hover:bg-blue-100 transition-colors">
-                                            <td class="px-4 py-3 text-sm font-medium text-gray-800">{{$vertretung->group->name}}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-700">{{$vertretung->stunde}}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-700">
+                                        <tr style="{{ ($loop->iteration-1)%2 == 0 ? 'background-color: var(--color-primary-light)' : 'background-color: var(--color-card-bg)' }}"
+                                            onmouseover="this.style.backgroundColor='var(--color-primary-light)'; this.style.opacity='0.85'"
+                                            onmouseout="this.style.backgroundColor='{{ ($loop->iteration-1)%2 == 0 ? 'var(--color-primary-light)' : 'var(--color-card-bg)' }}'; this.style.opacity='1'">
+                                            <td class="px-4 py-3 text-sm font-medium" style="color: var(--color-text-primary)">{{$vertretung->group->name}}</td>
+                                            <td class="px-4 py-3 text-sm" style="color: var(--color-text-secondary)">{{$vertretung->stunde}}</td>
+                                            <td class="px-4 py-3 text-sm" style="color: var(--color-text-secondary)">
                                                 {{$vertretung->altFach}}
                                                 @if($vertretung->neuFach)
-                                                    <i class="fas fa-arrow-right text-blue-600 mx-1"></i> {{$vertretung->neuFach}}
+                                                    <i class="fas fa-arrow-right mx-1" style="color: var(--color-primary)"></i> {{$vertretung->neuFach}}
                                                 @endif
                                             </td>
-                                            <td class="px-4 py-3 text-sm text-gray-700">{{$vertretung->lehrer}}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">{{$vertretung->comment}}</td>
+                                            <td class="px-4 py-3 text-sm" style="color: var(--color-text-secondary)">{{$vertretung->lehrer}}</td>
+                                            <td class="px-4 py-3 text-sm" style="color: var(--color-text-muted)">{{$vertretung->comment}}</td>
                                         </tr>
                                     @empty
                                         <tr>
