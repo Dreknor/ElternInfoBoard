@@ -60,19 +60,58 @@ class UcsLinkCandidate extends Model
     }
 
     /**
-     * Nur noch nicht bestätigte Kandidaten.
+     * Offene Kandidaten: noch nicht bestätigt und nicht verworfen.
+     *
+     * Primär-Filter: confirmed_at IS NULL (reject() setzt confirmed_at immer).
+     * Defensiv-Filter: payload->status != 'rejected' schützt vor manuellen
+     * DB-Eingriffen, bei denen confirmed_at aus Versehen NULL geblieben ist.
      */
-    public function scopePending($query)
+    public function scopeOpen($query)
     {
-        return $query->whereNull('confirmed_at');
+        return $query
+            ->whereNull('confirmed_at')
+            ->where(function ($q) {
+                $q->whereNull('payload->status')
+                  ->orWhere('payload->status', '!=', 'rejected');
+            });
     }
 
     /**
-     * Bereits bestätigte Kandidaten.
+     * Alias für scopeOpen – noch nicht bestätigte Kandidaten.
+     */
+    public function scopePending($query)
+    {
+        return $query
+            ->whereNull('confirmed_at')
+            ->where(function ($q) {
+                $q->whereNull('payload->status')
+                  ->orWhere('payload->status', '!=', 'rejected');
+            });
+    }
+
+    /**
+     * Bereits bestätigte oder verworfene Kandidaten.
      */
     public function scopeConfirmed($query)
     {
         return $query->whereNotNull('confirmed_at');
+    }
+
+    /**
+     * Verworfene Kandidaten (confirmed, payload.status = 'rejected').
+     */
+    public function scopeRejected($query)
+    {
+        return $query->whereNotNull('confirmed_at')
+            ->whereJsonContains('payload->status', 'rejected');
+    }
+
+    /**
+     * Gibt an, ob dieser Kandidat verworfen wurde.
+     */
+    public function isRejected(): bool
+    {
+        return ($this->payload['status'] ?? '') === 'rejected';
     }
 }
 

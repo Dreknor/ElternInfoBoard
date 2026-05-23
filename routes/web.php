@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\UcsLoginController;
 use App\Http\Controllers\ActiveDiseaseController;
 use App\Http\Controllers\Anwesenheit\ChildNoticeController;
 use App\Http\Controllers\Arbeitsgemeinschaften\ArbeitsgemeinschaftController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\RueckmeldungenController;
 use App\Http\Controllers\SchickzeitenController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UcsLinkCandidateController;
 use App\Http\Controllers\SiteBlockController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\TerminController;
@@ -65,6 +67,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('login/keycloak', [LoginController::class, 'redirectToKeycloak'])->name('login.keycloak');
 Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCallback']);
+
+// ── UCS@school OIDC-Login (Paket 06) ─────────────────────────────────────────
+Route::get('/auth/ucs/redirect', [UcsLoginController::class, 'redirect'])
+     ->name('auth.ucs.redirect');
+Route::get('/auth/ucs/callback', [UcsLoginController::class, 'callback'])
+     ->middleware('throttle:ucs-jit')
+     ->name('auth.ucs.callback');
+Route::get('/auth/ucs/pending', [UcsLoginController::class, 'pending'])
+     ->name('auth.ucs.pending');
+Route::post('/auth/ucs/logout', [UcsLoginController::class, 'logout'])
+     ->middleware('auth')
+     ->name('auth.ucs.logout');
 
 // POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam)
 Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
@@ -450,6 +464,18 @@ Route::middleware('auth')->group(function () {
             Route::get('settings', [SettingsController::class, 'index']);
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
+            Route::post('settings/ucs/test', [SettingsController::class, 'ucsTestConnection'])->name('settings.ucs.test');
+            Route::post('settings/ucs/sync', [SettingsController::class, 'ucsRunSync'])
+                ->name('settings.ucs.sync')
+                ->middleware('permission:manage ucs sync');
+
+            // UCS Link-Kandidaten (TODO-08)
+            Route::post('settings/ucs/link-candidates/{candidate}/confirm',
+                [UcsLinkCandidateController::class, 'confirm'])
+                ->name('settings.ucs.link.confirm');
+            Route::post('settings/ucs/link-candidates/{candidate}/reject',
+                [UcsLinkCandidateController::class, 'reject'])
+                ->name('settings.ucs.link.reject');
 
         });
 

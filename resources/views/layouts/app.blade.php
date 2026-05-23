@@ -257,6 +257,17 @@
                                     @stack('nav-user')
                                 </div>
 
+                                <!-- UCS-Konto verknüpfen (nur wenn UCS aktiviert, aber kein ucs_uuid gesetzt) -->
+                                @if(!empty($ucsLinkEnabled) && empty(auth()->user()?->ucs_uuid))
+                                <div class="border-t border-gray-200 mt-1 pt-1">
+                                    <a href="{{ route('auth.ucs.redirect') }}"
+                                       class="flex items-center gap-3 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <span>Mit Schul-Login verknüpfen</span>
+                                    </a>
+                                </div>
+                                @endif
+
                                 <!-- Logout -->
                                 <div class="border-t border-gray-200 mt-1 pt-1">
                                     <a href="#"

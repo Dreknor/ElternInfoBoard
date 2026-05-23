@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Listeners\TriggerUcsProvisioningOnLogin;
+use App\Settings\KeyCloakSetting;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
@@ -72,6 +76,65 @@ class UcsServiceProvider extends ServiceProvider
         // wirft, falls der Driver noch nicht vollständig gemappt wurde.
         // -----------------------------------------------------------------
         $this->registerUcsSocialiteDriver();
+
+        // -----------------------------------------------------------------
+        // services.ucs aus KeyCloakSetting befüllen (§6.1, §14.9)
+        // Damit kann Socialite::driver('ucs') die Credentials aus der DB lesen.
+        // -----------------------------------------------------------------
+        $this->configureUcsOidcServices();
+
+        // -----------------------------------------------------------------
+        // Login-Event-Listener: JIT-Sync nach direktem Login (§6.4)
+        // Nutzer mit ucs_username erhalten nach Passwort-/Magic-Link-Login
+        // einen asynchronen Hintergrund-Sync.
+        // -----------------------------------------------------------------
+        Event::listen(Login::class, TriggerUcsProvisioningOnLogin::class);
+    }
+
+    /**
+     * Füllt config('services.ucs') und config('services.keycloak') zur Laufzeit
+     * aus KeyCloakSetting (DB), damit Socialite die korrekten Credentials erhält.
+     *
+     * Priorität: DB-Setting → ENV → leer.
+     * Fehler beim Laden der Settings werden geloggt, aber nicht propagiert.
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §6.1, §14.9
+     */
+    protected function configureUcsOidcServices(): void
+    {
+        try {
+            /** @var \App\Settings\KeyCloakSetting $kc */
+            $kc = $this->app->make(\App\Settings\KeyCloakSetting::class);
+
+            $serviceConfig = [
+                'client_id'     => $kc->client_id     ?: config('services.keycloak.client_id'),
+                'client_secret' => $kc->client_secret ?: config('services.keycloak.client_secret'),
+                'redirect'      => $kc->redirect_uri  ?: config('services.keycloak.redirect'),
+                'base_url'      => $kc->base_url      ?: config('services.keycloak.base_url'),
+                'realms'        => $kc->realm         ?: config('services.keycloak.realms', 'master'),
+            ];
+
+            // Driver "ucs" konfigurieren
+            config(['services.ucs' => $serviceConfig]);
+
+            // services.keycloak für Rückwärtskompatibilität (bestehender Keycloak-Flow)
+            // aus DB-Settings befüllen, sofern Settings vorhanden sind.
+            if ($kc->enabled) {
+                config([
+                    'services.keycloak.client_id'     => $serviceConfig['client_id'],
+                    'services.keycloak.client_secret' => $serviceConfig['client_secret'],
+                    'services.keycloak.redirect'      => $serviceConfig['redirect'],
+                    'services.keycloak.base_url'      => $serviceConfig['base_url'],
+                    'services.keycloak.realms'        => $serviceConfig['realms'],
+                    'services.keycloak.enabled'       => true,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::channel('ucs')->warning(
+                'UcsServiceProvider: KeyCloakSetting konnte nicht geladen werden – '
+                . $e->getMessage()
+            );
+        }
     }
 
     /**

@@ -209,6 +209,11 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->ip());
         });
 
+        // Rate-Limit für UCS OIDC-JIT-Callback (schützt vor Kellvin-API-Überlast).
+        RateLimiter::for('ucs-jit', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
+
         Route::model('event', \App\Model\ElternratEvent::class);
         Route::model('task', \App\Model\ElternratTask::class);
 

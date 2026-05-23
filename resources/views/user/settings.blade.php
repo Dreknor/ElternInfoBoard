@@ -12,6 +12,23 @@
                 </h5>
             </div>
             <div class="p-4">
+
+                {{-- Hinweis-Banner: fehlende E-Mail (UCS-Nutzer ohne E-Mail) --}}
+                @if(empty($user->email))
+                <div class="mb-6 flex items-start gap-4 p-5 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-sm">
+                    <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-amber-100 rounded-full">
+                        <i class="fas fa-exclamation-triangle text-amber-600 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h6 class="text-base font-bold text-amber-800 mb-1">E-Mail-Adresse erforderlich</h6>
+                        <p class="text-sm text-amber-700 mb-0">
+                            Ihr Konto wurde über das Schulverwaltungssystem (UCS) angelegt, jedoch wurde dabei
+                            keine E-Mail-Adresse übermittelt. Bitte tragen Sie unten Ihre E-Mail-Adresse ein,
+                            um Benachrichtigungen und wichtige Mitteilungen der Schule zu erhalten.
+                        </p>
+                    </div>
+                </div>
+                @endif
                 @if(isset($changelog))
                     <div class="mb-6">
                         <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl shadow-lg overflow-hidden">
@@ -96,13 +113,26 @@
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                                     <i class="fas fa-envelope text-blue-600 mr-1"></i>
                                                     E-Mail
+                                                    @if(empty($user->email))
+                                                        <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 rounded-full">
+                                                            <i class="fas fa-exclamation-circle"></i> Erforderlich
+                                                        </span>
+                                                    @endif
                                                 </label>
                                                 <input type="email"
-                                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                       class="w-full px-4 py-3 text-sm border-2 rounded-lg focus:ring-2 transition-all duration-200 outline-none
+                                                              {{ empty($user->email) ? 'border-amber-400 bg-amber-50 focus:border-amber-500 focus:ring-amber-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200' }}"
                                                        placeholder="ihre.email@beispiel.de"
                                                        name="email"
                                                        value="{{$user->email}}"
+                                                       {{ empty($user->email) ? 'autofocus' : '' }}
                                                        required>
+                                                @if(empty($user->email))
+                                                <p class="mt-1.5 text-xs text-amber-700 flex items-center gap-1">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    Ohne E-Mail-Adresse können Sie keine Benachrichtigungen empfangen.
+                                                </p>
+                                                @endif
                                             </div>
 
                                             <div>

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncUcsSchoolJob;
 use App\Mail\TestEmail;
 use App\Model\Group;
 use App\Model\Groups;
 use App\Model\Module;
 use App\Model\User;
+use App\Rules\CronExpression;
 use App\Services\HolidayService;
+use App\Services\Ucs\KelvinClient;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
@@ -17,6 +20,7 @@ use App\Settings\PflichtstundenSetting;
 use App\Settings\ReminderSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
+use App\Settings\UcsSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -70,6 +74,7 @@ class SettingsController extends Controller implements HasMiddleware
             'stundenplanSettings' => $stundenplanSettings,
             'reminderSettings' => $reminderSettings,
             'messengerSettings' => $messengerSettings,
+            'ucsSettings' => new UcsSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -438,11 +443,86 @@ class SettingsController extends Controller implements HasMiddleware
                 $reminderSettings->include_attendance_queries = $request->has('include_attendance_queries');
                 $reminderSettings->save();
                 break;
+
+            case 'ucs':
+                $validated = $request->validate([
+                    'enabled'           => 'nullable|boolean',
+                    'kelvin_base_url'   => 'nullable|url|max:255',
+                    'school'            => 'nullable|string|max:255',
+                    'kelvin_username'   => 'nullable|string|max:255',
+                    'kelvin_password'   => 'nullable|string|max:255',
+                    'kelvin_page_size'  => 'required|integer|min:1|max:1000',
+                    'kelvin_timeout'    => 'required|integer|min:5|max:300',
+                    'kelvin_token_ttl'  => 'required|integer|min:60|max:86400',
+                    'sync_enabled'      => 'nullable|boolean',
+                    'sync_cron'         => ['required', 'string', new CronExpression],
+                    'on_login_fallback' => 'nullable|boolean',
+                    'on_login_timeout'  => 'required|integer|min:1|max:60',
+                    'purge_after_days'  => 'required|integer|min:1|max:365',
+                ]);
+
+                $ucsSettings = new UcsSetting;
+                $ucsSettings->enabled           = $request->has('enabled');
+                $ucsSettings->kelvin_base_url   = $validated['kelvin_base_url'] ?? null;
+                $ucsSettings->school            = $validated['school'] ?? null;
+                $ucsSettings->kelvin_page_size  = (int) $validated['kelvin_page_size'];
+                $ucsSettings->kelvin_timeout    = (int) $validated['kelvin_timeout'];
+                $ucsSettings->kelvin_token_ttl  = (int) $validated['kelvin_token_ttl'];
+                $ucsSettings->sync_enabled      = $request->has('sync_enabled');
+                $ucsSettings->sync_cron         = $validated['sync_cron'];
+                $ucsSettings->on_login_fallback = $request->has('on_login_fallback');
+                $ucsSettings->on_login_timeout  = (int) $validated['on_login_timeout'];
+                $ucsSettings->purge_after_days  = (int) $validated['purge_after_days'];
+
+                // Credentials nur überschreiben, wenn tatsächlich eingegeben
+                if ($request->filled('kelvin_username')) {
+                    $ucsSettings->kelvin_username = $validated['kelvin_username'];
+                }
+                if ($request->filled('kelvin_password')) {
+                    $ucsSettings->kelvin_password = $validated['kelvin_password'];
+                }
+
+                $ucsSettings->save();
+                break;
         }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Einstellungen gespeichert',
+        ]);
+    }
+
+    /**
+     * Verbindungstest zur Kelvin API.
+     */
+    public function ucsTestConnection(KelvinClient $client): RedirectResponse
+    {
+        try {
+            $schools = $client->ping();
+
+            return redirect()->back()->with([
+                'type'    => 'success',
+                'Meldung' => 'Verbindung OK. Erreichte Schulen: ' . $schools->count(),
+            ]);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Verbindungsfehler: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Manuellen UCS-Sync in die Queue stellen.
+     */
+    public function ucsRunSync(): RedirectResponse
+    {
+
+        SyncUcsSchoolJob::dispatch();
+
+        return redirect()->back()->with([
+            'type'    => 'success',
+            'Meldung' => 'Sync wurde in die Warteschlange gestellt',
         ]);
     }
 

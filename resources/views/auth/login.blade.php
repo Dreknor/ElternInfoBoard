@@ -243,6 +243,27 @@
             </div>
             @endif
 
+            {{-- UCS@school OIDC-Login (Paket 06) --}}
+            @if(!empty($ucsEnabled))
+            <div class="mt-4">
+                @if(!$keycloak)
+                <div class="relative flex items-center gap-3 mb-4">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">oder weiter mit</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                </div>
+                @endif
+                <a href="{{ route('auth.ucs.redirect') }}"
+                   class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl
+                          bg-blue-800 hover:bg-blue-900 active:scale-[0.98]
+                          text-white font-semibold text-sm shadow-sm
+                          transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2">
+                    <i class="fas fa-graduation-cap"></i>
+                    Anmelden mit Schul-Login (UCS)
+                </a>
+            </div>
+            @endif
+
             {{-- Mobile Copyright --}}
             <p class="lg:hidden mt-10 text-center text-xs text-gray-400">
                 &copy; {{ date('Y') }} {{ $settings->app_name ?? 'Elterninfo' }}
