@@ -533,14 +533,34 @@ class SettingsController extends Controller implements HasMiddleware
     /**
      * @return RedirectResponse
      */
+    /**
+     * Kernmodule, die nicht deaktiviert werden dürfen.
+     * Das Settings-Modul würde sonst seinen eigenen Sidebar-Link entfernen.
+     */
+    private const PROTECTED_MODULES = ['Settings'];
+
     public function change_status(string $modulname)
     {
         $modul = Module::where('setting', $modulname)->first();
 
+        if (! $modul) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Modul nicht gefunden.',
+            ]);
+        }
+
+        // Kernmodule dürfen nicht deaktiviert werden
+        if (in_array($modul->setting, self::PROTECTED_MODULES, true) && $modul->options['active'] == 1) {
+            return redirect()->back()->with([
+                'type'    => 'warning',
+                'Meldung' => 'Das Modul "' . $modul->setting . '" kann nicht deaktiviert werden, da es für den Zugriff auf die Einstellungen benötigt wird.',
+            ]);
+        }
+
         $options = $modul->options;
         if ($modul->options['active'] == 1) {
             $options['active'] = '0';
-
         } else {
             $options['active'] = '1';
         }
@@ -550,7 +570,7 @@ class SettingsController extends Controller implements HasMiddleware
         Cache::forget('modules');
 
         return redirect()->back()->with([
-            'type' => 'success',
+            'type'    => 'success',
             'Meldung' => 'Status geändert',
         ]);
     }

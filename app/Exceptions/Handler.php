@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Throwable;
 
@@ -20,7 +21,7 @@ class Handler extends ExceptionHandler
      * @var array
      */
     protected $dontReport = [
-
+        TransportException::class,
     ];
 
     /**
@@ -50,6 +51,21 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
+        // Mailserver-Verbindungsfehler: nur loggen, nicht als Fehlerseite anzeigen
+        if ($exception instanceof TransportException) {
+            Log::warning('Mailserver nicht erreichbar: ' . $exception->getMessage());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'E-Mail konnte nicht versendet werden. Bitte versuchen Sie es später erneut.',
+                ], 503);
+            }
+
+            return redirect()->back()->withErrors([
+                'email' => 'E-Mail konnte nicht versendet werden. Der Mailserver ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.',
+            ])->withInput();
+        }
+
         if ($exception instanceof ModelNotFoundException || $exception instanceof NotFoundHttpException) {
             $url = Request::fullUrl();
 

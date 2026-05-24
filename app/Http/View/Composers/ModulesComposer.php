@@ -4,6 +4,7 @@ namespace App\Http\View\Composers;
 
 use App\Model\Module;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ModulesComposer
 {
@@ -15,8 +16,16 @@ class ModulesComposer
         }
 
         $modules = Cache::remember('modules', 30, function () {
-            // Lade alle Module der Kategorie 'module' und filtere dann nach active
-            $allModules = Module::where('category', 'module')->orderBy('sort_order')->orderBy('id')->get();
+            try {
+                // Lade alle Module der Kategorie 'module' und filtere dann nach active
+                $allModules = Module::where('category', 'module')->orderBy('sort_order')->orderBy('id')->get();
+            } catch (\Exception $e) {
+                // Fallback falls sort_order-Spalte noch nicht migriert wurde
+                Log::warning('ModulesComposer: orderBy(sort_order) fehlgeschlagen, Fallback auf id-Sortierung.', [
+                    'error' => $e->getMessage(),
+                ]);
+                $allModules = Module::where('category', 'module')->orderBy('id')->get();
+            }
 
             return $allModules->filter(function ($module) {
                 // Prüfe ob options existiert und active = 1 ist

@@ -79,12 +79,24 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <!-- Rounded switch -->
-                                                <label class="switch">
-                                                    <input type="checkbox" class="activButton" id="{{$modul->setting}}"
-                                                           @if(is_array($modul->options) && ($modul->options['active'] ?? 0) == 1) checked @endif>
-                                                    <span class="slider round"></span>
-                                                </label>
+                                                @php
+                                                    $isProtected = in_array($modul->setting, ['Settings']);
+                                                    $isActive = is_array($modul->options) && ($modul->options['active'] ?? 0) == 1;
+                                                @endphp
+                                                @if($isProtected)
+                                                    {{-- Kernmodule dürfen nicht deaktiviert werden --}}
+                                                    <span title="Dieses Modul kann nicht deaktiviert werden" class="d-inline-flex align-items-center gap-1 text-muted" style="font-size:0.8rem;">
+                                                        <i class="fas fa-lock text-warning"></i>
+                                                        <span>gesichert</span>
+                                                    </span>
+                                                @else
+                                                    <!-- Rounded switch -->
+                                                    <label class="switch">
+                                                        <input type="checkbox" class="activButton" id="{{$modul->setting}}"
+                                                               @if($isActive) checked @endif>
+                                                        <span class="slider round"></span>
+                                                    </label>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

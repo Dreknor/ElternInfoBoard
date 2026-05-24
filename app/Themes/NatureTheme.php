@@ -11,146 +11,128 @@ class NatureTheme extends AbstractTheme
 
     public function name(): string
     {
-        return 'Natur (Grün)';
+        return 'Natur (Grün/Orange)';
     }
 
     public function description(): string
     {
-        return 'Ein frisches, grünes Design.';
+        return 'Ein naturverbundenes, freundliches Design passend zur Freien Schule Zollernalb.';
     }
 
     public function previewImage(): ?string
     {
-        return '/img/themes/preview-nature.svg';
+        return '/img/themes/preview-default.svg';
     }
 
     public function variables(): array
     {
         return [
-            // === Brand Colors (Ruhiges Salbei & dezenter Akzent) ===
-            '--color-primary'           => '#4d7c5d', // Gedämpftes Salbeigrün (Ruhe & Fokus)
-            '--color-primary-dark'      => '#3b5f47', // Hover-Zustand für Primary-Elemente
-            '--color-primary-light'     => '#f2f7f4', // Sehr helles Salbei-Weiß für Card-Hintergründe Typ A
-
-            '--color-secondary'         => '#64748b', // Neutraler Schieferton für sekundäre Icons/Texte
-
-            // === Sidebar ===
-            '--color-sidebar-bg'        => '#1a3325', // Dunkles Waldgrün
-            '--color-sidebar-bg-mid'    => '#2d4a36',
-            '--color-sidebar-border'    => '#2d4a36',
-            '--color-sidebar-text'      => '#d1e8d8',
-            '--color-sidebar-text-muted'=> '#a3c4a8',
-            '--color-sidebar-footer-bg' => '#111f18',
-            '--color-sidebar-footer-border' => '#2d4a36',
-            '--color-sidebar-logo-bg'   => '#111f18',
-            '--color-sidebar-logo-border' => '#2d4a36',
-            '--color-sidebar-active-bg' => '#4d7c5d',
-            '--color-sidebar-hover-bg'  => 'rgba(77,124,93,0.2)',
-            '--color-sidebar-hover-text'=> '#a3c4a8',
-            '--color-sidebar-admin-border' => 'rgba(163,196,168,0.35)', // gedämpftes Salbei-Grün
-            '--color-sidebar-admin-label'  => '#a3c4a8',                // Muted-Text
-            '--color-sidebar-admin-icon'   => '#a3c4a8',
-
-            // === Navbar ===
+            '--color-primary'           => '#85603e', // Erdiges Braun (für Buttons & UI-Elemente)
+            '--color-primary-dark'      => '#63462d', // Dunkleres Braun
+            '--color-primary-light'     => '#f6f9e8', // Sehr zartes Limettengrün
+            '--color-secondary'         => '#d5e561', // Frisches Limettengrün (aus den Bannern)
+            '--color-sidebar-bg'        => '#ffffff',
+            '--color-sidebar-bg-mid'    => '#fcfdf7', // Hauch von Limette im Hintergrund
+            '--color-sidebar-border'    => '#e3e4e6',
+            '--color-sidebar-text'      => '#696a6b',
+            '--color-sidebar-text-muted'=> '#9ca3af',
+            '--color-sidebar-footer-bg' => '#fcfdf7',
+            '--color-sidebar-footer-border' => '#1f2937',
+            '--color-sidebar-logo-bg'   => '#ffffff', // Weißer Hintergrund für das Logo (wie im Bild)
+            '--color-sidebar-logo-border' => '#e3e4e6',
+            '--color-sidebar-active-bg' => '#85603e', // Braun für aktiven Menüpunkt
+            '--color-sidebar-hover-bg'  => '#d5e561', // Limettengrün bei Hover
+            '--color-sidebar-hover-text'=> '#382818', // Dunkelbrauner Text bei Hover
+            '--color-sidebar-admin-border' => '#ffffff',
+            '--color-sidebar-admin-label'  => '#85603e',
+            '--color-sidebar-admin-icon'   => '#85603e',
             '--color-navbar-bg'         => '#ffffff',
-            '--color-navbar-text'       => '#1e293b',
-            '--color-navbar-border'     => '#e2e8e0',
-            '--color-navbar-user-btn-bg'=> '#f2f7f4',
-            '--color-navbar-user-btn-hover' => '#e6f0ea',
-
-            // === Cards & Text ===
+            '--color-navbar-text'       => '#1f2937',
+            '--color-navbar-border'     => '#e5e7eb',
+            '--color-navbar-user-btn-bg'=> '#f3f4f6',
+            '--color-navbar-user-btn-hover' => '#e5e7eb',
+            '--color-body-bg'           => '#fcfdf7',
+            '--color-surface-subtle'    => '#f6f9e8', // Zartes Limettengrün
             '--color-card-bg'           => '#ffffff',
-            '--color-text-primary'      => '#1e293b',
-            '--color-text-secondary'    => '#64748b',
-
-            // === Mobile Nav ===
+            '--color-card-border'       => '#e5e7eb',
+            '--color-text-primary'      => '#382818', // Dunkles Schwarzbraun für weicheren Kontrast
+            '--color-text-secondary'    => '#6b7280',
             '--color-mobile-nav-bg'     => '#ffffff',
-            '--color-mobile-nav-text'   => '#64748b',
-
-            // === Inputs ===
+            '--color-mobile-nav-text'   => '#6b7280',
             '--color-input-bg'          => '#ffffff',
-            '--color-input-border'      => '#c8d8c8',
-            '--color-input-placeholder' => '#a3c4a8',
-
-            // === Avatar & Badge ===
-            '--color-avatar-bg'         => '#4d7c5d',
-            '--color-badge-bg'          => '#ef4444',
-
-            // === App ===
-            '--app-bg'                  => '#f8fafc',
-            '--app-text'                => '#1e293b',
+            '--color-input-border'      => '#d1d5db',
+            '--color-input-placeholder' => '#9ca3af',
+            '--color-avatar-bg'         => '#85603e', // Erdbraun
+            '--color-badge-bg'          => '#d5e561', // Limettengrün
+            '--border-radius-base'      => '0.5rem',
+            '--font-family-base'        => "'Inter', ui-sans-serif, system-ui, sans-serif",
+            '--app-bg'                  => '#fcfdf7',
+            '--app-text'                => '#382818',
 
             // === Layout & Global Headers ===
-            '--color-main-header-bg'    => '#2d4a36', // Dunkles, edles Tannengrün für die Hauptleiste oben
-            '--color-body-bg'           => '#f8fafc', // Absolut ruhiges, hellgraues Off-White für den Hintergrund
-            '--color-surface-subtle'    => '#f2f7f4', // Dezentes Salbeigrün-Weiß für Tabellen-Header, Footers etc.
-            '--border-radius-base'      => '0.5rem',  // Etwas reduzierter für einen moderneren, cleanen Look
-            '--font-family-base'        => "'Inter', ui-sans-serif, system-ui, sans-serif", // Weg von der Serifenschrift
+            '--color-main-header-bg'    => '#63462d', // Dunkles Braun für die Kopfzeile
 
-            // === LISTE TYP A: "Termine" (Fokus-Typ mit grünem Header) ===
-            '--color-card-a-header-bg'  => '#4d7c5d', // Salbeigrün für Header
+            // === LISTE TYP A: "Termine" (Fokus-Typ mit braunem Header) ===
+            '--color-card-a-header-bg'  => '#85603e', // Braun
             '--color-card-a-header-text'=> '#ffffff',
             '--color-card-a-bg'         => '#ffffff',
-            '--color-card-a-btn-bg'     => '#4d7c5d', // Voller Button (Primary)
+            '--color-card-a-btn-bg'     => '#85603e', // Braun
             '--color-card-a-btn-text'   => '#ffffff',
-            '--color-badge-termin-bg'   => '#e6f0ea', // Sehr dezentes, helles Salbeigrün
-            '--color-badge-termin-text' => '#2d4a36',
+            '--color-badge-termin-bg'   => '#f6f9e8', // Zartes Limettengrün
+            '--color-badge-termin-text' => '#63462d', // Dunkelbraun
 
             // === LISTE TYP B: "Eintragungen" (Aufgelockerter Typ mit hellem Header) ===
-            '--color-card-b-header-bg'  => '#f0e9cc', // Neutraler, heller Header (bricht die grüne Wand)
-            '--color-card-b-header-text'=> '#1e293b', // Dunkler Text für Lesbarkeit
+            '--color-card-b-header-bg'  => '#d5e561', // Limettengrün
+            '--color-card-b-header-text'=> '#382818', // Dunkelbrauner Text
             '--color-card-b-bg'         => '#ffffff',
-            '--color-card-b-btn-bg'     => 'transparent', // Outline-Button statt Vollfläche
-            '--color-card-b-btn-border' => '#4d7c5d', // Grüner Rahmen
-            '--color-card-b-btn-text'   => '#4d7c5d', // Grüner Text
-            '--color-card-b-btn-hover'  => '#f2f7f4',
-            '--color-badge-eintrag-bg'  => '#e2e8f0', // Neutrales Hellgrau
+            '--color-card-b-btn-bg'     => 'transparent',
+            '--color-card-b-btn-border' => '#85603e', // Braun
+            '--color-card-b-btn-text'   => '#85603e', // Braun
+            '--color-card-b-btn-hover'  => '#f6f9e8', // Zartes Limettengrün
+            '--color-badge-eintrag-bg'  => '#e2e8f0',
             '--color-badge-eintrag-text'=> '#475569',
 
-            // === Allgemeine Card-Elemente ===
-            '--color-card-border'       => '#e2e8f0', // Dünne, saubere Trennlinien
-            '--color-text-main'         => '#1e293b', // Fast Schwarz für Fließtext
-            '--color-text-muted'        => '#64748b', // Grau für Datumsanzeigen unten
-
             // === Sonder-Status ===
-            '--color-badge-inactive-bg' => '#ffedd5', // Soft-Orange für "Inaktiv" (nicht so stechend)
+            '--color-badge-inactive-bg' => '#ffedd5',
             '--color-badge-inactive-text'=> '#c2410c',
-            '--color-text-success'      => '#15803d', // Für die linke Zahl bei "Bisherige Buchungen"
+            '--color-text-success'      => '#15803d',
+            '--color-text-main'         => '#382818',
+            '--color-text-muted'        => '#6b7280',
 
             // === Widget / Karten-Kopfzeilen ===
-            // Primär (Salbeigrün) – Nachrichten, aktuelle Listen
-            '--color-widget-primary-from'    => '#4d7c5d',
-            '--color-widget-primary-to'      => '#3b5f47',
-            '--color-widget-primary-border'  => '#2d4a36',
-            // Erfolg (Teal) – Termine, CheckIn, Terminlisten
+            // Primär (Braun) – Nachrichten, aktuelle Listen
+            '--color-widget-primary-from'    => '#85603e', // Braun
+            '--color-widget-primary-to'      => '#63462d', // Dunkelbraun
+            '--color-widget-primary-border'  => '#4a3320',
+            // Erfolg (Teal) – Beibehalten für CheckIn und Semantik
             '--color-widget-success-from'    => '#0d9488',
             '--color-widget-success-to'      => '#0f766e',
             '--color-widget-success-border'  => '#115e59',
             '--color-widget-success-accent'  => '#14b8a6',
-            // Akzent (Amber/Gold) – AGs, Statistiken, Rückmeldungen
-            '--color-widget-accent-from'     => '#b45309', // Amber-700 – warmes Erdgold
-            '--color-widget-accent-to'       => '#92400e', // Amber-800
-            '--color-widget-accent-border'   => '#78350f', // Amber-900
+            // Akzent (Olivgrün passend zur Limette, da weißer Text darauf muss)
+            '--color-widget-accent-from'     => '#8d9c3e',
+            '--color-widget-accent-to'       => '#707c30',
+            '--color-widget-accent-border'   => '#576124',
             // Warnung (Amber/Orange) – abgelaufene Listen, nicht eingecheckt
             '--color-widget-warning-from'    => '#d97706',
             '--color-widget-warning-to'      => '#ea580c',
             '--color-widget-warning-border'  => '#9a3412',
             // Helle Widget-Hintergründe (für Karten/Kacheln)
-            '--color-widget-primary-bg'      => '#f2f7f4',
+            '--color-widget-primary-bg'      => '#fdfbf9',
             '--color-widget-success-bg'      => '#f0fdf4',
-            '--color-widget-accent-bg'       => '#fffbeb', // Amber-50
-            '--color-widget-warning-bg'      => '#fefce8',
+            '--color-widget-accent-bg'       => '#f6f9e8', // Zartes Limettengrün
+            '--color-widget-warning-bg'      => '#fffbeb',
             // Gemeinsam
             '--color-widget-header-text'     => '#ffffff',
-            '--color-widget-body-bg'         => '#f2f7f4',
-            // Losung spezifisch
-            '--color-losung-header-from'     => '#4d7c5d',
-            '--color-losung-header-to'       => '#2d4a36',
-            '--color-losung-icon-bg'         => '#e6f0ea',
-            '--color-losung-icon-color'      => '#4d7c5d',
-            '--color-losung-icon2-bg'        => '#d1e8d8',
-            '--color-losung-icon2-color'     => '#2d4a36',
-            '--color-losung-outer-bg'        => 'linear-gradient(to bottom right, #f2f7f4, #e6f0ea)',
+            '--color-widget-body-bg'         => '#f9fafb',
+            // Losung spezifisch (Gradient aus Braun und Oliv)
+            '--color-losung-header-from'     => '#85603e',
+            '--color-losung-header-to'       => '#8d9c3e',
+            '--color-losung-icon-bg'         => '#f6f9e8',
+            '--color-losung-icon-color'      => '#8d9c3e',
+            '--color-losung-icon2-bg'        => '#fdfbf9',
+            '--color-losung-icon2-color'     => '#85603e',
+            '--color-losung-outer-bg'        => 'linear-gradient(to bottom right, #fdfbf9, #f6f9e8)',
         ];
     }
 }
