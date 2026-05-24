@@ -29,8 +29,46 @@
     {{-- Tailwind via Vite --}}
     @vite(['resources/css/app.css'])
 
+    {{-- Theme CSS Custom Properties (Admin-gewähltes Theme) --}}
+    <x-theme-vars />
+
     <style>
         body { font-family: 'Montserrat', system-ui, -apple-system, sans-serif !important; }
+
+        /* Login-spezifische Theme-Overrides */
+        .login-brand-panel {
+            background: linear-gradient(to bottom right, var(--color-primary-dark, #1d4ed8), var(--color-primary, #2563eb), var(--color-secondary, #6366f1));
+        }
+        .login-btn-primary {
+            background: linear-gradient(to right, var(--color-primary, #2563eb), var(--color-secondary, #6366f1));
+            box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--color-primary, #2563eb) 30%, transparent);
+        }
+        .login-btn-primary:hover {
+            background: linear-gradient(to right, var(--color-primary-dark, #1d4ed8), color-mix(in srgb, var(--color-secondary, #6366f1) 85%, black));
+        }
+        .login-link-primary {
+            color: var(--color-primary, #2563eb);
+        }
+        .login-link-primary:hover {
+            color: var(--color-primary-dark, #1d4ed8);
+        }
+        .login-mobile-logo {
+            background: linear-gradient(to bottom right, var(--color-primary, #2563eb), var(--color-secondary, #6366f1));
+        }
+        .login-input:focus {
+            border-color: var(--color-primary, #2563eb) !important;
+            --tw-ring-color: color-mix(in srgb, var(--color-primary, #2563eb) 20%, transparent) !important;
+        }
+        .login-toggle-btn:hover {
+            color: var(--color-primary, #2563eb);
+        }
+        .login-checkbox {
+            accent-color: var(--color-primary, #2563eb);
+        }
+        .login-btn-primary:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #2563eb) 40%, transparent);
+        }
     </style>
 </head>
 
@@ -40,12 +78,12 @@
 <div class="min-h-screen flex">
 
     {{-- -------- LINKE SEITE: Branding -------- --}}
-    <div class="hidden lg:flex lg:w-1/2 xl:w-3/5 relative bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex-col items-center justify-center p-12 overflow-hidden">
+    <div class="login-brand-panel hidden lg:flex lg:w-1/2 xl:w-3/5 relative flex-col items-center justify-center p-12 overflow-hidden">
 
         {{-- Dekorative Kreise --}}
         <div class="absolute -top-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-32 -right-32 w-[32rem] h-[32rem] bg-indigo-900/30 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-2xl"></div>
+        <div class="absolute -bottom-32 -right-32 w-[32rem] h-[32rem] bg-black/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
 
         {{-- Inhalt --}}
         <div class="relative z-10 max-w-md text-center">
@@ -58,26 +96,26 @@
             <h1 class="text-4xl xl:text-5xl font-extrabold text-white mb-4 leading-tight tracking-tight">
                 {{ $settings->app_name ?? 'Elterninfo' }}
             </h1>
-            <p class="text-blue-100 text-lg leading-relaxed mb-10">
+            <p class="text-white/80 text-lg leading-relaxed mb-10">
                 Ihr digitales Kommunikationsportal für Schule und Elternhaus
             </p>
 
             {{-- Feature-Pills --}}
             <div class="flex flex-wrap justify-center gap-3">
                 <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium ring-1 ring-white/20">
-                    <i class="fas fa-bell text-yellow-300 text-xs"></i> Benachrichtigungen
-                </span>
-                <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium ring-1 ring-white/20">
-                    <i class="fas fa-calendar text-green-300 text-xs"></i> Veranstaltungen
+                    <i class="fas fa-calendar text-green-300 text-xs"></i> Termine
                 </span>
                 <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium ring-1 ring-white/20">
                     <i class="fas fa-comments text-pink-300 text-xs"></i> Nachrichten
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium ring-1 ring-white/20">
+                    <i class="fas fa-bell text-yellow-300 text-xs"></i> Rückmeldungen
                 </span>
             </div>
         </div>
 
         {{-- Copyright unten links --}}
-        <p class="absolute bottom-6 left-0 right-0 text-center text-blue-200/60 text-xs">
+        <p class="absolute bottom-6 left-0 right-0 text-center text-white/50 text-xs">
             &copy; {{ date('Y') }} {{ $settings->app_name ?? 'Elterninfo' }}
         </p>
     </div>
@@ -88,7 +126,7 @@
 
             {{-- Mobile Logo (nur auf kleinen Screens) --}}
             <div class="lg:hidden text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg mb-3">
+                <div class="login-mobile-logo inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-3">
                     <img src="{{ asset('img/app_logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
                 </div>
                 <h1 class="text-2xl font-extrabold text-gray-800">{{ $settings->app_name ?? 'Elterninfo' }}</h1>
@@ -123,7 +161,7 @@
             @endif
 
             {{-- Formular --}}
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
+            <form method="POST" action="{{ route('login') }}" class="space-y-5" x-data="{ passwordless: false }">
                 @csrf
 
                 {{-- E-Mail --}}
@@ -139,11 +177,11 @@
                                value="{{ old('email') }}"
                                required autocomplete="email" autofocus
                                placeholder="ihre@email.de"
-                               class="w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all duration-200 outline-none
+                               class="login-input w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-all duration-200 outline-none
                                       @error('email')
                                           border-red-400 bg-red-50 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200
                                       @else
-                                          border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                                          border-gray-300 bg-white text-gray-900 focus:ring-2
                                       @enderror">
                     </div>
                     @error('email')
@@ -164,16 +202,16 @@
                         </span>
                         <input id="password" :type="show ? 'text' : 'password'"
                                name="password"
-                               required autocomplete="current-password"
+                               :required="!passwordless" autocomplete="current-password"
                                placeholder="••••••••"
-                               class="w-full pl-10 pr-12 py-3 rounded-xl border text-sm transition-all duration-200 outline-none
+                               class="login-input w-full pl-10 pr-12 py-3 rounded-xl border text-sm transition-all duration-200 outline-none
                                       @error('password')
                                           border-red-400 bg-red-50 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-200
                                       @else
-                                          border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                                          border-gray-300 bg-white text-gray-900 focus:ring-2
                                       @enderror">
                         <button type="button" @click="show = !show"
-                                class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-blue-600 transition-colors"
+                                class="login-toggle-btn absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors"
                                 :aria-label="show ? 'Verbergen' : 'Anzeigen'">
                             <i :class="show ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-sm"></i>
                         </button>
@@ -189,12 +227,12 @@
                 <div class="flex items-center justify-between">
                     <label class="flex items-center gap-2 cursor-pointer select-none">
                         <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}
-                               class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                               class="login-checkbox w-4 h-4 rounded border-gray-300 cursor-pointer">
                         <span class="text-sm text-gray-600">Angemeldet bleiben</span>
                     </label>
                     @if (Route::has('password.request'))
                     <a href="{{ route('password.request') }}"
-                       class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                       class="login-link-primary text-sm font-medium transition-colors">
                         Passwort vergessen?
                     </a>
                     @endif
@@ -202,18 +240,16 @@
 
                 {{-- Primär-Button --}}
                 <button type="submit"
-                        class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl
-                               bg-gradient-to-r from-blue-600 to-indigo-600
-                               hover:from-blue-700 hover:to-indigo-700
+                        class="login-btn-primary w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl
                                active:scale-[0.98] text-white font-semibold text-sm
-                               shadow-md shadow-blue-200 hover:shadow-lg hover:shadow-blue-300
-                               transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                               transition-all duration-200">
                     <i class="fas fa-sign-in-alt"></i>
                     Anmelden
                 </button>
 
                 {{-- Passwortloser Login --}}
                 <button type="submit" name="submit" value="password-less"
+                        @click="passwordless = true"
                         class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl
                                border-2 border-teal-500 text-teal-600
                                hover:bg-teal-500 hover:text-white
