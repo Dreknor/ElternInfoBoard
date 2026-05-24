@@ -52,22 +52,23 @@
                                     </div>
                                 @elseif($isCheckedIn)
                                     <div class="space-y-3">
-                                        <div class="flex items-start gap-2 p-3 bg-teal-50 border-l-4 border-teal-500 rounded">
-                                            <i class="fas fa-user-check text-teal-600 mt-1"></i>
+                                        <div class="flex items-start gap-2 p-3 rounded"
+                                             style="background: var(--color-widget-success-bg); border-left: 4px solid var(--color-widget-success-from);">
+                                            <i class="fas fa-user-check mt-1" style="color: var(--color-widget-success-from);"></i>
                                             <div class="flex-1">
-                                                <p class="text-teal-800 font-semibold text-sm mb-0">Angemeldet</p>
-                                                <p class="text-teal-600 text-xs mb-0">Derzeit in der Einrichtung</p>
+                                                <p class="font-semibold text-sm mb-0" style="color: var(--color-widget-success-border);">Angemeldet</p>
+                                                <p class="text-xs mb-0" style="color: var(--color-widget-success-to);">Derzeit in der Einrichtung</p>
                                             </div>
                                         </div>
 
                                         @if($schickzeitenToday->count() > 0)
-                                            <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                            <div class="rounded p-3" style="background: var(--color-widget-accent-bg); border: 1px solid var(--color-widget-accent-border);">
                                                 <div class="flex items-center gap-2 mb-2">
-                                                    <i class="far fa-clock text-blue-600 text-sm"></i>
-                                                    <span class="font-semibold text-blue-800 text-sm">Schickzeit heute:</span>
+                                                    <i class="far fa-clock text-sm" style="color: var(--color-widget-accent-from);"></i>
+                                                    <span class="font-semibold text-sm" style="color: var(--color-widget-accent-border);">Schickzeit heute:</span>
                                                 </div>
                                                 @foreach($schickzeitenToday as $schickzeit)
-                                                    <p class="text-blue-700 text-sm mb-0 ml-6">
+                                                    <p class="text-sm mb-0 ml-6" style="color: var(--color-widget-accent-to);">
                                                         @if($schickzeit->type == 'genau')
                                                             <i class="fas fa-dot-circle text-xs mr-1"></i>
                                                             Genau {{$schickzeit->time?->format('H:i')}} Uhr

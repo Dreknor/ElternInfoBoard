@@ -53,7 +53,7 @@ class NatureTheme extends AbstractTheme
             '--color-navbar-user-btn-hover' => '#e5e7eb',
             '--color-body-bg'           => '#fcfdf7',
             '--color-surface-subtle'    => '#f6f9e8', // Zartes Limettengrün
-            '--color-card-bg'           => '#ffffff',
+            '--color-card-bg'           => '#f6f9e8',
             '--color-card-border'       => '#e5e7eb',
             '--color-text-primary'      => '#382818', // Dunkles Schwarzbraun für weicheren Kontrast
             '--color-text-secondary'    => '#6b7280',
@@ -104,11 +104,11 @@ class NatureTheme extends AbstractTheme
             '--color-widget-primary-from'    => '#85603e', // Braun
             '--color-widget-primary-to'      => '#63462d', // Dunkelbraun
             '--color-widget-primary-border'  => '#4a3320',
-            // Erfolg (Teal) – Beibehalten für CheckIn und Semantik
-            '--color-widget-success-from'    => '#0d9488',
-            '--color-widget-success-to'      => '#0f766e',
-            '--color-widget-success-border'  => '#115e59',
-            '--color-widget-success-accent'  => '#14b8a6',
+            // Erfolg (Olivgrün) – CheckIn, Termine, Listen
+            '--color-widget-success-from'    => '#8d9c3e', // Olivgrün
+            '--color-widget-success-to'      => '#707c30', // Dunkleres Olivgrün
+            '--color-widget-success-border'  => '#576124',
+            '--color-widget-success-accent'  => '#d5e561', // Limettengrün
             // Akzent (Olivgrün passend zur Limette, da weißer Text darauf muss)
             '--color-widget-accent-from'     => '#8d9c3e',
             '--color-widget-accent-to'       => '#707c30',
@@ -119,7 +119,7 @@ class NatureTheme extends AbstractTheme
             '--color-widget-warning-border'  => '#9a3412',
             // Helle Widget-Hintergründe (für Karten/Kacheln)
             '--color-widget-primary-bg'      => '#fdfbf9',
-            '--color-widget-success-bg'      => '#f0fdf4',
+            '--color-widget-success-bg'      => '#f6f9e8', // Zartes Limettengrün
             '--color-widget-accent-bg'       => '#f6f9e8', // Zartes Limettengrün
             '--color-widget-warning-bg'      => '#fffbeb',
             // Gemeinsam
