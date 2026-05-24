@@ -1,17 +1,17 @@
 @extends('layouts.error')
 
-@section('title', 'Zugriff verweigert')
+@section('title', 'Seite nicht gefunden')
 
 @section('error-code')
-    <div class="error-code">403</div>
+    <div class="error-code">404</div>
 @endsection
 
 @section('content')
-    <div class="error-icon">🚫</div>
-    <div class="error-title">Zugriff verweigert</div>
+    <div class="error-icon">🔍</div>
+    <div class="error-title">Seite nicht gefunden</div>
     <div class="error-message">
-        Sie haben keine Berechtigung, diese Seite aufzurufen.<br>
-        Bitte wenden Sie sich an einen Administrator, falls Sie der Meinung sind, dass dies ein Fehler ist.
+        Die gesuchte Seite existiert nicht oder wurde verschoben.<br>
+        Bitte überprüfen Sie die Adresse oder kehren Sie zur Startseite zurück.
     </div>
     <div style="margin-top: 2rem;">
         <a href="{{ url('/') }}" class="btn-home">
@@ -22,3 +22,4 @@
         </a>
     </div>
 @endsection
+
