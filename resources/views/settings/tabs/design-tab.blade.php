@@ -261,6 +261,51 @@
         Wähle anschließend oben <strong>„Eigenes Design"</strong> als Standard-Theme aus.
     </p>
 
+    {{-- ===== GRUNDLAGE KOPIEREN ===== --}}
+    @php
+        $allThemeVars = [];
+        foreach($themes as $t) {
+            $allThemeVars[$t->id()] = [
+                'name'      => $t->name(),
+                'variables' => $t->variables(),
+            ];
+        }
+    @endphp
+
+    <div class="p-3 rounded border mb-4"
+         style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #c4b5fd;">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <i class="fas fa-copy" style="color: #7c3aed;"></i>
+            <strong class="small" style="color: #5b21b6;">Vorhandenes Design als Grundlage übernehmen</strong>
+        </div>
+        <p class="small mt-1 mb-2" style="color: #6d28d9;">
+            Wähle ein bestehendes Theme aus und übernimm dessen Werte als Startpunkt für dein eigenes Design.
+            Deine bisherigen Eingaben werden dadurch ersetzt.
+        </p>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <select id="copy-theme-source" class="form-control form-control-sm"
+                    style="max-width: 260px; background-color: var(--color-input-bg); border-color: #c4b5fd; color: var(--color-text-primary);">
+                <option value="">– Theme auswählen –</option>
+                @foreach($themes as $t)
+                    @if($t->id() !== 'custom')
+                        <option value="{{ $t->id() }}">{{ $t->name() }}</option>
+                    @endif
+                @endforeach
+            </select>
+            <button type="button" id="btn-copy-theme"
+                    class="btn btn-sm"
+                    style="background-color: #7c3aed; color: #fff; border: none;"
+                    onclick="copyThemeAsBase()">
+                <i class="fas fa-copy mr-1"></i>
+                Als Grundlage übernehmen
+            </button>
+        </div>
+    </div>
+
+    <script id="all-theme-vars-data" type="application/json">
+        {!! json_encode($allThemeVars) !!}
+    </script>
+
     <form action="{{ route('settings.custom-theme.update') }}" method="post" id="custom-theme-form">
         @csrf
         @method('PUT')
@@ -452,6 +497,41 @@
         if (el && value) el.style.background = value;
     }
 
+
+    // Theme als Grundlage kopieren
+    window.copyThemeAsBase = function () {
+        var select = document.getElementById('copy-theme-source');
+        var themeId = select ? select.value : '';
+        if (!themeId) {
+            alert('Bitte zuerst ein Theme auswählen.');
+            return;
+        }
+        var dataEl = document.getElementById('all-theme-vars-data');
+        if (!dataEl) return;
+        var allVars = JSON.parse(dataEl.textContent || '{}');
+        var themeData = allVars[themeId];
+        if (!themeData) {
+            alert('Theme-Daten nicht gefunden.');
+            return;
+        }
+        if (!confirm('Die Werte von „' + themeData.name + '" als Grundlage übernehmen? Deine bisherigen Eingaben im Formular werden ersetzt.')) return;
+
+        var variables = themeData.variables;
+        document.querySelectorAll('.theme-var-input').forEach(function (input) {
+            var key = input.getAttribute('data-var-key');
+            if (key && variables.hasOwnProperty(key)) {
+                input.value = variables[key];
+                // Farbpicker synchronisieren
+                var colorPicker = document.querySelector('[data-target="' + input.id + '"]');
+                if (colorPicker && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(variables[key])) {
+                    colorPicker.value = variables[key];
+                }
+                // Badge & Vorschau aktualisieren
+                updateCustomBadge(input);
+                updatePreview(key, input.value.trim());
+            }
+        });
+    };
 
     // Formular auf Default-Werte zurücksetzen (nur Formular, nicht DB)
     document.getElementById('btn-reset-to-default').addEventListener('click', function () {
