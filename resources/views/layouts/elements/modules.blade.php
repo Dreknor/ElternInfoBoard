@@ -84,43 +84,46 @@
                     @endpush
                 @endif
             @endif
-            @if(array_key_exists('adm-nav', $module->options) and is_array($module->options['adm-nav']) and isset($module->options['adm-nav']['adm-rights']))
-                @php
-                    $hasAdmPermission = false;
-                    foreach ($module->options['adm-nav']['adm-rights'] as $permission) {
-                        if (auth()->user()->can($permission)) {
-                            $hasAdmPermission = true;
-                            break;
-                        }
-                    }
-                @endphp
+        @endif
 
-                @if($hasAdmPermission)
-                    @push('adm-nav')
-                        @if(!isset($__admNavHeaderPushed))
-                            @php $__admNavHeaderPushed = true; @endphp
-                            <li class="px-3 pt-3 pb-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 border-t" style="border-color: var(--color-sidebar-admin-border, rgba(255,255,255,0.15))"></div>
-                                    <span class="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 px-1"
-                                          style="color: var(--color-sidebar-admin-label, rgba(255,255,255,0.4))">
-                                        <i class="fas fa-shield-alt text-[9px]"></i>
-                                        Verwaltung
-                                    </span>
-                                    <div class="flex-1 border-t" style="border-color: var(--color-sidebar-admin-border, rgba(255,255,255,0.15))"></div>
-                                </div>
-                            </li>
-                        @endif
-                        <li class="nav-item">
-                            <a href="{{url($module->options['adm-nav']['link'])}}"
-                               class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg sidebar-nav-link sidebar-admin-link transition-all duration-200 @if(request()->path() == $module->options['adm-nav']['link']) sidebar-active @endif group">
-                                <i class="{{$module->options['adm-nav']['icon']}} text-base group-hover:scale-110 transition-transform"
-                                   style="color: var(--color-sidebar-admin-icon, inherit)"></i>
-                                <span class="font-medium">{{$module->options['adm-nav']['name']}}</span>
-                            </a>
+        {{-- adm-nav wird unabhängig von den normalen Modulrechten geprüft,
+             damit Nutzer mit ausschließlich adm-rights den Verwaltungslink sehen --}}
+        @if(array_key_exists('adm-nav', $module->options) and is_array($module->options['adm-nav']) and isset($module->options['adm-nav']['adm-rights']))
+            @php
+                $hasAdmPermission = false;
+                foreach ($module->options['adm-nav']['adm-rights'] as $permission) {
+                    if (auth()->user()->can($permission)) {
+                        $hasAdmPermission = true;
+                        break;
+                    }
+                }
+            @endphp
+
+            @if($hasAdmPermission)
+                @push('adm-nav')
+                    @if(!isset($__admNavHeaderPushed))
+                        @php $__admNavHeaderPushed = true; @endphp
+                        <li class="px-3 pt-3 pb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 border-t" style="border-color: var(--color-sidebar-admin-border, rgba(255,255,255,0.15))"></div>
+                                <span class="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 px-1"
+                                      style="color: var(--color-sidebar-admin-label, rgba(255,255,255,0.4))">
+                                    <i class="fas fa-shield-alt text-[9px]"></i>
+                                    Verwaltung
+                                </span>
+                                <div class="flex-1 border-t" style="border-color: var(--color-sidebar-admin-border, rgba(255,255,255,0.15))"></div>
+                            </div>
                         </li>
-                    @endpush
-                @endif
+                    @endif
+                    <li class="nav-item">
+                        <a href="{{url($module->options['adm-nav']['link'])}}"
+                           class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg sidebar-nav-link sidebar-admin-link transition-all duration-200 @if(request()->path() == $module->options['adm-nav']['link']) sidebar-active @endif group">
+                            <i class="{{$module->options['adm-nav']['icon']}} text-base group-hover:scale-110 transition-transform"
+                               style="color: var(--color-sidebar-admin-icon, inherit)"></i>
+                            <span class="font-medium">{{$module->options['adm-nav']['name']}}</span>
+                        </a>
+                    </li>
+                @endpush
             @endif
         @endif
 
