@@ -13,7 +13,7 @@
                     <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
                 </a>
                 @can('create posts')
-                    <a href="{{ url('/nachrichten/create') }}" class="btn btn-primary">
+                    <a href="{{ url('/posts/create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Neue Nachricht
                     </a>
                 @endcan
