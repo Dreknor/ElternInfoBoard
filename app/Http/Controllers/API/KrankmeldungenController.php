@@ -140,17 +140,20 @@ class KrankmeldungenController extends Controller implements HasMiddleware
         }
 
         try {
-            if ($request->disease_id != null && $request->disease_id != 0) {
+            if (! empty($request->disease_id) && $request->disease_id != 0) {
                 $disease = Disease::find($request->disease_id);
-                ActiveDisease::insert([
-                    'user_id' => auth()->id(),
-                    'disease_id' => $request->disease_id,
-                    'start' => $krankmeldung->start,
-                    'end' => $krankmeldung->start->addDays($disease->aushang_dauer),
-                    'active' => false,
-                ]);
 
-                Cache::forget('active_diseases');
+                if ($disease && isset($krankmeldung)) {
+                    ActiveDisease::insert([
+                        'user_id' => auth()->id(),
+                        'disease_id' => $request->disease_id,
+                        'start' => $krankmeldung->start,
+                        'end' => $krankmeldung->start->addDays($disease->aushang_dauer),
+                        'active' => false,
+                    ]);
+
+                    Cache::forget('active_diseases');
+                }
             }
         } catch (\Exception $e) {
             Log::error('Krankmeldung: Fehler beim Speichern der Krankheit: '.$e->getMessage());
