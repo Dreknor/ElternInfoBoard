@@ -80,6 +80,11 @@
         </div>
     </div>
 
+    <!-- Erkrankungen-Widget -->
+    <div class="row">
+        @include('dashboard.components.diseases')
+    </div>
+
     <!-- CheckIn-Status für Care-Kinder -->
     <div class="row">
         @include('dashboard.components.checkin-status')

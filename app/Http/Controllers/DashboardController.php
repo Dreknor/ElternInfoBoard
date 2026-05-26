@@ -145,6 +145,22 @@ class DashboardController extends Controller implements HasMiddleware
                 ->get();
         });
 
+        // Erkrankungen-Widget: manage diseases sieht alle (auch unveröffentlichte), see disease nur veröffentlichte
+        $dashboardDiseasesWidget = null;
+        if (auth()->user()->can('manage diseases')) {
+            $dashboardDiseasesWidget = Cache::remember("dashboard_diseases_all_{$userId}", 60 * 5, function () {
+                return ActiveDisease::query()
+                    ->select(['id', 'disease_id', 'start', 'end', 'active', 'comment'])
+                    ->whereDate('end', '>=', Carbon::now())
+                    ->with('disease:id,name')
+                    ->orderByDesc('active')
+                    ->orderByDesc('start')
+                    ->get();
+            });
+        } elseif (auth()->user()->can('see disease')) {
+            $dashboardDiseasesWidget = $activeDiseases;
+        }
+
         // Prüfe auf offene Anwesenheitsabfragen für die Kinder des Benutzers
         $openAttendanceSurveys = false;
         if ($careChildren->count() > 0) {
@@ -198,6 +214,7 @@ class DashboardController extends Controller implements HasMiddleware
             'pendingFeedback' => $pendingFeedback,
             'authorFeedbackStats' => $authorFeedbackStats,
             'unreadConversations' => $unreadConversations,
+            'dashboardDiseasesWidget' => $dashboardDiseasesWidget,
         ]);
     }
 
