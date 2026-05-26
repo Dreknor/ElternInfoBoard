@@ -105,28 +105,31 @@ class DashboardController extends Controller implements HasMiddleware
             ->whereDate('date', Carbon::today())
             ->first();
 
-        // Hole die Kinder des Benutzers mit optimiertem Eager Loading
-        $careChildren = auth()->user()->children_rel()
+        // Hole die Kinder des Benutzers – eigene + Kinder des Sorg2-Partners
+        $currentUser = auth()->user();
+        $sorg2UserId = $currentUser->sorg2; // ID des verknüpften Sorgeberechtigten 2
+
+        $careChildren = Child::query()
             ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id'])
             ->care()
-            ->whereHas('parents', function ($query) use ($userId) {
+            ->whereHas('parents', function ($query) use ($userId, $sorg2UserId) {
                 $query->where('users.id', $userId);
+                if ($sorg2UserId) {
+                    $query->orWhere('users.id', $sorg2UserId);
+                }
             })
             ->with([
-                'group:id,name', // Nur ID und Name der Gruppe
+                'group:id,name',
                 'checkIns' => function ($query) {
-                    // Nur heutige CheckIns laden
                     $query->select(['id', 'child_id', 'date', 'checked_in', 'checked_out', 'should_be', 'updated_at'])
                         ->whereDate('date', Carbon::today());
                 },
                 'krankmeldungen' => function ($query) {
-                    // Nur aktuelle Krankmeldungen laden
                     $query->select(['id', 'child_id', 'start', 'ende'])
                         ->whereDate('start', '<=', Carbon::today())
                         ->whereDate('ende', '>=', Carbon::today());
                 },
                 'schickzeiten' => function ($query) {
-                    // Nur heutige Schickzeiten laden
                     $query->select(['id', 'child_id', 'type', 'specific_date', 'time', 'time_ab', 'time_spaet'])
                         ->where('specific_date', Carbon::today())
                         ->orderBy('specific_date', 'desc');
@@ -157,7 +160,7 @@ class DashboardController extends Controller implements HasMiddleware
                     ->orderByDesc('start')
                     ->get();
             });
-        } elseif (auth()->user()->can('see disease')) {
+        } elseif (auth()->user()->can('see diseases')) {
             $dashboardDiseasesWidget = $activeDiseases;
         }
 

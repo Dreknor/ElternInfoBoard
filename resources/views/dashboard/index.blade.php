@@ -42,7 +42,7 @@
         $hasCheckin   = $careChildren && $careChildren->count() > 0;
         $hasLosung    = !empty($losung);
         $hasDiseases  = $dashboardDiseasesWidget !== null
-                        && auth()->user()->canAny(['manage diseases', 'see disease']);
+                        && auth()->user()->canAny(['manage diseases', 'see diseases']);
         $hasSidebar   = $hasLosung || $hasDiseases;
         // Spaltenbreiten: CheckIn bekommt 8, Sidebar 4 – sonst jeweils 12
         $checkinCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-8 col-lg-7' : 'col-12';
