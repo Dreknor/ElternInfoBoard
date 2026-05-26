@@ -1,100 +1,89 @@
+{{-- Dashboard-Widget: Meldepflichtige Erkrankungen --}}
 @canany(['manage diseases', 'see disease'])
     @if($dashboardDiseasesWidget !== null)
-        <div class="col-12 mb-4">
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <!-- Header -->
-                <div class="px-4 py-3 border-b d-flex justify-content-between align-items-center"
-                     style="background: linear-gradient(to right, #dc2626, #b91c1c);">
-                    <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
-                        <i class="fas fa-virus"></i>
-                        Meldepflichtige Erkrankungen
-                        @can('manage diseases')
-                            <span class="ml-2 text-xs font-normal bg-white bg-opacity-20 px-2 py-0.5 rounded-full">
-                                inkl. unveröffentlichte
-                            </span>
-                        @endcan
-                    </h5>
+    <div class="col-12 mb-4">
+        <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b d-flex justify-content-between align-items-center"
+                 style="background: linear-gradient(to right, var(--color-widget-warning-from), var(--color-widget-warning-to)); border-color: var(--color-widget-warning-border);">
+                <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text);">
+                    <i class="fas fa-virus"></i>
+                    Meldepflichtige Erkrankungen
                     @can('manage diseases')
-                        <a href="{{ route('diseases.index') }}"
-                           class="inline-flex items-center gap-1 px-3 py-1 bg-white bg-opacity-10 hover:bg-opacity-20
-                                  text-white text-sm font-medium rounded-lg border border-white border-opacity-30
-                                  transition-colors duration-200 text-decoration-none">
-                            <i class="fas fa-cog text-xs"></i> Verwalten
-                        </a>
+                        <span class="ml-2 text-xs font-normal px-2 py-0.5 rounded-full"
+                              style="background: rgba(255,255,255,0.2); color: var(--color-widget-header-text);">
+                            inkl. unveröffentlichte
+                        </span>
                     @endcan
-                </div>
+                </h5>
+                @can('manage diseases')
+                    <a href="{{ route('diseases.index') }}"
+                       class="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-lg transition-colors duration-200 text-decoration-none"
+                       style="background: rgba(255,255,255,0.15); color: var(--color-widget-header-text); border: 1px solid rgba(255,255,255,0.3);"
+                       onmouseover="this.style.background='rgba(255,255,255,0.25)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                        <i class="fas fa-cog text-xs"></i> Verwalten
+                    </a>
+                @endcan
+            </div>
 
-                <div class="p-4">
-                    @if($dashboardDiseasesWidget->isEmpty())
-                        <div class="text-center py-6">
-                            <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
-                            <p class="text-gray-500 mb-0">Keine aktuellen Erkrankungen vorhanden</p>
-                        </div>
-                    @else
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="text-left py-2 pr-4 font-semibold text-gray-700">Erkrankung</th>
-                                        <th class="text-left py-2 pr-4 font-semibold text-gray-700">Von</th>
-                                        <th class="text-left py-2 pr-4 font-semibold text-gray-700">Bis</th>
-                                        @can('manage diseases')
-                                            <th class="text-left py-2 font-semibold text-gray-700">Status</th>
-                                        @endcan
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    @foreach($dashboardDiseasesWidget as $disease)
-                                        <tr class="hover:bg-gray-50 transition-colors duration-100
-                                                   @can('manage diseases') {{ !$disease->active ? 'opacity-60' : '' }} @endcan">
-                                            <td class="py-2 pr-4">
-                                                <span class="font-medium text-gray-800 flex items-center gap-2">
-                                                    <i class="fas fa-disease text-red-400 text-xs"></i>
-                                                    {{ $disease->disease->name }}
+            <!-- Body -->
+            <div class="p-4" style="background: var(--color-widget-body-bg);">
+                @if($dashboardDiseasesWidget->isEmpty())
+                    <div class="text-center py-6">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-3 d-block"></i>
+                        <p class="mb-0" style="color: var(--color-text-secondary);">Keine aktuellen Erkrankungen vorhanden</p>
+                    </div>
+                @else
+                    <div class="space-y-2">
+                        @foreach($dashboardDiseasesWidget as $disease)
+                            <div class="p-3 rounded-lg"
+                                 style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);
+                                        {{ !$disease->active ? 'opacity: 0.65;' : '' }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <!-- Name & Zeitraum -->
+                                    <div class="flex-1">
+                                        <span class="font-semibold d-flex align-items-center gap-2"
+                                              style="color: var(--color-text-primary);">
+                                            <i class="fas fa-disease text-sm" style="color: var(--color-widget-warning-from);"></i>
+                                            {{ $disease->disease->name }}
+                                        </span>
+                                        <div class="text-xs mt-1" style="color: var(--color-text-secondary);">
+                                            <i class="far fa-calendar mr-1"></i>
+                                            {{ $disease->start->format('d.m.Y') }}
+                                            @if($disease->end)
+                                                &ndash; {{ $disease->end->format('d.m.Y') }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <!-- Status-Badge (nur für manage diseases) -->
+                                    @can('manage diseases')
+                                        <div class="flex-shrink-0 ml-3">
+                                            @if($disease->active)
+                                                <span class="badge badge-danger badge-pill d-inline-flex align-items-center gap-1">
+                                                    <i class="fas fa-circle" style="font-size: 6px;"></i>
+                                                    Veröffentlicht
                                                 </span>
-                                            </td>
-                                            <td class="py-2 pr-4 text-gray-600">
-                                                <i class="far fa-calendar text-gray-400 mr-1"></i>
-                                                {{ $disease->start->format('d.m.Y') }}
-                                            </td>
-                                            <td class="py-2 pr-4 text-gray-600">
-                                                @if($disease->end)
-                                                    <i class="far fa-calendar-check text-gray-400 mr-1"></i>
-                                                    {{ $disease->end->format('d.m.Y') }}
-                                                @else
-                                                    <span class="text-gray-400">–</span>
-                                                @endif
-                                            </td>
-                                            @can('manage diseases')
-                                                <td class="py-2">
-                                                    @if($disease->active)
-                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5
-                                                                     bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                                                            <i class="fas fa-circle text-[6px] animate-pulse"></i>
-                                                            Veröffentlicht
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5
-                                                                     bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">
-                                                            <i class="fas fa-eye-slash text-[8px]"></i>
-                                                            Unveröffentlicht
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                            @endcan
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-3 mb-0">
-                            <i class="fas fa-info-circle"></i>
-                            Bitte beachten Sie die entsprechenden Hygienemaßnahmen.
-                        </p>
-                    @endif
-                </div>
+                                            @else
+                                                <span class="badge badge-secondary badge-pill d-inline-flex align-items-center gap-1">
+                                                    <i class="fas fa-eye-slash" style="font-size: 8px;"></i>
+                                                    Unveröffentlicht
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endcan
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <p class="text-xs mt-3 mb-0 d-flex align-items-center gap-1"
+                       style="color: var(--color-text-muted);">
+                        <i class="fas fa-info-circle"></i>
+                        Bitte beachten Sie die entsprechenden Hygienemaßnahmen.
+                    </p>
+                @endif
             </div>
         </div>
+    </div>
     @endif
 @endcanany
-
