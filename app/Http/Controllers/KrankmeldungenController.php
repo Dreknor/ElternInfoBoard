@@ -89,6 +89,7 @@ class KrankmeldungenController extends Controller
             }
 
             $meldung = 'Krankmeldung wurde erfolgreich eingetragen';
+            $disease = null;
 
             if (! empty($request->disease_id) && $request->disease_id != 0) {
 
