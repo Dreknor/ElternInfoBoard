@@ -729,25 +729,44 @@ html, body {
     background-color: var(--color-body-bg);
     cursor: not-allowed;
   }
-  .form-select {
+  .form-select,
+  .custom-select {
     display: block; width: 100%; padding: 0.5rem 2.5rem 0.5rem 0.75rem;
     font-size: 0.875rem;
+    line-height: 1.25rem;
+    min-height: calc(1.25rem + 1rem + 2px); /* gleiche Höhe wie .form-control */
     border: 1px solid var(--color-input-border);
     border-radius: 0.375rem;
     background-color: var(--color-input-bg);
     color: var(--color-text-primary);
     cursor: pointer; outline: none;
-    appearance: none; -webkit-appearance: none;
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-size: 1.25rem;
     background-position: right 0.5rem center;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .form-select:focus {
+  .form-select:focus,
+  .custom-select:focus {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
   }
+  .form-select[multiple],
+  .custom-select[multiple] {
+    padding-right: 0.75rem;
+    background-image: none;
+    cursor: default;
+  }
+  .form-select:disabled,
+  .custom-select:disabled { opacity: 0.6; cursor: not-allowed; }
   .form-group     { @apply mb-4; }
+  .form-group > label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
   .form-row       { @apply flex flex-wrap -mx-2; }
   .form-row > .col,
   .form-row > [class*="col-"] { @apply px-2; }

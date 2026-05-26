@@ -14,12 +14,35 @@
                     </h5>
                 </div>
                 @can('edit termin')
-                    <div class="relative group">
-                        <button class="text-white hover:bg-white/20 rounded p-1.5 transition-all duration-200" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div x-data="{
+                        open: false,
+                        pos: { top: 0, right: 0 },
+                        toggle(event) {
+                            this.open = !this.open;
+                            if (this.open) {
+                                const rect = event.currentTarget.getBoundingClientRect();
+                                this.pos.top = rect.bottom + 4;
+                                this.pos.right = window.innerWidth - rect.right;
+                            }
+                        }
+                    }" @click.outside="open = false">
+                        <button @click="toggle($event)"
+                                class="text-white hover:bg-white/20 rounded p-1.5 transition-all duration-200"
+                                aria-haspopup="true" :aria-expanded="open">
                             <i class="fa fa-ellipsis-v text-sm" aria-hidden="true"></i>
                         </button>
-                        <div class="dropdown-menu">
-                            <a href="{{url('termine/create')}}" class="dropdown-item flex items-center space-x-2 px-3 py-1.5 hover:bg-gray-100 transition-colors text-sm">
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             :style="`position: fixed; top: ${pos.top}px; right: ${pos.right}px; z-index: 1050;`"
+                             class="w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1"
+                             style="display: none;">
+                            <a href="{{ url('termine/create') }}"
+                               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                 <i class="fa fa-plus text-blue-600"></i>
                                 <span>Neuer Termin</span>
                             </a>
