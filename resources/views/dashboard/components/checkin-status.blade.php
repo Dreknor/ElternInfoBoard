@@ -1,6 +1,5 @@
 @if($careChildren && $careChildren->count() > 0)
-    <div class="col-12 mb-4">
-        <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
+    <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
             <div class="px-4 py-3 border-b"
                  style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
                 <h5 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text);">
@@ -9,7 +8,7 @@
                 </h5>
             </div>
             <div class="p-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     @foreach($careChildren as $child)
                         @php
                             $todayCheckIn = $child->checkIns->first();
@@ -117,6 +116,5 @@
                     </div>
                 @endcan
             </div>
-        </div>
     </div>
 @endif

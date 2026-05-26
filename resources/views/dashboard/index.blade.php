@@ -3,9 +3,9 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Willkommensbereich -->
     <div class="row">
         <div class="col-12">
-            <!-- Willkommensbereich -->
             <div class="rounded-lg shadow-lg p-6 mb-4 text-white"
                  style="background-color: var(--color-primary); background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary));">
                 <h2 class="text-2xl font-bold mb-2">Willkommen, {{ auth()->user()->name }}!</h2>
@@ -35,23 +35,66 @@
                     </div>
                 </div>
             @endif
-
-            <!-- Losung des Tages -->
-            @if($losung)
-                @include('include.losung')
-            @endif
         </div>
     </div>
 
-    <!-- Erkrankungen-Widget -->
-    <div class="row">
-        @include('dashboard.components.diseases')
-    </div>
+    @php
+        $hasCheckin   = $careChildren && $careChildren->count() > 0;
+        $hasLosung    = !empty($losung);
+        $hasDiseases  = $dashboardDiseasesWidget !== null
+                        && auth()->user()->canAny(['manage diseases', 'see disease']);
+        $hasSidebar   = $hasLosung || $hasDiseases;
+        // Spaltenbreiten: CheckIn bekommt 8, Sidebar 4 – sonst jeweils 12
+        $checkinCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-8 col-lg-7' : 'col-12';
+        $sidebarCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-4 col-lg-5' : 'col-12';
+        // Wenn kein CheckIn, aber Losung+Erkrankungen vorhanden: nebeneinander
+        $losungCol    = (!$hasCheckin && $hasLosung && $hasDiseases) ? 'col-lg-6' : 'col-12';
+        $diseasesCol  = (!$hasCheckin && $hasLosung && $hasDiseases) ? 'col-lg-6' : 'col-12';
+    @endphp
 
-    <!-- CheckIn-Status für Care-Kinder -->
-    <div class="row">
-        @include('dashboard.components.checkin-status')
+    {{-- Layout-Zeile: CheckIn-Status | Sidebar (Losung + Erkrankungen) --}}
+    @if($hasCheckin || $hasSidebar)
+    <div class="row g-4 mb-4">
+
+        {{-- CheckIn-Status --}}
+        @if($hasCheckin)
+        <div class="{{ $checkinCol }}">
+            @include('dashboard.components.checkin-status')
+        </div>
+        @endif
+
+        {{-- Sidebar: Losung + Erkrankungen --}}
+        @if($hasSidebar)
+        <div class="{{ $sidebarCol }}">
+
+            {{-- Wenn kein CheckIn: Losung & Erkrankungen nebeneinander --}}
+            @if(!$hasCheckin && $hasLosung && $hasDiseases)
+            <div class="row g-3">
+                <div class="{{ $losungCol }}">
+                    @include('include.losung')
+                </div>
+                <div class="{{ $diseasesCol }}">
+                    @include('dashboard.components.diseases')
+                </div>
+            </div>
+
+            {{-- Wenn CheckIn vorhanden: Losung & Erkrankungen gestapelt in Sidebar --}}
+            @else
+                @if($hasLosung)
+                    <div class="{{ $hasDiseases ? 'mb-4' : '' }}">
+                        @include('include.losung')
+                    </div>
+                @endif
+                @if($hasDiseases)
+                    @include('dashboard.components.diseases')
+                @endif
+            @endif
+
+        </div>
+        @endif
+
     </div>
+    @endif
 
     <!-- Offene Rückmeldungen -->
     <div class="row">

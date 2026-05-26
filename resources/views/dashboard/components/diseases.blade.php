@@ -1,8 +1,7 @@
 {{-- Dashboard-Widget: Meldepflichtige Erkrankungen --}}
 @canany(['manage diseases', 'see disease'])
     @if($dashboardDiseasesWidget !== null)
-    <div class="col-12 mb-4">
-        <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
+    <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
             <!-- Header -->
             <div class="px-4 py-3 border-b d-flex justify-content-between align-items-center"
                  style="background: linear-gradient(to right, var(--color-widget-warning-from), var(--color-widget-warning-to)); border-color: var(--color-widget-warning-border);">
@@ -84,6 +83,5 @@
                 @endif
             </div>
         </div>
-    </div>
     @endif
 @endcanany
