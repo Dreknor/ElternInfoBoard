@@ -13,7 +13,7 @@
                     <a href="{{ url('/') }}" class="btn btn-outline-primary">
                         <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
                     </a>
-                    @can('create termine')
+                    @can('edit termin')
                         <a href="{{ url('/termine/create') }}" class="btn btn-success">
                             <i class="fas fa-plus"></i> Neuer Termin
                         </a>
