@@ -3,50 +3,14 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Willkommensbereich -->
     <div class="row">
         <div class="col-12">
-            <!-- Willkommensbereich -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-lg p-6 mb-4 text-white">
+            <div class="rounded-lg shadow-lg p-6 mb-4 text-white"
+                 style="background-color: var(--color-primary); background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary));">
                 <h2 class="text-2xl font-bold mb-2">Willkommen, {{ auth()->user()->name }}!</h2>
-                <p class="text-blue-100">{{ $datum->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</p>
+                <p class="mb-0" style="opacity: 0.85;">{{ $datum->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</p>
             </div>
-
-            <!-- Aktive meldepflichtige Erkrankungen -->
-            @if($activeDiseases && count($activeDiseases) > 0)
-                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg shadow p-3 mb-4">
-                    <div class="d-flex align-items-start">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-exclamation-triangle text-red-500" style="font-size: 1.2rem;"></i>
-                        </div>
-                        <div class="ml-3 flex-1">
-                            <h6 class="font-bold text-red-800 mb-2">
-                                <i class="fas fa-virus"></i> Aktive meldepflichtige Erkrankungen
-                            </h6>
-                            <div class="space-y-2">
-                                @foreach($activeDiseases as $activeDisease)
-                                    <div class="bg-white border border-red-200 rounded p-2">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="font-semibold text-red-900 text-sm">
-                                                <i class="fas fa-disease"></i> {{ $activeDisease->disease->name }}
-                                            </span>
-                                            <span class="text-xs text-gray-600">
-                                                <i class="far fa-calendar"></i>
-                                                {{ $activeDisease->start->format('d.m.Y') }}
-                                                @if($activeDisease->end)
-                                                    - {{ $activeDisease->end->format('d.m.Y') }}
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <p class="text-xs text-red-600 mt-2 mb-0">
-                                <i class="fas fa-info-circle"></i> Bitte beachten Sie die entsprechenden Hygienemaßnahmen.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
 
             <!-- Hinweis auf offene Anwesenheitsabfragen -->
             @if($openAttendanceSurveys)
@@ -71,17 +35,80 @@
                     </div>
                 </div>
             @endif
-
-            <!-- Losung des Tages -->
-            @if($losung)
-                @include('include.losung')
-            @endif
         </div>
     </div>
 
-    <!-- CheckIn-Status für Care-Kinder -->
+    @php
+        $hasCheckin   = $careChildren && $careChildren->count() > 0;
+        $hasLosung    = !empty($losung);
+        $hasDiseases  = $dashboardDiseasesWidget !== null
+                        && auth()->user()->canAny(['manage diseases', 'see diseases']);
+        $hasSidebar   = $hasLosung || $hasDiseases;
+        // Spaltenbreiten: CheckIn bekommt 8, Sidebar 4 – sonst jeweils 12
+        $checkinCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-8 col-lg-7' : 'col-12';
+        $sidebarCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-4 col-lg-5' : 'col-12';
+        // Wenn kein CheckIn, aber Losung+Erkrankungen vorhanden: nebeneinander
+        $losungCol    = (!$hasCheckin && $hasLosung && $hasDiseases) ? 'col-lg-6' : 'col-12';
+        $diseasesCol  = (!$hasCheckin && $hasLosung && $hasDiseases) ? 'col-lg-6' : 'col-12';
+    @endphp
+
+    {{-- Layout-Zeile: CheckIn-Status | Sidebar (Losung + Erkrankungen) --}}
+    @if($hasCheckin || $hasSidebar)
+    <div class="row g-4 mb-4">
+
+        {{-- CheckIn-Status --}}
+        @if($hasCheckin)
+        <div class="{{ $checkinCol }}">
+            @include('dashboard.components.checkin-status')
+        </div>
+        @endif
+
+        {{-- Sidebar: Losung + Erkrankungen --}}
+        @if($hasSidebar)
+        <div class="{{ $sidebarCol }}">
+
+            {{-- Wenn kein CheckIn: Losung & Erkrankungen nebeneinander --}}
+            @if(!$hasCheckin && $hasLosung && $hasDiseases)
+            <div class="row g-3">
+                <div class="{{ $losungCol }}">
+                    @include('include.losung')
+                </div>
+                <div class="{{ $diseasesCol }}">
+                    @include('dashboard.components.diseases')
+                </div>
+            </div>
+
+            {{-- Wenn CheckIn vorhanden: Losung & Erkrankungen gestapelt in Sidebar --}}
+            @else
+                @if($hasLosung)
+                    <div class="{{ $hasDiseases ? 'mb-4' : '' }}">
+                        @include('include.losung')
+                    </div>
+                @endif
+                @if($hasDiseases)
+                    @include('dashboard.components.diseases')
+                @endif
+            @endif
+
+        </div>
+        @endif
+
+    </div>
+    @endif
+
+    <!-- Offene Rückmeldungen -->
     <div class="row">
-        @include('dashboard.components.checkin-status')
+        @include('dashboard.components.pending-feedback')
+    </div>
+
+    <!-- Ungelesene Chat-Nachrichten -->
+    <div class="row">
+        @include('dashboard.components.unread-messages')
+    </div>
+
+    <!-- Rückmeldestatus für Lehrkräfte/Autoren -->
+    <div class="row">
+        @include('dashboard.components.feedback-stats')
     </div>
 
     <div class="row">

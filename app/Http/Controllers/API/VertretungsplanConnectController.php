@@ -14,6 +14,7 @@ use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
+use App\Http\Requests\ApiUpdateAbsenceRequest;
 use Illuminate\Http\Request;
 
 class VertretungsplanConnectController extends Controller
@@ -227,38 +228,24 @@ class VertretungsplanConnectController extends Controller
 
     }
 
-    public function updateAbsence(Request $request, $id)
+    public function updateAbsence(ApiUpdateAbsenceRequest $request, $id)
     {
-        $vertretung = json_decode(
-            $this->getContent(),
-            true
-        );
+        $absence = VertretungsplanAbsence::where('absence_id', $id)->first();
 
-        if ($vertretung['key'] != config('app.api_key')) {
+        if (! $absence) {
             return response()->json([
-                'error' => 'API key ungültig',
-            ], 401);
+                'error' => 'Abwesenheit nicht gefunden',
+            ], 404);
         }
-
-        $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date',
-            'name' => 'required|string',
-            'reason' => 'nullable|string',
-        ]);
-
-        $absence = VertretungsplanAbsence::firstOrNew(['id' => $id]);
 
         $absence->start_date = $request->get('start_date');
         $absence->end_date = $request->get('end_date');
         $absence->name = $request->get('name');
         $absence->reason = $request->get('reason');
-
-        $absence->id = $request->get('id');
         $absence->save();
 
         return response()->json([
-            'success' => 'Vertretungen erfolgreich aktualisiert',
+            'success' => 'Abwesenheit erfolgreich aktualisiert',
         ]);
     }
 

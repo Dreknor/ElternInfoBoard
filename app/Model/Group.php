@@ -20,14 +20,15 @@ class Group extends Model implements HasMedia
     use HasFactory;
     use InteractsWithMedia;
 
-    protected $fillable = ['name', 'bereich', 'protected', 'owner_id'];
+    protected $fillable = ['name', 'bereich', 'protected', 'owner_id', 'has_chat'];
 
-    protected $visible = ['name', 'bereich', 'protected', 'owner_id'];
+    protected $visible = ['name', 'bereich', 'protected', 'owner_id', 'has_chat'];
 
     protected function casts(): array
     {
         return [
             'protected' => 'boolean',
+            'has_chat'  => 'boolean',
         ];
     }
 
@@ -64,5 +65,10 @@ class Group extends Model implements HasMedia
     public function arbeitsgemeinschaften(): BelongsToMany
     {
         return $this->belongsToMany(Arbeitsgemeinschaft::class, 'arbeitsgemeinschaften_groups', 'group_id', 'ag_id');
+    }
+
+    public function conversation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Conversation::class)->withoutGlobalScopes();
     }
 }

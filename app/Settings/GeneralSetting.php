@@ -12,6 +12,12 @@ class GeneralSetting extends Settings
 
     public string $favicon;
 
+    /** Globaler Standard-Theme-Identifier (siehe app/Themes/*) */
+    public string $default_theme = 'default';
+
+    /** Dürfen Nutzer einen eigenen Theme wählen? */
+    public bool $allow_user_theme = true;
+
     public static function group(): string
     {
         return 'general';

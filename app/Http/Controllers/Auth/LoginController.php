@@ -122,8 +122,8 @@ class LoginController extends Controller implements HasMiddleware
             return redirect()->route('home');
         }
 
-        // Check if KeyCloak is enabled (ENV only)
-        if (!env('KEYCLOAK_ENABLED', false)) {
+        // Check if KeyCloak is enabled
+        if (!config('services.keycloak.enabled')) {
             Log::warning('Keycloak login attempt but Keycloak is disabled in ENV');
             return redirect()->route('login')->with([
                 'type' => 'danger',
@@ -157,8 +157,8 @@ class LoginController extends Controller implements HasMiddleware
      */
     public function handleKeycloakCallback()
     {
-        // Check if KeyCloak is enabled (ENV only)
-        if (!env('KEYCLOAK_ENABLED', false)) {
+        // Check if KeyCloak is enabled
+        if (!config('services.keycloak.enabled')) {
             return redirect()->route('login')->with([
                 'type' => 'danger',
                 'Meldung' => 'Keycloak ist nicht aktiviert.',
@@ -209,7 +209,7 @@ class LoginController extends Controller implements HasMiddleware
         } else {
             // Check email domain whitelist
             $domain = explode('@', $keycloakUser->email)[1];
-            $allowedDomains = explode(',', env('KEYCLOAK_MAILDOMAIN', '*'));
+            $allowedDomains = explode(',', config('services.keycloak.mail_domain'));
             $allowedDomains = array_map('trim', $allowedDomains);
 
             if (!in_array('*', $allowedDomains) && !in_array($domain, $allowedDomains)) {
@@ -239,8 +239,8 @@ class LoginController extends Controller implements HasMiddleware
             // Create new user
             $newUser = User::create([
                 'name' => $name,
-                'email' => $user->email,
-                'password' => Hash::make(Str::random(64)), 
+                'email' => $keycloakUser->email,
+                'password' => Hash::make(Str::random(64)),
                 'created_at' => now(),
                 'updated_at' => now(),
                 'changePassword' => 0,

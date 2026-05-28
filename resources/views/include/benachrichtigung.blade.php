@@ -1,8 +1,24 @@
+<script>
+function readNotification(id) {
+    fetch('{{ route('notification.read') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ id: id }),
+    }).catch(() => {});
+}
+</script>
 <div x-data="{ open: false, showRead: false }" class="relative">
     @if(count($notifications) == 0)
         <!-- No Notifications -->
         <button type="button"
-                class="relative p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                class="relative p-2 rounded-lg transition-all duration-200"
+                style="color: var(--color-mobile-nav-text);"
+                onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-primary');this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-light')"
+                onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-mobile-nav-text');this.style.backgroundColor=''"
                 title="Keine neuen Benachrichtigungen vorhanden">
             <i class="fas fa-bell text-xl"></i>
         </button>
@@ -12,10 +28,15 @@
                 @click="open = !open"
                 aria-expanded="false"
                 x-bind:aria-expanded="open"
-                class="relative p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
+                class="relative p-2 rounded-lg transition-all duration-200"
+                style="color: var(--color-mobile-nav-text);"
+                onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-primary');this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-light')"
+                onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--color-mobile-nav-text');this.style.backgroundColor=''" >
             <i class="far fa-bell text-xl"></i>
             @if($notifications->where('read', 0)->count() > 0)
-                <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                <span data-notification-badge
+                      class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full animate-pulse"
+                      style="background-color: var(--color-badge-bg);">
                     {{$notifications->where('read', 0)->count()}}
                 </span>
             @endif
@@ -29,11 +50,13 @@
              x-transition:leave="transition ease-in duration-75"
              x-transition:leave-start="transform opacity-100 scale-100"
              x-transition:leave-end="transform opacity-0 scale-95"
-             class="fixed left-2 right-2 top-14 max-h-[85vh] sm:bottom-auto sm:absolute sm:mt-2 sm:right-0 sm:left-auto sm:w-96 sm:max-w-[calc(100vw-2rem)] md:max-w-md bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50 flex flex-col"
+             class="fixed left-2 right-2 top-14 max-h-[85vh] sm:bottom-auto sm:absolute sm:mt-2 sm:right-0 sm:left-auto sm:w-96 sm:max-w-[calc(100vw-2rem)] md:max-w-md rounded-lg shadow-2xl border overflow-hidden z-50 flex flex-col"
+             style="background-color: var(--color-card-bg); border-color: var(--color-card-border);"
              @click.away="open = false">
 
             <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
+            <div class="px-4 py-3 flex items-center justify-between flex-shrink-0"
+                 style="background-color: var(--color-primary);">
                 <h6 class="text-white font-bold text-base mb-0 flex items-center">
                     <i class="fas fa-bell mr-2"></i>
                     Benachrichtigungen
@@ -41,12 +64,14 @@
                 <div class="flex items-center gap-2">
                     @if($notifications->where('read', 0)->count() > 0)
                         <a href="{{route('notification.readAll')}}"
-                           class="text-xs text-white hover:text-blue-100 underline transition-colors hidden sm:inline">
-                            Alle als gelesen markieren
+                           class="text-xs text-white underline transition-colors hidden sm:inline"
+                           style="opacity: 0.85;"
+                           onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+                             Alle als gelesen markieren
                         </a>
                     @endif
                     <button @click="open = false"
-                            class="text-white hover:text-blue-100 transition-colors p-1 rounded hover:bg-white/10"
+                            class="text-white transition-colors p-1 rounded hover:bg-white/10"
                             title="Schließen">
                         <i class="fas fa-times text-lg"></i>
                     </button>
@@ -54,14 +79,16 @@
             </div>
 
             <!-- Filter Toggle -->
-            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <div class="px-4 py-3 border-b flex items-center justify-between flex-shrink-0"
+                 style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
                 <label class="flex items-center gap-2 cursor-pointer" @click.stop>
                     <input type="checkbox"
                            x-model="showRead"
-                           class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
-                    <span class="text-sm text-gray-700 select-none">Gelesene anzeigen</span>
+                           class="w-4 h-4 rounded cursor-pointer"
+                           style="accent-color: var(--color-primary);">
+                    <span class="text-sm select-none" style="color: var(--color-text-secondary);">Gelesene anzeigen</span>
                 </label>
-                <span class="text-xs text-gray-500">{{$notifications->count()}} insgesamt</span>
+                <span class="text-xs" style="color: var(--color-text-secondary);">{{$notifications->count()}} insgesamt</span>
             </div>
 
             <!-- Notifications List -->
@@ -70,97 +97,62 @@
                     @foreach($notifications->sortBy('read') as $item)
                         <div x-show="!{{$item->read ? 'true' : 'false'}} || showRead"
                              id="notification-{{$item->id}}"
-                             class="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                             class="border-b transition-colors duration-150"
+                             style="border-color: var(--color-card-border);"
+                             onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-navbar-user-btn-bg')"
+                             onmouseout="this.style.backgroundColor=''">
                             <a href="{{$item['url']}}"
                                onclick="readNotification({{$item->id}})"
-                               class="block px-4 py-3 text-decoration-none @if(!$item->read) bg-blue-50 border-l-4 border-l-blue-500 @else opacity-60 @endif">
+                               class="block px-4 py-3 text-decoration-none @if(!$item->read) border-l-4 @else opacity-60 @endif"
+                               style="@if(!$item->read) background-color: var(--color-primary-light); border-left-color: var(--color-primary); @endif">
                                 <div class="flex gap-3">
                                     @if($item['icon'])
                                         <div class="flex-shrink-0">
                                             <img src="{{$item['icon']}}"
                                                  alt="Icon"
-                                                 class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
+                                                 class="w-12 h-12 rounded-full object-cover border-2"
+                                                 style="border-color: var(--color-card-border);">
                                         </div>
                                     @else
-                                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+                                             style="background-color: var(--color-avatar-bg);">
                                             <i class="fas fa-bell text-white"></i>
                                         </div>
                                     @endif
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-800 mb-1 line-clamp-1">
+                                        <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold mb-1 line-clamp-1" style="color: var(--color-text-primary);">
                                             {{$item['title']}}
                                         </p>
-                                        <p class="text-xs text-gray-600 mb-0 line-clamp-2">
+                                        <p class="text-xs line-clamp-2 mb-1" style="color: var(--color-text-secondary);">
                                             {{$item['message']}}
                                         </p>
-                                        @if($item->created_at)
-                                            <p class="text-xs text-gray-400 mt-1 mb-0">
-                                                <i class="far fa-clock mr-1"></i>
-                                                {{$item->created_at->diffForHumans()}}
-                                            </p>
-                                        @endif
+                                        <span class="text-xs" style="color: var(--color-text-secondary); opacity: 0.7;">
+                                            {{$item->created_at?->diffForHumans()}}
+                                        </span>
                                     </div>
-                                    @if(!$item->read)
-                                        <div class="flex-shrink-0">
-                                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
-                                        </div>
-                                    @endif
                                 </div>
                             </a>
                         </div>
                     @endforeach
                 @else
                     <div class="px-4 py-8 text-center">
-                        <i class="fas fa-bell-slash text-gray-300 text-4xl mb-3"></i>
-                        <p class="text-gray-500 text-sm mb-0">Keine Benachrichtigungen vorhanden</p>
+                        <i class="fas fa-bell-slash text-3xl mb-2 block" style="color: var(--color-text-secondary); opacity: 0.5;"></i>
+                        <p class="text-sm" style="color: var(--color-text-secondary);">Keine Benachrichtigungen</p>
                     </div>
                 @endif
             </div>
 
-            <!-- Footer -->
-            @can('testing')
-                <div class="bg-gray-50 border-t border-gray-200 px-4 py-2 flex-shrink-0">
-                    <a href="{{route('push.test')}}"
-                       class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                        <i class="fas fa-vial mr-1"></i>
-                        Push-Benachrichtigung testen
-                    </a>
-                </div>
-            @endcan
+            {{-- Footer --}}
+            <div class="px-4 py-3 border-t flex-shrink-0"
+                 style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
+                <a href="{{ route('notification.readAll') }}"
+                   class="block text-center text-xs font-medium transition-colors"
+                   style="color: var(--color-primary);"
+                   onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    Alle als gelesen markieren
+                </a>
+            </div>
         </div>
     @endif
 </div>
 
-@push('js')
-    <script>
-        function readNotification(id) {
-            $.ajax({
-                url: "{{route('notification.read')}}",
-                type: "POST",
-                data: {
-                    id: id,
-                    _token: "{{csrf_token()}}"
-                },
-                success: function (data) {
-                    if (data.success) {
-                        // Fade out the notification smoothly
-                        $('#notification-' + id).fadeOut(300, function() {
-                            $(this).remove();
-
-                            // Update badge count if needed
-                            var badge = $('.animate-pulse');
-                            if (badge.length) {
-                                var currentCount = parseInt(badge.text());
-                                if (currentCount > 1) {
-                                    badge.text(currentCount - 1);
-                                } else {
-                                    badge.closest('button').html('<i class="fas fa-bell text-xl"></i>');
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    </script>
-@endpush

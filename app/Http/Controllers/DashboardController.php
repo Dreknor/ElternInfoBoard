@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Model\ActiveDisease;
 use App\Model\Child;
+use App\Model\Conversation;
 use App\Model\Losung;
 use App\Model\Post;
+use App\Model\ReadReceipts;
+use App\Model\Rueckmeldungen;
 use App\Model\Termin;
+use App\Model\UserRueckmeldungen;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -101,28 +105,31 @@ class DashboardController extends Controller implements HasMiddleware
             ->whereDate('date', Carbon::today())
             ->first();
 
-        // Hole die Kinder des Benutzers mit optimiertem Eager Loading
-        $careChildren = auth()->user()->children_rel()
+        // Hole die Kinder des Benutzers – eigene + Kinder des Sorg2-Partners
+        $currentUser = auth()->user();
+        $sorg2UserId = $currentUser->sorg2; // ID des verknüpften Sorgeberechtigten 2
+
+        $careChildren = Child::query()
             ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id'])
             ->care()
-            ->whereHas('parents', function ($query) use ($userId) {
+            ->whereHas('parents', function ($query) use ($userId, $sorg2UserId) {
                 $query->where('users.id', $userId);
+                if ($sorg2UserId) {
+                    $query->orWhere('users.id', $sorg2UserId);
+                }
             })
             ->with([
-                'group:id,name', // Nur ID und Name der Gruppe
+                'group:id,name',
                 'checkIns' => function ($query) {
-                    // Nur heutige CheckIns laden
                     $query->select(['id', 'child_id', 'date', 'checked_in', 'checked_out', 'should_be', 'updated_at'])
                         ->whereDate('date', Carbon::today());
                 },
                 'krankmeldungen' => function ($query) {
-                    // Nur aktuelle Krankmeldungen laden
                     $query->select(['id', 'child_id', 'start', 'ende'])
                         ->whereDate('start', '<=', Carbon::today())
                         ->whereDate('ende', '>=', Carbon::today());
                 },
                 'schickzeiten' => function ($query) {
-                    // Nur heutige Schickzeiten laden
                     $query->select(['id', 'child_id', 'type', 'specific_date', 'time', 'time_ab', 'time_spaet'])
                         ->where('specific_date', Carbon::today())
                         ->orderBy('specific_date', 'desc');
@@ -140,6 +147,22 @@ class DashboardController extends Controller implements HasMiddleware
                 ->with('disease:id,name')
                 ->get();
         });
+
+        // Erkrankungen-Widget: manage diseases sieht alle (auch unveröffentlichte), see disease nur veröffentlichte
+        $dashboardDiseasesWidget = null;
+        if (auth()->user()->can('manage diseases')) {
+            $dashboardDiseasesWidget = Cache::remember("dashboard_diseases_all_{$userId}", 60 * 5, function () {
+                return ActiveDisease::query()
+                    ->select(['id', 'disease_id', 'start', 'end', 'active', 'comment'])
+                    ->whereDate('end', '>=', Carbon::now())
+                    ->with('disease:id,name')
+                    ->orderByDesc('active')
+                    ->orderByDesc('start')
+                    ->get();
+            });
+        } elseif (auth()->user()->can('see diseases')) {
+            $dashboardDiseasesWidget = $activeDiseases;
+        }
 
         // Prüfe auf offene Anwesenheitsabfragen für die Kinder des Benutzers
         $openAttendanceSurveys = false;
@@ -168,6 +191,21 @@ class DashboardController extends Controller implements HasMiddleware
             });
         }
 
+        // ── Offene Rückmeldungen für diesen Benutzer ──────────
+        $pendingFeedback = $this->getPendingFeedbackForUser($userId);
+
+        // ── Rückmeldestatus für Autoren/Lehrkräfte ──────────────
+        $authorFeedbackStats = null;
+        if (auth()->user()->can('manage rueckmeldungen') || auth()->user()->can('edit posts')) {
+            $authorFeedbackStats = $this->getAuthorFeedbackStats($userId);
+        }
+
+        // ── Ungelesene Chat-Nachrichten ──────────────────────────
+        $unreadConversations = collect();
+        if (auth()->user()->can('use messenger')) {
+            $unreadConversations = $this->getUnreadConversations($userId);
+        }
+
         return view('dashboard.index', [
             'nachrichten' => $nachrichten,
             'termine' => $termine,
@@ -176,6 +214,171 @@ class DashboardController extends Controller implements HasMiddleware
             'careChildren' => $careChildren,
             'activeDiseases' => $activeDiseases,
             'openAttendanceSurveys' => $openAttendanceSurveys,
+            'pendingFeedback' => $pendingFeedback,
+            'authorFeedbackStats' => $authorFeedbackStats,
+            'unreadConversations' => $unreadConversations,
+            'dashboardDiseasesWidget' => $dashboardDiseasesWidget,
         ]);
+    }
+
+    /**
+     * Holt offene Pflicht-Rückmeldungen und Lesebestätigungen für den Benutzer.
+     */
+    private function getPendingFeedbackForUser(int $userId): \Illuminate\Support\Collection
+    {
+        return Cache::remember("pending_feedback_{$userId}", 120, function () use ($userId) {
+            $pending = collect();
+
+            // A) Pflicht-Rückmeldungen ohne Antwort
+            $userGroupIds = DB::table('group_user')
+                ->where('user_id', $userId)
+                ->pluck('group_id')
+                ->toArray();
+
+            if (!empty($userGroupIds)) {
+                $pflichtRueckmeldungen = Rueckmeldungen::where('pflicht', true)
+                    ->whereNotNull('ende')
+                    ->whereDate('ende', '>=', now()->startOfDay())
+                    ->whereHas('post', function ($q) use ($userGroupIds) {
+                        $q->where('released', 1)
+                            ->where(function ($q2) {
+                                $q2->whereNull('archiv_ab')
+                                    ->orWhere('archiv_ab', '>', now()->subDays(7));
+                            })
+                            ->whereHas('groups', fn ($q3) => $q3->whereIn('groups.id', $userGroupIds));
+                    })
+                    ->with('post:id,header,archiv_ab')
+                    ->get();
+
+                foreach ($pflichtRueckmeldungen as $rm) {
+                    $hasResponded = UserRueckmeldungen::where('post_id', $rm->post_id)
+                        ->where('users_id', $userId)
+                        ->exists();
+
+                    if (!$hasResponded && $rm->post) {
+                        $pending->push([
+                            'post_id' => $rm->post_id,
+                            'header' => $rm->post->header,
+                            'deadline' => $rm->ende,
+                            'is_overdue' => $rm->ende->isPast(),
+                            'type' => 'rueckmeldung',
+                        ]);
+                    }
+                }
+
+                // B) Unbestätigte Lesebestätigungen
+                $readReceiptPosts = Post::where('read_receipt', true)
+                    ->where('released', 1)
+                    ->where(function ($q) {
+                        $q->whereNull('archiv_ab')
+                            ->orWhere('archiv_ab', '>', now()->subDays(7));
+                    })
+                    ->whereHas('groups', fn ($q) => $q->whereIn('groups.id', $userGroupIds))
+                    ->whereDoesntHave('receipts', function ($q) use ($userId) {
+                        $q->where('user_id', $userId)->whereNotNull('confirmed_at');
+                    })
+                    ->select(['id', 'header', 'read_receipt_deadline', 'archiv_ab'])
+                    ->get();
+
+                foreach ($readReceiptPosts as $post) {
+                    $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;
+                    if ($deadline) {
+                        $pending->push([
+                            'post_id' => $post->id,
+                            'header' => $post->header,
+                            'deadline' => $deadline,
+                            'is_overdue' => $deadline->isPast(),
+                            'type' => 'lesebestaetigung',
+                        ]);
+                    }
+                }
+            }
+
+            // Sortieren: überfällige zuerst, dann nach Frist
+            return $pending->sortBy([
+                ['is_overdue', 'desc'],
+                ['deadline', 'asc'],
+            ])->values();
+        });
+    }
+
+    /**
+     * Holt Rückmeldestatus-Statistiken für Posts des Autors/Lehrkraft.
+     */
+    private function getAuthorFeedbackStats(int $userId): \Illuminate\Support\Collection
+    {
+        return Cache::remember("author_feedback_stats_{$userId}", 120, function () use ($userId) {
+            $posts = Post::where('author', $userId)
+                ->where('released', 1)
+                ->where(function ($q) {
+                    $q->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', now()->subDays(7));
+                })
+                ->whereHas('rueckmeldung', fn ($q) => $q->where('pflicht', true))
+                ->with(['rueckmeldung', 'userRueckmeldung', 'users'])
+                ->take(5)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return $posts->map(function ($post) {
+                $total = $post->users->unique('id')->count();
+                $responded = $post->userRueckmeldung->unique('users_id')->count();
+                $deadline = $post->rueckmeldung?->ende;
+                $overdue = 0;
+
+                if ($deadline && $deadline->isPast()) {
+                    $overdue = $total - $responded;
+                }
+
+                return [
+                    'post_id' => $post->id,
+                    'header' => $post->header,
+                    'total' => $total,
+                    'responded' => $responded,
+                    'overdue' => max(0, $overdue),
+                    'deadline' => $deadline,
+                ];
+            })->filter(fn ($s) => $s['total'] > 0);
+        });
+    }
+
+    /**
+     * Holt Konversationen mit ungelesenen Nachrichten für den Benutzer.
+     */
+    private function getUnreadConversations(int $userId): \Illuminate\Support\Collection
+    {
+        return Cache::remember("unread_conversations_{$userId}", 60, function () use ($userId) {
+            $conversations = Conversation::forUser($userId)
+                ->where('is_active', true)
+                ->with([
+                    'users' => fn ($q) => $q->select('users.id', 'users.name'),
+                    'latestMessage' => fn ($q) => $q->select(
+                        'messages.id',
+                        'messages.conversation_id',
+                        'messages.body',
+                        'messages.created_at',
+                        'messages.sender_id',
+                    ),
+                ])
+                ->get();
+
+            return $conversations
+                ->map(function (Conversation $conv) use ($userId) {
+                    $unread = $conv->unreadCountFor($userId);
+                    if ($unread === 0) {
+                        return null;
+                    }
+                    return [
+                        'id'           => $conv->id,
+                        'name'         => $conv->displayNameFor($userId),
+                        'unread'       => $unread,
+                        'last_message' => $conv->latestMessage?->body,
+                        'last_at'      => $conv->latestMessage?->created_at,
+                    ];
+                })
+                ->filter()
+                ->sortByDesc('unread')
+                ->values();
+        });
     }
 }

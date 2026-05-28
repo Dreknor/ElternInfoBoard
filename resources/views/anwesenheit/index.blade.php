@@ -72,7 +72,9 @@
                         <li class="nav-item bg-gradient-directional-blue-grey-light">
                             <a class="nav-link text-dark" id="abfrage-tab" data-toggle="tab" href="#Abfrage" role="tab" aria-controls="Abfrage" aria-selected="false">Ferien</a>
                         </li>
-
+                        <li class="nav-item bg-gradient-directional-blue-grey-light">
+                            <a class="nav-link text-dark" id="regelmaessig-tab" data-toggle="tab" href="#Regelmaessig" role="tab" aria-controls="Regelmaessig" aria-selected="false">Schickzeiten</a>
+                        </li>
                         <li class="nav-item bg-gradient-directional-grey-blue">
                             <a class="nav-link text-dark" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false">Abholvollmacht</a>
                         </li>
@@ -202,6 +204,16 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tab: Regelmäßige Schickzeiten -->
+                    <div class="tab-pane fade" id="Regelmaessig" role="tabpanel" aria-labelledby="regelmaessig-tab">
+                        <div class="modal-body">
+                            <h6>Regelmäßige Schickzeiten:</h6>
+                            <div id="regularSchickzeitenContainer" class="mt-2">
+                                <!-- Wird per JavaScript gefüllt -->
+                            </div>
+                        </div>
+                    </div>
                     <div class="tab-pane fade" id="vollmacht" role="tabpanel" aria-labelledby="vollmacht-tab">
                         <div class="modal-body">
                             <b>Abholvollmachten:</b>
@@ -223,6 +235,24 @@
             dt.setMinutes(tempTime[1]);
             dt.setSeconds(tempTime[2]);
             return dt;
+        }
+
+        /**
+         * Parst Zeitangaben sowohl im Format "HH:MM:SS" als auch als vollständigen
+         * ISO-Datetime-String (z.B. "2026-05-19T14:30:00.000000Z").
+         * Hintergrund: Das Feld `time` wird durch einen PHP-Accessor als Carbon-Objekt
+         * serialisiert und landet als ISO-String im JSON.
+         */
+        function parseTimeValue(val) {
+            if (!val) return null;
+            if (typeof val !== 'string') return null;
+            if (val.includes('T')) {
+                // ISO-Datetime-String
+                const d = new Date(val);
+                return isNaN(d.getTime()) ? null : d;
+            }
+            // "HH:MM:SS" oder "HH:MM"
+            return toDateWithOutTimeZone(val);
         }
 
         $(document).ready(function () {
@@ -292,6 +322,47 @@
                             }
                             schickzeitenContainer.appendChild(schickzeitElement);
                         });
+                    }
+
+                    // Regelmäßige Schickzeiten befüllen
+                    const weekdayNames = {0: 'Sonntag', 1: 'Montag', 2: 'Dienstag', 3: 'Mittwoch', 4: 'Donnerstag', 5: 'Freitag', 6: 'Samstag'};
+                    const regularContainer = document.getElementById('regularSchickzeitenContainer');
+                    regularContainer.innerHTML = '';
+                    const regularSchickzeiten = childData.regular_schickzeiten || [];
+                    if (regularSchickzeiten.length > 0) {
+                        // Gruppieren nach Wochentag
+                        const byWeekday = {};
+                        regularSchickzeiten.forEach(sz => {
+                            const day = sz.weekday;
+                            if (!byWeekday[day]) byWeekday[day] = [];
+                            byWeekday[day].push(sz);
+                        });
+                        Object.keys(byWeekday).sort().forEach(day => {
+                            const daySection = document.createElement('div');
+                            daySection.className = 'mb-2';
+                            const dayHeader = document.createElement('strong');
+                            dayHeader.textContent = weekdayNames[day] || `Tag ${day}`;
+                            daySection.appendChild(dayHeader);
+                            byWeekday[day].forEach(sz => {
+                                const entry = document.createElement('p');
+                                entry.className = 'mb-0 ml-2 text-sm';
+                                if (sz.type === 'genau' && sz.time) {
+                                    const t = parseTimeValue(sz.time);
+                                    entry.textContent = t
+                                        ? `Genau: ${t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`
+                                        : `Genau: ${sz.time} Uhr`;
+                                } else {
+                                    let text = '';
+                                    if (sz.time_ab) text += `ab ${toDateWithOutTimeZone(sz.time_ab).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
+                                    if (sz.time_spaet) text += ` – spät. ${toDateWithOutTimeZone(sz.time_spaet).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr`;
+                                    entry.textContent = text || '–';
+                                }
+                                daySection.appendChild(entry);
+                            });
+                            regularContainer.appendChild(daySection);
+                        });
+                    } else {
+                        regularContainer.innerHTML = '<p class="text-muted">Keine regelmäßigen Schickzeiten hinterlegt.</p>';
                     }
 
                     const noticesContainer = document.getElementById('noticesContainer');

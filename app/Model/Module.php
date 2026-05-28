@@ -11,7 +11,7 @@ class Module extends Model
 
     protected $table = 'settings_modules';
 
-    protected $fillable = ['setting', 'category', 'description', 'options'];
+    protected $fillable = ['setting', 'category', 'description', 'options', 'sort_order'];
 
     protected function casts(): array
     {

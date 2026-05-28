@@ -1,64 +1,42 @@
-
+/*
+ * mobile.css - Legacy-Datei (wird nur von layout.blade.php geladen)
+ * Die moderneren Mobile-Styles sind in app.css (via Vite).
+ */
 .mobile-bottom-nav {
     position: fixed;
-    bottom: 50px;
+    bottom: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
-
-    transform: translateZ(0);
-
+    z-index: 1040;
     display: flex;
-
-    height: 50px;
-
-    box-shadow: 0 -2px 5px -2px #333;
+    height: 64px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
     background-color: #fff;
 }
-
 .mobile-bottom-nav_item {
-    flex-grow: 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-size: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     min-width: 50px;
     overflow: hidden;
     white-space: nowrap;
 }
-
 .mobile-bottom-nav_item-icon {
-    font-size: 18px;
+    font-size: 22px;
 }
-
 .mobile-bottom-nav_item-text {
     display: block;
 }
-
 .mobile-bottom-nav_item-content {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
-
-
-.mobile-bottom-nav_item--active {
-    background-color: rgb(0, 187, 255);
-    border: 1px solid rgba(128, 182, 255, 0.64);
-    border-radius: 90px 90px 90px 90px;
-    max-width: 20px;
-    top: -15px;
-    position: relative;
-    box-shadow: 0 -2px 5px -2px #333;
+.mobile-bottom-nav_item--active .mobile-bottom-nav_item-content a {
+    color: #2563eb !important;
 }
-
-.mobile-bottom-nav_item--active a {
-    color: whitesmoke;
-}
-
-.mobile-bottom-nav_item--active span {
-    display: none;
-}
-
-
-

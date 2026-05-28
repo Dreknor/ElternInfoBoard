@@ -248,6 +248,16 @@
                         <td class="px-5 py-3 text-gray-900">{{ $user->sorgeberechtigter2?->name }}</td>
                     </tr>
                     @endif
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3 font-medium text-gray-700"><i class="fas fa-user-secret text-indigo-400 mr-2"></i>In Messenger-Suche sichtbar</td>
+                        <td class="px-5 py-3">
+                            @if($user->messenger_discoverable)
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"><i class="fas fa-check"></i> Ja, auffindbar</span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"><i class="fas fa-eye-slash"></i> Nicht auffindbar</span>
+                            @endif
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -827,6 +837,236 @@
             <div class="p-4 text-sm text-gray-400 italic">Keine Lesebestätigungen vorhanden.</div>
         @endif
     </div>
+
+    {{-- ===== MESSENGER: KONVERSATIONEN ===== --}}
+    @php
+        $userConversations = \App\Model\Conversation::forUser($user->id)->with('group')->get();
+    @endphp
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-500 px-5 py-3">
+            <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                <i class="fas fa-comments"></i>
+                Messenger – Konversationen
+            </h5>
+        </div>
+        <div class="p-3 bg-teal-50 border-b border-teal-100 text-xs text-teal-800">
+            <i class="fas fa-info-circle mr-1"></i>
+            Übersicht aller Messenger-Konversationen, an denen Sie teilnehmen oder teilgenommen haben.
+        </div>
+        @if($userConversations->count())
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Typ</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Titel / Gruppe</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Erstellt am</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($userConversations as $conv)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3">
+                            @if($conv->type === 'group')
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fas fa-users"></i> Gruppen-Chat</span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"><i class="fas fa-user"></i> Direktnachricht</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3 font-medium text-gray-900">{{ $conv->title ?? $conv->group?->name ?? 'Direktnachricht' }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $conv->created_at->format('d.m.Y H:i') }} Uhr</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+            <div class="p-4 text-sm text-gray-400 italic">Keine Messenger-Konversationen vorhanden.</div>
+        @endif
+    </div>
+
+    {{-- ===== MESSENGER: GESENDETE NACHRICHTEN ===== --}}
+    @php
+        $sentMessages = \App\Model\Message::where('sender_id', $user->id)->withTrashed()->with('conversation')->orderByDesc('created_at')->get();
+    @endphp
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-cyan-600 to-blue-500 px-5 py-3">
+            <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                <i class="fas fa-paper-plane"></i>
+                Messenger – Gesendete Nachrichten
+            </h5>
+        </div>
+        <div class="p-3 bg-cyan-50 border-b border-cyan-100 text-xs text-cyan-800">
+            <i class="fas fa-info-circle mr-1"></i>
+            Alle von Ihnen im Messenger gesendeten Nachrichten (einschließlich gelöschter). Empfangene Nachrichten anderer Nutzer werden hier nicht aufgeführt.
+        </div>
+        @if($sentMessages->count())
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Konversation</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Nachricht</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Typ</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Gesendet</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($sentMessages as $msg)
+                    <tr class="hover:bg-gray-50 {{ $msg->deleted_at ? 'bg-red-50' : '' }}">
+                        <td class="px-5 py-3 text-gray-700">{{ $msg->conversation?->title ?? 'ID ' . $msg->conversation_id }}</td>
+                        <td class="px-5 py-3 text-gray-900 max-w-xs truncate">{{ $msg->body }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $msg->type }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $msg->created_at->format('d.m.Y H:i') }} Uhr</td>
+                        <td class="px-5 py-3">
+                            @if($msg->deleted_at)
+                                <span class="text-red-600 text-xs"><i class="fas fa-trash"></i> gelöscht {{ $msg->deleted_at->format('d.m.Y') }}</span>
+                            @elseif($msg->edited_at)
+                                <span class="text-amber-600 text-xs"><i class="fas fa-edit"></i> bearbeitet {{ $msg->edited_at->format('d.m.Y H:i') }}</span>
+                            @else
+                                <span class="text-green-600 text-xs"><i class="fas fa-check"></i></span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+            <div class="p-4 text-sm text-gray-400 italic">Keine Messenger-Nachrichten gesendet.</div>
+        @endif
+    </div>
+
+    {{-- ===== MESSENGER: MELDUNGEN ===== --}}
+    @php
+        $userReports = \App\Model\MessageReport::where('reporter_id', $user->id)->with('message')->get();
+    @endphp
+    @if($userReports->count())
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-600 to-red-500 px-5 py-3">
+            <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                <i class="fas fa-flag"></i>
+                Messenger – Ihre Meldungen
+            </h5>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Grund</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Gemeldet am</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Aufgelöst am</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($userReports as $report)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3 text-gray-900">{{ $report->reason }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $report->created_at->format('d.m.Y H:i') }} Uhr</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $report->resolved_at ? \Carbon\Carbon::parse($report->resolved_at)->format('d.m.Y H:i') . ' Uhr' : '–' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- ===== BEITRAGSMELDUNGEN ===== --}}
+    @php
+        $postReports = \App\Model\PostReport::where('reporter_id', $user->id)->with('post')->get();
+    @endphp
+    @if($postReports->count())
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-red-600 to-orange-500 px-5 py-3">
+            <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                <i class="fas fa-flag"></i>
+                Beitragsmeldungen
+            </h5>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Beitrag</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Grund</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Gemeldet am</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Aufgelöst am</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($postReports as $report)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3 text-gray-900">{{ $report->post?->header ?? '[gelöscht]' }}</td>
+                        <td class="px-5 py-3 text-gray-900">{{ $report->reason }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $report->created_at->format('d.m.Y H:i') }} Uhr</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $report->resolved_at ? $report->resolved_at->format('d.m.Y H:i') . ' Uhr' : '–' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- ===== ERINNERUNGSLOGS ===== --}}
+    @php
+        $reminderLogs = \App\Model\ReminderLog::where('user_id', $user->id)->with('post')->orderByDesc('sent_at')->get();
+    @endphp
+    @if($reminderLogs->count())
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-amber-600 to-orange-500 px-5 py-3">
+            <h5 class="text-lg font-bold text-white mb-0 flex items-center gap-2">
+                <i class="fas fa-bell"></i>
+                Erinnerungen (automatisch gesendet)
+            </h5>
+        </div>
+        <div class="p-3 bg-amber-50 border-b border-amber-100 text-xs text-amber-800">
+            <i class="fas fa-info-circle mr-1"></i>
+            Protokoll aller automatisch an Sie gesendeten Erinnerungen für Rückmeldungen, Lesebestätigungen und Anwesenheitsabfragen.
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Typ</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Nachricht</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Stufe</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Kanal</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Gesendet</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($reminderLogs as $log)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3">
+                            @if(str_contains($log->remindable_type, 'Rueckmeldungen'))
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"><i class="fas fa-reply"></i> Rückmeldung</span>
+                            @elseif(str_contains($log->remindable_type, 'Post'))
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-800 text-xs rounded-full"><i class="fas fa-check-double"></i> Lesebestätigung</span>
+                            @elseif(str_contains($log->remindable_type, 'ChildCheckIn'))
+                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"><i class="fas fa-calendar-check"></i> Anwesenheit</span>
+                            @else
+                                <span class="text-gray-600 text-xs">{{ class_basename($log->remindable_type) }}</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3 font-medium text-gray-900">{{ $log->post?->header ?? '–' }}</td>
+                        <td class="px-5 py-3">
+                            <span class="inline-flex items-center px-2 py-1 text-xs rounded-full
+                                {{ $log->level === 1 ? 'bg-green-100 text-green-800' : ($log->level === 2 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') }}">
+                                Stufe {{ $log->level }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3 text-gray-600 text-xs">{{ $log->channel }}</td>
+                        <td class="px-5 py-3 text-gray-600">{{ $log->sent_at->format('d.m.Y H:i') }} Uhr</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 
     {{-- ===== HINWEIS AUDIT-LOG ===== --}}
     <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 text-sm text-amber-900">

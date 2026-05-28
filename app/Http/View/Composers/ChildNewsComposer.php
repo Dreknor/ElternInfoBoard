@@ -30,9 +30,12 @@ class ChildNewsComposer
                 return $careSettings->groups_list;
             });
 
-            $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
-                return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
-            });
+            // Nur filtern, wenn beide Listen konfiguriert sind
+            if (! empty($allowedClasses) && ! empty($allowedGroups)) {
+                $children = $children->filter(function ($child) use ($allowedClasses, $allowedGroups) {
+                    return in_array($child->class_id, $allowedClasses) && in_array($child->group_id, $allowedGroups);
+                });
+            }
             $children = $children->load(['checkIns' => fn ($query) => $query->where('date', '>=', today())->where('date', '<=', Carbon::now()->addDays(40))])
                 ->sortBy(function ($child) {
                     return $child->checkIns->count() > 0 ? $child->checkIns->first()->date : now();

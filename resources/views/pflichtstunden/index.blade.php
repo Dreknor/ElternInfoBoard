@@ -16,7 +16,10 @@
         <div class="flex justify-end mb-4">
             @if($helpSite)
                 <a href="{{ route('sites.show', $helpSite->id) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-700 hover:text-indigo-700 font-medium rounded-lg transition-all duration-200">
+                   class="inline-flex items-center gap-2 px-4 py-2 border-2 font-medium rounded-lg transition-all duration-200"
+                   style="border-color: var(--color-primary); color: var(--color-primary)"
+                   onmouseover="this.style.backgroundColor='var(--color-primary-light)'"
+                   onmouseout="this.style.backgroundColor=''">
                     <i class="fas fa-question-circle"></i>
                     <span class="hidden sm:inline">Zur Erklärung</span>
                 </a>
@@ -30,9 +33,11 @@
 
             <!-- Progress Card -->
             @if($pflichtstunden_settings->gamification_show_progress)
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-md overflow-hidden border border-blue-200">
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 border-b border-blue-800">
-                    <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-0">
+            <div class="rounded-lg shadow-md overflow-hidden border"
+                 style="background: linear-gradient(to bottom right, var(--color-widget-primary-bg), var(--color-widget-body-bg)); border-color: var(--color-widget-primary-border)">
+                <div class="px-3 py-2 border-b"
+                     style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
+                    <h4 class="text-sm font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                         <i class="fas fa-chart-line"></i>
                         Fortschritt
                     </h4>
@@ -42,12 +47,12 @@
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-semibold text-gray-700">Fortschritt</span>
-                            <span class="text-sm font-bold text-blue-600">{{ $progress_percentage }}%</span>
+                            <span class="text-sm font-bold" style="color: var(--color-widget-primary-from)">{{ $progress_percentage }}%</span>
                         </div>
 
                         <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden shadow-inner">
-                            <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
-                                 style="width: {{ $progress_percentage }}%"></div>
+                            <div class="h-full transition-all duration-500"
+                                 style="width: {{ $progress_percentage }}%; background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))"></div>
                         </div>
 
                         <div class="text-center text-xs text-gray-600">
@@ -86,9 +91,11 @@
 
             <!-- Ranking Card -->
             @if($pflichtstunden_settings->gamification_show_ranking)
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-md overflow-hidden border border-purple-200">
-                <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-2 border-b border-purple-800">
-                    <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-0">
+            <div class="rounded-lg shadow-md overflow-hidden border"
+                 style="background: linear-gradient(to bottom right, var(--color-widget-accent-bg), var(--color-widget-body-bg)); border-color: var(--color-widget-accent-border)">
+                <div class="px-3 py-2 border-b"
+                     style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
+                    <h4 class="text-sm font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                         <i class="fas fa-trophy"></i>
                         Ranking
                     </h4>
@@ -103,7 +110,7 @@
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-semibold text-gray-700">Platzierung</span>
-                            <span class="text-2xl font-bold text-purple-600">{{ $your_rank }}.</span>
+                            <span class="text-2xl font-bold" style="color: var(--color-widget-accent-from)">{{ $your_rank }}.</span>
                         </div>
 
                         <div class="text-center text-xs text-gray-600">
@@ -111,13 +118,13 @@
                         </div>
 
                         <!-- Rank Badge -->
-                        <div class="mt-2 p-1.5 rounded-lg bg-white border border-purple-200 text-center">
+                        <div class="mt-2 p-1.5 rounded-lg bg-white border text-center" style="border-color: var(--color-widget-accent-border)">
                             @if($your_rank == 1)
                                 <i class="fas fa-medal text-yellow-500 text-lg"></i>
                                 <p class="text-md font-bold text-yellow-600 mt-1">🥇 Platz 1!</p>
                             @elseif($rank_percentage <= 25)
                                 <i class="fas fa-medal text-gray-400 text-lg"></i>
-                                <p class="text-md font-bold text-purple-600 mt-1">Top 25%!</p>
+                                <p class="text-md font-bold mt-1" style="color: var(--color-widget-accent-from)">Top 25%!</p>
                             @else
                                 <i class="fas fa-arrow-trend-up text-green-500 text-lg"></i>
                                 <p class="text-md text-gray-600 mt-1">Noch Platz nach oben 💪</p>
@@ -130,9 +137,11 @@
 
             <!-- Statistics/Comparison Card -->
             @if($pflichtstunden_settings->gamification_show_comparison)
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-md overflow-hidden border border-green-200">
-                <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-3 py-2 border-b border-green-800">
-                    <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-0">
+            <div class="rounded-lg shadow-md overflow-hidden border"
+                 style="background: linear-gradient(to bottom right, var(--color-widget-success-bg), var(--color-widget-body-bg)); border-color: var(--color-widget-success-border)">
+                <div class="px-3 py-2 border-b"
+                     style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border)">
+                    <h4 class="text-sm font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                         <i class="fas fa-chart-bar"></i>
                         Vergleich
                     </h4>
@@ -154,7 +163,7 @@
                             </div>
                         </div>
 
-                        <div class="pt-1.5 border-t border-green-200">
+                        <div class="pt-1.5 border-t" style="border-color: var(--color-widget-success-border)">
                             @if($progress_percentage > $avg_progress)
                                 <div class="flex items-center gap-2 text-xs">
                                     <i class="fas fa-check-circle text-green-500"></i>
@@ -181,8 +190,9 @@
 
         <!-- Pflichtstunden Übersicht Card -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 border-b border-blue-800">
-                <h3 class="text-xl font-bold text-white flex items-center gap-2 mb-0">
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
+                <h3 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                     <i class="fas fa-tasks"></i>
                     Pflichtstunden
                 </h3>
@@ -318,7 +328,7 @@
                                 <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
                                     Gesamtstunden:
                                 </th>
-                                <th class="px-4 py-3 text-sm font-bold text-blue-600">
+                                <th class="px-4 py-3 text-sm font-bold" style="color: var(--color-widget-primary-from)">
                                     @if($pflichtstunden->sum('duration') > 60)
                                         {{ floor($pflichtstunden->sum('duration') / 60) }} Std. {{ $pflichtstunden->sum('duration') % 60 }} Min.
                                     @else
@@ -369,8 +379,9 @@
 
         <!-- Pflichtstunden eintragen Card -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 border-b border-green-800">
-                <h3 class="text-xl font-bold text-white flex items-center gap-2 mb-0">
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border)">
+                <h3 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
                     <i class="fas fa-plus-circle"></i>
                     Pflichtstunden eintragen
                 </h3>
@@ -453,7 +464,10 @@
                     @endif
 
                     <button type="submit"
-                            class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
+                            class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 text-white font-medium rounded-lg transition-colors duration-200"
+                            style="background-color: var(--color-widget-success-from)"
+                            onmouseover="this.style.backgroundColor='var(--color-widget-success-to)'"
+                            onmouseout="this.style.backgroundColor='var(--color-widget-success-from)'">
                         <i class="fas fa-save"></i>
                         Pflichtstunden eintragen
                     </button>

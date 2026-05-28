@@ -121,6 +121,16 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         return $this->hasMany(ReadReceipts::class);
     }
 
+    public function reports(): HasMany
+    {
+        return $this->hasMany(PostReport::class);
+    }
+
+    public function openReports(): HasMany
+    {
+        return $this->hasMany(PostReport::class)->whereNull('resolved_at');
+    }
+
     public function userReaction(?User $user = null)
     {
         if (is_null($user)) {

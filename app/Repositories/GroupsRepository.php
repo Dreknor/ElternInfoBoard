@@ -12,9 +12,12 @@ class GroupsRepository
 {
     public function getGroups(array $gruppen): Collection
     {
+        if (empty($gruppen)) {
+            return new Collection;
+        }
+
         $groups = new Collection;
 
-        // ($gruppen);
         if ($gruppen[0] == 'all') {
             $groups = Group::where('protected', 0)->get();
         }
@@ -26,11 +29,7 @@ class GroupsRepository
         }
 
         $groups = $groups->merge(Group::find($gruppen));
-        $groups->unique();
-
-        if (count($gruppen) < 1) {
-            return [];
-        }
+        $groups = $groups->unique();
 
         return $groups;
 

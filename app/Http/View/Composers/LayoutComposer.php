@@ -8,7 +8,6 @@ class LayoutComposer
 {
     public function compose($view, GeneralSetting $settings): void
     {
-        // KeyCloak wird jetzt nur über ENV gesteuert
-        $view->with('layout', env('KEYCLOAK_ENABLED', false));
+        $view->with('layout', config('services.keycloak.enabled'));
     }
 }

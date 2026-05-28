@@ -2,16 +2,25 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-header border-bottom">
-                Termin erstellen
+        <div class="card" style="border-color: var(--color-widget-success-border);">
+            <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                <span class="font-semibold flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                    <i class="fas fa-calendar-plus"></i>
+                    Termin erstellen
+                </span>
             </div>
             <div class="card-body">
-                <form action="{{url('/termin')}}" method="post" class="form form-horizontal" id="terminForm">
+                <form action="{{url('/termine')}}" method="post" class="form form-horizontal" id="terminForm">
                     @csrf
                     <div class="row">
                         <div class="col-l-6 col-md-12 col-sm-12">
-                            <div class="card">
+                            <div class="card" style="border-color: var(--color-widget-success-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                                    <span class="text-sm font-semibold flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-calendar-day"></i>
+                                        Termindaten
+                                    </span>
+                                </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-12">
@@ -60,7 +69,13 @@
 
                         </div>
                         <div class="col-l-6 col-md-12 col-sm-12">
-                            <div class="card">
+                            <div class="card" style="border-color: var(--color-widget-success-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                                    <span class="text-sm font-semibold flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-users"></i>
+                                        Gruppen
+                                    </span>
+                                </div>
                                 <div class="card-body">
                                     @include('include.formGroups')
                                 </div>

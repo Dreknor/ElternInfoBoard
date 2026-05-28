@@ -12,35 +12,51 @@
     }" x-init="window.location.hash && setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100)">
         <!-- Header -->
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Hort-Modul</h1>
-            <p class="text-gray-600">Anwesenheit, Schickzeiten und Abholvollmachten verwalten</p>
+            <h1 class="text-2xl font-bold mb-2" style="color: var(--color-text-primary);">Hort-Modul</h1>
+            <p style="color: var(--color-text-secondary);">Anwesenheit, Schickzeiten und Abholvollmachten verwalten</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
             <!-- Tab Navigation -->
-            <div class="border-b border-gray-200">
+            <div class="border-b" style="border-color: var(--color-card-border);">
                 <nav class="flex flex-wrap -mb-px" role="tablist">
+                    <!-- Anwesenheit Tab -->
                     <button @click="activeTab = 'anwesenheit'"
-                            :class="activeTab === 'anwesenheit' ? 'border-teal-600 text-teal-600 bg-teal-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
-                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+                            :class="activeTab === 'anwesenheit' ? '' : 'border-transparent'"
+                            :style="activeTab === 'anwesenheit'
+                                ? 'border-color: var(--color-widget-success-from); color: var(--color-widget-success-from); background-color: var(--color-primary-light);'
+                                : 'color: var(--color-text-secondary);'">
                         <i class="fas fa-child"></i>
                         <span class="hidden sm:inline">Anwesenheit</span>
                     </button>
+                    <!-- Schickzeiten Tab -->
                     <button @click="activeTab = 'schickzeiten'"
-                            :class="activeTab === 'schickzeiten' ? 'border-green-600 text-green-600 bg-green-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
-                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+                            :class="activeTab === 'schickzeiten' ? '' : 'border-transparent'"
+                            :style="activeTab === 'schickzeiten'
+                                ? 'border-color: var(--color-primary); color: var(--color-primary); background-color: var(--color-primary-light);'
+                                : 'color: var(--color-text-secondary);'">
                         <i class="fas fa-clock"></i>
                         <span class="hidden sm:inline">Schickzeiten</span>
                     </button>
+                    <!-- Anwesenheitsabfrage Tab -->
                     <button @click="activeTab = 'anwesenheitsabfrage'"
-                            :class="activeTab === 'anwesenheitsabfrage' ? 'border-indigo-600 text-indigo-600 bg-indigo-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
-                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+                            :class="activeTab === 'anwesenheitsabfrage' ? '' : 'border-transparent'"
+                            :style="activeTab === 'anwesenheitsabfrage'
+                                ? 'border-color: var(--color-secondary); color: var(--color-secondary); background-color: var(--color-primary-light);'
+                                : 'color: var(--color-text-secondary);'">
                         <i class="fas fa-calendar-check"></i>
                         <span class="hidden sm:inline">Anwesenheitsabfrage</span>
                     </button>
+                    <!-- Vollmacht Tab -->
                     <button @click="activeTab = 'vollmacht'"
-                            :class="activeTab === 'vollmacht' ? 'border-amber-600 text-amber-600 bg-amber-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
-                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+                            :class="activeTab === 'vollmacht' ? '' : 'border-transparent'"
+                            :style="activeTab === 'vollmacht'
+                                ? 'border-color: var(--color-widget-warning-from); color: var(--color-widget-warning-from); background-color: var(--color-primary-light);'
+                                : 'color: var(--color-text-secondary);'">
                         <i class="fas fa-user-shield"></i>
                         <span class="hidden sm:inline">Abholvollmacht</span>
                     </button>
@@ -69,12 +85,10 @@
                      x-transition:enter-start="opacity-0 transform scale-95"
                      x-transition:enter-end="opacity-100 transform scale-100"
                      style="display: none;">
-
-                    <!-- Info Box -->
-                    <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <div class="mb-6 border-l-4 p-4 rounded" style="background: var(--color-primary-light); border-color: var(--color-primary);">
                         <div class="flex items-start gap-3">
-                            <i class="fas fa-info-circle text-blue-600 mt-1"></i>
-                            <div class="text-sm text-blue-800">
+                            <i class="fas fa-info-circle mt-1" style="color: var(--color-primary);"></i>
+                            <div class="text-sm" style="color: var(--color-text-primary);">
                                 @include('schickzeiten.infos')
                             </div>
                         </div>
@@ -83,23 +97,25 @@
                     <!-- Kinder-Schickzeiten -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         @foreach($children as $child)
-                            <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                            <div class="rounded-lg shadow overflow-hidden" style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
                                 <!-- Child Header -->
-                                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3">
-                                    <h3 class="text-lg font-bold text-white mb-0">
+                                <div class="px-4 py-3" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to));">
+                                    <h3 class="text-lg font-bold mb-0" style="color: var(--color-widget-header-text);">
                                         {{$child->first_name}} {{$child->last_name}}
                                     </h3>
                                 </div>
-                                <div class="p-4 border-b border-gray-200">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-calendar-day text-purple-600"></i>
+
+                                <!-- Tagesaktuelle Schickzeiten -->
+                                <div class="p-4 border-b" style="border-color: var(--color-card-border);">
+                                    <h4 class="text-sm font-semibold mb-3 flex items-center gap-2" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-calendar-day" style="color: var(--color-widget-accent-from);"></i>
                                         Tagesaktuelle Schickzeiten
                                     </h4>
                                     @forelse($child->schickzeiten->where('specific_date', '!=', NULL) as $schickzeit)
-                                        <div class="flex items-start justify-between p-3 bg-purple-50 rounded-lg mb-2">
+                                        <div class="flex items-start justify-between p-3 rounded-lg mb-2" style="background: var(--color-body-bg); border: 1px solid var(--color-card-border);">
                                             <div>
-                                                <div class="font-medium text-gray-900">{{$schickzeit->specific_date->format('d.m.Y')}}</div>
-                                                <div class="text-sm text-gray-600">
+                                                <div class="font-medium" style="color: var(--color-text-primary);">{{$schickzeit->specific_date->format('d.m.Y')}}</div>
+                                                <div class="text-sm" style="color: var(--color-text-secondary);">
                                                     @if($schickzeit->type =="genau")
                                                         <i class="fas fa-clock text-green-600"></i> Genau {{$schickzeit->time?->format('H:i')}} Uhr
                                                     @else
@@ -121,22 +137,24 @@
                                             </form>
                                         </div>
                                     @empty
-                                        <p class="text-sm text-gray-400 italic">Keine tagesaktuellen Zeiten hinterlegt</p>
+                                        <p class="text-sm italic" style="color: var(--color-text-secondary);">Keine tagesaktuellen Zeiten hinterlegt</p>
                                     @endforelse
                                 </div>
 
                                 <!-- Regelmäßige Schickzeiten -->
-                                <div class="p-4 border-b border-gray-200">
-                                    <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-calendar-week text-blue-600"></i>
+                                <div class="p-4 border-b" style="border-color: var(--color-card-border);">
+                                    <h4 class="text-sm font-semibold mb-3 flex items-center gap-2" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-calendar-week" style="color: var(--color-primary);"></i>
                                         Regelmäßige Schickzeiten
                                     </h4>
                                     <ul class="space-y-2">
                                         @for($x=1;$x<6;$x++)
-                                            <li class="flex items-start justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-150" x-data="{ showMenu: false }">
+                                            <li class="flex items-start justify-between p-3 rounded-lg transition-colors duration-150"
+                                                style="background: var(--color-body-bg);"
+                                                x-data="{ showMenu: false }">
                                                 <div class="flex-1">
-                                                    <div class="font-medium text-gray-900 mb-1">{{$weekdays[$x]}}</div>
-                                                    <div class="text-sm text-gray-600">
+                                                    <div class="font-medium mb-1" style="color: var(--color-text-primary);">{{$weekdays[$x]}}</div>
+                                                    <div class="text-sm" style="color: var(--color-text-secondary);">
                                                         @if($child->schickzeiten->where('weekday', $x)->first())
                                                             @if($child->schickzeiten->where('weekday', $x)->first()->type == 'genau')
                                                                 <i class="fas fa-clock text-green-600"></i>
@@ -150,14 +168,15 @@
                                                                 Uhr
                                                             @endif
                                                         @else
-                                                            <span class="text-gray-400 italic">Keine Zeit hinterlegt</span>
+                                                            <span class="italic" style="color: var(--color-text-secondary); opacity: 0.7;">Keine Zeit hinterlegt</span>
                                                         @endif
                                                     </div>
                                                 </div>
                                                 <!-- Actions Dropdown -->
                                                 <div class="relative ml-2">
                                                     <button @click="showMenu = !showMenu" @click.away="showMenu = false" type="button"
-                                                            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors duration-150">
+                                                            class="p-2 rounded transition-colors duration-150"
+                                                            style="color: var(--color-text-secondary);">
                                                         <i class="fa fa-ellipsis-v"></i>
                                                     </button>
                                                     <div x-show="showMenu"
@@ -167,10 +186,11 @@
                                                          x-transition:leave="transition ease-in duration-75"
                                                          x-transition:leave-start="opacity-100 scale-100"
                                                          x-transition:leave-end="opacity-0 scale-95"
-                                                         class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
-                                                         style="display: none;">
+                                                         class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-10"
+                                                         style="background: var(--color-card-bg); border: 1px solid var(--color-card-border); display: none;">
                                                         <a href="{{url("schickzeiten/edit/$x/".$child->id)}}"
-                                                           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-t-lg transition-colors duration-150">
+                                                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-t-lg transition-colors duration-150 hover:bg-[var(--color-primary-light)]"
+                                                           style="color: var(--color-text-primary);">
                                                             <i class="fa fa-edit"></i> Bearbeiten
                                                         </a>
                                                         @if($child->schickzeiten->where('weekday', $x)->first())
@@ -188,15 +208,13 @@
                                     </ul>
                                 </div>
 
-                                <!-- Tagesaktuelle Schickzeiten -->
-
                                 <!-- Footer -->
-                                <div class="p-4 bg-gray-50">
+                                <div class="p-4" style="background: var(--color-body-bg);">
                                     <form action="{{url("schickzeiten/$child->id")}}" method="post">
                                         @csrf
                                         @method('delete')
                                         <button type="submit"
-                                                class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                                                class="w-full px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700">
                                             <i class="fa fa-trash"></i>
                                             Alle Schickzeiten löschen
                                         </button>
@@ -207,9 +225,9 @@
                     </div>
 
                     <!-- Neue tagesaktuelle Schickzeit -->
-                    <div class="mt-6 bg-white rounded-lg shadow border border-gray-200 overflow-hidden max-w-2xl mx-auto">
-                        <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3">
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                    <div class="mt-6 rounded-lg shadow overflow-hidden max-w-2xl mx-auto" style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                        <div class="px-4 py-3" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to));">
+                            <h3 class="text-lg font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text);">
                                 <i class="fas fa-plus-circle"></i>
                                 Neue tagesaktuelle Schickzeit anlegen
                             </h3>
@@ -218,19 +236,25 @@
                             <form action="{{route('schickzeiten.store')}}" method="post">
                                 @csrf
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-calendar-alt text-blue-600"></i> Datum
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-calendar-alt" style="color: var(--color-primary);"></i> Datum
                                     </label>
                                     <input type="date" name="specific_date" id="specific_date"
                                            value="{{old('specific_date', \Carbon\Carbon::now()->format('Y-m-d'))}}"
-                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                                           class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                           style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                           onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                           onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')">
                                 </div>
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-child text-blue-600"></i> Kind
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-child" style="color: var(--color-primary);"></i> Kind
                                     </label>
                                     <select name="child_id" id="child_id"
-                                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                                            class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                            style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                            onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                            onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')">
                                         <option value="" disabled selected>Bitte Kind auswählen</option>
                                         @foreach($children as $child)
                                             <option value="{{$child->id}}" @if(old('child_id') == $child->id) selected @endif>
@@ -240,21 +264,27 @@
                                     </select>
                                 </div>
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-list text-blue-600"></i> Typ
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-list" style="color: var(--color-primary);"></i> Typ
                                     </label>
                                     <select name="type" id="type" x-model="showTypeForm"
-                                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                                            class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                            style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                            onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                            onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')">
                                         <option value="genau">Genau um ... Uhr</option>
                                         <option value="ab">Ab ... bis ... Uhr</option>
                                     </select>
                                 </div>
                                 <div class="mb-4" x-show="showTypeForm === 'genau'">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        <i class="fas fa-clock text-blue-600"></i> Zeit
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-clock" style="color: var(--color-primary);"></i> Zeit
                                     </label>
                                     <input name="time" type="time"
-                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                           class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                           style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                           onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                           onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')"
                                            min="{{$vorgaben->schicken_ab}}"
                                            max="{{$vorgaben->schicken_bis}}"
                                            value="{{old('time')}}">
@@ -262,21 +292,27 @@
                                 <div class="mb-4" x-show="showTypeForm === 'ab'" style="display: none;">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-clock text-blue-600"></i> Ab ... Uhr
+                                            <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
+                                                <i class="fas fa-clock" style="color: var(--color-primary);"></i> Ab ... Uhr
                                             </label>
                                             <input name="time_ab" type="time"
-                                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                   class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                                   style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                                   onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                                   onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')"
                                                    min="{{$vorgaben->schicken_ab}}"
                                                    max="{{$vorgaben->schicken_bis}}"
                                                    value="{{old('time_ab')}}">
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <label class="block text-sm font-medium mb-2" style="color: var(--color-text-primary);">
                                                 <i class="fas fa-clock text-amber-600"></i> Spätestens (optional)
                                             </label>
                                             <input name="time_spaet" type="time"
-                                                   class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                                   class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                                   style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                                   onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                                   onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')"
                                                    min="{{$vorgaben->schicken_ab}}"
                                                    max="{{$vorgaben->schicken_bis}}"
                                                    value="{{old('time_spaet')}}">
@@ -284,7 +320,10 @@
                                     </div>
                                 </div>
                                 <button type="submit"
-                                        class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                                        class="w-full px-4 py-3 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                                        style="background-color: var(--color-widget-success-from);"
+                                        onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-success-to')"
+                                        onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-success-from')">
                                     <i class="fas fa-plus"></i>
                                     Neue individuelle Schickzeit anlegen
                                 </button>
@@ -299,137 +338,175 @@
                      x-transition:enter-start="opacity-0 transform scale-95"
                      x-transition:enter-end="opacity-100 transform scale-100"
                      style="display: none;">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        @foreach($children as $child)
-                            <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-                                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
-                                    <h3 class="text-lg font-bold text-white mb-0">
-                                        {{$child->first_name}} {{$child->last_name}}
-                                    </h3>
+
+                    <form action="{{ route('attendance.bulk-update') }}" method="post" id="bulk-attendance-form">
+                        @csrf
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            @foreach($children as $child)
+                                @php
+                                    $openCheckIns = $child->checkIns->filter(function ($ci) {
+                                        return $ci->date->isFuture() || $ci->date->isToday();
+                                    })->sortBy('date');
+                                @endphp
+                                <div class="rounded-lg shadow overflow-hidden"
+                                     style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);"
+                                     x-data="{
+                                        responses: {
+                                            @foreach($openCheckIns as $checkIn)
+                                                '{{ $checkIn->id }}': {{ $checkIn->should_be === true ? 'true' : ($checkIn->should_be === false ? 'false' : 'null') }},
+                                            @endforeach
+                                        },
+                                        setAll(value) {
+                                            @foreach($openCheckIns as $checkIn)
+                                                @php $locked = $checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now()); @endphp
+                                                @unless($locked)
+                                                    this.responses['{{ $checkIn->id }}'] = value;
+                                                @endunless
+                                            @endforeach
+                                        }
+                                     }">
+                                    <!-- Card Header -->
+                                    <div class="px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+                                         style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to));">
+                                        <h3 class="text-lg font-bold mb-0" style="color: var(--color-widget-header-text);">
+                                            <i class="fas fa-child mr-1"></i>
+                                            {{ $child->first_name }} {{ $child->last_name }}
+                                        </h3>
+                            @if($openCheckIns->count() > 0)
+                                <div class="flex gap-2">
+                                    <button type="button" @click="setAll(true)"
+                                            class="inline-flex items-center gap-1 px-3 py-1 text-xs rounded hover:bg-white/30 transition-colors font-semibold"
+                                            style="background: rgba(255,255,255,0.2); color: var(--color-widget-header-text);">
+                                        <i class="fas fa-check-double"></i> Alle anmelden
+                                    </button>
+                                    <button type="button" @click="setAll(false)"
+                                            class="inline-flex items-center gap-1 px-3 py-1 text-xs rounded hover:bg-white/20 transition-colors font-semibold border border-white/30"
+                                            style="background: rgba(255,255,255,0.1); color: var(--color-widget-header-text);">
+                                        <i class="fas fa-times"></i> Alle abmelden
+                                    </button>
                                 </div>
-                                <div class="p-4">
-                                    <!-- Desktop Ansicht -->
-                                    <div class="hidden md:block overflow-x-auto">
-                                        <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
-                                                <tr>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Datum</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Angemeldet?</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Hinweis</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Aktion</th>
-                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Frist</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-gray-200">
-                                            @forelse($child->checkIns->sortBy('date') as $checkIn)
-                                                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                                    <td class="px-3 py-2 text-sm text-gray-900">{{$checkIn->date->dayName}}, {{$checkIn->date->format('d.m.Y')}}</td>
-                                                    <td class="px-3 py-2">
-                                                        @if($checkIn->should_be)
-                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                <i class="fas fa-check mr-1"></i> Ja
-                                                            </span>
-                                                        @else
-                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                                <i class="fas fa-times mr-1"></i> Nein
-                                                            </span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-3 py-2 text-sm text-gray-600">{{$checkIn->comment}}</td>
-                                                    <td class="px-3 py-2">
-                                                        @if(!$checkIn->should_be)
-                                                            @if(($checkIn->lock_at && $checkIn->lock_at->endOfDay()?->gte(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
-                                                                <form action="{{route('checkIn.anmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                                    @csrf
-                                                                    @method('put')
-                                                                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors duration-150">
-                                                                        <i class="fa fa-check"></i> Anmelden
-                                                                    </button>
-                                                                </form>
-                                                            @else
-                                                                <span class="text-xs text-red-600">Zeitraum abgelaufen</span>
-                                                            @endif
-                                                        @else
-                                                            <form action="{{route('checkIn.abmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                                @csrf
-                                                                @method('PUT')
-                                                                <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-150">
-                                                                    <i class="fa fa-times"></i> Abmelden
-                                                                </button>
-                                                            </form>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-3 py-2 text-sm text-gray-600">
-                                                        @if($checkIn->lock_at != null)
-                                                            {{$checkIn->lock_at?->format('d.m.Y')}}
-                                                        @else
-                                                            <span class="text-gray-400">-</span>
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="px-3 py-4 text-center text-sm text-gray-500">Keine Anwesenheitsabfragen vorhanden</td>
-                                                </tr>
-                                            @endforelse
-                                            </tbody>
-                                        </table>
+                            @endif
                                     </div>
-                                    <!-- Mobile Ansicht -->
-                                    <div class="md:hidden space-y-3">
-                                        @forelse($child->checkIns->sortBy('date') as $checkIn)
-                                            <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                                                <div class="mb-2"><strong class="text-gray-700">Datum:</strong> {{$checkIn->date->dayName}}, {{$checkIn->date->format('d.m.Y')}}</div>
-                                                <div class="mb-2">
-                                                    <strong class="text-gray-700">Angemeldet?</strong>
-                                                    @if($checkIn->should_be)
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
-                                                            <i class="fas fa-check mr-1"></i> Ja
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
-                                                            <i class="fas fa-times mr-1"></i> Nein
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                                @if($checkIn->comment)
-                                                    <div class="mb-2"><strong class="text-gray-700">Hinweis:</strong> {{$checkIn->comment}}</div>
-                                                @endif
-                                                @if($checkIn->lock_at != null)
-                                                    <div class="mb-2"><strong class="text-gray-700">Frist:</strong> {{$checkIn->lock_at?->format('d.m.Y')}}</div>
-                                                @endif
-                                                <div class="mt-3">
-                                                    @if(!$checkIn->should_be)
-                                                        @if(($checkIn->lock_at && $checkIn->lock_at->endOfDay()?->gte(now()) or (!$checkIn->lock_at && $checkIn->date->gt(now()))))
-                                                            <form action="{{route('checkIn.anmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                                @csrf
-                                                                @method('put')
-                                                                <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors duration-150">
-                                                                    <i class="fa fa-check"></i> Anmelden
-                                                                </button>
-                                                            </form>
-                                                        @else
-                                                            <span class="text-sm text-red-600">Zeitraum abgelaufen</span>
+                                    <div class="p-4 space-y-2">
+                                        @forelse($openCheckIns as $checkIn)
+                                            @php
+                                                $locked = $checkIn->lock_at && $checkIn->lock_at->endOfDay()->lt(now());
+                                                $existingSchickzeit = $child->schickzeiten->first(
+                                                    fn($s) => $s->specific_date !== null && $s->specific_date->isSameDay($checkIn->date)
+                                                );
+                                                $prefillTime = null;
+                                                $prefillType = 'genau';
+                                                if ($existingSchickzeit) {
+                                                    $prefillType = $existingSchickzeit->type ?? 'genau';
+                                                    $prefillTime = $prefillType === 'ab'
+                                                        ? $existingSchickzeit->time_ab?->format('H:i')
+                                                        : $existingSchickzeit->time?->format('H:i');
+                                                }
+                                            @endphp
+                                            <div class="flex flex-col gap-1 py-2 border-b last:border-b-0 {{ $locked ? 'opacity-50' : '' }}"
+                                                 style="border-color: var(--color-card-border);">
+                                                {{-- Hauptzeile: Datum | Ja/Nein | Schickzeit | Frist --}}
+                                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                                    <input type="hidden" name="responses[{{ $child->id }}_{{ $checkIn->id }}][check_in_id]" value="{{ $checkIn->id }}">
+
+                                                    {{-- Hidden input für should_be, gesteuert durch Alpine --}}
+                                                    <input type="hidden"
+                                                           name="responses[{{ $child->id }}_{{ $checkIn->id }}][should_be]"
+                                                           :value="responses['{{ $checkIn->id }}'] === true ? '1' : '0'">
+
+                                                    {{-- Datum --}}
+                                                    <div class="font-medium text-sm" style="min-width: 150px; color: var(--color-text-primary);">
+                                                        {{ $checkIn->date->locale('de')->isoFormat('dd, D. MMM') }}
+                                                    </div>
+
+                                                    {{-- Ja/Nein Toggle --}}
+                                                    <div class="flex gap-1">
+                                                        <button type="button"
+                                                                @click="responses['{{ $checkIn->id }}'] = true"
+                                                                :class="responses['{{ $checkIn->id }}'] === true ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                                class="px-3 py-1 rounded text-xs font-semibold transition-all"
+                                                                {{ $locked ? 'disabled' : '' }}>
+                                                            <i class="fas fa-check"></i> Ja
+                                                        </button>
+                                                        <button type="button"
+                                                                @click="responses['{{ $checkIn->id }}'] = false"
+                                                                :class="responses['{{ $checkIn->id }}'] === false ? 'bg-red-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                                class="px-3 py-1 rounded text-xs font-semibold transition-all"
+                                                                {{ $locked ? 'disabled' : '' }}>
+                                                            <i class="fas fa-times"></i> Nein
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- Schickzeit --}}
+                                                    <div x-show="responses['{{ $checkIn->id }}'] === true"
+                                                         x-transition
+                                                         class="flex items-center gap-2">
+                                                        <label class="text-xs whitespace-nowrap" style="color: var(--color-text-secondary);">
+                                                            🕐 Schickzeit:{{ $existingSchickzeit ? ' (vorbelegt)' : '' }}
+                                                        </label>
+                                                        <input type="time"
+                                                               name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_time]"
+                                                               class="px-2 py-1 border rounded text-sm"
+                                                               style="width: 100px;
+                                                                      background: var(--color-input-bg);
+                                                                      color: var(--color-text-primary);
+                                                                      border-color: {{ $existingSchickzeit ? 'var(--color-secondary)' : 'var(--color-input-border)' }};
+                                                                      @if($existingSchickzeit) background-color: var(--color-primary-light); @endif"
+                                                               onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
+                                                               onblur="this.style.borderColor='{{ $existingSchickzeit ? 'var(--color-secondary)' : 'var(--color-input-border)' }}'"
+                                                               value="{{ $prefillTime }}">
+                                                        <input type="hidden"
+                                                               name="responses[{{ $child->id }}_{{ $checkIn->id }}][schickzeit_type]"
+                                                               value="{{ $prefillType }}">
+                                                        @if($existingSchickzeit)
+                                                            <span class="text-xs" style="color: var(--color-secondary);" title="Bereits hinterlegte Schickzeit">
+                                                                <i class="fas fa-clock"></i>
+                                                            </span>
                                                         @endif
-                                                    @else
-                                                        <form action="{{route('checkIn.abmelden', ['childCheckIn' => $checkIn->id])}}" method="post">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-150">
-                                                                <i class="fa fa-times"></i> Abmelden
-                                                            </button>
-                                                        </form>
+                                                    </div>
+
+                                                    {{-- Frist --}}
+                                                    @if($checkIn->lock_at)
+                                                        <small class="ml-auto whitespace-nowrap" style="color: var(--color-text-secondary);">
+                                                            bis {{ $checkIn->lock_at->format('d.m.') }}
+                                                            @if($locked)
+                                                                <span class="text-red-500">🔒</span>
+                                                            @endif
+                                                        </small>
                                                     @endif
                                                 </div>
+
+                                                {{-- Kommentar --}}
+                                                @if($checkIn->comment)
+                                                    <div class="flex items-start gap-2 px-2 py-1.5 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                                                        <i class="fas fa-comment-dots text-amber-500 mt-0.5 shrink-0"></i>
+                                                        <span>{{ $checkIn->comment }}</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @empty
-                                            <div class="text-center py-4 text-gray-500">Keine Anwesenheitsabfragen vorhanden</div>
+                                            <div class="text-center py-4" style="color: var(--color-text-secondary);">
+                                                <i class="fas fa-inbox text-2xl mb-2" style="color: var(--color-card-border);"></i>
+                                                <p class="text-sm">Keine offenen Anwesenheitsabfragen</p>
+                                            </div>
                                         @endforelse
                                     </div>
                                 </div>
+                            @endforeach
+                        </div>
+
+                        @if($children->flatMap(fn($c) => $c->checkIns->filter(fn($ci) => $ci->date->isFuture() || $ci->date->isToday()))->count() > 0)
+                            <div class="text-center mt-6">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+                                        style="background-color: var(--color-secondary);"
+                                        onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-accent-from')"
+                                        onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-secondary')">
+                                    <i class="fas fa-save"></i> Alle Antworten speichern
+                                </button>
                             </div>
-                        @endforeach
-                    </div>
+                        @endif
+                    </form>
                 </div>
 
                 <!-- Vollmacht Tab -->
@@ -440,25 +517,25 @@
                      style="display: none;">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         @foreach($children as $child)
-                            <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-                                <div class="bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3">
-                                    <h3 class="text-lg font-bold text-white mb-0">
+                            <div class="rounded-lg shadow overflow-hidden" style="background: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+                                <div class="px-4 py-3" style="background: linear-gradient(to right, var(--color-widget-warning-from), var(--color-widget-warning-to));">
+                                    <h3 class="text-lg font-bold mb-0" style="color: var(--color-widget-header-text);">
                                         {{$child->first_name}} {{$child->last_name}}
                                     </h3>
                                 </div>
                                 <div class="p-4">
                                     @if($child->mandates->isEmpty())
-                                        <div class="text-center py-4 text-gray-500">
-                                            <i class="fas fa-info-circle text-blue-500 mb-2"></i>
+                                        <div class="text-center py-4" style="color: var(--color-text-secondary);">
+                                            <i class="fas fa-info-circle mb-2" style="color: var(--color-primary);"></i>
                                             <p class="text-sm">Keine Abholvollmachten hinterlegt</p>
                                         </div>
                                     @else
                                         <ul class="space-y-2">
                                             @foreach($child->mandates as $mandate)
-                                                <li class="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                                                <li class="flex items-start justify-between p-3 rounded-lg" style="background: var(--color-body-bg);">
                                                     <div class="flex-1">
-                                                        <div class="font-medium text-gray-900">{{$mandate->mandate_name}}</div>
-                                                        <div class="text-sm text-gray-600">{{$mandate?->mandate_description}}</div>
+                                                        <div class="font-medium" style="color: var(--color-text-primary);">{{$mandate->mandate_name}}</div>
+                                                        <div class="text-sm" style="color: var(--color-text-secondary);">{{$mandate?->mandate_description}}</div>
                                                     </div>
                                                     <form action="{{route('child.mandate.destroy', ['mandate' => $mandate->id, 'child' => $child->id])}}" method="post">
                                                         @csrf
@@ -473,23 +550,32 @@
                                         </ul>
                                     @endif
                                 </div>
-                                <div class="p-4 bg-gray-50 border-t border-gray-200">
+                                <div class="p-4 border-t" style="background: var(--color-body-bg); border-color: var(--color-card-border);">
                                     <form action="{{route('child.mandate.store', ['child' => $child->id])}}" method="post">
                                         @csrf
                                         <div class="mb-3">
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Name der bevollmächtigten Person</label>
+                                            <label class="block text-sm font-medium mb-1" style="color: var(--color-text-primary);">Name der bevollmächtigten Person</label>
                                             <input type="text" name="mandate_name"
-                                                   class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 outline-none"
+                                                   class="w-full px-3 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                                   style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                                   onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-warning-from')"
+                                                   onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')"
                                                    value="{{old('mandate_name')}}" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung (z.B. Verwandtschaftsverhältnis, Telefonnummer)</label>
+                                            <label class="block text-sm font-medium mb-1" style="color: var(--color-text-primary);">Beschreibung (z.B. Verwandtschaftsverhältnis, Telefonnummer)</label>
                                             <textarea name="mandate_description"
-                                                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-200 outline-none"
+                                                      class="w-full px-3 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                                      style="background: var(--color-input-bg); border-color: var(--color-input-border); color: var(--color-text-primary);"
+                                                      onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-warning-from')"
+                                                      onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')"
                                                       rows="2" required>{{old('mandate_description')}}</textarea>
                                         </div>
                                         <button type="submit"
-                                                class="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                                                class="w-full px-4 py-2 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                                                style="background-color: var(--color-widget-warning-from);"
+                                                onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-warning-to')"
+                                                onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-warning-from')">
                                             <i class="fas fa-plus"></i>
                                             Neue Abholvollmacht anlegen
                                         </button>

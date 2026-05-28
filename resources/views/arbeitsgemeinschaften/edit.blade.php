@@ -1,71 +1,88 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">
-                <h4>Arbeitsgemeinschaft bearbeiten</h2>
+    <div class="container-fluid px-4 py-3">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="px-4 py-3 border-b"
+                 style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
+                <h4 class="text-xl font-bold mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text)">
+                    <i class="fas fa-edit"></i>
+                    Arbeitsgemeinschaft bearbeiten
+                </h4>
             </div>
-            <div class="card-body">
-                <form action="{{ route('verwaltung.arbeitsgemeinschaften.update', $arbeitsgemeinschaft) }}" method="POST">
+
+            <div class="p-6">
+                <form action="{{ route('verwaltung.arbeitsgemeinschaften.update', $arbeitsgemeinschaft) }}" method="POST" class="space-y-5">
                     @csrf
                     @method('PUT')
 
-                    <div class="row mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Linke Spalte -->
-                        <div class="col-md-6">
+                        <div class="space-y-4">
                             <!-- Name -->
-                            <div class="mb-3">
-                                <label for="name" class="form-label fw-bold">Name der AG</label>
+                            <div>
+                                <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-tag mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                    Name der AG
+                                </label>
                                 <input type="text"
-                                       class="form-control @error('name') is-invalid @enderror"
-                                       id="name"
-                                       name="name"
-                                       value="{{ old('name', $arbeitsgemeinschaft->name) }}"
-                                       required>
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('name') border-red-500 @enderror"
+                                       id="name" name="name"
+                                       value="{{ old('name', $arbeitsgemeinschaft->name) }}" required
+                                       onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                       onblur="this.style.borderColor='#d1d5db'">
                                 @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Beschreibung -->
-                            <div class="mb-3">
-                                <label for="description" class="form-label fw-bold">Beschreibung</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror"
-                                          id="description"
-                                          name="description"
-                                          rows="4"
-                                          required>{{ old('description', $arbeitsgemeinschaft->description) }}</textarea>
+                            <div>
+                                <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-align-left mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                    Beschreibung
+                                </label>
+                                <textarea class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 resize-none @error('description') border-red-500 @enderror"
+                                          id="description" name="description" rows="4" required
+                                          onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                          onblur="this.style.borderColor='#d1d5db'">{{ old('description', $arbeitsgemeinschaft->description) }}</textarea>
                                 @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            <!-- Maximale Teilnehmerzahl -->
-                            <div class="mb-3">
-                                <label for="max_participants" class="form-label fw-bold">Maximale Teilnehmerzahl</label>
+                            <!-- Max Teilnehmer -->
+                            <div>
+                                <label for="max_participants" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-users mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                    Maximale Teilnehmerzahl
+                                </label>
                                 <input type="number"
-                                       class="form-control @error('max_participants') is-invalid @enderror"
-                                       id="max_participants"
-                                       name="max_participants"
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('max_participants') border-red-500 @enderror"
+                                       id="max_participants" name="max_participants"
                                        value="{{ old('max_participants', $arbeitsgemeinschaft->max_participants) }}"
-                                       min="{{ $arbeitsgemeinschaft->participants()->count() }}"
-                                       required>
+                                       min="{{ $arbeitsgemeinschaft->participants()->count() }}" required
+                                       onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                       onblur="this.style.borderColor='#d1d5db'">
                                 @error('max_participants')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
-                                <small class="form-text text-muted">
+                                <p class="text-xs text-gray-500 mt-1">
                                     Aktuelle Teilnehmerzahl: {{ $arbeitsgemeinschaft->participants()->count() }}
-                                </small>
+                                </p>
                             </div>
 
                             <!-- Verantwortlicher -->
-                            <div class="mb-3">
-                                <label for="manager_id" class="form-label fw-bold">Verantwortlicher</label>
-                                <select class="custom-select @error('manager_id') is-invalid @enderror"
-                                        id="manager_id"
-                                        name="manager_id"
-                                        required>
+                            <div>
+                                <label for="manager_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-user mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                    Verantwortlicher
+                                </label>
+                                <select class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('manager_id') border-red-500 @enderror"
+                                        id="manager_id" name="manager_id" required
+                                        onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                        onblur="this.style.borderColor='#d1d5db'">
                                     <option value="">Bitte wählen...</option>
                                     @foreach($managers as $manager)
                                         <option value="{{ $manager->id }}"
@@ -75,20 +92,23 @@
                                     @endforeach
                                 </select>
                                 @error('manager_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
 
                         <!-- Rechte Spalte -->
-                        <div class="col-md-6">
+                        <div class="space-y-4">
                             <!-- Wochentag -->
-                            <div class="mb-3">
-                                <label for="weekday" class="form-label fw-bold">Wochentag</label>
-                                <select class="custom-select @error('weekday') is-invalid @enderror"
-                                        id="weekday"
-                                        name="weekday"
-                                        required>
+                            <div>
+                                <label for="weekday" class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-day mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                    Wochentag
+                                </label>
+                                <select class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('weekday') border-red-500 @enderror"
+                                        id="weekday" name="weekday" required
+                                        onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                        onblur="this.style.borderColor='#d1d5db'">
                                     <option value="">Bitte wählen...</option>
                                     @foreach($weekdays as $key => $day)
                                         <option value="{{ $key }}"
@@ -98,199 +118,158 @@
                                     @endforeach
                                 </select>
                                 @error('weekday')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            <!-- Zeitraum -->
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <label for="start_time" class="form-label fw-bold">Startzeit</label>
+                            <!-- Zeiten -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="start_time" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-clock mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                        Startzeit
+                                    </label>
                                     <input type="time"
-                                           class="form-control @error('start_time') is-invalid @enderror"
-                                           id="start_time"
-                                           name="start_time"
-                                           value="{{ old('start_time', $arbeitsgemeinschaft->start_time->format('H:i')) }}"
-                                           required>
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('start_time') border-red-500 @enderror"
+                                           id="start_time" name="start_time"
+                                           value="{{ old('start_time', $arbeitsgemeinschaft->start_time->format('H:i')) }}" required
+                                           onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                           onblur="this.style.borderColor='#d1d5db'">
                                     @error('start_time')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
-                                <div class="col-6">
-                                    <label for="end_time" class="form-label fw-bold">Endzeit</label>
+                                <div>
+                                    <label for="end_time" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-clock mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                        Endzeit
+                                    </label>
                                     <input type="time"
-                                           class="form-control @error('end_time') is-invalid @enderror"
-                                           id="end_time"
-                                           name="end_time"
-                                           value="{{ old('end_time', $arbeitsgemeinschaft->end_time->format('H:i')) }}"
-                                           required>
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('end_time') border-red-500 @enderror"
+                                           id="end_time" name="end_time"
+                                           value="{{ old('end_time', $arbeitsgemeinschaft->end_time->format('H:i')) }}" required
+                                           onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                           onblur="this.style.borderColor='#d1d5db'">
                                     @error('end_time')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
                             </div>
 
                             <!-- Datum -->
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <label for="start_date" class="form-label fw-bold">Startdatum</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-calendar mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                        Startdatum
+                                    </label>
                                     <input type="date"
-                                           class="form-control @error('start_date') is-invalid @enderror"
-                                           id="start_date"
-                                           name="start_date"
-                                           value="{{ old('start_date', $arbeitsgemeinschaft->start_date->format('Y-m-d')) }}"
-                                           required>
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('start_date') border-red-500 @enderror"
+                                           id="start_date" name="start_date"
+                                           value="{{ old('start_date', $arbeitsgemeinschaft->start_date->format('Y-m-d')) }}" required
+                                           onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                           onblur="this.style.borderColor='#d1d5db'">
                                     @error('start_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
-                                <div class="col-6">
-                                    <label for="end_date" class="form-label fw-bold">Enddatum</label>
+                                <div>
+                                    <label for="end_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-check mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                        Enddatum
+                                    </label>
                                     <input type="date"
-                                           class="form-control @error('end_date') is-invalid @enderror"
-                                           id="end_date"
-                                           name="end_date"
-                                           value="{{ old('end_date', $arbeitsgemeinschaft->end_date->format('Y-m-d')) }}"
-                                           required>
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none transition-all duration-200 @error('end_date') border-red-500 @enderror"
+                                           id="end_date" name="end_date"
+                                           value="{{ old('end_date', $arbeitsgemeinschaft->end_date->format('Y-m-d')) }}" required
+                                           onfocus="this.style.borderColor='var(--color-widget-accent-from)'"
+                                           onblur="this.style.borderColor='#d1d5db'">
                                     @error('end_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
                             </div>
 
                             <!-- Gruppen -->
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Zugangsberechtigte Gruppen</label>
-                                <div class="border rounded p-3 @error('groups') border-danger @enderror">
-                                    <div class="row g-2">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-layer-group mr-1" style="color: var(--color-widget-accent-from)"></i>
+                                    Zugangsberechtigte Gruppen
+                                </label>
+                                <div class="border-2 border-gray-300 rounded-lg p-4 @error('groups') border-red-500 @enderror">
+                                    <div class="grid grid-cols-2 gap-3">
                                         @foreach($groups as $group)
-                                            <div class="col-md-6">
-
-                                                    <input class=""
-                                                           type="checkbox"
-                                                           name="groups[]"
-                                                           value="{{ $group->id }}"
-                                                           id="group_{{ $group->id }}"
-                                                        {{ in_array($group->id, old('groups', $arbeitsgemeinschaft->groups->pluck('id')->toArray())) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="group_{{ $group->id }}">
-                                                        {{ $group->name }}
-                                                    </label>
-
-                                            </div>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded p-1 transition-colors">
+                                                <input type="checkbox"
+                                                       name="groups[]" value="{{ $group->id }}"
+                                                       id="group_{{ $group->id }}"
+                                                       class="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                                                       style="accent-color: var(--color-widget-accent-from)"
+                                                    {{ in_array($group->id, old('groups', $arbeitsgemeinschaft->groups->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                                <span class="text-sm text-gray-700">{{ $group->name }}</span>
+                                            </label>
                                         @endforeach
                                     </div>
                                 </div>
                                 @error('groups')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
                     </div>
 
                     <!-- Buttons -->
-                    <div class="row">
-                        <div class="col-md-6 mb-2 mb-md-0">
-                            <a href="{{ route('verwaltung.arbeitsgemeinschaften.index') }}" class="btn btn-secondary w-100">
-                                <i class="bi bi-x-circle"></i>
-                                <span class="button-text">Abbrechen</span>
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-check-circle"></i>
-                                <span class="button-text">Änderungen speichern</span>
-                            </button>
-                        </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-200">
+                        <button type="submit"
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                                style="background-color: var(--color-widget-accent-from)"
+                                onmouseover="this.style.backgroundColor='var(--color-widget-accent-to)'"
+                                onmouseout="this.style.backgroundColor='var(--color-widget-accent-from)'">
+                            <i class="fas fa-save"></i>
+                            Änderungen speichern
+                        </button>
+                        <a href="{{ route('verwaltung.arbeitsgemeinschaften.index') }}"
+                           class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors duration-200">
+                            <i class="fas fa-times"></i>
+                            Abbrechen
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    @push('styles')
-        <style>
-            /* Optimierungen für mobile Ansicht */
-            @media (max-width: 768px) {
-                .card-body {
-                    padding: 1rem;
-                }
-
-                /* Abstände zwischen den Formulargruppen */
-                .mb-3 {
-                    margin-bottom: 1.5rem !important;
-                }
-
-                /* Gruppen-Checkboxen */
-                .form-check {
-                    padding: 0.5rem;
-                    border-bottom: 1px solid rgba(0,0,0,.1);
-                }
-
-                .form-check:last-child {
-                    border-bottom: none;
-                }
-
-                /* Button-Text auf mobil */
-                @media (max-width: 768px) {
-                    .button-text {
-                        display: none;
-                    }
-
-                    .bi {
-                        font-size: 1.2rem;
-                    }
+@push('js')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startTimeInput = document.getElementById('start_time');
+            const endTimeInput = document.getElementById('end_time');
+            function validateTimes() {
+                if (startTimeInput.value && endTimeInput.value) {
+                    endTimeInput.setCustomValidity(
+                        startTimeInput.value >= endTimeInput.value
+                            ? 'Die Endzeit muss nach der Startzeit liegen'
+                            : ''
+                    );
                 }
             }
+            startTimeInput.addEventListener('change', validateTimes);
+            endTimeInput.addEventListener('change', validateTimes);
 
-            /* Hilfstext für Validierung */
-            .form-text {
-                font-size: 0.875rem;
-            }
-
-            /* Hover-Effekt für Checkboxen */
-            .form-check:hover {
-                background-color: rgba(0,0,0,.03);
-            }
-        </style>
-    @endpush
-
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Validierung der Zeiten
-                const startTimeInput = document.getElementById('start_time');
-                const endTimeInput = document.getElementById('end_time');
-
-                function validateTimes() {
-                    if (startTimeInput.value && endTimeInput.value) {
-                        if (startTimeInput.value >= endTimeInput.value) {
-                            endTimeInput.setCustomValidity('Die Endzeit muss nach der Startzeit liegen');
-                        } else {
-                            endTimeInput.setCustomValidity('');
-                        }
-                    }
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            function validateDates() {
+                if (startDateInput.value && endDateInput.value) {
+                    endDateInput.setCustomValidity(
+                        startDateInput.value >= endDateInput.value
+                            ? 'Das Enddatum muss nach dem Startdatum liegen'
+                            : ''
+                    );
                 }
-
-                startTimeInput.addEventListener('change', validateTimes);
-                endTimeInput.addEventListener('change', validateTimes);
-
-                // Validierung der Daten
-                const startDateInput = document.getElementById('start_date');
-                const endDateInput = document.getElementById('end_date');
-
-                function validateDates() {
-                    if (startDateInput.value && endDateInput.value) {
-                        if (startDateInput.value >= endDateInput.value) {
-                            endDateInput.setCustomValidity('Das Enddatum muss nach dem Startdatum liegen');
-                        } else {
-                            endDateInput.setCustomValidity('');
-                        }
-                    }
-                }
-
-                startDateInput.addEventListener('change', validateDates);
-                endDateInput.addEventListener('change', validateDates);
-            });
-        </script>
-    @endpush
+            }
+            startDateInput.addEventListener('change', validateDates);
+            endDateInput.addEventListener('change', validateDates);
+        });
+    </script>
+@endpush
 @endsection

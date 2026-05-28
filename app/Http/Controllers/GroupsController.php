@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AddUserToOwnGroupRequest;
 use App\Http\Requests\CreateGroupRequest;
 use App\Http\Requests\CreateOwnGroupRequest;
+use App\Model\Conversation;
 use App\Model\Group;
 use App\Model\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
@@ -109,6 +111,19 @@ class GroupsController extends Controller
 
         $group->users()->syncWithoutDetaching($request->user_id);
 
+        // Neues Mitglied auch in die aktive Gruppenkonversation aufnehmen (falls vorhanden)
+        $conversation = Conversation::withoutGlobalScopes()
+            ->where('group_id', $group->id)
+            ->where('type', 'group')
+            ->where('is_active', true)
+            ->first();
+
+        if ($conversation) {
+            $conversation->users()->syncWithoutDetaching([
+                $request->user_id => ['joined_at' => now()],
+            ]);
+        }
+
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Benutzer wurde hinzugefügt.',
@@ -183,5 +198,88 @@ class GroupsController extends Controller
             $group->media()->delete();
             $group->delete();
         }
+    }
+
+    /**
+     * Gruppen-Chat für eine Gruppe aktivieren oder deaktivieren.
+     * Wird automatisch eine Conversation angelegt bzw. deaktiviert.
+     */
+    public function toggleChat(Group $group): RedirectResponse
+    {
+        if (! auth()->user()->can('edit groups')) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
+            ]);
+        }
+
+        if ($group->has_chat) {
+            // Chat deaktivieren
+            Conversation::withoutGlobalScopes()
+                ->where('group_id', $group->id)
+                ->where('type', 'group')
+                ->update(['is_active' => false]);
+
+            $group->update(['has_chat' => false]);
+
+            return redirect()->back()->with([
+                'type'    => 'success',
+                'Meldung' => 'Gruppen-Chat für "' . $group->name . '" wurde deaktiviert.',
+            ]);
+        }
+
+        // Chat aktivieren
+        $group->update(['has_chat' => true]);
+
+        // Bestehende Konversation suchen – inkl. soft-deleted (withoutGlobalScopes entfernt SoftDeletingScope)
+        $conv = Conversation::withoutGlobalScopes()
+            ->where('group_id', $group->id)
+            ->where('type', 'group')
+            ->first();
+
+        if ($conv) {
+            // Ggf. wiederherstellen und reaktivieren
+            if ($conv->trashed()) {
+                $conv->restore();
+            }
+            $conv->update(['is_active' => true]);
+        } else {
+            $conv = Conversation::create([
+                'group_id'    => $group->id,
+                'type'        => 'group',
+                'title'       => $group->name,
+                'created_by'  => auth()->id(),
+                'is_active'   => true,
+            ]);
+        }
+
+        // Alle Gruppenmitglieder zur Konversation hinzufuegen (ohne Duplikate)
+        // intval() sichert konsistente Typen fuer array_diff
+        $groupUserIds    = DB::table('group_user')
+            ->where('group_id', $group->id)
+            ->pluck('user_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $existingUserIds = $conv->users()
+            ->pluck('users.id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $newUserIds = array_values(array_diff($groupUserIds, $existingUserIds));
+
+        if (! empty($newUserIds)) {
+            // syncWithoutDetaching verhindert Duplicate-Key-Fehler bei Race Conditions
+            $attachData = collect($newUserIds)
+                ->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])
+                ->all();
+            $conv->users()->syncWithoutDetaching($attachData);
+        }
+
+        return redirect()->back()->with([
+            'type'    => 'success',
+            'Meldung' => 'Gruppen-Chat fuer "' . $group->name . '" wurde aktiviert. ' . count($newUserIds) . ' Mitglieder hinzugefuegt.',
+        ]);
+
     }
 }

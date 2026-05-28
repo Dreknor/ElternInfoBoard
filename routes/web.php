@@ -16,6 +16,10 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GroupsController;
 use App\Http\Controllers\ICalController;
+use App\Http\Controllers\FamilyWeeklyController;
+use App\Http\Controllers\MessengerAdminController;
+use App\Http\Controllers\MessengerController;
+use App\Http\Controllers\PostReportController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\KrankmeldungenController;
@@ -42,6 +46,7 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -98,12 +103,16 @@ Route::middleware('auth')->group(function () {
     Route::post('password/post_expired', [ExpiredPasswordController::class, 'postExpired'])
         ->name('password.post_expired');
 
+    // Hilfe & Anleitungen
+    Route::get('hilfe', [HelpController::class, 'index'])->name('help.index');
+    Route::get('hilfe/{slug}', [HelpController::class, 'show'])->name('help.show');
+
     Route::middleware(['password_expired'])->group(function () {
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
         Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');
-        Route::get('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
-        Route::get('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
+        Route::delete('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
+        Route::delete('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
 
         // Routen für die Verwaltung der Rückmeldungen
         Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
@@ -111,8 +120,8 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:manage rueckmeldungen')->group(function () {
             Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
             Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
+            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
         });
-        Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
 
         // Vertretungsplan
         Route::get('vertretungsplan', [VertretungsplanController::class, 'index'])->middleware('can:view vertretungsplan');
@@ -181,11 +190,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('schickzeiten/{day}/{child}', [SchickzeitenController::class, 'destroy']);
         Route::put('anwesenheit/{childCheckIn}/anmelden', [SchickzeitenController::class, 'anwesenheitTrue'])->name('checkIn.anmelden');
         Route::put('anwesenheit/{childCheckIn}/abmelden', [SchickzeitenController::class, 'anwesenheitFalse'])->name('checkIn.abmelden');
+        Route::post('anwesenheit/bulk-update', [SchickzeitenController::class, 'bulkUpdateAttendance'])->name('attendance.bulk-update');
 
         // Schickzeiten Verwaltung
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
 
-        Route::get('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
+        Route::delete('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
         Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
         Route::get('verwaltung/schickzeiten/edit/{day}/{child}/{parent}', [SchickzeitenController::class, 'editVerwaltung'])->middleware('can:edit schickzeiten');
@@ -194,7 +204,7 @@ Route::middleware('auth')->group(function () {
         Route::get('krankmeldung', [KrankmeldungenController::class, 'index']);
         Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
-        Route::get('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
+        Route::post('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
 
         // Redirect old disease create route to new manage page
         Route::get('diseases/create', function () {
@@ -220,9 +230,7 @@ Route::middleware('auth')->group(function () {
         Route::get('active-diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases')->name('active-diseases.extend');
         // Termine
         Route::resource('termine', TerminController::class);
-        Route::resource('termin', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
-        // Route::get('termin/{termin}/edit', [TerminController::class, 'edit']);
 
         // Rückmeldungen
 
@@ -264,7 +272,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/home', [NachrichtenController::class, 'index']);
         Route::get('/nachrichten', [NachrichtenController::class, 'index'])->name('nachrichten.index');
         Route::get('/archiv', [NachrichtenController::class, 'postsArchiv']);
-        Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv']);
+        Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv'])->where('month', '^\d{4}-\d{2}$');
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost'])->name('post.find');
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
@@ -274,6 +282,16 @@ Route::middleware('auth')->group(function () {
         // Route::get('pdf/{archiv?}', [NachrichtenController::class, 'pdf']);
 
         Route::get('posts/{post}/react/{reaction}', [ReactionController::class, 'react']);
+
+        // Beitrag melden (alle authentifizierten Nutzer)
+        Route::post('post/{post}/report', [PostReportController::class, 'store'])->name('post.report');
+
+        // Admin: Gemeldete Beiträge verwalten
+        Route::middleware('permission:edit settings')->prefix('verwaltung/beitragsmeldungen')->group(function () {
+            Route::get('/', [PostReportController::class, 'index'])->name('post-reports.index');
+            Route::post('/{report}/resolve', [PostReportController::class, 'resolve'])->name('post-reports.resolve');
+            Route::delete('/{report}/destroy-post', [PostReportController::class, 'destroyPost'])->name('post-reports.destroy-post');
+        });
 
         // Umfragen
         Route::middleware('permission:create polls')->group(function () {
@@ -294,12 +312,12 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{terminListe}', [ListenController::class, 'show']);
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
-        Route::get('listen/{liste}/activate', [ListenController::class, 'activate']);
+        Route::post('listen/{liste}/activate', [ListenController::class, 'activate']);
         Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
         Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
-        Route::get('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
+        Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
-        Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport']);
+        Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport'])->name('listen.ical.export');
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
 
         // TerminListe
@@ -323,11 +341,11 @@ Route::middleware('auth')->group(function () {
 
         Route::middleware('permission:edit reinigung')->group(function () {
             Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
-            Route::get('reinigung/task/{task}/trash', [ReinigungsTaskController::class, 'destroy']);
+            Route::delete('reinigung/task/{task}/trash', [ReinigungsTaskController::class, 'destroy']);
             Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
             Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
             Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
-            Route::get('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+            Route::delete('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
             Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
             Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
         });
@@ -339,11 +357,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/touch/{posts}', [NachrichtenController::class, 'touch']);
         Route::get('/posts/release/{posts}', [NachrichtenController::class, 'release']);
         Route::get('/posts/stick/{post}', [NachrichtenController::class, 'stickPost'])->middleware(['permission:make sticky']);
-        Route::get('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
+        Route::post('/posts/archiv/{posts}', [NachrichtenController::class, 'archiv']);
         Route::put('/posts/{posts}/{kiosk?}', [NachrichtenController::class, 'update']);
         Route::post('/posts/', [NachrichtenController::class, 'store']);
         Route::get('posts/{media}/changeCollection/{collection_name}', [ImageController::class, 'changeCollection'])->middleware(['permission:edit posts']);
-        Route::get('posts/delete/{post}', [NachrichtenController::class, 'destroy']);
 
         Route::delete('posts/{posts}', [NachrichtenController::class, 'destroy']);
         Route::delete('rueckmeldung/{rueckmeldung}', [RueckmeldungenController::class, 'destroy']);
@@ -359,6 +376,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
+
+        // Nutzer-Theme (Design)
+        Route::put('/einstellungen/theme', [\App\Http\Controllers\User\UserThemeController::class, 'update'])
+            ->name('user.theme.update');
 
         // Downloads
         Route::get('/files', [FileController::class, 'index']);
@@ -399,6 +420,7 @@ Route::middleware('auth')->group(function () {
 
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
+            Route::post('users/{user}/resend-welcome', [UserController::class, 'resendWelcomeMail'])->name('users.resendWelcome');
             // Route::get('users/{user}/delete', [UserController::class, 'destroy']);
             // Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
             // Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
@@ -412,6 +434,7 @@ Route::middleware('auth')->group(function () {
         Route::get('groups/{group}/add', [GroupsController::class, 'addUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::post('groups/{group}/addUser', [GroupsController::class, 'storeUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
+        Route::post('/groups/{group}/toggle-chat', [GroupsController::class, 'toggleChat'])->name('groups.toggle-chat')->middleware(['permission:edit groups']);
 
         // Routen zur Rechteverwaltung
         Route::middleware('permission:edit permission')->group(function () {
@@ -424,11 +447,18 @@ Route::middleware('auth')->group(function () {
         // Routen zur Rechteverwaltung
         Route::middleware('permission:edit settings')->group(function () {
             Route::get('modules', [SettingsController::class, 'module']);
+            Route::post('modules/reorder', [SettingsController::class, 'reorder'])->name('modules.reorder');
             Route::get('modules/modul/bottomnav/{modul}', [SettingsController::class, 'change_nav']);
             Route::get('modules/modul/{modul}', [SettingsController::class, 'change_status']);
             Route::get('settings/losungen/import', [LosungController::class, 'importView']);
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
             Route::get('settings', [SettingsController::class, 'index']);
+            Route::put('settings/design', [\App\Http\Controllers\Settings\DesignSettingsController::class, 'update'])
+                ->name('settings.design.update');
+            Route::put('settings/custom-theme', [\App\Http\Controllers\Settings\CustomThemeController::class, 'update'])
+                ->name('settings.custom-theme.update');
+            Route::post('settings/custom-theme/reset', [\App\Http\Controllers\Settings\CustomThemeController::class, 'reset'])
+                ->name('settings.custom-theme.reset');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
 
@@ -440,7 +470,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // Seitenverwaltung und -anzeige
-        Route::group(['middlewareGroups' => ['can:view sites']], function () {
+        Route::middleware(['can:view sites'])->group(function () {
             Route::resource('sites', SiteController::class);
             Route::get('sites/{site}/active', [SiteController::class, 'activate'])->name('sites.activate');
             Route::post('blocks', [SiteBlockController::class, 'store'])->name('blocks.store');
@@ -508,7 +538,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('feedback/{mail}', [FeedbackController::class, 'deleteMail'])->middleware('can:see mails');
     Route::get('feedback/show/{mail}', [FeedbackController::class, 'showMail']);
 
-    Route::group(['middlewareGroups' => ['can:see logs']], function () {
+    Route::middleware(['can:see logs'])->group(function () {
         Route::get('logs', [LogController::class, 'index']);
         Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
         Route::delete('logs/cleanup', [LogController::class, 'cleanup'])->middleware('can:delete logs');
@@ -531,6 +561,10 @@ Route::middleware('auth')->group(function () {
         Route::post('care/abfrage/anwesenheit/download', [\App\Http\Controllers\Anwesenheit\CareController::class, 'downloadAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.download');
         Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
         Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
+
+        // Feature 6E: Statistiken & Ferienplan-PDF
+        Route::get('care/abfrage/stats', [\App\Http\Controllers\Anwesenheit\CareController::class, 'attendanceStats'])->name('care.abfrage.stats');
+        Route::post('care/abfrage/ferienplan/pdf', [\App\Http\Controllers\Anwesenheit\CareController::class, 'exportFerienplan'])->name('care.abfrage.ferienplan.pdf');
 
         Route::get('/child/{child}/mandates/edit', [\App\Http\Controllers\Anwesenheit\CareController::class, 'editMandates'])->name('child.mandates.edit');
         Route::put('/child/{child}/mandates', [\App\Http\Controllers\Anwesenheit\CareController::class, 'updateMandates'])->name('child.mandates.store');
@@ -584,6 +618,31 @@ Route::middleware('auth')->group(function () {
         Route::get('settings/schoolyear', [\App\Http\Controllers\SchoolYearController::class, 'index'])->name('schoolyear.index');
         Route::post('settings/schoolyear/process', [\App\Http\Controllers\SchoolYearController::class, 'process'])->name('schoolyear.process');
         Route::delete('settings/schoolyear/massDelete', [\App\Http\Controllers\SchoolYearController::class, 'massDelete'])->name('schoolyear.massDelete');
+    });
+
+    // ── Feature 4: Persönlicher Wochenplan / Familien-Dashboard ──────────────
+    Route::middleware(['password_expired'])->group(function () {
+        Route::get('wochenplan', [FamilyWeeklyController::class, 'index'])->name('family.weekly');
+        Route::get('wochenplan/pdf', [FamilyWeeklyController::class, 'exportPdf'])->name('family.weekly.pdf');
+    });
+
+    // ── Feature 2: Eltern-Nachrichten (Messenger) ──────────────────────────────
+    Route::middleware(['password_expired', 'permission:use messenger'])->prefix('messenger')->group(function () {
+        Route::get('/',                                     [MessengerController::class, 'index'])->name('messenger.index');
+        Route::get('/users/search',                         [MessengerController::class, 'searchUsers'])->name('messenger.users.search');
+        Route::get('/conversation/{conversation}',          [MessengerController::class, 'show'])->name('messenger.show');
+        Route::post('/conversation/{conversation}/messages',[MessengerController::class, 'sendMessage'])->name('messenger.send');
+        Route::post('/direct/{targetUser}',                       [MessengerController::class, 'startDirect'])->name('messenger.direct');
+        Route::put('/message/{message}',                    [MessengerController::class, 'editMessage'])->name('messenger.edit');
+        Route::delete('/message/{message}',                 [MessengerController::class, 'deleteMessage'])->name('messenger.delete');
+        Route::post('/message/{message}/report',            [MessengerController::class, 'reportMessage'])->name('messenger.report');
+        Route::post('/conversation/{conversation}/mute',    [MessengerController::class, 'toggleMute'])->name('messenger.mute');
+        Route::get('/attachment/{message}',                 [MessengerController::class, 'serveAttachment'])->name('messenger.attachment');
+    });
+    Route::middleware(['password_expired', 'permission:moderate messages'])->prefix('messenger/admin')->group(function () {
+        Route::get('/reports',                   [MessengerAdminController::class, 'reports'])->name('messenger.admin.reports');
+        Route::post('/reports/{report}/resolve', [MessengerAdminController::class, 'resolveReport'])->name('messenger.admin.resolve');
+        Route::post('/user/{user}/mute',         [MessengerAdminController::class, 'muteUser'])->name('messenger.admin.mute');
     });
 
 });

@@ -2,18 +2,27 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-header border-bottom">
-                Termin bearbeiten
+        <div class="card" style="border-color: var(--color-widget-success-border);">
+            <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                <span class="font-semibold flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                    <i class="fas fa-calendar-edit"></i>
+                    Termin bearbeiten
+                </span>
             </div>
             <div class="card-body">
-                <form action="{{url('/termin/'.$termin->id)}}" method="post" class="form form-horizontal"
+                <form action="{{url('/termine/'.$termin->id)}}" method="post" class="form form-horizontal"
                       id="terminForm">
                     @csrf
                     @method('put')
                     <div class="row">
                         <div class="col-l-6 col-md-12 col-sm-12">
-                            <div class="card">
+                            <div class="card" style="border-color: var(--color-widget-success-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                                    <span class="text-sm font-semibold flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-calendar-day"></i>
+                                        Termindaten
+                                    </span>
+                                </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-12">
@@ -29,7 +38,7 @@
                                             <div class="form-group">
                                                 <label for="start">Start</label>
                                                 <input type="datetime-local"
-                                                       value="{{old('start',$termin->start->toDateTimeLocalString())}}"
+                                                       value="{{old('start',$termin->start?->toDateTimeLocalString())}}"
                                                        id="start" class="form-control border-input date-input"
                                                        name="start" required>
                                             </div>
@@ -38,7 +47,7 @@
                                             <div class="form-group">
                                                 <label for="ende">Ende</label>
                                                 <input type="datetime-local"
-                                                       value="{{old('ende',$termin->ende->toDateTimeLocalString())}}"
+                                                       value="{{old('ende',$termin->ende?->toDateTimeLocalString())}}"
                                                        id="ende" class="form-control border-input date-input"
                                                        name="ende" required>
                                             </div>
@@ -76,7 +85,13 @@
 
                         </div>
                         <div class="col-l-6 col-md-12 col-sm-12">
-                            <div class="card">
+                            <div class="card" style="border-color: var(--color-widget-success-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-success-from), var(--color-widget-success-to)); border-color: var(--color-widget-success-border);">
+                                    <span class="text-sm font-semibold flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-users"></i>
+                                        Gruppen
+                                    </span>
+                                </div>
                                 <div class="card-body">
                                     @include('include.formGroups',['groups'=>$gruppen,'selectedGroups'=>$termin->groups])
                                 </div>
@@ -98,7 +113,7 @@
                 <div class="row">
                     <div class="col-12">
                         @can('delete', $termin)
-                            <form action="{{url("termin/$termin->id")}}" method="post" class="form-inline">
+                            <form action="{{url("termine/$termin->id")}}" method="post" class="form-inline">
                                 @csrf
                                 @method('delete')
                                 <button type="submit" class="btn-link text-danger">

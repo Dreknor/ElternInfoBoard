@@ -2,9 +2,10 @@
 
 @section('content')
 
-<div class="card">
-    <div class="card-header">
-        <h6 class="card-title">
+<div class="card" style="border-color: var(--color-widget-primary-border);">
+    <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+        <h6 class="card-title mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+            <i class="fas fa-envelope"></i>
             neue Mitteilung verfassen
         </h6>
     </div>
@@ -195,9 +196,10 @@
                     @endcan
                     <div class="row">
                         <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="card-title">
+                            <div class="card" style="border-color: var(--color-card-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                    <h6 class="card-title mb-0 flex items-center gap-2 text-sm" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-paperclip"></i>
                                         Dateien anfügen
                                     </h6>
                                 </div>

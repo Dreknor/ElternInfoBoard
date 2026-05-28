@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('holidays', function (Blueprint $table) {
             $table->string('bundesland', 2)->default('SN')->after('year');
-
             // Alten unique-Index entfernen und neuen mit bundesland erstellen
             $table->dropUnique(['year', 'name', 'start', 'end']);
             $table->unique(['year', 'bundesland', 'name', 'start', 'end']);

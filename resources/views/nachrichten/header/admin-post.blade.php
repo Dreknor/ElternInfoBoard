@@ -6,10 +6,20 @@
     </a>
 @endif
 
-<div class="relative inline-block" x-data="{ open: false }">
+<div class="relative inline-block" x-data="{
+    open: false,
+    pos: { top: 0, right: 0 },
+    toggle(event) {
+        this.open = !this.open;
+        if (this.open) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            this.pos.top = rect.bottom + 4;
+            this.pos.right = window.innerWidth - rect.right;
+        }
+    }
+}" @click.outside="open = false">
     <button type="button"
-            @click="open = !open"
-            @click.away="open = false"
+            @click="toggle($event)"
             class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors duration-200">
         <i class="fa fa-ellipsis-v"></i>
     </button>
@@ -21,7 +31,8 @@
          x-transition:leave="transition ease-in duration-75"
          x-transition:leave-start="transform opacity-100 scale-100"
          x-transition:leave-end="transform opacity-0 scale-95"
-         class="absolute left-0 md:left-auto md:right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50"
+         :style="`position: fixed; top: ${pos.top}px; right: ${pos.right}px; z-index: 1050;`"
+         class="w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1"
          style="display: none;">
 
         <a class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
@@ -53,11 +64,14 @@
         @endif
 
         @if($nachricht->released == 1 and !$nachricht->is_archived)
-            <a href="{{url('/posts/archiv/'.$nachricht->id)}}"
-               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                <i class="fas fa-archive text-orange-500"></i>
-                <span>Archivieren</span>
-            </a>
+            <form action="{{url('/posts/archiv/'.$nachricht->id)}}" method="POST" class="inline">
+                @csrf
+                <button type="submit"
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors w-full text-left">
+                    <i class="fas fa-archive text-orange-500"></i>
+                    <span>Archivieren</span>
+                </button>
+            </form>
         @endif
 
         @if(auth()->user()->can('make sticky'))
@@ -71,11 +85,15 @@
 
         @if($nachricht->released != 1 and (auth()->user()->can('delete posts') or auth()->id() == $nachricht->author))
             <div class="border-t border-gray-200 my-1"></div>
-            <a href="{{url('/posts/delete/'.$nachricht->id)}}"
-               class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                <i class="fas fa-trash"></i>
-                <span>Löschen</span>
-            </a>
+            <form action="{{url('/posts/'.$nachricht->id)}}" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left">
+                    <i class="fas fa-trash"></i>
+                    <span>Löschen</span>
+                </button>
+            </form>
         @endif
     </div>
 </div>

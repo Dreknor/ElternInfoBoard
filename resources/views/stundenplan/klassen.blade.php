@@ -6,23 +6,25 @@
 <div class="container mx-auto px-4 py-8">
     <!-- Header with back button -->
     <div class="mb-8">
-        <a href="/stundenplan" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
+        <a href="/stundenplan" class="inline-flex items-center mb-4 hover:underline"
+           style="color: var(--color-widget-primary-from)">
             <i class="fas fa-arrow-left mr-2"></i>
             {{ __('stundenplan.back_to_overview') }}
         </a>
 
         <div class="flex justify-between items-start">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <h1 class="text-3xl font-bold mb-2" style="color: var(--color-text-primary)">
                     <i class="fas fa-calendar-alt mr-2"></i>
                     {{ __('stundenplan.title') }} - {{ __('stundenplan.class') }} {{ $class }}
                     @if($currentWeek)
-                        <span class="ml-2 px-3 py-1 text-lg font-semibold rounded-full {{ $currentWeek->type === 'A' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                        <span class="ml-2 px-3 py-1 text-lg font-semibold rounded-full"
+                              style="{{ $currentWeek->type === 'A' ? 'background-color: var(--color-widget-body-bg); color: var(--color-widget-primary-border); border: 1px solid var(--color-widget-primary-border)' : 'background-color: var(--color-widget-body-bg); color: var(--color-widget-success-border); border: 1px solid var(--color-widget-success-border)' }}">
                             {{ $currentWeek->type }}-{{ __('stundenplan.week') }}
                         </span>
                     @endif
                 </h1>
-                <p class="text-gray-600">
+                <p style="color: var(--color-text-secondary)">
                     {{ __('stundenplan.valid_from') }}: {{ $basisdaten['DatumVon'] }} - {{ $basisdaten['DatumBis'] }} |
                     {{ __('stundenplan.school_weeks') }}: {{ $basisdaten['SwVon'] }} - {{ $basisdaten['SwBis'] }}
                 </p>
@@ -30,7 +32,8 @@
 
             <div class="flex space-x-2">
                 <button onclick="window.print()"
-                        class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        style="background-color: var(--color-card-bg); border-color: var(--color-card-border); color: var(--color-text-secondary)">
                     <i class="fas fa-print mr-2"></i>
                     {{ __('stundenplan.print') }}
                 </button>
@@ -96,10 +99,10 @@
     @endif
 
     <!-- Timetable -->
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg)">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gradient-to-r from-blue-600 to-indigo-600">
+            <table class="min-w-full divide-y" style="border-color: var(--color-card-border)">
+                <thead style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
                     <tr>
                         <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-20">
                             Zeit
@@ -121,13 +124,15 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y" style="background-color: var(--color-card-bg); border-color: var(--color-card-border)">
                     @foreach($zeitslots as $slot)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-3 py-4 whitespace-nowrap text-center bg-gray-50">
-                                <div class="text-sm font-bold text-gray-900">{{ $slot['Stunde'] }}.</div>
-                                <div class="text-xs text-gray-600">{{ $slot['ZeitVon'] }}</div>
-                                <div class="text-xs text-gray-500">{{ $slot['ZeitBis'] }}</div>
+                        <tr class="transition-colors" style="border-color: var(--color-card-border)"
+                            onmouseover="this.style.backgroundColor='var(--color-surface-subtle)'"
+                            onmouseout="this.style.backgroundColor=''">
+                            <td class="px-3 py-4 whitespace-nowrap text-center" style="background-color: var(--color-surface-subtle)">
+                                <div class="text-sm font-bold" style="color: var(--color-text-primary)">{{ $slot['Stunde'] }}.</div>
+                                <div class="text-xs" style="color: var(--color-text-secondary)">{{ $slot['ZeitVon'] }}</div>
+                                <div class="text-xs" style="color: var(--color-text-muted)">{{ $slot['ZeitBis'] }}</div>
                             </td>
 
                             @for($tag = 1; $tag <= 5; $tag++)
@@ -216,24 +221,24 @@
                                         @endphp
 
                                         <div class="rounded-md border-l-4 p-3 {{ $colorClass }} h-full">
-                                            <div class="font-semibold text-gray-900 mb-1">
+                                            <div class="font-semibold mb-1" style="color: var(--color-text-primary)">
                                                 {{ $fach }}
                                             </div>
                                             @if($lehrer)
-                                                <div class="text-xs text-gray-700 flex items-center mb-1">
-                                                    <i class="fas fa-user text-gray-500 mr-1" style="width: 12px;"></i>
+                                                <div class="text-xs flex items-center mb-1" style="color: var(--color-text-secondary)">
+                                                    <i class="fas fa-user mr-1" style="width: 12px; color: var(--color-text-muted)"></i>
                                                     {{ $lehrer }}
                                                 </div>
                                             @endif
                                             @if($raum)
-                                                <div class="text-xs text-gray-700 flex items-center">
-                                                    <i class="fas fa-door-open text-gray-500 mr-1" style="width: 12px;"></i>
+                                                <div class="text-xs flex items-center" style="color: var(--color-text-secondary)">
+                                                    <i class="fas fa-door-open mr-1" style="width: 12px; color: var(--color-text-muted)"></i>
                                                     {{ $raum }}
                                                 </div>
                                             @endif
                                         </div>
                                     @else
-                                        <div class="text-center text-gray-400 text-sm py-3">
+                                        <div class="text-center text-sm py-3" style="color: var(--color-text-muted)">
                                             <i class="fas fa-minus"></i>
                                         </div>
                                     @endif
@@ -247,43 +252,43 @@
     </div>
 
     <!-- Legend -->
-    <div class="legend mt-6 bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+    <div class="legend mt-6 rounded-lg shadow p-6" style="background-color: var(--color-card-bg)">
+        <h3 class="text-lg font-semibold mb-4" style="color: var(--color-text-primary)">
             <i class="fas fa-palette mr-2"></i>
             {{ __('stundenplan.color_legend') }}
         </h3>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-blue-100 border-l-4 border-blue-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.mathematics') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.mathematics') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-yellow-100 border-l-4 border-yellow-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.german') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.german') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-purple-100 border-l-4 border-purple-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.free_work') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.free_work') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-green-100 border-l-4 border-green-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.sports') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.sports') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-pink-100 border-l-4 border-pink-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.music') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.music') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-orange-100 border-l-4 border-orange-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.art') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.art') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-indigo-100 border-l-4 border-indigo-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.religion') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.religion') }}</span>
             </div>
             <div class="flex items-center">
                 <div class="w-4 h-4 rounded bg-gray-100 border-l-4 border-gray-300 mr-2"></div>
-                <span class="text-sm text-gray-700">{{ __('stundenplan.other') }}</span>
+                <span class="text-sm" style="color: var(--color-text-secondary)">{{ __('stundenplan.other') }}</span>
             </div>
         </div>
     </div>

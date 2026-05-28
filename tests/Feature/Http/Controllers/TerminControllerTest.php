@@ -21,7 +21,7 @@ class TerminControllerTest extends TestCase
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
 
-        $response = $this->actingAs($user)->get(route('termin.create'));
+        $response = $this->actingAs($user)->get(route('termine.create'));
 
         $response->assertRedirect(url('home'));
     }
@@ -35,7 +35,7 @@ class TerminControllerTest extends TestCase
         \Spatie\Permission\Models\Permission::create(['name' => 'create termine']);
         $user->givePermissionTo('create termine');
 
-        $response = $this->actingAs($user)->post(route('termin.store'), [
+        $response = $this->actingAs($user)->post(route('termine.store'), [
             'terminname' => 'Elternabend',
             'description' => 'Wichtiger Elternabend',
             'start' => now()->addDays(7)->format('Y-m-d H:i:s'),
@@ -74,7 +74,7 @@ class TerminControllerTest extends TestCase
             'ende' => now()->addDays(1)->addHours(2),
         ]);
 
-        $response = $this->actingAs($user)->delete(route('termin.destroy', ['termin' => $termin]));
+        $response = $this->actingAs($user)->delete(route('termine.destroy', ['termine' => $termin]));
 
         $response->assertRedirect();
         $this->assertSoftDeleted('termine', ['id' => $termin->id]);
@@ -92,7 +92,7 @@ class TerminControllerTest extends TestCase
             'ende' => now()->addDays(1)->addHours(2),
         ]);
 
-        $response = $this->actingAs($user1)->delete(route('termin.destroy', ['termin' => $termin]));
+        $response = $this->actingAs($user1)->delete(route('termine.destroy', ['termine' => $termin]));
         // Termine haben keine author_id, daher kann jeder authentifizierte User löschen
         $response->assertRedirect();
         $this->assertSoftDeleted('termine', ['id' => $termin->id]);
@@ -104,7 +104,7 @@ class TerminControllerTest extends TestCase
      **/
     public function unauthenticated_user_cannot_create_termin(): void
     {
-        $response = $this->post(route('termin.store'), [
+        $response = $this->post(route('termine.store'), [
             'title' => 'Test Termin',
             'start' => now()->format('Y-m-d H:i:s'),
             'end' => now()->addHours(1)->format('Y-m-d H:i:s'),
@@ -123,13 +123,13 @@ class TerminControllerTest extends TestCase
         $user = User::factory()->create(['password_changed_at' => now()]);
         \Spatie\Permission\Models\Permission::create(['name' => 'create termine']);
         $user->givePermissionTo('create termine');
-        $response = $this->actingAs($user)->post(route('termin.store'), [
+        $response = $this->actingAs($user)->post(route('termine.store'), [
             'title' => 'Test Termin',
             'start' => '',
             'end' => '',
         ]);
 
-        $response = $this->actingAs($user)->post(route('termin.store'), [
+        $response = $this->actingAs($user)->post(route('termine.store'), [
             'title' => 'Test Termin',
             'start' => 'invalid-date',
             'end' => 'invalid-date',

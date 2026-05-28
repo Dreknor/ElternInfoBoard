@@ -60,6 +60,7 @@ Route::post('/token/create', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('me', [AuthController::class, 'me']);
+    Route::get('me/permissions', [\App\Http\Controllers\API\UserPermissionsController::class, 'index']);
     Route::post('/token/logout', [AuthController::class, 'logout']);
 
     Route::get('files/{media_uuid}/download', [ImageController::class, 'getFileByUuid'])->name('api.files.download');
@@ -118,6 +119,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('termine', [\App\Http\Controllers\API\TerminController::class, 'index']);
 
     /**
+     * Module
+     */
+    Route::get('modules', [\App\Http\Controllers\API\ModuleController::class, 'index']);
+
+    /**
      * Nachrichten
      */
     Route::get('posts', [\App\Http\Controllers\API\NachrichtenController::class, 'index']);
@@ -166,6 +172,7 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::get('parent/children', [\App\Http\Controllers\API\ParentController::class, 'getChildren']);
     Route::get('parent/attendance-queries', [\App\Http\Controllers\API\ParentController::class, 'getAttendanceQueries']);
+    Route::post('parent/attendance-queries/bulk', [\App\Http\Controllers\API\ParentController::class, 'bulkUpdateAttendanceQueries']);
     Route::get('parent/children/check-in-status', [\App\Http\Controllers\API\ParentController::class, 'getChildrenCheckInStatus']);
     Route::put('parent/check-in/{checkInId}/confirm', [\App\Http\Controllers\API\ParentController::class, 'confirmAttendance']);
     Route::put('parent/check-in/{checkInId}/decline', [\App\Http\Controllers\API\ParentController::class, 'declineAttendance']);
@@ -200,5 +207,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('user/settings', [\App\Http\Controllers\API\UserSettingsController::class, 'update']);
     Route::delete('user/settings', [\App\Http\Controllers\API\UserSettingsController::class, 'destroy']);
     Route::get('user/settings/default', [\App\Http\Controllers\API\UserSettingsController::class, 'defaults']);
+
+    /**
+     * Feature 4: Persönlicher Wochenplan / Familien-Dashboard
+     */
+    Route::get('family/weekly', [\App\Http\Controllers\API\FamilyWeeklyController::class, 'index']);
+    Route::get('family/weekly/{child_id}', [\App\Http\Controllers\API\FamilyWeeklyController::class, 'show']);
+
+    /**
+     * Feature 2: Messenger
+     */
+    Route::middleware('permission:use messenger')->prefix('messenger')->group(function () {
+        Route::get('/conversations',                                [\App\Http\Controllers\API\MessengerController::class, 'conversations']);
+        Route::get('/conversations/{conversation}/messages',        [\App\Http\Controllers\API\MessengerController::class, 'messages']);
+        Route::post('/conversations/{conversation}/messages',       [\App\Http\Controllers\API\MessengerController::class, 'send']);
+        Route::post('/conversations/{conversation}/read',           [\App\Http\Controllers\API\MessengerController::class, 'markRead']);
+        Route::get('/unread-count',                                 [\App\Http\Controllers\API\MessengerController::class, 'unreadCount']);
+    });
 
 });

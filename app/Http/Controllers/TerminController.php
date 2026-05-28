@@ -68,15 +68,20 @@ class TerminController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function edit(Termin $termin)
+    public function edit(Termin $termine)
     {
+
+        $groups = Cache::remember('groups', now()->addDay(), function () {
+            return Group::all();
+        });
+
         return view('termine.edit', [
-            'gruppen' => Group::all(),
-            'termin' => $termin,
+            'gruppen' => $groups,
+            'termin' => $termine,
         ]);
     }
 
-    public function update(CreateTerminRequest $request, Termin $termin)
+    public function update(CreateTerminRequest $request, Termin $termine)
     {
         if (! auth()->user()->can('edit termin')) {
             return redirect()->back()->with([
@@ -96,7 +101,7 @@ class TerminController extends Controller implements HasMiddleware
         }
 
         try {
-            $termin->update(
+            $termine->update(
                 [
                     'terminname' => $request->terminname,
                     'start' => $start,
@@ -117,7 +122,7 @@ class TerminController extends Controller implements HasMiddleware
 
         try {
             $gruppen = $this->grousRepository->getGroups($request->input('gruppen'));
-            $termin->groups()->sync($gruppen);
+            $termine->groups()->sync($gruppen);
 
         } catch (\Exception $e) {
 
@@ -131,7 +136,7 @@ class TerminController extends Controller implements HasMiddleware
 
         Cache::forget('termine'.auth()->id());
 
-        return redirect(url('/'))->with([
+        return redirect(url('/termine'))->with([
             'type' => 'success',
             'Meldung' => 'Termin aktualisiert.',
         ]);
@@ -278,16 +283,16 @@ class TerminController extends Controller implements HasMiddleware
      *
      * @throws AuthorizationException
      */
-    public function destroy(Termin $termin)
+    public function destroy(Termin $termine)
     {
-        Gate::authorize('delete', $termin);
+        Gate::authorize('delete', $termine);
 
-        $termin->groups()->detach();
-        $termin->delete();
+        $termine->groups()->detach();
+        $termine->delete();
 
         Cache::forget('termine'.auth()->id());
 
-        return redirect()->back()->with([
+        return redirect(url('/termine'))->with([
             'type' => 'success',
             'Meldung' => 'Termin gelöscht.',
         ]);

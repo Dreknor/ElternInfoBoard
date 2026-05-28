@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
+use App\Model\UserAppSettings;
+use App\Settings\GeneralSetting;
+use App\Themes\ThemeRegistry;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +38,13 @@ class BenutzerController extends Controller implements HasMiddleware
         return view('user.settings', [
             'user' => auth()->user(),
             'changelog' => $changelog,
+            'themes' => app(ThemeRegistry::class)->all(),
+            'userTheme' => data_get(
+                UserAppSettings::where('user_id', auth()->id())->first()?->settings,
+                'theme',
+                ''
+            ),
+            'generalSettings' => app(GeneralSetting::class),
         ]);
     }
 
@@ -56,6 +66,7 @@ class BenutzerController extends Controller implements HasMiddleware
                 'publicPhone',
                 'calendar_prefix',
                 'releaseCalendar',
+                'messenger_discoverable',
             ])
         );
 

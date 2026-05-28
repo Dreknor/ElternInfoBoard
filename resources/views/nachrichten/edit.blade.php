@@ -1,9 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="card">
-        <div class="card-header">
-            <h6 class="card-title">
+    <div class="card" style="border-color: var(--color-widget-primary-border);">
+        <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+            <h6 class="card-title mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                <i class="fas fa-edit"></i>
                 Mitteilung bearbeiten
             </h6>
         </div>
@@ -196,11 +197,10 @@
                             @if(count($post->getMedia('header'))>0)
                                 <div class="col-12">
                                     <div class="card">
-                                        <div class="card-header border-bottom">
-                                            <p>
-                                                <b>
-                                                    vorhandene Titelbilder (nur das erste wird angezeigt)
-                                                </b>
+                                        <div class="card-header border-bottom" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                            <p class="mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                                <i class="fas fa-image"></i>
+                                                <b>vorhandene Titelbilder (nur das erste wird angezeigt)</b>
                                             </p>
                                         </div>
                                         <div class="card-body">
@@ -225,11 +225,10 @@
                             @if(count($post->getMedia('images'))>0)
                                 <div class="col-12">
                                     <div class="card">
-                                        <div class="card-header border-bottom">
-                                            <p>
-                                                <b>
-                                                   vorhandene Bilder
-                                                </b>
+                                        <div class="card-header border-bottom" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                            <p class="mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                                <i class="fas fa-images"></i>
+                                                <b>vorhandene Bilder</b>
                                             </p>
                                         </div>
                                         <div class="card-body">
@@ -265,11 +264,10 @@
                                 @if(count($post->getMedia('files'))>0)
                                     <div class="col-12">
                                         <div class="card">
-                                            <div class="card-header border-bottom">
-                                                <p>
-                                                    <b>
-                                                        vorhandene Dateien
-                                                    </b>
+                                            <div class="card-header border-bottom" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                                <p class="mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                                    <i class="fas fa-file-alt"></i>
+                                                    <b>vorhandene Dateien</b>
                                                 </p>
                                             </div>
                                             <div class="card-body">
@@ -349,9 +347,10 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h6>
+    <div class="card" style="border-color: var(--color-widget-primary-border);">
+        <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+            <h6 style="color: var(--color-widget-header-text);" class="mb-0 flex items-center gap-2">
+                <i class="fas fa-reply-all"></i>
                 Rückmeldungen
             </h6>
         </div>
@@ -418,9 +417,10 @@
                 @if(!is_null($post->rueckmeldung))
                     @switch($post->rueckmeldung->type)
                         @case('email')
-                            <div class="card" id="rueckmeldungCard">
-                                <div class="card-header">
-                                    <h6 class="card-title">
+                            <div class="card" id="rueckmeldungCard" style="border-color: var(--color-widget-primary-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                    <h6 class="card-title mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-reply"></i>
                                         Rückmeldung
                                     </h6>
                                 </div>
@@ -500,9 +500,10 @@
                             </div>
                             @break
                         @case('bild')
-                            <div class="card" id="rueckmeldungCard">
-                                <div class="card-header">
-                                    <h6>
+                            <div class="card" id="rueckmeldungCard" style="border-color: var(--color-widget-primary-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                    <h6 class="mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-image"></i>
                                         Bilder-Upload entfernen?
                                     </h6>
                                 </div>
@@ -533,9 +534,10 @@
                             </div>
                             @break
                         @case('commentable')
-                            <div class="card" id="rueckmeldungCard">
-                                <div class="card-header">
-                                    <h6>
+                            <div class="card" id="rueckmeldungCard" style="border-color: var(--color-widget-primary-border);">
+                                <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                    <h6 class="mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                        <i class="fas fa-comments"></i>
                                         Diskussion entfernen?
                                     </h6>
                                 </div>
@@ -655,10 +657,10 @@
                                         </div>
                                         @break
                             @case('terminliste')
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="card-title">
-                                            <i class="fas fa-calendar-check mr-2"></i>
+                                <div class="card" style="border-color: var(--color-widget-primary-border);">
+                                    <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                                        <h6 class="card-title mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                                            <i class="fas fa-calendar-check"></i>
                                             Terminlisten-Rückmeldung bearbeiten
                                         </h6>
                                     </div>
@@ -803,9 +805,10 @@
     @if(is_null($post->rueckmeldung))
         <div class="row d-none" id="createForm">
             <div class="col-12">
-                <div class="card" id="rueckmeldungCard">
-                    <div class="card-header">
-                        <h6 class="card-title">
+                <div class="card" id="rueckmeldungCard" style="border-color: var(--color-widget-primary-border);">
+                    <div class="card-header" style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border);">
+                        <h6 class="card-title mb-0 flex items-center gap-2" style="color: var(--color-widget-header-text);">
+                            <i class="fas fa-reply"></i>
                             Rückmeldung
                         </h6>
                     </div>

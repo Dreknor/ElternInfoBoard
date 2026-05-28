@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Mail\NewUserPasswordMail;
+use App\Model\Conversation;
 use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Liste;
@@ -220,6 +221,21 @@ class UserController extends Controller implements HasMiddleware
     }
 
     /**
+     * Willkommens-E-Mail erneut versenden (mit neuem Kennwort).
+     *
+     * @return RedirectResponse
+     */
+    public function resendWelcomeMail(Request $request, User $user): RedirectResponse
+    {
+        $result = $this->userService->resendWelcomeMail($user);
+
+        return redirect()->back()->with([
+            'type'    => $result['emailSent'] ? 'success' : 'danger',
+            'Meldung' => $result['emailStatus'],
+        ]);
+    }
+
+    /**
      * @return RedirectResponse
      */
     public function loginAsUser(Request $request, $id)
@@ -381,6 +397,19 @@ class UserController extends Controller implements HasMiddleware
 
         // Zur Gruppe hinzufügen
         $user->groups()->syncWithoutDetaching([$vereinsgruppe->id]);
+
+        // Gruppen-Konversation (falls aktiv) ebenfalls beitreten
+        $conv = Conversation::withoutGlobalScopes()
+            ->where('group_id', $vereinsgruppe->id)
+            ->where('type', 'group')
+            ->where('is_active', true)
+            ->first();
+
+        if ($conv && ! $conv->users()->where('users.id', $user->id)->exists()) {
+            $conv->users()->syncWithoutDetaching([
+                $user->id => ['joined_at' => now()],
+            ]);
+        }
 
         return response()->json([
             'success' => true,

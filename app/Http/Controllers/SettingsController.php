@@ -11,10 +11,15 @@ use App\Services\HolidayService;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
+use App\Settings\KeycloakSetting;
+use App\Settings\MessengerSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
+use App\Settings\ReminderSetting;
+use App\Settings\CustomThemeSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
+use App\Themes\ThemeRegistry;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -45,9 +50,16 @@ class SettingsController extends Controller implements HasMiddleware
         $careSettings = new CareSetting;
         $pflichtstundenSetting = new PflichtstundenSetting;
         $stundenplanSettings = new StundenplanSetting;
+        $reminderSettings = new ReminderSetting;
+        $messengerSettings = new MessengerSetting;
+        $keycloakSettings = new KeycloakSetting;
 
         $groups = Group::all();
         $roles = Role::all();
+
+        // Theme-Liste für Design-Tab
+        $themes = app(ThemeRegistry::class)->all();
+        $customThemeSettings = new CustomThemeSetting;
 
         $users = User::query()
             ->whereHas('roles', function ($query) {
@@ -64,16 +76,20 @@ class SettingsController extends Controller implements HasMiddleware
             'careSettings' => $careSettings,
             'pflichtstundenSettings' => $pflichtstundenSetting,
             'stundenplanSettings' => $stundenplanSettings,
+            'reminderSettings' => $reminderSettings,
+            'messengerSettings' => $messengerSettings,
+            'keycloakSettings' => $keycloakSettings,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
+            'themes'              => $themes,
+            'customThemeSettings' => $customThemeSettings,
         ]);
     }
 
     public function update(Request $request, $group): RedirectResponse
     {
         switch ($group) {
-
             case 'care':
                 $validated = $request->validate([
                     'view_detailed_care' => 'nullable|boolean',
@@ -367,6 +383,97 @@ class SettingsController extends Controller implements HasMiddleware
                 // Clear cache
                 Cache::forget('stundenplan_data');
                 break;
+
+            case 'messenger':
+                $validated = $request->validate([
+                    'auto_delete_days'      => 'required|integer|min:7|max:3650',
+                    'max_message_length'    => 'required|integer|min:100|max:10000',
+                    'allow_direct_messages' => 'nullable|boolean',
+                    'allow_file_uploads'    => 'nullable|boolean',
+                    'max_file_size_mb'      => 'required|integer|min:1|max:50',
+                ]);
+
+                $messengerSetting = new MessengerSetting;
+                $messengerSetting->auto_delete_days      = $validated['auto_delete_days'];
+                $messengerSetting->max_message_length    = $validated['max_message_length'];
+                $messengerSetting->allow_direct_messages = $request->has('allow_direct_messages');
+                $messengerSetting->allow_file_uploads    = $request->has('allow_file_uploads');
+                $messengerSetting->max_file_size_mb      = $validated['max_file_size_mb'];
+                $messengerSetting->save();
+                break;
+
+            case 'reminder':
+                $validated = $request->validate([
+                    'send_time' => 'required|date_format:H:i',
+                    'level1_active' => 'nullable|boolean',
+                    'level1_days_before_deadline' => 'required|integer|min:1|max:30',
+                    'level1_in_app' => 'nullable|boolean',
+                    'level1_email' => 'nullable|boolean',
+                    'level1_push' => 'nullable|boolean',
+                    'level2_active' => 'nullable|boolean',
+                    'level2_days_before_deadline' => 'required|integer|min:1|max:30',
+                    'level2_in_app' => 'nullable|boolean',
+                    'level2_email' => 'nullable|boolean',
+                    'level2_push' => 'nullable|boolean',
+                    'level3_active' => 'nullable|boolean',
+                    'level3_days_before_deadline' => 'required|integer|min:0|max:30',
+                    'level3_in_app' => 'nullable|boolean',
+                    'level3_email' => 'nullable|boolean',
+                    'level3_push' => 'nullable|boolean',
+                    'level3_escalate_to_author' => 'nullable|boolean',
+                    'include_rueckmeldungen' => 'nullable|boolean',
+                    'include_read_receipts' => 'nullable|boolean',
+                    'include_attendance_queries' => 'nullable|boolean',
+                ]);
+
+                $reminderSettings = new ReminderSetting;
+                $reminderSettings->send_time = $validated['send_time'];
+                $reminderSettings->level1_active = $request->has('level1_active');
+                $reminderSettings->level1_days_before_deadline = $validated['level1_days_before_deadline'];
+                $reminderSettings->level1_in_app = $request->has('level1_in_app');
+                $reminderSettings->level1_email = $request->has('level1_email');
+                $reminderSettings->level1_push = $request->has('level1_push');
+                $reminderSettings->level2_active = $request->has('level2_active');
+                $reminderSettings->level2_days_before_deadline = $validated['level2_days_before_deadline'];
+                $reminderSettings->level2_in_app = $request->has('level2_in_app');
+                $reminderSettings->level2_email = $request->has('level2_email');
+                $reminderSettings->level2_push = $request->has('level2_push');
+                $reminderSettings->level3_active = $request->has('level3_active');
+                $reminderSettings->level3_days_before_deadline = $validated['level3_days_before_deadline'];
+                $reminderSettings->level3_in_app = $request->has('level3_in_app');
+                $reminderSettings->level3_email = $request->has('level3_email');
+                $reminderSettings->level3_push = $request->has('level3_push');
+                $reminderSettings->level3_escalate_to_author = $request->has('level3_escalate_to_author');
+                $reminderSettings->include_rueckmeldungen = $request->has('include_rueckmeldungen');
+                $reminderSettings->include_read_receipts = $request->has('include_read_receipts');
+                $reminderSettings->include_attendance_queries = $request->has('include_attendance_queries');
+                $reminderSettings->save();
+                break;
+
+            case 'keycloak':
+                $validated = $request->validate([
+                    'enabled' => 'nullable|boolean',
+                    'client_id' => 'nullable|string|max:255',
+                    'client_secret' => 'nullable|string|max:255',
+                    'realm' => 'nullable|string|max:255',
+                    'redirect_uri' => 'nullable|string|max:500',
+                    'base_url' => 'nullable|string|max:500',
+                    'maildomain' => 'nullable|string|max:255',
+                ]);
+
+                $keycloakSettings = new KeycloakSetting;
+                $keycloakSettings->enabled = $request->has('enabled');
+                $keycloakSettings->client_id = $validated['client_id'] ?? null;
+                $keycloakSettings->client_secret = $validated['client_secret'] ?? null;
+                $keycloakSettings->realm = $validated['realm'] ?? 'master';
+                $keycloakSettings->redirect_uri = $validated['redirect_uri'] ?? null;
+                $keycloakSettings->base_url = $validated['base_url'] ?? null;
+                $keycloakSettings->maildomain = $validated['maildomain'] ?? '*';
+                $keycloakSettings->save();
+
+                Artisan::call('config:clear');
+                Artisan::call('cache:clear');
+                break;
         }
 
         return redirect()->back()->with([
@@ -395,7 +502,7 @@ class SettingsController extends Controller implements HasMiddleware
      */
     public function module()
     {
-        $module = Module::all();
+        $module = Module::orderBy('sort_order')->orderBy('id')->get();
 
         return view('settings.module', [
             'module' => $module,
@@ -403,16 +510,57 @@ class SettingsController extends Controller implements HasMiddleware
     }
 
     /**
+     * Reihenfolge der Module speichern (AJAX)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'order'   => 'required|array',
+            'order.*' => 'integer|exists:settings_modules,id',
+        ]);
+
+        foreach ($request->order as $position => $id) {
+            Module::where('id', $id)->update(['sort_order' => $position + 1]);
+        }
+
+        Cache::forget('modules');
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * @return RedirectResponse
      */
+    /**
+     * Kernmodule, die nicht deaktiviert werden dürfen.
+     * Das Settings-Modul würde sonst seinen eigenen Sidebar-Link entfernen.
+     */
+    private const PROTECTED_MODULES = ['Settings'];
+
     public function change_status(string $modulname)
     {
         $modul = Module::where('setting', $modulname)->first();
 
+        if (! $modul) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Modul nicht gefunden.',
+            ]);
+        }
+
+        // Kernmodule dürfen nicht deaktiviert werden
+        if (in_array($modul->setting, self::PROTECTED_MODULES, true) && $modul->options['active'] == 1) {
+            return redirect()->back()->with([
+                'type'    => 'warning',
+                'Meldung' => 'Das Modul "' . $modul->setting . '" kann nicht deaktiviert werden, da es für den Zugriff auf die Einstellungen benötigt wird.',
+            ]);
+        }
+
         $options = $modul->options;
         if ($modul->options['active'] == 1) {
             $options['active'] = '0';
-
         } else {
             $options['active'] = '1';
         }
@@ -422,7 +570,7 @@ class SettingsController extends Controller implements HasMiddleware
         Cache::forget('modules');
 
         return redirect()->back()->with([
-            'type' => 'success',
+            'type'    => 'success',
             'Meldung' => 'Status geändert',
         ]);
     }

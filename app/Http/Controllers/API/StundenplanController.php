@@ -77,7 +77,6 @@ class StundenplanController extends Controller
     public function getClasses(Request $request): JsonResponse
     {
 
-        Log::debug('getClasses API called', ['user_id' => $request->user()->id]);
         // Check permissions
         $user = $request->user();
         if (!$user->can('view stundenplan')) {
@@ -114,19 +113,6 @@ class StundenplanController extends Controller
 
             }
 
-            Log::debug('getClasses API returning', ['availableClasses' => $availableClasses]);
-
-            /*
-            // Filter for parents
-            if ($user->hasRole('eltern')) {
-                $allowedClasses = $this->getAllowedClassesForParent($user);
-                $klassen = $klassen->filter(function ($klasse) use ($allowedClasses) {
-                    return in_array($klasse->kurzform, $allowedClasses);
-                })->values();
-            }
-
-
-*/
             return response()->json([
                 'success' => true,
                 'data' => $availableClasses,
@@ -424,12 +410,6 @@ class StundenplanController extends Controller
 
 
             $vertretungen = $this->getVertretungenForClass($klasse->kurzform);
-
-            Log::debug('getTimetableByClass API returning', [
-                'class' => $klasse->kurzform,
-                'timetable_entries' => count($timetable),
-                'vertretungen' => $vertretungen,
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -764,7 +744,6 @@ class StundenplanController extends Controller
     private function buildTimetableForClassFromDB($schuljahr, $klasse)
     {
         $timetable = [];
-Log::debug('Erstelle Plan für Klasse', ['schuljahr' => $schuljahr->name, 'klasse' => $klasse->kurzform]);
         // Initialize empty timetable
         for ($tag = 1; $tag <= 5; $tag++) {
             $timetable[$tag] = [];
@@ -995,9 +974,6 @@ Log::debug('Erstelle Plan für Klasse', ['schuljahr' => $schuljahr->name, 'klass
         $endDate = Carbon::now()->endOfWeek();
 
         try {
-
-            Log::debug('Suche Vertretungen für Klasse', ['klasse' => $classKurzform, 'startDate' => $startDate->toDateString(), 'endDate' => $endDate->toDateString()]);
-
                 $vertretungen = Vertretung::where('klasse_kurzform', $classKurzform)
                     ->whereBetween('date', [$startDate, $endDate])
                     ->withoutGlobalScope('date')
@@ -1005,9 +981,7 @@ Log::debug('Erstelle Plan für Klasse', ['schuljahr' => $schuljahr->name, 'klass
                     ->groupBy(function($item) {
                         return Carbon::parse($item->date)->dayOfWeekIso;
                     });
-
-                Log::debug('Vertretungen für Klasse gefunden', ['klasse' => $classKurzform, 'count' => $vertretungen->count()]);
-            return $vertretungen;
+                return $vertretungen;
 
         } catch (\Exception $e) {
             return collect();

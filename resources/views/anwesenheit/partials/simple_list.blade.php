@@ -31,6 +31,7 @@
                                             [
                                                 'checked_in' => $child->checkedIn() ? 'true' : 'false',
                                                 'schickzeiten' => $child->getSchickzeitenForToday()?->toArray(),
+                                                'regular_schickzeiten' => $child->regularSchickzeiten?->toArray(),
                                                 'mandates' => $child->mandates?->toArray(),
 
                                             ]

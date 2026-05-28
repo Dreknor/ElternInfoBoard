@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Mail\NewUserPasswordMail;
+use App\Model\Conversation;
 use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Liste;
@@ -96,6 +97,41 @@ class UserService
 
         $gruppen = $this->groupsRepository->getGroups($groupInput);
         $user->groups()->sync($gruppen);
+
+        // Gruppen-Konversationen synchronisieren:
+        // Der User wird in alle aktiven Gruppen-Chats seiner neuen Gruppen aufgenommen.
+        // Aus Gruppen, aus denen er entfernt wurde, wird er aus den Konversationen ausgetragen.
+        $newGroupIds = $gruppen->pluck('id')->all();
+
+        // Hinzufügen zu aktiven Gruppen-Konversationen (falls noch nicht Mitglied)
+        $conversations = Conversation::withoutGlobalScopes()
+            ->whereIn('group_id', $newGroupIds)
+            ->where('type', 'group')
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($conversations as $conv) {
+            $alreadyMember = $conv->users()->where('users.id', $user->id)->exists();
+            if (! $alreadyMember) {
+                $conv->users()->syncWithoutDetaching([
+                    $user->id => ['joined_at' => now()],
+                ]);
+            }
+        }
+
+        // Entfernen aus Konversationen von Gruppen, denen der User nicht mehr angehört
+        $removedGroupIds = Conversation::withoutGlobalScopes()
+            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
+            ->where('type', 'group')
+            ->whereNotIn('group_id', $newGroupIds)
+            ->pluck('id');
+
+        if ($removedGroupIds->isNotEmpty()) {
+            DB::table('conversation_user')
+                ->whereIn('conversation_id', $removedGroupIds)
+                ->where('user_id', $user->id)
+                ->delete();
+        }
     }
 
     /**
