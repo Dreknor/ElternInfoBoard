@@ -1,3 +1,16 @@
+<script>
+function readNotification(id) {
+    fetch('{{ route('notification.read') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ id: id }),
+    }).catch(() => {});
+}
+</script>
 <div x-data="{ open: false, showRead: false }" class="relative">
     @if(count($notifications) == 0)
         <!-- No Notifications -->
