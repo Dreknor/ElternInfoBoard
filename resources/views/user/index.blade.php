@@ -183,11 +183,6 @@
                                                     </button>
                                                 </form>
                                             @endcan
-                                            @can('testing')
-                                                <a href="{{ url("push/$user->id") }}" class="btn btn-sm btn-warning" title="Push senden">
-                                                    <i class="fas fa-bell"></i>
-                                                </a>
-                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -270,11 +265,7 @@
                                         </button>
                                     </form>
                                 @endcan
-                                @can('testing')
-                                    <a href="{{ url("push/$mobileUser->id") }}" class="btn btn-sm btn-warning" title="Push senden">
-                                        <i class="fas fa-bell"></i>
-                                    </a>
-                                @endcan
+
                                 <form action="{{ url('users').'/'.$mobileUser->id }}" method="post" class="inline">
                                     @csrf
                                     @method('delete')

@@ -26,13 +26,36 @@
                     </p>
                 </div>
             </div>
-            {{-- Speichern-Button (Desktop, oben rechts – wird per JS eingeblendet) --}}
-            <button type="submit"
-                    class="btn btn-success"
-                    id="btn-save-desktop"
-                    style="display: none;">
-                <i class="fas fa-save"></i> Änderungen speichern
-            </button>
+            <div class="flex items-center gap-2 flex-wrap">
+                {{-- Willkommens-E-Mail erneut versenden --}}
+                @can('edit user')
+                    <button type="button"
+                            onclick="confirmResendWelcome()"
+                            class="btn btn-outline-info btn-sm"
+                            title="Neues Kennwort generieren und Zugangsdaten erneut per E-Mail versenden">
+                        <i class="fas fa-paper-plane"></i>
+                        <span class="hidden sm:inline">Zugangsdaten erneut senden</span>
+                    </button>
+
+                    {{-- Verstecktes Formular für die Aktion --}}
+                    <form id="resend-welcome-form"
+                          action="{{ route('users.resendWelcome', $user) }}"
+                          method="POST"
+                          class="hidden">
+                        @csrf
+                    </form>
+                @endcan
+
+                {{-- Speichern-Button (Desktop, oben rechts – wird per JS eingeblendet) --}}
+                <button type="submit"
+                        form="user-edit-form"
+                        class="btn btn-success btn-sm"
+                        id="btn-save-desktop"
+                        style="display: none;">
+                    <i class="fas fa-save"></i>
+                    <span class="hidden sm:inline">Änderungen speichern</span>
+                </button>
+            </div>
         </div>
 
         @if ($errors->any())
@@ -303,23 +326,66 @@
 @endsection
 
 @push('js')
+<script src="{{ asset('js/plugins/sweetalert2.all.min.js') }}"></script>
 <script>
+/**
+ * Bestätigungsdialog vor dem erneuten Versenden der Willkommens-E-Mail.
+ * Verwendet SweetAlert2 falls geladen, sonst nativen confirm()-Dialog.
+ */
+function confirmResendWelcome() {
+    const userName  = @json($user->name);
+    const userEmail = @json($user->email);
+
+    function doSubmit() {
+        document.getElementById('resend-welcome-form').submit();
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Zugangsdaten erneut versenden?',
+            html:
+                '<p>Für <strong>' + userName + '</strong> (<code>' + userEmail + '</code>) wird</p>' +
+                '<ul style="text-align:left;margin-top:10px;">' +
+                '<li>ein <strong>neues Kennwort</strong> generiert,</li>' +
+                '<li>das bisherige Kennwort <strong>sofort ungültig</strong> gemacht,</li>' +
+                '<li>eine E-Mail mit den neuen Zugangsdaten versendet.</li>' +
+                '</ul>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-paper-plane"></i> Ja, jetzt versenden',
+            cancelButtonText:  'Abbrechen',
+            confirmButtonColor: '#0891b2',
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                doSubmit();
+            }
+        });
+    } else {
+        if (confirm(
+            'Zugangsdaten erneut an ' + userEmail + ' versenden?\n\n' +
+            'Das bisherige Passwort wird sofort ungültig. ' +
+            'Ein neues Kennwort wird generiert und per E-Mail verschickt.'
+        )) {
+            doSubmit();
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     let formChanged = false;
-    const saveContainer = document.getElementById('save-btn-container');
-    const stickySaveBar = document.getElementById('sticky-save-bar');
+    const saveContainer  = document.getElementById('save-btn-container');
+    const stickySaveBar  = document.getElementById('sticky-save-bar');
     const btnSaveDesktop = document.getElementById('btn-save-desktop');
 
     function onFormChange() {
         if (!formChanged) {
             formChanged = true;
             // Desktop: Top-Button + inline Button einblenden
-            if (saveContainer) saveContainer.style.display = '';
-            if (btnSaveDesktop) btnSaveDesktop.style.display = '';
+            if (saveContainer)  saveContainer.style.display  = '';
+            if (btnSaveDesktop) btnSaveDesktop.style.display  = '';
             // Mobile: sticky Bar einblenden
             if (stickySaveBar) {
                 stickySaveBar.style.setProperty('display', 'flex', 'important');
-                // Padding-bottom anpassen damit Inhalt nicht verdeckt wird
                 const content = document.querySelector('.main-panel > .content');
                 if (content) content.style.paddingBottom = '80px';
             }
@@ -327,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.getElementById('user-edit-form')?.querySelectorAll('input, select, textarea').forEach(el => {
-        el.addEventListener('input', onFormChange);
+        el.addEventListener('input',  onFormChange);
         el.addEventListener('change', onFormChange);
     });
 });

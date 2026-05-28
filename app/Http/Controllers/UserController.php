@@ -221,6 +221,21 @@ class UserController extends Controller implements HasMiddleware
     }
 
     /**
+     * Willkommens-E-Mail erneut versenden (mit neuem Kennwort).
+     *
+     * @return RedirectResponse
+     */
+    public function resendWelcomeMail(Request $request, User $user): RedirectResponse
+    {
+        $result = $this->userService->resendWelcomeMail($user);
+
+        return redirect()->back()->with([
+            'type'    => $result['emailSent'] ? 'success' : 'danger',
+            'Meldung' => $result['emailStatus'],
+        ]);
+    }
+
+    /**
      * @return RedirectResponse
      */
     public function loginAsUser(Request $request, $id)

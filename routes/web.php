@@ -420,6 +420,7 @@ Route::middleware('auth')->group(function () {
 
             Route::resource('users', UserController::class);
             Route::get('users/{user}/remove/sorg2/{sorg2}', [UserController::class, 'removeVerknuepfung']);
+            Route::post('users/{user}/resend-welcome', [UserController::class, 'resendWelcomeMail'])->name('users.resendWelcome');
             // Route::get('users/{user}/delete', [UserController::class, 'destroy']);
             // Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
             // Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
