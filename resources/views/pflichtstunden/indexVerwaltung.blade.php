@@ -303,10 +303,11 @@
                                     <td class="px-4 py-3 text-sm font-medium text-gray-900">
                                         {{ $pflichtstunde->user->name }}
                                         @if($hasOverlap)
+                                            @php $groupId = $entryGroupMap[$pflichtstunde->id] ?? null; @endphp
                                             <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-300"
-                                                  title="Achtung: Für diese Familie existiert mindestens ein weiterer Eintrag im gleichen Zeitraum. Mögliche Doppelerfassung!">
+                                                  title="Achtung: Für diese Familie existiert mindestens ein weiterer Eintrag im gleichen Zeitraum. Mögliche Doppelerfassung! → Überlappungsgruppe {{ $groupId }}">
                                                 <i class="fas fa-exclamation-triangle"></i>
-                                                Überlappung
+                                                Überlappung{{ $groupId ? ' (Gr.&nbsp;' . $groupId . ')' : '' }}
                                             </span>
                                         @endif
                                     </td>
@@ -806,80 +807,110 @@
             </div>
         </div>
 
-        <!-- Bestätigte Pflichtstunden mit Überlappungen -->
-        @if($confirmedOverlaps->isNotEmpty())
+        <!-- Überlappungsgruppen: gruppierte Darstellung aller Zeitkonflikte -->
+        @if($overlapGroups->isNotEmpty())
             <div class="bg-white rounded-xl shadow-md border-2 border-orange-300 mb-6">
                 <div class="px-6 py-4 rounded-t-xl text-white"
                      style="background: linear-gradient(to right, #f97316, #ef4444)">
                     <h3 class="text-xl font-bold flex items-center gap-3">
                         <i class="fas fa-exclamation-triangle text-2xl"></i>
-                        Hinweis: Überlappungen bei bestätigten Pflichtstunden
+                        Hinweis: Überlappende Pflichtstunden
+                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/30 text-white text-sm font-bold">
+                            {{ $overlapGroups->count() }}
+                        </span>
                     </h3>
                     <p class="text-sm mt-1 text-white/90">
-                        Die folgenden bereits bestätigten Einträge überlappen sich zeitlich mit einem anderen Eintrag derselben Familie.
-                        Bitte prüfen Sie, ob es sich um Doppelerfassungen handelt.
+                        Die folgenden Einträge überlappen sich zeitlich innerhalb derselben Familie.
+                        Abgelehnte Einträge werden nicht berücksichtigt. Jede Gruppe zeigt die konkreten Überschneidungen.
                     </p>
                 </div>
-                <div class="p-6">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-orange-50 border-b-2 border-orange-200">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Datum</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Stunden</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Person</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Grund</th>
-                                @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Bereich</th>
-                                @endif
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Bestätigt am</th>
-                            </tr>
-                            </thead>
-                            <tbody class="divide-y divide-orange-100">
-                            @foreach ($confirmedOverlaps as $confirmedPs)
-                                <tr class="bg-orange-50 hover:bg-orange-100 transition-colors duration-150">
-                                    <td class="px-4 py-3 text-sm text-gray-700">
-                                        @if($confirmedPs->start->isSameDay($confirmedPs->end))
-                                            <div class="font-medium">{{ $confirmedPs->start->format('d.m.Y') }}</div>
-                                            <div class="text-xs text-gray-500">{{ $confirmedPs->start->format('H:i') }} – {{ $confirmedPs->end->format('H:i') }}</div>
-                                        @else
-                                            <div class="text-xs">{{ $confirmedPs->start->format('d.m.Y H:i') }}</div>
-                                            <div class="text-xs">{{ $confirmedPs->end->format('d.m.Y H:i') }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-sm">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                @if($confirmedPs->duration > 60)
-                                                    {{ floor($confirmedPs->duration / 60) }}h {{ $confirmedPs->duration % 60 }}m
-                                                @else
-                                                    {{ $confirmedPs->duration }}m
-                                                @endif
-                                            </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                        {{ $confirmedPs->user->name }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-gray-700">{{ $confirmedPs->description }}</td>
-                                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
-                                        <td class="px-4 py-3 text-sm">
-                                            @if($confirmedPs->bereich)
-                                                <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-                                                        <i class="fas fa-folder"></i>
-                                                        {{ $confirmedPs->bereich }}
-                                                    </span>
-                                            @else
-                                                <span class="text-gray-400 text-xs">–</span>
+
+                <div class="p-6 space-y-5">
+                    @foreach($overlapGroups as $group)
+                        <div class="border border-orange-200 rounded-xl overflow-hidden shadow-sm">
+                            <!-- Gruppen-Header -->
+                            <div class="bg-orange-50 px-4 py-3 flex items-center justify-between border-b border-orange-200">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold">
+                                        {{ $group['group_id'] }}
+                                    </span>
+                                    <span class="font-semibold text-orange-900">
+                                        <i class="fas fa-users text-orange-600 mr-1"></i>
+                                        {{ $group['family_name'] }}
+                                    </span>
+                                </div>
+                                <span class="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
+                                    {{ $group['entries']->count() }} überlappende Einträge
+                                </span>
+                            </div>
+
+                            <!-- Einträge der Gruppe, nach Startzeit sortiert -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50 border-b border-gray-200">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum / Uhrzeit</th>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dauer</th>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Person</th>
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Grund</th>
+                                            @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bereich</th>
                                             @endif
-                                        </td>
-                                    @endif
-                                    <td class="px-4 py-3 text-sm text-gray-500">
-                                        {{ $confirmedPs->approved_at ? $confirmedPs->approved_at->format('d.m.Y H:i') : '–' }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach($group['entries'] as $entry)
+                                            <tr class="{{ $entry->approved ? 'bg-green-50' : 'bg-yellow-50' }}">
+                                                <td class="px-4 py-3">
+                                                    @if($entry->approved)
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
+                                                            <i class="fas fa-check-circle"></i> Bestätigt
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-300">
+                                                            <i class="fas fa-clock"></i> Ausstehend
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-gray-700 font-medium">
+                                                    @if($entry->start->isSameDay($entry->end))
+                                                        <div>{{ $entry->start->format('d.m.Y') }}</div>
+                                                        <div class="text-xs text-gray-500">{{ $entry->start->format('H:i') }} – {{ $entry->end->format('H:i') }}</div>
+                                                    @else
+                                                        <div class="text-xs">{{ $entry->start->format('d.m.Y H:i') }}</div>
+                                                        <div class="text-xs">{{ $entry->end->format('d.m.Y H:i') }}</div>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        @if($entry->duration > 60)
+                                                            {{ floor($entry->duration / 60) }}h {{ $entry->duration % 60 }}m
+                                                        @else
+                                                            {{ $entry->duration }}m
+                                                        @endif
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->user->name }}</td>
+                                                <td class="px-4 py-3 text-gray-700">{{ $entry->description }}</td>
+                                                @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                                    <td class="px-4 py-3">
+                                                        @if($entry->bereich)
+                                                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                                                                <i class="fas fa-folder"></i> {{ $entry->bereich }}
+                                                            </span>
+                                                        @else
+                                                            <span class="text-gray-400 text-xs">–</span>
+                                                        @endif
+                                                    </td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         @endif
