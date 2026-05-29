@@ -60,7 +60,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        // TODO-2.7: Serverseitige Paginierung statt User::all() für bessere Performance
         $query = User::query()->with(['groups', 'permissions', 'sorgeberechtigter2', 'roles']);
 
         if ($search = $request->input('search')) {
@@ -81,7 +80,6 @@ class UserController extends Controller implements HasMiddleware
         return view('user.index', [
             'users' => $query->orderBy('name')->paginate(50)->withQueryString(),
             'roles' => Role::all(),
-            // TODO-2.7: WICHTIG – GetGroupsScope umgehen damit Admin alle Gruppen im Filter sieht
             'groups' => Group::withoutGlobalScope(\App\Scopes\GetGroupsScope::class)->orderBy('name')->get(),
         ]);
     }
@@ -119,7 +117,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function store(CreateUserRequest $request)
     {
-        // TODO-2.2: Erstellung über UserService delegieren
         $result = $this->userService->createUser($request->safe()->only(['name', 'email']));
         $user = $result['user'];
 
@@ -172,7 +169,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        // TODO-2.2: Update über UserService delegieren
         $this->userService->updateUser($user, $request->validated());
         $this->userService->syncGroups($user, $request->input('gruppen'));
 
@@ -312,7 +308,6 @@ class UserController extends Controller implements HasMiddleware
 
     public function massDelete(Request $request)
     {
-        // TODO-2.2: Massenlöschung über UserService delegieren
         $userIds = $request->input('user_ids', []);
         $result = $this->userService->massDeleteUsers($userIds);
 

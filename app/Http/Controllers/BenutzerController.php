@@ -54,7 +54,6 @@ class BenutzerController extends Controller implements HasMiddleware
     public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
-        // TODO-1.5: $request->safe()->only() statt $request->only() verwenden
         $user->update(
             $request->safe()->only([
                 'name',
@@ -70,7 +69,6 @@ class BenutzerController extends Controller implements HasMiddleware
             ])
         );
 
-        // TODO-1.14: Passwort-Änderung – Prüfung via FormRequest (current_password + confirmed)
         if ($request->filled('password')) {
             $user->update([
                 'password' => Hash::make($request->password),

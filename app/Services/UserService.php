@@ -54,6 +54,7 @@ class UserService
             Mail::to($user->email)->send(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
             $emailSent = true;
             $emailStatus = 'E-Mail mit Startkennwort wurde erfolgreich versendet.';
+            Log::debug('Willkommens-E-Mail versendet an '.$user->email);
         } catch (\Throwable $e) {
             Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
             $emailStatus = 'Warnung: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
@@ -214,6 +215,39 @@ class UserService
             User::where('id', $user->sorg2)->update(['sorg2' => null]);
         }
         $user->update(['sorg2' => null]);
+    }
+
+    /**
+     * Willkommens-E-Mail erneut versenden: neues Passwort generieren und per Mail schicken.
+     *
+     * @return array{emailSent: bool, emailStatus: string}
+     */
+    public function resendWelcomeMail(User $user): array
+    {
+        $password = Str::password(12, true, true, true, false);
+
+        $user->password = Hash::make($password);
+        $user->changePassword = true;
+        $user->lastEmail = Carbon::now();
+        $user->save();
+
+        $emailSent = false;
+        $emailStatus = '';
+
+        try {
+            $emailSettings = app(EmailSetting::class);
+            Mail::to($user->email)->send(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
+            $emailSent = true;
+            $emailStatus = 'Willkommens-E-Mail wurde erfolgreich erneut versendet.';
+            Log::info('Willkommens-E-Mail erneut versendet an '.$user->email, ['user_id' => $user->id]);
+        } catch (\Throwable $e) {
+            Log::error('Erneutes Versenden der Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage(), [
+                'user_id' => $user->id,
+            ]);
+            $emailStatus = 'Fehler: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
+        }
+
+        return compact('emailSent', 'emailStatus');
     }
 
     /**
