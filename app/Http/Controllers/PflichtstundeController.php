@@ -269,12 +269,67 @@ class PflichtstundeController extends Controller implements HasMiddleware
             $stats['avgPercent'] = round($groupedUsers->avg('percent'), 2);
         }
 
+        // ---------------------------------------------------------------
+        // Überlappungs-Erkennung (nur nicht abgelehnte Einträge)
+        // ---------------------------------------------------------------
+
+        // Familienzuordnung aufbauen (user_id → minimale user_id der Familie)
+        $familyUserMap = [];
+        foreach ($groupedUsers as $group) {
+            $familyUserIds = [$group['user']->id];
+            if ($group['partner']) {
+                $familyUserIds[] = $group['partner']->id;
+            }
+            foreach ($familyUserIds as $uid) {
+                $familyUserMap[$uid] = $familyUserIds;
+            }
+        }
+
+        // Alle nicht abgelehnten Pflichtstunden laden (pending + bestätigt)
+        $allNonRejectedPs = Pflichtstunde::query()
+            ->where('rejected', false)
+            ->with('user')
+            ->get();
+
+        // Nach Familien gruppieren
+        $familyPflichtstunden = [];
+        foreach ($allNonRejectedPs as $ps) {
+            $familyUserIds = $familyUserMap[$ps->user_id] ?? [$ps->user_id];
+            $familyKey = min($familyUserIds);
+            $familyPflichtstunden[$familyKey][] = $ps;
+        }
+
+        // Überlappende IDs ermitteln
+        $overlappingIds = collect();
+        foreach ($familyPflichtstunden as $familyPs) {
+            $count = count($familyPs);
+            for ($i = 0; $i < $count; $i++) {
+                for ($j = $i + 1; $j < $count; $j++) {
+                    $a = $familyPs[$i];
+                    $b = $familyPs[$j];
+                    // Überlappung: a.start < b.end UND a.end > b.start
+                    if ($a->start < $b->end && $a->end > $b->start) {
+                        $overlappingIds->push($a->id);
+                        $overlappingIds->push($b->id);
+                    }
+                }
+            }
+        }
+        $overlappingIds = $overlappingIds->unique()->values()->toArray();
+
+        // Bestätigte Einträge mit Überlappungen (für eigenen Hinweisbereich)
+        $confirmedOverlaps = $allNonRejectedPs->filter(function ($ps) use ($overlappingIds) {
+            return $ps->approved && in_array($ps->id, $overlappingIds);
+        })->sortBy('start')->values();
+
         return view('pflichtstunden.indexVerwaltung', [
             'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
             'groupedUsers' => $groupedUsers,
             'allGroupedUsers' => $groupedUsers, // Für Select2
             'stats' => $stats,
+            'overlappingIds' => $overlappingIds,
+            'confirmedOverlaps' => $confirmedOverlaps,
         ]);
     }
 

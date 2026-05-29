@@ -256,7 +256,8 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                             @foreach ($pflichtstunden as $pflichtstunde)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150"
+                                @php $hasOverlap = in_array($pflichtstunde->id, $overlappingIds); @endphp
+                                <tr class="hover:bg-gray-50 transition-colors duration-150 {{ $hasOverlap ? 'bg-orange-50' : '' }}"
                                     data-pflichtstunde-row
                                     data-pflichtstunde-id="{{ $pflichtstunde->id }}"
                                     data-bereich="{{ $pflichtstunde->bereich ?? '__KEIN_BEREICH__' }}"
@@ -301,6 +302,13 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm font-medium text-gray-900">
                                         {{ $pflichtstunde->user->name }}
+                                        @if($hasOverlap)
+                                            <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-300"
+                                                  title="Achtung: Für diese Familie existiert mindestens ein weiterer Eintrag im gleichen Zeitraum. Mögliche Doppelerfassung!">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Überlappung
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-700">
                                         <span x-show="!showEdit">{{ $pflichtstunde->description }}</span>
@@ -407,6 +415,84 @@
             </div>
         </div>
 
+
+        <!-- Bestätigte Pflichtstunden mit Überlappungen -->
+        @if($confirmedOverlaps->isNotEmpty())
+            <div class="bg-white rounded-xl shadow-md border-2 border-orange-300 mb-6">
+                <div class="px-6 py-4 rounded-t-xl text-white"
+                     style="background: linear-gradient(to right, #f97316, #ef4444)">
+                    <h3 class="text-xl font-bold flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                        Hinweis: Überlappungen bei bestätigten Pflichtstunden
+                    </h3>
+                    <p class="text-sm mt-1 text-white/90">
+                        Die folgenden bereits bestätigten Einträge überlappen sich zeitlich mit einem anderen Eintrag derselben Familie.
+                        Bitte prüfen Sie, ob es sich um Doppelerfassungen handelt.
+                    </p>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-orange-50 border-b-2 border-orange-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Datum</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Stunden</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Person</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Grund</th>
+                                    @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Bereich</th>
+                                    @endif
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-orange-700 uppercase tracking-wider">Bestätigt am</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-orange-100">
+                                @foreach ($confirmedOverlaps as $confirmedPs)
+                                    <tr class="bg-orange-50 hover:bg-orange-100 transition-colors duration-150">
+                                        <td class="px-4 py-3 text-sm text-gray-700">
+                                            @if($confirmedPs->start->isSameDay($confirmedPs->end))
+                                                <div class="font-medium">{{ $confirmedPs->start->format('d.m.Y') }}</div>
+                                                <div class="text-xs text-gray-500">{{ $confirmedPs->start->format('H:i') }} – {{ $confirmedPs->end->format('H:i') }}</div>
+                                            @else
+                                                <div class="text-xs">{{ $confirmedPs->start->format('d.m.Y H:i') }}</div>
+                                                <div class="text-xs">{{ $confirmedPs->end->format('d.m.Y H:i') }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                @if($confirmedPs->duration > 60)
+                                                    {{ floor($confirmedPs->duration / 60) }}h {{ $confirmedPs->duration % 60 }}m
+                                                @else
+                                                    {{ $confirmedPs->duration }}m
+                                                @endif
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                            {{ $confirmedPs->user->name }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-700">{{ $confirmedPs->description }}</td>
+                                        @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
+                                            <td class="px-4 py-3 text-sm">
+                                                @if($confirmedPs->bereich)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                                                        <i class="fas fa-folder"></i>
+                                                        {{ $confirmedPs->bereich }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-gray-400 text-xs">–</span>
+                                                @endif
+                                            </td>
+                                        @endif
+                                        <td class="px-4 py-3 text-sm text-gray-500">
+                                            {{ $confirmedPs->approved_at ? $confirmedPs->approved_at->format('d.m.Y H:i') : '–' }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Formular: Pflichtstunden für Nutzer erfassen -->
         @can('edit Pflichtstunden')
