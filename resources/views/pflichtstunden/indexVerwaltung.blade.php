@@ -1,6 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    // Defensive Fallbacks – werden normalerweise vom Controller befüllt
+    $overlappingIds = $overlappingIds ?? [];
+    $overlapGroups  = $overlapGroups  ?? collect();
+    $entryGroupMap  = $entryGroupMap  ?? [];
+@endphp
     <div class="container-fluid px-4 py-6">
 
         <!-- Statistik-Dashboard -->
