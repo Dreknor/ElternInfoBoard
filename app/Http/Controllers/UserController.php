@@ -223,7 +223,25 @@ class UserController extends Controller implements HasMiddleware
      */
     public function resendWelcomeMail(Request $request, User $user): RedirectResponse
     {
+        Log::debug('Resend Welcome Mail requested', [
+            'requestor_id' => $request->user()->id,
+            'requestor_email' => $request->user()->email,
+            'target_user_id' => $user->id,
+            'target_user_email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
+
         $result = $this->userService->resendWelcomeMail($user);
+
+        if ($result['emailSent']) {
+            Log::info('Welcome Mail resent', [
+                'requestor_id' => $request->user()->id,
+            ]);
+        } else {
+            Log::warning('Welcome Mail not resent', [
+                'result' => $result,
+            ]);
+        }
 
         return redirect()->back()->with([
             'type'    => $result['emailSent'] ? 'success' : 'danger',
