@@ -172,6 +172,11 @@ class PflichtstundeController extends Controller implements HasMiddleware
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
+        // Sichere Standardwerte – werden später befüllt
+        $overlappingIds = [];
+        $overlapGroups  = collect();
+        $entryGroupMap  = [];
+
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
@@ -270,19 +275,27 @@ class PflichtstundeController extends Controller implements HasMiddleware
         }
 
         // ---------------------------------------------------------------
-        // Überlappungs-Erkennung (nur nicht abgelehnte Einträge)
+        // Überlappungs-Erkennung mit Gruppenbildung (Connected Components)
+        // Nur nicht abgelehnte Einträge (pending + bestätigt)
         // ---------------------------------------------------------------
 
-        // Familienzuordnung aufbauen (user_id → minimale user_id der Familie)
-        $familyUserMap = [];
+        // Familienzuordnung aufbauen (user_id → familyKey = min der user_ids der Familie)
+        $familyUserMap  = [];
+        $familyNameMap  = [];
         foreach ($groupedUsers as $group) {
             $familyUserIds = [$group['user']->id];
             if ($group['partner']) {
                 $familyUserIds[] = $group['partner']->id;
             }
+            $familyKey = min($familyUserIds);
             foreach ($familyUserIds as $uid) {
-                $familyUserMap[$uid] = $familyUserIds;
+                $familyUserMap[$uid] = $familyKey;
             }
+            $name = $group['user']->name;
+            if ($group['partner']) {
+                $name .= ' / ' . $group['partner']->name;
+            }
+            $familyNameMap[$familyKey] = $name;
         }
 
         // Alle nicht abgelehnten Pflichtstunden laden (pending + bestätigt)
@@ -294,13 +307,12 @@ class PflichtstundeController extends Controller implements HasMiddleware
         // Nach Familien gruppieren
         $familyPflichtstunden = [];
         foreach ($allNonRejectedPs as $ps) {
-            $familyUserIds = $familyUserMap[$ps->user_id] ?? [$ps->user_id];
-            $familyKey = min($familyUserIds);
+            $familyKey = $familyUserMap[$ps->user_id] ?? $ps->user_id;
             $familyPflichtstunden[$familyKey][] = $ps;
         }
 
-        // Überlappende IDs ermitteln
-        $overlappingIds = collect();
+        // Überlappungs-Adjazenzliste aufbauen
+        $adjacency = [];
         foreach ($familyPflichtstunden as $familyPs) {
             $count = count($familyPs);
             for ($i = 0; $i < $count; $i++) {
@@ -309,27 +321,81 @@ class PflichtstundeController extends Controller implements HasMiddleware
                     $b = $familyPs[$j];
                     // Überlappung: a.start < b.end UND a.end > b.start
                     if ($a->start < $b->end && $a->end > $b->start) {
-                        $overlappingIds->push($a->id);
-                        $overlappingIds->push($b->id);
+                        $adjacency[$a->id][] = $b->id;
+                        $adjacency[$b->id][] = $a->id;
                     }
                 }
             }
         }
-        $overlappingIds = $overlappingIds->unique()->values()->toArray();
 
-        // Bestätigte Einträge mit Überlappungen (für eigenen Hinweisbereich)
-        $confirmedOverlaps = $allNonRejectedPs->filter(function ($ps) use ($overlappingIds) {
-            return $ps->approved && in_array($ps->id, $overlappingIds);
-        })->sortBy('start')->values();
+        // Zusammenhangskomponenten via BFS → Überlappungsgruppen
+        $allPsById   = $allNonRejectedPs->keyBy('id');
+        $visited     = [];
+        $overlapGroups = collect();
+        $groupCounter  = 1;
+
+        foreach ($allNonRejectedPs as $ps) {
+            if (!isset($adjacency[$ps->id]) || isset($visited[$ps->id])) {
+                continue;
+            }
+            // BFS
+            $groupIds = [];
+            $queue    = [$ps->id];
+            while (!empty($queue)) {
+                $currentId = array_shift($queue);
+                if (isset($visited[$currentId])) {
+                    continue;
+                }
+                $visited[$currentId] = true;
+                $groupIds[]          = $currentId;
+                foreach ($adjacency[$currentId] ?? [] as $neighborId) {
+                    if (!isset($visited[$neighborId])) {
+                        $queue[] = $neighborId;
+                    }
+                }
+            }
+
+            if (count($groupIds) < 2) {
+                continue;
+            }
+
+            $groupEntries = collect($groupIds)
+                ->map(fn ($id) => $allPsById->get($id))
+                ->filter()
+                ->sortBy('start')
+                ->values();
+
+            $firstEntry = $groupEntries->first();
+            $familyKey  = $familyUserMap[$firstEntry->user_id] ?? $firstEntry->user_id;
+            $familyName = $familyNameMap[$familyKey] ?? $firstEntry->user->name;
+
+            $overlapGroups->push([
+                'group_id'    => $groupCounter++,
+                'entries'     => $groupEntries,
+                'family_name' => $familyName,
+            ]);
+        }
+
+        // Flat-Liste überlappender IDs (für Badges in der Pending-Tabelle)
+        $overlappingIds = array_keys($adjacency);
+
+        // Map: entry_id → group_id (für Gruppenreferenz im Badge)
+        $entryGroupMap = [];
+        foreach ($overlapGroups as $group) {
+            foreach ($group['entries'] as $entry) {
+                $entryGroupMap[$entry->id] = $group['group_id'];
+            }
+        }
 
         return view('pflichtstunden.indexVerwaltung', [
-            'pflichtstunden' => $pflichtstunden,
+            'pflichtstunden'          => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
-            'groupedUsers' => $groupedUsers,
-            'allGroupedUsers' => $groupedUsers, // Für Select2
-            'stats' => $stats,
-            'overlappingIds' => $overlappingIds,
-            'confirmedOverlaps' => $confirmedOverlaps,
+            'groupedUsers'            => $groupedUsers,
+            'allGroupedUsers'         => $groupedUsers, // Für Select2
+            'stats'                   => $stats,
+            'overlappingIds'          => $overlappingIds,
+            'overlapGroups'           => $overlapGroups,
+            'entryGroupMap'           => $entryGroupMap,
         ]);
     }
 
