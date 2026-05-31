@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Exports\AufnahmeImportVorlage;
 use App\Imports\AufnahmeImport;
+use App\Imports\MitarbeiterImport;
+use App\Imports\UsersImport;
+use App\Imports\VereinImport;
 use App\Exports\ElternImportVorlage;
 use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
@@ -40,8 +43,31 @@ class ImportController extends Controller implements HasMiddleware
      */
     public function import(Request $request)
     {
+        // Spalten-Indizes, die in den verschiedenen Import-Typen verwendet werden.
+        // Sie müssen Ganzzahlen >= 1 sein, da im Code "- 1" gerechnet wird.
+        $columnFields = [
+            'klassenstufe', 'lerngruppe',
+            'S1Vorname', 'S1Nachname', 'S1Email',
+            'S2Vorname', 'S2Nachname', 'S2Email',
+            'gruppen',
+        ];
+
+        $rules = [
+            'file' => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+            'type' => ['required', 'in:eltern,aufnahme,mitarbeiter'],
+        ];
+
+        // Spaltenangaben nur für die Typen verlangen, die sie nutzen
+        if (in_array($request->input('type'), ['eltern', 'aufnahme'], true)) {
+            foreach ($columnFields as $field) {
+                $rules[$field] = ['required', 'integer', 'min:1'];
+            }
+        }
+
+        $validated = $request->validate($rules);
+
         if ($request->hasFile('file')) {
-            if ($request->input('type') == 'eltern') {
+            if ($validated['type'] == 'eltern') {
                 // group_user::truncate();
 
                 foreach (Group::where('protected', 0)->get() as $group) {
@@ -49,29 +75,29 @@ class ImportController extends Controller implements HasMiddleware
                 }
 
                 $header = [
-                    'klassenstufe' => $request->klassenstufe - 1,
-                    'lerngruppe' => $request->lerngruppe - 1,
-                    'S1Vorname' => $request->S1Vorname - 1,
-                    'S1Nachname' => $request->S1Nachname - 1,
-                    'S1Email' => $request->S1Email - 1,
-                    'S2Email' => $request->S2Email - 1,
-                    'S2Vorname' => $request->S2Vorname - 1,
-                    'S2Nachname' => $request->S2Nachname - 1,
-                    'gruppen' => $request->gruppen - 1,
+                    'klassenstufe' => $validated['klassenstufe'] - 1,
+                    'lerngruppe' => $validated['lerngruppe'] - 1,
+                    'S1Vorname' => $validated['S1Vorname'] - 1,
+                    'S1Nachname' => $validated['S1Nachname'] - 1,
+                    'S1Email' => $validated['S1Email'] - 1,
+                    'S2Email' => $validated['S2Email'] - 1,
+                    'S2Vorname' => $validated['S2Vorname'] - 1,
+                    'S2Nachname' => $validated['S2Nachname'] - 1,
+                    'gruppen' => $validated['gruppen'] - 1,
                 ];
 
                 Excel::import(new UsersImport($header), $request->file('file'));
 
                 $Meldung = 'Eltern wurden importiert';
-            } elseif ($request->input('type') == 'aufnahme') {
+            } elseif ($validated['type'] == 'aufnahme') {
                 $header = [
-                    'S1Vorname' => $request->input('S1Vorname') - 1,
-                    'S1Nachname' => $request->input('S1Nachname') - 1,
-                    'S1Email' => $request->input('S1Email') - 1,
-                    'S2Email' => $request->input('S2Email') - 1,
-                    'S2Vorname' => $request->input('S2Vorname') - 1,
-                    'S2Nachname' => $request->input('S2Nachname') - 1,
-                    'gruppen' => $request->input('gruppen') - 1,
+                    'S1Vorname' => $validated['S1Vorname'] - 1,
+                    'S1Nachname' => $validated['S1Nachname'] - 1,
+                    'S1Email' => $validated['S1Email'] - 1,
+                    'S2Email' => $validated['S2Email'] - 1,
+                    'S2Vorname' => $validated['S2Vorname'] - 1,
+                    'S2Nachname' => $validated['S2Nachname'] - 1,
+                    'gruppen' => $validated['gruppen'] - 1,
                 ];
 
                 Excel::import(new AufnahmeImport($header), $request->file('file'));
@@ -124,6 +150,10 @@ class ImportController extends Controller implements HasMiddleware
 
     public function importVerein(Request $request)
     {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+        ]);
+
         if ($request->hasFile('file')) {
 
             $group = Group::firstOrCreate(['name' => 'Vereinsmitglied'], [

@@ -57,6 +57,17 @@
         }
     @endphp
     <link rel="shortcut icon" href="{{$faviconUrl}}?v={{$faviconVersion}}" type="image/x-icon">
+
+    {{-- PWA / Mobile-Optimierung --}}
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#1f6feb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ $settings->app_name }}">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="apple-touch-icon" href="{{ asset('img/app_logo.png') }}">
+
     <title>{{$settings->app_name}} @yield('title')</title>
 
     <!-- Alpine.js x-cloak – verhindert FOUC -->

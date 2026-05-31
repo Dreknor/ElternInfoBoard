@@ -67,7 +67,7 @@
                         @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
                             <div class="carousel-item @if($loop->first) active @endif">
                                 <a href="{{url('/image/'.$media->id)}}" target="_blank" class="block">
-                                    <img class="d-block w-full h-auto mx-auto" src="{{url('/image/'.$media->id)}}" alt="{{$media->name}}" style="max-height: 600px; object-fit: contain;">
+                                    <img class="d-block w-full h-auto mx-auto" loading="lazy" decoding="async" src="{{url('/image/'.$media->id)}}" alt="{{$media->name}}" style="max-height: 600px; object-fit: contain;">
                                     @if($nachricht->rueckmeldung?->type == 'bild')
                                         <p class="text-center text-sm text-gray-600 mt-2">{{$media->name}}</p>
                                     @endif
