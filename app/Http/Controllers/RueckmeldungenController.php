@@ -537,6 +537,12 @@ class RueckmeldungenController extends Controller
      */
     public function destroy(Rueckmeldungen $rueckmeldung)
     {
+        Log::info('Rückmeldung gelöscht', [
+            'id' => $rueckmeldung->id,
+            'post_id' => $rueckmeldung->post_id,
+            'type' => $rueckmeldung->type,
+            'deleted_by' => auth()->id(),
+        ]);
         $rueckmeldung->delete();
 
         return response()->json([
@@ -558,6 +564,12 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
+        Log::info('Abfrage gelöscht', [
+            'id' => $rueckmeldung->id,
+            'post_id' => $rueckmeldung->post_id,
+            'deleted_by' => auth()->id(),
+        ]);
+
         $rueckmeldung->options()->delete();
         $rueckmeldung->delete();
 
@@ -574,6 +586,11 @@ class RueckmeldungenController extends Controller
      */
     public function destroyRueckmeldung(Rueckmeldungen $rueckmeldungen)
     {
+        Log::info('Rückmeldung gelöscht (destroyRueckmeldung)', [
+            'id' => $rueckmeldungen->id,
+            'post_id' => $rueckmeldungen->post_id,
+            'deleted_by' => auth()->id(),
+        ]);
         $rueckmeldungen->delete();
 
         return redirect()->back()->with([
