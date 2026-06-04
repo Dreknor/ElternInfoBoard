@@ -101,13 +101,33 @@ class UcsPing extends Command
             }
 
             $this->newLine();
-            $this->line('  <fg=yellow>So werden die UCS-Einstellungen gesetzt:</>');
-            $this->line('  1. Admin-Panel öffnen → Einstellungen → UCS-Integration');
-            $this->line('  2. Folgende Felder ausfüllen und speichern:');
-            $this->line('       kelvin_base_url  → z. B. https://<ucs-host>/ucsschool/kelvin/v1');
-            $this->line('       kelvin_username  → Service-Account-Benutzername');
-            $this->line('       kelvin_password  → Service-Account-Passwort');
-            $this->line('  3. Danach erneut ausführen: <fg=cyan>php artisan ucs:ping --debug</>');
+            $this->line('  <fg=yellow>Hintergrund:</>');
+            $this->line('  Die UCS-Einstellungen werden über Spatie Laravel Settings in der');
+            $this->line('  Datenbank gespeichert. Die Initialwerte kommen aus der <fg=cyan>.env</>-Datei');
+            $this->line('  und werden per <fg=cyan>php artisan settings:migrate</> einmalig übernommen.');
+            $this->newLine();
+            $this->line('  <fg=yellow>Option A – .env setzen und Settings-Migration ausführen:</>');
+            $this->line('  1. In der <fg=cyan>.env</> folgende Variablen setzen:');
+            $this->line('       UCS_ENABLED=true');
+            $this->line('       UCS_KELVIN_BASE_URL=https://<ucs-host>/ucsschool/kelvin/v1');
+            $this->line('       UCS_KELVIN_USER=<service-account>');
+            $this->line('       UCS_KELVIN_PASSWORD=<passwort>');
+            $this->line('       UCS_SCHOOL=<schulname>');
+            $this->line('  2. Falls die Settings-Migration noch nicht lief:');
+            $this->line('       <fg=cyan>php artisan settings:migrate</>');
+            $this->line('  3. Falls die Migration bereits lief (Werte in DB überschreiben):');
+            $this->line('       <fg=cyan>php artisan tinker</>');
+            $this->line('       >>> $s = app(\App\Settings\UcsSetting::class);');
+            $this->line('       >>> $s->kelvin_base_url = \'https://<ucs-host>/ucsschool/kelvin/v1\';');
+            $this->line('       >>> $s->kelvin_username = \'<service-account>\';');
+            $this->line('       >>> $s->kelvin_password = \'<passwort>\';');
+            $this->line('       >>> $s->enabled = true;');
+            $this->line('       >>> $s->save();');
+            $this->newLine();
+            $this->line('  <fg=yellow>Option B – Admin-Panel:</>');
+            $this->line('  Admin-Panel öffnen → Einstellungen → UCS-Integration → Felder ausfüllen.');
+            $this->newLine();
+            $this->line('  Danach erneut ausführen: <fg=cyan>php artisan ucs:ping --debug</>');
             $this->newLine();
 
             Log::channel('ucs')->error('[ucs:ping] Abgebrochen: Pflicht-Konfiguration fehlt.', [
