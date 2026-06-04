@@ -63,23 +63,27 @@ class KelvinClient
     // =========================================================================
 
     /**
-     * Connectivity-Check: GET /schools/?limit=1
+     * Connectivity-Check: GET /schools/{school}
+     *
+     * Ruft die konfigurierte Schule (UcsSetting::school) direkt per
+     * Name ab.
      *
      * Dient als Smoke-Test (Status-Karte im UI, ucs:ping-Command).
      * Wirft KelvinUnavailableException bei jedem HTTP-Fehler inkl. 404.
      *
-     * @return Collection<int, array<string, mixed>>
+     * @return array<string, mixed>
      *
      * @throws KelvinAuthException
      * @throws KelvinUnavailableException
      *
      * @see docs/kelvin-api-endpunkte.md#2-schulen-auflisten
      */
-    public function ping(): Collection
+    public function ping(): array
     {
-        $response = $this->executeGet('schools/', ['limit' => 1]);
+        $school   = $this->settings->school ?? '';
+        $response = $this->executeGet('schools/'.rawurlencode($school));
 
-        return collect($response->json() ?? []);
+        return $response->json() ?? [];
     }
 
     /**

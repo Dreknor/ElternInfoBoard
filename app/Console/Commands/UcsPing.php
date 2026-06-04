@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * Connectivity-Check gegen die Kelvin REST API.
  *
- * Ruft KelvinClient::ping() auf und gibt die Anzahl der erreichbaren Schulen,
- * die ersten Schulnamen sowie die HTTP-Latenz aus.
+ * Ruft KelvinClient::ping() auf (GET /schools/{school}) und gibt
+ * die Schuldaten sowie die HTTP-Latenz aus.
  *
  * Exit-Codes:
  *   0 – Verbindung erfolgreich
@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Optionen:
  *   --debug   Gibt Konfiguration, DNS-Check und TCP-Check vor dem HTTP-Call aus.
+ *
+ * Hinweis: Der Ping verwendet GET /schools/{school} (nicht GET /schools/?limit=1),
+ * da nur ersterer URL-Pfad in der Proxy-Whitelist freigeschaltet ist.
  *
  * @see docs/ucs-kelvin-integration-konzept.md §3, §7.6
  */
@@ -56,10 +59,14 @@ class UcsPing extends Command
             : preg_replace('#/v\d+/?$#i', '', $baseUrl).'/token';
         $username     = $settings->kelvin_username ?? '<fg=red>(nicht gesetzt)</>';
         $password     = empty($settings->kelvin_password) ? '<fg=red>(leer / nicht gesetzt)</>' : str_repeat('*', 8).' (gesetzt)';
+        $school       = $settings->school ?? '<fg=red>(nicht gesetzt)</>';
         $timeout      = $settings->kelvin_timeout.' s';
         $tokenTtl     = $settings->kelvin_token_ttl.' s';
         $enabled      = $settings->enabled ? '<fg=green>JA</>' : '<fg=red>NEIN</>';
         $tokenInCache = Cache::has(self::TOKEN_CACHE_KEY) ? '<fg=green>vorhanden</>' : '<fg=yellow>nicht vorhanden (wird neu geholt)</>';
+        $pingEndpoint = empty($settings->kelvin_base_url) || empty($settings->school)
+            ? '<fg=red>(nicht ableitbar)</>'
+            : rtrim($settings->kelvin_base_url, '/').'/schools/'.rawurlencode($settings->school ?? '');
 
         $this->table(
             ['Einstellung', 'Wert'],
@@ -67,8 +74,10 @@ class UcsPing extends Command
                 ['UCS Integration aktiv',       $enabled],
                 ['kelvin_base_url (v1)',         $baseUrlDisplay],
                 ['Token-Endpunkt (abgeleitet)',  $tokenUrl],
+                ['Ping-Endpunkt (abgeleitet)',   $pingEndpoint],
                 ['kelvin_username',              $username],
                 ['kelvin_password',              $password],
+                ['school (UCS_SCHOOL)',          $school],
                 ['kelvin_timeout',               $timeout],
                 ['kelvin_token_ttl',             $tokenTtl],
                 ['Bearer-Token im Cache',        $tokenInCache],
@@ -90,6 +99,10 @@ class UcsPing extends Command
 
         if (empty($settings->kelvin_password)) {
             $configErrors[] = 'kelvin_password ist nicht gesetzt.';
+        }
+
+        if (empty($settings->school)) {
+            $configErrors[] = 'school (UCS_SCHOOL) ist nicht gesetzt – wird für GET /schools/{school} benötigt.';
         }
 
         if (! empty($configErrors)) {
@@ -200,15 +213,17 @@ class UcsPing extends Command
         // ------------------------------------------------------------------
         // 4. Eigentlicher Ping-Request
         // ------------------------------------------------------------------
+        $schoolName = $settings->school ?? '';
+
         if ($debug) {
-            $this->section('4. HTTP-Ping (GET /schools/?limit=1)');
+            $this->section("4. HTTP-Ping (GET /schools/{$schoolName})");
         }
 
-        $this->line('  Starte Kelvin-Ping …');
+        $this->line("  Starte Kelvin-Ping für Schule \"<fg=cyan>{$schoolName}</>\" …");
         $start = microtime(true);
 
         try {
-            $schools = $client->ping();
+            $school = $client->ping();
         } catch (KelvinAuthException $e) {
             $this->outputException('Authentifizierung fehlgeschlagen', $e, $debug);
             Log::channel('ucs')->error('[ucs:ping] KelvinAuthException: '.$e->getMessage());
@@ -227,23 +242,27 @@ class UcsPing extends Command
         }
 
         // ------------------------------------------------------------------
-        // 6. Erfolgsmeldung
+        // 5. Erfolgsmeldung
         // ------------------------------------------------------------------
         $latencyMs = round((microtime(true) - $start) * 1000, 1);
-        $count     = $schools->count();
 
         $this->newLine();
-        $this->info("✓ Kelvin erreichbar.");
-        $this->line("  Schulen zurückgegeben : {$count}");
+        $this->info('✓ Kelvin erreichbar.');
+        $this->line("  Schule (name)         : ".($school['name'] ?? '(kein name-Feld)'));
+        $this->line("  Schule (display_name) : ".($school['display_name'] ?? '(kein display_name-Feld)'));
         $this->line("  Latenz                : {$latencyMs} ms");
 
-        if ($count > 0) {
-            $names = $schools->pluck('name')->filter()->take(3)->implode(', ');
-            $this->line("  Erste Schul-Namen     : {$names}");
+        if ($debug && ! empty($school)) {
+            $this->newLine();
+            $this->line('  <fg=yellow>Vollständige API-Antwort:</>');
+            foreach ($school as $key => $value) {
+                $display = is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value;
+                $this->line("    {$key}: {$display}");
+            }
         }
 
         Log::channel('ucs')->info('[ucs:ping] Erfolgreich.', [
-            'schools'    => $count,
+            'school'     => $school['name'] ?? null,
             'latency_ms' => $latencyMs,
         ]);
 
@@ -314,16 +333,18 @@ class UcsPing extends Command
         }
     }
 
-    /** Liest kelvin_base_url direkt aus den Settings (für Hinweistexte). */
+    /** Liest kelvin_base_url + school aus den Settings (für curl-Hinweis). */
     private function extractBaseUrl(): string
     {
         try {
             /** @var UcsSetting $s */
-            $s = app(UcsSetting::class);
+            $s      = app(UcsSetting::class);
+            $base   = rtrim($s->kelvin_base_url ?? '', '/');
+            $school = rawurlencode($s->school ?? '<Schul-ID>');
 
-            return rtrim($s->kelvin_base_url ?? '<URL>', '/').'/../schools/?limit=1';
+            return "{$base}/schools/{$school}";
         } catch (\Throwable) {
-            return '<kelvin-base-url>/schools/?limit=1';
+            return '<kelvin-base-url>/schools/<Schul-ID>';
         }
     }
 }
