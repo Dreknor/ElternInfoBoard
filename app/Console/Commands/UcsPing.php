@@ -45,59 +45,102 @@ class UcsPing extends Command
         $this->info('╚══════════════════════════════════════════════╝');
 
         // ------------------------------------------------------------------
-        // 1. Konfiguration anzeigen
+        // 1. Konfiguration anzeigen (immer, nicht nur im Debug-Modus)
         // ------------------------------------------------------------------
+        $this->section('1. Konfiguration');
+
+        $baseUrl      = rtrim($settings->kelvin_base_url ?? '', '/');
+        $baseUrlDisplay = empty($baseUrl) ? '<fg=red>(nicht gesetzt)</>' : $baseUrl.'/';
+        $tokenUrl     = empty($baseUrl)
+            ? '<fg=red>(nicht ableitbar – kelvin_base_url fehlt)</>'
+            : preg_replace('#/v\d+/?$#i', '', $baseUrl).'/token';
+        $username     = $settings->kelvin_username ?? '<fg=red>(nicht gesetzt)</>';
+        $password     = empty($settings->kelvin_password) ? '<fg=red>(leer / nicht gesetzt)</>' : str_repeat('*', 8).' (gesetzt)';
+        $timeout      = $settings->kelvin_timeout.' s';
+        $tokenTtl     = $settings->kelvin_token_ttl.' s';
+        $enabled      = $settings->enabled ? '<fg=green>JA</>' : '<fg=red>NEIN</>';
+        $tokenInCache = Cache::has(self::TOKEN_CACHE_KEY) ? '<fg=green>vorhanden</>' : '<fg=yellow>nicht vorhanden (wird neu geholt)</>';
+
+        $this->table(
+            ['Einstellung', 'Wert'],
+            [
+                ['UCS Integration aktiv',       $enabled],
+                ['kelvin_base_url (v1)',         $baseUrlDisplay],
+                ['Token-Endpunkt (abgeleitet)',  $tokenUrl],
+                ['kelvin_username',              $username],
+                ['kelvin_password',              $password],
+                ['kelvin_timeout',               $timeout],
+                ['kelvin_token_ttl',             $tokenTtl],
+                ['Bearer-Token im Cache',        $tokenInCache],
+            ],
+        );
+
+        // ------------------------------------------------------------------
+        // 1a. Konfigurationsvalidierung – Abbruch bei fehlenden Pflichtfeldern
+        // ------------------------------------------------------------------
+        $configErrors = [];
+
+        if (empty($settings->kelvin_base_url)) {
+            $configErrors[] = 'kelvin_base_url ist nicht gesetzt.';
+        }
+
+        if (empty($settings->kelvin_username)) {
+            $configErrors[] = 'kelvin_username ist nicht gesetzt.';
+        }
+
+        if (empty($settings->kelvin_password)) {
+            $configErrors[] = 'kelvin_password ist nicht gesetzt.';
+        }
+
+        if (! empty($configErrors)) {
+            $this->newLine();
+            $this->error('✗ Fehlende Pflicht-Konfiguration – Ping wird ABGEBROCHEN:');
+
+            foreach ($configErrors as $err) {
+                $this->line("  • {$err}");
+            }
+
+            $this->newLine();
+            $this->line('  <fg=yellow>So werden die UCS-Einstellungen gesetzt:</>');
+            $this->line('  1. Admin-Panel öffnen → Einstellungen → UCS-Integration');
+            $this->line('  2. Folgende Felder ausfüllen und speichern:');
+            $this->line('       kelvin_base_url  → z. B. https://<ucs-host>/ucsschool/kelvin/v1');
+            $this->line('       kelvin_username  → Service-Account-Benutzername');
+            $this->line('       kelvin_password  → Service-Account-Passwort');
+            $this->line('  3. Danach erneut ausführen: <fg=cyan>php artisan ucs:ping --debug</>');
+            $this->newLine();
+
+            Log::channel('ucs')->error('[ucs:ping] Abgebrochen: Pflicht-Konfiguration fehlt.', [
+                'missing' => $configErrors,
+            ]);
+
+            return self::FAILURE;
+        }
+
+        if (! $settings->enabled) {
+            $this->warn('⚠  UCS-Integration ist in den Einstellungen DEAKTIVIERT.');
+            $this->line('   Der Ping wird trotzdem ausgeführt, um die Erreichbarkeit zu prüfen.');
+        }
+
+        // ------------------------------------------------------------------
+        // 1b. Token ggf. aus Cache löschen (unabhängig von --debug)
+        // ------------------------------------------------------------------
+        if ($this->option('flush-token')) {
+            Cache::forget(self::TOKEN_CACHE_KEY);
+            $this->line('  → Bearer-Token aus Cache gelöscht (--flush-token).');
+        }
+
         if ($debug) {
-            $this->section('1. Konfiguration');
-
-            $baseUrl   = rtrim($settings->kelvin_base_url ?? '(nicht gesetzt)', '/').'/';
-            $tokenUrl  = preg_replace('#/v\d+/?$#i', '', rtrim($settings->kelvin_base_url ?? '', '/')).'/token';
-            $username  = $settings->kelvin_username ?? '(nicht gesetzt)';
-            $password  = empty($settings->kelvin_password) ? '(leer / nicht gesetzt)' : str_repeat('*', 8).' (gesetzt)';
-            $timeout   = $settings->kelvin_timeout.' s';
-            $tokenTtl  = $settings->kelvin_token_ttl.' s';
-            $enabled   = $settings->enabled ? '<fg=green>JA</>' : '<fg=red>NEIN</>';
-            $tokenInCache = Cache::has(self::TOKEN_CACHE_KEY) ? '<fg=green>vorhanden</>' : '<fg=yellow>nicht vorhanden (wird neu geholt)</>';
-
-            $this->table(
-                ['Einstellung', 'Wert'],
-                [
-                    ['UCS Integration aktiv', $enabled],
-                    ['kelvin_base_url (v1)', $baseUrl],
-                    ['Token-Endpunkt (abgeleitet)', $tokenUrl],
-                    ['kelvin_username', $username],
-                    ['kelvin_password', $password],
-                    ['kelvin_timeout', $timeout],
-                    ['kelvin_token_ttl', $tokenTtl],
-                    ['Bearer-Token im Cache', $tokenInCache],
-                ],
-            );
-
-            if (! $settings->enabled) {
-                $this->warn('⚠  UCS-Integration ist in den Einstellungen DEAKTIVIERT.');
-            }
-
-            if (empty($settings->kelvin_base_url)) {
-                $this->error('✗ kelvin_base_url ist leer. Ping wird trotzdem versucht.');
-            }
-
             // ------------------------------------------------------------------
-            // 2. Token ggf. aus Cache löschen
-            // ------------------------------------------------------------------
-            if ($this->option('flush-token')) {
-                Cache::forget(self::TOKEN_CACHE_KEY);
-                $this->line('  → Bearer-Token aus Cache gelöscht (--flush-token).');
-            }
-
-            // ------------------------------------------------------------------
-            // 3. DNS-Auflösung
+            // 2. DNS-Auflösung
             // ------------------------------------------------------------------
             $this->section('2. DNS-Auflösung');
 
-            $host = parse_url($settings->kelvin_base_url ?? '', PHP_URL_HOST);
+            $host = parse_url($settings->kelvin_base_url, PHP_URL_HOST);
 
             if (empty($host)) {
                 $this->warn('  ⚠  Kein Hostname aus kelvin_base_url extrahierbar – DNS-Check übersprungen.');
+                $this->line("  URL war: {$settings->kelvin_base_url}");
             } else {
                 $this->line("  Hostname : <fg=cyan>{$host}</>");
                 $ip = @gethostbyname($host);
@@ -111,17 +154,17 @@ class UcsPing extends Command
                 }
 
                 // ------------------------------------------------------------------
-                // 4. TCP-Verbindungscheck
+                // 3. TCP-Verbindungscheck
                 // ------------------------------------------------------------------
                 $this->section('3. TCP-Verbindungscheck (Port 443)');
 
-                $port    = parse_url($settings->kelvin_base_url ?? '', PHP_URL_PORT) ?? 443;
-                $timeout = min($settings->kelvin_timeout, 5);
+                $port       = parse_url($settings->kelvin_base_url, PHP_URL_PORT) ?? 443;
+                $tcpTimeout = min($settings->kelvin_timeout, 5);
 
                 $this->line("  Ziel    : <fg=cyan>{$host}:{$port}</>");
-                $this->line("  Timeout : {$timeout} s");
+                $this->line("  Timeout : {$tcpTimeout} s");
 
-                $socket = @fsockopen("ssl://{$host}", (int) $port, $errno, $errstr, $timeout);
+                $socket = @fsockopen("ssl://{$host}", (int) $port, $errno, $errstr, $tcpTimeout);
 
                 if ($socket === false) {
                     $this->error("  ✗ TCP/TLS-Verbindung fehlgeschlagen: [{$errno}] {$errstr}");
@@ -135,7 +178,7 @@ class UcsPing extends Command
         }
 
         // ------------------------------------------------------------------
-        // 5. Eigentlicher Ping-Request
+        // 4. Eigentlicher Ping-Request
         // ------------------------------------------------------------------
         if ($debug) {
             $this->section('4. HTTP-Ping (GET /schools/?limit=1)');
