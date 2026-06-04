@@ -236,6 +236,20 @@
                 ],
             ],
             [
+                'id'    => 'grp-warning-banner',
+                'title' => 'Warnung Alert-Banner',
+                'icon'  => 'fas fa-flag',
+                'vars'  => [
+                    '--color-warning-bg'             => 'Hintergrund',
+                    '--color-warning-border'         => 'Rahmen',
+                    '--color-warning-icon-bg'        => 'Icon-Hintergrund',
+                    '--color-warning-text'           => 'Text (Überschrift)',
+                    '--color-warning-text-secondary' => 'Text (Beschreibung)',
+                    '--color-warning-btn-bg'         => 'Button Hintergrund',
+                    '--color-warning-btn-hover'      => 'Button Hover',
+                ],
+            ],
+            [
                 'id'    => 'grp-losung',
                 'title' => 'Losung-Widget',
                 'icon'  => 'fas fa-book-open',

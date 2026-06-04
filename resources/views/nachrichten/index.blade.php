@@ -21,6 +21,39 @@
         </div>
     </div>
 
+    @can('release posts')
+        @if(($openReportsCount ?? 0) > 0)
+            <div class="rounded-xl shadow-md mb-4 p-4 flex items-center justify-between gap-4"
+                 style="background-color: var(--color-warning-bg); border: 1px solid var(--color-warning-border);">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
+                          style="background-color: var(--color-warning-icon-bg);">
+                        <i class="fas fa-flag" style="color: var(--color-widget-header-text);"></i>
+                    </span>
+                    <div>
+                        <p class="font-semibold" style="color: var(--color-warning-text);">
+                            <i class="fas fa-flag mr-1"></i>
+                            {{ $openReportsCount }} gemeldete
+                            {{ $openReportsCount === 1 ? 'Nachricht' : 'Nachrichten' }}
+                            warte{{ $openReportsCount === 1 ? 't' : 'n' }} auf Prüfung.
+                        </p>
+                        <p class="text-sm mt-0.5" style="color: var(--color-warning-text-secondary);">
+                            Bitte prüfe die gemeldeten Beiträge und entscheide über das weitere Vorgehen.
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('post-reports.index') }}"
+                   class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200"
+                   style="background-color: var(--color-warning-btn-bg); color: var(--color-widget-header-text);"
+                   onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-warning-btn-hover')"
+                   onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-warning-btn-bg')">
+                    <i class="fas fa-flag"></i>
+                    Meldungen ansehen
+                </a>
+            </div>
+        @endif
+    @endcan
+
     @include('nachrichten.start')
 </div>
 @endsection

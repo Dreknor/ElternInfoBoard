@@ -99,6 +99,14 @@
   --color-widget-warning-from:   #d97706;
   --color-widget-warning-to:     #ea580c;
   --color-widget-warning-border: #9a3412;
+  /* Warnung Alert-Banner */
+  --color-warning-bg:             #fef3c7;
+  --color-warning-border:         #f59e0b;
+  --color-warning-icon-bg:        #f59e0b;
+  --color-warning-text:           #78350f;
+  --color-warning-text-secondary: #92400e;
+  --color-warning-btn-bg:         #d97706;
+  --color-warning-btn-hover:      #b45309;
   /* Gemeinsam */
   --color-widget-header-text:    #ffffff;
   --color-widget-body-bg:        #f9fafb;
@@ -1392,3 +1400,15 @@ html.dark select option {
   color: var(--color-text-primary, #f8fafc);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE – Warning Alert Banner Overrides
+   ═══════════════════════════════════════════════════════════════ */
+html.dark {
+  --color-warning-bg:             #451a03;
+  --color-warning-border:         #d97706;
+  --color-warning-icon-bg:        #d97706;
+  --color-warning-text:           #fde68a;
+  --color-warning-text-secondary: #fcd34d;
+  --color-warning-btn-bg:         #b45309;
+  --color-warning-btn-hover:      #92400e;
+}
