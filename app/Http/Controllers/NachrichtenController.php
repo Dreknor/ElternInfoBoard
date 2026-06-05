@@ -122,10 +122,16 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         // Hole alle Nachrichten für die Übersichtsseite
 
+        $openReportsCount = 0;
+        if (auth()->user()->can('release posts')) {
+            $openReportsCount = \App\Model\PostReport::whereNull('resolved_at')->count();
+        }
+
         return view('nachrichten.index', [
             'datum' => Carbon::now(),
             'archiv' => $archiv,
             'nachrichten' => $nachrichten,
+            'openReportsCount' => $openReportsCount,
         ]);
     }
 

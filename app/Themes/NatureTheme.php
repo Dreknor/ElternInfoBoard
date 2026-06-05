@@ -125,6 +125,14 @@ class NatureTheme extends AbstractTheme
             // Gemeinsam
             '--color-widget-header-text'     => '#ffffff',
             '--color-widget-body-bg'         => '#f9fafb',
+            // Warning Alert-Banner
+            '--color-warning-bg'             => '#fef3c7',
+            '--color-warning-border'         => '#f59e0b',
+            '--color-warning-icon-bg'        => '#f59e0b',
+            '--color-warning-text'           => '#78350f',
+            '--color-warning-text-secondary' => '#92400e',
+            '--color-warning-btn-bg'         => '#d97706',
+            '--color-warning-btn-hover'      => '#b45309',
             // Losung spezifisch (Gradient aus Braun und Oliv)
             '--color-losung-header-from'     => '#85603e',
             '--color-losung-header-to'       => '#8d9c3e',
