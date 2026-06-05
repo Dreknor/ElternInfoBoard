@@ -374,7 +374,7 @@
                                         </a>
                                     </div>
                                 </div>
-                                <div class="row">
+                                <div class="row mt-2">
                                     <div class="col">
                                         <a href="{{url("rueckmeldungen/$post->id/createDiskussion")}}"
                                            id="CommentsButton"
@@ -388,7 +388,24 @@
                                             Bilder-Upload ermöglichen
                                         </a>
                                     </div>
-
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldung/create/$post->id/terminliste")}}"
+                                           id="terminlisteButton"
+                                           class="btn btn-block btn-outline-primary text-secondary">
+                                            Terminliste erstellen
+                                        </a>
+                                    </div>
+                                    @if(auth()->user()->can('create polls'))
+                                    <div class="col">
+                                        <a href="{{url("rueckmeldung/create/$post->id/poll")}}"
+                                           id="pollButton"
+                                           class="btn btn-block btn-outline-primary text-secondary">
+                                            Umfrage (anonym) erstellen
+                                        </a>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>

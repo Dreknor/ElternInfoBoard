@@ -310,6 +310,17 @@
     </div>
 </form>
 
+{{-- Verstecktes Formular für das erneute Versenden der Willkommens-E-Mail --}}
+{{-- MUSS außerhalb von user-edit-form stehen, da verschachtelte <form>-Elemente in HTML ungültig sind --}}
+@can('edit user')
+<form id="resend-welcome-form"
+      action="{{ route('users.resendWelcome', $user) }}"
+      method="POST"
+      class="hidden">
+    @csrf
+</form>
+@endcan
+
 {{-- Sticky Save-Bar auf Mobile (erscheint nach Änderungen) --}}
 <div id="sticky-save-bar"
      class="fixed bottom-0 left-0 right-0 md:hidden px-4 py-3 border-t shadow-2xl z-50 flex items-center gap-3"

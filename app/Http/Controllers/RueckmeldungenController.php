@@ -75,6 +75,17 @@ class RueckmeldungenController extends Controller
                 'type' => 'success',
                 'Meldung' => 'Nachricht wurde erstellt',
             ]);
+        } elseif ($type == 'poll') {
+            if (! auth()->user()->can('create polls')) {
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Berechtigung fehlt',
+                ]);
+            }
+
+            return view('nachrichten.createPoll', [
+                'nachricht' => $post,
+            ]);
         }
 
         return redirect()->back()->with([
