@@ -76,7 +76,11 @@
                                onclick="readNotification({{$item->id}})"
                                class="block px-4 py-3 text-decoration-none @if(!$item->read) bg-blue-50 border-l-4 border-l-blue-500 @else opacity-60 @endif">
                                 <div class="flex gap-3">
-                                    @if($item['icon'])
+                                    @if($item['icon'] && preg_match('/^(fas|far|fab|fal|fad)\s/', $item['icon']))
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
+                                            <i class="{{$item['icon']}} text-white text-lg"></i>
+                                        </div>
+                                    @elseif($item['icon'])
                                         <div class="flex-shrink-0">
                                             <img src="{{$item['icon']}}"
                                                  alt="Icon"
