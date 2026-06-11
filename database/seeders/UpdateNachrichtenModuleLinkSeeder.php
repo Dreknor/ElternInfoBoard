@@ -53,12 +53,12 @@ class UpdateNachrichtenModuleLinkSeeder extends Seeder
             if (! isset($options['nav'])) {
                 $options['nav'] = [
                     'name' => 'Termine',
-                    'link' => 'termin',
+                    'link' => 'termine',
                     'icon' => 'far fa-calendar-alt',
                     'bottom-nav' => 'true',
                 ];
             } else {
-                $options['nav']['link'] = 'termin';
+                $options['nav']['link'] = 'termine';
                 $options['nav']['bottom-nav'] = 'true';
             }
 
