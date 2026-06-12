@@ -36,14 +36,6 @@
                         <i class="fas fa-paper-plane"></i>
                         <span class="hidden sm:inline">Zugangsdaten erneut senden</span>
                     </button>
-
-                    {{-- Verstecktes Formular für die Aktion --}}
-                    <form id="resend-welcome-form"
-                          action="{{ route('users.resendWelcome', $user) }}"
-                          method="POST"
-                          class="hidden">
-                        @csrf
-                    </form>
                 @endcan
 
                 {{-- Speichern-Button (Desktop, oben rechts – wird per JS eingeblendet) --}}
@@ -361,13 +353,15 @@ function confirmResendWelcome() {
                 '<li>das bisherige Kennwort <strong>sofort ungültig</strong> gemacht,</li>' +
                 '<li>eine E-Mail mit den neuen Zugangsdaten versendet.</li>' +
                 '</ul>',
-            icon: 'warning',
+            type: 'warning',
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-paper-plane"></i> Ja, jetzt versenden',
             cancelButtonText:  'Abbrechen',
             confirmButtonColor: '#0891b2',
         }).then(function(result) {
-            if (result.isConfirmed) {
+            // SweetAlert2 v8: result.value ist gesetzt bei Bestätigung
+            // SweetAlert2 v9+: result.isConfirmed
+            if (result.value || result.isConfirmed) {
                 doSubmit();
             }
         });
@@ -377,6 +371,7 @@ function confirmResendWelcome() {
             'Das bisherige Passwort wird sofort ungültig. ' +
             'Ein neues Kennwort wird generiert und per E-Mail verschickt.'
         )) {
+            console.log()
             doSubmit();
         }
     }

@@ -44,6 +44,7 @@ class UserController extends Controller implements HasMiddleware
     {
         $this->groupsRepository = $groupsRepository;
         $this->userService = $userService;
+
     }
 
     public static function middleware(): array
