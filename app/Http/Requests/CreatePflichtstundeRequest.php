@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class CreatePflichtstundeRequest extends FormRequest
 {
@@ -11,7 +12,14 @@ class CreatePflichtstundeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()->can('view Pflichtstunden');
+        if (!auth()->check()) {
+            return false;
+        }
+
+        if (auth()->user()->can('view Pflichtstunden') || auth()->user()->can('edit Pflichtstunden')) {
+            return true;
+        }
+        return false;
     }
 
     /**
