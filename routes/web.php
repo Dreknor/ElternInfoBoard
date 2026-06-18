@@ -277,6 +277,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv'])->where('month', '^\d{4}-\d{2}$');
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost'])->name('post.find');
+        Route::get('post/{post}/pdf', [NachrichtenController::class, 'downloadPdf'])->name('post.pdf');
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         Route::post('post/{post}/readReceipt/{user}', [ReadReceiptsController::class, 'confirmForUser'])
             ->middleware('permission:manage rueckmeldungen')

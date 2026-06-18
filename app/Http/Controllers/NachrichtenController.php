@@ -978,5 +978,48 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         return redirect(url('/nachrichten#'.$post->id));
     }
+
+    /**
+     * Lädt einen einzelnen Post als PDF herunter.
+     *
+     * Zugriffslogik: Nutzer mit „view all"-Berechtigung dürfen alle Posts laden.
+     * Alle anderen Nutzer dürfen nur freigegebene Posts aus ihren Gruppen abrufen.
+     */
+    public function downloadPdf(Post $post): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Zugriffscheck
+        $canAccess = $user->can('view all')
+            || ($post->released == 1 && $post->groups->pluck('id')->intersect($user->groups->pluck('id'))->isNotEmpty())
+            || $user->id === $post->author;
+
+        if (! $canAccess) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Keine Berechtigung für diesen Beitrag.',
+            ]);
+        }
+
+        $post->load(['autor', 'groups', 'rueckmeldung', 'media']);
+
+        $pdf = PDF::loadView('pdf.post', [
+            'post'     => $post,
+            'exportAt' => Carbon::now(),
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        // Seitenränder: oben genug für den fixen Header, unten für Footer
+        $pdf->getDomPDF()->set_option('defaultFont', 'DejaVu Sans');
+        $pdf->getDomPDF()->set_option('isHtml5ParserEnabled', true);
+        $pdf->getDomPDF()->set_option('isRemoteEnabled', false);
+
+        $filename = Carbon::now()->format('Y-m-d')
+            .'_'.str($post->header)->slug()->limit(20)
+            .'.pdf';
+
+        return $pdf->download($filename);
+    }
 }
 
