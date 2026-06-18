@@ -1003,6 +1003,10 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $post->load(['autor', 'groups', 'rueckmeldung', 'media']);
 
+        // HTML für DomPDF bereinigen: Pixel-Breiten und overflow-x-auto entfernen,
+        // damit Tabellen beim Seitenumbruch nicht abgeschnitten werden.
+        $post->news = $this->sanitizeHtmlForPdf($post->news);
+
         $pdf = PDF::loadView('pdf.post', [
             'post'     => $post,
             'exportAt' => Carbon::now(),
@@ -1020,6 +1024,45 @@ class NachrichtenController extends Controller implements HasMiddleware
             .'.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Bereinigt HTML-Inhalt für die DomPDF-Ausgabe:
+     *  - Entfernt absolute Pixel-Breiten (style="width: Npx") aus Tabellen und Zellen,
+     *    damit Tabellen nicht über den Seitenrand hinausragen und abgeschnitten werden.
+     *  - Entfernt die CSS-Klasse "overflow-x-auto", die DomPDF dazu verleitet,
+     *    Tabelleninhalte beim Seitenumbruch zu clippen.
+     */
+    private function sanitizeHtmlForPdf(string $html): string
+    {
+        if (empty($html)) {
+            return $html;
+        }
+
+        // Pixel-Breiten in style-Attributen entfernen (z. B. style="width: 1644px;")
+        // Betrifft table, td, th, div, section – also alle Block-Elemente.
+        $html = preg_replace(
+            '/(<(?:table|td|th|div|section|col|colgroup)[^>]*)\bwidth\s*:\s*\d+(?:\.\d+)?px\s*;?\s*/i',
+            '$1',
+            $html
+        );
+
+        // Leere style-Attribute aufräumen
+        $html = preg_replace('/\s+style\s*=\s*["\']["\']/', '', $html);
+
+        // overflow-x-auto Klasse entfernen
+        $html = preg_replace_callback(
+            '/\bclass\s*=\s*(["\'])([^"\']*)\1/i',
+            function (array $m) {
+                $classes = preg_replace('/\boverflow-x-auto\b/', '', $m[2]);
+                $classes = trim(preg_replace('/\s+/', ' ', $classes));
+
+                return $classes !== '' ? 'class=' . $m[1] . $classes . $m[1] : '';
+            },
+            $html
+        );
+
+        return $html;
     }
 }
 

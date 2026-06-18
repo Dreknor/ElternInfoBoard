@@ -8,6 +8,15 @@
             box-sizing: border-box;
         }
 
+        /* DomPDF: Seitenränder reservieren Platz für fixed Header/Footer
+           auf JEDER Seite – verhindert, dass der Header den Inhalt überdeckt. */
+        @page {
+            margin-top: 30px;
+            margin-bottom: 26px;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
         body {
             font-family: DejaVu Sans, Arial, sans-serif;
             font-size: 11px;
@@ -21,10 +30,10 @@
         /* ── Seitenkopf (fest oben, einzeilig) ──────────────────────── */
         .page-header {
             position: fixed;
-            top: 0;
+            top: -30px;
             left: 0;
             right: 0;
-            height: 22px;
+            height: 26px;
             background: #1d4ed8;
             color: #ffffff;
             padding: 0 20px;
@@ -32,7 +41,7 @@
         .page-header table {
             width: 100%;
             border-collapse: collapse;
-            height: 22px;
+            height: 26px;
         }
         .page-header td {
             padding: 0;
@@ -54,10 +63,10 @@
         /* ── Seitenfuß (fest unten) ──────────────────────────────────── */
         .page-footer {
             position: fixed;
-            bottom: 0;
+            bottom: -26px;
             left: 0;
             right: 0;
-            height: 18px;
+            height: 22px;
             border-top: 1px solid #e2e8f0;
             padding: 0 20px;
             font-size: 8px;
@@ -67,7 +76,7 @@
         .page-footer table {
             width: 100%;
             border-collapse: collapse;
-            height: 18px;
+            height: 22px;
         }
         .page-footer td {
             padding: 0;
@@ -86,8 +95,8 @@
 
         /* ── Inhalt-Wrapper ──────────────────────────────────────────── */
         .content-wrap {
-            margin-top: 28px;
-            margin-bottom: 26px;
+            margin-top: 6px;
+            margin-bottom: 6px;
             padding: 0 20px;
         }
 
@@ -289,6 +298,32 @@
         /* ── Seitenumbruch-Kontrolle ─────────────────────────────────── */
         .no-break {
             page-break-inside: avoid;
+        }
+
+        /* ── Tabellen-Seitenumbruch-Fix (DomPDF) ─────────────────────── */
+        /*
+         * DomPDF clippt overflow: hidden/auto → alle Wrapper auf visible setzen.
+         * Tabellen dürfen über Seiten brechen (auto), aber einzelne Zeilen nicht
+         * mittendurch reißen (avoid).
+         * Pixel-Breiten aus dem Editor werden per !important überschrieben.
+         */
+        .post-body div,
+        .post-body section {
+            overflow: visible !important;
+        }
+        .post-body table {
+            width: 100% !important;
+            table-layout: auto;
+            page-break-inside: auto;
+        }
+        .post-body table tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        .post-body table td,
+        .post-body table th {
+            width: auto !important;
+            max-width: none !important;
         }
     </style>
 </head>
