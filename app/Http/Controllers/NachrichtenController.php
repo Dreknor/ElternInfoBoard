@@ -1007,9 +1007,32 @@ class NachrichtenController extends Controller implements HasMiddleware
         // damit Tabellen beim Seitenumbruch nicht abgeschnitten werden.
         $post->news = $this->sanitizeHtmlForPdf($post->news);
 
+        // <img>-Tags im Beitragstext durch Base64-Data-URIs ersetzen,
+        // da DomPDF mit isRemoteEnabled=false keine externen URLs lädt.
+        $post->news = $this->embedImagesAsBase64($post->news);
+
+        // Angehängte Bilder (Media Library) als Base64 für das PDF-Template vorbereiten.
+        $pdfImages = $post->getMedia('images')
+            ->map(function ($media) {
+                $path = $media->getPath();
+                if (! file_exists($path)) {
+                    return null;
+                }
+
+                return [
+                    'name'      => $media->name,
+                    'file_name' => $media->file_name,
+                    'mime_type' => $media->mime_type,
+                    'src'       => 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($path)),
+                ];
+            })
+            ->filter()
+            ->values();
+
         $pdf = PDF::loadView('pdf.post', [
-            'post'     => $post,
-            'exportAt' => Carbon::now(),
+            'post'      => $post,
+            'exportAt'  => Carbon::now(),
+            'pdfImages' => $pdfImages,
         ]);
 
         $pdf->setPaper('A4', 'portrait');
@@ -1063,6 +1086,86 @@ class NachrichtenController extends Controller implements HasMiddleware
         );
 
         return $html;
+    }
+
+    /**
+     * Ersetzt <img src="URL"> im HTML durch Base64-Data-URIs, damit DomPDF
+     * (isRemoteEnabled=false) die Bilder trotzdem rendern kann.
+     */
+    private function embedImagesAsBase64(string $html): string
+    {
+        if (empty($html)) {
+            return $html;
+        }
+
+        return preg_replace_callback(
+            '/<img([^>]*?)\ssrc\s*=\s*(["\'])([^"\']+)\2([^>]*)>/i',
+            function (array $m) {
+                $base64Src = $this->resolveImageSrcToBase64($m[3]);
+                if ($base64Src !== null) {
+                    return '<img'.$m[1].' src="'.$base64Src.'"'.$m[4].'>';
+                }
+
+                return $m[0]; // Unverändert lassen, wenn nicht auflösbar
+            },
+            $html
+        );
+    }
+
+    /**
+     * Versucht eine Bild-URL in eine Base64-Data-URI aufzulösen.
+     * Unterstützt:
+     *  - /image/{id}        → Spatie Media by ID
+     *  - /api/file/{uuid}   → Spatie Media by UUID
+     *  - /api/image/{id}    → Spatie Media by ID
+     *  - Absolute App-URLs  → werden auf relative Pfade reduziert
+     *  - Lokale public/-Pfade
+     */
+    private function resolveImageSrcToBase64(string $src): ?string
+    {
+        // Absoluten App-URL-Prefix entfernen
+        $appUrl = rtrim(config('app.url'), '/');
+        if (str_starts_with($src, $appUrl)) {
+            $src = substr($src, strlen($appUrl));
+        }
+
+        // /image/{id}
+        if (preg_match('#^/image/(\d+)(?:\?.*)?$#', $src, $m)) {
+            return $this->mediaToBase64ById((int) $m[1]);
+        }
+
+        // /api/image/{id}
+        if (preg_match('#^/api/image/(\d+)(?:\?.*)?$#', $src, $m)) {
+            return $this->mediaToBase64ById((int) $m[1]);
+        }
+
+        // /api/file/{uuid}
+        if (preg_match('#^/api/file/([0-9a-f\-]{36})(?:\?.*)?$#i', $src, $m)) {
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('uuid', $m[1])->first();
+            if ($media && file_exists($media->getPath())) {
+                return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
+            }
+        }
+
+        // Lokale public/-Pfade (z. B. /img/logo.png)
+        if (str_starts_with($src, '/') && file_exists(public_path($src))) {
+            $path = public_path($src);
+            $mime = mime_content_type($path) ?: 'image/png';
+
+            return 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
+        }
+
+        return null;
+    }
+
+    private function mediaToBase64ById(int $id): ?string
+    {
+        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($id);
+        if ($media && file_exists($media->getPath())) {
+            return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
+        }
+
+        return null;
     }
 }
 

@@ -274,6 +274,38 @@
             margin-right: 5px;
         }
 
+        /* ── Bilder-Galerie ──────────────────────────────────────────── */
+        .images-section {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 2px solid #e2e8f0;
+        }
+        .images-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+        .image-item {
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+            text-align: center;
+        }
+        .image-item img {
+            max-width: 100%;
+            max-height: 320px;
+            height: auto;
+            display: block;
+            margin: 0 auto 4px auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        .image-caption {
+            font-size: 8px;
+            color: #94a3b8;
+            text-align: center;
+        }
+
         /* ── Rückmeldungs-Hinweis ────────────────────────────────────── */
         .rueckmeldung-hint {
             margin-top: 16px;
@@ -383,6 +415,19 @@
     <div class="post-body">
         {!! $post->news !!}
     </div>
+
+    {{-- Angehängte Bilder (Media Library) --}}
+    @if(isset($pdfImages) && $pdfImages->isNotEmpty())
+        <div class="images-section">
+            <div class="images-title">&#128247; Bilder ({{ $pdfImages->count() }})</div>
+            @foreach($pdfImages as $img)
+                <div class="image-item">
+                    <img src="{{ $img['src'] }}" alt="{{ $img['name'] }}">
+                    <div class="image-caption">{{ $img['file_name'] }}</div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 
     {{-- Dateianhänge --}}
     @if($post->getMedia('files')->isNotEmpty())
