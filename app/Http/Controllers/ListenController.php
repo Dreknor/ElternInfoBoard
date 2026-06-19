@@ -276,6 +276,52 @@ class ListenController extends Controller
     }
 
     /**
+     * Eintragungsliste kopieren (inkl. Einträge, ohne Reservierungen)
+     *
+     * @return RedirectResponse
+     */
+    public function copyEintragListe(Liste $liste)
+    {
+        if (!auth()->user()->can('edit terminliste') && $liste->besitzer !== auth()->id()) {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        if ($liste->type !== 'eintrag') {
+            return redirect()->back()->with([
+                'type' => 'error',
+                'Meldung' => 'Nur Eintragungslisten können kopiert werden.',
+            ]);
+        }
+
+        // Liste kopieren
+        $kopie = $liste->replicate();
+        $kopie->listenname = 'Kopie von ' . $liste->listenname;
+        $kopie->active = 0;
+        $kopie->besitzer = auth()->id();
+        $kopie->save();
+
+        // Gruppen übernehmen
+        $kopie->groups()->attach($liste->groups->pluck('id'));
+
+        // Einträge kopieren – ohne Reservierungen (user_id = null)
+        foreach ($liste->eintragungen as $eintragung) {
+            $neuerEintrag = $eintragung->replicate();
+            $neuerEintrag->listen_id = $kopie->id;
+            $neuerEintrag->user_id = null;
+            $neuerEintrag->created_by = auth()->id();
+            $neuerEintrag->save();
+        }
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Liste erfolgreich kopiert.',
+        ]);
+    }
+
+    /**
      * Liste ausblenden
      *
      * @return RedirectResponse

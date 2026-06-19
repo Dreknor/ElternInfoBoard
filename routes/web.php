@@ -316,6 +316,7 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
         Route::post('listen/{liste}/activate', [ListenController::class, 'activate']);
+        Route::post('listen/{liste}/copy', [ListenController::class, 'copyEintragListe'])->name('listen.copy');
         Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
         Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
         Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
