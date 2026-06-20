@@ -47,20 +47,20 @@ class SyncUcsParents extends Command
 
         if (! $settings->sync_enabled && ! $this->option('dry-run')) {
             $this->warn('Sync ist deaktiviert (UcsSetting::sync_enabled=false). Kein Sync durchgeführt.');
-            Log::channel('ucs')->info('[sync:ucs-parents] Abgebrochen: sync_enabled=false.');
+            Log::info('[sync:ucs-parents] Abgebrochen: sync_enabled=false.');
 
             return 2;
         }
 
         if ($this->option('dry-run')) {
             $this->info('Dry-Run-Modus: Keine Datenbankänderungen.');
-            Log::channel('ucs')->info('[sync:ucs-parents] Dry-Run gestartet.');
+            Log::info('[sync:ucs-parents] Dry-Run gestartet.');
 
             try {
                 $counts = $svc->run(dryRun: true);
             } catch (\Throwable $e) {
                 $this->error('Dry-Run fehlgeschlagen: '.$e->getMessage());
-                Log::channel('ucs')->error('[sync:ucs-parents] Dry-Run Fehler: '.$e->getMessage());
+                Log::error('[sync:ucs-parents] Dry-Run Fehler: '.$e->getMessage());
 
                 return self::FAILURE;
             }
@@ -72,7 +72,7 @@ class SyncUcsParents extends Command
 
         // Echter Sync: direkt synchron, kein Queue-Worker erforderlich
         $this->info('Starte UCS-Elternsync (synchron) …');
-        Log::channel('ucs')->info('[sync:ucs-parents] Starte Bulk-Sync direkt (kein Job-Dispatch).');
+        Log::info('[sync:ucs-parents] Starte Bulk-Sync direkt (kein Job-Dispatch).');
 
         try {
             $counts = $svc->run();
