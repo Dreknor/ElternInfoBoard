@@ -725,6 +725,12 @@ class UcsSyncService
             ->pluck('groups.id')
             ->all();
 
+        Log::debug("syncGroupPivots: User {$user->name} – Detach-IDs ermittelt", [
+            'desired_group_ids' => $desiredGroupIds,
+            'current_auto_group_ids' => $user->groups()->wherePivot('is_auto_provisioned', true)->pluck('groups.id')->all(),
+            'ids_to_detach' => $idsToDetach,
+        ]);
+
         if (! empty($idsToDetach)) {
             $user->groups()->detach($idsToDetach);
         }
