@@ -48,6 +48,14 @@ class KelvinClient
     private const MAX_PAGES = 200;
 
     /**
+     * Laufzeit-Cache für aufgelöste Schulnamen (Input → kanonischer Name aus der API).
+     * Verhindert wiederholte GET /schools/-Aufrufe pro Sync-Lauf.
+     *
+     * @var array<string, string>
+     */
+    private array $resolvedSchoolNames = [];
+
+    /**
      * Korrelations-ID für diese Client-Instanz.
      * Wird mit jedem Log-Eintrag und per X-Correlation-Id-Header mitgesendet.
      */
@@ -374,11 +382,14 @@ class KelvinClient
         $this->log('info', "listUsers: start [{$role}]", ['school' => $school]);
 
         // Die Kelvin REST API erwartet den Parameter „roles" (Plural) mit dem
-        // vollständigen Rollen-String im Format „{role}:school:{school}",
-        // z. B. „legal_guardian:school:" oder „student:school:".
+        // vollständigen Rollen-String im Format „{role}:school:{school}".
+        // Der Schulname muss exakt der kanonischen Schreibweise in UCS entsprechen
+        // (case-sensitiv). Da UcsSetting::school in beliebiger Schreibweise
+        // gespeichert sein kann, wird der Name hier über GET /schools/ aufgelöst.
+        $canonicalSchool = $this->resolveCanonicalSchoolName($school);
 
         $response = $this->executeGet('users/', [
-            'roles' => $role.':school:'.$school,
+            'roles' => $role.':school:'.$canonicalSchool,
         ]);
 
         $users        = $response->json() ?? [];
@@ -484,6 +495,39 @@ class KelvinClient
     // =========================================================================
     // Hilfsmethoden
     // =========================================================================
+
+    /**
+     * Löst den kanonischen Schulnamen (exakte Schreibweise laut Kelvin-API) auf.
+     *
+     * Das UcsSetting::school kann in beliebiger Groß-/Kleinschreibung gespeichert
+     * sein (z. B. „evsr"), die Kelvin-API ist jedoch case-sensitiv und erwartet
+     * beim roles-Filter den exakten Namen (z. B. „EVSR").
+     *
+     * Vorgehen:
+     *  1. GET /schools/{school} – der Endpunkt ist im UCS-Kelvin-Stack case-insensitiv
+     *     (LDAP-DNs sind case-insensitiv), liefert aber den kanonischen Namen zurück.
+     *  2. Das „name"-Feld der Antwort wird als kanonischer Name verwendet.
+     *  3. Ergebnis wird pro Client-Instanz gecacht (kein doppelter HTTP-Call).
+     *
+     * @throws KelvinAuthException
+     * @throws KelvinUnavailableException
+     */
+    private function resolveCanonicalSchoolName(string $school): string
+    {
+        if (isset($this->resolvedSchoolNames[$school])) {
+            return $this->resolvedSchoolNames[$school];
+        }
+
+        $response  = $this->executeGet('schools/'.rawurlencode($school));
+        $canonical = $response->json('name') ?? $school;
+
+        $this->log('info', 'resolveCanonicalSchoolName', [
+            'input'     => $school,
+            'canonical' => $canonical,
+        ]);
+
+        return $this->resolvedSchoolNames[$school] = $canonical;
+    }
 
     /**
      * Basis-URL für alle v1-Ressourcen-Endpunkte (/users/, /schools/, /classes/, …).
