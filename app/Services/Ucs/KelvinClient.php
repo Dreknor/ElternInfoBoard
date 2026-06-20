@@ -360,7 +360,6 @@ class KelvinClient
     /**
      * Generischer Generator für GET /users/ mit einer bestimmten Rolle.
      *
-     * Die Kelvin API unterstützt bei /users/ KEINE Pagination.
      * Der Endpunkt liefert alle Einträge der Rolle auf einmal als großes JSON-Array.
      * limit/offset-Parameter werden von der API ignoriert und daher NICHT gesendet.
      *
@@ -374,9 +373,15 @@ class KelvinClient
     {
         $this->log('info', "listUsers: start [{$role}]", ['school' => $school]);
 
+        // Die Kelvin REST API erwartet den Parameter „roles" (Plural) mit dem
+        // vollständigen Rollen-String im Format „{role}:school:{school}",
+        // z. B. „legal_guardian:school:EVSR" oder „student:school:EVSR".
+        // Ein separater „role"- (Singular) oder „school"-Parameter wird von der
+        // API ignoriert, was dazu führt, dass alle Benutzer ungefiltert
+        // zurückgeliefert werden – einschließlich veralteter LDAP-Einträge mit
+        // der unbekannten Rolle „guardian:school:…" (HTTP 500).
         $response = $this->executeGet('users/', [
-            'role'   => $role,
-            'school' => $school,
+            'roles' => $role.':school:'.$school,
         ]);
 
         $users        = $response->json() ?? [];

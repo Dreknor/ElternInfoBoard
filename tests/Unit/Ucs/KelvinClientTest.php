@@ -205,12 +205,16 @@ class KelvinClientTest extends TestCase
             true
         );
 
-        $usersCalled = 0;
-        Http::fake(function ($request) use ($page1, &$usersCalled) {
+        $usersCalled      = 0;
+        $capturedRoles    = null;
+        Http::fake(function ($request) use ($page1, &$usersCalled, &$capturedRoles) {
             if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
             $usersCalled++;
+            // Prüfen, dass der korrekte „roles"-Parameter (Plural + Schul-Suffix) gesendet wird
+            parse_str(parse_url($request->url(), PHP_URL_QUERY) ?? '', $query);
+            $capturedRoles = $query['roles'] ?? null;
             // Liefert alle 2 Datensätze auf einmal (kein Paging)
             return Http::response($page1, 200);
         });
@@ -221,6 +225,8 @@ class KelvinClientTest extends TestCase
         $this->assertCount(2, $parents, '2 Elternteile aus Single-Request');
         $this->assertContainsOnlyInstancesOf(KelvinUserDto::class, $parents);
         $this->assertSame(1, $usersCalled, 'Nur 1 HTTP-Anfrage an /users/');
+        // Kelvin API erwartet „roles=legal_guardian:school:GS-XY" (Plural, vollständiger Rollen-String)
+        $this->assertSame('legal_guardian:school:GS-XY', $capturedRoles, 'Rollen-String muss legal_guardian:school:GS-XY sein');
     }
 
     public function test_list_parents_large_response_yields_all_records(): void
@@ -339,10 +345,13 @@ class KelvinClientTest extends TestCase
             true
         );
 
-        Http::fake(function ($request) use ($studentFixture) {
+        $capturedRoles = null;
+        Http::fake(function ($request) use ($studentFixture, &$capturedRoles) {
             if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
+            parse_str(parse_url($request->url(), PHP_URL_QUERY) ?? '', $query);
+            $capturedRoles = $query['roles'] ?? null;
             // Erste Seite: 3 Einträge (< page_size 200 → kein weiterer Call)
             static $called = false;
             if (! $called) {
@@ -356,6 +365,8 @@ class KelvinClientTest extends TestCase
 
         $this->assertCount(3, $students);
         $this->assertContainsOnlyInstancesOf(KelvinStudentDto::class, $students);
+        // Kelvin API erwartet „roles=student:school:GS-XY" (Plural, vollständiger Rollen-String)
+        $this->assertSame('student:school:GS-XY', $capturedRoles, 'Rollen-String muss student:school:GS-XY sein');
     }
 
     // =========================================================================
