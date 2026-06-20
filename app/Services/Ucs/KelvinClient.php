@@ -375,11 +375,8 @@ class KelvinClient
 
         // Die Kelvin REST API erwartet den Parameter „roles" (Plural) mit dem
         // vollständigen Rollen-String im Format „{role}:school:{school}",
-        // z. B. „legal_guardian:school:EVSR" oder „student:school:EVSR".
-        // Ein separater „role"- (Singular) oder „school"-Parameter wird von der
-        // API ignoriert, was dazu führt, dass alle Benutzer ungefiltert
-        // zurückgeliefert werden – einschließlich veralteter LDAP-Einträge mit
-        // der unbekannten Rolle „guardian:school:…" (HTTP 500).
+        // z. B. „legal_guardian:school:" oder „student:school:".
+
         $response = $this->executeGet('users/', [
             'roles' => $role.':school:'.$school,
         ]);
@@ -432,6 +429,14 @@ class KelvinClient
                     "Kelvin {$endpoint}: Auch nach Token-Refresh HTTP ".$response->status().'.'
                 );
             }
+        }
+
+        //404: Log-Ausgabe, aber nicht als Exception
+        if ($response->status() === 404) {
+            Log::debug("Kelvin {$endpoint}: 404 – Resource nicht gefunden", [
+                'endpoint' => $endpoint,
+                'query'    => $query,
+            ]);
         }
 
         $this->assertTypedException($response, $endpoint);
