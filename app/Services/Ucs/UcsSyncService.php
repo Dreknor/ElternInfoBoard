@@ -102,7 +102,12 @@ class UcsSyncService
                 $counts['parents_processed']++;
                 $seenParentUuids[] = $parentDto->recordUid;
 
-                Log::debug("Syncing Elternteil [{$parentDto->username}] mit ".count($parentDto->legalWards)." legal_wards");
+                Log::debug("Syncing Elternteil",[
+                    'username' => $parentDto,
+                    'school'   => $school,
+                    'dry_run'  => $dryRun,
+                    'legals'   => $parentDto->legalWards,
+                ]);
 
                 try {
                     DB::transaction(function () use (
