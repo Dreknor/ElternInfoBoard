@@ -100,7 +100,7 @@ class SyncUcsParents extends Command
         }
 
         $this->info('✓ Sync erfolgreich abgeschlossen.');
-        Log::channel('ucs')->info('[sync:ucs-parents] Bulk-Sync abgeschlossen.', $counts);
+        Log::info('[sync:ucs-parents] Bulk-Sync abgeschlossen.', $counts);
 
         $this->printCounterReport($counts);
 
