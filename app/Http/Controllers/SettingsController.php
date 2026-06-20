@@ -29,6 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
@@ -531,11 +532,16 @@ class SettingsController extends Controller implements HasMiddleware
         try {
             $schools = $client->ping();
 
+            Log::debug("Kelvin-Verbindungstest erfolgreich.", ['schools' => $schools]);
+
             return redirect()->back()->with([
                 'type'    => 'success',
-                'Meldung' => 'Verbindung OK. Erreichte Schulen: ' . $schools->count(),
+                'Meldung' => 'Verbindung OK.'
             ]);
         } catch (\Throwable $e) {
+
+            Log::error("Verbindungsfehler bei Kelvin-Verbindungstest: " . $e->getMessage(), ['exception' => $e]);
+
             return redirect()->back()->with([
                 'type'    => 'danger',
                 'Meldung' => 'Verbindungsfehler: ' . $e->getMessage(),
@@ -551,6 +557,8 @@ class SettingsController extends Controller implements HasMiddleware
 
         SyncUcsSchoolJob::dispatch();
 
+        Log::info("UCS-Sync manuell gestartet.");
+
         return redirect()->back()->with([
             'type'    => 'success',
             'Meldung' => 'Sync wurde in die Warteschlange gestellt',
@@ -565,6 +573,10 @@ class SettingsController extends Controller implements HasMiddleware
         $stundenplanSetting = new StundenplanSetting;
         $stundenplanSetting->import_api_key = \Illuminate\Support\Str::random(64);
         $stundenplanSetting->save();
+
+        Log::info("Stundenplan API Key erneuert.",[
+            'user' => auth()->user()->name,
+        ]);
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -612,6 +624,8 @@ class SettingsController extends Controller implements HasMiddleware
     {
         $modul = Module::where('setting', $modulname)->first();
 
+
+
         $options = $modul->options;
         if ($modul->options['active'] == 1) {
             $options['active'] = '0';
@@ -621,6 +635,12 @@ class SettingsController extends Controller implements HasMiddleware
         }
         $modul->options = $options;
         $modul->save();
+
+        Log::debug("Modul '{$modulname}' Status geändert.", [
+            'modul' => $modulname,
+            'active' => $options['active'],
+            'user' => auth()->user()->name,
+        ]);
 
         Cache::forget('modules');
 
