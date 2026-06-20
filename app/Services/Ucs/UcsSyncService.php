@@ -118,7 +118,11 @@ class UcsSyncService
                     ) {
                         $user = $this->upsertUser($parentDto, $dryRun, $counts);
 
-                        // Im Dry-Run ist $user null (kein DB-Write) – dennoch processWards für Counts aufrufen
+                        // upsertUser gibt null zurück wenn:
+                        //  a) Dry-Run  → processWards trotzdem aufrufen (Counts!)
+                        //  b) Neuanlage nicht möglich (fehlende E-Mail) → failed_parents schon erhöht, überspringen
+                        //
+                        // Unterscheidung: Im Dry-Run ist $dryRun=true; außerhalb + null = Fehler bereits behandelt.
                         if ($user === null && ! $dryRun) {
                             return;
                         }
@@ -127,7 +131,7 @@ class UcsSyncService
                             $user, $parentDto, $studentMap, $school, $dryRun, $counts, $seenStudentUsernames
                         );
 
-                        // ── Schritt 4: Pivot-Diff am Elternteil (Herzstück §5.2) ──
+                        // ── Schritt 4: Pivot-Diff am Elterntei ──
                         if (! $dryRun && $user !== null) {
                             $this->syncGroupPivots($user, $desiredGroupIds, $childIdMap);
                         }
@@ -136,6 +140,9 @@ class UcsSyncService
                     $counts['failed_parents']++;
                     $this->log('error', 'Fehler bei Elternteil-Sync', [
                         'username' => $parentDto->username,
+                        'name'     => trim($parentDto->firstname.' '.$parentDto->lastname),
+                        'email'    => $parentDto->email ?? '(keine E-Mail in UCS)',
+                        'school'   => $parentDto->school,
                         'error'    => $e->getMessage(),
                     ]);
                     // Kein Re-Throw: nächster Elternteil wird trotzdem verarbeitet
@@ -395,6 +402,10 @@ class UcsSyncService
     /**
      * Legt einen Elternteil-User an oder aktualisiert ihn.
      *
+     * Gibt null zurück wenn:
+     *  – Dry-Run (kein DB-Write)
+     *  – Neuanlage nicht möglich, weil die E-Mail fehlt (users.email NOT NULL)
+     *
      * @param  array<string, int>  $counts  Referenz-Array für Counter
      */
     private function upsertUser(KelvinUserDto $dto, bool $dryRun, array &$counts): ?User
@@ -403,10 +414,6 @@ class UcsSyncService
         //  1. ucs_uuid  – zuverlässigste Kennung; nur wenn record_uid vorhanden
         //  2. ucs_username – stabiler Anmeldename aus Kelvin
         //  3. email     – Fallback für Accounts, bei denen Kelvin keinen Benutzernamen liefert
-        //
-        // Hintergrund: Einige Kelvin-Installationen liefern record_uid = null und/oder
-        // username = "" – in diesem Fall extrahiert KelvinUserDto den Namen aus dem
-        // URL-Pfad. Die Email dient als letzter Anker, falls sie lokal bereits bekannt ist.
         $user = null;
 
         if ($dto->recordUid !== null) {
@@ -421,6 +428,34 @@ class UcsSyncService
             $user = User::where('email', $dto->email)->first();
         }
 
+        // ── Neuanlage erfordert E-Mail (users.email NOT NULL UNIQUE) ──
+        // Prüfung VOR dem Dry-Run-Block, damit sie in beiden Modi greift.
+        // • Dry-Run:    RuntimeException → Catch in run() loggt + zählt failed_parents
+        // • Normal:     Error loggen + failed_parents++ + null zurückgeben (kein Throw,
+        //               damit der nächste Elternteil weiterverarbeitet wird)
+        if ($user === null && $dto->email === null) {
+            $context = [
+                'username'   => $dto->username,
+                'record_uid' => $dto->recordUid,
+                'name'       => trim($dto->firstname.' '.$dto->lastname),
+                'school'     => $dto->school,
+                'roles'      => $dto->roles,
+                'hint'       => 'Bitte E-Mail-Adresse in UCS für diesen Account hinterlegen.',
+            ];
+
+            if ($dryRun) {
+                // Im Dry-Run → Exception; Catch in run() erhöht failed_parents und loggt
+                throw new \RuntimeException(
+                    "Elternteil [{$dto->username}] kann nicht provisioniert werden: keine E-Mail-Adresse in UCS."
+                );
+            }
+
+            $counts['failed_parents']++;
+            $this->log('error', 'Elternteil nicht provisioniert – keine E-Mail-Adresse in UCS', $context);
+
+            return null; // Sauberes Überspringen ohne globale Exception
+        }
+
         if ($dryRun) {
             if ($user === null) {
                 $counts['parents_created']++;
@@ -428,7 +463,7 @@ class UcsSyncService
                 $counts['parents_updated']++;
             }
 
-            return null; // Im Dry-Run kein echtes Objekt zurückgeben
+            return null;
         }
 
         if ($user === null) {
@@ -436,7 +471,7 @@ class UcsSyncService
             $user = User::create([
                 'name'          => trim($dto->firstname.' '.$dto->lastname),
                 'email'         => $dto->email,
-                'ucs_uuid'      => $dto->recordUid,   // null, wenn Kelvin keinen record_uid liefert
+                'ucs_uuid'      => $dto->recordUid,
                 'ucs_username'  => $dto->username,
                 'ucs_school'    => $dto->school,
                 'ucs_source'    => 'kelvin',
