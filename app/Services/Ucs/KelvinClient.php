@@ -381,15 +381,16 @@ class KelvinClient
     {
         $this->log('info', "listUsers: start [{$role}]", ['school' => $school]);
 
-        // Die Kelvin REST API erwartet den Parameter „roles" (Plural) mit dem
-        // vollständigen Rollen-String im Format „{role}:school:{school}".
-        // Der Schulname muss exakt der kanonischen Schreibweise in UCS entsprechen
-        // (case-sensitiv). Da UcsSetting::school in beliebiger Schreibweise
-        // gespeichert sein kann, wird der Name hier über GET /schools/ aufgelöst.
+        // Die Kelvin REST API /v1/users/ erwartet zwei separate Query-Parameter:
+        //   • „school" = kanonischer Schulname (z. B. „EVSR") – case-sensitiv
+        //   • „roles"  = Rollenname ohne Schulsuffix (z. B. „student" oder „legal_guardian")
+        // Der Schulname wird über GET /schools/{name} kanonisch aufgelöst, da
+        // UcsSetting::school in beliebiger Schreibweise gespeichert sein kann.
         $canonicalSchool = $this->resolveCanonicalSchoolName($school);
 
         $response = $this->executeGet('users/', [
-            'roles' => $role.':school:'.$canonicalSchool,
+            'school' => $canonicalSchool,
+            'roles'  => $role,
         ]);
 
         $users        = $response->json() ?? [];
