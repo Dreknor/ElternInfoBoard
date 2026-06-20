@@ -94,20 +94,23 @@ class UcsSyncService
             $studentMap = $this->buildStudentMap($school);
 
             // ── Schritt 2 + 3: Eltern paginiert iterieren + pro Elternteil syncen ──
-            $seenParentUuids    = [];
+            // Tracking per Username (primär) und UUID (wenn vorhanden).
+            // record_uid kann bei manchen Kelvin-Installationen null sein; der Username
+            // ist immer vorhanden (aus URL extrahiert) und dient als stabiler Anker.
+            $seenParentUuids     = [];
+            $seenParentUsernames = [];
             $seenStudentUsernames = [];
 
             foreach ($this->client->listParents($school) as $parentDto) {
                 /** @var KelvinUserDto $parentDto */
                 $counts['parents_processed']++;
-                $seenParentUuids[] = $parentDto->recordUid;
 
-                Log::debug("Syncing Elternteil",[
-                    'username' => $parentDto,
-                    'school'   => $school,
-                    'dry_run'  => $dryRun,
-                    'legals'   => $parentDto->legalWards,
-                ]);
+                if ($parentDto->recordUid !== null) {
+                    $seenParentUuids[] = $parentDto->recordUid;
+                }
+                if ($parentDto->username !== '') {
+                    $seenParentUsernames[] = $parentDto->username;
+                }
 
                 try {
                     DB::transaction(function () use (
@@ -141,7 +144,7 @@ class UcsSyncService
 
             // ── Schritt 5: Orphan-Cleanup ──
             if (! $dryRun) {
-                $this->orphanCleanup($school, $seenParentUuids, $seenStudentUsernames, $counts);
+                $this->orphanCleanup($school, $seenParentUuids, $seenParentUsernames, $seenStudentUsernames, $counts);
             }
 
             $counts['duration_seconds'] = round(microtime(true) - $startedAt, 2);
@@ -396,9 +399,27 @@ class UcsSyncService
      */
     private function upsertUser(KelvinUserDto $dto, bool $dryRun, array &$counts): ?User
     {
-        // Match per ucs_uuid (primär), sonst per ucs_username (Fallback)
-        $user = User::where('ucs_uuid', $dto->recordUid)->first()
-            ?? User::where('ucs_username', $dto->username)->first();
+        // Match-Strategie (in Prioritätsreihenfolge):
+        //  1. ucs_uuid  – zuverlässigste Kennung; nur wenn record_uid vorhanden
+        //  2. ucs_username – stabiler Anmeldename aus Kelvin
+        //  3. email     – Fallback für Accounts, bei denen Kelvin keinen Benutzernamen liefert
+        //
+        // Hintergrund: Einige Kelvin-Installationen liefern record_uid = null und/oder
+        // username = "" – in diesem Fall extrahiert KelvinUserDto den Namen aus dem
+        // URL-Pfad. Die Email dient als letzter Anker, falls sie lokal bereits bekannt ist.
+        $user = null;
+
+        if ($dto->recordUid !== null) {
+            $user = User::where('ucs_uuid', $dto->recordUid)->first();
+        }
+
+        if ($user === null && $dto->username !== '') {
+            $user = User::where('ucs_username', $dto->username)->first();
+        }
+
+        if ($user === null && $dto->email !== null) {
+            $user = User::where('email', $dto->email)->first();
+        }
 
         if ($dryRun) {
             if ($user === null) {
@@ -415,7 +436,7 @@ class UcsSyncService
             $user = User::create([
                 'name'          => trim($dto->firstname.' '.$dto->lastname),
                 'email'         => $dto->email,
-                'ucs_uuid'      => $dto->recordUid,
+                'ucs_uuid'      => $dto->recordUid,   // null, wenn Kelvin keinen record_uid liefert
                 'ucs_username'  => $dto->username,
                 'ucs_school'    => $dto->school,
                 'ucs_source'    => 'kelvin',
@@ -429,7 +450,7 @@ class UcsSyncService
             // Nur UCS-Felder + Name sanft aktualisieren
             // password, email (wenn local), Rollen, Einstellungen NICHT überschreiben
             $updates = [
-                'ucs_uuid'      => $dto->recordUid,
+                'ucs_uuid'      => $dto->recordUid ?? $user->ucs_uuid, // vorhandene UUID nicht überschreiben
                 'ucs_username'  => $dto->username,
                 'ucs_school'    => $dto->school,
                 'ucs_synced_at' => now(),
@@ -726,33 +747,62 @@ class UcsSyncService
     /**
      * Bereinigt Datensätze, die nicht mehr in der Kelvin-Antwort auftauchen.
      *
-     * ⚠️  Safety-Guard: Wenn beide Listen leer sind (API lieferte nichts /
+     * ⚠️  Safety-Guard: Wenn alle Listen leer sind (API lieferte nichts /
      *     Kelvin hatte einen stillen Fehler), wird der Cleanup ABGEBROCHEN.
      *     Ziel: kein ungewollter Massen-Soft-Delete bei leerem API-Response.
      *
-     * @param  string[]  $seenParentUuids       Alle record_uid der gesehenen Eltern
+     * Orphan-Erkennung für Eltern:
+     *   Ein Elternteil gilt als Waise wenn:
+     *   – Er hat eine ucs_uuid UND diese ist NICHT in $seenParentUuids, ODER
+     *   – Er hat keine ucs_uuid (record_uid war null in Kelvin) UND
+     *     sein ucs_username ist NICHT in $seenParentUsernames.
+     *
+     * @param  string[]  $seenParentUuids       Alle record_uid der gesehenen Eltern (ohne null)
+     * @param  string[]  $seenParentUsernames   Alle username der gesehenen Eltern
      * @param  string[]  $seenStudentUsernames  Alle username der gesehenen Schüler
      * @param  array<string, int>  $counts
      */
     private function orphanCleanup(
         string $school,
         array  $seenParentUuids,
+        array  $seenParentUsernames,
         array  $seenStudentUsernames,
         array  &$counts,
     ): void {
-        // Safety-Guard: Beide Listen leer → Kelvin lieferte kein Ergebnis.
+        // Safety-Guard: Alle Listen leer → Kelvin lieferte kein Ergebnis.
         // Kein Cleanup durchführen, um ungewollte Massen-Deaktivierung zu verhindern.
-        if (empty($seenParentUuids) && empty($seenStudentUsernames)) {
-            $this->log('warning', 'orphanCleanup: Beide Listen leer – Cleanup übersprungen (Safety-Guard).');
+        if (empty($seenParentUuids) && empty($seenParentUsernames) && empty($seenStudentUsernames)) {
+            $this->log('warning', 'orphanCleanup: Alle Listen leer – Cleanup übersprungen (Safety-Guard).');
 
             return;
         }
 
         // Eltern: deaktivieren (kein Hard-Delete!)
+        //
+        // Zwei Fälle:
+        // a) Elternteil hat eine ucs_uuid → Orphan wenn UUID nicht mehr in Kelvin
+        // b) Elternteil hat keine ucs_uuid (record_uid war null) → Orphan wenn Username nicht mehr in Kelvin
         $orphanParents = User::where('ucs_source', 'kelvin')
             ->where('is_active', true)
-            ->whereNotNull('ucs_uuid')
-            ->whereNotIn('ucs_uuid', $seenParentUuids)
+            ->where(function ($q) use ($seenParentUuids, $seenParentUsernames) {
+                $q->where(function ($q2) use ($seenParentUuids) {
+                    // Fall a: Hat UUID, aber nicht in der gesehenen Liste
+                    $q2->whereNotNull('ucs_uuid')
+                        ->when(
+                            ! empty($seenParentUuids),
+                            fn ($q3) => $q3->whereNotIn('ucs_uuid', $seenParentUuids),
+                            fn ($q3) => $q3, // Wenn keine UUIDs gesehen → keine UUID-Waise
+                        );
+                })->orWhere(function ($q2) use ($seenParentUsernames) {
+                    // Fall b: Hat keine UUID, aber Username nicht in der gesehenen Liste
+                    $q2->whereNull('ucs_uuid')
+                        ->when(
+                            ! empty($seenParentUsernames),
+                            fn ($q3) => $q3->whereNotIn('ucs_username', $seenParentUsernames),
+                            fn ($q3) => $q3->whereRaw('1=0'), // Wenn keine Usernames gesehen → sicher abstehen
+                        );
+                });
+            })
             ->get();
 
         foreach ($orphanParents as $orphan) {

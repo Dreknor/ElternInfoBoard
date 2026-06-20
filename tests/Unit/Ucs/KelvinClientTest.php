@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Ucs;
 
+use App\Services\Ucs\Dto\KelvinNormalizer;
 use App\Services\Ucs\Dto\KelvinStudentDto;
 use App\Services\Ucs\Dto\KelvinUserDto;
 use App\Services\Ucs\Exceptions\KelvinAuthException;
@@ -65,6 +66,17 @@ class KelvinClientTest extends TestCase
         return [
             ['name' => 'GS-XY', 'display_name' => 'Grundschule XY', 'dn' => 'ou=gs-xy,dc=ucs,dc=de',
                 'url' => 'https://ucs.example.de/ucsschool/kelvin/v1/schools/GS-XY'],
+        ];
+    }
+
+    /** Einzelne Schule (GET /schools/{name}) – kanonischer Name für resolveCanonicalSchoolName(). */
+    private function schoolResponse(string $name = 'GS-XY'): array
+    {
+        return [
+            'name'         => $name,
+            'display_name' => 'Schule '.$name,
+            'dn'           => 'ou='.strtolower($name).',dc=ucs,dc=de',
+            'url'          => 'https://ucs.example.de/ucsschool/kelvin/v1/schools/'.$name,
         ];
     }
 
@@ -515,5 +527,169 @@ class KelvinClientTest extends TestCase
                 "Unerlaubter POST-Endpunkt in KelvinClient: {$path}. Schreibzugriff auf UCS verboten (§1/§12)."
             );
         }
+    }
+
+    // =========================================================================
+    // KelvinNormalizer
+    // =========================================================================
+
+    public function test_normalizer_extracts_name_from_url(): void
+    {
+        $this->assertSame('legal_guardian', KelvinNormalizer::extractName(
+            'https://example.com/ucsschool/kelvin/v1/roles/legal_guardian'
+        ));
+        $this->assertSame('EVSR', KelvinNormalizer::extractName(
+            'https://example.com/ucsschool/kelvin/v1/schools/EVSR'
+        ));
+        $this->assertSame('legal_guardian', KelvinNormalizer::extractName('legal_guardian'));
+        $this->assertSame('EVSR', KelvinNormalizer::extractName('EVSR'));
+    }
+
+    public function test_normalizer_normalize_roles_removes_urls(): void
+    {
+        $roles = KelvinNormalizer::normalizeRoles([
+            'https://example.com/ucsschool/kelvin/v1/roles/legal_guardian',
+            'https://example.com/ucsschool/kelvin/v1/roles/student',
+            'legal_guardian', // Duplikat – wird dedupliziert
+        ]);
+
+        $this->assertSame(['legal_guardian', 'student'], $roles);
+    }
+
+    public function test_normalizer_resolve_username_prefers_username_field(): void
+    {
+        $this->assertSame('max.mueller', KelvinNormalizer::resolveUsername([
+            'username' => 'max.mueller',
+            'name'     => 'other-name',
+            'url'      => 'https://example.com/users/url-name',
+        ]));
+    }
+
+    public function test_normalizer_resolve_username_falls_back_to_name_field(): void
+    {
+        $this->assertSame('evsr-mamu99', KelvinNormalizer::resolveUsername([
+            'username' => '',
+            'name'     => 'evsr-mamu99',
+            'url'      => 'https://example.com/users/url-name',
+        ]));
+    }
+
+    public function test_normalizer_resolve_username_falls_back_to_url(): void
+    {
+        $this->assertSame('evsr-mamu99', KelvinNormalizer::resolveUsername([
+            'username' => '',
+            'url'      => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/users/evsr-mamu99',
+        ]));
+    }
+
+    public function test_normalizer_resolve_record_uid_returns_null_for_empty(): void
+    {
+        $this->assertNull(KelvinNormalizer::resolveRecordUid(['record_uid' => null]));
+        $this->assertNull(KelvinNormalizer::resolveRecordUid(['record_uid' => '']));
+        $this->assertNull(KelvinNormalizer::resolveRecordUid([]));
+        $this->assertSame('abc-123', KelvinNormalizer::resolveRecordUid(['record_uid' => 'abc-123']));
+    }
+
+    // =========================================================================
+    // KelvinUserDto – Normalisierung mit realen API-Daten
+    // =========================================================================
+
+    /**
+     * Simuliert das reale Kelvin-API-Response-Format dieser Instanz:
+     * – username leer, name enthält den echten Benutzernamen
+     * – roles als vollständige URLs
+     * – school als vollständige URL
+     * – record_uid null
+     */
+    public function test_kelvin_user_dto_normalizes_real_api_response(): void
+    {
+        $dto = KelvinUserDto::fromArray([
+            'username'  => '',
+            'name'      => 'evsr-mamu99',
+            'record_uid'=> null,
+            'firstname' => 'Max',
+            'lastname'  => 'Mustermann',
+            'email'     => null,
+            'school'    => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/schools/EVSR',
+            'roles'     => [
+                'https://test-api.dllp.schule/ucsschool/kelvin/v1/roles/legal_guardian',
+            ],
+            'legal_wards' => [
+                'https://test-api.dllp.schule/ucsschool/kelvin/v1/users/EVSR-LeRo29',
+            ],
+            'url' => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/users/evsr-mamu99',
+        ]);
+
+        $this->assertSame('evsr-mamu99', $dto->username,  'Username muss aus name-Feld extrahiert werden');
+        $this->assertNull($dto->recordUid,                'recordUid muss null sein wenn record_uid fehlt');
+        $this->assertSame('EVSR', $dto->school,           'Schule muss aus URL normalisiert werden');
+        $this->assertSame(['legal_guardian'], $dto->roles, 'Rolle muss aus URL normalisiert werden');
+        $this->assertNull($dto->email);
+    }
+
+    public function test_kelvin_user_dto_url_fallback_for_empty_name_and_username(): void
+    {
+        $dto = KelvinUserDto::fromArray([
+            'username' => '',
+            'url'      => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/users/evsr-mamu99',
+            'roles'    => [],
+            'school'   => 'EVSR',
+        ]);
+
+        $this->assertSame('evsr-mamu99', $dto->username, 'Username muss aus URL extrahiert werden');
+    }
+
+    // =========================================================================
+    // paginateUsers – client-seitiger Rollen-Filter mit URL-Normalisierung
+    // =========================================================================
+
+    public function test_list_parents_filters_url_roles_client_side(): void
+    {
+        // API antwortet mit URL-Rollen (reales Format dieser Kelvin-Instanz)
+        $apiUsers = [
+            [
+                'name'        => 'evsr-mamu99',
+                'username'    => '',
+                'record_uid'  => null,
+                'firstname'   => 'Max',
+                'lastname'    => 'Mustermann',
+                'email'       => null,
+                'school'      => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/schools/EVSR',
+                'roles'       => ['https://test-api.dllp.schule/ucsschool/kelvin/v1/roles/legal_guardian'],
+                'legal_wards' => [],
+                'url'         => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/users/evsr-mamu99',
+            ],
+            [
+                'name'        => 'evsr-student1',
+                'username'    => '',
+                'record_uid'  => null,
+                'firstname'   => 'Stu',
+                'lastname'    => 'Dent',
+                'email'       => null,
+                'school'      => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/schools/EVSR',
+                'roles'       => ['https://test-api.dllp.schule/ucsschool/kelvin/v1/roles/student'],
+                'legal_wards' => [],
+                'url'         => 'https://test-api.dllp.schule/ucsschool/kelvin/v1/users/evsr-student1',
+            ],
+        ];
+
+        Http::fake(function ($request) use ($apiUsers) {
+            if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
+                return Http::response($this->tokenResponse(), 200);
+            }
+            if (str_contains($request->url(), '/schools/')) {
+                return Http::response($this->schoolResponse('EVSR'), 200);
+            }
+            return Http::response($apiUsers, 200);
+        });
+
+        $parents = iterator_to_array($this->makeClient()->listParents('EVSR'), false);
+
+        // Nur der legal_guardian darf erscheinen; student muss herausgefiltert werden
+        $this->assertCount(1, $parents);
+        $this->assertInstanceOf(KelvinUserDto::class, $parents[0]);
+        $this->assertSame('evsr-mamu99', $parents[0]->username);
+        $this->assertSame(['legal_guardian'], $parents[0]->roles);
+        $this->assertSame('EVSR', $parents[0]->school);
     }
 }

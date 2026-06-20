@@ -2,6 +2,7 @@
 
 namespace App\Services\Ucs;
 
+use App\Services\Ucs\Dto\KelvinNormalizer;
 use App\Services\Ucs\Dto\KelvinStudentDto;
 use App\Services\Ucs\Dto\KelvinUserDto;
 use App\Services\Ucs\Exceptions\KelvinAuthException;
@@ -381,22 +382,38 @@ class KelvinClient
     {
         $this->log('info', "listUsers: start [{$role}]", ['school' => $school]);
 
-        // Die Kelvin REST API /v1/users/ erwartet zwei separate Query-Parameter:
-        //   • „school" = kanonischer Schulname (z. B. „EVSR") – case-sensitiv
-        //   • „roles"  = Rollenname ohne Schulsuffix (z. B. „student" oder „legal_guardian")
         // Der Schulname wird über GET /schools/{name} kanonisch aufgelöst, da
         // UcsSetting::school in beliebiger Schreibweise gespeichert sein kann.
         $canonicalSchool = $this->resolveCanonicalSchoolName($school);
 
+        // ⚠️  Kein „roles"-Filter im Request.
+        //
+        // Einige UCS-Installationen enthalten noch Benutzerkonten mit der
+        // veralteten LDAP-Rolle „guardian:school:…" (vor der UCS-5.x-Migration,
+        // die sie in „legal_guardian" umbenannt hat). Wenn ein „roles"-Query-
+        // Parameter mitgeschickt wird, validiert Kelvin serverseitig alle
+        // Benutzer der Schule – und crasht mit HTTP 500 beim ersten Account
+        // mit der unbekannten Rolle „guardian".
+        //
+        // Lösung: alle Benutzer der Schule abrufen und clientseitig filtern.
+        // Rollen werden normalisiert (URL → Short-Name), damit URL-Formate
+        // (z. B. „https://…/roles/legal_guardian") korrekt verglichen werden.
         $response = $this->executeGet('users/', [
             'school' => $canonicalSchool,
-            'roles'  => $role,
         ]);
 
         $users        = $response->json() ?? [];
         $totalYielded = 0;
+        $totalSkipped = 0;
 
         foreach ($users as $item) {
+            // Client-seitiger Rollen-Filter mit URL-Normalisierung
+            $normalizedRoles = KelvinNormalizer::normalizeRoles((array) ($item['roles'] ?? []));
+            if (! in_array($role, $normalizedRoles, strict: true)) {
+                $totalSkipped++;
+                continue;
+            }
+
             yield $role === 'student'
                 ? KelvinStudentDto::fromArray($item)
                 : KelvinUserDto::fromArray($item);
@@ -404,8 +421,9 @@ class KelvinClient
         }
 
         $this->log('info', "listUsers: done [{$role}]", [
-            'school' => $school,
-            'total'  => $totalYielded,
+            'school'  => $school,
+            'total'   => $totalYielded,
+            'skipped' => $totalSkipped,
         ]);
     }
 
