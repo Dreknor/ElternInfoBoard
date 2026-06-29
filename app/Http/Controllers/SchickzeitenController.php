@@ -223,10 +223,23 @@ class SchickzeitenController extends Controller implements HasMiddleware
             '5' => 'Freitag',
         ];
 
+        // Gruppen und Klassen für die Zielauswahl bei Anwesenheitsabfragen
+        $careGroups   = \App\Model\Groups::query()
+            ->when(!empty($careSettings->groups_list), fn ($q) => $q->whereIn('id', $careSettings->groups_list))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $careClasses  = \App\Model\Groups::query()
+            ->when(!empty($careSettings->class_list), fn ($q) => $q->whereIn('id', $careSettings->class_list))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return view('schickzeiten.index_verwaltung', [
-            'children' => $children,
-            'weekdays' => $weekdays,
-            'abfragen' => $abfragen_daten,
+            'children'    => $children,
+            'weekdays'    => $weekdays,
+            'abfragen'    => $abfragen_daten,
+            'careGroups'  => $careGroups,
+            'careClasses' => $careClasses,
         ]);
     }
 

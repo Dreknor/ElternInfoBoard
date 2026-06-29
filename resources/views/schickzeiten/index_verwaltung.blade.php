@@ -245,20 +245,34 @@
                         </div>
                     </div>
 
-                    <!-- Neue Abfrage erstellen -->
+                    <div class="mt-6 bg-white rounded-lg shadow border border-gray-200">
+                        <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3">
                             <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
-                                <i class="fas fa-plus-circle"></i>
-                                Neue Anwesenheitsabfrage erstellen
+                                Neue Anwesenheitsabfrage
                             </h3>
                         </div>
                         <div class="p-4">
                             <p class="text-sm text-gray-600 mb-4">
                                 Anwesenheitsabfragen dienen dem Erfassen von Anwesenheiten zu einzelnen Tagen (z.B. Ferientage). Hier können neue Abfragen erstellt werden.
                             </p>
-                            <form action="{{route('care.abfrage.store')}}" method="post" class="max-w-2xl">
+
+                            <form action="{{route('care.abfrage.store')}}" method="post" class="max-w-2xl"
+                                  x-data="{
+                                      targetType: 'all',
+                                      childSearch: '',
+                                      selectedGroups: [],
+                                      selectedClasses: [],
+                                      selectedChildren: [],
+                                      toggleId(arr, id) {
+                                          const idx = arr.indexOf(id);
+                                          if (idx === -1) { arr.push(id); } else { arr.splice(idx, 1); }
+                                      }
+                                  }">
                                 @csrf
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="mb-4">
+
+                                {{-- Zeitraum --}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             <i class="fas fa-calendar-alt text-red-600"></i> Datum von <span class="text-red-600">*</span>
                                         </label>
@@ -267,7 +281,7 @@
                                                min="{{now()->addDay()->format('Y-m-d')}}"
                                                required>
                                     </div>
-                                    <div class="mb-4">
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             <i class="fas fa-calendar-alt text-blue-600"></i> Datum bis
                                         </label>
@@ -275,18 +289,140 @@
                                                class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                                min="{{now()->addDay()->format('Y-m-d')}}">
                                     </div>
-                                    <div class="mb-4 md:col-span-2">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            <i class="fas fa-lock text-amber-600"></i> Bis wann ist eine Anmeldung möglich
+                                </div>
+
+                                {{-- Frist --}}
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-lock text-amber-600"></i> Bis wann ist eine Anmeldung möglich
+                                    </label>
+                                    <input type="date" name="lock_at"
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                           min="{{now()->addDay()->format('Y-m-d')}}">
+                                    <p class="mt-1 text-xs text-gray-500">Optional: Legen Sie eine Frist fest, bis wann Eltern ihre Kinder an-/abmelden können</p>
+                                </div>
+
+                                {{-- Zielauswahl --}}
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-users text-indigo-600"></i> Für wen gilt die Abfrage? <span class="text-red-600">*</span>
+                                    </label>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="target_type" value="all" x-model="targetType" class="sr-only">
+                                            <div :class="targetType === 'all' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                                 class="border-2 rounded-lg px-3 py-2 text-sm font-medium text-center transition-all duration-150">
+                                                <i class="fas fa-users block text-lg mb-1"></i>
+                                                Alle Kinder
+                                            </div>
                                         </label>
-                                        <input type="date" name="lock_at"
-                                               class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
-                                               min="{{now()->addDay()->format('Y-m-d')}}">
-                                        <p class="mt-1 text-xs text-gray-500">Optional: Legen Sie eine Frist fest, bis wann Eltern ihre Kinder an-/abmelden können</p>
+                                        @if(($careGroups ?? collect())->count() > 0)
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="target_type" value="groups" x-model="targetType" class="sr-only">
+                                            <div :class="targetType === 'groups' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                                 class="border-2 rounded-lg px-3 py-2 text-sm font-medium text-center transition-all duration-150">
+                                                <i class="fas fa-layer-group block text-lg mb-1"></i>
+                                                Gruppen
+                                            </div>
+                                        </label>
+                                        @endif
+                                        @if(($careClasses ?? collect())->count() > 0)
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="target_type" value="classes" x-model="targetType" class="sr-only">
+                                            <div :class="targetType === 'classes' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                                 class="border-2 rounded-lg px-3 py-2 text-sm font-medium text-center transition-all duration-150">
+                                                <i class="fas fa-school block text-lg mb-1"></i>
+                                                Klassen
+                                            </div>
+                                        </label>
+                                        @endif
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="target_type" value="children" x-model="targetType" class="sr-only">
+                                            <div :class="targetType === 'children' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                                 class="border-2 rounded-lg px-3 py-2 text-sm font-medium text-center transition-all duration-150">
+                                                <i class="fas fa-child block text-lg mb-1"></i>
+                                                Einzelne Kinder
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {{-- Gruppen-Auswahl --}}
+                                    <div x-show="targetType === 'groups'" x-cloak class="mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                        <p class="text-xs font-semibold text-indigo-700 mb-2">Gruppen auswählen:</p>
+                                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                            @foreach($careGroups ?? [] as $group)
+                                            <label class="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-indigo-100 transition-colors">
+                                                <input type="checkbox"
+                                                       name="target_ids[]"
+                                                       value="{{ $group->id }}"
+                                                       @change="toggleId(selectedGroups, {{ $group->id }})"
+                                                       class="rounded border-indigo-400 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-sm text-gray-700">{{ $group->name }}</span>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                        <p x-show="selectedGroups.length === 0" class="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                                            <i class="fas fa-exclamation-circle"></i> Bitte mindestens eine Gruppe wählen.
+                                        </p>
+                                    </div>
+
+                                    {{-- Klassen-Auswahl --}}
+                                    <div x-show="targetType === 'classes'" x-cloak class="mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                        <p class="text-xs font-semibold text-indigo-700 mb-2">Klassen auswählen:</p>
+                                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                            @foreach($careClasses ?? [] as $class)
+                                            <label class="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-indigo-100 transition-colors">
+                                                <input type="checkbox"
+                                                       name="target_ids[]"
+                                                       value="{{ $class->id }}"
+                                                       @change="toggleId(selectedClasses, {{ $class->id }})"
+                                                       class="rounded border-indigo-400 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-sm text-gray-700">{{ $class->name }}</span>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                        <p x-show="selectedClasses.length === 0" class="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                                            <i class="fas fa-exclamation-circle"></i> Bitte mindestens eine Klasse wählen.
+                                        </p>
+                                    </div>
+
+                                    {{-- Kinder-Auswahl --}}
+                                    <div x-show="targetType === 'children'" x-cloak class="mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                        <p class="text-xs font-semibold text-indigo-700 mb-2">Kinder auswählen:</p>
+                                        <div class="mb-2">
+                                            <input type="text"
+                                                   x-model="childSearch"
+                                                   placeholder="Suchen…"
+                                                   class="w-full px-3 py-1.5 text-sm border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-1">
+                                            @foreach($children as $child)
+                                            <label class="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-indigo-100 transition-colors"
+                                                   data-childname="{{ strtolower($child->last_name . ' ' . $child->first_name) }}"
+                                                   x-show="!childSearch || $el.dataset.childname.includes(childSearch.toLowerCase())">
+                                                <input type="checkbox"
+                                                       name="target_ids[]"
+                                                       value="{{ $child->id }}"
+                                                       @change="toggleId(selectedChildren, {{ $child->id }})"
+                                                       class="rounded border-indigo-400 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-sm text-gray-700">{{ $child->last_name }}, {{ $child->first_name }}</span>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-2">
+                                            <span x-text="selectedChildren.length"></span> Kind(er) ausgewählt
+                                        </p>
+                                        <p x-show="selectedChildren.length === 0" class="text-xs text-amber-600 flex items-center gap-1">
+                                            <i class="fas fa-exclamation-circle"></i> Bitte mindestens ein Kind wählen.
+                                        </p>
                                     </div>
                                 </div>
+
                                 <button type="submit"
-                                        class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200">
+                                        :disabled="(targetType === 'groups' && selectedGroups.length === 0) ||
+                                                   (targetType === 'classes' && selectedClasses.length === 0) ||
+                                                   (targetType === 'children' && selectedChildren.length === 0)"
+                                        class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors duration-200">
                                     <i class="fas fa-paper-plane"></i>
                                     Anwesenheit abfragen
                                 </button>
@@ -416,7 +552,7 @@
                                         <i class="fas fa-calendar-week text-orange-600"></i>
                                         Erwartete Kinder pro Tag
                                     </h6>
-                                    <template x-for="(dayStat, date) in stats.by_date" :key="date">
+                                    <template x-for="(dayStat, date) in (stats ? stats.by_date : {})" :key="date">
                                         <div class="flex items-center gap-3 mb-2">
                                             <span class="text-xs font-mono text-gray-500 whitespace-nowrap"
                                                   style="min-width: 100px;"

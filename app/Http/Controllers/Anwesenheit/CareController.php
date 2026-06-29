@@ -347,25 +347,86 @@ class CareController extends Controller implements HasMiddleware
     public function storeAbfrage(Request $request)
     {
         $request->validate([
-            'date_start' => 'required|date',
-            'date_end' => 'nullable|date|after_or_equal:date_start',
-            'lock_at' => 'nullable|date',
+            'date_start'  => 'required|date',
+            'date_end'    => 'nullable|date|after_or_equal:date_start',
+            'lock_at'     => 'nullable|date',
+            'target_type' => 'required|in:all,groups,classes,children',
+            'target_ids'  => 'nullable|array',
+            'target_ids.*'=> 'integer',
         ]);
 
-        $date_start = Carbon::parse($request->date_start);
-        $date_end = $request->date_end ? Carbon::parse($request->date_end) : $date_start->copy();
-        $lock_at = $request->lock_at ? Carbon::parse($request->lock_at) : null;
+        $date_start  = Carbon::parse($request->date_start);
+        $date_end    = $request->date_end ? Carbon::parse($request->date_end) : $date_start->copy();
+        $lock_at     = $request->lock_at ? Carbon::parse($request->lock_at) : null;
+        $targetType  = $request->input('target_type', 'all');
+        $targetIds   = $request->input('target_ids', []);
 
         $careSettings = new CareSetting;
 
-        $children = Child::query()
-            ->whereIn('class_id', $careSettings->class_list)
-            ->whereIn('group_id', $careSettings->groups_list)
+        $childQuery = Child::query();
+
+        switch ($targetType) {
+            case 'groups':
+                // Nur Kinder aus den gewählten Betreuungsgruppen
+                $allowedGroups = !empty($careSettings->groups_list)
+                    ? array_intersect($targetIds, $careSettings->groups_list)
+                    : $targetIds;
+                if (empty($allowedGroups)) {
+                    return redirect()->back()->with([
+                        'type'    => 'danger',
+                        'Meldung' => 'Keine gültigen Gruppen ausgewählt.',
+                    ]);
+                }
+                $childQuery->whereIn('group_id', $allowedGroups);
+                if (!empty($careSettings->class_list)) {
+                    $childQuery->whereIn('class_id', $careSettings->class_list);
+                }
+                break;
+
+            case 'classes':
+                // Nur Kinder aus den gewählten Klassen
+                $allowedClasses = !empty($careSettings->class_list)
+                    ? array_intersect($targetIds, $careSettings->class_list)
+                    : $targetIds;
+                if (empty($allowedClasses)) {
+                    return redirect()->back()->with([
+                        'type'    => 'danger',
+                        'Meldung' => 'Keine gültigen Klassen ausgewählt.',
+                    ]);
+                }
+                $childQuery->whereIn('class_id', $allowedClasses);
+                if (!empty($careSettings->groups_list)) {
+                    $childQuery->whereIn('group_id', $careSettings->groups_list);
+                }
+                break;
+
+            case 'children':
+                // Nur explizit gewählte Kinder
+                if (empty($targetIds)) {
+                    return redirect()->back()->with([
+                        'type'    => 'danger',
+                        'Meldung' => 'Keine Kinder ausgewählt.',
+                    ]);
+                }
+                $childQuery->whereIn('id', $targetIds);
+                break;
+
+            default:
+                // 'all' – alle Kinder in den konfigurierten Gruppen/Klassen
+                if (!empty($careSettings->class_list)) {
+                    $childQuery->whereIn('class_id', $careSettings->class_list);
+                }
+                if (!empty($careSettings->groups_list)) {
+                    $childQuery->whereIn('group_id', $careSettings->groups_list);
+                }
+        }
+
+        $children = $childQuery
             ->with([
                 'checkIns' => function ($query) use ($date_start, $date_end) {
                     $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()]);
                 },
-                'parents'
+                'parents',
             ])
             ->get();
 

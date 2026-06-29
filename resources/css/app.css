@@ -162,6 +162,16 @@ html, body {
   width: 6px;
 }
 
+/* Standard scrollbar (Firefox) */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+.sidebar-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
 /*
  * Sidebar-Navigations-Scroll-Bereich:
  * Mobile:  Sidebar overlay (top: 0) → nur Footer (~60px) abziehen
@@ -186,7 +196,7 @@ html, body {
 }
 
 .sidebar-wrapper::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: #e2e8f0;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb,
@@ -196,7 +206,7 @@ html, body {
 }
 
 .sidebar-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #94a3b8;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover,
@@ -205,7 +215,7 @@ html, body {
 }
 
 .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #64748b;
 }
 
 /* Rotate animation for chevron */
