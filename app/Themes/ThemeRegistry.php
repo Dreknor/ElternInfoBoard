@@ -19,6 +19,8 @@ class ThemeRegistry
         $this->register(new NatureTheme());
         $this->register(new WarmTheme());
         $this->register(new ESZTheme());
+        $this->register(new LightTheme());
+
     }
 
     public function register(ThemeInterface $theme): void
