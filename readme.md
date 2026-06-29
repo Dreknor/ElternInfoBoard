@@ -1,97 +1,237 @@
 <p align="center"><img src="https://mitarbeiter.esz-radebeul.de/img/logo.png" width="400"></p>
 
+<h1 align="center">ElternInfoBoard</h1>
+
+<p align="center">
+  <strong>Die digitale Kommunikationsplattform für Schulen</strong><br/>
+  Basierend auf <a href="https://laravel.com/">Laravel 12</a> · <a href="https://laravel-livewire.com/">Livewire 3</a> · <a href="https://tailwindcss.com/">Tailwind CSS 3</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/PHP-%5E8.2-blue" alt="PHP 8.2+">
+  <img src="https://img.shields.io/badge/Laravel-12-red" alt="Laravel 12">
+  <img src="https://img.shields.io/badge/License-AGPL--3.0-green" alt="AGPL-3.0">
+</p>
+
+---
+
 ## Über das ElternInfoBoard
 
-Das ElternInfoBoard ist ein Freizeitprojekt, welches entstanden ist um die Kommunikation des Evangelischen Schulzentrums Radebeul mit den Eltern der Schülerinnen und Schüler zu unterstützen. Es ermöglicht die Vorbereitung von Dienstberatungen online, in dem Themen durch Leitungen und Mitarbeiter im vorraus benannt, terminiert und priorisiert werden. Die Protokolle der besprochenen Themen werden direkt zu dem Thema abgelegt und sind somit jederzeit direkt abruf- und nachverfolgbar.
-Es basiert auf dem [Laravel-Framework](https://laravel.com/).
+Das **ElternInfoBoard** ist eine webbasierte Kommunikations- und Organisationsplattform, die ursprünglich für das Evangelische Schulzentrum Radebeul entwickelt wurde. Es vernetzt Eltern, Lehrkräfte und Schülerinnen und Schüler an einem zentralen Ort.
 
-## Nutzung
+Zu den Kernfunktionen gehören:
 
-Obwohl das ElternInfoBoard ausschließlich für das Evangelische Schulzentrum Radebeul gedacht war, kann die Software frei für nicht-kommerzielle Projekte im Bereich der Bildung genutzt werden. Es gibt jedoch keinerlei Anspruch auf Support oder Haftung, sollten Schäden oder Probleme auftreten.
-Änderungen und Weiterentwicklungen sind ebenfalls als Open-Source zur Verfügung zu stellen.
+- 📅 **Termine & Kalender** – Schulveranstaltungen, Elternabende und iCal-Export
+- 📢 **Informations-Feed** – Posts, Kommentare und Reaktionen nach Gruppen/Klassen
+- 💬 **Messenger** – Direktnachrichten mit Lesebestätigungen und Meldungen
+- 📋 **Listen & Anmeldungen** – digitale Eintragungslisten mit Terminen
+- 📊 **Umfragen & Abfragen** – interaktive Polls und strukturierte Abfragen
+- 🔔 **Push-Benachrichtigungen** – Web-Push (VAPID) für alle wichtigen Ereignisse
+- 📧 **E-Mail-Benachrichtigungen** – konfigurierbare Mailbenachrichtigungen
+- 🤒 **Krankmeldungen** – digitale Krankmeldung mit Bestätigungsworkflow
+- 📆 **Vertretungsplan** – Integration und Anzeige des Vertretungsplans
+- 🗓️ **Stundenplan** – Import und Darstellung des Stundenplans
+- 👪 **Elternrat** – Aufgaben, Ereignisse und Verwaltung des Elternrats
+- 🏫 **Arbeitsgemeinschaften** – Verwaltung von AGs und Mitgliedschaften
+- ⏰ **Pflichtstunden & Schickzeiten** – Erfassung und Verwaltung
+- 🧹 **Reinigungsdienste** – Zuweisung und Protokollierung
+- 📨 **Rückmeldungen** – digitale Einverständniserklärungen und Formulare
+- 📰 **CMS-Seiten** – frei gestaltbare Inhaltsseiten mit Blöcken
+- 🔑 **SSO via Keycloak / OIDC** – Single Sign-On für Eltern
+- 🔄 **UCS@school-Synchronisation** – automatische Klassen- und Elternsynchronisation
+- 🖥️ **Kiosk-Modus** – Anzeige für öffentliche Bildschirme
+- 📱 **Mobile App** – Native App via NativePHP
+- 📤 **Excel-Import/Export** – Daten importieren und exportieren
+- 🎨 **Theme-System** – anpassbare Themes pro Schule
+- 🔍 **Audit-Log** – lückenlose Nachverfolgung aller Datenänderungen
+
+---
+
+## Lizenz & Nutzung
+
+Das ElternInfoBoard steht unter der **GNU Affero General Public License v3.0 (AGPL-3.0)**.  
+Es darf frei für nicht-kommerzielle Projekte im Bildungsbereich genutzt werden.
+
+> ⚠️ Es besteht **kein Anspruch auf Support oder Haftung**. Änderungen und Weiterentwicklungen müssen ebenfalls als Open Source unter AGPL-3.0 veröffentlicht werden.
+
+---
 
 ## Systemvoraussetzungen
 
-* PHP 8
-* Mysql/MariaDB
-* Composer
-* am besten git auf dem Server
-* cronjobs
+| Komponente | Version |
+|---|---|
+| PHP | ≥ 8.2 (mit `ext-curl`) |
+| Composer | ≥ 2.x |
+| Node.js / npm | ≥ 18 / ≥ 9 |
+| Datenbank | MySQL 8 / MariaDB 10.6+ |
+| Queue-Worker | Supervisor o.Ä. empfohlen |
+
+---
 
 ## Installation
 
-Nach dem Upload der Dateien auf den Server ist zunächst die Datei ".env.example" in ".env" umzubenennen und auszufüllen. 
-
+### 1. Umgebungsdatei anlegen
 
 ```bash
 cp .env.example .env
 ```
 
-## Anpassung der .env
+Die `.env`-Datei öffnen und mindestens folgende Felder ausfüllen:
 
-Die Datei per Texteditor öffnen und mindestens die angegebenen Daten ausfüllen:
+```dotenv
+APP_NAME="ElternInfoBoard"
+APP_URL=https://deine-domain.de
 
-```bash
-APP_NAME => Wie die Anwendung dann benannt werden soll 
-APP_ENV => in Produktivumgebungen unbedingt production einsetzen. Zum Testen local nutzen
-APP_KEY => wird später durch den Befehl "php artisan key:generate" gesetzt
+DB_HOST=127.0.0.1
+DB_DATABASE=elterninfo
+DB_USERNAME=user
+DB_PASSWORD=secret
 
-APP_DEBUG => sollte false sein. Wenn Fehler auftreten kann der Wert kurzfristig auf true gesetzt werden, um ausführliche Fehlermeldungen zu erhalten. ACHTUNG: Sicherheitslücke!
-APP_URL => URL durch die die Anwendung erreichbar ist. Wird als Grundlage zur Erstellung von Links benötigt
+MAIL_MAILER=smtp
+MAIL_HOST=...
+MAIL_FROM_ADDRESS=info@schule.de
 
-Wenn Stanardtpasswörter für den Import verwendet werden sollen, so können diese hier gesetzt werden
-PW_IMPORT_AUFNAHME
-PW_IMPORT_MITARBEITER
-PW_IMPORT_VEREIN
-
-Logo und Favicon ablegen unter /public/img and set name here
-APP_LOGO    => eigenes Logo
-APP_FAVICON => eigenes Icon (In der Adressleiste des Browsers)
-
-Datenbankangaben sind zwingend erforderlich
-DB_HOST
-DB_PORT
-DB_DATABASE
-DB_USERNAME
-DB_PASSWORD
-
-Hier werden die Angaben zur SMTP-Server für die E-Mails eingetragen (Zwingend)
-MAIL_MAILER
-MAIL_HOST
-MAIL_PORT
-MAIL_USERNAME
-MAIL_PASSWORD
-MAIL_ENCRYPTION
-
-MAIL_FROM_ADDRESS => Welche E-Mail wird als Absender verwendet
-MAIL_FROM_NAME => Name des Abenders
+ADMIN_EMAIL=admin@schule.de   # E-Mail des ersten Adminbenutzers
 ```
 
-Anschließend die Installation durchführen:
+### 2. Abhängigkeiten installieren
 
 ```bash
-composer install
+composer install --no-dev --optimize-autoloader
+npm install
 ```
+
+### 3. Anwendung einrichten
+
 ```bash
 php artisan key:generate
-```
-
-```bash
 php artisan webpush:vapid
+php artisan migrate
+npm run build
 ```
+
+> Beim ersten `migrate` wird automatisch ein Admin-Benutzer mit der in `.env` hinterlegten `ADMIN_EMAIL` angelegt. Das initiale Passwort ist das aktuelle Datum im Format `TTMMJJJJ` und **muss beim ersten Login geändert werden**.
+
+### 4. Speicher-Symlink anlegen
 
 ```bash
-php artisan migrate
+php artisan storage:link
 ```
-Während dem Erstellen der Datenbanktabellen wird ein erster Benutzer mit der in der .env-Datei angegebenen E-Mail erstellt. Als Kennwort dient das aktuelle Datum 8-stellig. Es muss mit dem ersten Login geändert werden.
 
-Nun muss noch der CronJob angelegt werden, damit die automatisierten Prozesse für Benachrichtigungen und Mail-Versan laufen:
+### 5. CronJob einrichten
 
 ```bash
 crontab -e
 ```
 
-und dort eintragen:
-```bash
-* * * * * cd /your-project-path && php artisan schedule:run >> /dev/null 2>&1
+Eintragen:
+
+```cron
+* * * * * cd /pfad/zum/projekt && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+### 6. Queue-Worker starten
+
+```bash
+php artisan queue:work --sleep=3 --tries=3
+```
+
+Für den produktiven Betrieb wird Supervisor empfohlen.
+
+---
+
+## Entwicklungsumgebung starten
+
+Alle Prozesse (Server, Queue, Logs, Vite) lassen sich mit einem Befehl starten:
+
+```bash
+composer run dev
+```
+
+Oder einzeln:
+
+```bash
+php artisan serve          # Webserver
+php artisan queue:listen   # Queue-Worker
+npm run dev                # Vite Asset-Compiler
+php artisan pail           # Log-Viewer
+```
+
+---
+
+## Tests ausführen
+
+```bash
+composer run test
+```
+
+Für parallele Tests:
+
+```bash
+php artisan test --parallel
+```
+
+---
+
+## UCS@school-Integration
+
+Das ElternInfoBoard kann Eltern und Klassen automatisch aus einer
+[UCS@school](https://www.univention.de/produkte/ucsschool/)-Instanz
+über die **Kelvin REST API** synchronisieren. Durch die Integration
+entfällt die manuelle Pflege von Klassen-Zuordnungen; Eltern können sich
+außerdem per OIDC/Keycloak einmalig anmelden.
+
+### Voraussetzungen
+
+- **Kelvin-Service-Account** in UCS angelegt (Leserechte auf Schüler- und Erziehungsberechtigtendaten)
+- **OIDC-Client** in Keycloak (Eltern-Realm) konfiguriert
+- **Netzwerk-Freigabe**: Der Server muss den Kelvin-API-Host über HTTPS erreichen können
+- Queue-Worker läuft mit `--timeout=900`
+
+### Einrichtung
+
+1. Im Backend unter **Einstellungen → UCS@school** folgende Felder füllen:
+   - `Kelvin Base URL` – z. B. `https://ucs.schule.example/ucsschool/kelvin/v1`
+   - `Kelvin Benutzername` + `Passwort` – Service-Account-Credentials
+   - `Schulname` – interner UCS-Schulkürzel
+   - `Synchronisation aktivieren` – Schalter auf *An*
+2. Unter **Einstellungen → OIDC / Keycloak** die OIDC-Parameter hinterlegen
+   (Base URL, Realm, Client-ID/Secret, Redirect-URI, Maildomain)
+3. Verbindung testen: `php artisan ucs:ping` oder Test-Button im Settings-Tab
+4. Ersten Sync starten: `php artisan ucs:sync-parents --dry-run` (Probelauf) oder Sync-Button im UCS-Tab
+
+### Automatischer Sync
+
+Nach der Einrichtung läuft der Sync automatisch als geplanter Task.
+
+```bash
+php artisan schedule:list
+```
+
+---
+
+## Theme-System
+
+Das ElternInfoBoard unterstützt anpassbare Themes für verschiedene Schulen oder Mandanten.
+
+---
+
+
+
+## Tech-Stack
+
+| Bereich | Technologie |
+|---|---|
+| Backend-Framework | Laravel 12 |
+| Frontend-Reaktivität | Livewire 3 + Alpine.js 3 |
+| CSS-Framework | Tailwind CSS 3 |
+| Build-Tool | Vite 7 |
+| Berechtigungen | Spatie Laravel Permission |
+| Einstellungen | Spatie Laravel Settings |
+| Medienverwaltung | Spatie Laravel Medialibrary |
+| Authentifizierung | Laravel Sanctum + Socialite (Keycloak) |
+| Push-Benachrichtigungen | laravel-notification-channels/webpush |
+| Audit-Log | owen-it/laravel-auditing |
+| PDF-Export | barryvdh/laravel-dompdf |
+| Excel-Import/Export | Maatwebsite/Laravel-Excel |
+| Datei-Storage | Lokal 

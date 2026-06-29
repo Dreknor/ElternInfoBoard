@@ -133,16 +133,18 @@ Route::middleware('auth')->group(function () {
         Route::get('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'showImport'])->middleware('permission:edit settings')->name('stundenplan.import');
         Route::post('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'processImport'])->middleware('permission:edit settings')->name('stundenplan.import.process');
 
-        Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
-        Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
 
         Route::middleware('permission:edit Pflichtstunden')->group(function () {
             Route::get('verwaltung/pflichtstunden/export', [\App\Http\Controllers\PflichtstundeController::class, 'export'])->name('pflichtstunden.export');
+            Route::post('verwaltung/pflichtstunden/store', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->name('pflichtstunden.verwaltung.store');
+
             Route::get('verwaltung/pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'verwaltungIndex'])->name('pflichtstunden.indexVerwaltung');
             Route::put('pflichtstunden/approve-multiple', [\App\Http\Controllers\PflichtstundeController::class, 'approveMultiple'])->name('pflichtstunden.approveMultiple');
             Route::put('pflichtstunden/{pflichtstunde}/approve', [\App\Http\Controllers\PflichtstundeController::class, 'approve'])->name('pflichtstunden.approve');
             Route::put('pflichtstunden/{pflichtstunde}/reject', [\App\Http\Controllers\PflichtstundeController::class, 'reject'])->name('pflichtstunden.reject');
         });
+        Route::get('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'index'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.index');
+        Route::post('pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.store');
 
         Route::put('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'update'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.update');
         Route::delete('pflichtstunden/{pflichtstunde}', [\App\Http\Controllers\PflichtstundeController::class, 'destroy'])->middleware('can:view Pflichtstunden')->name('pflichtstunden.destroy');
@@ -275,6 +277,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/archiv/{month}', [NachrichtenController::class, 'postsArchiv'])->where('month', '^\d{4}-\d{2}$');
         Route::get('/external', [NachrichtenController::class, 'postsExternal']);
         Route::get('post/{post}', [NachrichtenController::class, 'findPost'])->name('post.find');
+        Route::get('post/{post}/pdf', [NachrichtenController::class, 'downloadPdf'])->name('post.pdf');
         Route::post('post/readReceipt', [ReadReceiptsController::class, 'store'])->name('nachrichten.read_receipt');
         Route::post('post/{post}/readReceipt/{user}', [ReadReceiptsController::class, 'confirmForUser'])
             ->middleware('permission:manage rueckmeldungen')
@@ -313,6 +316,7 @@ Route::middleware('auth')->group(function () {
         Route::get('listen/{terminListe}/edit', [ListenController::class, 'edit']);
         Route::put('listen/{terminListe}', [ListenController::class, 'update']);
         Route::post('listen/{liste}/activate', [ListenController::class, 'activate']);
+        Route::post('listen/{liste}/copy', [ListenController::class, 'copyEintragListe'])->name('listen.copy');
         Route::get('listen/{liste}/refresh', [ListenController::class, 'refresh']);
         Route::get('listen/{liste}/archiv', [ListenController::class, 'archiv']);
         Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);

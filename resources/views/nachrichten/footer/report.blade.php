@@ -1,16 +1,32 @@
-{{-- Beitrag melden - Button + Modal --}}
+{{-- Beitrag melden + PDF herunterladen - Button + Modal --}}
 @auth
-    @if(auth()->id() !== $nachricht->author)
-        <div class="bg-white px-4 py-2 flex justify-end" id="report-section-{{$nachricht->id}}">
-            <button type="button"
-                    onclick="document.getElementById('postReportModal-{{$nachricht->id}}').classList.remove('hidden')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors duration-200"
-                    title="Beitrag melden">
-                <i class="fas fa-flag"></i>
-                <span>Melden</span>
-            </button>
-        </div>
+    <div class="bg-white px-4 py-2 flex justify-between items-center">
+        {{-- PDF-Download für alle Nutzer --}}
+        <a href="{{ route('post.pdf', $nachricht) }}"
+           target="_blank"
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+           title="Beitrag als PDF herunterladen">
+            <i class="fas fa-file-pdf"></i>
+            <span>PDF</span>
+        </a>
 
+        {{-- Melden (nur wenn nicht eigener Beitrag) --}}
+        @if(auth()->id() !== $nachricht->author)
+            <div id="report-section-{{$nachricht->id}}">
+                <button type="button"
+                        onclick="document.getElementById('postReportModal-{{$nachricht->id}}').classList.remove('hidden')"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors duration-200"
+                        title="Beitrag melden">
+                    <i class="fas fa-flag"></i>
+                    <span>Melden</span>
+                </button>
+            </div>
+        @else
+            <div></div>
+        @endif
+    </div>
+
+    @if(auth()->id() !== $nachricht->author)
         {{-- Modal: Beitrag melden --}}
         <div id="postReportModal-{{$nachricht->id}}"
              class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

@@ -99,6 +99,14 @@
   --color-widget-warning-from:   #d97706;
   --color-widget-warning-to:     #ea580c;
   --color-widget-warning-border: #9a3412;
+  /* Warnung Alert-Banner */
+  --color-warning-bg:             #fef3c7;
+  --color-warning-border:         #f59e0b;
+  --color-warning-icon-bg:        #f59e0b;
+  --color-warning-text:           #78350f;
+  --color-warning-text-secondary: #92400e;
+  --color-warning-btn-bg:         #d97706;
+  --color-warning-btn-hover:      #b45309;
   /* Gemeinsam */
   --color-widget-header-text:    #ffffff;
   --color-widget-body-bg:        #f9fafb;
@@ -154,6 +162,16 @@ html, body {
   width: 6px;
 }
 
+/* Standard scrollbar (Firefox) */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+.sidebar-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #e2e8f0;
+}
+
 /*
  * Sidebar-Navigations-Scroll-Bereich:
  * Mobile:  Sidebar overlay (top: 0) → nur Footer (~60px) abziehen
@@ -178,7 +196,7 @@ html, body {
 }
 
 .sidebar-wrapper::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: #e2e8f0;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb,
@@ -188,7 +206,7 @@ html, body {
 }
 
 .sidebar-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #94a3b8;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover,
@@ -197,7 +215,7 @@ html, body {
 }
 
 .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #64748b;
 }
 
 /* Rotate animation for chevron */
@@ -1392,3 +1410,15 @@ html.dark select option {
   color: var(--color-text-primary, #f8fafc);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE – Warning Alert Banner Overrides
+   ═══════════════════════════════════════════════════════════════ */
+html.dark {
+  --color-warning-bg:             #451a03;
+  --color-warning-border:         #d97706;
+  --color-warning-icon-bg:        #d97706;
+  --color-warning-text:           #fde68a;
+  --color-warning-text-secondary: #fcd34d;
+  --color-warning-btn-bg:         #b45309;
+  --color-warning-btn-hover:      #92400e;
+}

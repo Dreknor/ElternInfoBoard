@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Model\Module;
 use App\Model\Post;
 use CURLFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -57,9 +58,34 @@ class WordpressRepository
 
         // process the request
         $return = curl_exec($process);
+
+        // cURL-Fehlerbehandlung: Netzwerk-/Verbindungsfehler abfangen
+        if ($return === false) {
+            $error = curl_error($process);
+            $errno = curl_errno($process);
+            curl_close($process);
+            Log::error('WordPress-Push fehlgeschlagen (remote_post)', [
+                'errno' => $errno,
+                'error' => $error,
+                'post_id' => $post_id,
+            ]);
+
+            return null;
+        }
+
+        $httpCode = curl_getinfo($process, CURLINFO_HTTP_CODE);
         curl_close($process);
 
-        // This buit is to show you on the screen what the data looks like returned and then decoded for PHP use
+        if ($httpCode >= 400) {
+            Log::error('WordPress-Push: HTTP-Fehlerstatus (remote_post)', [
+                'http_code' => $httpCode,
+                'post_id' => $post_id,
+                'response' => is_string($return) ? Str::limit($return, 500) : null,
+            ]);
+
+            return null;
+        }
+
         return $return;
     }
 
@@ -80,10 +106,33 @@ class WordpressRepository
         // Erstelle zunächst den Post ohne Bilder (oder aktualisiere ihn)
         $wp_call = $this->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
 
+        // Abbruch, wenn der Aufruf fehlgeschlagen ist (Fehler bereits geloggt)
+        if ($wp_call === null) {
+            return;
+        }
+
         $return = json_decode($wp_call);
+
+        // Antwort validieren, bevor auf Eigenschaften zugegriffen wird
+        if (! is_object($return)) {
+            Log::error('WordPress-Push: Unerwartete Antwort beim Erstellen/Aktualisieren des Posts', [
+                'post_id' => $post->id,
+                'response' => is_string($wp_call) ? Str::limit($wp_call, 500) : null,
+            ]);
+
+            return;
+        }
 
         // Nur die ID setzen, wenn es ein neuer Post ist
         if ($post->published_wp_id == null) {
+            if (! isset($return->id)) {
+                Log::error('WordPress-Push: Keine Post-ID in der Antwort erhalten', [
+                    'post_id' => $post->id,
+                ]);
+
+                return;
+            }
+
             $post->update([
                 'published_wp_id' => $return->id,
             ]);
@@ -145,6 +194,19 @@ class WordpressRepository
                 'Content-Disposition: form-data; filename='.$image->file_name,
             ]);
             $result = curl_exec($ch);
+
+            if ($result === false) {
+                Log::error('WordPress-Push: Bild-Upload fehlgeschlagen', [
+                    'errno' => curl_errno($ch),
+                    'error' => curl_error($ch),
+                    'post_id' => $post->published_wp_id,
+                    'media' => $image->file_name,
+                ]);
+                curl_close($ch);
+
+                return null;
+            }
+
             curl_close($ch);
 
             return $result;

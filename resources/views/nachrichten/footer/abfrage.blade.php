@@ -1,26 +1,32 @@
 @if(!is_null($user->getRueckmeldung()) and !is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first()))
     @foreach($user->getRueckmeldung()->where('post_id', $nachricht->id)->all() as $rueckmeldung)
         <!-- Submitted Survey Response -->
-        <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-4">
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-4"
+             x-data="{ editMode: false }">
             <!-- Header -->
             <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-check-circle text-white"></i>
+                        <i class="fas fa-check-circle text-white" x-show="!editMode"></i>
+                        <i class="fas fa-edit text-white" x-show="editMode"></i>
                     </div>
-                    <h6 class="text-white font-semibold mb-0">Ihre Antworten zu: {{ $nachricht->rueckmeldung->text}}</h6>
+                    <h6 class="text-white font-semibold mb-0">
+                        <span x-show="!editMode">Ihre Antworten zu: {{ $nachricht->rueckmeldung->text}}</span>
+                        <span x-show="editMode">Antworten bearbeiten: {{ $nachricht->rueckmeldung->text}}</span>
+                    </h6>
                 </div>
                 @if($nachricht->rueckmeldung->ende->gte(\Carbon\Carbon::today()))
-                    <a href="{{url('/userrueckmeldung/edit/'.$rueckmeldung->id)}}"
-                       class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white font-medium rounded-lg transition-colors duration-200">
-                        <i class="fa fa-edit"></i>
-                        <span class="hidden md:inline">Bearbeiten</span>
-                    </a>
+                    <button type="button"
+                            @click="editMode = !editMode"
+                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white font-medium rounded-lg transition-colors duration-200">
+                        <i class="fa" :class="editMode ? 'fa-times' : 'fa-edit'"></i>
+                        <span class="hidden md:inline" x-text="editMode ? 'Abbrechen' : 'Bearbeiten'"></span>
+                    </button>
                 @endif
             </div>
 
-            <!-- Answers List -->
-            <div class="divide-y divide-gray-200">
+            <!-- Answers List (read-only view) -->
+            <div class="divide-y divide-gray-200" x-show="!editMode">
                 @foreach($nachricht->rueckmeldung->options as $option)
                     <div class="px-4 py-3 hover:bg-gray-50 transition-colors duration-200">
                         <div class="flex items-start justify-between gap-4">
@@ -51,7 +57,101 @@
                     </div>
                 @endforeach
             </div>
+
+            <!-- Inline Edit Form -->
+            <div class="p-4" x-show="editMode" x-cloak
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                 x-transition:enter-end="opacity-100 transform translate-y-0">
+                <form method="POST" action="{{url('userrueckmeldung/'.$rueckmeldung->id)}}">
+                    @csrf
+                    @method('PUT')
+                    <div class="space-y-4">
+                        @foreach($nachricht->rueckmeldung->options as $option)
+                            @if($option->type == 'check')
+                                <!-- Checkbox/Radio Option -->
+                                <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
+                                    <label class="flex items-center gap-3 w-full cursor-pointer @if($option->required == true) text-red-600 @endif">
+                                        @if($nachricht->rueckmeldung->max_answers == 1)
+                                            <input type="radio"
+                                                   name="answers[options][]"
+                                                   value="{{$option->id}}"
+                                                   @if($option->required == true) required @endif
+                                                   @if($rueckmeldung->answers->where('option_id', $option->id)->first() != null) checked @endif
+                                                   class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                        @else
+                                            <input type="checkbox"
+                                                   name="answers[options][]"
+                                                   value="{{$option->id}}"
+                                                   @if($option->required == true) required @endif
+                                                   @if($rueckmeldung->answers->where('option_id', $option->id)->first() != null) checked @endif
+                                                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 abfrage_edit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}}">
+                                        @endif
+                                        <span class="text-sm font-medium text-gray-700">{{$option->option}}</span>
+                                        @if($option->required == true)
+                                            <span class="ml-auto px-2 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded">Pflicht</span>
+                                        @endif
+                                    </label>
+                                </div>
+                            @elseif($option->type == 'trenner')
+                                <!-- Section Divider -->
+                                <div class="pt-4 pb-2 border-t-2 border-gray-300 mt-6">
+                                    <h6 class="text-base font-bold text-gray-900">{{$option->option}}</h6>
+                                </div>
+                            @else
+                                <!-- Text Input -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2 @if($option->required == true) text-red-600 @endif">
+                                        {{$option->option}}
+                                        @if($option->required == true)
+                                            <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-medium rounded">Pflicht</span>
+                                        @endif
+                                    </label>
+                                    @if($option->type == 'textbox')
+                                        <textarea name="answers[text][{{$option->id}}]"
+                                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                                  @if($option->required == true) required @endif
+                                                  rows="4">{{$rueckmeldung->answers->where('option_id', $option->id)->first()?->answer}}</textarea>
+                                    @else
+                                        <input name="answers[text][{{$option->id}}]"
+                                               @if($option->required == true) required @endif
+                                               value="{{$rueckmeldung->answers->where('option_id', $option->id)->first()?->answer}}"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                    @endif
+                                </div>
+                            @endif
+                        @endforeach
+
+                        <!-- Submit Button -->
+                        <div class="flex gap-3">
+                            <button type="submit"
+                                    class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                                    id="edit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}}_button">
+                                <i class="fas fa-save mr-2"></i>
+                                Änderungen speichern
+                            </button>
+                            <button type="button"
+                                    @click="editMode = false"
+                                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all duration-200">
+                                <i class="fas fa-times mr-2"></i>
+                                Abbrechen
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
+
+        @push('js')
+        <script type="text/javascript">
+            // Limit checkboxes for inline edit form
+            var checkboxEditLimit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}} = {{($nachricht->rueckmeldung->max_answers > 0) ? $nachricht->rueckmeldung->max_answers : 100}};
+            $(document).on('click', 'input.abfrage_edit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}}:checkbox', function () {
+                var checkTest = $('input.abfrage_edit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}}:checked').length >= checkboxEditLimit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}};
+                $('input.abfrage_edit_{{$nachricht->rueckmeldung->id}}_{{$rueckmeldung->id}}[type=checkbox]').not(":checked").attr("disabled", checkTest);
+            });
+        </script>
+        @endpush
     @endforeach
 @endif
 

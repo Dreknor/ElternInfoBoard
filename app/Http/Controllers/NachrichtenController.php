@@ -122,10 +122,16 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         // Hole alle Nachrichten für die Übersichtsseite
 
+        $openReportsCount = 0;
+        if (auth()->user()->can('release posts')) {
+            $openReportsCount = \App\Model\PostReport::whereNull('resolved_at')->count();
+        }
+
         return view('nachrichten.index', [
             'datum' => Carbon::now(),
             'archiv' => $archiv,
             'nachrichten' => $nachrichten,
+            'openReportsCount' => $openReportsCount,
         ]);
     }
 
@@ -971,6 +977,195 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         return redirect(url('/nachrichten#'.$post->id));
+    }
+
+    /**
+     * Lädt einen einzelnen Post als PDF herunter.
+     *
+     * Zugriffslogik: Nutzer mit „view all"-Berechtigung dürfen alle Posts laden.
+     * Alle anderen Nutzer dürfen nur freigegebene Posts aus ihren Gruppen abrufen.
+     */
+    public function downloadPdf(Post $post): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Zugriffscheck
+        $canAccess = $user->can('view all')
+            || ($post->released == 1 && $post->groups->pluck('id')->intersect($user->groups->pluck('id'))->isNotEmpty())
+            || $user->id === $post->author;
+
+        if (! $canAccess) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Keine Berechtigung für diesen Beitrag.',
+            ]);
+        }
+
+        $post->load(['autor', 'groups', 'rueckmeldung', 'media']);
+
+        // HTML für DomPDF bereinigen: Pixel-Breiten und overflow-x-auto entfernen,
+        // damit Tabellen beim Seitenumbruch nicht abgeschnitten werden.
+        $post->news = $this->sanitizeHtmlForPdf($post->news);
+
+        // <img>-Tags im Beitragstext durch Base64-Data-URIs ersetzen,
+        // da DomPDF mit isRemoteEnabled=false keine externen URLs lädt.
+        $post->news = $this->embedImagesAsBase64($post->news);
+
+        // Angehängte Bilder (Media Library) als Base64 für das PDF-Template vorbereiten.
+        $pdfImages = $post->getMedia('images')
+            ->map(function ($media) {
+                $path = $media->getPath();
+                if (! file_exists($path)) {
+                    return null;
+                }
+
+                return [
+                    'name'      => $media->name,
+                    'file_name' => $media->file_name,
+                    'mime_type' => $media->mime_type,
+                    'src'       => 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($path)),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $pdf = PDF::loadView('pdf.post', [
+            'post'      => $post,
+            'exportAt'  => Carbon::now(),
+            'pdfImages' => $pdfImages,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        // Seitenränder: oben genug für den fixen Header, unten für Footer
+        $pdf->getDomPDF()->set_option('defaultFont', 'DejaVu Sans');
+        $pdf->getDomPDF()->set_option('isHtml5ParserEnabled', true);
+        $pdf->getDomPDF()->set_option('isRemoteEnabled', false);
+
+        $filename = Carbon::now()->format('Y-m-d')
+            .'_'.str($post->header)->slug()->limit(20)
+            .'.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Bereinigt HTML-Inhalt für die DomPDF-Ausgabe:
+     *  - Entfernt absolute Pixel-Breiten (style="width: Npx") aus Tabellen und Zellen,
+     *    damit Tabellen nicht über den Seitenrand hinausragen und abgeschnitten werden.
+     *  - Entfernt die CSS-Klasse "overflow-x-auto", die DomPDF dazu verleitet,
+     *    Tabelleninhalte beim Seitenumbruch zu clippen.
+     */
+    private function sanitizeHtmlForPdf(string $html): string
+    {
+        if (empty($html)) {
+            return $html;
+        }
+
+        // Pixel-Breiten in style-Attributen entfernen (z. B. style="width: 1644px;")
+        // Betrifft table, td, th, div, section – also alle Block-Elemente.
+        $html = preg_replace(
+            '/(<(?:table|td|th|div|section|col|colgroup)[^>]*)\bwidth\s*:\s*\d+(?:\.\d+)?px\s*;?\s*/i',
+            '$1',
+            $html
+        );
+
+        // Leere style-Attribute aufräumen
+        $html = preg_replace('/\s+style\s*=\s*["\']["\']/', '', $html);
+
+        // overflow-x-auto Klasse entfernen
+        $html = preg_replace_callback(
+            '/\bclass\s*=\s*(["\'])([^"\']*)\1/i',
+            function (array $m) {
+                $classes = preg_replace('/\boverflow-x-auto\b/', '', $m[2]);
+                $classes = trim(preg_replace('/\s+/', ' ', $classes));
+
+                return $classes !== '' ? 'class=' . $m[1] . $classes . $m[1] : '';
+            },
+            $html
+        );
+
+        return $html;
+    }
+
+    /**
+     * Ersetzt <img src="URL"> im HTML durch Base64-Data-URIs, damit DomPDF
+     * (isRemoteEnabled=false) die Bilder trotzdem rendern kann.
+     */
+    private function embedImagesAsBase64(string $html): string
+    {
+        if (empty($html)) {
+            return $html;
+        }
+
+        return preg_replace_callback(
+            '/<img([^>]*?)\ssrc\s*=\s*(["\'])([^"\']+)\2([^>]*)>/i',
+            function (array $m) {
+                $base64Src = $this->resolveImageSrcToBase64($m[3]);
+                if ($base64Src !== null) {
+                    return '<img'.$m[1].' src="'.$base64Src.'"'.$m[4].'>';
+                }
+
+                return $m[0]; // Unverändert lassen, wenn nicht auflösbar
+            },
+            $html
+        );
+    }
+
+    /**
+     * Versucht eine Bild-URL in eine Base64-Data-URI aufzulösen.
+     * Unterstützt:
+     *  - /image/{id}        → Spatie Media by ID
+     *  - /api/file/{uuid}   → Spatie Media by UUID
+     *  - /api/image/{id}    → Spatie Media by ID
+     *  - Absolute App-URLs  → werden auf relative Pfade reduziert
+     *  - Lokale public/-Pfade
+     */
+    private function resolveImageSrcToBase64(string $src): ?string
+    {
+        // Absoluten App-URL-Prefix entfernen
+        $appUrl = rtrim(config('app.url'), '/');
+        if (str_starts_with($src, $appUrl)) {
+            $src = substr($src, strlen($appUrl));
+        }
+
+        // /image/{id}
+        if (preg_match('#^/image/(\d+)(?:\?.*)?$#', $src, $m)) {
+            return $this->mediaToBase64ById((int) $m[1]);
+        }
+
+        // /api/image/{id}
+        if (preg_match('#^/api/image/(\d+)(?:\?.*)?$#', $src, $m)) {
+            return $this->mediaToBase64ById((int) $m[1]);
+        }
+
+        // /api/file/{uuid}
+        if (preg_match('#^/api/file/([0-9a-f\-]{36})(?:\?.*)?$#i', $src, $m)) {
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('uuid', $m[1])->first();
+            if ($media && file_exists($media->getPath())) {
+                return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
+            }
+        }
+
+        // Lokale public/-Pfade (z. B. /img/logo.png)
+        if (str_starts_with($src, '/') && file_exists(public_path($src))) {
+            $path = public_path($src);
+            $mime = mime_content_type($path) ?: 'image/png';
+
+            return 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
+        }
+
+        return null;
+    }
+
+    private function mediaToBase64ById(int $id): ?string
+    {
+        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($id);
+        if ($media && file_exists($media->getPath())) {
+            return 'data:'.$media->mime_type.';base64,'.base64_encode(file_get_contents($media->getPath()));
+        }
+
+        return null;
     }
 }
 

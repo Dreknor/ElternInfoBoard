@@ -46,7 +46,7 @@
                     @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
                         <div class="carousel-item text-center @if($loop->first) active @endif">
                             <a href="{{url('/image/'.$media->id)}}" target="_blank" class="block">
-                                <img class="mx-auto max-h-[600px] w-auto" src="{{url('/image/'.$media->id)}}" alt="{{$media->name ?? 'Bild'}}">
+                                <img class="mx-auto max-h-[600px] w-auto" loading="lazy" decoding="async" src="{{url('/image/'.$media->id)}}" alt="{{$media->name ?? 'Bild'}}">
                             </a>
                         </div>
                     @endforeach
@@ -77,7 +77,7 @@
     <div class="{{ $cardClass }}" id="{{$nachricht->id}}" @if($nachricht->is_archived) x-data="{ showArchived: false }" @endif>
         @if(count($nachricht->getMedia('header'))>0)
             <div class="relative h-56 overflow-hidden">
-                <img class="w-full h-full object-cover object-center" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
+                <img class="w-full h-full object-cover object-center" loading="lazy" decoding="async" src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
                      style="object-position: 0 70%;" alt="Header-Bild">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
             </div>

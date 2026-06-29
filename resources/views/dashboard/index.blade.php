@@ -39,20 +39,18 @@
     </div>
 
     @php
-        $hasCheckin   = $careChildren && $careChildren->count() > 0;
-        $hasLosung    = !empty($losung);
-        $hasDiseases  = $dashboardDiseasesWidget !== null
-                        && auth()->user()->canAny(['manage diseases', 'see diseases']);
-        $hasSidebar   = $hasLosung || $hasDiseases;
-        // Spaltenbreiten: CheckIn bekommt 8, Sidebar 4 – sonst jeweils 12
-        $checkinCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-8 col-lg-7' : 'col-12';
-        $sidebarCol   = ($hasCheckin && $hasSidebar) ? 'col-xl-4 col-lg-5' : 'col-12';
-        // Wenn kein CheckIn, aber Losung+Erkrankungen vorhanden: nebeneinander
-        $losungCol    = (!$hasCheckin && $hasLosung && $hasDiseases) ? 'col-lg-6' : 'col-12';
-        $diseasesCol  = (!$hasCheckin && $hasLosung && $hasDiseases) ? 'col-lg-6' : 'col-12';
+        $hasCheckin  = $careChildren && $careChildren->count() > 0;
+        $hasLosung   = !empty($losung);
+        $hasDiseases = $dashboardDiseasesWidget !== null
+                       && auth()->user()->canAny(['manage diseases', 'see diseases']);
+        // Erkrankungen erscheinen in einer eigenen Zeile – Sidebar nur für die Losung
+        $hasSidebar  = $hasLosung;
+        // Spaltenbreiten: CheckIn bekommt 8, Losung-Sidebar 4 – sonst jeweils 12
+        $checkinCol  = ($hasCheckin && $hasSidebar) ? 'col-xl-8 col-lg-7' : 'col-12';
+        $sidebarCol  = ($hasCheckin && $hasSidebar) ? 'col-xl-4 col-lg-5' : 'col-12';
     @endphp
 
-    {{-- Layout-Zeile: CheckIn-Status | Sidebar (Losung + Erkrankungen) --}}
+    {{-- Layout-Zeile 1: CheckIn-Status | Losung --}}
     @if($hasCheckin || $hasSidebar)
     <div class="row g-4 mb-4">
 
@@ -63,35 +61,22 @@
         </div>
         @endif
 
-        {{-- Sidebar: Losung + Erkrankungen --}}
+        {{-- Sidebar: Losung --}}
         @if($hasSidebar)
         <div class="{{ $sidebarCol }}">
-
-            {{-- Wenn kein CheckIn: Losung & Erkrankungen nebeneinander --}}
-            @if(!$hasCheckin && $hasLosung && $hasDiseases)
-            <div class="row g-3">
-                <div class="{{ $losungCol }}">
-                    @include('include.losung')
-                </div>
-                <div class="{{ $diseasesCol }}">
-                    @include('dashboard.components.diseases')
-                </div>
-            </div>
-
-            {{-- Wenn CheckIn vorhanden: Losung & Erkrankungen gestapelt in Sidebar --}}
-            @else
-                @if($hasLosung)
-                    <div class="{{ $hasDiseases ? 'mb-4' : '' }}">
-                        @include('include.losung')
-                    </div>
-                @endif
-                @if($hasDiseases)
-                    @include('dashboard.components.diseases')
-                @endif
-            @endif
-
+            @include('include.losung')
         </div>
         @endif
+
+    </div>
+    @endif
+
+    {{-- Layout-Zeile 2: Meldepflichtige Erkrankungen (eigene Zeile) --}}
+    @if($hasDiseases)
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            @include('dashboard.components.diseases')
+        </div>
 
     </div>
     @endif

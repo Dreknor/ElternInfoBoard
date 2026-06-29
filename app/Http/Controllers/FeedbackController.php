@@ -114,7 +114,11 @@ class FeedbackController extends Controller implements HasMiddleware
                         'Meldung' => $error,
                     ]);
                 }
-                $data[] = $document;
+                $data['attachments'][] = [
+                    'path' => $document->getRealPath(),
+                    'name' => $document->getClientOriginalName(),
+                    'mime' => $document->getMimeType(),
+                ];
             }
         }
 /*

@@ -95,6 +95,14 @@
                 </button>
             </form>
         @endif
+
+        <div class="border-t border-gray-200 my-1"></div>
+        <a href="{{ route('post.pdf', $nachricht) }}"
+           target="_blank"
+           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+            <i class="fas fa-file-pdf text-red-500"></i>
+            <span>Als PDF herunterladen</span>
+        </a>
     </div>
 </div>
 

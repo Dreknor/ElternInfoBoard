@@ -143,6 +143,15 @@ class DarkTheme extends AbstractTheme
             '--color-widget-header-text'     => '#ffffff',
             '--color-widget-body-bg'         => '#1e293b', // Einheitlich mit `--color-card-bg`
 
+            // Warning Alert-Banner (Dark Mode)
+            '--color-warning-bg'             => '#451a03',
+            '--color-warning-border'         => '#d97706',
+            '--color-warning-icon-bg'        => '#d97706',
+            '--color-warning-text'           => '#fde68a',
+            '--color-warning-text-secondary' => '#fcd34d',
+            '--color-warning-btn-bg'         => '#b45309',
+            '--color-warning-btn-hover'      => '#92400e',
+
             // === Losung ===
             '--color-losung-header-from'     => '#4f46e5', // Indigo zu Blau Übergang
             '--color-losung-header-to'       => '#3b82f6',

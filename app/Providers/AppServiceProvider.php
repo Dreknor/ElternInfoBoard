@@ -49,6 +49,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSetting $settings): void
     {
+        // PCRE JIT deaktivieren – verhindert "Allocation of JIT memory failed"-Fehler
+        // in Umgebungen, in denen PHP keine ausführbaren Speicherbereiche allokieren darf.
+        ini_set('pcre.jit', '0');
+
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);

@@ -85,11 +85,23 @@
                                     </button>
                                 </form>
                             @endif
-                            <a href="{{ url("listen/$liste->id/archiv") }}"
+                             <a href="{{ url("listen/$liste->id/archiv") }}"
                                class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150">
-                                <i class="fas fa-archive w-4"></i>
-                                <span>Archivieren</span>
-                            </a>
+                                 <i class="fas fa-archive w-4"></i>
+                                 <span>Archivieren</span>
+                             </a>
+                             <div class="my-1" style="border-top: 1px solid var(--color-card-border);"></div>
+                             <form action="{{ route('listen.copy', $liste->id) }}" method="POST">
+                                 @csrf
+                                 <button type="submit"
+                                    class="flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-150 w-full text-left"
+                                    style="color: var(--color-text-primary);"
+                                    onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-body-bg')"
+                                    onmouseout="this.style.background=''">
+                                     <i class="fas fa-copy text-blue-600 w-4"></i>
+                                     <span>Kopieren</span>
+                                 </button>
+                             </form>
                         </div>
                     </div>
                 @endif

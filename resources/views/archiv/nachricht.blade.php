@@ -2,6 +2,7 @@
     <!-- Header Image -->
     @if(count($nachricht->getMedia('header'))>0)
         <img class="w-full h-64 object-cover object-center"
+             loading="lazy" decoding="async"
              src="{{url('/image/'.$nachricht->getMedia('header')->first()->id)}}"
              alt="Header-Bild">
     @endif

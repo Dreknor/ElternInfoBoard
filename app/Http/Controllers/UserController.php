@@ -44,6 +44,7 @@ class UserController extends Controller implements HasMiddleware
     {
         $this->groupsRepository = $groupsRepository;
         $this->userService = $userService;
+
     }
 
     public static function middleware(): array
@@ -60,7 +61,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        // TODO-2.7: Serverseitige Paginierung statt User::all() für bessere Performance
         $query = User::query()->with(['groups', 'permissions', 'sorgeberechtigter2', 'roles']);
 
         if ($search = $request->input('search')) {
@@ -81,7 +81,6 @@ class UserController extends Controller implements HasMiddleware
         return view('user.index', [
             'users' => $query->orderBy('name')->paginate(50)->withQueryString(),
             'roles' => Role::all(),
-            // TODO-2.7: WICHTIG – GetGroupsScope umgehen damit Admin alle Gruppen im Filter sieht
             'groups' => Group::withoutGlobalScope(\App\Scopes\GetGroupsScope::class)->orderBy('name')->get(),
         ]);
     }
@@ -119,7 +118,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function store(CreateUserRequest $request)
     {
-        // TODO-2.2: Erstellung über UserService delegieren
         $result = $this->userService->createUser($request->safe()->only(['name', 'email']));
         $user = $result['user'];
 
@@ -172,7 +170,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        // TODO-2.2: Update über UserService delegieren
         $this->userService->updateUser($user, $request->validated());
         $this->userService->syncGroups($user, $request->input('gruppen'));
 
@@ -227,7 +224,25 @@ class UserController extends Controller implements HasMiddleware
      */
     public function resendWelcomeMail(Request $request, User $user): RedirectResponse
     {
+        Log::debug('Resend Welcome Mail requested', [
+            'requestor_id' => $request->user()->id,
+            'requestor_email' => $request->user()->email,
+            'target_user_id' => $user->id,
+            'target_user_email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
+
         $result = $this->userService->resendWelcomeMail($user);
+
+        if ($result['emailSent']) {
+            Log::info('Welcome Mail resent', [
+                'requestor_id' => $request->user()->id,
+            ]);
+        } else {
+            Log::warning('Welcome Mail not resent', [
+                'result' => $result,
+            ]);
+        }
 
         return redirect()->back()->with([
             'type'    => $result['emailSent'] ? 'success' : 'danger',
@@ -312,7 +327,6 @@ class UserController extends Controller implements HasMiddleware
 
     public function massDelete(Request $request)
     {
-        // TODO-2.2: Massenlöschung über UserService delegieren
         $userIds = $request->input('user_ids', []);
         $result = $this->userService->massDeleteUsers($userIds);
 

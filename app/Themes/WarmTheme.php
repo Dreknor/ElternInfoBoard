@@ -127,6 +127,15 @@ class WarmTheme extends AbstractTheme
             '--color-widget-header-text'     => '#5c463c',
             '--color-widget-body-bg'         => '#ffffff',
 
+            // Warning Alert-Banner (Warm: Texte an Warm-Theme-Palette angepasst)
+            '--color-warning-bg'             => '#fffbeb',
+            '--color-warning-border'         => '#f59e0b',
+            '--color-warning-icon-bg'        => '#f59e0b',
+            '--color-warning-text'           => '#5c463c',
+            '--color-warning-text-secondary' => '#8c7368',
+            '--color-warning-btn-bg'         => '#d97706',
+            '--color-warning-btn-hover'      => '#b45309',
+
             // === Losung Widgets ===
             '--color-losung-header-from'     => '#ffb088',
             '--color-losung-header-to'       => '#ffd180',
