@@ -1110,20 +1110,23 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $request->validate([
             'date_start' => 'required|date',
-            'date_end' => 'nullable|date',
-            'child_id' => 'required|exists:children,id',
-            'lock_at' => 'nullable|date',
+            'date_end'   => 'nullable|date',
+            'child_id'   => 'required|exists:children,id',
+            'lock_at'    => 'nullable|date',
+            'should_be'  => 'required|in:0,1',
         ]);
 
         $date_start = Carbon::parse($request->date_start);
-        $date_end = Carbon::parse($request->date_end);
-        $lock_at = $request->lock_at ? Carbon::parse($request->lock_at) : null;
+        $date_end   = $request->date_end ? Carbon::parse($request->date_end) : $date_start->copy();
+        $lock_at    = $request->lock_at ? Carbon::parse($request->lock_at) : null;
+
+        // should_be aus dem Formular: '1' => true, '0' => false
+        $shouldBeValue = (bool) $request->input('should_be');
 
         $child = Child::find($request->child_id);
 
-        $child->load(['checkIns' => fn ($query) => $query->where('date', '>=', $date_start)->where('date', '<=', $date_end)]);
+        $child->load(['checkIns' => fn ($query) => $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()])]);
 
-        $checkIn = [];
         $newCheckInsCreated = false;
 
         for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
@@ -1131,25 +1134,25 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 continue;
             }
 
-            // Prüfe ob ein neuer CheckIn erstellt wird
-            $existingCheckIn = $child->checkIns()->where('date', $date->toDateString())->first();
+            $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
 
-            $child->checkIns()->updateOrCreate([
-                'date' => $date->toDateString(),
-            ], [
-                'checked_in' => false,
-                'checked_out' => false,
-                'should_be' => null, // null bedeutet, dass noch keine Rückmeldung erfolgt ist
-                'lock_at' => $lock_at,
-                'comment' => $request->comment ?? null,
-            ]);
-
-            if (!$existingCheckIn) {
+            if ($existingCheckIn) {
+                // Bestehenden Eintrag: nur should_be aktualisieren, lock_at und check-in-Status nicht überschreiben
+                $existingCheckIn->should_be = $shouldBeValue;
+                $existingCheckIn->save();
+            } else {
+                // Neuen Eintrag erstellen
+                $child->checkIns()->create([
+                    'date'        => $date->toDateString(),
+                    'checked_in'  => false,
+                    'checked_out' => false,
+                    'should_be'   => $shouldBeValue,
+                    'lock_at'     => $lock_at,
+                ]);
                 $newCheckInsCreated = true;
             }
         }
 
-        ChildCheckIn::query()->insert($checkIn);
 
         // Benachrichtige die Eltern, wenn neue Anwesenheitsabfragen erstellt wurden
         if ($newCheckInsCreated) {
