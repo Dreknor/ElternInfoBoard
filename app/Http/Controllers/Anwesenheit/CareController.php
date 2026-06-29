@@ -353,6 +353,7 @@ class CareController extends Controller implements HasMiddleware
             'target_type' => 'required|in:all,groups,classes,children',
             'target_ids'  => 'nullable|array',
             'target_ids.*'=> 'integer',
+            'should_be'   => 'nullable|in:0,1,',
         ]);
 
         $date_start  = Carbon::parse($request->date_start);
@@ -360,6 +361,10 @@ class CareController extends Controller implements HasMiddleware
         $lock_at     = $request->lock_at ? Carbon::parse($request->lock_at) : null;
         $targetType  = $request->input('target_type', 'all');
         $targetIds   = $request->input('target_ids', []);
+
+        // should_be: '' => null, '1' => true, '0' => false
+        $shouldBeRaw = $request->input('should_be', '');
+        $shouldBeValue = ($shouldBeRaw === '' || $shouldBeRaw === null) ? null : (bool) $shouldBeRaw;
 
         $careSettings = new CareSetting;
 
@@ -430,9 +435,11 @@ class CareController extends Controller implements HasMiddleware
             ])
             ->get();
 
-        $checkIns = [];
+        $checkInsToCreate = [];
+        $checkInsToUpdate = []; // IDs bestehender Einträge, die aktualisiert werden sollen
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
         $holidayService = new HolidayService();
+        $lockAtValue = $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString();
 
         for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
             if ($date->isWeekend()) {
@@ -449,16 +456,18 @@ class CareController extends Controller implements HasMiddleware
                 $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
 
                 if ($existingCheckIn) {
+                    // Bestehenden Eintrag aktualisieren: nur should_be setzen, lock_at NICHT verändern
+                    $checkInsToUpdate[] = $existingCheckIn->id;
                     continue;
                 }
 
-                $checkIns[] = [
+                $checkInsToCreate[] = [
                     'child_id' => $child->id,
                     'checked_in' => false,
                     'checked_out' => false,
                     'date' => $date->toDateString(),
-                    'should_be' => null, // null = noch nicht beantwortet
-                    'lock_at' => $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString(),
+                    'should_be' => $shouldBeValue,
+                    'lock_at' => $lockAtValue,
                 ];
 
                 // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)
@@ -470,16 +479,34 @@ class CareController extends Controller implements HasMiddleware
             }
         }
 
-        if (!empty($checkIns)) {
-            ChildCheckIn::query()->insert($checkIns);
+        if (!empty($checkInsToCreate)) {
+            ChildCheckIn::query()->insert($checkInsToCreate);
 
             // Benachrichtige alle betroffenen Eltern einmalig
             $this->notifyParentsAboutNewAttendanceQuery($parentsToNotify, $date_start, $date_end, $lock_at);
         }
 
+        // Bestehende Abfragen aktualisieren: nur should_be setzen, lock_at bleibt unverändert
+        if (!empty($checkInsToUpdate)) {
+            ChildCheckIn::whereIn('id', $checkInsToUpdate)->update(['should_be' => $shouldBeValue]);
+        }
+
+        $created = count($checkInsToCreate);
+        $updated = count($checkInsToUpdate);
+
+        if ($created > 0 && $updated > 0) {
+            $meldung = "{$created} Abfrage(n) neu erstellt, {$updated} bestehende(r) Eintrag/Einträge aktualisiert.";
+        } elseif ($created > 0) {
+            $meldung = "Die Abfrage wurde erstellt.";
+        } elseif ($updated > 0) {
+            $meldung = "{$updated} bestehende Abfrage(n) wurden aktualisiert.";
+        } else {
+            $meldung = 'Es wurden keine Abfragen erstellt oder aktualisiert.';
+        }
+
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Die Abfrage wurde erstellt.',
+            'Meldung' => $meldung,
         ]);
     }
 

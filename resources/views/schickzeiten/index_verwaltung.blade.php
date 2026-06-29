@@ -418,6 +418,20 @@
                                     </div>
                                 </div>
 
+                                 {{-- Anwesenheitsstatus --}}
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-user-check text-green-600"></i> Anwesenheitsstatus
+                                    </label>
+                                    <select name="should_be"
+                                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                                        <option value="">Keine Angabe (Eltern werden gefragt)</option>
+                                        <option value="1">Kind kommt</option>
+                                        <option value="0">Kind kommt nicht</option>
+                                    </select>
+                                    <p class="mt-1 text-xs text-gray-500">Optional: Legen Sie direkt fest, ob das Kind anwesend sein wird. Bestehende Einträge werden entsprechend aktualisiert.</p>
+                                </div>
+
                                 <button type="submit"
                                         :disabled="(targetType === 'groups' && selectedGroups.length === 0) ||
                                                    (targetType === 'classes' && selectedClasses.length === 0) ||
