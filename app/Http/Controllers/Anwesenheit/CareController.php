@@ -419,8 +419,6 @@ class CareController extends Controller implements HasMiddleware
                     ]);
                 }
                 $childQuery->whereIn('id', $targetIds);
-                Log::debug('Anwesenheitsabfrage für Kinder: ' . implode(', ', $targetIds));
-
                 break;
 
 
@@ -494,7 +492,6 @@ class CareController extends Controller implements HasMiddleware
 
         // Bestehende Abfragen aktualisieren: nur should_be setzen, lock_at bleibt unverändert
         if (!empty($checkInsToUpdate)) {
-            Log::debug('Updating existing check-ins: ' . implode(', ', $checkInsToUpdate));
             ChildCheckIn::whereIn('id', $checkInsToUpdate)->update(['should_be' => $shouldBeValue]);
         }
 
