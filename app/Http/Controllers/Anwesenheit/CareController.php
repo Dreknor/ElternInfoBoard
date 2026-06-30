@@ -449,13 +449,7 @@ class CareController extends Controller implements HasMiddleware
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
         $lockAtValue = $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString();
 
-        // $date_start->copy() verwenden, damit das Original-Objekt für spätere Verwendung
-        // (z. B. notifyParentsAboutNewAttendanceQuery) unverändert bleibt.
-        // Hinweis: Wochenenden werden beim Erstellen neuer Einträge übersprungen.
-        // Ferienstage werden NICHT übersprungen, da die Abfrage explizit die Anwesenheit
-        // in den Ferien erfassen soll. Der automatische CheckIn (dailyCheckIn) prüft
-        // Ferien separat und führt in den Ferien keinen Auto-CheckIn durch.
-        for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
+       for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
             foreach ($children as $child) {
                 // Prüfe, ob bereits ein CheckIn für dieses Datum existiert
                 $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
@@ -478,6 +472,8 @@ class CareController extends Controller implements HasMiddleware
                     'date' => $date->toDateString(),
                     'should_be' => $shouldBeValue,
                     'lock_at' => $lockAtValue,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
                 // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)
@@ -498,6 +494,7 @@ class CareController extends Controller implements HasMiddleware
 
         // Bestehende Abfragen aktualisieren: nur should_be setzen, lock_at bleibt unverändert
         if (!empty($checkInsToUpdate)) {
+            Log::debug('Updating existing check-ins: ' . implode(', ', $checkInsToUpdate));
             ChildCheckIn::whereIn('id', $checkInsToUpdate)->update(['should_be' => $shouldBeValue]);
         }
 
