@@ -356,6 +356,11 @@ class CareController extends Controller implements HasMiddleware
             'should_be'   => 'nullable|in:0,1,',
         ]);
 
+
+        Log::debug('Anwesenheitsabfrage gespeichert.', [
+            'request' => $request->all()
+        ]);
+
         $date_start  = Carbon::parse($request->date_start);
         $date_end    = $request->date_end ? Carbon::parse($request->date_end) : $date_start->copy();
         $lock_at     = $request->lock_at ? Carbon::parse($request->lock_at) : null;
@@ -414,7 +419,11 @@ class CareController extends Controller implements HasMiddleware
                     ]);
                 }
                 $childQuery->whereIn('id', $targetIds);
+                Log::debug('Anwesenheitsabfrage für Kinder: ' . implode(', ', $targetIds));
+
                 break;
+
+
 
             default:
                 // 'all' – alle Kinder in den konfigurierten Gruppen/Klassen
