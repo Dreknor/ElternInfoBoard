@@ -314,7 +314,7 @@
                                             <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-300"
                                                   title="Achtung: Für diese Familie existiert mindestens ein weiterer Eintrag im gleichen Zeitraum. Mögliche Doppelerfassung! → Überlappungsgruppe {{ $groupId }}">
                                                 <i class="fas fa-exclamation-triangle"></i>
-                                                Überlappung{{ $groupId ? ' (Gr.&nbsp;' . $groupId . ')' : '' }}
+                                                Überlappung{!! $groupId ? ' (Gr.&nbsp;' . $groupId . ')' : '' !!}
                                             </span>
                                         @endif
                                     </td>
@@ -834,7 +834,11 @@
 
                 <div class="p-6 space-y-5">
                     @foreach($overlapGroups as $group)
-                        <div class="border border-orange-200 rounded-xl overflow-hidden shadow-sm">
+                        @php
+                            $confirmedCount = $group['entries']->where('approved', true)->count();
+                        @endphp
+                        <div class="border border-orange-200 rounded-xl overflow-hidden shadow-sm"
+                             x-data="{ showConfirmed: false }">
                             <!-- Gruppen-Header -->
                             <div class="bg-orange-50 px-4 py-3 flex items-center justify-between border-b border-orange-200">
                                 <div class="flex items-center gap-2">
@@ -846,9 +850,21 @@
                                         {{ $group['family_name'] }}
                                     </span>
                                 </div>
-                                <span class="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
-                                    {{ $group['entries']->count() }} überlappende Einträge
-                                </span>
+                                <div class="flex items-center gap-3">
+                                    @if($confirmedCount > 0)
+                                        <button @click="showConfirmed = !showConfirmed" type="button"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200"
+                                                :class="showConfirmed
+                                                    ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200'
+                                                    : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-100'">
+                                            <i class="fas" :class="showConfirmed ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                            <span x-text="showConfirmed ? 'Bestätigte ausblenden' : 'Bestätigte einblenden ({{ $confirmedCount }})'"></span>
+                                        </button>
+                                    @endif
+                                    <span class="text-xs text-orange-600 font-medium bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">
+                                        {{ $group['entries']->count() }} überlappende Einträge
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Einträge der Gruppe, nach Startzeit sortiert -->
@@ -864,11 +880,21 @@
                                             @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
                                                 <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Bereich</th>
                                             @endif
+                                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Aktionen</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">
                                         @foreach($group['entries'] as $entry)
-                                            <tr class="{{ $entry->approved ? 'bg-green-50' : 'bg-yellow-50' }}">
+                                            <tr class="{{ $entry->approved ? 'bg-green-50' : 'bg-yellow-50' }}"
+                                                x-show="{{ $entry->approved ? 'showConfirmed' : 'true' }}"
+                                                x-data="{
+                                                    showEdit: false,
+                                                    editData: {
+                                                        start: '{{ $entry->start->format('Y-m-d\TH:i') }}',
+                                                        end: '{{ $entry->end->format('Y-m-d\TH:i') }}',
+                                                        description: {{ Js::from($entry->description) }}
+                                                    }
+                                                }">
                                                 <td class="px-4 py-3">
                                                     @if($entry->approved)
                                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
@@ -881,13 +907,19 @@
                                                     @endif
                                                 </td>
                                                 <td class="px-4 py-3 text-gray-700 font-medium">
-                                                    @if($entry->start->isSameDay($entry->end))
-                                                        <div>{{ $entry->start->format('d.m.Y') }}</div>
-                                                        <div class="text-xs text-gray-500">{{ $entry->start->format('H:i') }} – {{ $entry->end->format('H:i') }}</div>
-                                                    @else
-                                                        <div class="text-xs">{{ $entry->start->format('d.m.Y H:i') }}</div>
-                                                        <div class="text-xs">{{ $entry->end->format('d.m.Y H:i') }}</div>
-                                                    @endif
+                                                    <span x-show="!showEdit">
+                                                        @if($entry->start->isSameDay($entry->end))
+                                                            <div>{{ $entry->start->format('d.m.Y') }}</div>
+                                                            <div class="text-xs text-gray-500">{{ $entry->start->format('H:i') }} – {{ $entry->end->format('H:i') }}</div>
+                                                        @else
+                                                            <div class="text-xs">{{ $entry->start->format('d.m.Y H:i') }}</div>
+                                                            <div class="text-xs">{{ $entry->end->format('d.m.Y H:i') }}</div>
+                                                        @endif
+                                                    </span>
+                                                    <div x-show="showEdit" x-cloak class="space-y-2">
+                                                        <input type="datetime-local" x-model="editData.start" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                                                        <input type="datetime-local" x-model="editData.end" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                                                    </div>
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -899,7 +931,10 @@
                                                     </span>
                                                 </td>
                                                 <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->user->name }}</td>
-                                                <td class="px-4 py-3 text-gray-700">{{ $entry->description }}</td>
+                                                <td class="px-4 py-3 text-gray-700">
+                                                    <span x-show="!showEdit">{{ $entry->description }}</span>
+                                                    <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="2" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
+                                                </td>
                                                 @if(!empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0)
                                                     <td class="px-4 py-3">
                                                         @if($entry->bereich)
@@ -911,6 +946,79 @@
                                                         @endif
                                                     </td>
                                                 @endif
+                                                <td class="px-4 py-3 text-sm">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <!-- Bearbeiten -->
+                                                        <button @click="showEdit = !showEdit" type="button"
+                                                                class="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors duration-200">
+                                                            <i class="fas" :class="showEdit ? 'fa-times' : 'fa-edit'"></i>
+                                                            <span x-text="showEdit ? 'Abbrechen' : 'Bearbeiten'"></span>
+                                                        </button>
+                                                        <!-- Speichern (nur bei Edit) -->
+                                                        <form x-show="showEdit" x-cloak :action="`{{ route('pflichtstunden.update', $entry) }}`" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <input type="hidden" name="start" :value="editData.start">
+                                                            <input type="hidden" name="end" :value="editData.end">
+                                                            <input type="hidden" name="description" :value="editData.description">
+                                                            <button type="submit"
+                                                                    class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded transition-colors duration-200"
+                                                                    onclick="return confirm('Änderungen speichern?');">
+                                                                <i class="fas fa-save"></i>
+                                                                Speichern
+                                                            </button>
+                                                        </form>
+                                                        @if(!$entry->approved)
+                                                            <!-- Bestätigen -->
+                                                            <form action="{{ route('pflichtstunden.approve', $entry) }}" method="POST" class="inline">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <button type="submit"
+                                                                        class="inline-flex items-center gap-1 px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
+                                                                    <i class="fas fa-check"></i>
+                                                                    Bestätigen
+                                                                </button>
+                                                            </form>
+                                                            <!-- Ablehnen -->
+                                                            <div x-data="{ showReject: false }" class="inline-flex items-center gap-2">
+                                                                <button @click="showReject = !showReject" type="button"
+                                                                        class="inline-flex items-center gap-1 px-2 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors duration-200">
+                                                                    <i class="fas fa-times"></i>
+                                                                    Ablehnen
+                                                                </button>
+                                                                <form x-show="showReject"
+                                                                      x-transition
+                                                                      action="{{ route('pflichtstunden.reject', $entry) }}"
+                                                                      method="POST"
+                                                                      class="inline-flex items-center gap-2">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <input name="rejection_reason"
+                                                                           type="text"
+                                                                           class="px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-200"
+                                                                           placeholder="Grund..."
+                                                                           required>
+                                                                    <button type="submit"
+                                                                            class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg"
+                                                                            onclick="return confirm('Möchten Sie diese Pflichtstunde wirklich ablehnen?');">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        @endif
+                                                        <!-- Löschen -->
+                                                        <form action="{{ route('pflichtstunden.destroy', $entry) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                    class="inline-flex items-center gap-1 px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded transition-colors duration-200"
+                                                                    onclick="return confirm('Möchten Sie diese Pflichtstunde wirklich löschen?');">
+                                                                <i class="fas fa-trash"></i>
+                                                                Löschen
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>

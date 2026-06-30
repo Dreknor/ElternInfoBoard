@@ -438,26 +438,27 @@ class CareController extends Controller implements HasMiddleware
         $checkInsToCreate = [];
         $checkInsToUpdate = []; // IDs bestehender Einträge, die aktualisiert werden sollen
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
-        $holidayService = new HolidayService();
         $lockAtValue = $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString();
 
-        for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
-            if ($date->isWeekend()) {
-                continue;
-            }
-
-            // Feiertage/Ferien überspringen (Feature 6, Verbesserung D)
-            if ($holidayService->isHoliday($date->copy())) {
-                continue;
-            }
-
+        // $date_start->copy() verwenden, damit das Original-Objekt für spätere Verwendung
+        // (z. B. notifyParentsAboutNewAttendanceQuery) unverändert bleibt.
+        // Hinweis: Wochenenden werden beim Erstellen neuer Einträge übersprungen.
+        // Ferienstage werden NICHT übersprungen, da die Abfrage explizit die Anwesenheit
+        // in den Ferien erfassen soll. Der automatische CheckIn (dailyCheckIn) prüft
+        // Ferien separat und führt in den Ferien keinen Auto-CheckIn durch.
+        for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
             foreach ($children as $child) {
                 // Prüfe, ob bereits ein CheckIn für dieses Datum existiert
                 $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
 
                 if ($existingCheckIn) {
-                    // Bestehenden Eintrag aktualisieren: nur should_be setzen, lock_at NICHT verändern
+                    // Bestehende Einträge immer aktualisieren – unabhängig von Ferien/Wochenende
                     $checkInsToUpdate[] = $existingCheckIn->id;
+                    continue;
+                }
+
+                // Neue Einträge nur für Werktage erstellen (Wochenenden überspringen)
+                if ($date->isWeekend()) {
                     continue;
                 }
 
