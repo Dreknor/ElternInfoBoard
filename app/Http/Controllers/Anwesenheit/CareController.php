@@ -356,6 +356,11 @@ class CareController extends Controller implements HasMiddleware
             'should_be'   => 'nullable|in:0,1,',
         ]);
 
+
+        Log::debug('Anwesenheitsabfrage gespeichert.', [
+            'request' => $request->all()
+        ]);
+
         $date_start  = Carbon::parse($request->date_start);
         $date_end    = $request->date_end ? Carbon::parse($request->date_end) : $date_start->copy();
         $lock_at     = $request->lock_at ? Carbon::parse($request->lock_at) : null;
@@ -416,6 +421,8 @@ class CareController extends Controller implements HasMiddleware
                 $childQuery->whereIn('id', $targetIds);
                 break;
 
+
+
             default:
                 // 'all' – alle Kinder in den konfigurierten Gruppen/Klassen
                 if (!empty($careSettings->class_list)) {
@@ -438,26 +445,21 @@ class CareController extends Controller implements HasMiddleware
         $checkInsToCreate = [];
         $checkInsToUpdate = []; // IDs bestehender Einträge, die aktualisiert werden sollen
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
-        $holidayService = new HolidayService();
         $lockAtValue = $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString();
 
-        for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
-            if ($date->isWeekend()) {
-                continue;
-            }
-
-            // Feiertage/Ferien überspringen (Feature 6, Verbesserung D)
-            if ($holidayService->isHoliday($date->copy())) {
-                continue;
-            }
-
+       for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
             foreach ($children as $child) {
                 // Prüfe, ob bereits ein CheckIn für dieses Datum existiert
                 $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
 
                 if ($existingCheckIn) {
-                    // Bestehenden Eintrag aktualisieren: nur should_be setzen, lock_at NICHT verändern
+                    // Bestehende Einträge immer aktualisieren – unabhängig von Ferien/Wochenende
                     $checkInsToUpdate[] = $existingCheckIn->id;
+                    continue;
+                }
+
+                // Neue Einträge nur für Werktage erstellen (Wochenenden überspringen)
+                if ($date->isWeekend()) {
                     continue;
                 }
 
@@ -468,6 +470,8 @@ class CareController extends Controller implements HasMiddleware
                     'date' => $date->toDateString(),
                     'should_be' => $shouldBeValue,
                     'lock_at' => $lockAtValue,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
                 // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)

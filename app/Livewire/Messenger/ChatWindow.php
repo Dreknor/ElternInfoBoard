@@ -7,6 +7,7 @@ use App\Model\Message;
 use App\Model\Notification;
 use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
@@ -201,12 +202,18 @@ class ChatWindow extends Component
             return true;
         });
 
+        // Cooldown: max. eine Push-Benachrichtigung pro Nutzer/Konversation alle 10 Minuten
+        $pushCooldownMinutes = 10;
+
         foreach ($pushRecipients as $participant) {
             try {
                 if ($participant->pushSubscriptions()->exists()) {
-                    $participant->notify(
-                        new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
-                    );
+                    $cacheKey = "messenger_push_{$participant->id}_{$conversation->id}";
+                    if (Cache::add($cacheKey, true, now()->addMinutes($pushCooldownMinutes))) {
+                        $participant->notify(
+                            new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
+                        );
+                    }
                 }
             } catch (\Exception $e) {
                 Log::warning("Messenger WebPush fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
