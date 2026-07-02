@@ -15,6 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -205,6 +207,31 @@ class MessengerController extends Controller
         // syncWithoutDetaching verhindert Duplicate-Key bei gleichzeitigen Requests
         $conversation->users()->syncWithoutDetaching([$user->id, $targetUser->id]);
 
+        // Empfänger über neue Direktkonversation informieren
+        $url   = route('messenger.show', $conversation);
+        $title = 'Neue Direktnachricht von ' . $user->name;
+        $conversation->load('users');
+        $recipients = $conversation->users->where('id', $targetUser->id);
+        $conversation->notify(
+            $recipients,
+            $title,
+            $user->name . ' möchte dir eine Nachricht schicken.',
+            false,
+            $url,
+            'messenger',
+            'fas fa-comments',
+            false
+        );
+        try {
+            if ($targetUser->pushSubscriptions()->exists()) {
+                $targetUser->notify(
+                    new MessengerPushNotification($title, $user->name . ' möchte dir eine Nachricht schicken.', $url)
+                );
+            }
+        } catch (\Exception $e) {
+            Log::warning("Messenger WebPush (startDirect) fehlgeschlagen für User {$targetUser->id}: " . $e->getMessage());
+        }
+
         return redirect()->route('messenger.show', $conversation);
     }
 
@@ -321,7 +348,8 @@ class MessengerController extends Controller
     {
         $sender = auth()->user();
 
-        $participants = $conversation->users
+        // Alle nicht-stummgeschalteten Teilnehmer (außer Sender) für In-App-Benachrichtigungen
+        $allRecipients = $conversation->users
             ->where('id', '!=', $sender->id)
             ->filter(function ($user) {
                 $pivot = $user->pivot;
@@ -331,15 +359,10 @@ class MessengerController extends Controller
                     return false;
                 }
 
-                // Nutzer überspringen, die den Chat gerade aktiv lesen (last_read_at < 30 Sek.)
-                if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
-                    return false;
-                }
-
                 return true;
             });
 
-        if ($participants->isEmpty()) {
+        if ($allRecipients->isEmpty()) {
             return;
         }
 
@@ -347,10 +370,9 @@ class MessengerController extends Controller
         $snippet = mb_substr($message->body, 0, 80) . (mb_strlen($message->body) > 80 ? '…' : '');
         $url     = route('messenger.show', $conversation);
 
-        // In-App-Benachrichtigung (Glocke im Menü)
-
+        // In-App-Benachrichtigung (Glocke im Menü) für ALLE nicht-stummgeschalteten Teilnehmer
         $conversation->notify(
-            $participants,
+            $allRecipients,
             $title,
             "{$sender->name}: {$snippet}",
             false,
@@ -360,16 +382,36 @@ class MessengerController extends Controller
             true
         );
 
-        // WebPush für User mit aktiven Push-Subscriptions
-        foreach ($participants as $participant) {
+        // WebPush nur für Nutzer, die den Chat NICHT gerade aktiv lesen (last_read_at > 30 Sek.)
+        // Wer gerade aktiv im Chat ist, sieht die Nachricht direkt – kein Push-Spam nötig.
+        $pushRecipients = $allRecipients->filter(function ($user) {
+            $pivot = $user->pivot;
+            if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
+                return false;
+            }
+            return true;
+        });
+
+        // WebPush für User mit aktiven Push-Subscriptions.
+        // Cooldown: max. eine Push-Benachrichtigung pro Nutzer/Konversation alle 10 Minuten,
+        // damit bei Gruppen-Aktivität keine Flut von Meldungen entsteht.
+        $pushCooldownMinutes = 10;
+
+        foreach ($pushRecipients as $participant) {
             try {
                 if ($participant->pushSubscriptions()->exists()) {
-                    $participant->notify(
-                        new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
-                    );
+                    $cacheKey = "messenger_push_{$participant->id}_{$conversation->id}";
+                    // Cache::add() setzt den Wert NUR, wenn der Key noch nicht existiert.
+                    // Gibt true zurück → erste Push-Mitteilung im Cooldown-Fenster → senden.
+                    // Gibt false zurück → innerhalb des Fensters bereits benachrichtigt → überspringen.
+                    if (Cache::add($cacheKey, true, now()->addMinutes($pushCooldownMinutes))) {
+                        $participant->notify(
+                            new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
+                        );
+                    }
                 }
             } catch (\Exception $e) {
-                \Log::warning("Messenger WebPush fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
+                Log::warning("Messenger WebPush fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
             }
         }
     }

@@ -106,9 +106,18 @@ function readNotification(id) {
                                class="block px-4 py-3 text-decoration-none @if(!$item->read) border-l-4 @else opacity-60 @endif"
                                style="@if(!$item->read) background-color: var(--color-primary-light); border-left-color: var(--color-primary); @endif">
                                 <div class="flex gap-3">
-                                    @if($item['icon'])
+                                    @php
+                                        $iconValue = $item['icon'] ?? '';
+                                        $isFaIcon  = $iconValue && str_starts_with($iconValue, 'fa');
+                                    @endphp
+                                    @if($isFaIcon)
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+                                             style="background-color: var(--color-avatar-bg);">
+                                            <i class="{{ $iconValue }} text-white text-xl"></i>
+                                        </div>
+                                    @elseif($iconValue)
                                         <div class="flex-shrink-0">
-                                            <img src="{{$item['icon']}}"
+                                            <img src="{{ $iconValue }}"
                                                  alt="Icon"
                                                  class="w-12 h-12 rounded-full object-cover border-2"
                                                  style="border-color: var(--color-card-border);">
