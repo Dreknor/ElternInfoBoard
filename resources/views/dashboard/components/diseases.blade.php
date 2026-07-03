@@ -1,6 +1,6 @@
 {{-- Dashboard-Widget: Meldepflichtige Erkrankungen --}}
 @canany(['manage diseases', 'see diseases'])
-    @if($dashboardDiseasesWidget !== null)
+    @if(!$dashboardDiseasesWidget->isEmpty())
     <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
             <!-- Header -->
             <div class="px-4 py-3 border-b d-flex justify-content-between align-items-center"
