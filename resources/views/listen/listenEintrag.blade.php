@@ -16,8 +16,8 @@
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <!-- Header -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 border-b border-blue-800 @if($liste->active == 0) from-cyan-500 to-cyan-600 border-cyan-700 @endif">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-2xl font-bold text-white flex items-center gap-3 mb-0">
+                <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+                    <h2 class="text-xl sm:text-2xl font-bold text-white flex flex-wrap items-center gap-2 mb-0">
                         <i class="fas fa-list-check"></i>
                         {{ $liste->listenname }}
                         @if($liste->active == 0)
@@ -29,16 +29,16 @@
                     </h2>
 
                     @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
                             <a href="{{ route('listen.export-excel.termine', ['id' => $liste->id]) }}"
                                class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-blue-600 font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-file-excel"></i>
-                                <span class="hidden md:inline">Excel</span>
+                                <span>Excel</span>
                             </a>
                             <button onclick="generatePDF()"
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-red-600 font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-file-pdf"></i>
-                                <span class="hidden md:inline">PDF</span>
+                                <span>PDF</span>
                             </button>
                         </div>
                     @endif
