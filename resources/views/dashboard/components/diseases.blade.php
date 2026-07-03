@@ -28,12 +28,7 @@
 
             <!-- Body -->
             <div class="p-4" style="background: var(--color-widget-body-bg);">
-                @if($dashboardDiseasesWidget->isEmpty())
-                    <div class="text-center py-6">
-                        <i class="fas fa-check-circle text-4xl text-green-500 mb-3 d-block"></i>
-                        <p class="mb-0" style="color: var(--color-text-secondary);">Keine aktuellen Erkrankungen vorhanden</p>
-                    </div>
-                @else
+                @if(!$dashboardDiseasesWidget->isEmpty())
                     <div class="space-y-2">
                         @foreach($dashboardDiseasesWidget as $disease)
                             <div class="p-3 rounded-lg"
