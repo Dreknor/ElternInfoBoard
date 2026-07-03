@@ -66,6 +66,9 @@
                         <p class="text-xs text-gray-500 mt-1" title="Aktuell bestätigt: Ø {{ $stats['avgPercent'] }}%">
                             Erwartet: Ø {{ $stats['expectedAvgPercent'] }}% Erfüllung
                         </p>
+                        <p class="text-xs text-gray-500 mt-1" title="Aktuell bestätigt: Ø {{ $stats['avgPercent'] }}%">
+                            Enthält geplante zukünftige Stunden
+                        </p>
                     </div>
                     <div class="bg-yellow-100 rounded-full p-3">
                         <i class="fas fa-hourglass-half text-2xl text-yellow-600" aria-hidden="true"></i>
