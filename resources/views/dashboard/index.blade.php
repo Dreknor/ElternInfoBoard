@@ -261,24 +261,29 @@
                     <i class="fas fa-bolt"></i> Schnellzugriff
                 </h5>
                 <div class="row">
-                    @can('view schickzeiten')
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <a href="{{ url('/schickzeiten') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
-                                <i class="fas fa-clock text-blue-600" style="font-size: 2rem;"></i>
-                                <p class="text-gray-800 font-semibold mt-2 mb-0">Hort</p>
-                            </a>
-                        </div>
-                    @endcan
+                    @if($modules->where('setting', 'Schickzeiten')->isNotEmpty())
+                        @can('view schickzeiten')
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url('/schickzeiten') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
+                                    <i class="fas fa-clock text-blue-600" style="font-size: 2rem;"></i>
+                                    <p class="text-gray-800 font-semibold mt-2 mb-0">Hort</p>
+                                </a>
+                            </div>
+                        @endcan
+                    @endif
 
-                    @can('view krankmeldung')
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <a href="{{ url('/krankmeldung') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
-                                <i class="fas fa-notes-medical text-red-600" style="font-size: 2rem;"></i>
-                                <p class="text-gray-800 font-semibold mt-2 mb-0">Krankmeldung</p>
-                            </a>
-                        </div>
-                    @endcan
+                    @if($modules->where('setting', 'Krankmeldung')->isNotEmpty())
+                        @can('view krankmeldung')
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url('/krankmeldung') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
+                                    <i class="fas fa-notes-medical text-red-600" style="font-size: 2rem;"></i>
+                                    <p class="text-gray-800 font-semibold mt-2 mb-0">Krankmeldung</p>
+                                </a>
+                            </div>
+                        @endcan
+                    @endif
 
+                    @if($modules->where('setting', 'Vertretungsplan')->isNotEmpty())
                         @can('view vertretungsplan')
                             <div class="col-md-3 col-sm-6 mb-3">
                                 <a href="{{ url('/vertretungsplan') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
@@ -287,25 +292,29 @@
                                 </a>
                             </div>
                         @endcan
+                    @endif
 
+                    @if($modules->where('setting', 'Kinderverwaltung')->isNotEmpty())
+                        @can('view child')
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url('/care/children') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
+                                    <i class="fas fa-child text-purple-600" style="font-size: 2rem;"></i>
+                                    <p class="text-gray-800 font-semibold mt-2 mb-0">Kinder</p>
+                                </a>
+                            </div>
+                        @endcan
+                    @endif
 
-                    @can('view child')
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <a href="{{ url('/care/children') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
-                                <i class="fas fa-child text-purple-600" style="font-size: 2rem;"></i>
-                                <p class="text-gray-800 font-semibold mt-2 mb-0">Kinder</p>
-                            </a>
-                        </div>
-                    @endcan
-
-                    @can('view listen')
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <a href="{{ url('/listen') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
-                                <i class="fas fa-list text-green-600" style="font-size: 2rem;"></i>
-                                <p class="text-gray-800 font-semibold mt-2 mb-0">Listen</p>
-                            </a>
-                        </div>
-                    @endcan
+                    @if($modules->where('setting', 'Listen')->isNotEmpty())
+                        @can('view listen')
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url('/listen') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
+                                    <i class="fas fa-list text-green-600" style="font-size: 2rem;"></i>
+                                    <p class="text-gray-800 font-semibold mt-2 mb-0">Listen</p>
+                                </a>
+                            </div>
+                        @endcan
+                    @endif
                 </div>
             </div>
         </div>
