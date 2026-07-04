@@ -34,7 +34,7 @@ class ComposerServiceProvider extends ServiceProvider
         // you will need ModulesComposer@compose method
         //
         View::composer(
-            'layouts.elements.modules', ModulesComposer::class
+            ['layouts.elements.modules', 'dashboard.index'], ModulesComposer::class
         );
 
         View::composer(

@@ -112,13 +112,26 @@ class PflichtstundeController extends Controller implements HasMiddleware
             $processed->push($user->id);
         }
 
-        // Statistiken berechnen
-        // ... [Rang-Berechnung bleibt wie zuvor] ...
+        // Sortiere nach Fortschritt absteigend für Rang-Berechnung
+        $sorted = $familyStats->sortByDesc('progress')->values();
+
+        // Rang der aktuellen Familie bestimmen
+        $yourRank = 1;
+        foreach ($sorted as $index => $family) {
+            if (in_array($currentUser->id, $family['user_ids'])) {
+                $yourRank = $index + 1;
+                break;
+            }
+        }
+
+        $avgProgress = round($familyStats->avg('progress') ?? 0, 2);
 
         return [
-            // ... andere Stats ...
-            'avgPercent'         => round($familyStats->avg('progress') ?? 0, 2),
-            'expectedAvgPercent' => round($familyStats->avg('expected_progress') ?? 0, 2), // Neue Rückgabe
+            'your_rank'          => $yourRank,
+            'total_parents'      => $familyStats->count(),
+            'avg_progress'       => $avgProgress,
+            'avgPercent'         => $avgProgress,
+            'expectedAvgPercent' => round($familyStats->avg('expected_progress') ?? 0, 2),
         ];
     }
 

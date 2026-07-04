@@ -16,8 +16,8 @@
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <!-- Header -->
             <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 border-b border-teal-700 @if($liste->active == 0) from-cyan-500 to-cyan-600 border-cyan-700 @endif">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-2xl font-bold text-white flex items-center gap-3 mb-0">
+                <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+                    <h2 class="text-xl sm:text-2xl font-bold text-white flex flex-wrap items-center gap-2 mb-0">
                         <i class="fas fa-calendar-check"></i>
                         {{ $liste->listenname }}
                         @if($liste->active == 0)
@@ -28,16 +28,16 @@
                     </h2>
 
                     @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
                             <button class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200"
                                     data-toggle="modal" data-target="#createEintragungModal">
                                 <i class="fas fa-plus"></i>
-                                <span class="hidden md:inline">Termin</span>
+                                <span>Termin</span>
                             </button>
                             <a href="{{ url('listen/' . $liste->id . '/export') }}"
                                class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-print"></i>
-                                <span class="hidden md:inline">Druck</span>
+                                <span>Druck</span>
                             </a>
 
                             {{-- iCal-Download-Dropdown --}}
@@ -45,7 +45,7 @@
                                 <button @click="open = !open"
                                         class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
                                     <i class="fas fa-calendar-download"></i>
-                                    <span class="hidden md:inline">Kalender</span>
+                                    <span>Kalender</span>
                                     <i class="fas fa-chevron-down text-xs ml-1"></i>
                                 </button>
                                 <div x-show="open"
@@ -82,7 +82,7 @@
                             <button type="button" id="showAll"
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-eye"></i>
-                                <span class="hidden md:inline">Alle</span>
+                                <span>Alle</span>
                             </button>
                         </div>
                     @endif
