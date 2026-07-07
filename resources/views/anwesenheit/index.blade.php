@@ -57,7 +57,7 @@
     <!-- Modal -->
     <div class="modal fade" id="childModal" tabindex="-1" role="dialog" aria-labelledby="childModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document"
-             style="max-width: min(95vw, 900px); width: min(95vw, 900px); margin: 1.5rem auto; padding: 0;">
+             style="max-width: min(75vw, 900px); width: min(75vw, 900px); margin: 1.5rem auto; padding: 0;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="childModalLabel">Übersicht</h5>
