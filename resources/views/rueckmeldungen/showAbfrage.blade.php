@@ -26,6 +26,16 @@
                 </div>
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12 col-md-4">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            </div>
+                            <input type="text" id="nameSearch" class="form-control" placeholder="Nach Name suchen…">
+                        </div>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover table-striped table-sm" id="abfrageTable">
                         <thead>
@@ -108,19 +118,24 @@
     <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 
     <script>
-        $('#abfrageTable').dataTable({
+        var table = $('#abfrageTable').dataTable({
             paging: false,
+            searching: true,
+            dom: 'rtip',
             order: [[1, 'asc']],
             columnDefs: [
                 { orderable: false, targets: 0 }
             ],
             language: {
-                search: "Suche:",
                 zeroRecords: "Keine Einträge gefunden",
                 info: "_TOTAL_ Einträge",
                 infoEmpty: "Keine Einträge",
                 infoFiltered: "(gefiltert aus _MAX_ Einträgen)"
             }
+        });
+
+        $('#nameSearch').on('keyup', function () {
+            table.api().column(1).search(this.value).draw();
         });
     </script>
 @endpush
