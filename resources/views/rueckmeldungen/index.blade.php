@@ -17,73 +17,75 @@
                 </div>
             </div>
             <div class="card-body">
-                <table class="table table-hover" id="rueckmeldungenTable">
-                    <thead>
-                    <tr>
-                        <td></td>
-                        <th>Nachricht</th>
-                        <th>Ende</th>
-                        <th>Typ</th>
-                        <th>Anzahl</th>
-                        <td></td>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($rueckmeldungen as $rueckmeldung)
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm" id="rueckmeldungenTable">
+                        <thead>
                         <tr>
-                            <td>
-                                @if($rueckmeldung->type == "email" or $rueckmeldung->type == "abfrage" or $rueckmeldung->type == "terminliste")
-                                    <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-                                @endif
-                            </td>
-                            <td>
-                                {{$rueckmeldung->post->header}}
-                            </td>
-                            <td>
-                                {{$rueckmeldung->ende->format('d.m.Y')}}
-                                @if($rueckmeldung->pflicht)
-                                    <i class="text-danger fas fa-exclamation-circle"></i>
-                                @endif
-                            </td>
-                            <td>
-                                @switch($rueckmeldung->type)
-                                    @case('email')
-                                        <i class="fas fa-envelope" title="Email an {{$rueckmeldung->empfaenger}}"></i>
-                                        @break
-                                    @case('poll')
-                                        <i class="fas fa-poll" title="Umfrage"></i>
-                                        @break
-                                    @case('bild')
-                                        <i class="fas fa-image" title="Bild"></i>
-                                        @break
-                                    @case('abfrage')
-                                        <i class="fas fa-table" title="Abfrage"></i>
-                                        @break
-                                    @case('terminliste')
-                                        <i class="fas fa-calendar-check" title="Terminliste: {{$rueckmeldung->liste?->listenname ?? 'N/A'}}"></i>
-                                        @break
-                                @endswitch
-                            </td>
-                            <td>
-                                @if($rueckmeldung->type == 'terminliste')
-                                    {{$rueckmeldung->liste?->termine()->whereBetween('termin', [$rueckmeldung->terminliste_start_date, $rueckmeldung->terminliste_end_date])->whereNotNull('reserviert_fuer')->count() ?? 0}}
-                                @else
-                                    {{$rueckmeldung->rueckmeldungen}}
-                                @endif
-                            </td>
-                            <td>
-                                @if($rueckmeldung->type == "email" or $rueckmeldung->type == 'abfrage')
-                                    <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/download")}}">
-                                        <i class="fa fa-download"></i>
-                                    </a>
-                                @endif
-                            </td>
+                            <th class="text-center" style="width:40px;"></th>
+                            <th>Nachricht</th>
+                            <th style="white-space:nowrap;">Ende</th>
+                            <th style="width:50px;">Typ</th>
+                            <th style="width:60px;">Anzahl</th>
+                            <th style="width:40px;" class="text-center"></th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($rueckmeldungen as $rueckmeldung)
+                            <tr>
+                                <td class="text-center">
+                                    @if($rueckmeldung->type == "email" or $rueckmeldung->type == "abfrage" or $rueckmeldung->type == "terminliste")
+                                        <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/show/")}}">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
+                                    @endif
+                                </td>
+                                <td>
+                                    {{$rueckmeldung->post->header}}
+                                </td>
+                                <td style="white-space:nowrap;">
+                                    {{$rueckmeldung->ende->format('d.m.Y')}}
+                                    @if($rueckmeldung->pflicht)
+                                        <i class="text-danger fas fa-exclamation-circle"></i>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @switch($rueckmeldung->type)
+                                        @case('email')
+                                            <i class="fas fa-envelope" title="Email an {{$rueckmeldung->empfaenger}}"></i>
+                                            @break
+                                        @case('poll')
+                                            <i class="fas fa-poll" title="Umfrage"></i>
+                                            @break
+                                        @case('bild')
+                                            <i class="fas fa-image" title="Bild"></i>
+                                            @break
+                                        @case('abfrage')
+                                            <i class="fas fa-table" title="Abfrage"></i>
+                                            @break
+                                        @case('terminliste')
+                                            <i class="fas fa-calendar-check" title="Terminliste: {{$rueckmeldung->liste?->listenname ?? 'N/A'}}"></i>
+                                            @break
+                                    @endswitch
+                                </td>
+                                <td class="text-center">
+                                    @if($rueckmeldung->type == 'terminliste')
+                                        {{$rueckmeldung->liste?->termine()->whereBetween('termin', [$rueckmeldung->terminliste_start_date, $rueckmeldung->terminliste_end_date])->whereNotNull('reserviert_fuer')->count() ?? 0}}
+                                    @else
+                                        {{$rueckmeldung->rueckmeldungen}}
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($rueckmeldung->type == "email" or $rueckmeldung->type == 'abfrage')
+                                        <a href="{{url('rueckmeldungen/'.$rueckmeldung->id."/download")}}">
+                                            <i class="fa fa-download"></i>
+                                        </a>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

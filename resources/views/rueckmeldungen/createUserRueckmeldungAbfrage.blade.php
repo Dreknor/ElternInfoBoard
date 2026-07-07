@@ -22,12 +22,15 @@
                     @csrf
                     <div class="container-fluid">
                         <div class="row">
-                            <label for="user">Für welchen Benutzer?</label>
-                            <select class="custom-select" name="user">
-                                @foreach($users as $user)
-                                    <option value="{{$user->id}}">{{$user->name}}</option>
-                                @endforeach
-                            </select>
+                            <div class="col-12">
+                                <label for="user">Für welchen Benutzer?</label>
+                                <select class="form-control" id="user-select" name="user" style="width:100%;">
+                                    <option value="">— Elternteil auswählen —</option>
+                                    @foreach($users as $user)
+                                        <option value="{{$user->id}}">{{trim($user->familienname)}}, {{$user->vorname}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="row mt-4 border-top p-4">
                             <div class="container-fluid">
@@ -84,3 +87,27 @@
     </div>
 
 @endsection
+
+@section('css')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <style>
+        .select2-container { width: 100% !important; }
+    </style>
+@endsection
+
+@push('js')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#user-select').select2({
+                placeholder: '— Elternteil auswählen —',
+                allowClear: true,
+                language: {
+                    noResults: function () { return 'Keine Treffer'; },
+                    searching: function () { return 'Suche…'; }
+                }
+            });
+        });
+    </script>
+@endpush
+
