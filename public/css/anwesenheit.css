@@ -120,6 +120,24 @@ body {
     text-align: center;
 }
 
+/* Bootstrap-Compat: rounded-circle fehlt im Tailwind-Layer */
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+/* Status-Icons in der Kinderliste */
+.status-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 12px;
+}
+
 .badge {
 
     font-weight: 600;
