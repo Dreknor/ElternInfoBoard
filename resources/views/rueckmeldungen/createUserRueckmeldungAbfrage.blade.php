@@ -27,7 +27,7 @@
                                 <select class="form-control" id="user-select" name="user" style="width:100%;">
                                     <option value="">— Elternteil auswählen —</option>
                                     @foreach($users as $user)
-                                        <option value="{{$user->id}}">{{trim($user->familienname)}}, {{$user->vorname}}</option>
+                                        <option value="{{$user->id}}">{{trim($user->familie_name)}}, {{$user->vorname}}</option>
                                     @endforeach
                                 </select>
                             </div>

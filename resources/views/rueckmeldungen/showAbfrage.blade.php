@@ -22,88 +22,82 @@
                                 neue Rückmeldung anlegen
                             </div>
                         </a>
-
                     </div>
                 </div>
             </div>
             <div class="card-body">
-                <table class="table table-bordered table-hover table-striped">
-                    <thead>
-                    <tr>
-                        <th></th>
-                        <th>
-                            Name
-                        </th>
-                        <th>
-                            Email
-                        </th>
-
-                        @foreach($rueckmeldung->options as $option)
-                            <th>
-                                {{$option->option}}
-                            </th>
-                        @endforeach
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($rueckmeldung->userRueckmeldungen as $userRueckmeldung)
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped table-sm" id="abfrageTable">
+                        <thead>
                         <tr>
-                            <td>
-                                <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/edit/'.$userRueckmeldung->id)}}">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                            </td>
-                            <td>
-                                {{$userRueckmeldung->user->name}}
-                            </td>
-                            <td>
-                                {{$userRueckmeldung->user->email}}
-                            </td>
+                            <th style="width:40px;"></th>
+                            <th>Name</th>
+                            <th>Email</th>
                             @foreach($rueckmeldung->options as $option)
-                                <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type) bg-success @endif">
-                                    @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
-                                        @switch($option->type)
-                                            @case('text')
-                                                @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
-                                                    {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
-                                                @else
-                                                    <i class="fa fa-slash ">
-                                                        @endif
-                                                        @break
-                                                        @case('textbox')
-                                                            @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
-                                                                {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
-                                                            @else
-                                                                <i class="fa fa-slash ">
-                                                                    @endif
-                                                                    @break
-                                                                    @case('check')
-                                                                        <i class="fa fa-check">
-                                                                            @break
-                                                                            @endswitch
-                                                                            @else
-                                                                                <i class="fa fa-slash ">
-                                                @endif
-                                </td>
+                                <th>{{$option->option}}</th>
                             @endforeach
                         </tr>
-                    @endforeach
-                    <tr class="text-center">
-                        <th colspan="2">
-                            Summe:
-                        </th>
-                        @foreach($rueckmeldung->options as $option)
-                            <th>
-                                @if($option->type == 'check')
-                                    {{$option->answers->count()}}
-                                @else
-                                    {{$option->answers->where('answer', '!=', '')->count()}}
-                                @endif
-                            </th>
+                        </thead>
+                        <tbody>
+                        @foreach($rueckmeldung->userRueckmeldungen as $userRueckmeldung)
+                            <tr>
+                                <td class="text-center">
+                                    <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/edit/'.$userRueckmeldung->id)}}">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
+                                <td data-sort="{{trim($userRueckmeldung->user->familie_name)}}">
+                                    {{trim($userRueckmeldung->user->familie_name)}}, {{$userRueckmeldung->user->vorname}}
+                                </td>
+                                <td>
+                                    {{$userRueckmeldung->user->email}}
+                                </td>
+                                @foreach($rueckmeldung->options as $option)
+                                    <td class="text-center @if($userRueckmeldung->answers->contains('option_id', $option->id) and $option->type) bg-success @endif">
+                                        @if($userRueckmeldung->answers->contains('option_id', $option->id) and $userRueckmeldung->answers->where('option_id', $option->id)->first() != null)
+                                            @switch($option->type)
+                                                @case('text')
+                                                    @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
+                                                        {{$userRueckmeldung->answers->where('option_id', $option->id)->first()->answer}}
+                                                    @else
+                                                        <i class="fa fa-slash"></i>
+                                                    @endif
+                                                    @break
+                                                @case('textbox')
+                                                    @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
+                                                        {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
+                                                    @else
+                                                        <i class="fa fa-slash"></i>
+                                                    @endif
+                                                    @break
+                                                @case('check')
+                                                    <i class="fa fa-check"></i>
+                                                    @break
+                                            @endswitch
+                                        @else
+                                            <i class="fa fa-slash"></i>
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
                         @endforeach
-                    </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                        <tfoot>
+                        <tr class="text-center table-secondary">
+                            <th colspan="3">Summe:</th>
+                            @foreach($rueckmeldung->options as $option)
+                                <th>
+                                    @if($option->type == 'check')
+                                        {{$option->answers->count()}}
+                                    @else
+                                        {{$option->answers->where('answer', '!=', '')->count()}}
+                                    @endif
+                                </th>
+                            @endforeach
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -112,13 +106,22 @@
 
 @push('js')
     <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="{{asset('js/moment-with-locales.js')}}"></script>
-    <script src="https://cdn.datatables.net/plug-ins/1.12.1/sorting/datetime-moment.js"></script>
 
     <script>
-        $.fn.dataTable.moment('D.M.YYYY');
-        $('#rueckmeldungenTable').dataTable();
-
+        $('#abfrageTable').dataTable({
+            paging: false,
+            order: [[1, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: 0 }
+            ],
+            language: {
+                search: "Suche:",
+                zeroRecords: "Keine Einträge gefunden",
+                info: "_TOTAL_ Einträge",
+                infoEmpty: "Keine Einträge",
+                infoFiltered: "(gefiltert aus _MAX_ Einträgen)"
+            }
+        });
     </script>
 @endpush
 
