@@ -156,23 +156,67 @@
 @endif
 
 @if($nachricht->rueckmeldung->ende->endOfDay()->greaterThan(\Carbon\Carbon::now()) and ($nachricht->rueckmeldung->multiple == true or $user->getRueckmeldung()->where('post_id', $nachricht->id)->count()==0))
-    <!-- Survey Form -->
+    <!-- Survey Form with Confirmation Step -->
     <div id="rueckmeldeForm_{{$nachricht->id}}"
-         class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden @if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first())) d-none @endif">
+         class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden @if(!is_null($user->getRueckmeldung()->where('post_id', $nachricht->id)->first())) d-none @endif"
+         x-data="{
+             showConfirmation: false,
+             answerSummary: [],
+             emptyError: false,
+             options: @js($nachricht->rueckmeldung->options->toArray()),
+
+             prepareSubmit() {
+                 this.emptyError = false;
+                 const form = this.$refs.abfrageForm;
+                 const formData = new FormData(form);
+
+                 this.answerSummary = [];
+                 const checkedOptions = formData.getAll('answers[options][]');
+
+                 for (const option of this.options) {
+                     if (option.type === 'check') {
+                         if (checkedOptions.includes(String(option.id))) {
+                             this.answerSummary.push({ question: option.option, answer: 'check', type: 'check' });
+                         }
+                     } else if (option.type === 'text' || option.type === 'textbox') {
+                         const answer = formData.get('answers[text][' + option.id + ']');
+                         if (answer && answer.trim() !== '') {
+                             this.answerSummary.push({ question: option.option, answer: answer, type: 'text' });
+                         }
+                     }
+                 }
+
+                 if (this.answerSummary.length === 0) {
+                     this.emptyError = true;
+                     return;
+                 }
+
+                 this.showConfirmation = true;
+             },
+
+             submitForm() {
+                 this.$refs.abfrageForm.submit();
+             }
+         }">
 
         <!-- Form Header -->
         <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-3">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-poll-h text-white"></i>
+                    <i class="fas fa-poll-h text-white" x-show="!showConfirmation"></i>
+                    <i class="fas fa-clipboard-check text-white" x-show="showConfirmation" x-cloak></i>
                 </div>
-                <h6 class="text-white font-semibold mb-0">{{$nachricht->rueckmeldung->text}}</h6>
+                <div>
+                    <h6 class="text-white font-semibold mb-0">{{$nachricht->rueckmeldung->text}}</h6>
+                    <p class="text-white/70 text-xs mb-0" x-show="!showConfirmation">Bitte beantworten Sie die folgenden Fragen</p>
+                    <p class="text-white/70 text-xs mb-0" x-show="showConfirmation" x-cloak>Bitte überprüfen Sie Ihre Antworten vor dem Absenden</p>
+                </div>
             </div>
         </div>
 
-        <!-- Form Body -->
-        <div class="p-4">
-            <form action="{{url('userrueckmeldung/'.$nachricht->rueckmeldung->id.'')}}" method="POST">
+        <!-- Schritt 1: Formular ausfüllen -->
+        <div class="p-4" x-show="!showConfirmation">
+            <form x-ref="abfrageForm" action="{{url('userrueckmeldung/'.$nachricht->rueckmeldung->id)}}" method="POST" @submit.prevent="prepareSubmit()">
                 @csrf
                 <div class="space-y-4">
                     @foreach($nachricht->rueckmeldung->options as $option)
@@ -229,15 +273,69 @@
                         @endif
                     @endforeach
 
-                    <!-- Submit Button -->
+                    <!-- Fehler bei leerer Abgabe -->
+                    <div x-show="emptyError" x-cloak
+                         class="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-red-500 flex-shrink-0"></i>
+                        <p class="text-red-600 text-sm font-medium mb-0">
+                            Bitte beantworten Sie mindestens eine Frage.
+                        </p>
+                    </div>
+
+                    <!-- Weiter-Button -->
                     <button type="submit"
                             class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                             id="{{$nachricht->rueckmeldung->id}}_button">
-                        <i class="fas fa-paper-plane mr-2"></i>
-                        Antworten absenden
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        Weiter &amp; Überprüfen
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Schritt 2: Antworten bestätigen -->
+        <div class="p-4" x-show="showConfirmation" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0">
+
+            <p class="text-sm text-gray-600 mb-4 flex items-center gap-2">
+                <i class="fas fa-info-circle text-indigo-500"></i>
+                Bitte überprüfen Sie Ihre Antworten, bevor Sie absenden:
+            </p>
+
+            <div class="space-y-2 mb-6">
+                <template x-for="(item, index) in answerSummary" :key="index">
+                    <div class="flex items-start justify-between gap-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <span class="text-sm text-gray-700 flex-1 leading-snug" x-text="item.question"></span>
+                        <div class="flex-shrink-0">
+                            <template x-if="item.type === 'check'">
+                                <div class="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center">
+                                    <i class="fa fa-check text-white text-xs"></i>
+                                </div>
+                            </template>
+                            <template x-if="item.type !== 'check'">
+                                <span class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-lg text-sm font-medium max-w-[12rem] text-right break-words" x-text="item.answer"></span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button"
+                        @click="showConfirmation = false"
+                        class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Zurück
+                </button>
+                <button type="button"
+                        @click="submitForm()"
+                        class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Antworten absenden
+                </button>
+            </div>
         </div>
     </div>
 
@@ -308,17 +406,11 @@
 
 @push('js')
 <script type="text/javascript">
-    // Limit the number of checkboxes that can be selected at one time
+    // Anzahl der auswählbaren Checkboxen begrenzen
     var checkboxLimit_{{$nachricht->rueckmeldung->id}} = {{($nachricht->rueckmeldung->max_answers > 0) ? $nachricht->rueckmeldung->max_answers : 100}};
     $('input.abfrage_{{$nachricht->rueckmeldung->id}}:checkbox').click(function () {
         var checkTest = $('input.abfrage_{{$nachricht->rueckmeldung->id}}:checked').length >= checkboxLimit_{{$nachricht->rueckmeldung->id}};
         $('input[type=checkbox][name="answers[options][]"]').not(":checked").attr("disabled", checkTest);
-
-        if ($('input[name="answers[options][]"]:checked').length < 1) {
-            $('#{{$nachricht->rueckmeldung->id}}_button').removeClass('visible').addClass('invisible');
-        } else {
-            $('#{{$nachricht->rueckmeldung->id}}_button').addClass('visible').removeClass('invisible');
-        }
     });
 </script>
 @endpush

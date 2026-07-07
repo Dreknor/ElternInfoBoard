@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller implements HasMiddleware
@@ -37,15 +38,30 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
             ]);
         }
 
-        $userRueckmeldung = new UserRueckmeldungen([
-            'post_id' => $rueckmeldung->post->id,
-            'users_id' => auth()->id(),
-            'rueckmeldung_number' => auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() + 1,
-            'text' => '',
-        ]);
-        $userRueckmeldung->save();
+        // Server-seitige Validierung: mindestens eine Antwort muss vorhanden sein
+        $requestAnswers = $request->input('answers', []);
+        $hasOptions = !empty($requestAnswers['options'] ?? []);
+        $hasText = collect($requestAnswers['text'] ?? [])->filter(fn ($v) => filled($v))->isNotEmpty();
 
-        $this->generateAnswerModels($request, $userRueckmeldung);
+        if (! $hasOptions && ! $hasText) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Bitte beantworten Sie mindestens eine Frage.',
+            ]);
+        }
+
+        // Transaktion: UserRueckmeldung und Antworten werden gemeinsam gespeichert
+        DB::transaction(function () use ($request, $rueckmeldung) {
+            $userRueckmeldung = new UserRueckmeldungen([
+                'post_id' => $rueckmeldung->post->id,
+                'users_id' => auth()->id(),
+                'rueckmeldung_number' => auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() + 1,
+                'text' => '',
+            ]);
+            $userRueckmeldung->save();
+
+            $this->generateAnswerModels($request, $userRueckmeldung);
+        });
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -205,8 +221,11 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
     {
         $answers = [];
 
-        if (array_key_exists('options', $request->answers)) {
-            foreach ($request->answers['options'] as $option) {
+        // Sicheres Lesen der Antworten – verhindert TypeError wenn `answers` null ist
+        $requestAnswers = $request->input('answers', []);
+
+        if (array_key_exists('options', $requestAnswers)) {
+            foreach ($requestAnswers['options'] as $option) {
                 $answers[] = [
                     'rueckmeldung_id' => $userRueckmeldung->id,
                     'user_id' => auth()->id(),
@@ -215,17 +234,23 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
                 ];
             }
         }
-        if (array_key_exists('text', $request->answers)) {
-            foreach ($request->answers['text'] as $key => $answer) {
-                $answers[] = [
-                    'rueckmeldung_id' => $userRueckmeldung->id,
-                    'user_id' => auth()->id(),
-                    'option_id' => $key,
-                    'answer' => $answer,
-                ];
+        if (array_key_exists('text', $requestAnswers)) {
+            foreach ($requestAnswers['text'] as $key => $answer) {
+                // Leere Textantworten nicht speichern
+                if (filled($answer)) {
+                    $answers[] = [
+                        'rueckmeldung_id' => $userRueckmeldung->id,
+                        'user_id' => auth()->id(),
+                        'option_id' => $key,
+                        'answer' => $answer,
+                    ];
+                }
             }
         }
 
-        AbfrageAntworten::insert($answers);
+        // Nur einfügen wenn tatsächlich Antworten vorhanden sind
+        if (! empty($answers)) {
+            AbfrageAntworten::insert($answers);
+        }
     }
 }
