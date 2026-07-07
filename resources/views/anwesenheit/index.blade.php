@@ -198,22 +198,20 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="Abfrage" role="tabpanel" aria-labelledby="abfrage-tab">
-                        <div class="tab-content border-top" id="myTabContent">
-                            <div class="modal-body">
-                                <div class="table-responsive-md">
-                                    <table class="table table-striped">
-                                        <thead>
-                                        <tr>
-                                            <th>Datum</th>
-                                            <th>angemeldet?</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
+                        <div class="modal-body border-top">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>angemeldet?</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
 
-                                        </tbody>
-                                    </table>
+                                    </tbody>
+                                </table>
 
-                                </div>
                             </div>
                         </div>
                     </div>
