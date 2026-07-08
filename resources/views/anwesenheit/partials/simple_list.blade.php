@@ -7,8 +7,8 @@
             <div class="col-lg-3 col-md-6 mb-1">
                 <div class="card">
                     <div class="card-header bg-primary text-white"
-                         style="position: sticky; top: 0; z-index: 1; padding: 0.5rem;">
-                        <span class="badge badge-warning pull-right">{{ $children->where('group_id', $group->id)->count() }}</span>
+                         style="position: sticky; top: 0; z-index: 1; padding: 0.5rem; background-color: #007bff !important; color: #fff !important;">
+                        <span class="badge badge-warning float-right">{{ $children->where('group_id', $group->id)->count() }}</span>
 
                         <h3 style="margin: 0;">{{ $group->name }}</h3>
                     </div>
@@ -18,7 +18,7 @@
                                 @continue
                             @endif
                             <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 60px; z-index: 1; margin: 0.5rem 0;">
-                                {{ $class->name }}  <span class="badge badge-primary pull-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
+                                {{ $class->name }}  <span class="badge badge-primary float-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
                             </h4>
                             @php
                                 $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)?->sortBy('last_name');
@@ -43,25 +43,24 @@
                                         style="padding: 0.5rem;">
                                         <div class="container-fluid">
                                             <div class="row">
-                                                <div class="col-2 d-flex justify-content-center align-items-center">
+                                                <div class="col-2 d-flex justify-content-center align-items-center" style="gap: 4px; flex-wrap: wrap;">
                                                     @if($child->should_be_today() and !$child->checkedIn())
-                                                        <div class="bg-info text-white rounded-circle" style="width: 25px; height: 25px; display: flex; justify-content: center; align-items: center;">
-                                                            <i class="fas fa-question"></i>
+                                                        <div title="Anwesenheit noch nicht bestätigt"
+                                                             style="width:26px;height:26px;border-radius:50%;background-color:#17a2b8;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                                            <i class="fas fa-question" style="font-size:12px;"></i>
                                                         </div>
-                                                    @else
-
                                                     @endif
-
 
                                                     @if($child->hasNotice())
-                                                        <div class=" text-white notice rounded-circle @if($child->noticeToday()->isNew()) blink @else bg-info @endif" >
-                                                            <i class="fas fa-envelope"></i>
+                                                        <div title="Nachricht vorhanden"
+                                                             class="@if($child->noticeToday()->isNew()) blink @endif"
+                                                             style="width:26px;height:26px;border-radius:50%;background-color:#fd7e14;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                                            <i class="fas fa-envelope" style="font-size:11px;"></i>
                                                         </div>
                                                     @endif
 
-
                                                     @if($child->krankmeldungToday())
-                                                        <div class="badge badge-danger">
+                                                        <div class="badge badge-danger" style="font-size:0.7rem;">
                                                             <i class="fas fa-ban"></i> Krank
                                                         </div>
                                                     @endif

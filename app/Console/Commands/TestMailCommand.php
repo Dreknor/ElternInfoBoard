@@ -33,7 +33,7 @@ class TestMailCommand extends Command
         $this->info('SMTP Host: ' . (config('mail.mailers.smtp.host') ?? 'NICHT GESETZT'));
         $this->info('SMTP Port: ' . (config('mail.mailers.smtp.port') ?? 'NICHT GESETZT'));
         $this->info('SMTP Username: ' . (config('mail.mailers.smtp.username') ?? 'NICHT GESETZT'));
-        $this->info('SMTP Encryption: ' . (config('mail.mailers.smtp.encryption') ?? 'NICHT GESETZT'));
+        $this->info('SMTP Scheme: ' . (config('mail.mailers.smtp.scheme') ?? 'NICHT GESETZT'));
         $this->info('From Address: ' . (config('mail.from.address') ?? 'NICHT GESETZT'));
         $this->info('From Name: ' . (config('mail.from.name') ?? 'NICHT GESETZT'));
         $this->info('');

@@ -56,31 +56,39 @@
 
     <!-- Modal -->
     <div class="modal fade" id="childModal" tabindex="-1" role="dialog" aria-labelledby="childModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document"
+             style="max-width: min(75vw, 900px); width: min(75vw, 900px); margin: 1.5rem auto; padding: 0;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="childModalLabel">Übersicht</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close modal-close-btn" data-dismiss="modal" aria-label="Schließen">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="card-body">
-                    <ul class="nav nav-pills card-header-tabs  nav-fill"  id="myTab" role="tablist">
-                        <li class="nav-item  bg-gradient-directional-blue-grey-light ">
-                            <a class="nav-link text-dark active" id="anwesenheit-tab" data-toggle="tab" href="#Anwesenheit" role="tab" aria-controls="Anwesenheit" aria-selected="true">Anwesenheit</a>
+                <div class="modal-tabs-wrapper">
+                    <ul class="nav nav-pills nav-fill modal-tabs" id="myTab" role="tablist">
+                        <li class="nav-item bg-gradient-directional-blue-grey-light">
+                            <a class="nav-link text-dark active" id="anwesenheit-tab" data-toggle="tab" href="#Anwesenheit" role="tab" aria-controls="Anwesenheit" aria-selected="true">
+                                <i class="fas fa-child mr-1"></i> Anwesenheit
+                            </a>
                         </li>
                         <li class="nav-item bg-gradient-directional-blue-grey-light">
-                            <a class="nav-link text-dark" id="abfrage-tab" data-toggle="tab" href="#Abfrage" role="tab" aria-controls="Abfrage" aria-selected="false">Ferien</a>
+                            <a class="nav-link text-dark" id="abfrage-tab" data-toggle="tab" href="#Abfrage" role="tab" aria-controls="Abfrage" aria-selected="false">
+                                <i class="fas fa-calendar-alt mr-1"></i> Ferien
+                            </a>
                         </li>
                         <li class="nav-item bg-gradient-directional-blue-grey-light">
-                            <a class="nav-link text-dark" id="regelmaessig-tab" data-toggle="tab" href="#Regelmaessig" role="tab" aria-controls="Regelmaessig" aria-selected="false">Schickzeiten</a>
+                            <a class="nav-link text-dark" id="regelmaessig-tab" data-toggle="tab" href="#Regelmaessig" role="tab" aria-controls="Regelmaessig" aria-selected="false">
+                                <i class="fas fa-clock mr-1"></i> Schickzeiten
+                            </a>
                         </li>
                         <li class="nav-item bg-gradient-directional-grey-blue">
-                            <a class="nav-link text-dark" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false">Abholvollmacht</a>
+                            <a class="nav-link text-dark" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false">
+                                <i class="fas fa-user-check mr-1"></i> Vollmacht
+                            </a>
                         </li>
-
                     </ul>
-                </div>
+                </div><!-- /.modal-tabs-wrapper -->
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="Anwesenheit" role="tabpanel" aria-labelledby="anwesenheit-tab">
                         <div class="modal-body">
@@ -101,11 +109,15 @@
                                     </div>
                                 </div>
                                 <div class="card-footer border-top">
-                                    <button type="button" class="btn btn-danger  btn-block" id="logoutButton" style="display: none;">
-                                        <i class="fa-solid fa-shoe-prints"></i> <div id="checkoutButtonChildName" class="d-inline"></div> <div class="d-inline text-medium">Abmelden</div>
+                                    <button type="button" class="btn btn-danger btn-block action-btn" id="logoutButton" style="display: none;">
+                                        <i class="fa-solid fa-shoe-prints fa-lg"></i>
+                                        <span class="action-btn-name" id="checkoutButtonChildName"></span>
+                                        <span class="action-btn-label">Abmelden</span>
                                     </button>
-                                    <button type="button" class="btn btn-success btn-block text-greater" id="checkinButton" style="display: none;">
-                                        <i class="fa-solid fa-child-reaching"></i> <div id="checkinButtonChildName" class="d-inline"></div> <div class="d-inline text-medium"> Anmelden </div>
+                                    <button type="button" class="btn btn-success btn-block action-btn" id="checkinButton" style="display: none;">
+                                        <i class="fa-solid fa-child-reaching fa-lg"></i>
+                                        <span class="action-btn-name" id="checkinButtonChildName"></span>
+                                        <span class="action-btn-label">Anmelden</span>
                                     </button>
                                 </div>
                             </div>
@@ -125,7 +137,7 @@
                                                 <option value="genau">genau</option>
                                             </select>
                                         </div>
-                                        <div class="form-group collapse" id="genau_row">
+                                        <div class="form-group d-none" id="genau_row">
                                             <label for="schickzeitTime">Zeit</label>
                                             <input type="time" class="form-control w-100" id="schickzeitTime" name="time">
                                         </div>
@@ -176,8 +188,9 @@
 
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">schließen</button>
-
+                                <button type="button" class="btn btn-secondary btn-close-modal" data-dismiss="modal">
+                                    <i class="fas fa-times mr-1"></i> Schließen
+                                </button>
                                 <div id="spinner" class="spinner-border text-danger" role="status" style="display: none;">
                                     <span class="sr-only">Loading...</span>
                                 </div>
@@ -185,22 +198,20 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="Abfrage" role="tabpanel" aria-labelledby="abfrage-tab">
-                        <div class="tab-content border-top" id="myTabContent">
-                            <div class="modal-body">
-                                <div class="table-responsive-md">
-                                    <table class="table table-striped">
-                                        <thead>
-                                        <tr>
-                                            <th>Datum</th>
-                                            <th>angemeldet?</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
+                        <div class="modal-body border-top">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>angemeldet?</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
 
-                                        </tbody>
-                                    </table>
+                                    </tbody>
+                                </table>
 
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -291,9 +302,9 @@
 
                     if (childData.checked_in === 'false') {
                         logoutButton.style.display = 'none';
-                        checkinButton.style.display = 'inline-block';
+                        checkinButton.style.display = 'flex';
                     } else {
-                        logoutButton.style.display = 'inline-block';
+                        logoutButton.style.display = 'flex';
                         checkinButton.style.display = 'none';
                     }
 
@@ -418,7 +429,7 @@
                     window.location.reload();
                 }).always(function () {
                     spinner.style.display = 'none';
-                    logoutButton.style.display = 'inline-block';
+                    logoutButton.style.display = 'flex';
                 });
             });
 
@@ -440,7 +451,7 @@
                     window.location.reload();
                 }).always(function () {
                     spinner.style.display = 'none';
-                    checkinButton.style.display = 'inline-block';
+                    checkinButton.style.display = 'flex';
                 });
             });
         });
@@ -473,13 +484,14 @@
 
                             data =data.data;
                             data.forEach(checkin => {
-                                $toogleUrl = "{{ route('checkIn.shouldBe', ['checkin' => ':checkin']) }}";
-                                $toogleUrl.replace(':checkin', checkin.id)
                                 const row = document.createElement('tr');
+                                row.dataset.checkinId = checkin.id;
+                                const shouldBeLabel = checkin.should_be === true ? 'Ja' : (checkin.should_be === false ? 'Nein' : 'Offen');
+                                const shouldBeClass = checkin.should_be === true ? 'text-success font-weight-bold' : (checkin.should_be === false ? 'text-danger' : 'text-muted');
                                 row.innerHTML = `
                                     <td>${new Date(checkin.date).toLocaleDateString('de-DE')}</td>
-                                    <td>${checkin.should_be ? 'Ja' : 'Nein'}</td>
-                                    <td><button class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id})"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
+                                    <td class="${shouldBeClass}">${shouldBeLabel}</td>
+                                    <td><button class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id}, this)"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
                                 `;
                                 tableBody.appendChild(row);
                             });
@@ -491,17 +503,44 @@
             });
         });
 
-        function toogle_should_be(checkinId) {
+        function toogle_should_be(checkinId, btn) {
             const url = "{{ route('checkIn.shouldBe', ['checkin' => ':checkin']) }}".replace(':checkin', checkinId);
-            console.log('click');
+
+            // Button während der Anfrage deaktivieren
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
+            }
+
             $.ajax({
                 url: url,
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}'
                 }
-            }).done(function () {
-                window.location.reload();
+            }).done(function (response) {
+                // Zeile direkt aktualisieren – kein Seiten-Reload, Modal bleibt offen
+                if (btn) {
+                    const row = btn.closest('tr');
+                    if (row && response.data) {
+                        const shouldBe = response.data.should_be;
+                        const label = shouldBe === true ? 'Ja' : (shouldBe === false ? 'Nein' : 'Offen');
+                        const cls   = shouldBe === true ? 'text-success font-weight-bold' : (shouldBe === false ? 'text-danger' : 'text-muted');
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length >= 2) {
+                            cells[1].textContent  = label;
+                            cells[1].className    = cls;
+                        }
+                    }
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i>';
+                }
+            }).fail(function () {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i>';
+                }
+                alert('Fehler beim Aktualisieren.');
             });
         }
 
