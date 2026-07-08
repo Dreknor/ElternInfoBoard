@@ -47,6 +47,7 @@ use App\Http\Controllers\TerminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\HelpController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -650,3 +651,16 @@ Route::middleware('auth')->group(function () {
     });
 
 });
+
+/*
+|--------------------------------------------------------------------------
+| Support-Widget (FreeScout-Anbindung)
+|--------------------------------------------------------------------------
+| Nur für eingeloggte, aktive Nutzer – mit Rate-Limit gegen Spam.
+*/
+Route::middleware(['auth', 'password_expired'])->group(function () {
+    Route::post('/support/ticket', [SupportController::class, 'store'])
+         ->middleware('throttle:10,1')
+         ->name('support.ticket');
+});
+

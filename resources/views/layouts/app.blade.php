@@ -555,6 +555,9 @@
     @livewire('help.help-drawer')
 @endauth
 
+{{-- Support-Widget (FreeScout-Anbindung) --}}
+<x-support-widget />
+
 <script>
     // Sidebar Toggle
     document.getElementById('toogleSidebarButton')?.addEventListener('click', function () {
