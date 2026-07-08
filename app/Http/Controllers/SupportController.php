@@ -28,6 +28,14 @@ class SupportController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        Log::info('SupportController::store() aufgerufen', [
+            'user_id'  => Auth::id(),
+            'ip'       => $request->ip(),
+            'has_msg'  => $request->has('message'),
+        ]);
+
+        Log::info('SupportController: Ticket erstellt durch '.auth()->user()->name.' ('.auth()->user()->email.')');
+
         $validated = $request->validate([
             'message'    => ['required', 'string', 'max:5000'],
             'screenshot' => ['nullable', 'string'],

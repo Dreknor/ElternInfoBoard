@@ -57,8 +57,10 @@ class SendFreeScoutTicket implements ShouldQueue
     {
         $this->payload = $payload;
 
-        // Dedizierte Queue setzen (wird bei sync-Betrieb ignoriert)
-        $this->onQueue(config('services.freescout.queue_name', 'freescout'));
+        // Im async-Modus: Einreihung in die konfigurierte Queue (Standard: 'default',
+        // damit der bestehende Queue-Worker die Jobs aufnimmt).
+        // Im sync-Modus wird onQueue() ignoriert.
+        $this->onQueue(config('services.freescout.queue_name', 'default'));
     }
 
     /**
@@ -89,7 +91,7 @@ class SendFreeScoutTicket implements ShouldQueue
         $config = config('services.freescout');
 
         if (empty($config['url']) || empty($config['api_key']) || empty($config['mailbox_id'])) {
-            Log::warning('SendFreeScoutTicket: FreeScout ist nicht konfiguriert – Job wird übersprungen.', [
+            $this->safeLog('warning', 'SendFreeScoutTicket: FreeScout ist nicht konfiguriert – Job wird übersprungen.', [
                 'payload_subject' => $this->payload['subject'] ?? null,
             ]);
             return;
@@ -98,16 +100,19 @@ class SendFreeScoutTicket implements ShouldQueue
         $thread = $this->buildThread();
         $body   = $this->buildRequestBody($thread);
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Accept'       => 'application/json',
-        ])->post(
-            rtrim($config['url'], '/') . '/api/conversations?api_key=' . urlencode($config['api_key']),
-            $body
-        );
+        // Explizites Timeout, damit der Job nicht unbegrenzt hängt
+        $response = Http::timeout(30)
+            ->connectTimeout(10)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept'       => 'application/json',
+            ])->post(
+                rtrim($config['url'], '/') . '/api/conversations?api_key=' . urlencode($config['api_key']),
+                $body
+            );
 
         if ($response->failed()) {
-            Log::error('SendFreeScoutTicket: API-Anfrage fehlgeschlagen.', [
+            $this->safeLog('error', 'SendFreeScoutTicket: API-Anfrage fehlgeschlagen.', [
                 'status'  => $response->status(),
                 'body'    => $response->body(),
                 'subject' => $this->payload['subject'] ?? null,
@@ -119,10 +124,24 @@ class SendFreeScoutTicket implements ShouldQueue
             );
         }
 
-        Log::info('SendFreeScoutTicket: Ticket erfolgreich erstellt.', [
+        // Logging nach erfolgreichem API-Call – Fehler hier dürfen den Job NICHT scheitern lassen
+        $this->safeLog('info', 'SendFreeScoutTicket: Ticket erfolgreich erstellt.', [
             'conversation_id' => data_get($response->json(), 'id'),
             'subject'         => $this->payload['subject'] ?? null,
         ]);
+    }
+
+    /**
+     * Wrapper um Log::*() – fängt Exceptions (z. B. fehlende Schreibrechte) still ab,
+     * damit ein Logging-Problem den Job nicht als fehlgeschlagen markiert.
+     */
+    protected function safeLog(string $level, string $message, array $context = []): void
+    {
+        try {
+            Log::$level($message, $context);
+        } catch (\Throwable) {
+            // Logging-Fehler ignorieren – Job-Ergebnis nicht beeinflussen
+        }
     }
 
     /**
@@ -192,7 +211,7 @@ class SendFreeScoutTicket implements ShouldQueue
      */
     public function failed(Throwable $exception): void
     {
-        Log::critical('SendFreeScoutTicket: Job endgültig fehlgeschlagen.', [
+        $this->safeLog('critical', 'SendFreeScoutTicket: Job endgültig fehlgeschlagen.', [
             'subject'   => $this->payload['subject'] ?? null,
             'exception' => $exception->getMessage(),
         ]);

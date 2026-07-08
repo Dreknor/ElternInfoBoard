@@ -108,7 +108,7 @@
 
             {{-- Formular --}}
             <div x-show="!success">
-                <form @submit.prevent="submitTicket()" novalidate>
+                <form @submit.prevent novalidate>
 
                     {{-- Nachricht --}}
                     <div class="mb-3">
@@ -160,9 +160,10 @@
                         </label>
                     </div>
 
-                    {{-- Absenden-Button --}}
+                    {{-- Absenden-Button (type="button" verhindert Konflikte mit dem globalen jQuery-Submit-Handler) --}}
                     <button
-                        type="submit"
+                        type="button"
+                        @click="submitTicket()"
                         :disabled="loading || !message.trim()"
                         class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
                                text-white rounded-lg transition-all duration-200 focus:outline-none
