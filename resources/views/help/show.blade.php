@@ -2,25 +2,6 @@
 
 @section('title') - {{ $topic['title'] }} @endsection
 
-@push('css')
-<style>
-    .help-prose h1 { @apply text-2xl font-bold text-gray-900 mt-6 mb-3; }
-    .help-prose h2 { @apply text-xl font-bold text-gray-900 mt-6 mb-2 pb-1 border-b border-gray-200; }
-    .help-prose h3 { @apply text-lg font-semibold text-gray-800 mt-4 mb-2; }
-    .help-prose p  { @apply text-gray-700 leading-relaxed mb-3; }
-    .help-prose ul { @apply list-disc pl-6 mb-3 space-y-1 text-gray-700; }
-    .help-prose ol { @apply list-decimal pl-6 mb-3 space-y-1 text-gray-700; }
-    .help-prose a  { @apply text-blue-600 hover:text-blue-800 underline; }
-    .help-prose code { @apply bg-gray-100 text-pink-700 px-1.5 py-0.5 rounded text-sm; }
-    .help-prose pre { @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-3; }
-    .help-prose pre code { @apply bg-transparent text-gray-100 p-0; }
-    .help-prose blockquote { @apply border-l-4 border-blue-500 bg-blue-50 pl-4 py-2 my-3 text-gray-700 italic; }
-    .help-prose img { @apply rounded-lg shadow my-3 max-w-full h-auto; }
-    .help-prose table { @apply min-w-full border border-gray-200 my-3; }
-    .help-prose th, .help-prose td { @apply border border-gray-200 px-3 py-2 text-sm; }
-    .help-prose th { @apply bg-gray-50 font-semibold; }
-</style>
-@endpush
 
 @section('content')
 <div class="container-fluid py-4">
@@ -53,7 +34,7 @@
 
             {{-- Inhalt --}}
             <div class="p-6 md:p-8">
-                <div class="help-prose">
+                <div class="prose prose-gray max-w-none">
                     {!! $content !!}
                 </div>
             </div>

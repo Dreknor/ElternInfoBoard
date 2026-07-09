@@ -118,6 +118,34 @@
         </div>
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100 ">
+                    Bezeichnung Standard-Kontakt (Kontaktformular)
+                    <input type="text" class="form-control" name="contact_default_name"
+                           value="{{$mailSettings->contact_default_name ?? 'Sekretariat'}}">
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    <i class="fas fa-info-circle text-info"></i> Diese Bezeichnung wird im Kontaktformular als Standard-Empfänger angezeigt (z.B. "Sekretariat").
+                </div>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100 ">
+                    E-Mail Standard-Kontakt (Kontaktformular)
+                    <input type="email" class="form-control" name="contact_default_email"
+                           value="{{$mailSettings->contact_default_email}}">
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    <i class="fas fa-info-circle text-info"></i> An diese E-Mail-Adresse werden Nachrichten gesendet, wenn im Kontaktformular der Standard-Kontakt ausgewählt wird. Wenn leer, wird die SMTP-From-Email verwendet.
+                </div>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
                 <label class="label-control d-flex align-items-center">
                     <input type="checkbox" name="log_sent_emails" value="1"
                            {{ $mailSettings->log_sent_emails ? 'checked' : '' }}

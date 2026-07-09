@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\SendFeedback;
 use App\Model\User;
+use App\Settings\EmailSetting;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -40,13 +41,16 @@ class ContactController extends Controller implements HasMiddleware
      */
     public function index()
     {
+        $emailSettings = new EmailSetting;
+        $defaultName = $emailSettings->contact_default_name ?? 'Sekretariat';
+
         $mitarbeiter = User::whereHas('roles', function ($q) {
             $q->where('name', 'Mitarbeiter');
         })->orWhereHas('permissions', function ($q) {
             $q->where('name', 'show in contact form');
         })->orderBy('name')->get(['id', 'name']);
 
-        $mitarbeiter->prepend(['id' => 0, 'name' => 'Sekretariat']);
+        $mitarbeiter->prepend(['id' => 0, 'name' => $defaultName]);
 
         return response()->json(
             ['data' => $mitarbeiter]
@@ -97,7 +101,8 @@ class ContactController extends Controller implements HasMiddleware
                 return response()->json(['error' => 'Empfänger nicht gefunden'], 404);
             }
         } else {
-            $email = config('mail.from.address');
+            $emailSettings = new EmailSetting;
+            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
         }
 
         Log::info('Target email address: ' . $email);

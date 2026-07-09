@@ -22,6 +22,10 @@ class CareSetting extends Settings
 
     public ?int $info_to;
 
+    public bool $mandate_notification_enabled;
+
+    public ?string $mandate_notification_email;
+
     public string $bundesland;
 
     public static function group(): string

@@ -46,6 +46,9 @@
                                             <div class="flex items-center gap-2">
                                                 <i class="fas fa-key text-purple-600 text-sm"></i>
                                                 <span class="text-sm font-medium text-gray-900">{{$Recht->name}}</span>
+                                                @if($Recht->guard_name !== 'web')
+                                                    <span class="text-xs text-gray-500">({{$Recht->guard_name}})</span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
@@ -109,37 +112,6 @@
                                 class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2">
                             <i class="fas fa-plus-circle"></i>
                             <span>Rolle anlegen</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- New Permission Card -->
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 border-b border-purple-800">
-                    <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
-                        <i class="fas fa-key"></i>
-                        Neues Recht anlegen
-                    </h5>
-                </div>
-                <div class="p-6">
-                    <form action="{{url('roles/permission')}}" method="post" class="space-y-4">
-                        @csrf
-                        <div>
-                            <label for="permission-name" class="block text-sm font-medium text-gray-700 mb-2">
-                                Name der Berechtigung
-                            </label>
-                            <input type="text"
-                                   id="permission-name"
-                                   name="name"
-                                   placeholder="z.B. benutzer.bearbeiten"
-                                   required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
-                        </div>
-                        <button type="submit"
-                                class="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:from-purple-700 hover:to-purple-800 transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Berechtigung anlegen</span>
                         </button>
                     </form>
                 </div>

@@ -102,6 +102,8 @@ class SettingsController extends Controller implements HasMiddleware
                     'info_to' => 'nullable|exists:users,id',
                     'end_time' => 'nullable|date_format:H:i',
                     'bundesland' => 'required|string|in:' . implode(',', array_keys(HolidayService::bundeslaender())),
+                    'mandate_notification_enabled' => 'nullable|boolean',
+                    'mandate_notification_email' => 'nullable|email',
                 ]);
 
                 $careSettings = new CareSetting;
@@ -128,6 +130,8 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->info_to = $validated['info_to'] ?? null;
                 $careSettings->end_time = $validated['end_time'] ?? null;
                 $careSettings->bundesland = $newBundesland;
+                $careSettings->mandate_notification_enabled = $validated['mandate_notification_enabled'] ?? false;
+                $careSettings->mandate_notification_email = $validated['mandate_notification_email'] ?? null;
 
                 $careSettings->save();
 
@@ -261,6 +265,8 @@ class SettingsController extends Controller implements HasMiddleware
                     'mail_from_name' => 'required|max:255',
                     'new_user_welcome_text' => 'required|string|max:1000',
                     'log_sent_emails' => 'nullable|boolean',
+                    'contact_default_name' => 'required|max:255',
+                    'contact_default_email' => 'nullable|email|max:255',
                 ]);
 
                 $mailSettings = new EmailSetting;
@@ -273,6 +279,8 @@ class SettingsController extends Controller implements HasMiddleware
                 $mailSettings->mail_from_name = $validated['mail_from_name'];
                 $mailSettings->new_user_welcome_text = $validated['new_user_welcome_text'];
                 $mailSettings->log_sent_emails = $validated['log_sent_emails'] ?? false;
+                $mailSettings->contact_default_name = $validated['contact_default_name'];
+                $mailSettings->contact_default_email = $validated['contact_default_email'] ?? null;
                 $mailSettings->save();
 
                 config([

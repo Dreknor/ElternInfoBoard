@@ -94,17 +94,33 @@
             </div>
 
             {{-- Footer --}}
-            <div class="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-                <a href="{{ url('hilfe') }}"
-                   class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                    <i class="fas fa-book-open"></i>
-                    Zur Hilfe-Übersicht
-                </a>
-                <a href="{{ url('feedback') }}"
-                   class="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                    <i class="fas fa-comment-dots"></i>
-                    Feedback
-                </a>
+            <div class="px-5 py-3 border-t border-gray-200 bg-gray-50">
+                {{-- Support-Ticket --}}
+                <button
+                    type="button"
+                    x-data
+                    @click="$dispatch('support:open'); $wire.closeDrawer()"
+                    class="w-full mb-2 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium
+                           text-white rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors duration-200
+                           focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1"
+                >
+                    <i class="fas fa-headset"></i>
+                    Support-Ticket erstellen
+                </button>
+
+                {{-- Links --}}
+                <div class="flex items-center justify-between">
+                    <a href="{{ url('hilfe') }}"
+                       class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                        <i class="fas fa-book-open"></i>
+                        Zur Hilfe-Übersicht
+                    </a>
+                    <a href="{{ url('feedback') }}"
+                       class="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                        <i class="fas fa-comment-dots"></i>
+                        Feedback
+                    </a>
+                </div>
             </div>
         </aside>
     </div>
