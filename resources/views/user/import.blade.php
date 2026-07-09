@@ -39,7 +39,8 @@
                 </div>
             </div>
 
-            <form action="{{ url('/users/import') }}" method="post" enctype="multipart/form-data" id="importForm">
+            <form action="{{ url('/users/import') }}" method="post" enctype="multipart/form-data" id="importForm"
+                  @submit="if (canSubmit) { submitting = true } else { $event.preventDefault() }">
                 @csrf
                 {{-- Hidden fields populated by Alpine --}}
                 <input type="hidden" name="type" x-bind:value="importTyp">
@@ -610,16 +611,20 @@
                     </div>
 
                     <div class="flex justify-between mt-6">
-                        <button type="button" @click="step = 2"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <button type="button" @click="step = 2" :disabled="submitting"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="fas fa-arrow-left"></i> Zurück
                         </button>
                         <button type="submit"
-                                :disabled="!canSubmit"
+                                :disabled="!canSubmit || submitting"
                                 class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-sm transition-all"
-                                :class="canSubmit ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
-                            <i class="fas fa-rocket"></i>
-                            Import starten
+                                :class="(canSubmit && !submitting) ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+                            <svg x-show="submitting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <i x-show="!submitting" class="fas fa-rocket"></i>
+                            <span x-text="submitting ? 'Import läuft…' : 'Import starten'"></span>
                         </button>
                     </div>
                 </div>
@@ -641,6 +646,7 @@ function importWizard() {
         loading: false,
         sendMode: 'email',
         confirmed: false,
+        submitting: false,
         currentFile: null,
         groupPreview: [],
         selectedNewGroups: [],

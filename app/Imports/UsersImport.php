@@ -106,12 +106,32 @@ class UsersImport implements ToCollection, WithHeadingRow
         );
 
         $user->touch();
-        $user->assignRole('Eltern');
-        $user->removeRole('Aufnahme');
-        $user->groups()->attach($gruppen);
+
+        // Rollen- und Gruppenzuweisung unabhängig voneinander absichern: ein Fehler bei der
+        // Rollenzuweisung (z.B. fehlende Rolle) darf die Gruppenzuweisung nicht verhindern und
+        // umgekehrt. So bleibt der Benutzer nutzbar, selbst wenn ein Teilschritt fehlschlägt.
+        try {
+            $user->assignRole('Eltern');
+            $user->removeRole('Aufnahme');
+        } catch (\Throwable $e) {
+            Log::error("Fehler bei Rollenzuweisung für {$email}: " . $e->getMessage());
+        }
+
+        try {
+            // syncWithoutDetaching statt attach(), damit ein erneuter Import (z.B. bei mehrfach
+            // gelisteten Sorgeberechtigten oder wiederholtem Import) keine doppelten
+            // Gruppen-Zuordnungen anlegt und nicht an einer Unique-Constraint scheitert.
+            $user->groups()->syncWithoutDetaching($gruppen);
+        } catch (\Throwable $e) {
+            Log::error("Fehler bei Gruppenzuweisung für {$email}: " . $e->getMessage());
+        }
 
         if ($isNewUser) {
-            $this->handleNewUserCredentials($user, $password);
+            try {
+                $this->handleNewUserCredentials($user, $password);
+            } catch (\Throwable $e) {
+                Log::error("Fehler beim Verarbeiten der Zugangsdaten für {$email}: " . $e->getMessage());
+            }
         }
 
         return $user;
@@ -119,9 +139,15 @@ class UsersImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $collection)
     {
-        foreach ($collection as $row) {
-            set_time_limit(20);
+        // Der Import kann bei vielen Zeilen (inkl. Rollen-/Gruppenzuweisung und ggf.
+        // E-Mail-Versand) sehr lange dauern. Ein zu niedriges Zeitlimit (z.B. bei einem
+        // langsamen Mailserver) würde den PHP-Prozess sonst mit einem nicht abfangbaren
+        // Fatal Error mitten im Import beenden – Gruppen/Sorg2-Verknüpfung/Kind-Verknüpfung
+        // für die restlichen Zeilen würden dann stillschweigend nie ausgeführt. Daher wird
+        // das Zeitlimit für den gesamten Import-Vorgang deaktiviert.
+        set_time_limit(0);
 
+        foreach ($collection as $row) {
             $row = array_values($row->toArray());
 
             // ── Gruppen aus Klassenstufe / Lerngruppe ──────────────────────────
@@ -163,7 +189,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     $this->cellValue($row, 'S1Nachname'),
                     $gruppen
                 );
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $vorname = $this->cellValue($row, 'S1Vorname') ?: '?';
                 $nachname = $this->cellValue($row, 'S1Nachname') ?: '?';
                 Log::error("Fehler beim Importieren von Sorgeberechtigtem 1 ({$vorname} {$nachname}): " . $e->getMessage());
@@ -180,7 +206,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     $this->cellValue($row, 'S2Nachname'),
                     $gruppen
                 );
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $vorname = $this->cellValue($row, 'S2Vorname') ?: '?';
                 $nachname = $this->cellValue($row, 'S2Nachname') ?: '?';
                 Log::error("Fehler beim Importieren von Sorgeberechtigtem 2 ({$vorname} {$nachname}): " . $e->getMessage());
@@ -193,7 +219,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     $user2->sorg2 = $user1->id;
                     $user1->save();
                     $user2->save();
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     Log::error("Fehler beim Verknüpfen von Sorg1 ({$user1->email}) und Sorg2 ({$user2->email}): " . $e->getMessage());
                 }
             }
@@ -227,7 +253,7 @@ class UsersImport implements ToCollection, WithHeadingRow
                     } else {
                         Log::info("Kind nicht gefunden – übersprungen: {$kindVorname} {$kindNachname}");
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     Log::error("Fehler bei Kind-Verknüpfung ({$kindVorname} {$kindNachname}): " . $e->getMessage());
                 }
             }
