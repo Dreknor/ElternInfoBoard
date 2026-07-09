@@ -77,10 +77,10 @@ class CreateSettingsSeeder extends Seeder
                 'options' => '{"active":"0","rights":[],"nav":{"name":"Listen","link":"listen","icon":"far fa-list-alt", "bottom-nav":"false"},"adm-nav":{"adm-rights":["create terminliste"],"name":"neue Liste","link":"listen\\/create","icon":"far fa-list-alt"}}',
             ],
             [
-                'setting' => 'Schickzeiten',
-                'description' => 'Sorgeberechtigte tragen regelmäßige Zeiten ein, zu denen Ihr Kind die Schule verlassen soll.',
+                'setting' => 'Hort',
+                'description' => 'Erfassen von Schickzeiten, Anwesenheiten und Nachrichten für den Hort.',
                 'category' => 'module',
-                'options' => '{"active":"0","rights":["view schickzeiten"],"nav":{"name":"Schickzeiten","link":"schickzeiten","icon":"fas fa-clock", "bottom-nav":"false"},"adm-nav":{"adm-rights":["edit schickzeiten"],"name":"Schickzeitenliste","link":"verwaltung\\/schickzeiten","icon":"fas fa-clock"}}',
+                'options' => '{"active":"0","rights":["view schickzeiten"],"nav":{"name":"Hort","link":"schickzeiten","icon":"fas fa-clock", "bottom-nav":"false"},"adm-nav":{"adm-rights":["edit schickzeiten"],"name":"Hortverwaltung","link":"verwaltung\\/schickzeiten","icon":"fas fa-clock"}}',
             ],
             [
                 'setting' => 'Kontakt',
