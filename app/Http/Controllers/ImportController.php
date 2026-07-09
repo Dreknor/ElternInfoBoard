@@ -12,13 +12,16 @@ use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
 use App\Model\Group;
 use App\Model\group_user;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 
@@ -31,92 +34,186 @@ class ImportController extends Controller implements HasMiddleware
         ];
     }
 
-    /**
-     */
     public function importForm()
     {
         return view('user.import');
     }
 
     /**
-     * @return RedirectResponse
+     * AJAX: Reads the header row from an uploaded Excel file and returns column names as JSON.
+     */
+    public function previewHeaders(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+        ]);
+
+        try {
+            $spreadsheet = IOFactory::load($request->file('file')->getPathname());
+            $sheet       = $spreadsheet->getActiveSheet();
+
+            $headers = [];
+            foreach ($sheet->getRowIterator(1, 1) as $row) {
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(false);
+                foreach ($cellIterator as $cell) {
+                    $headers[] = (string) ($cell->getValue() ?? '');
+                }
+            }
+
+            // Remove trailing empty columns
+            while (! empty($headers) && end($headers) === '') {
+                array_pop($headers);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Fehler beim Lesen der Datei: ' . $e->getMessage()], 422);
+        }
+
+        return response()->json(['headers' => $headers]);
+    }
+
+    /**
+     * @return RedirectResponse|\Symfony\Component\HttpFoundation\Response
      */
     public function import(Request $request)
     {
-        // Spalten-Indizes, die in den verschiedenen Import-Typen verwendet werden.
-        // Sie müssen Ganzzahlen >= 1 sein, da im Code "- 1" gerechnet wird.
-        $columnFields = [
-            'klassenstufe', 'lerngruppe',
-            'S1Vorname', 'S1Nachname', 'S1Email',
-            'S2Vorname', 'S2Nachname', 'S2Email',
-            'gruppen',
-        ];
+        $type = $request->input('type');
 
         $rules = [
-            'file' => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
-            'type' => ['required', 'in:eltern,aufnahme,mitarbeiter'],
+            'file'       => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+            'type'       => ['required', 'in:eltern,aufnahme,mitarbeiter'],
+            'send_email' => ['nullable', 'in:1,0'],
         ];
 
-        // Spaltenangaben nur für die Typen verlangen, die sie nutzen
-        if (in_array($request->input('type'), ['eltern', 'aufnahme'], true)) {
-            foreach ($columnFields as $field) {
-                $rules[$field] = ['required', 'integer', 'min:1'];
-            }
+        if ($type === 'eltern') {
+            $rules['klassenstufe'] = ['required', 'integer', 'min:1'];
+            $rules['lerngruppe'] = ['required', 'integer', 'min:1'];
+            $rules['S1Vorname'] = ['required', 'integer', 'min:1'];
+            $rules['S1Nachname'] = ['required', 'integer', 'min:1'];
+            $rules['S1Email'] = ['required', 'integer', 'min:1'];
+            $rules['S2Vorname'] = ['nullable', 'integer', 'min:1'];
+            $rules['S2Nachname'] = ['nullable', 'integer', 'min:1'];
+            $rules['S2Email'] = ['nullable', 'integer', 'min:1'];
+            $rules['gruppen'] = ['nullable', 'integer', 'min:1'];
+            $rules['kind_vorname'] = ['nullable', 'integer', 'min:1'];
+            $rules['kind_nachname'] = ['nullable', 'integer', 'min:1'];
+        } elseif ($type === 'aufnahme') {
+            $rules['S1Vorname'] = ['required', 'integer', 'min:1'];
+            $rules['S1Nachname'] = ['required', 'integer', 'min:1'];
+            $rules['S1Email'] = ['required', 'integer', 'min:1'];
+            $rules['S2Vorname'] = ['nullable', 'integer', 'min:1'];
+            $rules['S2Nachname'] = ['nullable', 'integer', 'min:1'];
+            $rules['S2Email'] = ['nullable', 'integer', 'min:1'];
+            $rules['gruppen'] = ['nullable', 'integer', 'min:1'];
+            $rules['kind_vorname'] = ['nullable', 'integer', 'min:1'];
+            $rules['kind_nachname'] = ['nullable', 'integer', 'min:1'];
         }
 
         $validated = $request->validate($rules);
+        $sendEmail = ($validated['send_email'] ?? '1') === '1';
 
-        if ($request->hasFile('file')) {
-            if ($validated['type'] == 'eltern') {
-                // group_user::truncate();
-
-                foreach (Group::where('protected', 0)->get() as $group) {
-                    $group->users()->detach();
-                }
-
-                $header = [
-                    'klassenstufe' => $validated['klassenstufe'] - 1,
-                    'lerngruppe' => $validated['lerngruppe'] - 1,
-                    'S1Vorname' => $validated['S1Vorname'] - 1,
-                    'S1Nachname' => $validated['S1Nachname'] - 1,
-                    'S1Email' => $validated['S1Email'] - 1,
-                    'S2Email' => $validated['S2Email'] - 1,
-                    'S2Vorname' => $validated['S2Vorname'] - 1,
-                    'S2Nachname' => $validated['S2Nachname'] - 1,
-                    'gruppen' => $validated['gruppen'] - 1,
-                ];
-
-                Excel::import(new UsersImport($header), $request->file('file'));
-
-                $Meldung = 'Eltern wurden importiert';
-            } elseif ($validated['type'] == 'aufnahme') {
-                $header = [
-                    'S1Vorname' => $validated['S1Vorname'] - 1,
-                    'S1Nachname' => $validated['S1Nachname'] - 1,
-                    'S1Email' => $validated['S1Email'] - 1,
-                    'S2Email' => $validated['S2Email'] - 1,
-                    'S2Vorname' => $validated['S2Vorname'] - 1,
-                    'S2Nachname' => $validated['S2Nachname'] - 1,
-                    'gruppen' => $validated['gruppen'] - 1,
-                ];
-
-                Excel::import(new AufnahmeImport($header), $request->file('file'));
-                $Meldung = 'Aufnahme-Import abgeschlossen';
-            } else {
-                Excel::import(new MitarbeiterImport, $request->file('file'));
-                $Meldung = 'Mitarbeiter-Import abgeschlossen';
-            }
-
-            return redirect()->to(url('users'))->with([
-                'type' => 'success',
-                'Meldung' => $Meldung,
-            ]);
-        } else {
+        if (! $request->hasFile('file')) {
             return redirect()->back()->with([
-                'type' => 'danger',
+                'type'    => 'danger',
                 'Meldung' => 'Keine Datei ausgewählt',
             ]);
         }
+
+        $importTypeLabel = match ($validated['type']) {
+            'eltern'      => 'Eltern-Import',
+            'aufnahme'    => 'Aufnahme-Import',
+            'mitarbeiter' => 'Mitarbeiter-Import',
+        };
+
+        $uploadedFile = $request->file('file');
+        $tmpDir       = storage_path('app/imports/temp');
+        if (! is_dir($tmpDir)) {
+            mkdir($tmpDir, 0755, true);
+        }
+        $filename   = 'import_' . now()->format('YmdHis') . '_' . uniqid() . '.' . $uploadedFile->getClientOriginalExtension();
+        $movedFile  = $uploadedFile->move($tmpDir, $filename);
+        $storedPath = $movedFile->getPathname();
+
+        // Schutz vor PHP 8.4 ValueError "Path must not be empty": Falls das Verschieben
+        // der Datei aus irgendeinem Grund keinen gültigen Pfad ergeben hat, brechen wir
+        // hier kontrolliert ab, statt Excel::import() mit einem leeren Pfad aufzurufen.
+        if ($storedPath === '' || ! is_file($storedPath)) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Die Datei konnte nicht verarbeitet werden. Bitte wählen Sie die Datei erneut aus und versuchen Sie es noch einmal.',
+            ]);
+        }
+
+        try {
+        if ($validated['type'] === 'eltern') {
+            foreach (Group::where('protected', 0)->get() as $group) {
+                $group->users()->detach();
+            }
+
+            $header = [
+                'klassenstufe' => $validated['klassenstufe'] - 1,
+                'lerngruppe'   => $validated['lerngruppe'] - 1,
+                'S1Vorname'    => $validated['S1Vorname'] - 1,
+                'S1Nachname'   => $validated['S1Nachname'] - 1,
+                'S1Email'      => $validated['S1Email'] - 1,
+            ];
+            if (! empty($validated['S2Vorname']))     $header['S2Vorname']    = $validated['S2Vorname'] - 1;
+            if (! empty($validated['S2Nachname']))    $header['S2Nachname']   = $validated['S2Nachname'] - 1;
+            if (! empty($validated['S2Email']))       $header['S2Email']      = $validated['S2Email'] - 1;
+            if (! empty($validated['gruppen']))       $header['gruppen']      = $validated['gruppen'] - 1;
+            if (! empty($validated['kind_vorname']))  $header['kind_vorname'] = $validated['kind_vorname'] - 1;
+            if (! empty($validated['kind_nachname'])) $header['kind_nachname']= $validated['kind_nachname'] - 1;
+
+            $importer = new UsersImport($header, $sendEmail);
+
+            dump($storedPath);
+            dump($header);
+            dump($importer);
+            Excel::import($importer, $storedPath);
+            $newUsers = $importer->getNewUsers();
+            $Meldung  = 'Eltern wurden importiert';
+        } elseif ($validated['type'] === 'aufnahme') {
+            $header = [
+                'S1Vorname'  => $validated['S1Vorname'] - 1,
+                'S1Nachname' => $validated['S1Nachname'] - 1,
+                'S1Email'    => $validated['S1Email'] - 1,
+            ];
+            if (! empty($validated['S2Vorname']))     $header['S2Vorname']    = $validated['S2Vorname'] - 1;
+            if (! empty($validated['S2Nachname']))    $header['S2Nachname']   = $validated['S2Nachname'] - 1;
+            if (! empty($validated['S2Email']))       $header['S2Email']      = $validated['S2Email'] - 1;
+            if (! empty($validated['gruppen']))       $header['gruppen']      = $validated['gruppen'] - 1;
+            if (! empty($validated['kind_vorname']))  $header['kind_vorname'] = $validated['kind_vorname'] - 1;
+            if (! empty($validated['kind_nachname'])) $header['kind_nachname']= $validated['kind_nachname'] - 1;
+
+            $importer = new AufnahmeImport($header, $sendEmail);
+            Excel::import($importer, $storedPath);
+            $newUsers = $importer->getNewUsers();
+            $Meldung  = 'Aufnahme-Import abgeschlossen';
+        } else {
+            $importer = new MitarbeiterImport($sendEmail);
+            Excel::import($importer, $storedPath);
+            $newUsers = $importer->getNewUsers();
+            $Meldung  = 'Mitarbeiter-Import abgeschlossen';
+        }
+        } finally {
+            if (file_exists($storedPath)) {
+                unlink($storedPath);
+            }
+        }
+
+        if (! $sendEmail && count($newUsers) > 0) {
+            $pdf = Pdf::loadView('pdf.import-credentials', [
+                'users'      => $newUsers,
+                'importType' => $importTypeLabel,
+            ]);
+            $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
+            return $pdf->download($filename);
+        }
+
+        return redirect()->to(url('users'))->with([
+            'type'    => 'success',
+            'Meldung' => $Meldung . ($sendEmail ? '' : ' – keine neuen Benutzer angelegt.'),
+        ]);
     }
 
     public function importVereinForm()
@@ -178,7 +275,6 @@ class ImportController extends Controller implements HasMiddleware
                 'type' => 'success',
                 'Meldung' => $Meldung,
             ]);
-
         } else {
             return redirect()->back()->with([
                 'type' => 'danger',

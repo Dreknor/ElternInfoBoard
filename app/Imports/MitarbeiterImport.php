@@ -16,6 +16,21 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class MitarbeiterImport implements ToCollection, WithHeadingRow
 {
+    protected bool $sendEmail;
+
+    /** @var array<int, array{name: string, email: string, password: string}> */
+    protected array $newUsers = [];
+
+    public function __construct(bool $sendEmail = true)
+    {
+        $this->sendEmail = $sendEmail;
+    }
+
+    /** Returns credentials of newly created users (only populated when sendEmail = false). */
+    public function getNewUsers(): array
+    {
+        return $this->newUsers;
+    }
     private function getImportPassword(): string
     {
         $pw = config('app.import_mitarbeiter');
@@ -45,13 +60,17 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 $user->touch();
                 $user->assignRole('Mitarbeiter');
 
-                // TODO-1.2: Willkommens-E-Mail für neue Benutzer versenden
+                // TODO-1.2: Willkommens-E-Mail für neue Benutzer versenden oder Zugangsdaten für PDF sammeln
                 if ($user->wasRecentlyCreated) {
-                    try {
-                        $emailSettings = app(EmailSetting::class);
-                        Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
-                    } catch (\Exception $e) {
-                        Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
+                    if ($this->sendEmail) {
+                        try {
+                            $emailSettings = app(EmailSetting::class);
+                            Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
+                        } catch (\Exception $e) {
+                            Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
+                        }
+                    } else {
+                        $this->newUsers[] = ['name' => $user->name, 'email' => $user->email, 'password' => $password];
                     }
                 }
             }
