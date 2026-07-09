@@ -58,7 +58,11 @@ class UsersImport implements ToCollection, WithHeadingRow
         return $value === '' ? '' : $value;
     }
 
-    /** Versendet die Willkommens-E-Mail oder sammelt die Zugangsdaten für den PDF-Export. */
+    /**
+     * Versendet die Willkommens-E-Mail (nur im E-Mail-Modus) oder sammelt die
+     * Zugangsdaten für den PDF-Export (nur im PDF-Modus). Neue Benutzer erhalten
+     * niemals beides gleichzeitig – im PDF-Modus dürfen sie KEINE E-Mail erhalten.
+     */
     private function handleNewUserCredentials(User $user, string $password): void
     {
         if ($this->sendEmail) {

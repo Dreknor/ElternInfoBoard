@@ -10,6 +10,7 @@ use App\Imports\VereinImport;
 use App\Exports\ElternImportVorlage;
 use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
+use App\Mail\ImportCredentialsMail;
 use App\Model\Group;
 use App\Model\group_user;
 use App\Scopes\GetGroupsScope;
@@ -21,6 +22,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\Permission\Models\Role;
@@ -268,18 +270,41 @@ class ImportController extends Controller implements HasMiddleware
             }
         }
 
+        // Zugangsdaten neuer Benutzer:
+        // - E-Mail-Modus ($sendEmail = true): jeder neue Benutzer hat bereits individuell
+        //   seine Zugangsdaten per Mail erhalten (siehe Importer) – hier passiert nichts
+        //   weiter, insbesondere wird KEINE PDF erzeugt.
+        // - PDF-Modus ($sendEmail = false): neue Benutzer erhalten KEINE E-Mail. Stattdessen
+        //   wird die PDF dem eingeloggten (importierenden) Benutzer zum Download angeboten
+        //   UND zusätzlich per E-Mail an dessen Adresse verschickt.
         if (! $sendEmail && count($newUsers) > 0) {
             $pdf = Pdf::loadView('pdf.import-credentials', [
                 'users'      => $newUsers,
                 'importType' => $importTypeLabel,
             ]);
             $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
-            return $pdf->download($filename);
+            $pdfContent = $pdf->output();
+
+            $currentUser = $request->user();
+            if ($currentUser && $currentUser->email) {
+                try {
+                    Mail::to($currentUser->email)->queue(
+                        new ImportCredentialsMail($pdfContent, $filename, $importTypeLabel, count($newUsers))
+                    );
+                } catch (\Exception $mailException) {
+                    \Log::error('Fehler beim Versenden der Zugangsdaten-PDF an ' . $currentUser->email . ': ' . $mailException->getMessage());
+                }
+            }
+
+            return response($pdfContent, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
         }
 
         return redirect()->to(url('users'))->with([
             'type'    => 'success',
-            'Meldung' => $Meldung . ($sendEmail ? '' : ' – keine neuen Benutzer angelegt.'),
+            'Meldung' => $Meldung . (! $sendEmail ? ' – keine neuen Benutzer angelegt.' : ''),
         ]);
     }
 

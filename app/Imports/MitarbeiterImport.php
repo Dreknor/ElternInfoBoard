@@ -60,7 +60,9 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 $user->touch();
                 $user->assignRole('Mitarbeiter');
 
-                // TODO-1.2: Willkommens-E-Mail für neue Benutzer versenden oder Zugangsdaten für PDF sammeln
+                // Willkommens-E-Mail versenden (E-Mail-Modus) ODER Zugangsdaten für den
+                // PDF-Export sammeln (PDF-Modus). Im PDF-Modus darf keine E-Mail an den
+                // neuen Benutzer verschickt werden.
                 if ($user->wasRecentlyCreated) {
                     if ($this->sendEmail) {
                         try {

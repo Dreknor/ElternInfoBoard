@@ -100,7 +100,9 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changeSettings' => 1,
                     ]);
 
-                    // TODO-1.2: Willkommens-E-Mail versenden oder Zugangsdaten für PDF sammeln
+                    // Willkommens-E-Mail versenden (E-Mail-Modus) ODER Zugangsdaten für
+                    // den PDF-Export sammeln (PDF-Modus). Im PDF-Modus darf keine E-Mail
+                    // an den neuen Benutzer verschickt werden.
                     try {
                         if ($this->sendEmail) {
                             $emailSettings = app(EmailSetting::class);
@@ -147,7 +149,9 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changeSettings' => 1,
                     ]);
 
-                    // TODO-1.2: Willkommens-E-Mail versenden oder Zugangsdaten für PDF sammeln
+                    // Willkommens-E-Mail versenden (E-Mail-Modus) ODER Zugangsdaten für
+                    // den PDF-Export sammeln (PDF-Modus). Im PDF-Modus darf keine E-Mail
+                    // an den neuen Benutzer verschickt werden.
                     try {
                         if ($this->sendEmail) {
                             $emailSettings = app(EmailSetting::class);

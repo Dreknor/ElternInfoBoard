@@ -581,9 +581,12 @@
                                 <input type="radio" x-model="sendMode" value="pdf" class="mt-0.5">
                                 <div>
                                     <div class="font-medium text-sm text-gray-800 dark:text-gray-200">
-                                        <i class="fas fa-file-pdf mr-1.5 text-orange-500"></i>Als PDF herunterladen
+                                        <i class="fas fa-file-pdf mr-1.5 text-orange-500"></i>Als PDF (kein Mailversand an neue Benutzer)
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Nach dem Import wird ein PDF mit den Zugangsdaten aller <em>neuen</em> Benutzer heruntergeladen.</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        Neue Benutzer erhalten <strong>keine</strong> E-Mail. Stattdessen wird nach dem Import ein PDF mit den
+                                        Zugangsdaten aller <em>neuen</em> Benutzer heruntergeladen und zusätzlich an Ihre eigene E-Mail-Adresse versendet.
+                                    </div>
                                 </div>
                             </label>
                         </div>
