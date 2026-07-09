@@ -569,6 +569,7 @@ class CareController extends Controller implements HasMiddleware
                 $query->where('checked_in', false)
                     ->orWhere('checked_out', false);
             })
+            ->orderBy('date')
             ->get();
 
         if ($checkIns) {
