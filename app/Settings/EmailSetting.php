@@ -25,6 +25,10 @@ class EmailSetting extends Settings
 
     public bool $log_sent_emails = false;
 
+    public ?string $contact_default_name = 'Sekretariat';
+
+    public ?string $contact_default_email = null;
+
     public static function group(): string
     {
         return 'email';
