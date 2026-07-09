@@ -12,6 +12,7 @@ use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
 use App\Model\Group;
 use App\Model\group_user;
+use App\Scopes\GetGroupsScope;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -73,6 +74,59 @@ class ImportController extends Controller implements HasMiddleware
     }
 
     /**
+     * AJAX: Liest die "Gruppen"-Spalte einer hochgeladenen Excel-Datei aus, ermittelt
+     * alle darin vorkommenden (Semikolon-getrennten) Gruppennamen und markiert, welche
+     * davon bereits als Gruppe existieren. Damit kann der Benutzer vor dem Import
+     * auswählen, welche der neuen Gruppennamen als globale Gruppe angelegt werden sollen.
+     */
+    public function previewGroups(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file'            => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+            'gruppen_column'  => ['required', 'integer', 'min:1'],
+        ]);
+
+        $columnIndex = (int) $request->input('gruppen_column');
+
+        try {
+            $spreadsheet = IOFactory::load($request->file('file')->getPathname());
+            $sheet       = $spreadsheet->getActiveSheet();
+            $highestRow  = $sheet->getHighestDataRow();
+
+            $names = [];
+            for ($row = 2; $row <= $highestRow; $row++) {
+                $value = $sheet->getCellByColumnAndRow($columnIndex, $row)->getValue();
+                if ($value === null || $value === '') {
+                    continue;
+                }
+                foreach (explode(';', (string) $value) as $name) {
+                    $name = trim($name);
+                    if ($name !== '') {
+                        $names[$name] = $name;
+                    }
+                }
+            }
+            ksort($names, SORT_NATURAL | SORT_FLAG_CASE);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Fehler beim Lesen der Datei: ' . $e->getMessage()], 422);
+        }
+
+        $existingNames = Group::withoutGlobalScope(GetGroupsScope::class)
+            ->pluck('name')
+            ->map(fn ($n) => mb_strtolower($n))
+            ->all();
+
+        $groups = array_map(function ($name) use ($existingNames) {
+            return [
+                'name'   => $name,
+                'exists' => in_array(mb_strtolower($name), $existingNames, true),
+            ];
+        }, array_values($names));
+
+        return response()->json(['groups' => $groups]);
+    }
+
+    /**
      * @return RedirectResponse|\Symfony\Component\HttpFoundation\Response
      */
     public function import(Request $request)
@@ -80,9 +134,11 @@ class ImportController extends Controller implements HasMiddleware
         $type = $request->input('type');
 
         $rules = [
-            'file'       => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
-            'type'       => ['required', 'in:eltern,aufnahme,mitarbeiter'],
-            'send_email' => ['nullable', 'in:1,0'],
+            'file'          => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+            'type'          => ['required', 'in:eltern,aufnahme,mitarbeiter'],
+            'send_email'    => ['nullable', 'in:1,0'],
+            'new_groups'    => ['nullable', 'array'],
+            'new_groups.*'  => ['string', 'max:255'],
         ];
 
         if ($type === 'eltern') {
@@ -144,6 +200,20 @@ class ImportController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Vom Benutzer ausgewählte neue Gruppennamen (aus der "Gruppen"-Spalte) werden
+        // vor dem eigentlichen Import als globale Gruppe (ohne owner_id) angelegt, damit
+        // der Importer sie den Benutzern zuordnen kann.
+        foreach ($validated['new_groups'] ?? [] as $groupName) {
+            $groupName = trim($groupName);
+            if ($groupName === '') {
+                continue;
+            }
+            Group::withoutGlobalScope(GetGroupsScope::class)->firstOrCreate(
+                ['name' => $groupName],
+                ['protected' => 0]
+            );
+        }
+
         try {
         if ($validated['type'] === 'eltern') {
             foreach (Group::where('protected', 0)->get() as $group) {
@@ -166,10 +236,7 @@ class ImportController extends Controller implements HasMiddleware
 
             $importer = new UsersImport($header, $sendEmail);
 
-            dump($storedPath);
-            dump($header);
-            dump($importer);
-            Excel::import($importer, $storedPath);
+            $this->debugExcelImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Eltern wurden importiert';
         } elseif ($validated['type'] === 'aufnahme') {
@@ -186,12 +253,12 @@ class ImportController extends Controller implements HasMiddleware
             if (! empty($validated['kind_nachname'])) $header['kind_nachname']= $validated['kind_nachname'] - 1;
 
             $importer = new AufnahmeImport($header, $sendEmail);
-            Excel::import($importer, $storedPath);
+            $this->debugExcelImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Aufnahme-Import abgeschlossen';
         } else {
             $importer = new MitarbeiterImport($sendEmail);
-            Excel::import($importer, $storedPath);
+            $this->debugExcelImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Mitarbeiter-Import abgeschlossen';
         }
@@ -214,6 +281,40 @@ class ImportController extends Controller implements HasMiddleware
             'type'    => 'success',
             'Meldung' => $Meldung . ($sendEmail ? '' : ' – keine neuen Benutzer angelegt.'),
         ]);
+    }
+
+    /**
+     * TEMPORÄR: Führt Excel::import() aus und protokolliert bei einem Fehler
+     * die vollständige Exception (Klasse, Nachricht, Datei, Zeile, Trace) im
+     * Laravel-Log, damit der tatsächliche Ursprungsort des "Path must not be
+     * empty"-Fehlers ermittelt werden kann. Kann nach der Fehlersuche wieder
+     * entfernt werden.
+     */
+    private function debugExcelImport(object $importer, string $storedPath): void
+    {
+        try {
+            \Log::info('debugExcelImport: Starte Import', [
+                'storedPath' => $storedPath,
+                'exists'     => file_exists($storedPath),
+                'realpath'   => realpath($storedPath),
+                'is_file'    => is_file($storedPath),
+                'filesize'   => @filesize($storedPath),
+            ]);
+
+            Excel::import($importer, $storedPath);
+
+            \Log::info('debugExcelImport: Import erfolgreich');
+        } catch (\Throwable $e) {
+            \Log::error('debugExcelImport: Fehler beim Import', [
+                'exception' => get_class($e),
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
+        }
     }
 
     public function importVereinForm()

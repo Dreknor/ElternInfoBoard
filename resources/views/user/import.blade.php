@@ -55,6 +55,9 @@
                 <input type="hidden" name="S2Email" x-bind:value="mapping.s2Email">
                 <input type="hidden" name="kind_vorname" x-bind:value="mapping.kindVorname">
                 <input type="hidden" name="kind_nachname" x-bind:value="mapping.kindNachname">
+                <template x-for="(name, i) in selectedNewGroups" :key="i">
+                    <input type="hidden" name="new_groups[]" :value="name">
+                </template>
 
                 {{-- ═══ STEP 1: Import-Typ ═══════════════════════════════════════════ --}}
                 <div x-show="step === 1">
@@ -398,7 +401,7 @@
                                             <p class="text-xs text-gray-400">Semikolon-getrennte Gruppennamen</p>
                                         </td>
                                         <td class="px-4 py-2.5">
-                                            <select x-model="mapping.gruppen"
+                                            <select x-model="mapping.gruppen" @change="loadGroupPreview()"
                                                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1.5">
                                                 <option value="">— nicht vorhanden —</option>
                                                 <template x-for="(h, i) in headers" :key="i">
@@ -412,6 +415,45 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Neue Gruppen aus der Gruppen-Spalte auswählen --}}
+                        <div x-show="mapping.gruppen" class="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center justify-between">
+                                <span>Gruppen aus der Datei</span>
+                                <span x-show="groupPreviewLoading" class="normal-case font-normal text-gray-400">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>wird geprüft…
+                                </span>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                    Wählen Sie aus, welche der folgenden Gruppen (sofern noch nicht vorhanden) als
+                                    <strong>globale Gruppe</strong> angelegt werden sollen. Nicht ausgewählte, noch
+                                    nicht existierende Gruppen werden beim Import übersprungen.
+                                </p>
+                                <div x-show="!groupPreviewLoading && groupPreview.length === 0" class="text-xs text-gray-400">
+                                    Keine Gruppennamen in der zugeordneten Spalte gefunden.
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <template x-for="group in groupPreview" :key="group.name">
+                                        <label class="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs cursor-pointer"
+                                               :class="group.exists
+                                                    ? 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-500'
+                                                    : (selectedNewGroups.includes(group.name)
+                                                        ? 'border-primary bg-primary/5 text-gray-800 dark:text-gray-100'
+                                                        : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300')">
+                                            <input type="checkbox" class="rounded"
+                                                   x-show="!group.exists"
+                                                   :checked="selectedNewGroups.includes(group.name)"
+                                                   @change="toggleNewGroup(group.name)">
+                                            <i class="fas fa-check text-green-500" x-show="group.exists"></i>
+                                            <span x-text="group.name"></span>
+                                            <span x-show="group.exists" class="text-gray-400">(vorhanden)</span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
 
                         {{-- Validation summary --}}
                         <div x-show="!requiredMappingsValid && headers.length > 0"
@@ -496,6 +538,19 @@
                                                 <span class="px-2 py-0.5 rounded text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
                                                     2. Sorgeberechtigte/r
                                                 </span>
+                                            </template>
+                                        </div>
+                                    </dd>
+                                </div>
+                            </template>
+                            <template x-if="selectedNewGroups.length > 0">
+                                <div class="flex px-4 py-3 gap-4">
+                                    <dt class="text-sm text-gray-500 dark:text-gray-400 w-40 flex-shrink-0">Neue globale Gruppen</dt>
+                                    <dd class="text-sm text-gray-800 dark:text-gray-200">
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <template x-for="name in selectedNewGroups" :key="name">
+                                                <span class="px-2 py-0.5 rounded text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                                                      x-text="name"></span>
                                             </template>
                                         </div>
                                     </dd>
@@ -586,6 +641,10 @@ function importWizard() {
         loading: false,
         sendMode: 'email',
         confirmed: false,
+        currentFile: null,
+        groupPreview: [],
+        selectedNewGroups: [],
+        groupPreviewLoading: false,
         mapping: {
             klassenstufe: '',
             lerngruppe:   '',
@@ -656,6 +715,9 @@ function importWizard() {
             const file = event.target.files[0];
             if (!file) return;
             this.fileName = file.name;
+            this.currentFile = file;
+            this.groupPreview = [];
+            this.selectedNewGroups = [];
 
             if (this.importTyp === 'mitarbeiter') return;
 
@@ -680,6 +742,9 @@ function importWizard() {
                 const data = await response.json();
                 this.headers = data.headers;
                 this.autoDetect(data.headers);
+                if (this.mapping.gruppen) {
+                    this.loadGroupPreview();
+                }
             } catch (e) {
                 console.error('Header-Erkennung fehlgeschlagen:', e);
                 alert('Fehler beim Lesen der Datei: ' + e.message + '\nBitte prüfen Sie das Dateiformat.');
@@ -687,6 +752,49 @@ function importWizard() {
                 event.target.value = '';
             } finally {
                 this.loading = false;
+            }
+        },
+
+        toggleNewGroup(name) {
+            const idx = this.selectedNewGroups.indexOf(name);
+            if (idx === -1) {
+                this.selectedNewGroups.push(name);
+            } else {
+                this.selectedNewGroups.splice(idx, 1);
+            }
+        },
+
+        async loadGroupPreview() {
+            this.groupPreview = [];
+            if (!this.mapping.gruppen || !this.currentFile) {
+                this.selectedNewGroups = [];
+                return;
+            }
+
+            this.groupPreviewLoading = true;
+            const formData = new FormData();
+            formData.append('file', this.currentFile);
+            formData.append('gruppen_column', this.mapping.gruppen);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+            try {
+                const response = await fetch('{{ route("users.import.groups") }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData,
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || 'HTTP ' + response.status);
+                }
+                const data = await response.json();
+                this.groupPreview = data.groups || [];
+                // Neue Gruppen sind standardmäßig zur Anlage vorausgewählt.
+                this.selectedNewGroups = this.groupPreview.filter(g => !g.exists).map(g => g.name);
+            } catch (e) {
+                console.error('Gruppen-Erkennung fehlgeschlagen:', e);
+            } finally {
+                this.groupPreviewLoading = false;
             }
         },
     };
