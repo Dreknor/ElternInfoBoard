@@ -25,6 +25,8 @@ class UsersImport implements ToCollection, WithHeadingRow
 
     protected bool $sendEmail;
 
+    protected ?string $welcomeText;
+
     /** @var array<int, array{name: string, email: string, password: string}> */
     protected array $newUsers = [];
 
@@ -33,6 +35,9 @@ class UsersImport implements ToCollection, WithHeadingRow
         $this->header = $header;
         $this->sendEmail = $sendEmail;
         $this->groups = Group::withoutGlobalScope(GetGroupsScope::class)->get();
+        // Einmal pro Import statt einmal pro Sorgeberechtigtem laden, um unnötige
+        // Settings-Abfragen bei vielen Zeilen zu vermeiden.
+        $this->welcomeText = $this->sendEmail ? app(EmailSetting::class)->new_user_welcome_text : null;
     }
 
     /** Returns credentials of newly created users (only populated when sendEmail = false). */
@@ -62,18 +67,19 @@ class UsersImport implements ToCollection, WithHeadingRow
      * Versendet die Willkommens-E-Mail (nur im E-Mail-Modus) oder sammelt die
      * Zugangsdaten für den PDF-Export (nur im PDF-Modus). Neue Benutzer erhalten
      * niemals beides gleichzeitig – im PDF-Modus dürfen sie KEINE E-Mail erhalten.
+     * Der Mailversand erfolgt über Mail::queue() und damit asynchron über die
+     * Laravel-Queue, damit ein langsamer Mailserver den Import nicht ausbremst.
      */
     private function handleNewUserCredentials(User $user, string $password): void
     {
         if ($this->sendEmail) {
             try {
-                $emailSettings = app(EmailSetting::class);
                 Mail::to($user->email)->queue(
-                    new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text)
+                    new NewUserPasswordMail($user, $password, $this->welcomeText)
                 );
-                Log::info('Willkommens-E-Mail an ' . $user->email . ' versendet');
+                Log::info('Willkommens-E-Mail an ' . $user->email . ' zum Versand eingereiht (Queue)');
             } catch (\Exception $mailException) {
-                Log::error('Fehler beim Versenden der Willkommens-E-Mail an ' . $user->email . ': ' . $mailException->getMessage());
+                Log::error('Fehler beim Einreihen der Willkommens-E-Mail an ' . $user->email . ': ' . $mailException->getMessage());
             }
         } else {
             $this->newUsers[] = ['name' => $user->name, 'email' => $user->email, 'password' => $password];
