@@ -242,17 +242,26 @@ class UsersImport implements ToCollection, WithHeadingRow
 
                     $child = $childQuery->first();
 
-                    if ($child) {
-                        if ($user1) {
-                            $child->parents()->syncWithoutDetaching([$user1->id]);
-                        }
-                        if ($user2) {
-                            $child->parents()->syncWithoutDetaching([$user2->id]);
-                        }
-                        Log::info("Kind verknüpft: {$kindVorname} {$kindNachname} (ID: {$child->id})");
-                    } else {
-                        Log::info("Kind nicht gefunden – übersprungen: {$kindVorname} {$kindNachname}");
+                    // Kind existiert noch nicht: neu anlegen, statt es nur zu überspringen.
+                    // Klassenstufe wird als group_id, Lerngruppe als class_id übernommen,
+                    // analog zur Gruppenzuweisung der Sorgeberechtigten.
+                    if (! $child) {
+                        $child = Child::create([
+                            'first_name' => $kindVorname,
+                            'last_name'  => $kindNachname,
+                            'group_id'   => $Klassenstufe?->id,
+                            'class_id'   => $Lerngruppe?->id,
+                        ]);
+                        Log::info("Kind neu angelegt: {$kindVorname} {$kindNachname} (ID: {$child->id})");
                     }
+
+                    if ($user1) {
+                        $child->parents()->syncWithoutDetaching([$user1->id]);
+                    }
+                    if ($user2) {
+                        $child->parents()->syncWithoutDetaching([$user2->id]);
+                    }
+                    Log::info("Kind verknüpft: {$kindVorname} {$kindNachname} (ID: {$child->id})");
                 } catch (\Throwable $e) {
                     Log::error("Fehler bei Kind-Verknüpfung ({$kindVorname} {$kindNachname}): " . $e->getMessage());
                 }
