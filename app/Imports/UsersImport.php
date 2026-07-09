@@ -143,10 +143,10 @@ class UsersImport implements ToCollection, WithHeadingRow
                 $gruppen[$Lerngruppe->id] = $Lerngruppe->id;
             }
 
-            // ── Zusätzliche Gruppen aus Gruppen-Spalte ─────────────────────────
+            // ── Zusätzliche Gruppen aus Gruppen-Spalte (Komma-getrennt) ─────────
             $gruppenListe = $this->cellValue($row, 'gruppen');
             if (! empty($gruppenListe)) {
-                foreach (explode(';', $gruppenListe) as $user_group) {
+                foreach (explode(',', $gruppenListe) as $user_group) {
                     $group = $this->groups->firstWhere('name', trim($user_group));
                     if (! is_null($group)) {
                         $gruppen[$group->id] = $group->id;

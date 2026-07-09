@@ -398,7 +398,7 @@
                                     <tr class="bg-white dark:bg-gray-800">
                                         <td class="px-4 py-2.5">
                                             <span class="text-gray-700 dark:text-gray-300">Weitere Gruppen</span>
-                                            <p class="text-xs text-gray-400">Semikolon-getrennte Gruppennamen</p>
+                                            <p class="text-xs text-gray-400">Komma-getrennte Gruppennamen</p>
                                         </td>
                                         <td class="px-4 py-2.5">
                                             <select x-model="mapping.gruppen" @change="loadGroupPreview()"

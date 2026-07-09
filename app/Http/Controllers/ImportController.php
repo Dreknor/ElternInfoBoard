@@ -99,7 +99,7 @@ class ImportController extends Controller implements HasMiddleware
                 if ($value === null || $value === '') {
                     continue;
                 }
-                foreach (explode(';', (string) $value) as $name) {
+                foreach (explode(',', (string) $value) as $name) {
                     $name = trim($name);
                     if ($name !== '') {
                         $names[$name] = $name;
