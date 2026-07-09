@@ -155,6 +155,39 @@
             </div>
         </div>
 
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    E-Mail-Benachrichtigung bei neuer Abholvollmacht
+                    <input type="checkbox" class="form-control" name="mandate_notification_enabled"
+                           value="1" @if($careSettings->mandate_notification_enabled) checked @endif
+                           id="mandate_notification_enabled">
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, wird bei jeder neu eingetragenen Abholvollmacht eine E-Mail an die unten angegebene Adresse gesendet.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border" id="mandate_notification_email_row"
+             style="{{ $careSettings->mandate_notification_enabled ? '' : 'display:none;' }}">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    E-Mail-Adresse für Abholvollmacht-Benachrichtigung
+                    <input type="email" class="form-control" name="mandate_notification_email"
+                           value="{{ $careSettings->mandate_notification_email }}"
+                           placeholder="z.B. verwaltung@einrichtung.de">
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    An diese Adresse wird die Benachrichtigung bei neuer Abholvollmacht verschickt.
+                </div>
+            </div>
+        </div>
+
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">
                 Save Settings
@@ -162,3 +195,9 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.getElementById('mandate_notification_enabled').addEventListener('change', function () {
+        document.getElementById('mandate_notification_email_row').style.display = this.checked ? '' : 'none';
+    });
+</script>

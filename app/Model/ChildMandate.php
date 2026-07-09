@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use App\Observers\ChildMandateObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use OwenIt\Auditing\Contracts\Auditable;

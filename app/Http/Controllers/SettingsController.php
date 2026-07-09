@@ -102,6 +102,8 @@ class SettingsController extends Controller implements HasMiddleware
                     'info_to' => 'nullable|exists:users,id',
                     'end_time' => 'nullable|date_format:H:i',
                     'bundesland' => 'required|string|in:' . implode(',', array_keys(HolidayService::bundeslaender())),
+                    'mandate_notification_enabled' => 'nullable|boolean',
+                    'mandate_notification_email' => 'nullable|email',
                 ]);
 
                 $careSettings = new CareSetting;
@@ -128,6 +130,8 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->info_to = $validated['info_to'] ?? null;
                 $careSettings->end_time = $validated['end_time'] ?? null;
                 $careSettings->bundesland = $newBundesland;
+                $careSettings->mandate_notification_enabled = $validated['mandate_notification_enabled'] ?? false;
+                $careSettings->mandate_notification_email = $validated['mandate_notification_email'] ?? null;
 
                 $careSettings->save();
 
