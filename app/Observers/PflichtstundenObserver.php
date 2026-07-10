@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Model\Notification;
 use App\Model\Pflichtstunde;
+use Illuminate\Support\Facades\Log;
 
 class PflichtstundenObserver
 {
@@ -50,7 +51,11 @@ class PflichtstundenObserver
      */
     public function deleted(Pflichtstunde $pflichtstunde): void
     {
-        //
+        Log::info('Pflichtstunde gelöscht: ', [
+            'Benutzer' => $pflichtstunde->user->name ?? 'unknown',
+            'gelöscht durch' => auth()->user()->name ?? 'system',
+            'Eintrag' => $pflichtstunde->toArray(),
+        ]);
     }
 
     /**
