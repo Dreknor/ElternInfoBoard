@@ -457,46 +457,54 @@
         });
 
 
+        // Gemeinsame Variable für das aktuell geöffnete Kind (wird beim Modal-Öffnen gesetzt)
+        let currentCheckinChildId = null;
+        const checkinsApiUrlTemplate = `{{ route('checkins.api',['child' => 'childID']) }}`;
+
+        function reloadCheckinsTable() {
+            if (!currentCheckinChildId) return;
+            const tableBody = document.querySelector('#Abfrage table tbody');
+            if (!tableBody) return;
+
+            const url = checkinsApiUrlTemplate.replace('childID', currentCheckinChildId);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    tableBody.innerHTML = '';
+                    const checkins = data.data;
+                    if (!checkins || checkins.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td colspan="3">Keine Check-Ins gefunden</td>`;
+                        tableBody.appendChild(row);
+                        return;
+                    }
+
+                    checkins.forEach(checkin => {
+                        const row = document.createElement('tr');
+                        row.dataset.checkinId = checkin.id;
+                        const shouldBeLabel = checkin.should_be === true ? 'Ja' : (checkin.should_be === false ? 'Nein' : 'Offen');
+                        const shouldBeClass = checkin.should_be === true ? 'text-success font-weight-bold' : (checkin.should_be === false ? 'text-danger' : 'text-muted');
+                        row.innerHTML = `
+                            <td>${new Date(checkin.date).toLocaleDateString('de-DE')}</td>
+                            <td class="${shouldBeClass}">${shouldBeLabel}</td>
+                            <td><button class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id}, this)"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Fehler beim Laden der Check-Ins:', error));
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const childModal = $('#childModal');
-            const tableBody = document.querySelector('table tbody');
 
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
                     const childData = JSON.parse(this.dataset.child);
-                    const childId = childData.id;
+                    currentCheckinChildId = childData.id;
 
-
-                    const url = `{{ route('checkins.api',['child' => 'childID']) }}`.replace('childID', childId);
-
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(data => {
-                            tableBody.innerHTML = ''; // Tabelle leeren
-                            if (data.length === 0) {
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td colspan="2">Keine Check-Ins gefunden</td>
-                                `;
-                                tableBody.appendChild(row);
-                                return;
-                            }
-
-                            data =data.data;
-                            data.forEach(checkin => {
-                                const row = document.createElement('tr');
-                                row.dataset.checkinId = checkin.id;
-                                const shouldBeLabel = checkin.should_be === true ? 'Ja' : (checkin.should_be === false ? 'Nein' : 'Offen');
-                                const shouldBeClass = checkin.should_be === true ? 'text-success font-weight-bold' : (checkin.should_be === false ? 'text-danger' : 'text-muted');
-                                row.innerHTML = `
-                                    <td>${new Date(checkin.date).toLocaleDateString('de-DE')}</td>
-                                    <td class="${shouldBeClass}">${shouldBeLabel}</td>
-                                    <td><button class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id}, this)"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
-                                `;
-                                tableBody.appendChild(row);
-                            });
-                        })
-                        .catch(error => console.error('Fehler beim Laden der Check-Ins:', error));
+                    reloadCheckinsTable();
 
                     childModal.modal('show');
                 });
@@ -506,7 +514,6 @@
         function toogle_should_be(checkinId, btn) {
             const url = "{{ route('checkIn.shouldBe', ['checkin' => ':checkin']) }}".replace(':checkin', checkinId);
 
-            // Button während der Anfrage deaktivieren
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fa fa-spinner fa-spin" aria-hidden="true"></i>';
@@ -518,23 +525,9 @@
                 data: {
                     _token: '{{ csrf_token() }}'
                 }
-            }).done(function (response) {
-                // Zeile direkt aktualisieren – kein Seiten-Reload, Modal bleibt offen
-                if (btn) {
-                    const row = btn.closest('tr');
-                    if (row && response.data) {
-                        const shouldBe = response.data.should_be;
-                        const label = shouldBe === true ? 'Ja' : (shouldBe === false ? 'Nein' : 'Offen');
-                        const cls   = shouldBe === true ? 'text-success font-weight-bold' : (shouldBe === false ? 'text-danger' : 'text-muted');
-                        const cells = row.querySelectorAll('td');
-                        if (cells.length >= 2) {
-                            cells[1].textContent  = label;
-                            cells[1].className    = cls;
-                        }
-                    }
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i>';
-                }
+            }).done(function () {
+                // Tabelle neu laden um Duplikate und falsche Sortierung zu vermeiden
+                reloadCheckinsTable();
             }).fail(function () {
                 if (btn) {
                     btn.disabled = false;

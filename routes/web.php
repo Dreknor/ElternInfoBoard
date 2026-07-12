@@ -407,6 +407,8 @@ Route::middleware('auth')->group(function () {
 
             Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
+            Route::post('users/import/headers', [ImportController::class, 'previewHeaders'])->middleware(['permission:import user'])->name('users.import.headers');
+            Route::post('users/import/groups', [ImportController::class, 'previewGroups'])->middleware(['permission:import user'])->name('users.import.groups');
             Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
             Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 
@@ -663,4 +665,3 @@ Route::middleware(['auth', 'password_expired'])->group(function () {
          ->middleware('throttle:10,1')
          ->name('support.ticket');
 });
-

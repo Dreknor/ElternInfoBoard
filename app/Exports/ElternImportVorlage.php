@@ -36,7 +36,7 @@ class ElternImportVorlage implements FromArray, ShouldAutoSize, WithHeadings, Wi
     {
         return [
             [
-                'Elternvertreter;Förderverein', // gruppen (Semikolon-getrennte Gruppennamen)
+                'Elternvertreter,Förderverein', // gruppen (Komma-getrennte Gruppennamen)
                 '5',                             // klassenstufe  (z. B. "5" → Gruppe "Klassenstufe 5")
                 'b5a',                           // lerngruppe (führendes Zeichen wird entfernt → Gruppe "5a")
                 'Max',                           // S1 Vorname

@@ -16,6 +16,26 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class MitarbeiterImport implements ToCollection, WithHeadingRow
 {
+    protected bool $sendEmail;
+
+    protected ?string $welcomeText;
+
+    /** @var array<int, array{name: string, email: string, password: string}> */
+    protected array $newUsers = [];
+
+    public function __construct(bool $sendEmail = true)
+    {
+        $this->sendEmail = $sendEmail;
+        // Einmal pro Import statt einmal pro Zeile laden, um unnötige
+        // Settings-Abfragen bei vielen Zeilen zu vermeiden.
+        $this->welcomeText = $this->sendEmail ? app(EmailSetting::class)->new_user_welcome_text : null;
+    }
+
+    /** Returns credentials of newly created users (only populated when sendEmail = false). */
+    public function getNewUsers(): array
+    {
+        return $this->newUsers;
+    }
     private function getImportPassword(): string
     {
         $pw = config('app.import_mitarbeiter');
@@ -45,13 +65,20 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
                 $user->touch();
                 $user->assignRole('Mitarbeiter');
 
-                // TODO-1.2: Willkommens-E-Mail für neue Benutzer versenden
+                // Willkommens-E-Mail versenden (E-Mail-Modus) ODER Zugangsdaten für den
+                // PDF-Export sammeln (PDF-Modus). Im PDF-Modus darf keine E-Mail an den
+                // neuen Benutzer verschickt werden. Der Versand erfolgt über Mail::queue()
+                // asynchron über die Laravel-Queue, damit ein langsamer Mailserver den
+                // Import nicht ausbremst.
                 if ($user->wasRecentlyCreated) {
-                    try {
-                        $emailSettings = app(EmailSetting::class);
-                        Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $emailSettings->new_user_welcome_text));
-                    } catch (\Exception $e) {
-                        Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
+                    if ($this->sendEmail) {
+                        try {
+                            Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $this->welcomeText));
+                        } catch (\Exception $e) {
+                            Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user->email.': '.$e->getMessage());
+                        }
+                    } else {
+                        $this->newUsers[] = ['name' => $user->name, 'email' => $user->email, 'password' => $password];
                     }
                 }
             }

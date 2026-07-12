@@ -38,7 +38,7 @@ class CleanupSchickzeitenNonCareChildren extends Command
 
         if (empty($allowedGroups) || empty($allowedClasses)) {
             $this->warn('⚠️  Keine Gruppen oder Klassen im Care-Modul konfiguriert. Abbruch.');
-            return Command::FAILURE;
+            return Command::SUCCESS;
         }
 
         if ($dryRun) {

@@ -22,11 +22,28 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
 
     protected \Illuminate\Database\Eloquent\Collection $groups;
 
-    public function __construct(array $header)
+    protected bool $sendEmail;
+
+    protected ?string $welcomeText;
+
+    /** @var array<int, array{name: string, email: string, password: string}> */
+    protected array $newUsers = [];
+
+    public function __construct(array $header, bool $sendEmail = true)
     {
         $this->header = $header;
+        $this->sendEmail = $sendEmail;
         // TODO-1.10: GetGroupsScope umgehen, damit alle Gruppen geladen werden
         $this->groups = Group::withoutGlobalScope(GetGroupsScope::class)->get();
+        // Einmal pro Import statt einmal pro Sorgeberechtigtem laden, um unnötige
+        // Settings-Abfragen bei vielen Zeilen zu vermeiden.
+        $this->welcomeText = $this->sendEmail ? app(EmailSetting::class)->new_user_welcome_text : null;
+    }
+
+    /** Returns credentials of newly created users (only populated when sendEmail = false). */
+    public function getNewUsers(): array
+    {
+        return $this->newUsers;
     }
 
     /** Gibt das konfigurierte Import-Passwort zurück oder ein zufälliges, falls ENV nicht gesetzt. */
@@ -88,10 +105,16 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changeSettings' => 1,
                     ]);
 
-                    // TODO-1.2: Willkommens-E-Mail versenden
+                    // Willkommens-E-Mail versenden (E-Mail-Modus) ODER Zugangsdaten für
+                    // den PDF-Export sammeln (PDF-Modus). Im PDF-Modus darf keine E-Mail
+                    // an den neuen Benutzer verschickt werden. Der Versand erfolgt über
+                    // Mail::queue() asynchron über die Laravel-Queue.
                     try {
-                        $emailSettings = app(EmailSetting::class);
-                        Mail::to($user1->email)->queue(new NewUserPasswordMail($user1, $password1, $emailSettings->new_user_welcome_text));
+                        if ($this->sendEmail) {
+                            Mail::to($user1->email)->queue(new NewUserPasswordMail($user1, $password1, $this->welcomeText));
+                        } else {
+                            $this->newUsers[] = ['name' => $user1->name, 'email' => $user1->email, 'password' => $password1];
+                        }
                     } catch (\Exception $e) {
                         Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user1->email.': '.$e->getMessage());
                     }
@@ -131,10 +154,16 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'changeSettings' => 1,
                     ]);
 
-                    // TODO-1.2: Willkommens-E-Mail versenden
+                    // Willkommens-E-Mail versenden (E-Mail-Modus) ODER Zugangsdaten für
+                    // den PDF-Export sammeln (PDF-Modus). Im PDF-Modus darf keine E-Mail
+                    // an den neuen Benutzer verschickt werden. Der Versand erfolgt über
+                    // Mail::queue() asynchron über die Laravel-Queue.
                     try {
-                        $emailSettings = app(EmailSetting::class);
-                        Mail::to($user2->email)->queue(new NewUserPasswordMail($user2, $password2, $emailSettings->new_user_welcome_text));
+                        if ($this->sendEmail) {
+                            Mail::to($user2->email)->queue(new NewUserPasswordMail($user2, $password2, $this->welcomeText));
+                        } else {
+                            $this->newUsers[] = ['name' => $user2->name, 'email' => $user2->email, 'password' => $password2];
+                        }
                     } catch (\Exception $e) {
                         Log::error('Willkommens-E-Mail fehlgeschlagen für '.$user2->email.': '.$e->getMessage());
                     }
