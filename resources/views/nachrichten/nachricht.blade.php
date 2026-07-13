@@ -291,7 +291,10 @@
 
                 <!-- Rueckmeldungen Section -->
                 @if(!is_null($nachricht->rueckmeldung))
-                    <div class="border-t border-gray-200 bg-gray-50 p-6">
+                    <div id="rueckmeldung_{{$nachricht->id}}"></div>
+                @endif
+                @if(!is_null($nachricht->rueckmeldung))
+                    <div class="border-t border-gray-200 bg-gray-50 p-6" >
                         <div class="space-y-3">
                             @if($nachricht->rueckmeldung->multiple)
                                 <div class="flex items-start gap-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">

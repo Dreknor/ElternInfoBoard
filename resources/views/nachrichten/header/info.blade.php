@@ -19,6 +19,16 @@
     </div>
 </div>
 
+@if(!is_null($nachricht->rueckmeldung))
+    <div class="mb-3">
+        <a href="#rueckmeldung_{{$nachricht->id}}"
+           class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2"
+           style="background-color: var(--color-primary, #1e3a8a); --tw-ring-color: var(--color-primary, #1e3a8a);">
+            <i class="fa fa-comment"></i>
+            <span>zur Rückmeldung</span>
+        </a>
+    </div>
+@endif
 
 <div class="" id="info_{{$nachricht->id}}">
     <div class="flex flex-wrap gap-2 mt-2">
