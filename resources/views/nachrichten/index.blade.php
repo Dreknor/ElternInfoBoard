@@ -92,6 +92,17 @@
                     $(this).toggleText('Pflichtaufgaben ausblenden', 'Pflichtaufgaben einblenden');
                 });
 
+                function updateFilterSwitchVisuals() {
+                    $('.filter_switch').each(function () {
+                        $(this).next('.filter_switch_track').css(
+                            'background-color',
+                            this.checked
+                                ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary')
+                                : getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')
+                        );
+                    });
+                }
+
                 @foreach(auth()->user()->groups as $group)
                 $('#{{\Illuminate\Support\Str::camel($group->name)}}').on('change', function (event) {
                     let target = event.target
@@ -106,6 +117,8 @@
                         $('.nachricht').show()
                         $('.anker_link').show()
                     }
+
+                    updateFilterSwitchVisuals();
                 });
                 @endforeach
             });

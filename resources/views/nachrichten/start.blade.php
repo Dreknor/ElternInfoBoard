@@ -112,9 +112,8 @@
                                             <input type="checkbox"
                                                    class="filter_switch sr-only peer"
                                                    id="{{\Illuminate\Support\Str::camel($group->name)}}">
-                                            <div class="w-9 h-5 rounded-full peer transition-all duration-200"
-                                                 style="background-color: var(--color-input-border);"
-                                                 :class="{ 'bg-primary': peer.checked }">
+                                            <div class="w-9 h-5 rounded-full transition-all duration-200 filter_switch_track"
+                                                 style="background-color: var(--color-input-border);">
                                                 <div class="absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 peer-checked:translate-x-4"></div>
                                             </div>
                                         </div>
