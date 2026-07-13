@@ -41,28 +41,6 @@
                                            "
                                            style="@if($nachricht->released == 1) background-color: var(--color-body-bg); @else background-color: var(--color-card-bg); border: 2px solid #f59e0b; @endif">
                                             <div class="flex items-start gap-2">
-                                                <!-- Icons Container -->
-                                                <div class="flex-shrink-0 flex flex-col gap-1">
-                                                    @if(! is_null($nachricht->rueckmeldung))
-                                                        <span class="inline-flex @if($nachricht->rueckmeldung->pflicht == 1) text-red-300 @endif">
-                                                            @switch($nachricht->rueckmeldung->type)
-                                                                @case('email')
-                                                                    <i class="fas fa-comment-dots text-sm"></i>
-                                                                    @break
-                                                                @case('abfrage')
-                                                                    <i class="fa fa-poll-h text-sm"></i>
-                                                                    @break
-                                                            @endswitch
-                                                        </span>
-                                                    @endif
-
-                                                    @if($nachricht->read_receipt == 1)
-                                                        <span class="inline-flex">
-                                                            <i class="fas fa-book-open text-sm"></i>
-                                                        </span>
-                                                    @endif
-                                                </div>
-
                                                 <!-- Nachricht Text -->
                                                 <div class="flex-1 min-w-0">
                                                     <span class="block text-sm font-semibold leading-tight break-words
@@ -78,6 +56,28 @@
 
                                                         {{\Illuminate\Support\Str::limit($nachricht->header, 60, $end='...')}}
                                                     </span>
+
+                                                    <!-- Badges für Rückmeldung / Lesebestätigung -->
+                                                    @if(! is_null($nachricht->rueckmeldung) or $nachricht->read_receipt == 1)
+                                                        <div class="flex flex-wrap items-center gap-1 mt-1.5">
+                                                            @if(! is_null($nachricht->rueckmeldung))
+                                                                <span title="@if($nachricht->rueckmeldung->pflicht == 1)Rückmeldung erforderlich@else Rückmeldung erwünscht @endif"
+                                                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
+                                                                          @if($nachricht->rueckmeldung->pflicht == 1) bg-red-600 text-white @else bg-amber-400 text-amber-900 @endif">
+                                                                    <i class="fas fa-reply text-[10px]"></i>
+                                                                    Rückmeldung
+                                                                </span>
+                                                            @endif
+
+                                                            @if($nachricht->read_receipt == 1)
+                                                                <span title="Lesebestätigung erforderlich"
+                                                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-blue-600 text-white">
+                                                                    <i class="fas fa-book-open text-[10px]"></i>
+                                                                    Lesebestätigung
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
 
                                                 <!-- Arrow Icon -->
