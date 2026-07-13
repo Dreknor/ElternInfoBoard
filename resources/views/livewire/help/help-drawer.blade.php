@@ -95,7 +95,8 @@
 
             {{-- Footer --}}
             <div class="px-5 py-3 border-t border-gray-200 bg-gray-50">
-                {{-- Support-Ticket --}}
+                {{-- Support-Ticket (eigenes Recht, unabhängig vom schwebenden Support-Button) --}}
+                @can('create support ticket')
                 <button
                     type="button"
                     x-data
@@ -107,6 +108,7 @@
                     <i class="fas fa-headset"></i>
                     Support-Ticket erstellen
                 </button>
+                @endcan
 
                 {{-- Links --}}
                 <div class="flex items-center justify-between">
