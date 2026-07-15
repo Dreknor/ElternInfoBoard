@@ -196,6 +196,17 @@ body {
 
 /* ── Scrollbares Modal (gilt für alle Geräte) ─────────────────── */
 
+/* Das äußere .modal (Tailwind-Compat-Layer) ist selbst overflow-y:auto
+   und deckt den ganzen Bildschirm ab (position: fixed; inset: 0).
+   Wenn zusätzlich .modal-content scrollt, konkurrieren auf Touch-Geräten
+   zwei verschachtelte Scroll-Container um die Touch-Geste – das Ergebnis
+   ist häufig, dass gar nichts scrollt. Daher übernimmt bei
+   .modal-dialog-scrollable ausschließlich .modal-content das Scrollen. */
+.modal.fade .modal-dialog-scrollable,
+#childModal {
+    overflow: hidden !important;
+}
+
 /* Breite: wird primär über Inline-Style gesetzt (sicherste Methode).
    Diese Regel greift als Fallback und für den Touch-Override. */
 .modal-dialog {
@@ -208,7 +219,10 @@ body {
 .modal-dialog-scrollable {
     display: flex !important;
     flex-direction: column;
+    /* dvh berücksichtigt auf mobilen Browsern die tatsächlich sichtbare
+       Höhe (ohne/mit Adressleiste); vh bleibt als Fallback erhalten. */
     max-height: calc(100vh - 3.5rem);
+    max-height: calc(100dvh - 3.5rem);
     align-items: stretch;   /* modal-content füllt die volle Dialogbreite */
 }
 
@@ -219,9 +233,17 @@ body {
     display: flex;
     flex-direction: column;
     max-height: calc(100vh - 3.5rem);
+    max-height: calc(100dvh - 3.5rem);
     overflow-y: auto !important;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    /* Erlaubt dem Browser, vertikales Touch-Scrolling sofort zu übernehmen,
+       statt erst zu prüfen, ob z.B. horizontal gescrollt/gezoomt werden soll –
+       verhindert "hängenbleibende" Scroll-Gesten auf Smartphones. */
+    touch-action: pan-y;
+    /* Verhindert, dass eine ausgeschöpfte Scrollgeste an den darunterliegenden
+       (eigentlich fixierten) Hintergrund/Modal-Rahmen weitergereicht wird. */
+    overscroll-behavior: contain;
 }
 
 /* Tab-Leiste bleibt beim Scrollen sichtbar */
@@ -414,10 +436,12 @@ body {
 
     .modal-dialog-scrollable {
         max-height: calc(100vh - 1rem);
+        max-height: calc(100dvh - 1rem);
     }
 
     .modal-dialog-scrollable .modal-content {
         max-height: calc(100vh - 1rem);
+        max-height: calc(100dvh - 1rem);
     }
 
     /* Close-Button: ausreichend groß für Finger */
