@@ -29,21 +29,12 @@ Zu den Kernfunktionen gehören:
 - 🔔 **Push-Benachrichtigungen** – Web-Push (VAPID) für alle wichtigen Ereignisse
 - 📧 **E-Mail-Benachrichtigungen** – konfigurierbare Mailbenachrichtigungen
 - 🤒 **Krankmeldungen** – digitale Krankmeldung mit Bestätigungsworkflow
-- 📆 **Vertretungsplan** – Integration und Anzeige des Vertretungsplans
 - 🗓️ **Stundenplan** – Import und Darstellung des Stundenplans
 - 👪 **Elternrat** – Aufgaben, Ereignisse und Verwaltung des Elternrats
 - 🏫 **Arbeitsgemeinschaften** – Verwaltung von AGs und Mitgliedschaften
-- ⏰ **Pflichtstunden & Schickzeiten** – Erfassung und Verwaltung
 - 🧹 **Reinigungsdienste** – Zuweisung und Protokollierung
 - 📨 **Rückmeldungen** – digitale Einverständniserklärungen und Formulare
-- 📰 **CMS-Seiten** – frei gestaltbare Inhaltsseiten mit Blöcken
 - 🔑 **SSO via Keycloak / OIDC** – Single Sign-On für Eltern
-- 🔄 **UCS@school-Synchronisation** – automatische Klassen- und Elternsynchronisation
-- 🖥️ **Kiosk-Modus** – Anzeige für öffentliche Bildschirme
-- 📱 **Mobile App** – Native App via NativePHP
-- 📤 **Excel-Import/Export** – Daten importieren und exportieren
-- 🎨 **Theme-System** – anpassbare Themes pro Schule
-- 🔍 **Audit-Log** – lückenlose Nachverfolgung aller Datenänderungen
 
 ---
 
