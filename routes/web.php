@@ -662,6 +662,6 @@ Route::middleware('auth')->group(function () {
 */
 Route::middleware(['auth', 'password_expired'])->group(function () {
     Route::post('/support/ticket', [SupportController::class, 'store'])
-         ->middleware('throttle:10,1')
+         ->middleware(['throttle:10,1', 'permission:use support widget|create support ticket'])
          ->name('support.ticket');
 });

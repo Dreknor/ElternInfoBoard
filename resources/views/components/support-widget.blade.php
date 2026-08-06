@@ -20,18 +20,22 @@
 >
 
     {{-- ═══ Trigger-Button (unten rechts) ════════════════════════════════ --}}
+    {{-- Eigenes Recht: Sichtbarkeit des schwebenden Buttons wird unabhängig
+         vom Button im Hilfe-Fenster gesteuert. --}}
+    @can('use support widget')
     <button
         type="button"
         @click="open = true"
         title="Support kontaktieren"
         aria-label="Support-Widget öffnen"
         x-show="!open"
-        class="fixed bottom-6 right-6 z-[1050] flex items-center justify-center w-12 h-12 rounded-full shadow-lg
+        class="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 lg:bottom-6 lg:right-6 z-[1050] flex items-center justify-center w-12 h-12 rounded-full shadow-lg
                bg-slate-700 hover:bg-slate-600 text-white transition-all duration-200 focus:outline-none
                focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
     >
         <i class="fas fa-headset text-lg"></i>
     </button>
+    @endcan
 
     {{-- ═══ Backdrop ════════════════════════════════════════════════════ --}}
     <div
@@ -57,7 +61,7 @@
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-4 scale-95"
         @keydown.escape.window="closeModal()"
-        class="fixed bottom-6 right-6 z-[1050] w-full max-w-sm rounded-2xl shadow-2xl border
+        class="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 left-4 sm:left-auto lg:bottom-6 lg:right-6 z-[1050] w-full max-w-sm rounded-2xl shadow-2xl border
                bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 overflow-hidden"
         style="display: none;"
         role="dialog"
