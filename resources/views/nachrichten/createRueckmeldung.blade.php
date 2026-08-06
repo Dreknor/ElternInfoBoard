@@ -8,7 +8,7 @@
             </h6>
         </div>
         <div class="card-body">
-            <form action="{{url("/rueckmeldung/$nachricht->id/create")}}" method="post" class="form form-horizontal">
+            <form action="{{url("/rueckmeldung/$nachricht->id/create")}}" method="post" class="form form-horizontal" id="rueckmeldungForm">
                 @csrf
                 <div class="row">
                     <div class="col-md-4">
@@ -38,8 +38,8 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label>Rückmeldung</label>
-                            <textarea class="form-control border-input" name="text">
+                            <label>Rückmeldung*</label>
+                            <textarea class="form-control border-input" name="text" id="text" required>
                                 {{old('text')}}
                             </textarea>
                         </div>
@@ -135,6 +135,7 @@
             const endInput = document.getElementById('terminliste_end_date');
             const select = document.querySelector('select[name="liste_id"]');
             const multipleHint = document.getElementById('terminlisteMultipleHint');
+            const form = document.getElementById('rueckmeldungForm');
 
             startInput.addEventListener('change', function () {
                 if (!endInput.value || endInput.value < startInput.value) {
@@ -151,6 +152,18 @@
                     multipleHint.style.display = 'flex';
                 } else {
                     multipleHint.style.display = 'none';
+                }
+            });
+
+            form.addEventListener('submit', function (event) {
+                const editor = tinymce.get('text');
+                if (editor) {
+                    const content = editor.getContent({format: 'text'}).trim();
+                    if (content.length === 0) {
+                        event.preventDefault();
+                        alert('Bitte geben Sie einen Text für die Rückmeldung ein.');
+                        editor.focus();
+                    }
                 }
             });
         });
