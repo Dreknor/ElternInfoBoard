@@ -29,6 +29,8 @@ class AufnahmeImportVorlage implements FromArray, ShouldAutoSize, WithHeadings, 
             'S2 Vorname',       // Spalte 7 (Standard: S2Vorname=7, optional)
             'S2 Nachname',      // Spalte 8 (Standard: S2Nachname=8, optional)
             'S2 E-Mail',        // Spalte 9 (Standard: S2Email=9, optional)
+            'Kind Vorname',     // Spalte 10 (optional – für automatische Eltern-Kind-Verknüpfung)
+            'Kind Nachname',    // Spalte 11 (optional – für automatische Eltern-Kind-Verknüpfung)
         ];
     }
 
@@ -45,6 +47,8 @@ class AufnahmeImportVorlage implements FromArray, ShouldAutoSize, WithHeadings, 
                 'Stefan',                        // S2 Vorname (optional)
                 'Beispiel',                      // S2 Nachname (optional)
                 'stefan.beispiel@example.com',   // S2 E-Mail (optional)
+                'Moritz',                        // Kind Vorname (optional)
+                'Beispiel',                      // Kind Nachname (optional)
             ],
         ];
     }

@@ -29,6 +29,8 @@ class ElternImportVorlage implements FromArray, ShouldAutoSize, WithHeadings, Wi
             'S2 Vorname',       // Spalte 7 (Standard: S2Vorname=7)
             'S2 Nachname',      // Spalte 8 (Standard: S2Nachname=8)
             'S2 E-Mail',        // Spalte 9 (Standard: S2Email=9)
+            'Kind Vorname',     // Spalte 10 (optional – für automatische Eltern-Kind-Verknüpfung)
+            'Kind Nachname',    // Spalte 11 (optional – für automatische Eltern-Kind-Verknüpfung)
         ];
     }
 
@@ -45,6 +47,8 @@ class ElternImportVorlage implements FromArray, ShouldAutoSize, WithHeadings, Wi
                 'Erika',                         // S2 Vorname (optional)
                 'Mustermann',                    // S2 Nachname (optional)
                 'erika.mustermann@example.com',  // S2 E-Mail (optional)
+                'Moritz',                        // Kind Vorname (optional)
+                'Mustermann',                    // Kind Nachname (optional)
             ],
         ];
     }
