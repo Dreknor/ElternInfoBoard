@@ -49,7 +49,7 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
     public function collection(Collection $collection)
     {
         foreach ($collection as $row) {
-            if (array_key_exists('e_mail', $row) and ! is_null($row['e_mail'])) {
+            if ($row->has('e_mail') && ! is_null($row['e_mail'])) {
                 $password = Str::password(12, true, true, true, false);
 
                 $user = User::firstOrCreate([
