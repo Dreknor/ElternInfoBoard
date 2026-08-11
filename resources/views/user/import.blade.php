@@ -131,7 +131,7 @@
                                 :disabled="!importTyp"
                                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all text-white"
                                 :class="importTyp ? 'hover:opacity-90 cursor-pointer' : 'bg-gray-200 !text-gray-400 cursor-not-allowed'"
-                                :style="importTyp ? 'background-color: var(--primary)' : ''">
+                                :style="importTyp ? 'background-color: var(--color-primary)' : ''">
                             Weiter <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -488,7 +488,7 @@
                                 :disabled="!canProceedStep2"
                                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all text-white"
                                 :class="canProceedStep2 ? 'hover:opacity-90 cursor-pointer' : 'bg-gray-200 !text-gray-400 cursor-not-allowed'"
-                                :style="canProceedStep2 ? 'background-color: var(--primary)' : ''">
+                                :style="canProceedStep2 ? 'background-color: var(--color-primary)' : ''">
                             Weiter <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
