@@ -46,6 +46,28 @@ class UsersImport implements ToCollection, WithHeadingRow
         return $this->newUsers;
     }
 
+    /**
+     * Sucht eine Gruppe anhand ihres Namens im bereits geladenen Cache und legt sie andernfalls
+     * neu an. So werden im Import angegebene Klassenstufen/Lerngruppen/Gruppen zuverlässig
+     * zugeordnet, selbst wenn sie im System noch nicht existieren. Der Cache wird sofort
+     * aktualisiert, damit mehrfach vorkommende Gruppennamen innerhalb desselben Imports nicht
+     * mehrfach angelegt werden.
+     */
+    private function findOrCreateGroup(string $name): Group
+    {
+        $group = $this->groups->firstWhere('name', $name);
+        if (! is_null($group)) {
+            return $group;
+        }
+
+        $group = Group::withoutGlobalScope(GetGroupsScope::class)->firstOrCreate(['name' => $name]);
+        $this->groups->push($group);
+
+        Log::info("Gruppe neu angelegt: {$name} (ID: {$group->id})");
+
+        return $group;
+    }
+
     /** Liest eine Zellen-Spalte robust aus: trimmt und liefert null bei fehlendem/leerem Wert. */
     private function cellValue(array $row, string $key): ?string
     {
@@ -161,15 +183,24 @@ class UsersImport implements ToCollection, WithHeadingRow
             $row = array_values($row->toArray());
 
             // ── Gruppen aus Klassenstufe / Lerngruppe ──────────────────────────
+            // Existieren die Gruppen noch nicht, werden sie hier angelegt, damit die
+            // Zuordnung nicht stillschweigend ausbleibt, nur weil die Gruppe im System
+            // noch fehlt.
             $klassenstufeValue = $this->cellValue($row, 'klassenstufe');
             $Klassenstufe = ! empty($klassenstufeValue)
-                ? $this->groups->firstWhere('name', 'Klassenstufe ' . $klassenstufeValue)
+                ? $this->findOrCreateGroup('Klassenstufe ' . $klassenstufeValue)
                 : null;
 
             $lerngruppeValue = $this->cellValue($row, 'lerngruppe');
             $Lerngruppe = ! empty($lerngruppeValue)
-                ? $this->groups->firstWhere('name', substr($lerngruppeValue, 1))
+                ? $this->findOrCreateGroup(substr($lerngruppeValue, 1))
                 : null;
+
+            // Fehlt eine der beiden Angaben, wird sie durch die jeweils andere ersetzt, damit
+            // ein Kind (siehe unten) und die Sorgeberechtigten immer korrekt einer Klasse
+            // zugeordnet werden, auch wenn im Import nur eine der beiden Spalten befüllt war.
+            $Klassenstufe ??= $Lerngruppe;
+            $Lerngruppe ??= $Klassenstufe;
 
             $gruppen = [];
             if (! is_null($Klassenstufe)) {
@@ -183,10 +214,12 @@ class UsersImport implements ToCollection, WithHeadingRow
             $gruppenListe = $this->cellValue($row, 'gruppen');
             if (! empty($gruppenListe)) {
                 foreach (explode(',', $gruppenListe) as $user_group) {
-                    $group = $this->groups->firstWhere('name', trim($user_group));
-                    if (! is_null($group)) {
-                        $gruppen[$group->id] = $group->id;
+                    $user_group = trim($user_group);
+                    if ($user_group === '') {
+                        continue;
                     }
+                    $group = $this->findOrCreateGroup($user_group);
+                    $gruppen[$group->id] = $group->id;
                 }
             }
 
@@ -263,6 +296,22 @@ class UsersImport implements ToCollection, WithHeadingRow
                             'class_id'   => $Lerngruppe?->id,
                         ]);
                         Log::info("Kind neu angelegt: {$kindVorname} {$kindNachname} (ID: {$child->id})");
+                    } else {
+                        // Bereits bestehendes Kind: fehlende Klassenstufe/Lerngruppe nachtragen,
+                        // statt sie dauerhaft leer zu lassen, falls der Import diesmal Werte liefert.
+                        $updated = false;
+                        if (! $child->group_id && $Klassenstufe) {
+                            $child->group_id = $Klassenstufe->id;
+                            $updated = true;
+                        }
+                        if (! $child->class_id && $Lerngruppe) {
+                            $child->class_id = $Lerngruppe->id;
+                            $updated = true;
+                        }
+                        if ($updated) {
+                            $child->save();
+                            Log::info("Kind aktualisiert (Klasse/Lerngruppe ergänzt): {$kindVorname} {$kindNachname} (ID: {$child->id})");
+                        }
                     }
 
                     if ($user1) {
