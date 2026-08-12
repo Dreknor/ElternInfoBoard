@@ -3,7 +3,7 @@
         $groupsAndClassesIdentical = $groups->pluck('id')->sort()->values()->all() === $classes->pluck('id')->sort()->values()->all();
     @endphp
     <div class="row">
-        @foreach($groups as $group)
+        @foreach($groups->sortBy('name') as $group)
             @if($careSettings->hide_groups_when_empty and $children->where('group_id', $group->id)->count() == 0)
                 @continue
             @endif
