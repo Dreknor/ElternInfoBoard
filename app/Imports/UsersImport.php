@@ -277,9 +277,16 @@ class UsersImport implements ToCollection, WithHeadingRow
                         ->where('last_name', $kindNachname);
 
                     if ($Lerngruppe) {
+                        // Ein bereits existierendes, aber noch KEINER Klasse zugeordnetes Kind
+                        // (group_id und class_id beide leer) muss ebenfalls gefunden werden –
+                        // sonst würde bei jedem Import ein doppeltes Kind angelegt, statt die
+                        // fehlende Zuordnung nachzutragen.
                         $childQuery->where(function ($q) use ($Lerngruppe) {
                             $q->where('group_id', $Lerngruppe->id)
-                                ->orWhere('class_id', $Lerngruppe->id);
+                                ->orWhere('class_id', $Lerngruppe->id)
+                                ->orWhere(function ($q2) {
+                                    $q2->whereNull('group_id')->whereNull('class_id');
+                                });
                         });
                     }
 
