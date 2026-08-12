@@ -1,74 +1,273 @@
-@foreach($groups as $group)
-    <div class="col-lg-3 col-md-6 mb-1">
-        <div class="card">
-            <div class="card-header bg-primary text-white"
-                 style="position: sticky; top: 0; z-index: 1; padding: 0.5rem;">
-                <h3 style="margin: 0;">{{ $group->name }}</h3>
-            </div>
-            <div class="card-body" style="padding: 0.5rem;">
-                @foreach($classes as $class)
-                    <h4 class="text-secondary"
-                        style="position: sticky; top: 60px; z-index: 1; background-color: white; margin: 0.5rem 0;">
-                        {{ $class->name }}
-                    </h4>
+<div class="container-fluid">
+    @php
+        $groupsAndClassesIdentical = $groups->pluck('id')->sort()->values()->all() === $classes->pluck('id')->sort()->values()->all();
+    @endphp
+    <div class="row">
+        @foreach($groups as $group)
+            @if($careSettings->hide_groups_when_empty and $children->where('group_id', $group->id)->count() == 0)
+                @continue
+            @endif
+            <div class="col-lg-3 col-md-6 mb-1">
+                <div class="card">
+                    <div class="card-header bg-primary text-white"
+                         style="position: sticky; top: 0; z-index: 1; padding: 0.5rem; background-color: #007bff !important; color: #fff !important;">
+                        <span class="badge badge-warning float-right">{{ $children->where('group_id', $group->id)->count() }}</span>
 
-                    @php
-                        $sortedChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)->sortBy('last_name');
-                    @endphp
-                    <div class="row">
-                        @foreach($sortedChildren as $child)
-                            <div class="col-12 mb-1">
-                                <div class="card p-1 child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
-                                     data-child='@json(array_merge($child->toArray(), ['checked_in' => $child->checkedIn() ? 'true' : 'false', 'schickzeiten' => $child->getSchickzeitenForToday()]))'
-                                     style="padding: 0.5rem;">
-                                    <div class="d-flex align-items-center">
-                                        <img
-                                            src="{{ isset($child['image']) ? $child['image'] : asset('img/avatar.png') }}"
-                                            class="avatar-img mr-2"
-                                            alt="{{ $child['first_name'] }} {{ $child['last_name'] }}">
-                                        <div class="w-100">
+                        <h3 style="margin: 0;">{{ $group->name }}</h3>
+                    </div>
+                    <div class="card-body" style="padding: 0.5rem;">
+                        @if($groupsAndClassesIdentical)
+                            @php
+                                $sortedChildren = $children->where('group_id', $group->id)?->sortBy('last_name');
+                            @endphp
+                            <ul class="list-group" style="margin: 0;">
+                                @forelse($sortedChildren as $child)
+                                    @php
+                                        $childData = array_merge(
+                                            $child->toArray(),
+                                            [
+                                                'checked_in' => $child->checkedIn() ? 'true' : 'false',
+                                                'schickzeiten' => $child->getSchickzeitenForToday()?->toArray(),
+                                                'regular_schickzeiten' => $child->regularSchickzeiten?->toArray(),
+                                                'mandates' => $child->mandates?->toArray(),
 
-                                                {{ $child['last_name'] }}, {{ $child['first_name'] }}
-                                                @if($child->getSchickzeitenForToday()->count() > 0 and $child->checkedIn())
-                                                    <div class="p-2 pull-right">
+                                            ]
+                                        );
+                                    @endphp
+                                    <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
+                                        data-child='@json($childData)'
+                                        data-notices='@json($child->hasNotice())'
+                                        style="padding: 0.5rem;">
+                                        <div class="container-fluid">
+                                            <div class="row">
+                                                <div class="col-2 d-flex justify-content-center align-items-center" style="gap: 4px; flex-wrap: wrap;">
+                                                    @if($child->should_be_today() and !$child->checkedIn())
+                                                        <div title="Anwesenheit noch nicht bestätigt"
+                                                             style="width:26px;height:26px;border-radius:50%;background-color:#17a2b8;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                                            <i class="fas fa-question" style="font-size:12px;"></i>
+                                                        </div>
+                                                    @endif
 
-                                                        @foreach($child->getSchickzeitenForToday()->sortBy('type') as $schickzeit)
+                                                    @if($child->hasNotice())
+                                                        <div title="Nachricht vorhanden"
+                                                             class="@if($child->noticeToday()->isNew()) blink @endif"
+                                                             style="width:26px;height:26px;border-radius:50%;background-color:#fd7e14;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                                            <i class="fas fa-envelope" style="font-size:11px;"></i>
+                                                        </div>
+                                                    @endif
+
+                                                    @if($child->krankmeldungToday())
+                                                        <div class="badge badge-danger" style="font-size:0.7rem;">
+                                                            <i class="fas fa-ban"></i> Krank
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="col-auto d-flex justify-content-center align-items-center name">
+                                                    {{ $child->last_name }}, {{ $child->first_name }}
+                                                </div>
+                                                <div class="col-auto d-flex justify-content-center align-items-center ">
+                                                    @if($child->getSchickzeitenForToday()?->count() > 0 and $child->checkedIn())
+                                                        @foreach($child->getSchickzeitenForToday()?->sortBy('type') as $schickzeit)
                                                             @php
                                                                 $currentTime = now();
-                                                                $schickzeitTime = $schickzeit->time;
-                                                                $timeDifference = $currentTime->diffInMinutes($schickzeitTime, false);
-                                                                $backgroundClass = '';
+                                                                $backgroundClass = 'badge badge-';
+                                                                $text_size = 'text-smaller';
 
-                                                                if (!$child->checkedIn()) {
-                                                                    $backgroundClass = "schickzeit_liste";
-                                                                } elseif ($timeDifference <= 10 && $timeDifference >= 0 && ($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')) {
-                                                                    $backgroundClass = "schickzeit_liste  schickzeit_liste--yellow";
-                                                                } elseif ($timeDifference < 0 && ($schickzeit->type == 'genau' || $schickzeit->type == 'spät.')) {
-                                                                    $backgroundClass = "schickzeit_liste  schickzeit_liste--red text-medium";
-
+                                                                if($schickzeit->type == 'ab' and (isset($schickzeit->time_ab) && $currentTime->isBefore($schickzeit?->time_ab))) {
+                                                                    $backgroundClass .= 'success';
+                                                                    $text_size = 'text-smaller';
+                                                                } elseif($schickzeit->type == 'ab' and ($schickzeit->time_ab && $currentTime->isAfter($schickzeit->time_ab)) and ($schickzeit->time_spaet && $currentTime->isBefore($schickzeit->time_spaet))) {
+                                                                    $backgroundClass .= 'warning';
+                                                                    $text_size = 'text-great';
+                                                                } elseif($schickzeit->type == 'ab' and $schickzeit->time_spaet and $currentTime->isAfter($schickzeit->time_spaet)) {
+                                                                    $backgroundClass .= 'danger';
+                                                                    $text_size = 'text-medium';
+                                                                } elseif($schickzeit->type == 'genau' and $schickzeit->time and $currentTime->isBefore($schickzeit->time)) {
+                                                                    $backgroundClass .= 'success';
+                                                                    $text_size = 'text-smaller';
+                                                                } elseif($schickzeit->type == 'genau' and $schickzeit->time and $currentTime->isAfter($schickzeit->time)) {
+                                                                    $backgroundClass .= 'danger';
+                                                                    $text_size = 'text-great';
                                                                 } else {
-                                                                    $backgroundClass = "schickzeit_liste schickzeit_liste--blue";
+                                                                    $backgroundClass .= 'primary';
+                                                                    $text_size = 'text-medium';
                                                                 }
-                                                            @endphp
 
-                                                        <span class="{{ $backgroundClass }}">
-                                                            @if($schickzeit->type == 'genau')
-                                                                {{ $schickzeit->time->format('H:i') }}
+                                                            @endphp
+                                                            @if($schickzeit->type == 'ab')
+                                                                @if($schickzeit->time_ab != '')
+                                                                    <span class="{{ $backgroundClass }} text-smaller">
+                                                                         ab {{ $schickzeit->time_ab?->format('H:i') }}
+                                                                    </span>
+                                                                @endif
+                                                                @if($schickzeit->time_spaet)
+                                                                    <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                             {{ $schickzeit->time_spaet?->format('H:i') }} (spät.)
+                                                                        </span>
+                                                                @endif
                                                             @else
-                                                                {{ $schickzeit->time->format('H:i') }} @if(!$loop->last) - @endif
+                                                                <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                       <i class="fa-regular fa-clock mr-1"></i>  {{ $schickzeit->time?->format('H:i') }}
+                                                                    </span>
                                                             @endif
-                                                        </span>
-                                                    @endforeach
+                                                        @endforeach
+                                                    @endif
+                                                    @if(!($isFerientag ?? false) && $child->arbeitsgemeinschaften_today()->isNotEmpty())
+                                                        @foreach($child->arbeitsgemeinschaften_today() as $ag)
+                                                            <span class="badge badge-primary ml-1">
+                                                                <i class="fas fa-users"></i> AG
+                                                                {{ $ag->name }}, <br> {{ $ag->start_time->format('H:i') }} - {{ $ag->end_time->format('H:i') }}
+                                                            </span>
+                                                        @endforeach
+                                                    @endif
                                                 </div>
-                                                @endif
+
+                                            </div>
+
+
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+
+                                    </li>
+                                @empty
+                                    @if($careSettings->show_message_on_empty_group)
+                                        <li class="list-group-item bg-gradient-directional-light-yellow" style="padding: 0.5rem;">
+                                            Keine Kinder in dieser Klassenstufe
+                                        </li>
+                                    @endif
+                                @endforelse
+                            </ul>
+                        @else
+                            @foreach($classes as $class)
+                                @if($careSettings->hide_groups_when_empty and $children->where('group_id', $group->id)->where('class_id', $class->id)->count() == 0)
+                                    @continue
+                                @endif
+                                <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 60px; z-index: 1; margin: 0.5rem 0;">
+                                    {{ $class->name }}  <span class="badge badge-primary float-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
+                                </h4>
+                                @php
+                                    $sortedClassChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)?->sortBy('last_name');
+                                @endphp
+                                <ul class="list-group" style="margin: 0;">
+                                    @forelse($sortedClassChildren as $child)
+                                        @php
+                                            $childData = array_merge(
+                                                $child->toArray(),
+                                                [
+                                                    'checked_in' => $child->checkedIn() ? 'true' : 'false',
+                                                    'schickzeiten' => $child->getSchickzeitenForToday()?->toArray(),
+                                                    'regular_schickzeiten' => $child->regularSchickzeiten?->toArray(),
+                                                    'mandates' => $child->mandates?->toArray(),
+
+                                                ]
+                                            );
+                                        @endphp
+                                        <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
+                                            data-child='@json($childData)'
+                                            data-notices='@json($child->hasNotice())'
+                                            style="padding: 0.5rem;">
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col-2 d-flex justify-content-center align-items-center" style="gap: 4px; flex-wrap: wrap;">
+                                                        @if($child->should_be_today() and !$child->checkedIn())
+                                                            <div title="Anwesenheit noch nicht bestätigt"
+                                                                 style="width:26px;height:26px;border-radius:50%;background-color:#17a2b8;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                                                <i class="fas fa-question" style="font-size:12px;"></i>
+                                                            </div>
+                                                        @endif
+
+                                                        @if($child->hasNotice())
+                                                            <div title="Nachricht vorhanden"
+                                                                 class="@if($child->noticeToday()->isNew()) blink @endif"
+                                                                 style="width:26px;height:26px;border-radius:50%;background-color:#fd7e14;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                                                <i class="fas fa-envelope" style="font-size:11px;"></i>
+                                                            </div>
+                                                        @endif
+
+                                                        @if($child->krankmeldungToday())
+                                                            <div class="badge badge-danger" style="font-size:0.7rem;">
+                                                                <i class="fas fa-ban"></i> Krank
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="col-auto d-flex justify-content-center align-items-center name">
+                                                        {{ $child->last_name }}, {{ $child->first_name }}
+                                                    </div>
+                                                    <div class="col-auto d-flex justify-content-center align-items-center ">
+                                                        @if($child->getSchickzeitenForToday()?->count() > 0 and $child->checkedIn())
+                                                            @foreach($child->getSchickzeitenForToday()?->sortBy('type') as $schickzeit)
+                                                                @php
+                                                                    $currentTime = now();
+                                                                    $backgroundClass = 'badge badge-';
+                                                                    $text_size = 'text-smaller';
+
+                                                                    if($schickzeit->type == 'ab' and (isset($schickzeit->time_ab) && $currentTime->isBefore($schickzeit?->time_ab))) {
+                                                                        $backgroundClass .= 'success';
+                                                                        $text_size = 'text-smaller';
+                                                                    } elseif($schickzeit->type == 'ab' and ($schickzeit->time_ab && $currentTime->isAfter($schickzeit->time_ab)) and ($schickzeit->time_spaet && $currentTime->isBefore($schickzeit->time_spaet))) {
+                                                                        $backgroundClass .= 'warning';
+                                                                        $text_size = 'text-great';
+                                                                    } elseif($schickzeit->type == 'ab' and $schickzeit->time_spaet and $currentTime->isAfter($schickzeit->time_spaet)) {
+                                                                        $backgroundClass .= 'danger';
+                                                                        $text_size = 'text-medium';
+                                                                    } elseif($schickzeit->type == 'genau' and $schickzeit->time and $currentTime->isBefore($schickzeit->time)) {
+                                                                        $backgroundClass .= 'success';
+                                                                        $text_size = 'text-smaller';
+                                                                    } elseif($schickzeit->type == 'genau' and $schickzeit->time and $currentTime->isAfter($schickzeit->time)) {
+                                                                        $backgroundClass .= 'danger';
+                                                                        $text_size = 'text-great';
+                                                                    } else {
+                                                                        $backgroundClass .= 'primary';
+                                                                        $text_size = 'text-medium';
+                                                                    }
+
+                                                                @endphp
+                                                                @if($schickzeit->type == 'ab')
+                                                                    @if($schickzeit->time_ab != '')
+                                                                        <span class="{{ $backgroundClass }} text-smaller">
+                                                                             ab {{ $schickzeit->time_ab?->format('H:i') }}
+                                                                        </span>
+                                                                    @endif
+                                                                    @if($schickzeit->time_spaet)
+                                                                        <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                                 {{ $schickzeit->time_spaet?->format('H:i') }} (spät.)
+                                                                            </span>
+                                                                    @endif
+                                                                @else
+                                                                    <span class="{{ $backgroundClass }} {{$text_size}}">
+                                                                           <i class="fa-regular fa-clock mr-1"></i>  {{ $schickzeit->time?->format('H:i') }}
+                                                                        </span>
+                                                                @endif
+                                                            @endforeach
+                                                        @endif
+                                                        @if(!($isFerientag ?? false) && $child->arbeitsgemeinschaften_today()->isNotEmpty())
+                                                            @foreach($child->arbeitsgemeinschaften_today() as $ag)
+                                                                <span class="badge badge-primary ml-1">
+                                                                    <i class="fas fa-users"></i> AG
+                                                                    {{ $ag->name }}, <br> {{ $ag->start_time->format('H:i') }} - {{ $ag->end_time->format('H:i') }}
+                                                                </span>
+                                                            @endforeach
+                                                        @endif
+                                                    </div>
+
+                                                </div>
+
+
+                                            </div>
+
+                                        </li>
+                                    @empty
+                                        @if($careSettings->show_message_on_empty_group)
+                                            <li class="list-group-item bg-gradient-directional-light-yellow" style="padding: 0.5rem;">
+                                                Keine Kinder in dieser Klassenstufe
+                                            </li>
+                                        @endif
+                                    @endforelse
+                                </ul>
+                            @endforeach
+                        @endif
                     </div>
-                @endforeach
+                </div>
             </div>
-        </div>
+        @endforeach
     </div>
-@endforeach
+</div>

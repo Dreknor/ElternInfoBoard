@@ -181,4 +181,40 @@ class UsersImportGroupChildTest extends TestCase
         $this->assertEquals($klassenstufe->id, $child->group_id);
         $this->assertEquals($lerngruppe->id, $child->class_id);
     }
+
+    /** @test */
+    public function no_group_with_empty_name_is_created(): void
+    {
+        // Regressionstest: Besteht die Lerngruppen-Spalte nur aus dem zu entfernenden
+        // Präfixzeichen (z.B. "b" statt "b5a") oder ist die Gruppen-Spalte nur mit Kommas/
+        // Leerzeichen befüllt, darf niemals eine Gruppe mit leerem Namen angelegt werden.
+        Role::firstOrCreate(['name' => 'Eltern', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Aufnahme', 'guard_name' => 'web']);
+
+        $path = $this->importPath('test_group_empty_name_import.xlsx', [
+            'klassenstufe', 'lerngruppe', 'gruppen', 'S1Vorname', 'S1Nachname', 'S1Email',
+        ], [
+            ['9', 'b', ' , ', 'Karl', 'Fehler', 'karl@example.com'],
+        ]);
+
+        $header = [
+            'klassenstufe' => 0,
+            'lerngruppe'   => 1,
+            'gruppen'      => 2,
+            'S1Vorname'    => 3,
+            'S1Nachname'   => 4,
+            'S1Email'      => 5,
+        ];
+
+        Excel::import(new UsersImport($header, false), $path);
+        @unlink($path);
+
+        $this->assertDatabaseMissing('groups', ['name' => '']);
+
+        $user = User::where('email', 'karl@example.com')->first();
+        $this->assertNotNull($user);
+        // Nur die gültige Klassenstufe darf zugewiesen sein, keine leere Gruppe.
+        $this->assertTrue($user->groups->contains('name', 'Klassenstufe 9'));
+        $this->assertFalse($user->groups->contains('name', ''));
+    }
 }
