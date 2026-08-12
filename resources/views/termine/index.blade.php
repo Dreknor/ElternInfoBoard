@@ -148,7 +148,7 @@
                                                             </p>
                                                         </div>
 
-                                                        @if($termin->groups && count($termin->groups) > 0)
+                                                        @if($termin->groups && count($termin->groups) > 0 && auth()->user()->can('edit termin'))
                                                             <div class="col-md-6 mb-2">
                                                                 <p class="mb-0" style="color: var(--color-text-secondary);">
                                                                     <i class="fas fa-users" style="color: var(--color-widget-accent-from);"></i>
