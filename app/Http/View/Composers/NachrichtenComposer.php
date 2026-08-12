@@ -20,7 +20,9 @@ class NachrichtenComposer
 
         $expire = 30;
 
-        $nachrichten = Cache::remember('posts_'.auth()->id(), $expire, function () {
+        $cacheKey = 'posts_'.auth()->id().'_v'.Post::cacheVersion();
+
+        $nachrichten = Cache::remember($cacheKey, $expire, function () {
             $user = auth()->user();
 
             if (! $user->can('view all')) {

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -56,6 +57,21 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
             'read_receipt' => 'boolean',
             'no_header' => 'boolean',
         ];
+    }
+
+
+    public static function cacheVersion(): int
+    {
+        return (int) Cache::get('posts_cache_version', 1);
+    }
+
+    /**
+     * Invalidiert die Nachrichten-Caches für alle Benutzer, indem die
+     * Cache-Version erhöht wird.
+     */
+    public static function bumpCacheVersion(): void
+    {
+        Cache::forever('posts_cache_version', self::cacheVersion() + 1);
     }
 
     public function groups(): BelongsToMany

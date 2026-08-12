@@ -183,7 +183,9 @@ class NachrichtenController extends Controller implements HasMiddleware
             ]);
         }
 
-        $nachrichten = Cache::remember('posts_external_'.auth()->id(), 1, function () {
+        $cacheKey = 'posts_external_'.auth()->id().'_v'.Post::cacheVersion();
+
+        $nachrichten = Cache::remember($cacheKey, 1, function () {
             $user = auth()->user();
 
             if (! $user->can('view all')) {
@@ -825,6 +827,8 @@ class NachrichtenController extends Controller implements HasMiddleware
 
             $post->delete();
 
+
+
             return redirect()->to('/home')->with([
                 'type' => 'success',
                 'Meldung' => 'Nachricht gelöscht',
@@ -1003,12 +1007,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $post->load(['autor', 'groups', 'rueckmeldung', 'media']);
 
-        // HTML für DomPDF bereinigen: Pixel-Breiten und overflow-x-auto entfernen,
-        // damit Tabellen beim Seitenumbruch nicht abgeschnitten werden.
         $post->news = $this->sanitizeHtmlForPdf($post->news);
-
-        // <img>-Tags im Beitragstext durch Base64-Data-URIs ersetzen,
-        // da DomPDF mit isRemoteEnabled=false keine externen URLs lädt.
         $post->news = $this->embedImagesAsBase64($post->news);
 
         // Angehängte Bilder (Media Library) als Base64 für das PDF-Template vorbereiten.
