@@ -52,9 +52,20 @@ class UsersImport implements ToCollection, WithHeadingRow
      * zugeordnet, selbst wenn sie im System noch nicht existieren. Der Cache wird sofort
      * aktualisiert, damit mehrfach vorkommende Gruppennamen innerhalb desselben Imports nicht
      * mehrfach angelegt werden.
+     *
+     * Liefert null bei leerem/nur aus Whitespace bestehendem Namen, damit niemals eine Gruppe
+     * ohne (sinnvollen) Namen angelegt wird – z.B. wenn eine Lerngruppen-Spalte nur aus dem zu
+     * entfernenden Präfixzeichen besteht (z.B. "b" statt "b5a").
      */
-    private function findOrCreateGroup(string $name): Group
+    private function findOrCreateGroup(string $name): ?Group
     {
+        $name = trim($name);
+        if ($name === '') {
+            Log::warning('Gruppe mit leerem Namen übersprungen (kein gültiger Gruppenname im Import gefunden)');
+
+            return null;
+        }
+
         $group = $this->groups->firstWhere('name', $name);
         if (! is_null($group)) {
             return $group;
@@ -83,6 +94,17 @@ class UsersImport implements ToCollection, WithHeadingRow
         $value = trim((string) $value);
 
         return $value === '' ? '' : $value;
+    }
+
+    /**
+     * Prüft, ob ein per cellValue() gelesener Wert tatsächlich befüllt ist. Bewusst KEIN
+     * empty($value), da PHP z.B. die Zeichenkette "0" (z.B. Klassenstufe "0" für eine
+     * Vorschulklasse) fälschlicherweise als "leer" behandeln würde und die Angabe dann trotz
+     * Befüllung im Import verloren ginge.
+     */
+    private function hasValue(?string $value): bool
+    {
+        return $value !== null && $value !== '';
     }
 
     /**
@@ -187,12 +209,12 @@ class UsersImport implements ToCollection, WithHeadingRow
             // Zuordnung nicht stillschweigend ausbleibt, nur weil die Gruppe im System
             // noch fehlt.
             $klassenstufeValue = $this->cellValue($row, 'klassenstufe');
-            $Klassenstufe = ! empty($klassenstufeValue)
+            $Klassenstufe = $this->hasValue($klassenstufeValue)
                 ? $this->findOrCreateGroup('Klassenstufe ' . $klassenstufeValue)
                 : null;
 
             $lerngruppeValue = $this->cellValue($row, 'lerngruppe');
-            $Lerngruppe = ! empty($lerngruppeValue)
+            $Lerngruppe = $this->hasValue($lerngruppeValue)
                 ? $this->findOrCreateGroup(substr($lerngruppeValue, 1))
                 : null;
 
@@ -212,14 +234,12 @@ class UsersImport implements ToCollection, WithHeadingRow
 
             // ── Zusätzliche Gruppen aus Gruppen-Spalte (Komma-getrennt) ─────────
             $gruppenListe = $this->cellValue($row, 'gruppen');
-            if (! empty($gruppenListe)) {
+            if ($this->hasValue($gruppenListe)) {
                 foreach (explode(',', $gruppenListe) as $user_group) {
-                    $user_group = trim($user_group);
-                    if ($user_group === '') {
-                        continue;
-                    }
                     $group = $this->findOrCreateGroup($user_group);
-                    $gruppen[$group->id] = $group->id;
+                    if (! is_null($group)) {
+                        $gruppen[$group->id] = $group->id;
+                    }
                 }
             }
 
