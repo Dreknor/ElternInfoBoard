@@ -5,7 +5,6 @@ namespace App\Observers;
 use App\Jobs\PushPostToWordpress;
 use App\Model\Module;
 use App\Model\Post;
-use Illuminate\Support\Facades\Cache;
 
 class PostObserver
 {
@@ -16,7 +15,7 @@ class PostObserver
      */
     public function created(Post $post): void
     {
-        Cache::forget('posts_'.auth()->id());
+        Post::bumpCacheVersion();
 
     }
 
@@ -33,7 +32,7 @@ class PostObserver
             PushPostToWordpress::dispatch($post);
         }
 
-        Cache::forget('posts_'.auth()->id());
+        Post::bumpCacheVersion();
 
     }
 
@@ -44,7 +43,7 @@ class PostObserver
      */
     public function deleted(Post $post): void
     {
-        Cache::forget('posts_'.auth()->id());
+        Post::bumpCacheVersion();
 
     }
 
@@ -55,7 +54,7 @@ class PostObserver
      */
     public function restored(Post $post): void
     {
-        Cache::forget('posts_'.auth()->id());
+        Post::bumpCacheVersion();
 
     }
 
@@ -66,7 +65,7 @@ class PostObserver
      */
     public function forceDeleted(Post $post): void
     {
-        Cache::forget('posts_'.auth()->id());
+        Post::bumpCacheVersion();
 
     }
 }
