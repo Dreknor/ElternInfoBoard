@@ -169,7 +169,7 @@
                 <div>
                     <label for="kommentar" class="block text-sm font-medium mb-2" style="color: var(--color-text-primary)">
                         <i class="fas fa-comment-alt mr-1" style="color: var(--color-text-secondary)"></i>
-                        <span>Kommentar / Bemerkungen (optional):</span>
+                        <span>Kommentar / Bemerkungen (verpflichtend):</span>
                     </label>
                     <textarea id="kommentar"
                               name="kommentar"
