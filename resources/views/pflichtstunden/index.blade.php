@@ -190,12 +190,70 @@
 
         <!-- Pflichtstunden Übersicht Card -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="px-4 py-3 border-b"
+            <div class="px-4 py-3 border-b flex items-center justify-between flex-wrap gap-2"
                  style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
-                <h3 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
-                    <i class="fas fa-tasks"></i>
-                    Pflichtstunden
-                </h3>
+                <div>
+                    <h3 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
+                        <i class="fas fa-tasks"></i>
+                        Pflichtstunden
+                    </h3>
+                    <p class="text-xs mt-1 ml-6" style="color: var(--color-widget-header-text)">
+                        Zeitraum: {{ $periodStart->format('d.m.Y') }} - {{ $periodEnd->format('d.m.Y') }}
+                        @if ($selectedYear)
+                            <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-white/20">
+                                <i class="fas fa-history"></i> vergangener Zeitraum
+                            </span>
+                        @endif
+                    </p>
+                </div>
+
+                <div x-data="{ showPeriodMenu: false }" class="relative">
+                    <button @click="showPeriodMenu = !showPeriodMenu"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-white font-semibold rounded-lg transition-colors duration-200 shadow-md"
+                            style="color: var(--color-widget-primary-from)"
+                            onmouseover="this.style.backgroundColor='#f0fdf4'"
+                            onmouseout="this.style.backgroundColor='#ffffff'">
+                        <i class="fas fa-calendar-alt"></i>
+                        Zeitraum
+                        <i class="fas fa-chevron-down text-sm"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div x-show="showPeriodMenu"
+                         @click.away="showPeriodMenu = false"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                         style="display: none;">
+                        <div class="py-2">
+                            <a href="{{ route('pflichtstunden.index') }}"
+                               class="flex items-center gap-3 px-4 py-3 {{ ! $selectedYear ? 'bg-green-50' : '' }} text-gray-700 hover:bg-green-50 transition-colors duration-150">
+                                <i class="fas fa-calendar-day text-green-600"></i>
+                                <div>
+                                    <div class="font-medium">Aktueller Zeitraum</div>
+                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::createFromFormat('m-d', $pflichtstunden_settings->pflichtstunden_start)->format('d.m.') }} - {{ \Carbon\Carbon::createFromFormat('m-d', $pflichtstunden_settings->pflichtstunden_ende)->format('d.m.Y') }}</div>
+                                </div>
+                            </a>
+                            @if (count($availableYears) > 0)
+                                <div class="border-t border-gray-200 my-1"></div>
+                                @foreach ($availableYears as $availableYear)
+                                    <a href="{{ route('pflichtstunden.index', ['year' => $availableYear]) }}"
+                                       class="flex items-center gap-3 px-4 py-3 {{ $selectedYear === $availableYear ? 'bg-blue-50' : '' }} text-gray-700 hover:bg-blue-50 transition-colors duration-150">
+                                        <i class="fas fa-history text-blue-600"></i>
+                                        <div>
+                                            <div class="font-medium">{{ $loop->first ? 'Vorjahr' : $availableYear.'-'.($availableYear + 1) }}</div>
+                                            <div class="text-xs text-gray-500">Zeitraum {{ $availableYear }}-{{ $availableYear + 1 }}</div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="p-4 prose max-w-none">
