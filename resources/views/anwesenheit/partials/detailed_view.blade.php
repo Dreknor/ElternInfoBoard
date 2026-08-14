@@ -34,7 +34,7 @@
                                             ]
                                         );
                                     @endphp
-                                    <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
+                                    <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if($child->checkedIn()) detail-checkedIn @else detail-checkedOut @endif"
                                         data-child='@json($childData)'
                                         data-notices='@json($child->hasNotice())'
                                         style="padding: 0.5rem;">
@@ -161,7 +161,7 @@
                                                 ]
                                             );
                                         @endphp
-                                        <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
+                                        <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if($child->checkedIn()) detail-checkedIn @else detail-checkedOut @endif"
                                             data-child='@json($childData)'
                                             data-notices='@json($child->hasNotice())'
                                             style="padding: 0.5rem;">

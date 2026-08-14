@@ -158,6 +158,21 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
+                    Abholvollmachten aktivieren
+                    <input type="checkbox" class="form-control" name="show_mandates"
+                           value="1" @if($careSettings->show_mandates) checked @endif>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, werden die Abholvollmachten-Tabs in der Anwesenheit und im Hort/Care-Modul angezeigt. Ist diese Option deaktiviert, sind die Tabs ausgeblendet.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
                     E-Mail-Benachrichtigung bei neuer Abholvollmacht
                     <input type="checkbox" class="form-control" name="mandate_notification_enabled"
                            value="1" @if($careSettings->mandate_notification_enabled) checked @endif

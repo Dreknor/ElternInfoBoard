@@ -62,7 +62,35 @@ body {
     background-color: #e4e4e4;
 }
 
-/* Kinder die nicht eingecheckt sind (= abwesend/abgemeldet) */
+/* Kinder die eingecheckt sind (= anwesend) - dezentes Grün (nur Detailansicht) */
+.detail-checkedIn,
+.list-group-item.detail-checkedIn {
+    background-color: var(--color-attendance-present-bg, #eaf7ea);
+}
+
+/* Hover darf die Farbe von detail-checkedIn nicht überschreiben */
+.list-group-item.detail-checkedIn:hover {
+    background-color: var(--color-attendance-present-bg-hover, #dcf0dc);
+}
+
+/* Kinder die nicht eingecheckt sind (= abwesend, Detailansicht) - grau und durchgestrichen */
+.detail-checkedOut,
+.list-group-item.detail-checkedOut {
+    color: var(--color-attendance-absent-text, #6c757d);
+    background-color: var(--color-attendance-absent-bg, #e9ecef);
+}
+
+.detail-checkedOut .name,
+.list-group-item.detail-checkedOut .name {
+    text-decoration: line-through;
+}
+
+/* Hover darf die Farbe von detail-checkedOut nicht überschreiben */
+.list-group-item.detail-checkedOut:hover {
+    background-color: var(--color-attendance-absent-bg-hover, #dee2e6);
+}
+
+/* Kinder die nicht eingecheckt sind (= abwesend/abgemeldet, einfache Liste) */
 .child-checkedOut,
 .list-group-item.child-checkedOut {
     color: #214a71;

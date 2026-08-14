@@ -82,11 +82,13 @@
                                 <i class="fas fa-clock mr-1"></i> Schickzeiten
                             </a>
                         </li>
+                        @if($careSettings->show_mandates)
                         <li class="nav-item bg-gradient-directional-grey-blue">
                             <a class="nav-link text-dark" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false">
                                 <i class="fas fa-user-check mr-1"></i> Vollmacht
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div><!-- /.modal-tabs-wrapper -->
                 <div class="tab-content" id="myTabContent">
@@ -225,6 +227,7 @@
                             </div>
                         </div>
                     </div>
+                    @if($careSettings->show_mandates)
                     <div class="tab-pane fade" id="vollmacht" role="tabpanel" aria-labelledby="vollmacht-tab">
                         <div class="modal-body">
                             <b>Abholvollmachten:</b>
@@ -233,6 +236,7 @@
                            </ul>
                         </div>
                     </div>
+                    @endif
 
         </div>
     </div>

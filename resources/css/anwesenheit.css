@@ -49,6 +49,20 @@ body {
     background-color: #e4e4e4;
 }
 
+.detail-checkedIn {
+    background-color: var(--color-attendance-present-bg, #eaf7ea);
+}
+
+.detail-checkedOut {
+    color: var(--color-attendance-absent-text, #6c757d);
+    background-color: var(--color-attendance-absent-bg, #e9ecef);
+}
+
+.detail-checkedOut .name {
+    text-decoration: line-through;
+}
+
+/* Einfache Liste: eigenes Farbschema, unabhängig von der Detailansicht */
 .child-checkedOut {
     color: #214a71;
     background-color: #97ff89;
