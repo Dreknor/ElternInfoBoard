@@ -51,6 +51,7 @@
                         <span class="hidden sm:inline">Anwesenheitsabfrage</span>
                     </button>
                     <!-- Vollmacht Tab -->
+                    @if($careSettings->show_mandates)
                     <button @click="activeTab = 'vollmacht'"
                             class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
                             :class="activeTab === 'vollmacht' ? '' : 'border-transparent'"
@@ -60,6 +61,7 @@
                         <i class="fas fa-user-shield"></i>
                         <span class="hidden sm:inline">Abholvollmacht</span>
                     </button>
+                    @endif
                 </nav>
             </div>
 
@@ -510,6 +512,7 @@
                 </div>
 
                 <!-- Vollmacht Tab -->
+                @if($careSettings->show_mandates)
                 <div x-show="activeTab === 'vollmacht'"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 transform scale-95"
@@ -585,6 +588,7 @@
                         @endforeach
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
