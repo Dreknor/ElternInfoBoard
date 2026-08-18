@@ -32,21 +32,42 @@ class PflichtstundeController extends Controller implements HasMiddleware
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         if (! auth()->user()->can('view Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
-        $pflichtstunden = auth()->user()->pflichtstunden;
+        // Zeitraum bestimmen: ohne "year"-Parameter wird der aktuelle Zeitraum
+        // angezeigt, mit "year" kann ein vergangener Zeitraum ausgewählt werden.
+        $selectedYear = $request->filled('year') ? (int) $request->get('year') : null;
+        [$periodStart, $periodEnd] = $this->resolvePeriod($selectedYear);
+
+        // Familien-Nutzer-IDs (aktueller Nutzer + ggf. Partner via sorg2) ermitteln.
+        // Hinweis: Die Relation `User::pflichtstunden()` hängt ihr `orWhere('user_id', sorg2)`
+        // unparenthetisiert an, wodurch zusätzliche where-Bedingungen (z. B. whereBetween)
+        // sich per SQL-Operatorrangfolge nur an den zweiten OR-Zweig binden würden.
+        // Daher hier bewusst über whereIn statt über die Relation direkt filtern.
+        $currentUser = auth()->user();
+        $familyUserIds = array_filter([$currentUser->id, $currentUser->sorg2]);
+
+        $pflichtstunden = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
+            ->whereIn('user_id', $familyUserIds)
+            ->whereBetween('start', [$periodStart, $periodEnd])
+            ->orderBy('start', 'desc')
+            ->get();
 
         // Berechne Statistiken für Gamification
-        $parent_stats = $this->calculateParentStats();
+        $parent_stats = $this->calculateParentStats($periodStart, $periodEnd);
 
         return view('pflichtstunden.index', [
             'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
             'parent_stats' => $parent_stats,
+            'selectedYear' => $selectedYear,
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+            'availableYears' => $this->availablePeriodYears(),
         ]);
 
     }
@@ -54,14 +75,17 @@ class PflichtstundeController extends Controller implements HasMiddleware
     /**
      * Berechne Statistiken für Ranking und Vergleich
      */
-    private function calculateParentStats()
+    private function calculateParentStats(\Carbon\Carbon $periodStart, \Carbon\Carbon $periodEnd)
     {
         $currentUser = auth()->user();
 
         // WICHTIG: Hier das 'where' entfernen, damit WIRKLICH ALLE Stunden geladen werden
         $users = User::query()
             ->permission('view Pflichtstunden')
-            ->with('pflichtstunden') // Lädt bestätigte UND unbestätigte Stunden
+            ->with(['pflichtstunden' => function ($query) use ($periodStart, $periodEnd) {
+                $query->withoutGlobalScope('aktuellerZeitraum')
+                    ->whereBetween('start', [$periodStart, $periodEnd]); // Lädt bestätigte UND unbestätigte Stunden des Zeitraums
+            }])
             ->get();
 
         $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
@@ -156,7 +180,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     /**
      * Verwaltungsansicht der Pflichtstunden
      */
-    public function verwaltungIndex()
+    public function verwaltungIndex(Request $request)
     {
         if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
@@ -166,6 +190,11 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $overlappingIds = [];
         $overlapGroups  = collect();
         $entryGroupMap  = [];
+
+        // Zeitraum bestimmen: ohne "year"-Parameter wird der aktuelle Zeitraum
+        // angezeigt, mit "year" kann ein vergangener Zeitraum ausgewählt werden.
+        $selectedYear = $request->filled('year') ? (int) $request->get('year') : null;
+        [$periodStart, $periodEnd] = $this->resolvePeriod($selectedYear);
 
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
@@ -177,8 +206,10 @@ class PflichtstundeController extends Controller implements HasMiddleware
         // Hole alle Nutzer mit Permission "view Pflichtstunden"
         $users = User::query()
             ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function ($query) {
-                $query->where('approved', true);
+            ->with(['pflichtstunden' => function ($query) use ($periodStart, $periodEnd) {
+                $query->withoutGlobalScope('aktuellerZeitraum')
+                    ->where('approved', true)
+                    ->whereBetween('start', [$periodStart, $periodEnd]);
             }])
             ->get();
 
@@ -388,7 +419,60 @@ class PflichtstundeController extends Controller implements HasMiddleware
             'overlappingIds'          => $overlappingIds,
             'overlapGroups'           => $overlapGroups,
             'entryGroupMap'           => $entryGroupMap,
+            'selectedYear'            => $selectedYear,
+            'periodStart'             => $periodStart,
+            'periodEnd'               => $periodEnd,
+            'availableYears'          => $this->availablePeriodYears(),
         ]);
+    }
+
+    /**
+     * Ermittelt Start- und Enddatum des Pflichtstunden-Zeitraums.
+     *
+     * Ohne Jahr wird der aktuell laufende Zeitraum (ggf. über den Jahreswechsel
+     * hinweg) berechnet, mit Jahr der Zeitraum, der in diesem Jahr beginnt.
+     *
+     * @return array{0: \Carbon\Carbon, 1: \Carbon\Carbon}
+     */
+    private function resolvePeriod(?int $year): array
+    {
+        if ($year) {
+            $start = \Carbon\Carbon::createFromFormat('Y-m-d', $year.'-'.$this->pflichtstunden_settings->pflichtstunden_start)->startOfDay();
+            $end = \Carbon\Carbon::createFromFormat('Y-m-d', ($year + 1).'-'.$this->pflichtstunden_settings->pflichtstunden_ende)->endOfDay();
+
+            return [$start, $end];
+        }
+
+        $start = \Carbon\Carbon::createFromFormat('m-d', $this->pflichtstunden_settings->pflichtstunden_start)->startOfDay();
+        if ($start->isFuture()) {
+            $start->subYear();
+        }
+
+        $end = \Carbon\Carbon::createFromFormat('m-d', $this->pflichtstunden_settings->pflichtstunden_ende)->endOfDay();
+        if ($end->isPast()) {
+            $end->addYear();
+        }
+
+        return [$start, $end];
+    }
+
+    /**
+     * Liste der Jahre (Zeitraum-Startjahre), für die vergangene Zeiträume
+     * zur Auswahl angeboten werden sollen (basierend auf vorhandenen Daten).
+     */
+    private function availablePeriodYears(): array
+    {
+        $earliestStart = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')->where('approved', true)->min('start');
+
+        $earliestYear = $earliestStart
+            ? \Carbon\Carbon::parse($earliestStart)->year
+            : (int) date('Y') - 1;
+
+        $currentPeriodStartYear = (int) $this->resolvePeriod(null)[0]->year;
+
+        $years = range($currentPeriodStartYear - 1, min($earliestYear, $currentPeriodStartYear - 1), -1);
+
+        return $years;
     }
 
     public function approve(Request $request, Pflichtstunde $pflichtstunde)
