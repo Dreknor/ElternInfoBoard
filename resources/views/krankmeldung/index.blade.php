@@ -90,7 +90,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     @if($diseases)
                         <div class="md:col-span-1">
-                            <label for="disease" class="block text-sm font-medium mb-2" style="color: var(--color-text-primary)">besondere Erkrankung:</label>
+                            <label for="disease" class="block text-sm font-medium mb-2" style="color: var(--color-text-primary)">meldepflichtige Erkrankung:</label>
                             <select name="disease_id" id="disease"
                                     class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
                                     style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
