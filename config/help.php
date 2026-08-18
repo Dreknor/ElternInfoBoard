@@ -241,5 +241,26 @@ return [
             'order'   => 20,
         ],
 
+        [
+            'slug'    => 'reinigungsplan',
+            'title'   => 'Reinigungsplan',
+            'excerpt' => 'Eigene Reinigungseinsätze einsehen und Erinnerungen erhalten.',
+            'icon'    => 'fas fa-broom',
+            'group'   => 'familie',
+            'routes'  => ['reinigung', 'reinigung/*'],
+            'order'   => 40,
+        ],
+
+        [
+            'slug'       => 'reinigungsplan-verwaltung',
+            'title'      => 'Reinigungsplan verwalten',
+            'excerpt'    => 'Bereiche konfigurieren, automatisch befüllen und Einträge pflegen.',
+            'icon'       => 'fas fa-broom',
+            'group'      => 'verwaltung',
+            'permission' => 'edit reinigung',
+            'routes'     => ['reinigung/create/*', 'reinigung/*/auto*', 'settings/reinigung*'],
+            'order'      => 50,
+        ],
+
     ],
 ];
