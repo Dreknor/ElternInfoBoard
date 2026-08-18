@@ -68,6 +68,16 @@ try {
 
         }
 
+        // Reinigung: Erinnerung vor dem eigenen Reinigungseinsatz (Vorschlag 4 des Konzepts)
+        try {
+            $reinigungSetting = new \App\Settings\ReinigungSetting;
+            if ($reinigungSetting->reminder_enabled) {
+                Schedule::job(new \App\Jobs\ProcessReinigungRemindersJob)->dailyAt($reinigungSetting->reminder_time);
+            }
+        } catch (\Exception $e) {
+
+        }
+
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 

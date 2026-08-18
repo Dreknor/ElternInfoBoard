@@ -24,9 +24,15 @@ class ReinigungExport implements FromCollection, WithHeadings, WithMapping
     {
         $datum = Carbon::now()->startOfWeek()->startOfDay();
 
-        return Reinigung::where('Bereich', $this->bereich)->whereDate('datum', '>=', $datum)
-            ->orderBy('datum')
-            ->get();
+        $query = Reinigung::whereDate('datum', '>=', $datum)->orderBy('datum');
+
+        // Im gemeinsamen Modus (Reinigung::BEREICH_GESAMT) werden alle Datensätze
+        // unabhängig vom ursprünglich gespeicherten Bereich exportiert.
+        if ($this->bereich !== Reinigung::BEREICH_GESAMT) {
+            $query->where('Bereich', $this->bereich);
+        }
+
+        return $query->get();
     }
 
     public function map($reinigung): array

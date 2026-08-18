@@ -82,6 +82,28 @@ class ICalController extends Controller
                     }
                 }
 
+                // Vorschlag 7: eigene Reinigungsdienste in den persönlichen Kalender aufnehmen
+                $reinigungTermine = $user->reinigung()->whereDate('datum', '>', Carbon::now()->subWeek()->startOfDay())->get();
+                if (! is_null($user->sorgeberechtigter2)) {
+                    $reinigungTermine = $reinigungTermine->merge(
+                        $user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon::now()->subWeek()->startOfDay())->get()
+                    );
+                }
+                $reinigungTermine = $reinigungTermine->unique('id');
+
+                foreach ($reinigungTermine as $reinigung) {
+                    $wocheStart = $reinigung->datum->copy()->startOfWeek();
+                    $wocheEnde = $reinigung->datum->copy()->endOfWeek();
+
+                    $icalObject->event(Event::create()
+                        ->name($prefix.'Reinigungsdienst'.($reinigung->aufgabe ? ': '.$reinigung->aufgabe : ''))
+                        ->uniqueIdentifier('reinigung-'.$reinigung->id)
+                        ->startsAt($wocheStart)
+                        ->endsAt($wocheEnde)
+                        ->withoutTimezone()
+                        ->fullDay());
+                }
+
                 return response($icalObject->get(), 200, [
                     'Content-Type' => 'text/calendar; charset=utf-8',
                     'Content-Disposition' => 'attachment; filename="'.config('app.name').'.ics"',

@@ -36,6 +36,7 @@
                             ['id' => 'schoolyear',    'label' => 'Schuljahreswechsel', 'icon' => 'fas fa-graduation-cap'],
                             ['id' => 'stundenplan',   'label' => 'Stundenplan',        'icon' => 'fas fa-calendar-alt'],
                             ['id' => 'reminder',      'label' => 'Erinnerungen',       'icon' => 'fas fa-alarm-clock'],
+                            ['id' => 'reinigung',     'label' => 'Reinigungsplan',     'icon' => 'fas fa-broom'],
                             ['id' => 'messenger',     'label' => 'Eltern-Nachrichten', 'icon' => 'fas fa-comments'],
                             ['id' => 'design',        'label' => 'Design',             'icon' => 'fas fa-palette'],
                         ];
@@ -89,6 +90,9 @@
                 <div x-show="activeTab === 'reminder'" x-cloak class="p-6">
                     @include('settings.tabs.reminder-tab')
                 </div>
+                <div x-show="activeTab === 'reinigung'" x-cloak class="p-6">
+                    @include('settings.tabs.reinigung-tab')
+                </div>
                 <div x-show="activeTab === 'messenger'" x-cloak class="p-6">
                     @include('settings.tabs.messenger-tab')
                 </div>
@@ -114,7 +118,7 @@
                 init() {
                     const hash = window.location.hash?.slice(1);
                     const validTabs = ['home','email','notify','schickzeiten','care','keycloak',
-                                       'pflichtstunden','schoolyear','stundenplan','reminder','messenger','design'];
+                                       'pflichtstunden','schoolyear','stundenplan','reminder','reinigung','messenger','design'];
                     if (hash && validTabs.includes(hash)) {
                         this.activeTab = hash;
                     }
