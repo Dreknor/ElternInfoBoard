@@ -19,6 +19,7 @@ return [
         \App\Settings\SchickzeitenSetting::class,
         \App\Settings\StundenplanSetting::class,
         \App\Settings\KeycloakSetting::class,
+        \App\Settings\ReinigungSetting::class,
 
     ],
 

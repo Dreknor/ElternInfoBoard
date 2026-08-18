@@ -11,6 +11,13 @@ class Reinigung extends Model
 {
     use HasFactory;
 
+    /**
+     * Pseudo-Bereich, der verwendet wird, wenn der Reinigungsplan gemäß
+     * ReinigungSetting::$separate_bereiche als gemeinsamer Plan für die gesamte
+     * Einrichtung geführt wird (oder wenn bei den Gruppen keine Bereiche gepflegt sind).
+     */
+    public const BEREICH_GESAMT = 'Gesamt';
+
     protected $table = 'reinigung';
 
     protected $visible = ['bereich', 'aufgabe', 'datum', 'bemerkung'];

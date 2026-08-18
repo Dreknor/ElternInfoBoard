@@ -15,6 +15,7 @@ use App\Settings\KeycloakSetting;
 use App\Settings\MessengerSetting;
 use App\Settings\NotifySetting;
 use App\Settings\PflichtstundenSetting;
+use App\Settings\ReinigungSetting;
 use App\Settings\ReminderSetting;
 use App\Settings\CustomThemeSetting;
 use App\Settings\SchickzeitenSetting;
@@ -53,9 +54,17 @@ class SettingsController extends Controller implements HasMiddleware
         $reminderSettings = new ReminderSetting;
         $messengerSettings = new MessengerSetting;
         $keycloakSettings = new KeycloakSetting;
+        $reinigungSettings = new ReinigungSetting;
 
         $groups = Group::all();
         $roles = Role::all();
+
+        $reinigungBereiche = Group::query()
+            ->whereNotNull('bereich')
+            ->where('bereich', '!=', 'Aufnahme')
+            ->pluck('bereich')
+            ->unique()
+            ->values();
 
         // Theme-Liste für Design-Tab
         $themes = app(ThemeRegistry::class)->all();
@@ -79,6 +88,8 @@ class SettingsController extends Controller implements HasMiddleware
             'reminderSettings' => $reminderSettings,
             'messengerSettings' => $messengerSettings,
             'keycloakSettings' => $keycloakSettings,
+            'reinigungSettings' => $reinigungSettings,
+            'reinigungBereiche' => $reinigungBereiche,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -483,6 +494,31 @@ class SettingsController extends Controller implements HasMiddleware
 
                 Artisan::call('config:clear');
                 Artisan::call('cache:clear');
+                break;
+
+            case 'reinigung':
+                $validated = $request->validate([
+                    'separate_bereiche' => 'nullable|boolean',
+                    'combined_exclude_bereiche' => 'nullable|array',
+                    'combined_exclude_bereiche.*' => 'nullable|string',
+                    'skip_holidays' => 'nullable|boolean',
+                    'reminder_enabled' => 'nullable|boolean',
+                    'reminder_days_before' => 'required|integer|min:0|max:30',
+                    'reminder_email' => 'nullable|boolean',
+                    'reminder_push' => 'nullable|boolean',
+                    'reminder_time' => 'required|date_format:H:i',
+                ]);
+
+                $reinigungSettings = new ReinigungSetting;
+                $reinigungSettings->separate_bereiche = $request->has('separate_bereiche');
+                $reinigungSettings->combined_exclude_bereiche = $validated['combined_exclude_bereiche'] ?? [];
+                $reinigungSettings->skip_holidays = $request->has('skip_holidays');
+                $reinigungSettings->reminder_enabled = $request->has('reminder_enabled');
+                $reinigungSettings->reminder_days_before = $validated['reminder_days_before'];
+                $reinigungSettings->reminder_email = $request->has('reminder_email');
+                $reinigungSettings->reminder_push = $request->has('reminder_push');
+                $reinigungSettings->reminder_time = $validated['reminder_time'];
+                $reinigungSettings->save();
                 break;
         }
 
