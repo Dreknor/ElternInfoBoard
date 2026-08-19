@@ -6,7 +6,8 @@ use App\Exports\PflichtstundenExport;
 use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
-use App\Model\User;
+use App\Model\PflichtstundenFamilyRuleHistory;
+use App\Services\PflichtstundenFamilyService;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -16,10 +17,12 @@ class PflichtstundeController extends Controller implements HasMiddleware
 {
     protected PflichtstundenSetting $pflichtstunden_settings;
 
+    protected PflichtstundenFamilyService $familyService;
+
     public function __construct()
     {
-
         $this->pflichtstunden_settings = new PflichtstundenSetting;
+        $this->familyService = new PflichtstundenFamilyService($this->pflichtstunden_settings);
     }
 
     public static function middleware(): array
@@ -29,25 +32,15 @@ class PflichtstundeController extends Controller implements HasMiddleware
         ];
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         if (! auth()->user()->can('view Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
-        // Zeitraum bestimmen: ohne "year"-Parameter wird der aktuelle Zeitraum
-        // angezeigt, mit "year" kann ein vergangener Zeitraum ausgewählt werden.
         $selectedYear = $request->filled('year') ? (int) $request->get('year') : null;
-        [$periodStart, $periodEnd] = $this->resolvePeriod($selectedYear);
+        [$periodStart, $periodEnd] = $this->familyService->resolvePeriod($selectedYear);
 
-        // Familien-Nutzer-IDs (aktueller Nutzer + ggf. Partner via sorg2) ermitteln.
-        // Hinweis: Die Relation `User::pflichtstunden()` hängt ihr `orWhere('user_id', sorg2)`
-        // unparenthetisiert an, wodurch zusätzliche where-Bedingungen (z. B. whereBetween)
-        // sich per SQL-Operatorrangfolge nur an den zweiten OR-Zweig binden würden.
-        // Daher hier bewusst über whereIn statt über die Relation direkt filtern.
         $currentUser = auth()->user();
         $familyUserIds = array_filter([$currentUser->id, $currentUser->sorg2]);
 
@@ -57,118 +50,27 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ->orderBy('start', 'desc')
             ->get();
 
-        // Berechne Statistiken für Gamification
-        $parent_stats = $this->calculateParentStats($periodStart, $periodEnd);
+        $familySummaries = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $parentStats = $this->calculateParentStatsFromSummaries($familySummaries, $currentUser->id);
+        $currentFamilySummary = $familySummaries->first(fn (array $summary) => in_array($currentUser->id, $summary['user_ids']));
 
         return view('pflichtstunden.index', [
             'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
-            'parent_stats' => $parent_stats,
+            'parent_stats' => $parentStats,
+            'currentFamilySummary' => $currentFamilySummary,
             'selectedYear' => $selectedYear,
             'periodStart' => $periodStart,
             'periodEnd' => $periodEnd,
             'availableYears' => $this->availablePeriodYears(),
         ]);
-
     }
 
-    /**
-     * Berechne Statistiken für Ranking und Vergleich
-     */
-    private function calculateParentStats(\Carbon\Carbon $periodStart, \Carbon\Carbon $periodEnd)
-    {
-        $currentUser = auth()->user();
-
-        // WICHTIG: Hier das 'where' entfernen, damit WIRKLICH ALLE Stunden geladen werden
-        $users = User::query()
-            ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function ($query) use ($periodStart, $periodEnd) {
-                $query->withoutGlobalScope('aktuellerZeitraum')
-                    ->whereBetween('start', [$periodStart, $periodEnd]); // Lädt bestätigte UND unbestätigte Stunden des Zeitraums
-            }])
-            ->get();
-
-        $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
-
-        $familyStats = collect();
-        $processed = collect();
-
-        foreach ($users as $user) {
-            if ($processed->contains($user->id)) {
-                continue;
-            }
-
-            // Trenne in bestätigte und alle (erwartete) Stunden
-            $approvedMinutes = $user->pflichtstunden->where('approved', true)->sum('duration');
-            $expectedMinutes = $user->pflichtstunden->sum('duration'); // Alle (bestätigt + offen)
-
-            $familyUserIds = [$user->id];
-
-            if ($user->sorg2) {
-                $partner = $users->firstWhere('id', $user->sorg2);
-                if ($partner) {
-                    $approvedMinutes += $partner->pflichtstunden->where('approved', true)->sum('duration');
-                    $expectedMinutes += $partner->pflichtstunden->sum('duration');
-
-                    $familyUserIds[] = $partner->id;
-                    $processed->push($partner->id);
-                }
-            }
-
-            // Aktueller Fortschritt (nur bestätigt)
-            $progress = $requiredMinutes > 0
-                ? min(100, round(($approvedMinutes / $requiredMinutes) * 100, 2))
-                : 0;
-
-            // Erwarteter Fortschritt (bestätigt + offen)
-            $expectedProgress = $requiredMinutes > 0
-                ? min(100, round(($expectedMinutes / $requiredMinutes) * 100, 2))
-                : 0;
-
-            $familyStats->push([
-                'user_ids'          => $familyUserIds,
-                'name'              => $user->name,
-                'progress'          => $progress,
-                'expected_progress' => $expectedProgress, // Neuer Wert
-                'total_minutes'     => $approvedMinutes,
-            ]);
-
-            $processed->push($user->id);
-        }
-
-        // Sortiere nach Fortschritt absteigend für Rang-Berechnung
-        $sorted = $familyStats->sortByDesc('progress')->values();
-
-        // Rang der aktuellen Familie bestimmen
-        $yourRank = 1;
-        foreach ($sorted as $index => $family) {
-            if (in_array($currentUser->id, $family['user_ids'])) {
-                $yourRank = $index + 1;
-                break;
-            }
-        }
-
-        $avgProgress = round($familyStats->avg('progress') ?? 0, 2);
-
-        return [
-            'your_rank'          => $yourRank,
-            'total_parents'      => $familyStats->count(),
-            'avg_progress'       => $avgProgress,
-            'avgPercent'         => $avgProgress,
-            'expectedAvgPercent' => round($familyStats->avg('expected_progress') ?? 0, 2),
-        ];
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(CreatePflichtstundeRequest $request)
     {
         $data = $request->validated();
 
-        // Wenn user_id nicht gesetzt ist oder Nutzer keine Berechtigung hat, für andere anzulegen
         if (! isset($data['user_id']) || ! auth()->user()->can('edit Pflichtstunden')) {
-            // Dann für den aktuell angemeldeten Nutzer
             $data['user_id'] = auth()->id();
         }
 
@@ -177,302 +79,183 @@ class PflichtstundeController extends Controller implements HasMiddleware
         return redirect()->back()->with('success', 'Pflichtstunde angelegt');
     }
 
-    /**
-     * Verwaltungsansicht der Pflichtstunden
-     */
     public function verwaltungIndex(Request $request)
     {
         if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
-        // Sichere Standardwerte – werden später befüllt
-        $overlappingIds = [];
-        $overlapGroups  = collect();
-        $entryGroupMap  = [];
-
-        // Zeitraum bestimmen: ohne "year"-Parameter wird der aktuelle Zeitraum
-        // angezeigt, mit "year" kann ein vergangener Zeitraum ausgewählt werden.
         $selectedYear = $request->filled('year') ? (int) $request->get('year') : null;
-        [$periodStart, $periodEnd] = $this->resolvePeriod($selectedYear);
+        [$periodStart, $periodEnd] = $this->familyService->resolvePeriod($selectedYear);
+        $periodYear = $this->familyService->periodStartYear($periodStart);
 
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
-            ->where('end', '<', now())
             ->orderBy('end', 'desc')
             ->get();
 
-        // Hole alle Nutzer mit Permission "view Pflichtstunden"
-        $users = User::query()
-            ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function ($query) use ($periodStart, $periodEnd) {
-                $query->withoutGlobalScope('aktuellerZeitraum')
-                    ->where('approved', true)
-                    ->whereBetween('start', [$periodStart, $periodEnd]);
-            }])
-            ->get();
+        $groupedUsers = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
 
-        // Gruppiere nach Hauptnutzer (berücksichtige sorg2-Verknüpfung)
-        $groupedUsers = collect();
-        $processed = collect();
-
-        // Statistiken initialisieren
         $stats = [
-            'totalFamilies' => 0,
-            'completed' => 0,
-            'partial' => 0,
-            'notStarted' => 0,
-            'totalHoursCompleted' => 0,
-            'totalHoursMissing' => 0,
-            'totalHoursRequired' => 0,
-            'totalBeitrag' => 0,
-            'avgPercent' => 0,
-            'expectedAvgPercent' => 0,
+            'totalFamilies' => $groupedUsers->count(),
+            'completed' => $groupedUsers->where('percent', '>=', 100)->count(),
+            'partial' => $groupedUsers->whereBetween('percent', [0.01, 99.99])->count(),
+            'notStarted' => $groupedUsers->where('percent', '<=', 0)->count(),
+            'totalHoursCompleted' => round($groupedUsers->sum('totalMinutes') / 60, 2),
+            'totalHoursMissing' => round($groupedUsers->sum('openMinutes') / 60, 2),
+            'totalHoursRequired' => round($groupedUsers->sum('required_minutes') / 60, 2),
+            'totalBeitrag' => round($groupedUsers->sum('beitrag'), 2),
+            'avgPercent' => round((float) $groupedUsers->avg('percent'), 2),
+            'expectedAvgPercent' => round((float) $groupedUsers->avg('expected_percent'), 2),
         ];
 
-        foreach ($users as $user) {
-            // Überspringe wenn bereits als sorg2 verarbeitet
-            if ($processed->contains($user->id)) {
-                continue;
-            }
+        [$overlappingIds, $overlapGroups, $entryGroupMap] = $this->buildOverlapGroups($groupedUsers);
 
-            // Finde verknüpfte Person
-            $partner = null;
-            if ($user->sorg2) {
-                $partner = $users->where('id', $user->sorg2)->first();
-                if ($partner) {
-                    $processed->push($partner->id);
+        $asOfDate = $request->filled('as_of_date') ? \Carbon\Carbon::parse($request->input('as_of_date')) : now();
+        $closingPreview = $groupedUsers
+            ->map(function (array $group) use ($asOfDate, $periodStart, $periodEnd) {
+                $targetDate = $asOfDate->copy();
+                if ($targetDate->lt($periodStart)) {
+                    $targetDate = $periodStart->copy();
                 }
-            }
+                if ($targetDate->gt($periodEnd)) {
+                    $targetDate = $periodEnd->copy();
+                }
 
-            // Berechne kombinierte Statistiken
-            $totalMinutes = $user->pflichtstunden->sum('duration');
-            if ($partner) {
-                $totalMinutes += $partner->pflichtstunden->sum('duration');
-            }
+                $referenceDate = now()->lt($periodEnd) ? now() : $periodEnd;
+                $elapsedDays = max(1, $periodStart->diffInDays($referenceDate) + 1);
+                $avgApprovedPerDay = $group['totalMinutes'] / $elapsedDays;
+                $targetDays = max(1, $periodStart->diffInDays($targetDate) + 1);
+                $projectedApproved = (int) round($avgApprovedPerDay * $targetDays);
+                $projectedClosing = (int) $group['opening_balance_minutes'] + $projectedApproved - (int) $group['required_minutes'];
 
-            $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
-            $openMinutes = max(0, $requiredMinutes - $totalMinutes);
+                return [
+                    'family_name' => $group['family_name'],
+                    'mode' => $this->familyService->modeLabel($group),
+                    'current_closing_minutes' => $group['closing_balance_minutes'],
+                    'projected_closing_minutes' => $projectedClosing,
+                ];
+            })
+            ->sortBy('family_name')
+            ->values();
 
-            // Berechne Beitrag
-            $beitrag = 0;
-            if ($openMinutes > 0) {
-                $openHours = $openMinutes / 60;
-                $beitrag = $openHours * $this->pflichtstunden_settings->pflichtstunden_betrag;
-            }
+        $familyNameMap = $groupedUsers->mapWithKeys(function (array $group) {
+            return [
+                (string) $group['family_key'] => $group['family_name'],
+            ];
+        })->all();
 
-            $percent = $requiredMinutes > 0 ? min(100, round(($totalMinutes / $requiredMinutes) * 100, 2)) : 0;
-
-            $groupedUsers->push([
-                'user' => $user,
-                'partner' => $partner,
-                'totalMinutes' => $totalMinutes,
-                'openMinutes' => $openMinutes,
-                'beitrag' => $beitrag,
-                'percent' => $percent,
-            ]);
-
-            $processed->push($user->id);
-
-            // Statistiken aktualisieren
-            $stats['totalFamilies']++;
-            $stats['totalHoursCompleted'] += $totalMinutes / 60;
-            $stats['totalHoursMissing'] += $openMinutes / 60;
-            $stats['totalHoursRequired'] += $requiredMinutes / 60;
-            $stats['totalBeitrag'] += $beitrag;
-
-            if ($percent >= 100) {
-                $stats['completed']++;
-            } elseif ($percent > 0) {
-                $stats['partial']++;
-            } else {
-                $stats['notStarted']++;
-            }
-        }
-
-        // Durchschnittliche Erfüllung berechnen
-        if ($stats['totalFamilies'] > 0) {
-            $stats['avgPercent'] = round($groupedUsers->avg('percent'), 2);
-            $stats['expectedAvgPercent'] = $stats['avgPercent']; // pending + bestätigt sind hier identisch (nur approved geladen)
-        }
-
-        // ---------------------------------------------------------------
-        // Überlappungs-Erkennung mit Gruppenbildung (Connected Components)
-        // Nur nicht abgelehnte Einträge (pending + bestätigt)
-        // ---------------------------------------------------------------
-
-        // Familienzuordnung aufbauen (user_id → familyKey = min der user_ids der Familie)
-        $familyUserMap  = [];
-        $familyNameMap  = [];
-        foreach ($groupedUsers as $group) {
-            $familyUserIds = [$group['user']->id];
-            if ($group['partner']) {
-                $familyUserIds[] = $group['partner']->id;
-            }
-            $familyKey = min($familyUserIds);
-            foreach ($familyUserIds as $uid) {
-                $familyUserMap[$uid] = $familyKey;
-            }
-            $name = $group['user']->name;
-            if ($group['partner']) {
-                $name .= ' / ' . $group['partner']->name;
-            }
-            $familyNameMap[$familyKey] = $name;
-        }
-
-        // Alle nicht abgelehnten Pflichtstunden laden (pending + bestätigt)
-        $allNonRejectedPs = Pflichtstunde::query()
-            ->where('rejected', false)
-            ->with('user')
+        $ruleHistoryEntries = PflichtstundenFamilyRuleHistory::query()
+            ->with('changedBy')
+            ->where('period_year', $periodYear)
+            ->latest()
+            ->limit(20)
             ->get();
 
-        // Nach Familien gruppieren
-        $familyPflichtstunden = [];
-        foreach ($allNonRejectedPs as $ps) {
-            $familyKey = $familyUserMap[$ps->user_id] ?? $ps->user_id;
-            $familyPflichtstunden[$familyKey][] = $ps;
-        }
-
-        // Überlappungs-Adjazenzliste aufbauen
-        $adjacency = [];
-        foreach ($familyPflichtstunden as $familyPs) {
-            $count = count($familyPs);
-            for ($i = 0; $i < $count; $i++) {
-                for ($j = $i + 1; $j < $count; $j++) {
-                    $a = $familyPs[$i];
-                    $b = $familyPs[$j];
-                    // Überlappung: a.start < b.end UND a.end > b.start
-                    if ($a->start < $b->end && $a->end > $b->start) {
-                        $adjacency[$a->id][] = $b->id;
-                        $adjacency[$b->id][] = $a->id;
-                    }
-                }
-            }
-        }
-
-        // Zusammenhangskomponenten via BFS → Überlappungsgruppen
-        $allPsById   = $allNonRejectedPs->keyBy('id');
-        $visited     = [];
-        $overlapGroups = collect();
-        $groupCounter  = 1;
-
-        foreach ($allNonRejectedPs as $ps) {
-            if (!isset($adjacency[$ps->id]) || isset($visited[$ps->id])) {
-                continue;
-            }
-            // BFS
-            $groupIds = [];
-            $queue    = [$ps->id];
-            while (!empty($queue)) {
-                $currentId = array_shift($queue);
-                if (isset($visited[$currentId])) {
-                    continue;
-                }
-                $visited[$currentId] = true;
-                $groupIds[]          = $currentId;
-                foreach ($adjacency[$currentId] ?? [] as $neighborId) {
-                    if (!isset($visited[$neighborId])) {
-                        $queue[] = $neighborId;
-                    }
-                }
-            }
-
-            if (count($groupIds) < 2) {
-                continue;
-            }
-
-            $groupEntries = collect($groupIds)
-                ->map(fn ($id) => $allPsById->get($id))
-                ->filter()
-                ->sortBy('start')
-                ->values();
-
-            $firstEntry = $groupEntries->first();
-            $familyKey  = $familyUserMap[$firstEntry->user_id] ?? $firstEntry->user_id;
-            $familyName = $familyNameMap[$familyKey] ?? $firstEntry->user->name;
-
-            $overlapGroups->push([
-                'group_id'    => $groupCounter++,
-                'entries'     => $groupEntries,
-                'family_name' => $familyName,
-            ]);
-        }
-
-        // Flat-Liste überlappender IDs (für Badges in der Pending-Tabelle)
-        $overlappingIds = array_keys($adjacency);
-
-        // Map: entry_id → group_id (für Gruppenreferenz im Badge)
-        $entryGroupMap = [];
-        foreach ($overlapGroups as $group) {
-            foreach ($group['entries'] as $entry) {
-                $entryGroupMap[$entry->id] = $group['group_id'];
-            }
-        }
+        $ruleHistoryEntries = $ruleHistoryEntries->map(function (PflichtstundenFamilyRuleHistory $entry) use ($familyNameMap) {
+            return [
+                'id' => $entry->id,
+                'family_name' => $familyNameMap[$entry->family_key] ?? $entry->family_key,
+                'from_mode' => $entry->from_mode,
+                'to_mode' => $entry->to_mode,
+                'from_custom_required_hours' => $entry->from_custom_required_hours,
+                'to_custom_required_hours' => $entry->to_custom_required_hours,
+                'reason' => $entry->reason,
+                'changed_by_name' => $entry->changedBy?->name ?? 'Unbekannt',
+                'created_at' => $entry->created_at,
+            ];
+        });
 
         return view('pflichtstunden.indexVerwaltung', [
-            'pflichtstunden'          => $pflichtstunden,
+            'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
-            'groupedUsers'            => $groupedUsers,
-            'allGroupedUsers'         => $groupedUsers, // Für Select2
-            'stats'                   => $stats,
-            'overlappingIds'          => $overlappingIds,
-            'overlapGroups'           => $overlapGroups,
-            'entryGroupMap'           => $entryGroupMap,
-            'selectedYear'            => $selectedYear,
-            'periodStart'             => $periodStart,
-            'periodEnd'               => $periodEnd,
-            'availableYears'          => $this->availablePeriodYears(),
+            'groupedUsers' => $groupedUsers,
+            'allGroupedUsers' => $groupedUsers,
+            'stats' => $stats,
+            'overlappingIds' => $overlappingIds,
+            'overlapGroups' => $overlapGroups,
+            'entryGroupMap' => $entryGroupMap,
+            'selectedYear' => $selectedYear,
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+            'periodYear' => $periodYear,
+            'closingPreview' => $closingPreview,
+            'asOfDate' => $asOfDate,
+            'ruleHistoryEntries' => $ruleHistoryEntries,
+            'availableYears' => $this->availablePeriodYears(),
         ]);
     }
 
-    /**
-     * Ermittelt Start- und Enddatum des Pflichtstunden-Zeitraums.
-     *
-     * Ohne Jahr wird der aktuell laufende Zeitraum (ggf. über den Jahreswechsel
-     * hinweg) berechnet, mit Jahr der Zeitraum, der in diesem Jahr beginnt.
-     *
-     * @return array{0: \Carbon\Carbon, 1: \Carbon\Carbon}
-     */
-    private function resolvePeriod(?int $year): array
+    public function updateFamilyRule(Request $request)
     {
-        if ($year) {
-            $start = \Carbon\Carbon::createFromFormat('Y-m-d', $year.'-'.$this->pflichtstunden_settings->pflichtstunden_start)->startOfDay();
-            $end = \Carbon\Carbon::createFromFormat('Y-m-d', ($year + 1).'-'.$this->pflichtstunden_settings->pflichtstunden_ende)->endOfDay();
-
-            return [$start, $end];
+        if (! auth()->user()->can('edit Pflichtstunden')) {
+            return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
-        $start = \Carbon\Carbon::createFromFormat('m-d', $this->pflichtstunden_settings->pflichtstunden_start)->startOfDay();
-        if ($start->isFuture()) {
-            $start->subYear();
+        $validated = $request->validate([
+            'family_key' => 'required|string|max:64',
+            'period_year' => 'required|integer|min:2000|max:2100',
+            'mode' => 'required|string|in:standard,reduced,custom',
+            'custom_required_hours' => 'nullable|numeric|min:0|max:999.99',
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validated['mode'] === 'custom' && $validated['custom_required_hours'] === null) {
+            return redirect()->back()->with('error', 'Für den Modus "Individuell" muss eine Stundenanzahl angegeben werden.');
         }
 
-        $end = \Carbon\Carbon::createFromFormat('m-d', $this->pflichtstunden_settings->pflichtstunden_ende)->endOfDay();
-        if ($end->isPast()) {
-            $end->addYear();
+        if ($validated['mode'] === 'custom' && empty(trim((string) ($validated['reason'] ?? '')))) {
+            return redirect()->back()->with('error', 'Für individuelle Sollstunden ist eine Begründung erforderlich.');
         }
 
-        return [$start, $end];
+        $this->familyService->upsertFamilyRule(
+            $validated['family_key'],
+            (int) $validated['period_year'],
+            $validated['mode'],
+            isset($validated['custom_required_hours']) ? (float) $validated['custom_required_hours'] : null,
+            $validated['reason'] ?? null,
+            auth()->id()
+        );
+
+        return redirect()->back()->with('success', 'Familienregel gespeichert');
     }
 
-    /**
-     * Liste der Jahre (Zeitraum-Startjahre), für die vergangene Zeiträume
-     * zur Auswahl angeboten werden sollen (basierend auf vorhandenen Daten).
-     */
-    private function availablePeriodYears(): array
+    public function bulkUpdateFamilyRule(Request $request)
     {
-        $earliestStart = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')->where('approved', true)->min('start');
+        if (! auth()->user()->can('edit Pflichtstunden')) {
+            return redirect(url('/'))->with('error', 'Berechtigung fehlt');
+        }
 
-        $earliestYear = $earliestStart
-            ? \Carbon\Carbon::parse($earliestStart)->year
-            : (int) date('Y') - 1;
+        $validated = $request->validate([
+            'period_year' => 'required|integer|min:2000|max:2100',
+            'mode' => 'required|string|in:standard,reduced,custom',
+            'custom_required_hours' => 'nullable|numeric|min:0|max:999.99',
+            'reason' => 'nullable|string|max:1000',
+            'family_keys' => 'required|array|min:1',
+            'family_keys.*' => 'string|max:64',
+        ]);
 
-        $currentPeriodStartYear = (int) $this->resolvePeriod(null)[0]->year;
+        if ($validated['mode'] === 'custom' && $validated['custom_required_hours'] === null) {
+            return redirect()->back()->with('error', 'Für den Modus "Individuell" muss eine Stundenanzahl angegeben werden.');
+        }
 
-        $years = range($currentPeriodStartYear - 1, min($earliestYear, $currentPeriodStartYear - 1), -1);
+        if ($validated['mode'] === 'custom' && empty(trim((string) ($validated['reason'] ?? '')))) {
+            return redirect()->back()->with('error', 'Für individuelle Sollstunden ist eine Begründung erforderlich.');
+        }
 
-        return $years;
+        foreach ($validated['family_keys'] as $familyKey) {
+            $this->familyService->upsertFamilyRule(
+                $familyKey,
+                (int) $validated['period_year'],
+                $validated['mode'],
+                isset($validated['custom_required_hours']) ? (float) $validated['custom_required_hours'] : null,
+                $validated['reason'] ?? null,
+                auth()->id()
+            );
+        }
+
+        return redirect()->back()->with('success', count($validated['family_keys']).' Familienregeln aktualisiert');
     }
 
     public function approve(Request $request, Pflichtstunde $pflichtstunde)
@@ -492,7 +275,6 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $pflichtstunde->rejection_reason = null;
         $pflichtstunde->save();
 
-        // Finde die nächste unbestätigte Pflichtstunde
         $nextPflichtstunde = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
@@ -501,13 +283,10 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ->orderBy('id', 'asc')
             ->first();
 
-        // URL-Parameter sammeln
         $params = [];
         if ($nextPflichtstunde) {
             $params['scroll_to'] = $nextPflichtstunde->id;
         }
-
-        // Bereich-Filter übernehmen falls vorhanden
         if ($request->has('bereich_filter')) {
             $params['bereich_filter'] = $request->input('bereich_filter');
         }
@@ -523,7 +302,6 @@ class PflichtstundeController extends Controller implements HasMiddleware
         }
 
         $ids = json_decode($request->input('ids'), true);
-
         if (empty($ids) || ! is_array($ids)) {
             return redirect()->route('pflichtstunden.indexVerwaltung')->with('error', 'Keine Pflichtstunden ausgewählt');
         }
@@ -565,7 +343,6 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $pflichtstunde->rejection_reason = $request->input('rejection_reason');
         $pflichtstunde->save();
 
-        // URL-Parameter sammeln
         $params = [];
         if ($request->has('bereich_filter')) {
             $params['bereich_filter'] = $request->input('bereich_filter');
@@ -575,13 +352,29 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ->with('success', 'Pflichtstunde abgelehnt');
     }
 
-    /**
-     * Excel-Export für Pflichtstunden-Abrechnung
-     */
     public function export(Request $request)
     {
         if (! auth()->user()->can('edit Pflichtstunden')) {
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
+        }
+
+        $startInput = $request->input('start');
+        $endInput = $request->input('end');
+
+        if ($startInput || $endInput) {
+            $request->validate([
+                'start' => 'required|date_format:Y-m-d',
+                'end' => 'required|date_format:Y-m-d|after_or_equal:start',
+            ]);
+
+            $startDate = \Carbon\Carbon::createFromFormat('Y-m-d', $startInput)->startOfDay();
+            $endDate = \Carbon\Carbon::createFromFormat('Y-m-d', $endInput)->endOfDay();
+            $label = $startDate->format('d.m.Y').' - '.$endDate->format('d.m.Y');
+
+            return Excel::download(
+                new PflichtstundenExport(null, $startDate, $endDate, $label),
+                'pflichtstunden_abrechnung_'.$startDate->format('Y-m-d').'_'.$endDate->format('Y-m-d').'_'.date('Y-m-d').'.xlsx'
+            );
         }
 
         $year = $request->get('year', null);
@@ -592,38 +385,26 @@ class PflichtstundeController extends Controller implements HasMiddleware
         );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdatePflichtstundeRequest $request, Pflichtstunde $pflichtstunde)
     {
-        // Prüfe ob bereits bestätigt oder abgelehnt
         if ($pflichtstunde->approved || $pflichtstunde->rejected) {
             return redirect()->back()->with('error', 'Pflichtstunde kann nicht mehr bearbeitet werden, da sie bereits bestätigt oder abgelehnt wurde.');
         }
 
         $data = $request->validated();
-
-        // user_id darf beim Update nicht geändert werden
         unset($data['user_id']);
-
         $pflichtstunde->update($data);
 
         return redirect()->back()->with('success', 'Pflichtstunde aktualisiert');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Pflichtstunde $pflichtstunde)
     {
-        // Prüfe Berechtigung: Entweder eigene Pflichtstunde (nicht bestätigt/abgelehnt) oder edit Pflichtstunden Berechtigung
         if (! auth()->user()->can('edit Pflichtstunden') &&
             ($pflichtstunde->user_id !== auth()->id() || $pflichtstunde->approved || $pflichtstunde->rejected)) {
             return redirect()->back()->with('error', 'Berechtigung fehlt oder Pflichtstunde kann nicht mehr gelöscht werden.');
         }
 
-        // Zusätzliche Prüfung für normale User
         if (! auth()->user()->can('edit Pflichtstunden') && ($pflichtstunde->approved || $pflichtstunde->rejected)) {
             return redirect()->back()->with('error', 'Pflichtstunde kann nicht mehr gelöscht werden, da sie bereits bestätigt oder abgelehnt wurde.');
         }
@@ -631,5 +412,139 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $pflichtstunde->delete();
 
         return redirect()->back()->with('success', 'Pflichtstunde gelöscht');
+    }
+
+    private function availablePeriodYears(): array
+    {
+        $earliestStart = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')->where('approved', true)->min('start');
+        $earliestYear = $earliestStart
+            ? \Carbon\Carbon::parse($earliestStart)->year
+            : (int) date('Y') - 1;
+        $currentPeriodStartYear = (int) $this->familyService->resolvePeriod(null)[0]->year;
+
+        return range($currentPeriodStartYear - 1, min($earliestYear, $currentPeriodStartYear - 1), -1);
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, array<string, mixed>> $summaries
+     * @return array<string, mixed>
+     */
+    private function calculateParentStatsFromSummaries(\Illuminate\Support\Collection $summaries, int $currentUserId): array
+    {
+        $sorted = $summaries->sortByDesc('percent')->values();
+        $yourRank = 1;
+        foreach ($sorted as $index => $summary) {
+            if (in_array($currentUserId, $summary['user_ids'])) {
+                $yourRank = $index + 1;
+                break;
+            }
+        }
+
+        return [
+            'your_rank' => $yourRank,
+            'total_parents' => $summaries->count(),
+            'avg_progress' => round((float) $summaries->avg('percent'), 2),
+            'avgPercent' => round((float) $summaries->avg('percent'), 2),
+            'expectedAvgPercent' => round((float) $summaries->avg('expected_percent'), 2),
+        ];
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, array<string, mixed>> $groupedUsers
+     * @return array{0:array<int,int>,1:\Illuminate\Support\Collection<int, array<string,mixed>>,2:array<int,int>}
+     */
+    private function buildOverlapGroups(\Illuminate\Support\Collection $groupedUsers): array
+    {
+        $familyUserMap = [];
+        $familyNameMap = [];
+        foreach ($groupedUsers as $group) {
+            foreach ($group['user_ids'] as $uid) {
+                $familyUserMap[$uid] = $group['family_key'];
+            }
+            $familyNameMap[$group['family_key']] = $group['family_name'];
+        }
+
+        $allNonRejectedPs = Pflichtstunde::query()
+            ->where('rejected', false)
+            ->with('user')
+            ->get();
+
+        $familyPflichtstunden = [];
+        foreach ($allNonRejectedPs as $ps) {
+            $familyKey = $familyUserMap[$ps->user_id] ?? (string) $ps->user_id;
+            $familyPflichtstunden[$familyKey][] = $ps;
+        }
+
+        $adjacency = [];
+        foreach ($familyPflichtstunden as $familyPs) {
+            $count = count($familyPs);
+            for ($i = 0; $i < $count; $i++) {
+                for ($j = $i + 1; $j < $count; $j++) {
+                    $a = $familyPs[$i];
+                    $b = $familyPs[$j];
+                    if ($a->start < $b->end && $a->end > $b->start) {
+                        $adjacency[$a->id][] = $b->id;
+                        $adjacency[$b->id][] = $a->id;
+                    }
+                }
+            }
+        }
+
+        $allPsById = $allNonRejectedPs->keyBy('id');
+        $visited = [];
+        $overlapGroups = collect();
+        $groupCounter = 1;
+
+        foreach ($allNonRejectedPs as $ps) {
+            if (! isset($adjacency[$ps->id]) || isset($visited[$ps->id])) {
+                continue;
+            }
+
+            $groupIds = [];
+            $queue = [$ps->id];
+            while (! empty($queue)) {
+                $currentId = array_shift($queue);
+                if (isset($visited[$currentId])) {
+                    continue;
+                }
+                $visited[$currentId] = true;
+                $groupIds[] = $currentId;
+                foreach ($adjacency[$currentId] ?? [] as $neighborId) {
+                    if (! isset($visited[$neighborId])) {
+                        $queue[] = $neighborId;
+                    }
+                }
+            }
+
+            if (count($groupIds) < 2) {
+                continue;
+            }
+
+            $groupEntries = collect($groupIds)
+                ->map(fn (int $id) => $allPsById->get($id))
+                ->filter()
+                ->sortBy('start')
+                ->values();
+
+            $firstEntry = $groupEntries->first();
+            $familyKey = $familyUserMap[$firstEntry->user_id] ?? (string) $firstEntry->user_id;
+            $familyName = $familyNameMap[$familyKey] ?? $firstEntry->user->name;
+
+            $overlapGroups->push([
+                'group_id' => $groupCounter++,
+                'entries' => $groupEntries,
+                'family_name' => $familyName,
+            ]);
+        }
+
+        $overlappingIds = array_keys($adjacency);
+        $entryGroupMap = [];
+        foreach ($overlapGroups as $group) {
+            foreach ($group['entries'] as $entry) {
+                $entryGroupMap[$entry->id] = $group['group_id'];
+            }
+        }
+
+        return [$overlappingIds, $overlapGroups, $entryGroupMap];
     }
 }

@@ -330,8 +330,12 @@ class SettingsController extends Controller implements HasMiddleware
                     'pflichtstunden_ende' => 'required|string',
                     'pflichtstunden_text' => 'required|string',
                     'pflichtstunden_anzahl' => 'required|integer|min:1',
+                    'pflichtstunden_anzahl_ermaessigt' => 'required|integer|min:0',
                     'listen_autocreate' => 'nullable|boolean',
                     'pflichtstunden_betrag' => 'required|numeric|min:0',
+                    'pflichtstunden_betrag_ermaessigt' => 'required|numeric|min:0',
+                    'konto_uebertrag_aktiv' => 'nullable|boolean',
+                    'konto_uebertrag_max_stunden' => 'nullable|numeric|min:0',
                     'gamification_show_progress' => 'nullable|boolean',
                     'gamification_show_ranking' => 'nullable|boolean',
                     'gamification_show_comparison' => 'nullable|boolean',
@@ -379,8 +383,12 @@ class SettingsController extends Controller implements HasMiddleware
                 $pflichtstundenSetting->pflichtstunden_ende = $end->format('m-d');
                 $pflichtstundenSetting->pflichtstunden_text = $validated['pflichtstunden_text'];
                 $pflichtstundenSetting->pflichtstunden_anzahl = $validated['pflichtstunden_anzahl'];
+                $pflichtstundenSetting->pflichtstunden_anzahl_ermaessigt = $validated['pflichtstunden_anzahl_ermaessigt'];
                 $pflichtstundenSetting->listen_autocreate = $request->has('listen_autocreate');
                 $pflichtstundenSetting->pflichtstunden_betrag = $validated['pflichtstunden_betrag'];
+                $pflichtstundenSetting->pflichtstunden_betrag_ermaessigt = $validated['pflichtstunden_betrag_ermaessigt'];
+                $pflichtstundenSetting->konto_uebertrag_aktiv = $request->has('konto_uebertrag_aktiv');
+                $pflichtstundenSetting->konto_uebertrag_max_stunden = $validated['konto_uebertrag_max_stunden'] ?? null;
                 $pflichtstundenSetting->gamification_show_progress = $request->has('gamification_show_progress');
                 $pflichtstundenSetting->gamification_show_ranking = $request->has('gamification_show_ranking');
                 $pflichtstundenSetting->gamification_show_comparison = $request->has('gamification_show_comparison');

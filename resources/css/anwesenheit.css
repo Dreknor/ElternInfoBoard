@@ -131,6 +131,33 @@ body {
 }
 
 /* Modal Styles */
+
+/*
+ * modal-dialog-scrollable erwartet, dass .modal-body ein direktes Kind von .modal-content ist.
+ * Da hier .tab-content / .tab-pane dazwischen liegen, übernehmen wir das Scroll-Verhalten
+ * auf .tab-content und lassen die einzelnen .modal-body-Elemente normal fließen.
+ */
+.modal-dialog-scrollable .modal-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-dialog-scrollable .modal-tabs-wrapper {
+    flex-shrink: 0;
+}
+
+.modal-dialog-scrollable .tab-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+/* Innerhalb von tab-content darf .modal-body nicht nochmals scrollen */
+.modal-dialog-scrollable .tab-content .modal-body {
+    overflow-y: visible;
+}
+
 .modal-header {
     background-color: #007bff;
     color: white;

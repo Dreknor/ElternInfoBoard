@@ -5,8 +5,19 @@
         @php
             // Berechne grundlegende Werte für alle Gamification-Cards
             $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
-            $required_minutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
-            $progress_percentage = min(round(($approved_minutes / $required_minutes) * 100), 100);
+            $required_minutes = $currentFamilySummary['required_minutes'] ?? ($pflichtstunden_settings->pflichtstunden_anzahl * 60);
+            $opening_balance_minutes = $currentFamilySummary['opening_balance_minutes'] ?? 0;
+            $credited_minutes = max(0, $opening_balance_minutes + $approved_minutes);
+            $progress_percentage = $required_minutes > 0 ? min(round(($credited_minutes / $required_minutes) * 100), 100) : 100;
+            $hourly_rate = $currentFamilySummary['hourly_rate'] ?? $pflichtstunden_settings->pflichtstunden_betrag;
+            $open_minutes = max(0, (int) ($currentFamilySummary['openMinutes'] ?? max(0, $required_minutes - $credited_minutes)));
+            $closing_balance_minutes = $currentFamilySummary['closing_balance_minutes'] ?? 0;
+            $carryover_preview_minutes = $currentFamilySummary['carryover_preview_minutes'] ?? 0;
+            $mode_label = match($currentFamilySummary['rule_mode'] ?? 'standard') {
+                'reduced' => 'Ermäßigt',
+                'custom' => 'Individuell',
+                default => 'Standard',
+            };
 
             // Finde die Pflichtstunden-Hilfe-Site
             $helpSite = \App\Model\Site::where('name', 'Pflichtstunden Hilfe')->where('is_active', true)->first();
@@ -56,8 +67,8 @@
                         </div>
 
                         <div class="text-center text-xs text-gray-600">
-                            <span class="font-semibold text-green-600">{{ floor($approved_minutes / 60) }}h {{ $approved_minutes % 60 }}m</span>
-                            / <span class="font-semibold">{{ $pflichtstunden_settings->pflichtstunden_anzahl }}h</span>
+                            <span class="font-semibold text-green-600">{{ floor($credited_minutes / 60) }}h {{ $credited_minutes % 60 }}m</span>
+                            / <span class="font-semibold">{{ round($required_minutes / 60, 2) }}h</span>
                         </div>
 
                         <!-- Achievement Badge -->
@@ -187,6 +198,38 @@
             @endif
         </div>
         @endif
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-4 py-3 border-b flex items-center justify-between"
+                 style="background: linear-gradient(to right, var(--color-widget-accent-from), var(--color-widget-accent-to)); border-color: var(--color-widget-accent-border)">
+                <h3 class="text-xl font-bold flex items-center gap-2 mb-0" style="color: var(--color-widget-header-text)">
+                    <i class="fas fa-wallet"></i>
+                    Familienkonto & Soll-Modell
+                </h3>
+            </div>
+            <div class="p-4 grid grid-cols-1 md:grid-cols-2 {{ $pflichtstunden_settings->konto_uebertrag_aktiv ? 'lg:grid-cols-4' : 'lg:grid-cols-3' }} gap-3">
+                <div class="rounded-lg border p-3">
+                    <div class="text-xs text-gray-500">Soll-Modell</div>
+                    <div class="font-semibold text-gray-900">{{ $mode_label }}</div>
+                </div>
+                <div class="rounded-lg border p-3">
+                    <div class="text-xs text-gray-500">Startsaldo</div>
+                    <div class="font-semibold text-gray-900">{{ floor(abs($opening_balance_minutes) / 60) }}h {{ abs($opening_balance_minutes) % 60 }}m</div>
+                </div>
+                <div class="rounded-lg border p-3">
+                    <div class="text-xs text-gray-500">Aktueller Kontostand</div>
+                    <div class="font-semibold {{ $closing_balance_minutes < 0 ? 'text-red-600' : 'text-green-700' }}">
+                        {{ $closing_balance_minutes < 0 ? '-' : '' }}{{ floor(abs($closing_balance_minutes) / 60) }}h {{ abs($closing_balance_minutes) % 60 }}m
+                    </div>
+                </div>
+                @if($pflichtstunden_settings->konto_uebertrag_aktiv)
+                    <div class="rounded-lg border p-3">
+                        <div class="text-xs text-gray-500">Voraussichtlicher Übertrag</div>
+                        <div class="font-semibold text-gray-900">{{ floor($carryover_preview_minutes / 60) }}h {{ $carryover_preview_minutes % 60 }}m</div>
+                    </div>
+                @endif
+            </div>
+        </div>
 
         <!-- Pflichtstunden Übersicht Card -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -400,7 +443,7 @@
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-orange-600">
                                     @php
-                                        $remaining = $pflichtstunden_settings->pflichtstunden_anzahl *60 - $pflichtstunden->where('approved', true)->sum('duration');
+                                        $remaining = $open_minutes;
                                     @endphp
                                     @if($remaining > 60)
                                         {{ floor($remaining / 60) }} Std. {{ $remaining % 60 }} Min.
@@ -413,20 +456,20 @@
                             </tr>
                             <tr>
                                 <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                                    Offener Betrag ({{$pflichtstunden_settings->pflichtstunden_betrag}} € je Pflichtstunde):
+                                   Offener Betrag ({{ number_format($hourly_rate, 2, ',', '.') }} € je Pflichtstunde):
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-red-600">
                                    @php
-                                       $remaining_hours = ($pflichtstunden_settings->pflichtstunden_anzahl * 60 - $pflichtstunden->where('approved', true)->sum('duration')) / 60;
-                                       $betrag_gesamt = $pflichtstunden_settings->pflichtstunden_anzahl * $pflichtstunden_settings->pflichtstunden_betrag;
-                                       $offener_betrag = $remaining_hours * $pflichtstunden_settings->pflichtstunden_betrag;
+                                       $remaining_hours = $open_minutes / 60;
+                                       $betrag_gesamt = ($required_minutes / 60) * $hourly_rate;
+                                       $offener_betrag = $remaining_hours * $hourly_rate;
                                     @endphp
                                     @if($offener_betrag<0)
                                         0.00
                                     @else
-                                        {{number_format($offener_betrag, 2)}}
+                                        {{ number_format($offener_betrag, 2, ',', '.') }}
                                     @endif
-                                    <span class="text-gray-500 font-normal">von {{$betrag_gesamt}} €</span>
+                                    <span class="text-gray-500 font-normal">von {{ number_format($betrag_gesamt, 2, ',', '.') }} €</span>
                                 </th>
                             </tr>
                         </tfoot>
@@ -534,4 +577,3 @@
         </div>
     </div>
 @endsection
-

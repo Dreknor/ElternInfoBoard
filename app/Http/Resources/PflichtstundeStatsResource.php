@@ -31,6 +31,10 @@ class PflichtstundeStatsResource extends JsonResource
                 'required_hours' => $this->resource['required_hours'],
                 'open_minutes' => $this->resource['open_minutes'],
                 'open_hours' => $this->resource['open_hours'],
+                'opening_balance_minutes' => $this->resource['opening_balance_minutes'] ?? 0,
+                'closing_balance_minutes' => $this->resource['closing_balance_minutes'] ?? 0,
+                'carryover_preview_minutes' => $this->resource['carryover_preview_minutes'] ?? 0,
+                'mode' => $this->resource['rule_mode'] ?? 'standard',
                 'is_completed' => $this->resource['your_progress'] >= 100,
             ],
             'ranking' => [
@@ -46,4 +50,3 @@ class PflichtstundeStatsResource extends JsonResource
         ];
     }
 }
-

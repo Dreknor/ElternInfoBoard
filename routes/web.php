@@ -138,6 +138,8 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:edit Pflichtstunden')->group(function () {
             Route::get('verwaltung/pflichtstunden/export', [\App\Http\Controllers\PflichtstundeController::class, 'export'])->name('pflichtstunden.export');
             Route::post('verwaltung/pflichtstunden/store', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->name('pflichtstunden.verwaltung.store');
+            Route::put('verwaltung/pflichtstunden/familienregel', [\App\Http\Controllers\PflichtstundeController::class, 'updateFamilyRule'])->name('pflichtstunden.family-rule.update');
+            Route::put('verwaltung/pflichtstunden/familienregel-bulk', [\App\Http\Controllers\PflichtstundeController::class, 'bulkUpdateFamilyRule'])->name('pflichtstunden.family-rule.bulk');
 
             Route::get('verwaltung/pflichtstunden', [\App\Http\Controllers\PflichtstundeController::class, 'verwaltungIndex'])->name('pflichtstunden.indexVerwaltung');
             Route::put('pflichtstunden/approve-multiple', [\App\Http\Controllers\PflichtstundeController::class, 'approveMultiple'])->name('pflichtstunden.approveMultiple');
