@@ -189,9 +189,12 @@ class ListenController extends Controller
         if ($terminListe->type == 'termin') {
             $terminListe->load('termine');
             $terminListe->termine->sortBy('termin');
+            $allTermineInPast = $terminListe->termine->isNotEmpty()
+                && $terminListe->termine->every(fn ($termin) => $termin->termin->lessThan(now()));
 
             return view('listen.terminListen.terminAuswahl', [
                 'liste' => $terminListe,
+                'allTermineInPast' => $allTermineInPast,
             ]);
         }
 

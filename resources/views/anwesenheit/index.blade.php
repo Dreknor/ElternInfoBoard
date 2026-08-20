@@ -89,6 +89,13 @@
                             </a>
                         </li>
                         @endif
+                        @if($careSettings->show_parents)
+                        <li class="nav-item bg-gradient-directional-blue-grey-light">
+                            <a class="nav-link text-dark" id="eltern-tab" data-toggle="tab" href="#Eltern" role="tab" aria-controls="Eltern" aria-selected="false">
+                                <i class="fas fa-users mr-1"></i> Eltern
+                            </a>
+                        </li>
+                        @endif
                     </ul>
                 </div><!-- /.modal-tabs-wrapper -->
                 <div class="tab-content" id="myTabContent">
@@ -233,6 +240,15 @@
                             <b>Abholvollmachten:</b>
                             <ul class="list-group mt-2">
 
+                            </ul>
+                        </div>
+                    </div>
+                    @endif
+                    @if($careSettings->show_parents)
+                    <div class="tab-pane fade" id="Eltern" role="tabpanel" aria-labelledby="eltern-tab">
+                        <div class="modal-body border-top">
+                            <b>Erziehungsberechtigte:</b>
+                            <ul class="list-group mt-2" id="elternContainer">
                             </ul>
                         </div>
                     </div>
@@ -410,6 +426,27 @@
                         }
                     }
 
+                    const elternContainer = document.getElementById('elternContainer');
+                    if (elternContainer) {
+                        elternContainer.innerHTML = '';
+                        const parents = childData.parents || [];
+                        if (parents.length > 0) {
+                            parents.forEach(function(p) {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item';
+                                const emailLink = p.email
+                                    ? ` &nbsp;<a href="mailto:${p.email}" class="text-muted small"><i class="fas fa-envelope mr-1"></i>${p.email}</a>`
+                                    : '';
+                                li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + (p.name || '') + '</b>' + emailLink;
+                                elternContainer.appendChild(li);
+                            });
+                        } else {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item text-muted';
+                            li.textContent = 'Keine Erziehungsberechtigten hinterlegt';
+                            elternContainer.appendChild(li);
+                        }
+                    }
 
                     childModal.modal('show');
                 });

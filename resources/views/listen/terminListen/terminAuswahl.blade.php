@@ -96,6 +96,22 @@
             <!-- Termine List -->
             <div class="px-6 py-6">
                 @if($liste->termine->count() > 0)
+                    @if($allTermineInPast)
+                        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-exclamation-triangle mt-1 text-amber-500"></i>
+                                <div>
+                                    <p class="font-semibold">Alle angelegten Termine liegen bereits in der Vergangenheit.</p>
+                                    @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
+                                        <p class="text-sm text-amber-800">Mit „Alle“ kannst du sie trotzdem einblenden.</p>
+                                    @else
+                                        <p class="text-sm text-amber-800">Aktuell sind daher keine buchbaren Termine mehr vorhanden.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="space-y-3">
                         @foreach($liste->termine->sortBy('termin') as $eintrag)
                             @include('listen.terminListen.termin')
@@ -267,4 +283,3 @@
         });
     </script>
 @endpush
-
