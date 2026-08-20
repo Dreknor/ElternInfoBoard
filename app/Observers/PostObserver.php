@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Jobs\PushPostToWordpress;
 use App\Model\Module;
 use App\Model\Post;
+use Illuminate\Support\Facades\Log;
 
 class PostObserver
 {
@@ -43,7 +44,17 @@ class PostObserver
      */
     public function deleted(Post $post): void
     {
+        Log::debug('Post deleted: ',[
+            "alte Cache Version: " => Post::cacheVersion(),
+        ]);
+
+
+
         Post::bumpCacheVersion();
+
+        Log::debug('Post deleted: ',[
+            "neue Cache Version: " => Post::cacheVersion(),
+        ]);
 
     }
 
