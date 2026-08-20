@@ -16,7 +16,7 @@ Nur im gemeinsamen Modus relevant: Über **„Bereiche vom gemeinsamen Plan auss
 
 ## Plan automatisch befüllen
 
-Über den Button **„automatisch befüllen"** wählst du Zeitraum, Aufgaben und optional auszuschließende Gruppen aus. Das System teilt die Familien dann fair über den Zeitraum ein:
+Über den Button **„füllen"** (Zauberstab-Symbol) wählst du Zeitraum, Aufgaben und optional auszuschließende Gruppen aus. Das System teilt die Familien dann fair über den Zeitraum ein:
 
 - Familien mit den **wenigsten bisherigen Einsätzen** werden zuerst berücksichtigt (Fairness-Algorithmus), innerhalb gleicher Einsatzzahl wird zufällig gemischt.
 - Ist eine Familie bereits im **selben Bereich und Zeitraum** eingeteilt, wird sie beim automatischen Befüllen übersprungen.
