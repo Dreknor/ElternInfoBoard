@@ -229,11 +229,11 @@
                     </div>
                     @if($careSettings->show_mandates)
                     <div class="tab-pane fade" id="vollmacht" role="tabpanel" aria-labelledby="vollmacht-tab">
-                        <div class="modal-body">
+                        <div class="modal-body border-top">
                             <b>Abholvollmachten:</b>
-                           <ul class="list-group">
+                            <ul class="list-group mt-2">
 
-                           </ul>
+                            </ul>
                         </div>
                     </div>
                     @endif

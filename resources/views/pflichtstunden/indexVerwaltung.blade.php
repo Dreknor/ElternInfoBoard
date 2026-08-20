@@ -92,6 +92,8 @@
                 </div>
             </div>
         </div>
+
+
         <!-- Unbestätigte Pflichtstunden -->
         <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6" x-data="{
             selectedIds: [],
@@ -551,7 +553,7 @@
 
 
         <!-- Übersicht der Pflichtstunden mit Suchfunktion und Pagination -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200"
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6"
              x-data="{
                  search: '',
                  currentPage: 1,
@@ -561,6 +563,11 @@
                      {
                          userName: '{{ addslashes($group['user']->name) }}',
                          partnerName: '{{ $group['partner'] ? addslashes($group['partner']->name) : '' }}',
+                         modeLabel: '{{ $group['rule_mode'] === 'reduced' ? 'Ermäßigt' : ($group['rule_mode'] === 'custom' ? 'Individuell' : 'Standard') }}',
+                         requiredMinutes: {{ $group['required_minutes'] }},
+                         openingBalanceMinutes: {{ $group['opening_balance_minutes'] }},
+                         closingBalanceMinutes: {{ $group['closing_balance_minutes'] }},
+                         carryoverMinutes: {{ $group['carryover_preview_minutes'] }},
                          totalMinutes: {{ $group['totalMinutes'] }},
                          openMinutes: {{ $group['openMinutes'] }},
                          beitrag: {{ $group['beitrag'] }},
@@ -720,6 +727,17 @@
                                     <div class="text-xs text-gray-500">Zeitraum {{ date('Y') - 2 }}</div>
                                 </div>
                             </a>
+                            <div class="border-t border-gray-200 my-1"></div>
+                            <form action="{{ route('pflichtstunden.export') }}" method="get" class="px-4 py-3 space-y-2">
+                               <div class="font-medium text-gray-700">Individueller Zeitraum</div>
+                               <div class="grid grid-cols-2 gap-2">
+                                   <input type="date" name="start" class="px-2 py-1 border rounded text-sm" value="{{ request('start') }}">
+                                   <input type="date" name="end" class="px-2 py-1 border rounded text-sm" value="{{ request('end') }}">
+                               </div>
+                               <button type="submit" class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+                                   Export starten
+                               </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -751,7 +769,9 @@
                         <thead class="bg-gray-50 border-b-2 border-gray-200">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name/Familie</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Modus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Geleistet</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Konto</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Offen</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Beitrag</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Erfüllung</th>
@@ -767,6 +787,9 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-700">
+                                       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800" x-text="group.modeLabel"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             <template x-if="group.totalMinutes >= 60">
                                                 <span x-text="Math.floor(group.totalMinutes / 60) + 'h ' + (group.totalMinutes % 60) + 'm'"></span>
@@ -775,6 +798,12 @@
                                                 <span x-text="group.totalMinutes + 'm'"></span>
                                             </template>
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                       <div>
+                                           <span :class="group.closingBalanceMinutes < 0 ? 'text-red-600' : 'text-green-700'" class="font-semibold" x-text="(group.closingBalanceMinutes < 0 ? '-' : '') + Math.floor(Math.abs(group.closingBalanceMinutes) / 60) + 'h ' + (Math.abs(group.closingBalanceMinutes) % 60) + 'm'"></span>
+                                           <div class="text-xs text-gray-500" x-text="'Übertrag: ' + Math.floor(group.carryoverMinutes / 60) + 'h ' + (group.carryoverMinutes % 60) + 'm'"></div>
+                                       </div>
                                     </td>
                                     <td class="px-4 py-3 text-sm">
                                         <template x-if="group.openMinutes > 0">
@@ -872,6 +901,104 @@
                     <i class="fas fa-search text-4xl mb-3"></i>
                     <p class="text-lg font-medium">Keine Nutzer gefunden</p>
                     <p class="text-sm">Versuchen Sie eine andere Suche</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6">
+            <div class="px-6 py-4 rounded-t-xl text-white"
+                 style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to))">
+                <h3 class="text-xl font-bold flex items-center gap-3">
+                    <i class="fas fa-sliders-h text-2xl"></i>
+                    Sollstunden-Zuweisung pro Familie
+                </h3>
+                <p class="text-sm text-white/90 mt-1">Zeitraum-Startjahr: {{ $periodYear }}</p>
+            </div>
+            <div class="p-6">
+                <form method="POST" action="{{ route('pflichtstunden.family-rule.bulk') }}" class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-5 p-4 border rounded-lg bg-gray-50">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="period_year" value="{{ $periodYear }}">
+                    <div class="md:col-span-2">
+                        <label class="text-xs font-semibold text-gray-600">Modus für markierte Familien</label>
+                        <select name="mode" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="standard">Standard</option>
+                            <option value="reduced">Ermäßigt</option>
+                            <option value="custom">Individuell</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600">Individuell (h)</label>
+                        <input type="number" step="0.5" min="0" name="custom_required_hours" class="w-full px-3 py-2 border rounded-lg" placeholder="z. B. 12.5">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs font-semibold text-gray-600">Begründung (bei individuell Pflicht)</label>
+                        <input type="text" name="reason" class="w-full px-3 py-2 border rounded-lg" placeholder="z. B. Sonderregelung Vorstandsbeschluss">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+                            Bulk übernehmen
+                        </button>
+                    </div>
+                    <div class="md:col-span-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                        @foreach($groupedUsers as $group)
+                            <label class="inline-flex items-center gap-2 text-sm p-2 border rounded bg-white">
+                                <input type="checkbox" name="family_keys[]" value="{{ $group['family_key'] }}">
+                                <span>{{ $group['family_name'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-3 py-2 text-left">Familie</th>
+                            <th class="px-3 py-2 text-left">Modus</th>
+                            <th class="px-3 py-2 text-left">Sollstunden</th>
+                            <th class="px-3 py-2 text-left">Begründung</th>
+                            <th class="px-3 py-2 text-left">Aktion</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                        @foreach($groupedUsers as $group)
+                            @php $ruleFormId = 'family-rule-'.$group['family_key']; @endphp
+                            <tr>
+                                <td class="px-3 py-2 font-medium">{{ $group['family_name'] }}</td>
+                                <td class="px-3 py-2">
+                                    <select name="mode" form="{{ $ruleFormId }}" class="px-2 py-1 border rounded w-full max-w-xs">
+                                        <option value="standard" @selected($group['rule_mode'] === 'standard')>Standard</option>
+                                        <option value="reduced" @selected($group['rule_mode'] === 'reduced')>Ermäßigt</option>
+                                        <option value="custom" @selected($group['rule_mode'] === 'custom')>Individuell</option>
+                                    </select>
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="number" step="0.5" min="0" name="custom_required_hours" form="{{ $ruleFormId }}"
+                                           value="{{ $group['custom_required_hours'] }}"
+                                           class="px-2 py-1 border rounded w-28">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" name="reason" form="{{ $ruleFormId }}"
+                                           value="{{ $group['rule_reason'] }}"
+                                           class="px-2 py-1 border rounded w-full"
+                                           placeholder="Begründung">
+                                </td>
+                                <td class="px-3 py-2">
+                                    <form method="POST" action="{{ route('pflichtstunden.family-rule.update') }}" id="{{ $ruleFormId }}" class="inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="family_key" value="{{ $group['family_key'] }}">
+                                        <input type="hidden" name="period_year" value="{{ $periodYear }}">
+                                    </form>
+                                    <button type="submit" form="{{ $ruleFormId }}" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded">
+                                        Speichern
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1091,6 +1218,46 @@
                 </div>
             </div>
         @endif
+
+
+        @if($ruleHistoryEntries->isNotEmpty())
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6">
+                <div class="px-6 py-4 rounded-t-xl text-white"
+                     style="background: linear-gradient(to right, #6b7280, #4b5563)">
+                    <h3 class="text-xl font-bold flex items-center gap-3">
+                        <i class="fas fa-history text-2xl"></i>
+                        Historie der Soll-Regeln (letzte 20 Änderungen)
+                    </h3>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-3 py-2 text-left">Zeitpunkt</th>
+                            <th class="px-3 py-2 text-left">Familie</th>
+                            <th class="px-3 py-2 text-left">Von</th>
+                            <th class="px-3 py-2 text-left">Nach</th>
+                            <th class="px-3 py-2 text-left">Begründung</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                        @foreach($ruleHistoryEntries as $history)
+                            <tr>
+                                <td class="px-3 py-2">{{ $history['created_at']->format('d.m.Y H:i') }}</td>
+                                <td class="px-3 py-2">{{ $history['family_name'] }}</td>
+                                <td class="px-3 py-2">{{ $history['from_mode'] ?? '-' }} {{ $history['from_custom_required_hours'] ? '('.$history['from_custom_required_hours'].'h)' : '' }}</td>
+                                <td class="px-3 py-2">{{ $history['to_mode'] }} {{ $history['to_custom_required_hours'] ? '('.$history['to_custom_required_hours'].'h)' : '' }}</td>
+                                <td class="px-3 py-2">
+                                    <div>{{ $history['reason'] ?? '-' }}</div>
+                                    <div class="text-xs text-gray-500">von {{ $history['changed_by_name'] }}</div>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection
 
@@ -1305,4 +1472,3 @@
         });
     </script>
 @endpush
-

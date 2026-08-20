@@ -109,6 +109,8 @@ try {
         Schedule::command('krankmeldungen:cleanup')->yearlyOn(8, 1, '03:00');
         // Messenger: Schuljahresend-Löschung am 1. 8.
         Schedule::command('messenger:cleanup-school-year')->yearlyOn(8, 1, '02:15');
+        // Pflichtstunden: Jahresabschluss zum Start des neuen Zeitraums
+        Schedule::command('pflichtstunden:jahresabschluss')->yearlyOn(8, 1, '04:15');
         // User-Cleanup: Force-Delete soft-gelöschter User nach 90 Tagen
         Schedule::command('users:cleanup --purge-days=90')->dailyAt('04:00');
         // Monatlicher Inaktivitätsbericht an Administratoren

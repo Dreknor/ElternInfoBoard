@@ -47,6 +47,20 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
+                    <input type="number" class="form-control" name="pflichtstunden_anzahl_ermaessigt"
+                           value="{{$pflichtstundenSettings->pflichtstunden_anzahl_ermaessigt ?? 0}}">
+                    Ermäßigte Pflichtstunden pro Jahr
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Dieses Soll wird verwendet, wenn einer Familie in der Pflichtstunden-Verwaltung der Modus „Ermäßigt“ zugewiesen wurde.
+                </div>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
                     <input type="number" class="form-control" name="pflichtstunden_betrag" step="0.01"
                            value="{{$pflichtstundenSettings->pflichtstunden_betrag ?? 0}}">
                     Betrag je Pflichtstunden
@@ -55,6 +69,48 @@
             <div class="col-md-6 col-sm-12 m-auto">
                 <div class="small">
                     Der Betrag, der je nicht geleisteter Pflichtstunde berechnet wird. Dieser Wert wird verwendet, um die finanziellen Konsequenzen für nicht erfüllte Pflichtstunden zu bestimmen.
+                </div>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="number" class="form-control" name="pflichtstunden_betrag_ermaessigt" step="0.01"
+                           value="{{$pflichtstundenSettings->pflichtstunden_betrag_ermaessigt ?? 0}}">
+                    Ermäßigter Betrag je Pflichtstunde
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Dieser Betrag wird für Familien im Modus „Ermäßigt“ genutzt.
+                </div>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="checkbox" name="konto_uebertrag_aktiv" value="1"
+                           @if($pflichtstundenSettings->konto_uebertrag_aktiv ?? false) checked @endif>
+                    Übertrag von Guthaben in den Folgezeitraum aktivieren
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiv, wird ein positiver Pflichtstunden-Saldo pro Familie ins nächste Jahr übernommen.
+                </div>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    <input type="number" class="form-control" name="konto_uebertrag_max_stunden" step="0.01" min="0"
+                           value="{{$pflichtstundenSettings->konto_uebertrag_max_stunden ?? ''}}">
+                    Maximal übertragbare Stunden (optional)
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Optionales Limit für den Jahresübertrag. Leer lassen bedeutet: kein Limit.
                 </div>
             </div>
         </div>
