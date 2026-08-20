@@ -25,7 +25,7 @@ return new class extends Migration
                 ->references('id')
                 ->on('pflichtstunden_family_rules')
                 ->onDelete('cascade');
-            $table->index(['family_key', 'period_year']);
+            $table->index(['family_key', 'period_year'], 'ps_family_rule_hist_family_year_idx');
         });
     }
 
