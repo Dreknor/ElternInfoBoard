@@ -816,9 +816,17 @@ class NachrichtenController extends Controller implements HasMiddleware
     {
 
         if ($post->author == auth()->id() or auth()->user()->can('delete posts')) {
+
+            Log::debug('Deleting post', [
+                'post_id' => $post->id,
+                'author_id' => $post->author,
+                'current_user_id' => auth()->id(),
+            ]);
+
             $post->groups()->detach();
             if (! is_null($post->rueckmeldung())) {
                 $post->rueckmeldung()->delete();
+
             }
 
             foreach ($post->media as $media) {
