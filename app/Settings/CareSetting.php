@@ -28,6 +28,8 @@ class CareSetting extends Settings
 
     public bool $show_mandates;
 
+    public bool $show_parents;
+
     public string $bundesland;
 
     public static function group(): string

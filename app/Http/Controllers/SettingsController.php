@@ -116,6 +116,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'mandate_notification_enabled' => 'nullable|boolean',
                     'mandate_notification_email' => 'nullable|email',
                     'show_mandates' => 'nullable|boolean',
+                    'show_parents' => 'nullable|boolean',
                 ]);
 
                 $careSettings = new CareSetting;
@@ -145,6 +146,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->mandate_notification_enabled = $validated['mandate_notification_enabled'] ?? false;
                 $careSettings->mandate_notification_email = $validated['mandate_notification_email'] ?? null;
                 $careSettings->show_mandates = $validated['show_mandates'] ?? false;
+                $careSettings->show_parents = $validated['show_parents'] ?? false;
 
                 $careSettings->save();
 

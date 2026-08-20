@@ -66,6 +66,7 @@ class CareController extends Controller implements HasMiddleware
                 })
                 ->with([
                     'mandates',
+                    'parents:id,name,email,sorg2',
                     'checkIns' => function ($query) {
                         $query->whereDate('date', today());
                     },
@@ -102,6 +103,7 @@ class CareController extends Controller implements HasMiddleware
                 ->whereIn('class_id', $careSettings->class_list)
                 ->with([
                     'mandates',
+                    'parents:id,name,email,sorg2',
                     'checkIns' => function ($query) {
                         $query->whereDate('date', today());
                     },
@@ -133,8 +135,13 @@ class CareController extends Controller implements HasMiddleware
                 ->get();
         }
 
-
         $isFerientag = (new HolidayService())->isTodayHoliday();
+
+        // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1)
+        $sorg2Ids = $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values();
+        $sorg2Users = $sorg2Ids->isNotEmpty()
+            ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email'])->keyBy('id')
+            : collect();
 
         return view('anwesenheit.index', [
             'children' => $childs,
@@ -142,6 +149,7 @@ class CareController extends Controller implements HasMiddleware
             'classes' => $classes,
             'careSettings' => $careSettings,
             'isFerientag' => $isFerientag,
+            'sorg2Users' => $sorg2Users,
         ]);
     }
 

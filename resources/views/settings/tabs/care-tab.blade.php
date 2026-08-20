@@ -158,6 +158,21 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
+                    Eltern-Tab im Kindermodal anzeigen
+                    <input type="checkbox" class="form-control" name="show_parents"
+                           value="1" @if($careSettings->show_parents) checked @endif>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, wird im Kindermodal ein Tab „Eltern" angezeigt, der die Namen und E-Mail-Adressen der Erziehungsberechtigten enthält. Gilt für die ausführliche Ansicht und die einfache Liste.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
                     Abholvollmachten aktivieren
                     <input type="checkbox" class="form-control" name="show_mandates"
                            value="1" @if($careSettings->show_mandates) checked @endif>
