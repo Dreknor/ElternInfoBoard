@@ -21,7 +21,7 @@ Nur im gemeinsamen Modus relevant: Über **„Bereiche vom gemeinsamen Plan auss
 - Familien mit den **wenigsten bisherigen Einsätzen** werden zuerst berücksichtigt (Fairness-Algorithmus), innerhalb gleicher Einsatzzahl wird zufällig gemischt.
 - Ist eine Familie bereits im **selben Bereich und Zeitraum** eingeteilt, wird sie beim automatischen Befüllen übersprungen.
 - **Sind nicht genügend Familien für alle Wochen/Aufgaben vorhanden**, werden Familien mit den wenigsten bisherigen Einsätzen in diesem Lauf **mehrfach eingesetzt**, statt den Vorgang abzubrechen. Nur wenn im gewählten Bereich **überhaupt keine** Familie zur Verfügung steht, erscheint eine Fehlermeldung.
-- Ist **„Ferienwochen überspringen"** aktiviert, werden Wochen, die laut hinterlegtem Bundesland (Care-Einstellungen) in die Schulferien fallen, nicht verplant.
+- Ist **„Ferienwochen beim automatischen Befüllen überspringen"** aktiviert, werden Wochen, die laut hinterlegtem Bundesland (Care-Einstellungen) in die Schulferien fallen, nicht verplant.
 
 ## Eintrag manuell erstellen
 
