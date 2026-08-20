@@ -815,6 +815,12 @@ class NachrichtenController extends Controller implements HasMiddleware
     public function destroy(Post $post)
     {
 
+        Log::debug('Deleting post', [
+            'post_id' => $post,
+            'author_id' => $post->author,
+            'current_user_id' => auth()->id(),
+        ]);
+
         if ($post->author == auth()->id() or auth()->user()->can('delete posts')) {
 
             Log::debug('Deleting post', [
