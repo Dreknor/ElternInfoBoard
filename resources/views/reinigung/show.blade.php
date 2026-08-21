@@ -189,9 +189,10 @@
                             @forelse($aufgaben as $task)
                                 <div class="p-3 rounded-lg d-flex justify-content-between align-items-center" style="background: var(--color-widget-body-bg); border: 1px solid var(--color-card-border);">
                                     <span style="color: var(--color-text-primary);">{{$task->task}}</span>
-                                    <form action="{{url('reinigung/task/'.$task->id.'/trash')}}" method="POST" class="inline">
+                                    <form action="{{url('reinigung/task/trash')}}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
+                                        <input type="hidden" name="task_id" value="{{$task->id}}">
                                         <button type="submit" class="text-danger" style="background: none; border: none;">
                                             <i class="fas fa-trash"></i>
                                         </button>
