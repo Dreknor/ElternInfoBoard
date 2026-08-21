@@ -5,6 +5,8 @@
         @php
             // Berechne grundlegende Werte für alle Gamification-Cards
             $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
+            $pending_minutes = $pflichtstunden->where('approved', false)->where('rejected', false)->sum('duration');
+            $rejected_minutes = $pflichtstunden->where('rejected', true)->sum('duration');
             $required_minutes = $currentFamilySummary['required_minutes'] ?? ($pflichtstunden_settings->pflichtstunden_anzahl * 60);
             $opening_balance_minutes = $currentFamilySummary['opening_balance_minutes'] ?? 0;
             $credited_minutes = max(0, $opening_balance_minutes + $approved_minutes);
@@ -69,7 +71,16 @@
                         <div class="text-center text-xs text-gray-600">
                             <span class="font-semibold text-green-600">{{ floor($credited_minutes / 60) }}h {{ $credited_minutes % 60 }}m</span>
                             / <span class="font-semibold">{{ round($required_minutes / 60, 2) }}h</span>
+                            <span class="block text-[11px] text-gray-500 mt-0.5">(bestätigt, zählt zum Fortschritt)</span>
                         </div>
+
+                        @if($pending_minutes > 0)
+                            <div class="text-center text-xs text-amber-700">
+                                <i class="fas fa-hourglass-half"></i>
+                                + {{ floor($pending_minutes / 60) }}h {{ $pending_minutes % 60 }}m unbestätigt
+                                <span class="block text-[11px] text-gray-500">wartet auf Bestätigung, zählt noch nicht</span>
+                            </div>
+                        @endif
 
                         <!-- Achievement Badge -->
                         @if($progress_percentage >= 100)
@@ -207,7 +218,7 @@
                     Familienkonto & Soll-Modell
                 </h3>
             </div>
-            <div class="p-4 grid grid-cols-1 md:grid-cols-2 {{ $pflichtstunden_settings->konto_uebertrag_aktiv ? 'lg:grid-cols-4' : 'lg:grid-cols-3' }} gap-3">
+            <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="rounded-lg border p-3">
                     <div class="text-xs text-gray-500">Soll-Modell</div>
                     <div class="font-semibold text-gray-900">{{ $mode_label }}</div>
@@ -221,7 +232,18 @@
                     <div class="font-semibold {{ $closing_balance_minutes < 0 ? 'text-red-600' : 'text-green-700' }}">
                         {{ $closing_balance_minutes < 0 ? '-' : '' }}{{ floor(abs($closing_balance_minutes) / 60) }}h {{ abs($closing_balance_minutes) % 60 }}m
                     </div>
+                    <div class="text-[11px] text-gray-500 mt-0.5">nur bestätigte Stunden</div>
                 </div>
+                @if($pending_minutes > 0)
+                    <div class="rounded-lg border p-3 border-amber-300 bg-amber-50">
+                        <div class="text-xs text-amber-700">
+                            <i class="fas fa-hourglass-half"></i>
+                            davon unbestätigt
+                        </div>
+                        <div class="font-semibold text-amber-700">{{ floor($pending_minutes / 60) }}h {{ $pending_minutes % 60 }}m</div>
+                        <div class="text-[11px] text-gray-500 mt-0.5">noch nicht im Kontostand enthalten</div>
+                    </div>
+                @endif
                 @if($pflichtstunden_settings->konto_uebertrag_aktiv)
                     <div class="rounded-lg border p-3">
                         <div class="text-xs text-gray-500">Voraussichtlicher Übertrag</div>
@@ -427,19 +449,56 @@
                         <tfoot class="bg-gray-50 border-t-2 border-gray-300">
                             <tr>
                                 <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                                    Gesamtstunden:
+                                    <span class="inline-flex items-center gap-1 text-green-700">
+                                        <i class="fas fa-check-circle"></i>
+                                        bestätigte Stunden (zählen zum Fortschritt):
+                                    </span>
                                 </th>
-                                <th class="px-4 py-3 text-sm font-bold" style="color: var(--color-widget-primary-from)">
-                                    @if($pflichtstunden->sum('duration') > 60)
-                                        {{ floor($pflichtstunden->sum('duration') / 60) }} Std. {{ $pflichtstunden->sum('duration') % 60 }} Min.
+                                <th class="px-4 py-3 text-sm font-bold text-green-700">
+                                    @if($approved_minutes > 60)
+                                        {{ floor($approved_minutes / 60) }} Std. {{ $approved_minutes % 60 }} Min.
                                     @else
-                                        {{ $pflichtstunden->sum('duration') }} Min.
+                                        {{ $approved_minutes }} Min.
                                     @endif
                                 </th>
                             </tr>
+                            @if($pending_minutes > 0)
                             <tr>
                                 <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                                    Verbleibende Stunden:
+                                    <span class="inline-flex items-center gap-1 text-amber-700">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        noch unbestätigte Stunden (zählen noch nicht zum Fortschritt):
+                                    </span>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-bold text-amber-700">
+                                    @if($pending_minutes > 60)
+                                        {{ floor($pending_minutes / 60) }} Std. {{ $pending_minutes % 60 }} Min.
+                                    @else
+                                        {{ $pending_minutes }} Min.
+                                    @endif
+                                </th>
+                            </tr>
+                            @endif
+                            @if($rejected_minutes > 0)
+                            <tr>
+                                <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                    <span class="inline-flex items-center gap-1 text-red-700">
+                                        <i class="fas fa-times-circle"></i>
+                                        abgelehnte Stunden (zählen nicht zum Fortschritt):
+                                    </span>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-bold text-red-700">
+                                    @if($rejected_minutes > 60)
+                                        {{ floor($rejected_minutes / 60) }} Std. {{ $rejected_minutes % 60 }} Min.
+                                    @else
+                                        {{ $rejected_minutes }} Min.
+                                    @endif
+                                </th>
+                            </tr>
+                            @endif
+                            <tr>
+                                <th colspan="{{ !empty($pflichtstunden_settings->pflichtstunden_bereiche) && count($pflichtstunden_settings->pflichtstunden_bereiche) > 0 ? '5' : '4' }}" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                                    offene Stunden (Soll abzüglich bestätigter Stunden):
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-orange-600">
                                     @php
