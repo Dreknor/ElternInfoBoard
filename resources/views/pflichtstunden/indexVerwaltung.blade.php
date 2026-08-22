@@ -8,7 +8,11 @@
     $entryGroupMap  = $entryGroupMap  ?? [];
 @endphp
     <div class="container-fluid px-4 py-6">
-
+        @if(session('error'))
+            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
         <!-- Statistik-Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <!-- Gesamt Familien -->
@@ -915,6 +919,11 @@
                 <p class="text-sm text-white/90 mt-1">Zeitraum-Startjahr: {{ $periodYear }}</p>
             </div>
             <div class="p-6">
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 <form method="POST" action="{{ route('pflichtstunden.family-rule.bulk') }}" class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-5 p-4 border rounded-lg bg-gray-50">
                     @csrf
                     @method('PUT')
