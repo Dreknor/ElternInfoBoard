@@ -27,48 +27,61 @@
                     @csrf
                     @method('put')
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                        Berechtigung
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                        Rollen
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($Rechte as $Recht)
-                                    <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center gap-2">
-                                                <i class="fas fa-key text-purple-600 text-sm"></i>
-                                                <span class="text-sm font-medium text-gray-900">{{$Recht->name}}</span>
-                                                @if($Recht->guard_name !== 'web')
-                                                    <span class="text-xs text-gray-500">({{$Recht->guard_name}})</span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-                                                @foreach($Rollen as $Rolle)
-                                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                                        <input type="checkbox"
-                                                               name="{{$Rolle->name}}[]"
-                                                               value="{{$Recht->name}}"
-                                                               @if($Rolle->hasPermissionTo($Recht->name)) checked @endif
-                                                               class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2 transition-all">
-                                                        <span class="text-sm text-gray-700 group-hover:text-purple-600 transition-colors">{{$Rolle->name}}</span>
-                                                    </label>
-                                                @endforeach
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="space-y-6">
+                        @foreach($permissionsByModule as $moduleName => $modulePermissions)
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                                    <h3 class="text-sm font-semibold text-gray-800">{{ $moduleName ?: 'Allgemein' }}</h3>
+                                </div>
+
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                    Berechtigung
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                    Beschreibung
+                                                </th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                    Rollen
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($modulePermissions as $Recht)
+                                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <div class="flex items-center gap-2">
+                                                            <i class="fas fa-key text-purple-600 text-sm"></i>
+                                                            <span class="text-sm font-medium text-gray-900">{{$Recht->name}}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-6 py-4 text-sm text-gray-600">
+                                                        {{ $Recht->description ?: 'Keine Beschreibung hinterlegt.' }}
+                                                    </td>
+                                                    <td class="px-6 py-4">
+                                                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                                                            @foreach($Rollen as $Rolle)
+                                                                <label class="flex items-center gap-2 cursor-pointer group">
+                                                                    <input type="checkbox"
+                                                                           name="{{$Rolle->name}}[]"
+                                                                           value="{{$Recht->name}}"
+                                                                           @if($Rolle->hasPermissionTo($Recht->name)) checked @endif
+                                                                           class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2 transition-all">
+                                                                    <span class="text-sm text-gray-700 group-hover:text-purple-600 transition-colors">{{$Rolle->name}}</span>
+                                                                </label>
+                                                            @endforeach
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
 
                     <!-- Save Button (Hidden by default) -->

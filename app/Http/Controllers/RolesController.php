@@ -17,9 +17,16 @@ class RolesController extends Controller
      */
     public function edit()
     {
+        $permissionsByModule = Permission::query()
+            ->where('guard_name', 'web')
+            ->orderBy('module')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('module');
+
         return view('permissions.edit', [
             'Rollen' => Role::all(),
-            'Rechte' => Permission::all(),
+            'permissionsByModule' => $permissionsByModule,
         ]);
     }
 
