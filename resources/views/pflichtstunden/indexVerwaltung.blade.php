@@ -317,7 +317,7 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                        {{ $pflichtstunde->user->name }}
+                                        {{ $pflichtstunde->user?->name ?? 'Unbekannt / gelöschter Benutzer' }}
                                         @if($hasOverlap)
                                             @php $groupId = $entryGroupMap[$pflichtstunde->id] ?? null; @endphp
                                             <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-300"
@@ -1128,7 +1128,7 @@
                                                         @endif
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->user->name }}</td>
+                                                <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->user?->name ?? 'Unbekannt / gelöschter Benutzer' }}</td>
                                                 <td class="px-4 py-3 text-gray-700">
                                                     <span x-show="!showEdit">{{ $entry->description }}</span>
                                                     <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="2" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>
