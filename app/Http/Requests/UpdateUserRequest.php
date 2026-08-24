@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Model\User;
-use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
