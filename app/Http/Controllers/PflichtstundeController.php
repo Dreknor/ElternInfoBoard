@@ -527,19 +527,12 @@ class PflichtstundeController extends Controller implements HasMiddleware
                 ->values();
 
             $firstEntry = $groupEntries->first();
-            $familyKey = $familyUserMap[$firstEntry->user_id] ?? (string) $firstEntry->user_id;
+            $familyKey = $familyUserMap[$firstEntry->user_id] ?? null;
+            $familyName = $familyKey ? ($familyNameMap[$familyKey] ?? null) : null;
 
-            if (empty($familyKey)) {
-                if (is_null($firstEntry->user)) {
-                    $familyKey = 'Unbekannt / gelöschter Benutzer';
-                } else {
-                    $familyKey = $firstEntry->user->name;
-                }
-            } else {
-                $familyName = $familyNameMap[$familyKey];
+            if (empty($familyName)) {
+                $familyName = $firstEntry->user?->name ?? 'Unbekannt / gelöschter Benutzer';
             }
-
-            //$familyName = $familyNameMap[$familyKey] ?? $firstEntry->user->name;
 
             $overlapGroups->push([
                 'group_id' => $groupCounter++,
