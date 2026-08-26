@@ -8,7 +8,11 @@
     $entryGroupMap  = $entryGroupMap  ?? [];
 @endphp
     <div class="container-fluid px-4 py-6">
-
+        @if(session('error'))
+            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
         <!-- Statistik-Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <!-- Gesamt Familien -->
@@ -313,7 +317,7 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                        {{ $pflichtstunde->user->name }}
+                                        {{ $pflichtstunde->user?->name ?? 'Unbekannt / gelöschter Benutzer' }}
                                         @if($hasOverlap)
                                             @php $groupId = $entryGroupMap[$pflichtstunde->id] ?? null; @endphp
                                             <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-300"
@@ -915,6 +919,11 @@
                 <p class="text-sm text-white/90 mt-1">Zeitraum-Startjahr: {{ $periodYear }}</p>
             </div>
             <div class="p-6">
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 <form method="POST" action="{{ route('pflichtstunden.family-rule.bulk') }}" class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-5 p-4 border rounded-lg bg-gray-50">
                     @csrf
                     @method('PUT')
@@ -1119,7 +1128,7 @@
                                                         @endif
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->user->name }}</td>
+                                                <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->user?->name ?? 'Unbekannt / gelöschter Benutzer' }}</td>
                                                 <td class="px-4 py-3 text-gray-700">
                                                     <span x-show="!showEdit">{{ $entry->description }}</span>
                                                     <textarea x-show="showEdit" x-cloak x-model="editData.description" rows="2" class="w-full px-2 py-1 text-xs border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200"></textarea>

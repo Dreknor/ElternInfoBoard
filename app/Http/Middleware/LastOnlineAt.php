@@ -12,17 +12,22 @@ class LastOnlineAt
     /**
      * Handle an incoming request.
      *
-     * @param  Illuminate\Support\Facades\Request  $request
-     * @return mixed
+     * @param  Request  $request
+     * @return Response
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->guest() or session()->has('ownID')) {
+        $user = $request->user();
+
+        // Breche früh ab, wenn der Nutzer ein Gast ist oder unter fremder ID agiert
+        if (! $user || $request->session()->has('ownID')) {
             return $next($request);
         }
-        if (auth()->user()->last_online_at->diffInMinutes(now()) >= 5 and auth()->user()->track_login == true) {
+
+        // Prüfe zuerst den Boolean, dann ob der Zeitstempel existiert oder älter als 5 Minuten ist
+        if ($user->track_login && (! $user->last_online_at || $user->last_online_at->diffInMinutes(now()) >= 5)) {
             DB::table('users')
-                ->where('id', auth()->user()->id)
+                ->where('id', $user->id)
                 ->update(['last_online_at' => now()]);
         }
 

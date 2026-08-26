@@ -1078,7 +1078,8 @@ html, body {
   .table-responsive-sm { @apply sm:block sm:overflow-x-auto; }
 
   /* ── Pagination ───────────────────────────────────────────── */
-  .pagination { @apply flex items-center gap-1 list-none p-0 m-0; }
+  .pagination { @apply flex flex-wrap items-center gap-1 list-none p-0 m-0; }
+  .page-item { @apply inline-flex; }
   .page-item .page-link {
     background-color: var(--color-card-bg);
     border: 1px solid var(--color-card-border);

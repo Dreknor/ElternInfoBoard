@@ -28,6 +28,16 @@ Die Dauer in Stunden wird automatisch aus dem Zeitraum berechnet.
 
 Pflichtstunden werden **pro Familie** geführt: Wenn du eine:n zweite:n Sorgeberechtigte:n verknüpft hast, addieren sich eure Stunden.
 
+Je nach Einstellung deiner Einrichtung kann ein **Kontostand** (Guthaben) in den nächsten Zeitraum übertragen werden.
+
+## Soll-Modell pro Familie
+
+Die Verwaltung kann pro Familie ein Soll-Modell festlegen:
+
+- **Standard** (reguläre Pflichtstunden)
+- **Ermäßigt** (reduziertes Soll und ggf. reduzierter Satz)
+- **Individuell** (separat festgelegte Sollstunden)
+
 ## Fortschritt & Statistik
 
 Je nach Einstellung deiner Einrichtung siehst du:
