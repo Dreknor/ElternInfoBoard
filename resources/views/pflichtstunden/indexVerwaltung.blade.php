@@ -605,9 +605,8 @@
                                     <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">Details</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-200 bg-white">
-                                <template x-for="group in paginatedUsers" :key="group.userName">
-                                    <template x-if="true">
+                            <template x-for="group in paginatedUsers" :key="group.userName">
+                                <tbody class="divide-y divide-slate-200 bg-white">
                                         <tr class="align-top hover:bg-slate-50">
                                             <td class="px-4 py-3">
                                                 <div class="font-semibold text-slate-900" x-text="group.userName"></div>
@@ -688,9 +687,8 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                    </template>
-                                </template>
-                            </tbody>
+                                </tbody>
+                            </template>
                         </table>
                     </div>
 
