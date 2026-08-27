@@ -8,7 +8,9 @@ use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
 use App\Model\PflichtstundenFamilyRuleHistory;
 use App\Services\PflichtstundenFamilyService;
+use App\Services\PflichtstundenReportPdfService;
 use App\Settings\PflichtstundenSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,10 +21,13 @@ class PflichtstundeController extends Controller implements HasMiddleware
 
     protected PflichtstundenFamilyService $familyService;
 
+    protected PflichtstundenReportPdfService $reportPdfService;
+
     public function __construct()
     {
         $this->pflichtstunden_settings = new PflichtstundenSetting;
         $this->familyService = new PflichtstundenFamilyService($this->pflichtstunden_settings);
+        $this->reportPdfService = new PflichtstundenReportPdfService($this->familyService);
     }
 
     public static function middleware(): array
@@ -383,6 +388,48 @@ class PflichtstundeController extends Controller implements HasMiddleware
             new PflichtstundenExport($year),
             'pflichtstunden_abrechnung_'.($year ?? 'aktuell').'_'.date('Y-m-d').'.xlsx'
         );
+    }
+
+    public function reportPdf(Request $request)
+    {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
+            return redirect(url('/'))->with('error', 'Berechtigung fehlt');
+        }
+
+        $validated = $request->validate([
+            'year' => ['nullable', 'integer', 'min:2020', 'max:2100'],
+            'start' => ['nullable', 'date_format:Y-m-d'],
+            'end' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start'],
+            'sort' => ['nullable', 'in:family_name,highest_debt'],
+            'anonymized' => ['nullable', 'boolean'],
+        ]);
+
+        $sort = $validated['sort'] ?? 'family_name';
+        $anonymized = (bool) ($validated['anonymized'] ?? false);
+
+        if (! empty($validated['start']) || ! empty($validated['end'])) {
+            $request->validate([
+                'start' => 'required|date_format:Y-m-d',
+                'end' => 'required|date_format:Y-m-d|after_or_equal:start',
+            ]);
+
+            $periodStart = \Carbon\Carbon::createFromFormat('Y-m-d', $validated['start'])->startOfDay();
+            $periodEnd = \Carbon\Carbon::createFromFormat('Y-m-d', $validated['end'])->endOfDay();
+        } else {
+            $year = $validated['year'] ?? $this->familyService->resolvePeriod(null)[0]->year;
+            [$periodStart, $periodEnd] = $this->familyService->resolvePeriod((int) $year);
+        }
+
+        $report = $this->reportPdfService->buildReport($periodStart, $periodEnd, $sort, $anonymized);
+
+        $pdf = Pdf::loadView('pflichtstunden.report-pdf', $report)
+            ->setPaper('A4', 'portrait');
+
+        $filename = 'pflichtstunden_report_'.
+            $periodStart->format('Y-m-d').'_'.$periodEnd->format('Y-m-d').
+            ($anonymized ? '_anonymisiert' : '').'.pdf';
+
+        return $pdf->download($filename);
     }
 
     public function update(UpdatePflichtstundeRequest $request, Pflichtstunde $pflichtstunde)

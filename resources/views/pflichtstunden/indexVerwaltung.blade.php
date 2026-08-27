@@ -97,6 +97,55 @@
             </div>
         </div>
 
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6 p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-file-pdf text-red-600"></i>
+                        Erweiterter PDF-Report
+                    </h3>
+                    <p class="text-sm text-gray-600 mt-1">Management Summary, Compliance-Liste und Freigabecontrolling als PDF.</p>
+                </div>
+                <form method="GET" action="{{ route('pflichtstunden.report.pdf') }}" class="flex flex-col md:flex-row gap-3 items-end">
+                    <div>
+                        <label for="report_year" class="block text-xs font-semibold uppercase text-gray-600 mb-1">Schuljahr</label>
+                        <select id="report_year" name="year" class="px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            @foreach($availableYears as $year)
+                                <option value="{{ $year }}" {{ (int) $selectedYear === (int) $year ? 'selected' : '' }}>{{ $year }} / {{ $year + 1 }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="report_start" class="block text-xs font-semibold uppercase text-gray-600 mb-1">Start</label>
+                        <input type="date" id="report_start" name="start" class="px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                    </div>
+
+                    <div>
+                        <label for="report_end" class="block text-xs font-semibold uppercase text-gray-600 mb-1">Ende</label>
+                        <input type="date" id="report_end" name="end" class="px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Sortierung</label>
+                        <select name="sort" class="px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            <option value="family_name">Nach Nachname</option>
+                            <option value="highest_debt">Nach höchster Stundenschuld</option>
+                        </select>
+                    </div>
+
+                    <label class="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                        <input type="checkbox" name="anonymized" value="1">
+                        Anonymisiert
+                    </label>
+
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow">
+                        <i class="fas fa-download"></i>
+                        PDF generieren
+                    </button>
+                </form>
+            </div>
+        </div>
 
         <!-- Unbestätigte Pflichtstunden -->
         <div class="bg-white rounded-xl shadow-md border border-gray-200 mb-6" x-data="{
