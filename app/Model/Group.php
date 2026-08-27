@@ -41,7 +41,7 @@ class Group extends Model implements HasMedia
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('active', true);
+        return $query->where('groups.active', true);
     }
 
     public function users(): BelongsToMany
