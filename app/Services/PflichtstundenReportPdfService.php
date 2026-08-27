@@ -30,7 +30,12 @@ class PflichtstundenReportPdfService
         $totalApprovedMinutes = $approvedEntries->sum(fn (Pflichtstunde $entry) => $this->durationMinutes($entry));
         $pendingEntriesCount = $pendingEntries->count();
         $highRiskEntries = $entries
-            ->filter(fn (Pflichtstunde $entry) => $this->durationMinutes($entry) > 12 * 60)
+            ->filter(fn (Pflichtstunde $entry) =>
+                $entry->approved
+                && ! $entry->rejected
+                && ! $entry->trashed()
+                && $this->durationMinutes($entry) > 12 * 60
+            )
             ->values();
 
         $areas = $this->collectAreaDistribution($approvedEntries);
