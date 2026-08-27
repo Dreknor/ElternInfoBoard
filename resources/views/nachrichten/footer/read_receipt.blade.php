@@ -1,5 +1,6 @@
 @php
     $receipt = $user->read_receipts()->where('post_id', $post->id)->first();
+    $canSubmitReadReceipt = !auth()->user()->can('view all') && $post->users->contains(auth()->user());
 
     // Sorg2-Partner-Bestätigung prüfen
     $sorg2Receipt = null;
@@ -21,62 +22,64 @@
     $confirmedBySorg2 = $isConfirmed && !($receipt && $receipt->confirmed_at);
 @endphp
 
-@if($isConfirmed)
-    <!-- Read Receipt Confirmed -->
-    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg p-4">
-        <div class="flex items-center gap-3">
-            <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check text-white"></i>
-                </div>
-            </div>
-            <div class="flex-1">
-                <p class="text-sm font-semibold text-green-900 mb-0">{{ __('Nachricht gelesen und bestätigt') }}</p>
-                <p class="text-xs text-green-700 mb-0">
-                    @if($confirmedBySorg2 && $sorg2ConfirmedUser)
-                        Bestätigt von {{ $sorg2ConfirmedUser->name }} am {{ $confirmedReceipt->confirmed_at->format('d.m.Y H:i') }} Uhr
-                    @else
-                        Bestätigt am {{ $confirmedReceipt->confirmed_at->format('d.m.Y H:i') }} Uhr
-                    @endif
-                </p>
-            </div>
-        </div>
-    </div>
-@else
-    @php
-        $wasReminded = ($receipt && $receipt->reminded_at && !$receipt->confirmed_at)
-            || ($sorg2Receipt && $sorg2Receipt->reminded_at && !$sorg2Receipt->confirmed_at);
-    @endphp
-    <!-- Read Receipt Not Confirmed / Reminded -->
-    <div class="bg-gradient-to-r {{ $wasReminded ? 'from-yellow-50 to-amber-50 border-yellow-500' : 'from-red-50 to-orange-50 border-red-500' }} border-l-4 rounded-lg p-4">
-        <div class="flex flex-col gap-4">
+@if($canSubmitReadReceipt)
+    @if($isConfirmed)
+        <!-- Read Receipt Confirmed -->
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg p-4">
             <div class="flex items-center gap-3">
                 <div class="flex-shrink-0">
-                    <div class="w-10 h-10 {{ $wasReminded ? 'bg-yellow-500' : 'bg-red-500' }} rounded-full flex items-center justify-center {{ $wasReminded ? '' : 'animate-pulse' }}">
-                        <i class="fas {{ $wasReminded ? 'fa-bell' : 'fa-exclamation' }} text-white"></i>
+                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check text-white"></i>
                     </div>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-semibold {{ $wasReminded ? 'text-yellow-900' : 'text-red-900' }} mb-0">
-                        {{ $wasReminded ? __('Erinnerung versendet') : __('Nachricht noch nicht gelesen') }}
-                    </p>
-                    <p class="text-xs {{ $wasReminded ? 'text-yellow-700' : 'text-red-700' }} mb-0">
-                        {{ $wasReminded ? 'Sie wurden bereits erinnert, die Lesebestätigung fehlt weiterhin.' : 'Bitte bestätigen Sie, dass Sie diese Nachricht gelesen haben' }}
+                    <p class="text-sm font-semibold text-green-900 mb-0">{{ __('Nachricht gelesen und bestätigt') }}</p>
+                    <p class="text-xs text-green-700 mb-0">
+                        @if($confirmedBySorg2 && $sorg2ConfirmedUser)
+                            Bestätigt von {{ $sorg2ConfirmedUser->name }} am {{ $confirmedReceipt->confirmed_at->format('d.m.Y H:i') }} Uhr
+                        @else
+                            Bestätigt am {{ $confirmedReceipt->confirmed_at->format('d.m.Y H:i') }} Uhr
+                        @endif
                     </p>
                 </div>
             </div>
-
-            <form action="{{ route('nachrichten.read_receipt') }}" method="post">
-                @csrf
-                <input type="hidden" name="post_id" value="{{$post->id}}">
-                <button type="submit"
-                        class="w-full px-6 py-3 {{ $wasReminded ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700' }} text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                    <i class="fas fa-check-circle"></i>
-                    <span>{{ __('Nachricht als gelesen markieren') }}</span>
-                </button>
-            </form>
         </div>
-    </div>
+    @else
+        @php
+            $wasReminded = ($receipt && $receipt->reminded_at && !$receipt->confirmed_at)
+                || ($sorg2Receipt && $sorg2Receipt->reminded_at && !$sorg2Receipt->confirmed_at);
+        @endphp
+        <!-- Read Receipt Not Confirmed / Reminded -->
+        <div class="bg-gradient-to-r {{ $wasReminded ? 'from-yellow-50 to-amber-50 border-yellow-500' : 'from-red-50 to-orange-50 border-red-500' }} border-l-4 rounded-lg p-4">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 {{ $wasReminded ? 'bg-yellow-500' : 'bg-red-500' }} rounded-full flex items-center justify-center {{ $wasReminded ? '' : 'animate-pulse' }}">
+                            <i class="fas {{ $wasReminded ? 'fa-bell' : 'fa-exclamation' }} text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold {{ $wasReminded ? 'text-yellow-900' : 'text-red-900' }} mb-0">
+                            {{ $wasReminded ? __('Erinnerung versendet') : __('Nachricht noch nicht gelesen') }}
+                        </p>
+                        <p class="text-xs {{ $wasReminded ? 'text-yellow-700' : 'text-red-700' }} mb-0">
+                            {{ $wasReminded ? 'Sie wurden bereits erinnert, die Lesebestätigung fehlt weiterhin.' : 'Bitte bestätigen Sie, dass Sie diese Nachricht gelesen haben' }}
+                        </p>
+                    </div>
+                </div>
+
+                <form action="{{ route('nachrichten.read_receipt') }}" method="post">
+                    @csrf
+                    <input type="hidden" name="post_id" value="{{$post->id}}">
+                    <button type="submit"
+                            class="w-full px-6 py-3 {{ $wasReminded ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700' }} text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ __('Nachricht als gelesen markieren') }}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    @endif
 @endif
 
 @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $post->author)

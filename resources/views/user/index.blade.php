@@ -113,6 +113,7 @@
                                 <th>Gruppen</th>
                                 <th>Rechte</th>
                                 <th class="hidden lg:table-cell">Verknüpft</th>
+                                <th class="hidden lg:table-cell">zuletzt online</th>
                                 <th class="hidden lg:table-cell">E-Mail-Status</th>
                                 <th class="text-right">Aktionen</th>
                             </tr>
@@ -153,6 +154,12 @@
                                     </td>
                                     <td class="hidden lg:table-cell text-sm" style="color: var(--color-text-secondary);">
                                         {{ $user->sorgeberechtigter2?->name }}
+                                    </td>
+                                    <td class="hidden lg:table-cell">
+                                        <span class="badge badge-success" title="Zuletzt online">
+                                            <i class="fas fa-circle"></i>
+                                            {{ $user->last_online_at?->diffForHumans() ?? 'nie' }}
+                                        </span>
                                     </td>
                                     <td class="hidden lg:table-cell">
                                         <a class="btn btn-sm @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-outline-danger @else btn-outline-success @endif"
@@ -255,6 +262,14 @@
                                 <i class="fas fa-envelope mr-1"></i>
                                 <span class="text-xs">{{ $mobileUser->lastEmail?->format('d.m.Y') ?? 'keine Mail' }}</span>
                             </a>
+
+                            {{-- Zuletzt online --}}
+                            <span class="badge badge-success flex-1" title="Zuletzt online">
+                                <i class="fas fa-circle"></i>
+                                {{ $mobileUser->last_online_at?->diffForHumans() ?? 'nie' }}
+                            </span>
+
+                            {{-- Aktionen --}}
 
                             <div class="flex items-center gap-2 flex-shrink-0">
                                 @can('loginAsUser')

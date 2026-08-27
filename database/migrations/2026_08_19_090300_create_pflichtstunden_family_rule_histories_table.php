@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('pflichtstunden_family_rule_histories')) {
+            return;
+        }
         Schema::create('pflichtstunden_family_rule_histories', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('pflichtstunden_family_rule_id');

@@ -40,7 +40,7 @@
     @endif
 
     {{-- Hauptkarte mit Sidebar-Tab-Layout --}}
-    <div class="rounded-xl shadow-lg overflow-hidden flex flex-col" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
+    <div class="settings-page-shell rounded-xl shadow-lg overflow-hidden flex flex-col" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border);">
 
         {{-- Header – überspannt die gesamte Breite über Sidebar und Inhalt --}}
         <div class="flex-none w-full px-6 py-4 flex items-center gap-4" style="background-color: var(--color-primary); border-bottom: 3px solid var(--color-primary-dark);">
@@ -53,11 +53,25 @@
             </div>
         </div>
 
-        {{-- Sidebar + Inhalt --}}
-        <div class="flex flex-1" style="min-height: 520px;">
+        {{-- Mobile-Navigation: Dropdown zur Tab-Auswahl (nur auf kleinen Bildschirmen sichtbar) --}}
+        <div class="settings-mobile-nav md:hidden flex-none px-3 py-3 border-b" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
+            <label class="block text-xs font-semibold mb-1.5" style="color: var(--color-text-secondary);">
+                <i class="fas fa-bars mr-1"></i>Bereich wählen
+            </label>
+            <select x-model="activeTab"
+                    class="w-full px-3 py-2.5 text-sm font-medium border-2 rounded-lg outline-none"
+                    style="border-color: var(--color-card-border); background-color: var(--color-input-bg); color: var(--color-text-primary);">
+                <template x-for="tab in tabs" :key="tab.id">
+                    <option :value="tab.id" x-text="tab.label"></option>
+                </template>
+            </select>
+        </div>
 
-            {{-- Sidebar-Navigation --}}
-            <nav class="flex-shrink-0 border-r" style="width: 220px; background-color: var(--color-body-bg); border-color: var(--color-card-border);">
+        {{-- Sidebar + Inhalt --}}
+        <div class="settings-page-layout flex flex-1" style="min-height: 520px;">
+
+            {{-- Sidebar-Navigation (nur ab Tablet/Desktop sichtbar) --}}
+            <nav class="settings-sidebar hidden md:block flex-shrink-0 border-r" style="width: 220px; background-color: var(--color-body-bg); border-color: var(--color-card-border);">
                 <div class="p-2 space-y-0.5">
                     <template x-for="tab in tabs" :key="tab.id">
                         <button
@@ -83,7 +97,7 @@
             </nav>
 
             {{-- Tab-Inhalte --}}
-            <div class="flex-1 overflow-y-auto" style="max-height: calc(100vh - 180px);">
+            <div class="settings-content-panel flex-1 overflow-y-auto" style="max-height: calc(100vh - 180px);">
 
                 @if ($errors->any())
                     <div class="mx-6 mt-5 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
@@ -114,7 +128,7 @@
                                 <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Namen, E-Mail und Telefonnummer</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+                        <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-user text-blue-600 mr-1"></i>Name
@@ -177,7 +191,7 @@
                                     Lassen Sie die Passwort-Felder leer, wenn Sie das Passwort nicht ändern möchten.
                                 </p>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-7">
+                            <div class="settings-form-grid grid grid-cols-1 md:grid-cols-3 gap-7">
                                 <div>
                                     <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                         <i class="fas fa-lock text-blue-600 mr-1"></i>
@@ -232,7 +246,7 @@
                                 <p class="text-xs mb-0" style="color: var(--color-text-secondary);">E-Mail-Benachrichtigungen und Kopien</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-7">
+                        <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-envelope-circle-check text-blue-600 mr-1"></i>
@@ -276,7 +290,7 @@
                                 <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Login, Kalender und weitere Optionen</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-7">
+                        <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-3 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-sign-in-alt text-blue-600 mr-1"></i>
@@ -313,7 +327,7 @@
                             </div>
                         </div>
                         @if($user->can('use messenger'))
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-7 mt-5">
+                        <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-3 gap-7 mt-5">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-user-secret text-blue-600 mr-1"></i>
@@ -353,7 +367,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
                         @if(auth()->user()->groups->count() > 0 || auth()->user()->children()?->count() > 0)
                         <div>
                             <h3 class="text-sm font-bold mb-3 flex items-center gap-2" style="color: var(--color-text-primary);">
@@ -478,7 +492,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
                         @if($user->releaseCalendar == 1)
                         <div class="rounded-lg overflow-hidden border" style="border-color: var(--color-card-border);">
                             <div class="px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700">
@@ -606,7 +620,7 @@
                     <form action="{{ route('user.theme.update') }}" method="post" id="themeForm">
                         @csrf
                         @method('PUT')
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-5" id="themeGrid">
+                        <div class="settings-theme-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-5" id="themeGrid">
                             <label class="cursor-pointer theme-card-label" data-theme-value="">
                                 <input type="radio" name="theme" value="" class="sr-only" @if(empty($userTheme)) checked @endif>
                                 <div class="theme-card border-2 rounded-xl p-3 text-center transition-all duration-200 relative"
@@ -882,6 +896,31 @@ $(document).ready(function() {
     .changelog-content h3:first-child, .changelog-content h4:first-child { margin-top: 0; }
     .changelog-content code { background: #fef3c7; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875em; color: #92400e; }
     .changelog-content blockquote { border-left: 4px solid #fbbf24; padding-left: 1rem; margin: 1rem 0; color: #78350f; font-style: italic; }
+
+    @media (max-width: 767px) {
+        .settings-page-layout {
+            display: flex;
+            flex-direction: column;
+            min-height: unset;
+        }
+
+        .settings-content-panel {
+            max-height: none !important;
+            overflow: visible;
+        }
+
+        .settings-content-panel [x-show] {
+            padding: 1rem !important;
+        }
+
+        .settings-form-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .settings-theme-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
 </style>
 @endpush
 

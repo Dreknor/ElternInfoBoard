@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
-        Paginator::useBootstrap();
+        Paginator::useTailwind();
 
         View::share('settings', $settings);
 
