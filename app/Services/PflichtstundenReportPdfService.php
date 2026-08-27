@@ -250,7 +250,7 @@ class PflichtstundenReportPdfService
             ->filter(fn ($value) => $value > 0)
             ->values();
 
-        $workload = collect();
+        $workload = [];
         foreach ($entries as $entry) {
             if ($entry->approved_by) {
                 $user = User::find($entry->approved_by);
@@ -264,6 +264,8 @@ class PflichtstundenReportPdfService
                 $workload[$key]['rejected'] = ($workload[$key]['rejected'] ?? 0) + 1;
             }
         }
+
+        $workload = collect($workload);
 
         $rejectionReasons = $entries
             ->filter(fn (Pflichtstunde $entry) => $entry->rejected && ! empty(trim((string) ($entry->rejection_reason ?? ''))))
