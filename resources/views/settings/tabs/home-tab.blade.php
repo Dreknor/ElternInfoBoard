@@ -49,6 +49,34 @@
                     </div>
                 </div>
             </div>
+            <div class="form-row mt-1 p-2 border">
+                <div class="col-md-6 col-sm-12">
+                    <label class="label-control w-100">
+                        Login-Tracking-Modus
+                        <select name="login_tracking_mode" class="form-control mt-1">
+                            <option value="user" @selected($settings->login_tracking_mode === 'user')>
+                                Nutzer entscheidet selbst
+                            </option>
+                            <option value="always" @selected($settings->login_tracking_mode === 'always')>
+                                Immer aufzeichnen
+                            </option>
+                            <option value="never" @selected($settings->login_tracking_mode === 'never')>
+                                Niemals aufzeichnen
+                            </option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-md-6 col-sm-12 m-auto">
+                    <div class="small">
+                        Legt fest, ob der letzte Login der Nutzer gespeichert wird.
+                        <ul class="mt-1 mb-0 pl-4">
+                            <li><strong>Nutzer entscheidet:</strong> Jeder Nutzer kann in seinen Einstellungen wählen, ob sein Login aufgezeichnet wird.</li>
+                            <li><strong>Immer:</strong> Das Tracking ist systemweit aktiv – die Nutzereinstellung wird ignoriert.</li>
+                            <li><strong>Niemals:</strong> Das Tracking ist systemweit deaktiviert – der Nutzerbereich wird ausgeblendet.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="form-row">
                 <button type="submit" class="btn btn-success btn-block">
                     Einstellungen speichern

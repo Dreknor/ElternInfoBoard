@@ -291,6 +291,7 @@
                             </div>
                         </div>
                         <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-3 gap-7">
+                            @if(($generalSettings->login_tracking_mode ?? 'user') === 'user')
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-sign-in-alt text-blue-600 mr-1"></i>
@@ -303,6 +304,7 @@
                                     <option value="0" @if($user->track_login == false) selected @endif>Nicht speichern</option>
                                 </select>
                             </div>
+                            @endif
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-calendar-share text-blue-600 mr-1"></i>
