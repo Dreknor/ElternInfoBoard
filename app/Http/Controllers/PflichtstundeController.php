@@ -200,11 +200,34 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ];
         });
 
+        $overviewUsers = $groupedUsers->map(function (array $group) {
+            return [
+                'userName' => $group['user']->name ?? '',
+                'partnerName' => $group['partner']?->name ?? '',
+                'modeLabel' => match ($group['rule_mode'] ?? 'standard') {
+                    'reduced' => 'Ermäßigt',
+                    'custom' => 'Individuell',
+                    default => 'Standard',
+                },
+                'requiredMinutes' => (int) ($group['required_minutes'] ?? 0),
+                'openingBalanceMinutes' => (int) ($group['opening_balance_minutes'] ?? 0),
+                'closingBalanceMinutes' => (int) ($group['closing_balance_minutes'] ?? 0),
+                'carryoverMinutes' => (int) ($group['carryover_preview_minutes'] ?? 0),
+                'totalMinutes' => (int) ($group['totalMinutes'] ?? 0),
+                'openMinutes' => (int) ($group['openMinutes'] ?? 0),
+                'beitrag' => (float) ($group['beitrag'] ?? 0),
+                'percent' => (float) ($group['percent'] ?? 0),
+                'showDetails' => false,
+                'entries' => $group['entries'] ?? [],
+            ];
+        })->values()->all();
+
         return view('pflichtstunden.indexVerwaltung', [
             'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
             'groupedUsers' => $groupedUsers,
             'allGroupedUsers' => $groupedUsers,
+            'overviewUsers' => $overviewUsers,
             'stats' => $stats,
             'overlappingIds' => $overlappingIds,
             'overlapGroups' => $overlapGroups,

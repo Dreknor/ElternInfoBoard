@@ -468,31 +468,15 @@
                  search: '',
                  currentPage: 1,
                  perPage: 20,
-                 allUsers: [
-                     @foreach ($groupedUsers as $group)
-                     {
-                         userName: '{{ addslashes($group['user']->name) }}',
-                         partnerName: '{{ $group['partner'] ? addslashes($group['partner']->name) : '' }}',
-                         modeLabel: '{{ $group['rule_mode'] === 'reduced' ? 'Ermäßigt' : ($group['rule_mode'] === 'custom' ? 'Individuell' : 'Standard') }}',
-                         requiredMinutes: {{ $group['required_minutes'] }},
-                         openingBalanceMinutes: {{ $group['opening_balance_minutes'] }},
-                         closingBalanceMinutes: {{ $group['closing_balance_minutes'] }},
-                         carryoverMinutes: {{ $group['carryover_preview_minutes'] }},
-                         totalMinutes: {{ $group['totalMinutes'] }},
-                         openMinutes: {{ $group['openMinutes'] }},
-                         beitrag: {{ $group['beitrag'] }},
-                         percent: {{ $group['percent'] }},
-                         showDetails: false,
-                         entries: @json($group['entries'] ?? [])
-                     },
-                     @endforeach
-                 ],
+                 allUsers: {{ \Illuminate\Support\Js::from($overviewUsers ?? []) }},
                  get filteredUsers() {
-                     if (this.search === '') return this.allUsers;
+                     const source = Array.isArray(this.allUsers) ? this.allUsers : [];
+                     if (!this.search || !this.search.trim()) return source;
+
                      const searchLower = this.search.toLowerCase();
-                     return this.allUsers.filter(group => {
-                         const userName = group.userName.toLowerCase();
-                         const partnerName = group.partnerName ? group.partnerName.toLowerCase() : '';
+                     return source.filter(group => {
+                         const userName = String(group?.userName ?? '').toLowerCase();
+                         const partnerName = String(group?.partnerName ?? '').toLowerCase();
                          return userName.includes(searchLower) || partnerName.includes(searchLower);
                      });
                  },
@@ -502,7 +486,7 @@
                      return filtered.slice(start, start + this.perPage);
                  },
                  get totalPages() {
-                     return Math.ceil(this.filteredUsers.length / this.perPage);
+                     return Math.max(1, Math.ceil(this.filteredUsers.length / this.perPage));
                  },
                  nextPage() {
                      if (this.currentPage < this.totalPages) {
@@ -521,10 +505,13 @@
                      this.scrollToTable();
                  },
                  scrollToTable() {
-                     document.querySelector('#userTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     const table = document.querySelector('#userTable');
+                     if (table) {
+                         table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }
                  }
              }"
-             x-init="$watch('search', () => currentPage = 1)">
+             x-init="$watch('search', () => { currentPage = 1; })">
             <div class="border-b border-slate-200 bg-slate-50 px-6 py-3">
                 <div class="flex flex-wrap gap-2">
                     <button type="button" @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100'" class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors">

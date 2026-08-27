@@ -66,6 +66,39 @@ class PflichtstundenReportPdfTest extends TestCase
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_admin_can_open_verwaltungs_dashboard_with_family_overview(): void
+    {
+        Permission::findOrCreate('view Pflichtstunden');
+        Permission::findOrCreate('edit Pflichtstunden');
+
+        $admin = User::factory()->create(['changePassword' => false]);
+        $admin->givePermissionTo('view Pflichtstunden');
+        $admin->givePermissionTo('edit Pflichtstunden');
+
+        $user = User::factory()->create(['name' => 'Falk Wenzel']);
+        $user->givePermissionTo('view Pflichtstunden');
+        $periodStart = now()->startOfYear()->addDays(10)->startOfDay();
+
+        Pflichtstunde::create([
+            'user_id' => $user->id,
+            'start' => $periodStart,
+            'end' => $periodStart->copy()->addHours(2),
+            'description' => 'Familienüberblick Test',
+            'approved' => true,
+            'approved_at' => now(),
+            'approved_by' => $admin->id,
+            'created_at' => now()->subDay(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('pflichtstunden.indexVerwaltung'));
+
+        $response->assertOk();
+        $response->assertSee('Übersicht der Pflichtstunden');
+        $response->assertSee('Falk Wenzel');
+    }
+
     public function test_plausibility_report_only_includes_approved_entries(): void
     {
         Permission::findOrCreate('edit Pflichtstunden');
