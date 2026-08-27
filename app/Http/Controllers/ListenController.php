@@ -73,7 +73,7 @@ class ListenController extends Controller
             $oldListen = Liste::where('ende', '<', Carbon::today())->orderByDesc('ende')->paginate(15);
         } else {
             $oldListen = '';
-            $listen = $request->user()->listen()->where('active', 1)->where('ende', '>=', Carbon::now())->get();
+            $listen = $request->user()->listen()->where('listen.active', 1)->where('listen.ende', '>=', Carbon::now())->get();
             if ($request->user()->can('create terminliste')) {
                 $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now())->get();
 
