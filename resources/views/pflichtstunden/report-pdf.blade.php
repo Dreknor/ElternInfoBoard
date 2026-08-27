@@ -200,55 +200,7 @@
         <p class="muted">Keine auffälligen Einträge (> 12 Stunden) im gewählten Zeitraum.</p>
     @endif
 
-    <h2>Teil 2: Compliance-Liste (Familien-Abrechnung)</h2>
-    <table class="table-small">
-        <thead>
-        <tr>
-            <th>Familie</th>
-            <th>Soll</th>
-            <th>Geleistet</th>
-            <th>Ausstehend</th>
-            <th>Differenz</th>
-            <th>Erfüllung</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($family_rows as $family)
-            @php
-                $alertClass = $family['difference_minutes'] < 0 ? 'badge-danger' : 'badge';
-            @endphp
-            <tr>
-                <td>{{ $family['family_name'] }}</td>
-                <td>{{ number_format((float) $family['required_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $family['approved_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $family['pending_hours'], 2, ',', '.') }}h</td>
-                <td><span class="badge {{ $alertClass }}">{{ $formatMinutes($family['difference_minutes']) }}</span></td>
-                <td>{{ number_format((float) $family['percent'], 2, ',', '.') }}%</td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-
-    <table class="table-small">
-        <thead>
-        <tr>
-            <th>Top-Helfer</th>
-            <th>Erfüllt</th>
-            <th>Überschuss</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach($top_helpers as $helper)
-            <tr>
-                <td>{{ $helper['family_name'] }}</td>
-                <td>{{ number_format((float) $helper['approved_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $helper['extra_hours'], 2, ',', '.') }}h</td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-
-    <h2>Teil 3: Zeitliche Verteilung &amp; Ressourcen</h2>
+    <h2>Teil 2: Zeitliche Verteilung &amp; Ressourcen</h2>
     <table class="table-small">
         <thead>
         <tr>
@@ -317,7 +269,7 @@
         </tbody>
     </table>
 
-    <h2>Teil 4: Controlling des Freigabeprozesses</h2>
+    <h2>Teil 3: Controlling des Freigabeprozesses</h2>
     <table class="table-small">
         <tr>
             <th>Durchschnittliche Bearbeitungsdauer</th>
@@ -349,6 +301,54 @@
                 <td>{{ $entry['approved'] }}</td>
                 <td>{{ $entry['rejected'] }}</td>
                 <td>{{ $entry['total'] }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+
+    <h2>Teil 4: Familien-Abrechnung</h2>
+
+    <table class="table-small">
+        <thead>
+        <tr>
+            <th>Top-Helfer</th>
+            <th>Erfüllt</th>
+            <th>Überschuss</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($top_helpers as $helper)
+            <tr>
+                <td>{{ $helper['family_name'] }}</td>
+                <td>{{ number_format((float) $helper['approved_hours'], 2, ',', '.') }}h</td>
+                <td>{{ number_format((float) $helper['extra_hours'], 2, ',', '.') }}h</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+    <table class="table-small">
+        <thead>
+        <tr>
+            <th>Familie</th>
+            <th>Soll</th>
+            <th>Geleistet</th>
+            <th>Ausstehend</th>
+            <th>Differenz</th>
+            <th>Erfüllung</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($family_rows as $family)
+            @php
+                $alertClass = $family['difference_minutes'] < 0 ? 'badge-danger' : 'badge';
+            @endphp
+            <tr>
+                <td>{{ $family['family_name'] }}</td>
+                <td>{{ number_format((float) $family['required_hours'], 2, ',', '.') }}h</td>
+                <td>{{ number_format((float) $family['approved_hours'], 2, ',', '.') }}h</td>
+                <td>{{ number_format((float) $family['pending_hours'], 2, ',', '.') }}h</td>
+                <td><span class="badge {{ $alertClass }}">{{ $formatMinutes($family['difference_minutes']) }}</span></td>
+                <td>{{ number_format((float) $family['percent'], 2, ',', '.') }}%</td>
             </tr>
         @endforeach
         </tbody>
