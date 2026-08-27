@@ -21,13 +21,20 @@ class GroupsController extends Controller
     /**
      * @return View
      */
-    public function index()
+    public function index(Request $request)
     {
+        $showInactive = $request->boolean('inactive');
+
         if (auth()->user()->can('edit groups')) {
-            $groups = Group::with('users')->get();
+            $groups = Group::with('users')
+                ->when(! $showInactive, function (Builder $query) {
+                    $query->where('active', true);
+                })
+                ->get();
         } elseif (auth()->user()->can('view groups')) {
             $groups = auth()->user()->groups;
             $groups = $groups->merge(auth()->user()->ownGroups);
+            $groups = $groups->where('active', true)->values();
         } else {
             return redirect(url('/'))->with([
                 'type' => 'warning',
@@ -37,6 +44,7 @@ class GroupsController extends Controller
 
         return view('groups.index')->with([
             'groups' => $groups,
+            'showInactive' => $showInactive,
         ]);
     }
 
@@ -59,7 +67,7 @@ class GroupsController extends Controller
 
         Cache::forget('groups');
         Cache::remember('groups', 60 * 5, function () {
-            return Group::all();
+            return Group::active()->get();
         });
 
         return redirect()->back()->with([
@@ -198,6 +206,29 @@ class GroupsController extends Controller
             $group->media()->delete();
             $group->delete();
         }
+    }
+
+    /**
+     * Gruppe aktivieren oder deaktivieren. Deaktivierte Gruppen tauchen im
+     * Gruppen-Modul (standardmäßig), bei der Erstellung von Inhalten und in
+     * den Nachrichten-Filtern nicht mehr auf, bleiben aber inklusive ihrer
+     * bestehenden Verknüpfungen erhalten und können jederzeit reaktiviert werden.
+     */
+    public function toggleActive(Group $group): RedirectResponse
+    {
+        if (! auth()->user()->can('edit groups')) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Berechtigung fehlt.',
+            ]);
+        }
+
+        $group->update(['active' => ! $group->active]);
+
+        return redirect()->back()->with([
+            'type'    => 'success',
+            'Meldung' => 'Gruppe "'.$group->name.'" wurde '.($group->active ? 'aktiviert' : 'deaktiviert').'.',
+        ]);
     }
 
     /**

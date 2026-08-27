@@ -69,7 +69,7 @@ class SiteController extends Controller implements HasMiddleware
 
         if (auth()->user()->can('create sites')) {
             $sites = Site::all();
-            $gruppen = Group::all();
+            $gruppen = Group::active()->get();
         } else {
             $sites = auth()->user()->sites;
             $own = Site::where('author_id', auth()->id())->get();

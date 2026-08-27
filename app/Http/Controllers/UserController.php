@@ -107,7 +107,7 @@ class UserController extends Controller implements HasMiddleware
 
         return view('user.create', [
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
-                return Group::all();
+                return Group::active()->get();
             }),
             'roles' => $roles,
         ]);
@@ -152,7 +152,7 @@ class UserController extends Controller implements HasMiddleware
         return view('user.show', [
             'user' => $user->load('groups'),
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
-                return Group::all();
+                return Group::active()->get();
             }),
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();

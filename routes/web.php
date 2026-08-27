@@ -446,6 +446,7 @@ Route::middleware('auth')->group(function () {
         Route::post('groups/{group}/addUser', [GroupsController::class, 'storeUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
         Route::post('/groups/{group}/toggle-chat', [GroupsController::class, 'toggleChat'])->name('groups.toggle-chat')->middleware(['permission:edit groups']);
+        Route::post('/groups/{group}/toggle-active', [GroupsController::class, 'toggleActive'])->name('groups.toggle-active')->middleware(['permission:edit groups']);
 
         // Routen zur Rechteverwaltung
         Route::middleware('permission:edit permission')->group(function () {

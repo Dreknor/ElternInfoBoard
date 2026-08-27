@@ -19,16 +19,20 @@ class GroupsRepository
         $groups = new Collection;
 
         if ($gruppen[0] == 'all') {
-            $groups = Group::where('protected', 0)->get();
+            $groups = Group::active()->where('protected', 0)->get();
         }
 
-        if (Group::whereIn('bereich', $gruppen)->first() != null) {
-            $getGruppen = Group::whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen)->get();
+        if (Group::active()->whereIn('bereich', $gruppen)->first() != null) {
+            $getGruppen = Group::active()
+                ->where(function ($query) use ($gruppen) {
+                    $query->whereIn('bereich', $gruppen)->orWhereIn('id', $gruppen);
+                })
+                ->get();
             $getGruppen = $getGruppen->unique();
             $groups = $groups->merge($getGruppen);
         }
 
-        $groups = $groups->merge(Group::find($gruppen));
+        $groups = $groups->merge(Group::active()->find($gruppen));
         $groups = $groups->unique();
 
         return $groups;

@@ -15,7 +15,7 @@ class SchoolYearController extends Controller
         if (! auth()->user()->can('schoolyear.change')) {
             abort(403, 'Keine Berechtigung für den Schuljahreswechsel.');
         }
-        $groups = Group::all();
+        $groups = Group::active()->get();
         $roles = app('spatie.permission.models.role')::all();
 
         return view('schoolyear.index', compact('groups', 'roles'));
