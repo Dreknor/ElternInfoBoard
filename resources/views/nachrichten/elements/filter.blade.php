@@ -27,7 +27,7 @@
 
 <div class="row mt-1">
 
-    @foreach(auth()->user()->groups as $group)
+    @foreach(auth()->user()->groups->where('active', true) as $group)
         <div class="col">
             <div class="btn btn-outline-primary btn-sm btn-block" type="button" id="{{\Illuminate\Support\Str::camel($group->name)}}" data-show="true">
                 {{$group->name}}

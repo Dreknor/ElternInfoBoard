@@ -56,7 +56,7 @@ class SettingsController extends Controller implements HasMiddleware
         $keycloakSettings = new KeycloakSetting;
         $reinigungSettings = new ReinigungSetting;
 
-        $groups = Group::all();
+        $groups = Group::active()->get();
         $roles = Role::all();
 
         $reinigungBereiche = Group::query()

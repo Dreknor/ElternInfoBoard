@@ -215,7 +215,7 @@ class ElternratController extends Controller implements HasMiddleware
     public function addFile()
     {
         return view('elternrat.createFile', [
-            'groups' => Group::all(),
+            'groups' => Group::active()->get(),
         ]);
     }
 

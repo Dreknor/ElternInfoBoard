@@ -46,7 +46,7 @@ class GTAController extends Controller
     public function create()
     {
         $managers = User::role('Mitarbeiter')->orderBy('name')->get();
-        $groups = Group::all();
+        $groups = Group::active()->get();
 
         return view('arbeitsgemeinschaften.create')
             ->with([
@@ -97,7 +97,7 @@ class GTAController extends Controller
     public function edit(Arbeitsgemeinschaft $arbeitsgemeinschaft)
     {
         $managers = User::role('Mitarbeiter')->orderBy('name')->get();
-        $groups = Group::all();
+        $groups = Group::active()->get();
 
         return view('arbeitsgemeinschaften.edit')
             ->with([

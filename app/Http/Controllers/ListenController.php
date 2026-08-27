@@ -121,7 +121,7 @@ class ListenController extends Controller
         }
 
         return view('listen.create', [
-            'gruppen' => Group::all(),
+            'gruppen' => Group::active()->get(),
         ]);
     }
 
@@ -223,7 +223,7 @@ class ListenController extends Controller
 
         return view('listen.edit', [
             'liste' => $terminListe,
-            'gruppen' => Group::all(),
+            'gruppen' => Group::active()->get(),
         ]);
     }
 

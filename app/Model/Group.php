@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Scopes\GetGroupsScope;
 use App\Scopes\SortGroupsScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,16 +21,27 @@ class Group extends Model implements HasMedia
     use HasFactory;
     use InteractsWithMedia;
 
-    protected $fillable = ['name', 'bereich', 'protected', 'owner_id', 'has_chat'];
+    protected $fillable = ['name', 'bereich', 'protected', 'owner_id', 'has_chat', 'active'];
 
-    protected $visible = ['name', 'bereich', 'protected', 'owner_id', 'has_chat'];
+    protected $visible = ['name', 'bereich', 'protected', 'owner_id', 'has_chat', 'active'];
 
     protected function casts(): array
     {
         return [
             'protected' => 'boolean',
             'has_chat'  => 'boolean',
+            'active'    => 'boolean',
         ];
+    }
+
+    /**
+     * Nur aktive Gruppen. Deaktivierte Gruppen sollen bei der Auswahl für
+     * neue Inhalte, im Gruppen-Modul sowie in Nachrichten-Filtern nicht mehr
+     * auftauchen, bleiben aber inklusive ihrer bestehenden Verknüpfungen erhalten.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', true);
     }
 
     public function users(): BelongsToMany
