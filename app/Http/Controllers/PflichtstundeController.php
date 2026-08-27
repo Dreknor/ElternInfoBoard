@@ -97,18 +97,13 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
+            ->with('user')
             ->orderBy('end', 'desc')
             ->get();
 
         $groupedUsers = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
-        $groupedUsers = $groupedUsers->map(function (array $group) use ($periodStart, $periodEnd) {
-            $entries = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
-                ->whereBetween('start', [$periodStart->copy()->startOfDay(), $periodEnd->copy()->endOfDay()])
-                ->whereIn('user_id', $group['user_ids'])
-                ->where('rejected', false)
-                ->with('user')
-                ->orderBy('start')
-                ->get()
+        $groupedUsers = $groupedUsers->map(function (array $group) {
+            $entries = collect($group['entries'] ?? [])
                 ->map(function (Pflichtstunde $entry) {
                     return [
                         'id' => $entry->id,
