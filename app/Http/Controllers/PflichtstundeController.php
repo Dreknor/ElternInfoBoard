@@ -101,6 +101,34 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ->get();
 
         $groupedUsers = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $groupedUsers = $groupedUsers->map(function (array $group) use ($periodStart, $periodEnd) {
+            $entries = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
+                ->whereBetween('start', [$periodStart->copy()->startOfDay(), $periodEnd->copy()->endOfDay()])
+                ->whereIn('user_id', $group['user_ids'])
+                ->where('rejected', false)
+                ->with('user')
+                ->orderBy('start')
+                ->get()
+                ->map(function (Pflichtstunde $entry) {
+                    return [
+                        'id' => $entry->id,
+                        'user' => $entry->user?->name ?? 'Unbekannt',
+                        'start' => $entry->start?->format('d.m.Y H:i'),
+                        'end' => $entry->end?->format('d.m.Y H:i'),
+                        'duration' => $entry->start && $entry->end
+                            ? ($entry->start->diffInMinutes($entry->end) >= 60
+                                ? floor($entry->start->diffInMinutes($entry->end) / 60).'h '.($entry->start->diffInMinutes($entry->end) % 60).'m'
+                                : $entry->start->diffInMinutes($entry->end).'m')
+                            : '0m',
+                        'description' => $entry->description ?? '-',
+                        'bereich' => $entry->bereich ?: 'Ohne Bereich',
+                        'approved' => (bool) $entry->approved,
+                    ];
+                })
+                ->values();
+
+            return array_merge($group, ['entries' => $entries]);
+        });
 
         $stats = [
             'totalFamilies' => $groupedUsers->count(),
