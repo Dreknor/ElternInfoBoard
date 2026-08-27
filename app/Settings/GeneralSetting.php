@@ -18,6 +18,14 @@ class GeneralSetting extends Settings
     /** Dürfen Nutzer einen eigenen Theme wählen? */
     public bool $allow_user_theme = true;
 
+    /**
+     * Steuert das globale Last-Login-Tracking.
+     * 'user'   – Nutzer entscheidet selbst (bisheriges Verhalten)
+     * 'always' – immer aufzeichnen, unabhängig von der Nutzereinstellung
+     * 'never'  – niemals aufzeichnen, Nutzereinstellung wird ignoriert
+     */
+    public string $login_tracking_mode = 'user';
+
     public static function group(): string
     {
         return 'general';
