@@ -4,9 +4,14 @@
 </style>
 <div class="container-fluid">
     @php
-        $groupsAndClassesIdentical = $groups->pluck('id')->sort()->values()->all() === $classes->pluck('id')->sort()->values()->all();
-        $visibleGroups = $groups->sortBy('name')->filter(function($group) use ($careSettings, $children) {
-            return !($careSettings->hide_groups_when_empty && $children->where('group_id', $group->id)->count() == 0);
+        $isClassOnlyMode = $groups->isEmpty() && $classes->isNotEmpty();
+        $groupingField = $isClassOnlyMode ? 'class_id' : 'group_id';
+        $displayGroups = $isClassOnlyMode ? $classes : $groups;
+        $groupsAndClassesIdentical = ! $isClassOnlyMode
+            && $groups->pluck('id')->sort()->values()->all() === $classes->pluck('id')->sort()->values()->all();
+        $showChildrenByGroupOnly = $isClassOnlyMode || $classes->isEmpty() || $groupsAndClassesIdentical;
+        $visibleGroups = $displayGroups->sortBy('name')->filter(function($group) use ($careSettings, $children, $groupingField) {
+            return !($careSettings->hide_groups_when_empty && $children->where($groupingField, $group->id)->count() == 0);
         });
     @endphp
 
@@ -37,14 +42,14 @@
                 <div class="card">
                     <div class="card-header bg-primary text-white"
                          style="position: sticky; top: 0; z-index: 1; padding: 0.5rem; background-color: #007bff !important; color: #fff !important;">
-                        <span class="badge badge-warning float-right">{{ $children->where('group_id', $group->id)->count() }}</span>
+                        <span class="badge badge-warning float-right">{{ $children->where($groupingField, $group->id)->count() }}</span>
 
                         <h3 style="margin: 0;">{{ $group->name }}</h3>
                     </div>
                     <div class="card-body" style="padding: 0.5rem;">
-                        @if($groupsAndClassesIdentical)
+                        @if($showChildrenByGroupOnly)
                             @php
-                                $sortedChildren = $children->where('group_id', $group->id)?->sortBy('last_name');
+                                $sortedChildren = $children->where($groupingField, $group->id)?->sortBy('last_name');
                             @endphp
                             <ul class="list-group" style="margin: 0;">
                                 @forelse($sortedChildren as $child)
@@ -171,14 +176,14 @@
                             </ul>
                         @else
                             @foreach($classes as $class)
-                                @if($careSettings->hide_groups_when_empty and $children->where('group_id', $group->id)->where('class_id', $class->id)->count() == 0)
+                                @if($careSettings->hide_groups_when_empty and $children->where($groupingField, $group->id)->where('class_id', $class->id)->count() == 0)
                                     @continue
                                 @endif
                                 <h4 class="bg-gradient-directional-grey-blue text-white p-2" style="position: sticky; top: 60px; z-index: 1; margin: 0.5rem 0;">
-                                    {{ $class->name }}  <span class="badge badge-primary float-right">{{ $children->where('group_id', $group->id)->where('class_id', $class->id)->count() }}</span>
+                                    {{ $class->name }}  <span class="badge badge-primary float-right">{{ $children->where($groupingField, $group->id)->where('class_id', $class->id)->count() }}</span>
                                 </h4>
                                 @php
-                                    $sortedClassChildren = $children->where('group_id', $group->id)->where('class_id', $class->id)?->sortBy('last_name');
+                                    $sortedClassChildren = $children->where($groupingField, $group->id)->where('class_id', $class->id)?->sortBy('last_name');
                                 @endphp
                                 <ul class="list-group" style="margin: 0;">
                                     @forelse($sortedClassChildren as $child)
