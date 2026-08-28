@@ -437,10 +437,14 @@
                                 const emailLink = p.email
                                     ? ` &nbsp;<a href="mailto:${p.email}" class="text-muted small"><i class="fas fa-envelope mr-1"></i>${p.email}</a>`
                                     : '';
-                                const phoneLink = p.phone
-                                    ? ` &nbsp;<a href="tel:${p.phone}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${p.phone}</a>`
-                                    : '';
-                                li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + (p.name || '') + '</b>' + emailLink + phoneLink;
+                                let phoneLinks = '';
+                                if (p.phone) {
+                                    phoneLinks += ` &nbsp;<a href="tel:${p.phone}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${p.phone}</a>`;
+                                }
+                                if (p.publicPhone && p.publicPhone !== p.phone) {
+                                    phoneLinks += ` &nbsp;<a href="tel:${p.publicPhone}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${p.publicPhone}</a>`;
+                                }
+                                li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + (p.name || '') + '</b>' + emailLink + phoneLinks;
                                 elternContainer.appendChild(li);
                             });
                         } else {
