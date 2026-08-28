@@ -57,6 +57,10 @@ class UpdateProfileRequest extends FormRequest
                 'nullable',
                 'string',
             ],
+            'phone' => [
+                'nullable',
+                'string',
+            ],
             'calendar_prefix' => [
                 'nullable',
                 'string',

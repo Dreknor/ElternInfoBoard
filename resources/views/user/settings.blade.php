@@ -165,6 +165,16 @@
                                        class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
                                        placeholder="+49 123 456789" name="publicPhone" value="{{$user->publicPhone}}" autocomplete="off">
                             </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
+                                    <i class="fas fa-phone-alt text-blue-600 mr-1"></i>
+                                    Telefonnummer
+                                    <span class="block text-xs font-normal mt-0.5" style="color: var(--color-text-secondary);">Nicht öffentlich, nur für Betreuer (z.B. Hort) sichtbar</span>
+                                </label>
+                                <input type="tel"
+                                       class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                                       placeholder="+49 123 456789" name="phone" value="{{$user->phone}}" autocomplete="off">
+                            </div>
                         </div>
                         <div class="mt-6 pt-4 border-t" style="border-color: var(--color-card-border);">
                             <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm rounded-lg transition-colors shadow-sm">

@@ -63,6 +63,7 @@ class BenutzerController extends Controller implements HasMiddleware
                 'track_login',
                 'publicMail',
                 'publicPhone',
+                'phone',
                 'calendar_prefix',
                 'releaseCalendar',
                 'messenger_discoverable',

@@ -79,7 +79,7 @@ class CareController extends Controller implements HasMiddleware
             $childs = $childQuery
                 ->with([
                     'mandates',
-                    'parents:id,name,email,sorg2',
+                    'parents:id,name,email,phone,sorg2',
                     'checkIns' => function ($query) {
                         $query->whereDate('date', today());
                     },
@@ -116,7 +116,7 @@ class CareController extends Controller implements HasMiddleware
         // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1)
         $sorg2Ids = $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values();
         $sorg2Users = $sorg2Ids->isNotEmpty()
-            ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email'])->keyBy('id')
+            ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email', 'phone'])->keyBy('id')
             : collect();
 
         return view('anwesenheit.index', [
