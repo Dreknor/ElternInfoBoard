@@ -49,61 +49,37 @@ class CareController extends Controller implements HasMiddleware
             return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', false));
         }
 
-        $groups = Groups::query()->whereIn('id', $careSettings->groups_list)->get();
-        $classes = Groups::query()->whereIn('id', $careSettings->class_list)->get();
+        $configuredGroupIds = array_values((array) ($careSettings->groups_list ?? []));
+        $configuredClassIds = array_values((array) ($careSettings->class_list ?? []));
 
-        // Wenn keine Gruppen oder Klassen konfiguriert sind, keine Kinder anzeigen
-        if (empty($careSettings->groups_list) || empty($careSettings->class_list)) {
+        $groups = Groups::query()->whereIn('id', $configuredGroupIds)->get();
+        $classes = Groups::query()->whereIn('id', $configuredClassIds)->get();
+
+        if (empty($configuredGroupIds) && empty($configuredClassIds)) {
             $childs = collect();
-        } elseif ($careSettings->hide_childs_when_absent == true && ! request()->cookie('showAll')) {
-            $childs = Child::query()
-                ->whereIn('group_id', $careSettings->groups_list)
-                ->whereIn('class_id', $careSettings->class_list)
-                ->whereHas('checkIns', function ($query) {
+        } else {
+            $childQuery = Child::query();
+
+            if (!empty($configuredGroupIds)) {
+                $childQuery->whereIn('group_id', $configuredGroupIds);
+            }
+
+            if (!empty($configuredClassIds)) {
+                $childQuery->whereIn('class_id', $configuredClassIds);
+            }
+
+            if ($careSettings->hide_childs_when_absent == true && ! request()->cookie('showAll')) {
+                $childQuery->whereHas('checkIns', function ($query) {
                     $query
                         ->checkedIn()
                         ->whereDate('date', now()->toDateString());
-                })
-                ->with([
-                    'mandates',
-                    'parents:id,name,email,sorg2',
-                    'checkIns' => function ($query) {
-                        $query->whereDate('date', today());
-                    },
-                    'schickzeiten' => function ($query) {
-                        $query->where('specific_date', today())
-                            ->orderBy('specific_date', 'desc');
-                    },
-                    'regularSchickzeiten',
-                    'krankmeldungen' => function ($query) {
-                        $query->whereDate('start', '<=', today())
-                            ->whereDate('ende', '>=', today());
-                    },
-                    'notice' => function ($query) {
-                        $query->whereDate('date', today());
-                    },
-                    'arbeitsgemeinschaften' => function ($query) {
-                        $query->where('end_date', '>', now())
-                            ->where('weekday', now()->dayOfWeek)
-                            ->where(function ($q) {
-                                $q->whereDate('start_date', '<=', today())
-                                    ->orWhereNull('start_date');
-                            })
-                            ->where(function ($q) {
-                                $q->whereDate('end_date', '>=', today())
-                                    ->orWhereNull('end_date');
-                            });
-                    }
-                ])
-                ->get();
+                });
+            }
 
-        } else {
-            $childs = Child::query()
-                ->whereIn('group_id', $careSettings->groups_list)
-                ->whereIn('class_id', $careSettings->class_list)
+            $childs = $childQuery
                 ->with([
                     'mandates',
-                    'parents:id,name,email,sorg2',
+                    'parents:id,name,email,phone,sorg2',
                     'checkIns' => function ($query) {
                         $query->whereDate('date', today());
                     },
@@ -140,7 +116,7 @@ class CareController extends Controller implements HasMiddleware
         // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1)
         $sorg2Ids = $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values();
         $sorg2Users = $sorg2Ids->isNotEmpty()
-            ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email'])->keyBy('id')
+            ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email', 'phone'])->keyBy('id')
             : collect();
 
         return view('anwesenheit.index', [
@@ -396,9 +372,6 @@ class CareController extends Controller implements HasMiddleware
                     ]);
                 }
                 $childQuery->whereIn('group_id', $allowedGroups);
-                if (!empty($careSettings->class_list)) {
-                    $childQuery->whereIn('class_id', $careSettings->class_list);
-                }
                 break;
 
             case 'classes':
@@ -413,9 +386,6 @@ class CareController extends Controller implements HasMiddleware
                     ]);
                 }
                 $childQuery->whereIn('class_id', $allowedClasses);
-                if (!empty($careSettings->groups_list)) {
-                    $childQuery->whereIn('group_id', $careSettings->groups_list);
-                }
                 break;
 
             case 'children':

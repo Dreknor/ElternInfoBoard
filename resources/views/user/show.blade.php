@@ -106,6 +106,15 @@
                             </div>
                         </div>
 
+                        {{-- Private Telefonnummer --}}
+                        <div class="form-group mb-0">
+                            <label class="label-control">Telefonnummer
+                                <span class="text-xs font-normal" style="color: var(--color-text-muted);">(nicht öffentlich, nur für Betreuer z.B. in der Anwesenheit sichtbar)</span>
+                            </label>
+                            <input type="tel" class="form-control" placeholder="Telefonnummer"
+                                   name="phone" value="{{ $user->phone }}" autocomplete="off">
+                        </div>
+
                         {{-- Benachrichtigung & Kopie --}}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="form-group mb-0">

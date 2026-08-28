@@ -16,6 +16,7 @@
                 <input type="text" class="form-control" id="search" placeholder="Search for names..">
             </div>
             <div class="card-body">
+                <div class="table-responsive">
                 <table class="table table-bordered" id="childrenTable">
                     <thead>
                     <tr>
@@ -52,14 +53,14 @@
                                 @endforeach
                             </td>
                             <td>
-                                <a href="{{ route('child.edit', $child->id) }}" class="btn btn-primary">Edit</a>
-                                <a href="{{ route('child.mandates.edit', $child->id) }}" class="btn btn-info">Vollmachten</a>
+                                <a href="{{ route('child.edit', $child->id) }}" class="btn btn-primary btn-sm mb-1 mb-md-0">Edit</a>
+                                <a href="{{ route('child.mandates.edit', $child->id) }}" class="btn btn-info btn-sm mb-1 mb-md-0">Vollmachten</a>
 
 
                                 <form action="{{ route('child.destroy', $child->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                 </form>
                             </td>
 
@@ -67,6 +68,7 @@
                     @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

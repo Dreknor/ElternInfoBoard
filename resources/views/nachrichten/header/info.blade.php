@@ -46,7 +46,7 @@
         </div>
         <div class="flex items-center gap-2 @if($nachricht->released == 0) text-white @endif">
             <i class="far fa-calendar text-gray-400"></i>
-            <span>Archiv ab: {{$nachricht->archiv_ab->format('d.m.Y')}}</span>
+            <span>Archiv ab: {{$nachricht->archiv_ab?->format('d.m.Y') ?? '-'}}</span>
         </div>
     </div>
 </div>

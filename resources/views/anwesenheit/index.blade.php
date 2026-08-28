@@ -437,7 +437,10 @@
                                 const emailLink = p.email
                                     ? ` &nbsp;<a href="mailto:${p.email}" class="text-muted small"><i class="fas fa-envelope mr-1"></i>${p.email}</a>`
                                     : '';
-                                li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + (p.name || '') + '</b>' + emailLink;
+                                const phoneLink = p.phone
+                                    ? ` &nbsp;<a href="tel:${p.phone}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${p.phone}</a>`
+                                    : '';
+                                li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + (p.name || '') + '</b>' + emailLink + phoneLink;
                                 elternContainer.appendChild(li);
                             });
                         } else {

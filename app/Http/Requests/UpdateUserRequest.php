@@ -44,6 +44,10 @@ class UpdateUserRequest extends FormRequest
                 'nullable',
                 'string',
             ],
+            'phone' => [
+                'nullable',
+                'string',
+            ],
             'benachrichtigung' => [
                 'required',
                 'in:weekly,daily',
