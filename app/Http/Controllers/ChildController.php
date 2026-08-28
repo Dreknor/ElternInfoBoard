@@ -91,7 +91,7 @@ class ChildController extends Controller implements HasMiddleware
 
         return view('child.create', [
             'child' => $child ?? new Child,
-            'groups' => Group::all(),
+            'groups' => Group::active()->get(),
             'parents' => $parents,
         ]);
     }
@@ -110,7 +110,7 @@ class ChildController extends Controller implements HasMiddleware
                 })
                 ->get();
 
-            $groups = Group::all();
+            $groups = Group::active()->get();
 
         } else {
 
@@ -139,7 +139,7 @@ class ChildController extends Controller implements HasMiddleware
 
         return view('child.edit', [
             'child' => $child,
-            'groups' => Group::all(),
+            'groups' => Group::active()->get(),
             'parents' => $parents,
         ]);
     }

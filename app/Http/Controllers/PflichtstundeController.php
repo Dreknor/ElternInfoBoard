@@ -8,7 +8,9 @@ use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
 use App\Model\PflichtstundenFamilyRuleHistory;
 use App\Services\PflichtstundenFamilyService;
+use App\Services\PflichtstundenReportPdfService;
 use App\Settings\PflichtstundenSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,10 +21,13 @@ class PflichtstundeController extends Controller implements HasMiddleware
 
     protected PflichtstundenFamilyService $familyService;
 
+    protected PflichtstundenReportPdfService $reportPdfService;
+
     public function __construct()
     {
         $this->pflichtstunden_settings = new PflichtstundenSetting;
         $this->familyService = new PflichtstundenFamilyService($this->pflichtstunden_settings);
+        $this->reportPdfService = new PflichtstundenReportPdfService($this->familyService);
     }
 
     public static function middleware(): array
@@ -92,10 +97,33 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
+            ->with('user')
             ->orderBy('end', 'desc')
             ->get();
 
         $groupedUsers = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $groupedUsers = $groupedUsers->map(function (array $group) {
+            $entries = collect($group['entries'] ?? [])
+                ->map(function (Pflichtstunde $entry) {
+                    return [
+                        'id' => $entry->id,
+                        'user' => $entry->user?->name ?? 'Unbekannt',
+                        'start' => $entry->start?->format('d.m.Y H:i'),
+                        'end' => $entry->end?->format('d.m.Y H:i'),
+                        'duration' => $entry->start && $entry->end
+                            ? ($entry->start->diffInMinutes($entry->end) >= 60
+                                ? floor($entry->start->diffInMinutes($entry->end) / 60).'h '.($entry->start->diffInMinutes($entry->end) % 60).'m'
+                                : $entry->start->diffInMinutes($entry->end).'m')
+                            : '0m',
+                        'description' => $entry->description ?? '-',
+                        'bereich' => $entry->bereich ?: 'Ohne Bereich',
+                        'approved' => (bool) $entry->approved,
+                    ];
+                })
+                ->values();
+
+            return array_merge($group, ['entries' => $entries]);
+        });
 
         $stats = [
             'totalFamilies' => $groupedUsers->count(),
@@ -167,11 +195,34 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ];
         });
 
+        $overviewUsers = $groupedUsers->map(function (array $group) {
+            return [
+                'userName' => $group['user']->name ?? '',
+                'partnerName' => $group['partner']?->name ?? '',
+                'modeLabel' => match ($group['rule_mode'] ?? 'standard') {
+                    'reduced' => 'Ermäßigt',
+                    'custom' => 'Individuell',
+                    default => 'Standard',
+                },
+                'requiredMinutes' => (int) ($group['required_minutes'] ?? 0),
+                'openingBalanceMinutes' => (int) ($group['opening_balance_minutes'] ?? 0),
+                'closingBalanceMinutes' => (int) ($group['closing_balance_minutes'] ?? 0),
+                'carryoverMinutes' => (int) ($group['carryover_preview_minutes'] ?? 0),
+                'totalMinutes' => (int) ($group['totalMinutes'] ?? 0),
+                'openMinutes' => (int) ($group['openMinutes'] ?? 0),
+                'beitrag' => (float) ($group['beitrag'] ?? 0),
+                'percent' => (float) ($group['percent'] ?? 0),
+                'showDetails' => false,
+                'entries' => $group['entries'] ?? [],
+            ];
+        })->values()->all();
+
         return view('pflichtstunden.indexVerwaltung', [
             'pflichtstunden' => $pflichtstunden,
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
             'groupedUsers' => $groupedUsers,
             'allGroupedUsers' => $groupedUsers,
+            'overviewUsers' => $overviewUsers,
             'stats' => $stats,
             'overlappingIds' => $overlappingIds,
             'overlapGroups' => $overlapGroups,
@@ -383,6 +434,48 @@ class PflichtstundeController extends Controller implements HasMiddleware
             new PflichtstundenExport($year),
             'pflichtstunden_abrechnung_'.($year ?? 'aktuell').'_'.date('Y-m-d').'.xlsx'
         );
+    }
+
+    public function reportPdf(Request $request)
+    {
+        if (! auth()->user()->can('edit Pflichtstunden')) {
+            return redirect(url('/'))->with('error', 'Berechtigung fehlt');
+        }
+
+        $validated = $request->validate([
+            'year' => ['nullable', 'integer', 'min:2020', 'max:2100'],
+            'start' => ['nullable', 'date_format:Y-m-d'],
+            'end' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start'],
+            'sort' => ['nullable', 'in:family_name,highest_debt'],
+            'anonymized' => ['nullable', 'boolean'],
+        ]);
+
+        $sort = $validated['sort'] ?? 'family_name';
+        $anonymized = (bool) ($validated['anonymized'] ?? false);
+
+        if (! empty($validated['start']) || ! empty($validated['end'])) {
+            $request->validate([
+                'start' => 'required|date_format:Y-m-d',
+                'end' => 'required|date_format:Y-m-d|after_or_equal:start',
+            ]);
+
+            $periodStart = \Carbon\Carbon::createFromFormat('Y-m-d', $validated['start'])->startOfDay();
+            $periodEnd = \Carbon\Carbon::createFromFormat('Y-m-d', $validated['end'])->endOfDay();
+        } else {
+            $year = $validated['year'] ?? $this->familyService->resolvePeriod(null)[0]->year;
+            [$periodStart, $periodEnd] = $this->familyService->resolvePeriod((int) $year);
+        }
+
+        $report = $this->reportPdfService->buildReport($periodStart, $periodEnd, $sort, $anonymized);
+
+        $pdf = Pdf::loadView('pflichtstunden.report-pdf', $report)
+            ->setPaper('A4', 'portrait');
+
+        $filename = 'pflichtstunden_report_'.
+            $periodStart->format('Y-m-d').'_'.$periodEnd->format('Y-m-d').
+            ($anonymized ? '_anonymisiert' : '').'.pdf';
+
+        return $pdf->download($filename);
     }
 
     public function update(UpdatePflichtstundeRequest $request, Pflichtstunde $pflichtstunde)

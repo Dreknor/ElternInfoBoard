@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Settings\GeneralSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +25,15 @@ class LastOnlineAt
             return $next($request);
         }
 
-        // Prüfe zuerst den Boolean, dann ob der Zeitstempel existiert oder älter als 5 Minuten ist
-        if ($user->track_login && (! $user->last_online_at || $user->last_online_at->diffInMinutes(now()) >= 5)) {
+        $mode = app(GeneralSetting::class)->login_tracking_mode ?? 'user';
+
+        $shouldTrack = match ($mode) {
+            'always' => true,
+            'never'  => false,
+            default  => (bool) $user->track_login, // 'user' – Nutzer entscheidet
+        };
+
+        if ($shouldTrack && (! $user->last_online_at || $user->last_online_at->diffInMinutes(now()) >= 5)) {
             DB::table('users')
                 ->where('id', $user->id)
                 ->update(['last_online_at' => now()]);

@@ -137,6 +137,8 @@ Route::middleware('auth')->group(function () {
 
         Route::middleware('permission:edit Pflichtstunden')->group(function () {
             Route::get('verwaltung/pflichtstunden/export', [\App\Http\Controllers\PflichtstundeController::class, 'export'])->name('pflichtstunden.export');
+            Route::get('verwaltung/pflichtstunden/report', [\App\Http\Controllers\PflichtstundeController::class, 'reportPdf'])->name('pflichtstunden.report');
+            Route::get('verwaltung/pflichtstunden/report-pdf', [\App\Http\Controllers\PflichtstundeController::class, 'reportPdf'])->name('pflichtstunden.report.pdf');
             Route::post('verwaltung/pflichtstunden/store', [\App\Http\Controllers\PflichtstundeController::class, 'store'])->name('pflichtstunden.verwaltung.store');
             Route::put('verwaltung/pflichtstunden/familienregel', [\App\Http\Controllers\PflichtstundeController::class, 'updateFamilyRule'])->name('pflichtstunden.family-rule.update');
             Route::put('verwaltung/pflichtstunden/familienregel-bulk', [\App\Http\Controllers\PflichtstundeController::class, 'bulkUpdateFamilyRule'])->name('pflichtstunden.family-rule.bulk');
@@ -444,6 +446,7 @@ Route::middleware('auth')->group(function () {
         Route::post('groups/{group}/addUser', [GroupsController::class, 'storeUserToOwnGroup'])->middleware(['permission:create own group']);
         Route::delete('/groups/{group}/delete', [GroupsController::class, 'delete'])->middleware(['permission:delete groups']);
         Route::post('/groups/{group}/toggle-chat', [GroupsController::class, 'toggleChat'])->name('groups.toggle-chat')->middleware(['permission:edit groups']);
+        Route::post('/groups/{group}/toggle-active', [GroupsController::class, 'toggleActive'])->name('groups.toggle-active')->middleware(['permission:edit groups']);
 
         // Routen zur Rechteverwaltung
         Route::middleware('permission:edit permission')->group(function () {

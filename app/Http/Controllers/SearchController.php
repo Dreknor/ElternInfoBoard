@@ -86,7 +86,7 @@ class SearchController extends Controller implements HasMiddleware
             'sites' => $sites->unique()->sortByDesc('name')->all(),
             'archiv' => null,
             'user' => $request->user(),
-            'gruppen' => Group::all(),
+            'gruppen' => Group::active()->get(),
             'Suche' => $request->input('suche'),
         ]);
     }

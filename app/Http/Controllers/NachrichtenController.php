@@ -233,7 +233,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             ]);
         }
 
-        $gruppen = Group::all();
+        $gruppen = Group::active()->get();
         $external = Cache::remember('external_offers', 120, function () {
             return Module::firstWhere(['setting' => 'externe Angebote'])->options['active'];
         });
@@ -262,7 +262,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             ]);
         }
 
-        $gruppen = Group::all();
+        $gruppen = Group::active()->get();
 
         if (is_null($posts->rueckmeldung)) {
             $rueckmeldung = new Rueckmeldungen;

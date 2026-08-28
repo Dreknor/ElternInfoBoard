@@ -134,15 +134,33 @@ class PflichtstundenFamilyService
             ->whereIn('user_id', $allUserIds)
             ->whereBetween('start', [$periodStart, $periodEnd])
             ->where('rejected', false)
+            ->with('user')
             ->get();
 
         $entriesByUser = $entries->groupBy('user_id');
 
-        $summaries = $groups->map(function (array $group) use ($periodYear, $rules, $entriesByUser, $persistAccounts) {
+        // Bulk-load existing accounts for the current (and, if needed, previous)
+        // period once instead of issuing two lookup queries per family below.
+        $currentAccounts = PflichtstundenFamilyAccount::query()
+            ->where('period_year', $periodYear)
+            ->get()
+            ->keyBy('family_key');
+
+        $previousAccounts = $this->settings->konto_uebertrag_aktiv
+            ? PflichtstundenFamilyAccount::query()
+                ->where('period_year', $periodYear - 1)
+                ->get()
+                ->keyBy('family_key')
+            : collect();
+
+        $accountsToUpsert = [];
+
+        $summaries = $groups->map(function (array $group) use ($periodYear, $rules, $entriesByUser, $currentAccounts, $previousAccounts, &$accountsToUpsert) {
             $familyEntries = collect();
             foreach ($group['user_ids'] as $userId) {
                 $familyEntries = $familyEntries->merge($entriesByUser->get($userId, collect()));
             }
+            $familyEntries = $familyEntries->sortBy('start')->values();
 
             $allMinutes = $familyEntries->sum(fn (Pflichtstunde $entry) => $this->entryMinutes($entry));
             $approvedMinutes = $familyEntries
@@ -155,7 +173,7 @@ class PflichtstundenFamilyService
             $hourlyRate = $this->resolveHourlyRate($mode);
             $requiredMinutes = (int) round($requiredHours * 60);
 
-            $openingBalance = $this->resolveOpeningBalanceMinutes($group['family_key'], $periodYear);
+            $openingBalance = $this->resolveOpeningBalanceMinutes($group['family_key'], $currentAccounts, $previousAccounts);
             $creditedMinutes = $openingBalance + $approvedMinutes;
             $closingBalance = $creditedMinutes - $requiredMinutes;
             $openMinutes = max(0, -$closingBalance);
@@ -175,23 +193,19 @@ class PflichtstundenFamilyService
                 }
             }
 
-            if ($persistAccounts) {
-                PflichtstundenFamilyAccount::updateOrCreate(
-                    [
-                        'family_key' => $group['family_key'],
-                        'period_year' => $periodYear,
-                    ],
-                    [
-                        'opening_balance_minutes' => $openingBalance,
-                        'earned_minutes' => $approvedMinutes,
-                        'required_minutes' => $requiredMinutes,
-                        'closing_balance_minutes' => $closingBalance,
-                        'carried_to_next_minutes' => $carryoverMinutes,
-                        'carryover_applied' => $this->settings->konto_uebertrag_aktiv,
-                        'last_calculated_at' => now(),
-                    ]
-                );
-            }
+            $accountsToUpsert[] = [
+                'family_key' => $group['family_key'],
+                'period_year' => $periodYear,
+                'opening_balance_minutes' => $openingBalance,
+                'earned_minutes' => $approvedMinutes,
+                'required_minutes' => $requiredMinutes,
+                'closing_balance_minutes' => $closingBalance,
+                'carried_to_next_minutes' => $carryoverMinutes,
+                'carryover_applied' => $this->settings->konto_uebertrag_aktiv,
+                'last_calculated_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
 
             return [
                 'family_key' => $group['family_key'],
@@ -214,8 +228,28 @@ class PflichtstundenFamilyService
                 'beitrag' => $beitrag,
                 'percent' => $percent,
                 'expected_percent' => $expectedPercent,
+                'entries' => $familyEntries,
             ];
         });
+
+        if ($persistAccounts && $accountsToUpsert !== []) {
+            // Single bulk upsert instead of one updateOrCreate() call (select + write)
+            // per family, which previously caused 2×N queries on every dashboard load.
+            PflichtstundenFamilyAccount::query()->upsert(
+                $accountsToUpsert,
+                ['family_key', 'period_year'],
+                [
+                    'opening_balance_minutes',
+                    'earned_minutes',
+                    'required_minutes',
+                    'closing_balance_minutes',
+                    'carried_to_next_minutes',
+                    'carryover_applied',
+                    'last_calculated_at',
+                    'updated_at',
+                ]
+            );
+        }
 
         return $summaries->values();
     }
@@ -292,12 +326,9 @@ class PflichtstundenFamilyService
             : (float) $this->settings->pflichtstunden_betrag;
     }
 
-    private function resolveOpeningBalanceMinutes(string $familyKey, int $periodYear): int
+    private function resolveOpeningBalanceMinutes(string $familyKey, Collection $currentAccounts, Collection $previousAccounts): int
     {
-        $existing = PflichtstundenFamilyAccount::query()
-            ->where('family_key', $familyKey)
-            ->where('period_year', $periodYear)
-            ->first();
+        $existing = $currentAccounts->get($familyKey);
 
         if ($existing) {
             return (int) $existing->opening_balance_minutes;
@@ -307,10 +338,7 @@ class PflichtstundenFamilyService
             return 0;
         }
 
-        $previous = PflichtstundenFamilyAccount::query()
-            ->where('family_key', $familyKey)
-            ->where('period_year', $periodYear - 1)
-            ->first();
+        $previous = $previousAccounts->get($familyKey);
 
         if (! $previous) {
             return 0;

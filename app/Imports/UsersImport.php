@@ -214,9 +214,19 @@ class UsersImport implements ToCollection, WithHeadingRow
                 : null;
 
             $lerngruppeValue = $this->cellValue($row, 'lerngruppe');
-            $Lerngruppe = $this->hasValue($lerngruppeValue)
-                ? $this->findOrCreateGroup(substr($lerngruppeValue, 1))
-                : null;
+            if ($this->hasValue($lerngruppeValue)) {
+                $normalizedLerngruppe = preg_replace('/^[A-Za-z]\s*/u', '', $lerngruppeValue);
+                $normalizedLerngruppe = trim($normalizedLerngruppe ?? $lerngruppeValue);
+
+                // Nur bekannte Präfixe entfernen; ansonsten den Originalwert unverändert übernehmen.
+                if ($normalizedLerngruppe === '') {
+                    $normalizedLerngruppe = $lerngruppeValue;
+                }
+
+                $Lerngruppe = $this->findOrCreateGroup($normalizedLerngruppe);
+            } else {
+                $Lerngruppe = null;
+            }
 
             // Fehlt eine der beiden Angaben, wird sie durch die jeweils andere ersetzt, damit
             // ein Kind (siehe unten) und die Sorgeberechtigten immer korrekt einer Klasse
@@ -355,4 +365,3 @@ class UsersImport implements ToCollection, WithHeadingRow
         }
     }
 }
-

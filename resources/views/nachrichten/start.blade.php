@@ -104,7 +104,7 @@
                                 Filter
                             </h6>
                             <div class="space-y-2">
-                                @foreach(auth()->user()->groups as $group)
+                                @foreach(auth()->user()->groups->where('active', true) as $group)
                                     <label class="flex items-center gap-2 p-1.5 rounded-lg transition-colors cursor-pointer group"
                                            onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-card-bg')"
                                            onmouseout="this.style.backgroundColor=''">

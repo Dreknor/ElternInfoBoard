@@ -56,7 +56,7 @@ class SettingsController extends Controller implements HasMiddleware
         $keycloakSettings = new KeycloakSetting;
         $reinigungSettings = new ReinigungSetting;
 
-        $groups = Group::all();
+        $groups = Group::active()->get();
         $roles = Role::all();
 
         $reinigungBereiche = Group::query()
@@ -232,6 +232,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'app_name' => 'required|max:255',
                     'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                     'favicon' => 'sometimes|nullable|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
+                    'login_tracking_mode' => 'required|in:user,always,never',
                 ]);
 
                 $settings = new GeneralSetting;
@@ -264,13 +265,13 @@ class SettingsController extends Controller implements HasMiddleware
                     Storage::disk('public')->put('img/'.$name, file_get_contents($file));
                     $settings->favicon = $name;
                 }
-                $settings->save();
+                    $settings->login_tracking_mode = $validated['login_tracking_mode'];
+                    $settings->save();
 
-                break;
+                    break;
 
             case 'email':
-
-                $validated = $request->validate([
+                    $validated = $request->validate([
                     'mail_server' => 'required|max:255',
                     'mail_port' => 'required|max:255',
                     'mail_username' => 'required|max:255',

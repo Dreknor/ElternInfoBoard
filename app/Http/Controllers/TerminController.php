@@ -72,7 +72,7 @@ class TerminController extends Controller implements HasMiddleware
     {
 
         $groups = Cache::remember('groups', now()->addDay(), function () {
-            return Group::all();
+            return Group::active()->get();
         });
 
         return view('termine.edit', [
@@ -159,7 +159,7 @@ class TerminController extends Controller implements HasMiddleware
         }
 
         return view('termine.create', [
-            'gruppen' => Group::all(),
+            'gruppen' => Group::active()->get(),
         ]);
     }
 
@@ -203,7 +203,7 @@ class TerminController extends Controller implements HasMiddleware
         ]);
 
         return view('termine.createFromPost', [
-            'gruppen' => Group::all(),
+            'gruppen' => Group::active()->get(),
             'termin' => $termin,
             'post' => $post,
         ]);

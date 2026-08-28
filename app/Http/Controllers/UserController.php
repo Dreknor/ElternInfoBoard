@@ -18,6 +18,7 @@ use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Services\UserService;
 use App\Settings\EmailSetting;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,6 +83,7 @@ class UserController extends Controller implements HasMiddleware
             'users' => $query->orderBy('name')->paginate(50)->withQueryString(),
             'roles' => Role::all(),
             'groups' => Group::withoutGlobalScope(\App\Scopes\GetGroupsScope::class)->orderBy('name')->get(),
+            'generalSettings' => app(GeneralSetting::class),
         ]);
     }
 
@@ -105,7 +107,7 @@ class UserController extends Controller implements HasMiddleware
 
         return view('user.create', [
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
-                return Group::all();
+                return Group::active()->get();
             }),
             'roles' => $roles,
         ]);
@@ -150,7 +152,7 @@ class UserController extends Controller implements HasMiddleware
         return view('user.show', [
             'user' => $user->load('groups'),
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
-                return Group::all();
+                return Group::active()->get();
             }),
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();

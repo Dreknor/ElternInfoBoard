@@ -3,8 +3,18 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3 space-y-4">
+        @can('edit groups')
+            <div class="flex justify-end">
+                <a href="{{ url('groups') }}?inactive={{ $showInactive ? 0 : 1 }}"
+                   class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors"
+                   style="border-color: var(--color-card-border); color: var(--color-text-secondary);">
+                    <i class="fas {{ $showInactive ? 'fa-eye-slash' : 'fa-eye' }}"></i>
+                    {{ $showInactive ? 'Inaktive Gruppen ausblenden' : 'Inaktive Gruppen anzeigen' }}
+                </a>
+            </div>
+        @endcan
         @foreach($groups as $group)
-            <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
+            <div class="rounded-lg shadow-lg overflow-hidden {{ !$group->active ? 'opacity-60' : '' }}" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                 <!-- Card Header -->
                 <div class="px-4 py-3 border-b"
                      style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
@@ -16,6 +26,11 @@
                                 <i class="fas fa-lock"></i>
                             @endif
                             {{$group->name}}
+                            @if(!$group->active)
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background: rgba(0,0,0,0.25); color: var(--color-widget-header-text);">
+                                    Inaktiv
+                                </span>
+                            @endif
                         </h5>
                         @canany(['edit groups', 'delete groups'])
                             <div x-data="{ open: false }" class="relative">
@@ -44,6 +59,16 @@
                                         </a>
                                     @endcan
                                     @can('edit groups')
+                                        @if(!$group->owner_id)
+                                            <form action="{{ route('groups.toggle-active', $group) }}" method="POST">
+                                                @csrf
+                                                <button type="submit"
+                                                        class="flex items-center gap-3 px-4 py-2 text-sm w-full text-left {{ $group->active ? 'text-orange-700 hover:bg-orange-50' : 'text-green-700 hover:bg-green-50' }} transition-colors">
+                                                    <i class="fas {{ $group->active ? 'fa-toggle-off text-orange-500' : 'fa-toggle-on text-green-600' }}"></i>
+                                                    <span>{{ $group->active ? 'Gruppe deaktivieren' : 'Gruppe aktivieren' }}</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                         @php
                                             $messengerActive = \App\Model\Module::firstWhere('setting', 'Eltern-Nachrichten')?->options['active'] ?? false;
                                         @endphp

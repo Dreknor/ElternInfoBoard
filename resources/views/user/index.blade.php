@@ -156,10 +156,12 @@
                                         {{ $user->sorgeberechtigter2?->name }}
                                     </td>
                                     <td class="hidden lg:table-cell">
+                                        @if(($generalSettings->login_tracking_mode ?? 'user') !== 'never')
                                         <span class="badge badge-success" title="Zuletzt online">
                                             <i class="fas fa-circle"></i>
                                             {{ $user->last_online_at?->diffForHumans() ?? 'nie' }}
                                         </span>
+                                        @endif
                                     </td>
                                     <td class="hidden lg:table-cell">
                                         <a class="btn btn-sm @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-outline-danger @else btn-outline-success @endif"
@@ -264,10 +266,12 @@
                             </a>
 
                             {{-- Zuletzt online --}}
+                            @if(($generalSettings->login_tracking_mode ?? 'user') !== 'never')
                             <span class="badge badge-success flex-1" title="Zuletzt online">
                                 <i class="fas fa-circle"></i>
                                 {{ $mobileUser->last_online_at?->diffForHumans() ?? 'nie' }}
                             </span>
+                            @endif
 
                             {{-- Aktionen --}}
 

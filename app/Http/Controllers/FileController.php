@@ -78,16 +78,16 @@ class FileController extends Controller implements HasMiddleware
 
         if ($user->can('upload files')) {
             if (! $user->can('view protected')) {
-                $gruppen = Group::where('protected', 0)->get();
+                $gruppen = Group::active()->where('protected', 0)->get();
             } else {
-                $gruppen = Group::all();
+                $gruppen = Group::active()->get();
             }
 
             return view('files.indexVerwaltung', [
                 'gruppen' => $gruppen->load('media'),
             ]);
         } else {
-            $gruppen = $user->groups()->with('media')->get();
+            $gruppen = $user->groups()->where('active', true)->with('media')->get();
             $media = new Collection;
 
             foreach ($gruppen as $gruppe) {
@@ -112,7 +112,7 @@ class FileController extends Controller implements HasMiddleware
     public function create()
     {
         return view('files.create', [
-            'groups' => Group::all(),
+            'groups' => Group::active()->get(),
         ]);
     }
 
