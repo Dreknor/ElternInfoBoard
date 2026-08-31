@@ -286,6 +286,13 @@ class SchickzeitenController extends Controller implements HasMiddleware
      */
     public function storeVerwaltung($parent, SchickzeitRequest $request)
     {
+        if ($request->type == 'ab' && ! $this->schickenzeitenSetting->schicken_erlaube_zeitraum) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Die Angabe eines Zeitraums ("von ... bis") ist derzeit nicht erlaubt.',
+            ]);
+        }
+
         $weekdays = [
             'Montag' => '1',
             'Dienstag' => '2',
@@ -472,6 +479,13 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $settings_ab = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_ab);
         $settings_bis = Carbon::createFromFormat('H:i', $this->schickenzeitenSetting->schicken_bis);
+
+        if ($request->type == 'ab' && ! $this->schickenzeitenSetting->schicken_erlaube_zeitraum) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Die Angabe eines Zeitraums ("von ... bis") ist derzeit nicht erlaubt.',
+            ]);
+        }
 
         if ($request->type == 'genau') {
 
@@ -755,6 +769,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
             'day' => $weekdays[$day],
             'day_number' => $day,
             'schickzeiten' => $schickzeiten,
+            'vorgaben' => new SchickzeitenSetting,
 
         ]);
     }
@@ -998,6 +1013,13 @@ class SchickzeitenController extends Controller implements HasMiddleware
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
+            ]);
+        }
+
+        if ($request->type == 'ab' && ! $this->schickenzeitenSetting->schicken_erlaube_zeitraum) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Die Angabe eines Zeitraums ("von ... bis") ist derzeit nicht erlaubt.',
             ]);
         }
 

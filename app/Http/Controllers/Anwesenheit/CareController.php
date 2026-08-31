@@ -14,6 +14,7 @@ use App\Model\User;
 use App\Services\HolidayService;
 use App\Notifications\AttendanceQueryNotification;
 use App\Settings\CareSetting;
+use App\Settings\SchickzeitenSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -126,6 +127,7 @@ class CareController extends Controller implements HasMiddleware
             'careSettings' => $careSettings,
             'isFerientag' => $isFerientag,
             'sorg2Users' => $sorg2Users,
+            'schickzeitenSettings' => new SchickzeitenSetting,
         ]);
     }
 
