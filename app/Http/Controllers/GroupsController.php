@@ -42,6 +42,10 @@ class GroupsController extends Controller
             ]);
         }
 
+        // Natürliche Sortierung nach Name, damit z.B. "Klassenstufe 10" nach
+        // "Klassenstufe 9" statt nach "Klassenstufe 1" einsortiert wird.
+        $groups = $groups->sortBy('name', SORT_NATURAL)->values();
+
         return view('groups.index')->with([
             'groups' => $groups,
             'showInactive' => $showInactive,
