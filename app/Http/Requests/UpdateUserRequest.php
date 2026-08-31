@@ -29,7 +29,6 @@ class UpdateUserRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                Rule::unique(User::class)->ignore($this->user->id)->withoutTrashed(),
             ],
             'email' => [
                 'required',
