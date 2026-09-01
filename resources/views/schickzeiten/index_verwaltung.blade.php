@@ -2,7 +2,7 @@
 @section('title') - Hort-Verwaltung @endsection
 
 @section('content')
-    <div class="container-fluid px-4 py-6" x-data="{ activeTab: 'anwesenheitsabfragen' }">
+    <div class="container-fluid px-4 py-6" x-data="{ activeTab: '{{ request('tab', 'anwesenheitsabfragen') }}' }">
         <!-- Header -->
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-2">Hort-Verwaltung</h1>
@@ -27,6 +27,17 @@
                         Schickzeiten
                     </button>
                     @endcan
+                    <button @click="activeTab = 'late_pickups'"
+                            :class="activeTab === 'late_pickups' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Verspätete Abholungen
+                        @if(($latePickupsByDate->flatten()->where('status', 'offen')->count() ?? 0) > 0)
+                            <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-600 text-white">
+                                {{ $latePickupsByDate->flatten()->where('status', 'offen')->count() }}
+                            </span>
+                        @endif
+                    </button>
                 </nav>
             </div>
 
@@ -726,6 +737,171 @@
                     </div>
                 </div>
                 @endcan
+
+                <!-- Verspätete Abholungen Tab -->
+                <div x-show="activeTab === 'late_pickups'"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform scale-95"
+                     x-transition:enter-end="opacity-100 transform scale-100"
+                     style="display: none;">
+
+                    <div class="bg-white rounded-lg shadow border border-gray-200 mb-6">
+                        <div class="bg-gradient-to-r from-red-600 to-red-700 px-4 py-3">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Verspätete Abholungen
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-sm text-gray-600 mb-4">
+                                Übersicht über Kinder, die nach der hinterlegten Schickzeit abgeholt wurden. Verspätete Abholungen müssen
+                                bestätigt oder verworfen werden (z. B. wenn das Austragen im System vergessen wurde, das Kind aber
+                                rechtzeitig abgeholt wurde).
+                            </p>
+
+                            {{-- Filter --}}
+                            <form method="get" action="{{ url('verwaltung/schickzeiten') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 items-end">
+                                <input type="hidden" name="tab" value="late_pickups">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-week text-red-600"></i> Woche
+                                    </label>
+                                    <input type="week" name="late_week"
+                                           value="{{ $lateWeekStart->format('o-\WW') }}"
+                                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Gruppe</label>
+                                    <select name="late_group_id" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 outline-none">
+                                        <option value="">Alle Gruppen</option>
+                                        @foreach($careGroups as $group)
+                                            <option value="{{ $group->id }}" @selected((string) $lateGroupId === (string) $group->id)>{{ $group->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Klasse</label>
+                                    <select name="late_class_id" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 outline-none">
+                                        <option value="">Alle Klassen</option>
+                                        @foreach($careClasses as $class)
+                                            <option value="{{ $class->id }}" @selected((string) $lateClassId === (string) $class->id)>{{ $class->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kind (Einzelansicht)</label>
+                                    <select name="late_child_id" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200 outline-none">
+                                        <option value="">Wochenansicht (alle Kinder)</option>
+                                        @foreach($latePickupChildren as $lpChild)
+                                            <option value="{{ $lpChild->id }}" @selected((string) $lateChildId === (string) $lpChild->id)>{{ $lpChild->last_name }}, {{ $lpChild->first_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit"
+                                            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-filter"></i> Filtern
+                                    </button>
+                                </div>
+                            </form>
+
+                            @if(!$selectedLateChild)
+                                {{-- Wochennavigation --}}
+                                <div class="flex items-center justify-between mb-4">
+                                    <a href="{{ request()->fullUrlWithQuery(['late_week' => $lateWeekStart->copy()->subWeek()->format('o-\WW'), 'tab' => 'late_pickups']) }}"
+                                       class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-chevron-left"></i> Vorherige Woche
+                                    </a>
+                                    <span class="font-medium text-gray-700">
+                                        {{ $lateWeekStart->format('d.m.Y') }} – {{ $lateWeekEnd->format('d.m.Y') }}
+                                    </span>
+                                    <a href="{{ request()->fullUrlWithQuery(['late_week' => $lateWeekStart->copy()->addWeek()->format('o-\WW'), 'tab' => 'late_pickups']) }}"
+                                       class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
+                                        Nächste Woche <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+
+                                @if($latePickupsByDate->isEmpty())
+                                    <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 text-sm">
+                                        <i class="fas fa-check-circle"></i> Keine verspäteten Abholungen in dieser Woche.
+                                    </div>
+                                @else
+                                    <div class="space-y-6">
+                                        @foreach($latePickupsByDate as $date => $entries)
+                                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                                <div class="bg-gray-50 px-4 py-2 font-semibold text-gray-700">
+                                                    {{ \Carbon\Carbon::parse($date)->translatedFormat('l, d.m.Y') }}
+                                                </div>
+                                                <div class="overflow-x-auto">
+                                                    <table class="min-w-full divide-y divide-gray-200">
+                                                        <thead class="bg-white">
+                                                        <tr>
+                                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Kind</th>
+                                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Erwartet bis</th>
+                                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Abgeholt um</th>
+                                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Verspätung</th>
+                                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+                                                            @if($canManageLatePickups)
+                                                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase">Aktionen</th>
+                                                            @endif
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody class="bg-white divide-y divide-gray-200">
+                                                        @foreach($entries as $entry)
+                                                            @include('schickzeiten.partials.late_pickup_row', ['entry' => $entry, 'canManageLatePickups' => $canManageLatePickups])
+                                                        @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            @else
+                                {{-- Einzelkind-Ansicht --}}
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-lg font-semibold text-gray-800">
+                                        Verspätete Abholungen: {{ $selectedLateChild->last_name }}, {{ $selectedLateChild->first_name }}
+                                    </h4>
+                                    <a href="{{ request()->fullUrlWithQuery(['late_child_id' => '', 'tab' => 'late_pickups']) }}"
+                                       class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-arrow-left"></i> Zur Wochenansicht
+                                    </a>
+                                </div>
+
+                                @if($childLatePickups->isEmpty())
+                                    <div class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 text-sm">
+                                        <i class="fas fa-check-circle"></i> Keine verspäteten Abholungen für dieses Kind (letzte 90 Tage).
+                                    </div>
+                                @else
+                                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Datum</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Erwartet bis</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Abgeholt um</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Verspätung</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+                                                    @if($canManageLatePickups)
+                                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase">Aktionen</th>
+                                                    @endif
+                                                </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                @foreach($childLatePickups as $entry)
+                                                    @include('schickzeiten.partials.late_pickup_row', ['entry' => $entry, 'canManageLatePickups' => $canManageLatePickups, 'showDate' => true])
+                                                @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -12,6 +12,7 @@ use App\Model\Notification;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use App\Notifications\AttendanceQueryNotification;
+use App\Services\LatePickupService;
 use App\Settings\CareSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
@@ -140,7 +141,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
     /**
      * @return Application|Factory|View|RedirectResponse
      */
-    public function indexVerwaltung()
+    public function indexVerwaltung(Request $request, LatePickupService $latePickupService)
     {
 
         if (\auth()->user()->can('edit schickzeiten') == false) {
@@ -234,12 +235,48 @@ class SchickzeitenController extends Controller implements HasMiddleware
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        // ------------------------------------------------------------------
+        // Verspätete Abholungen: Wochenansicht + optionale Einzelkind-Ansicht
+        // ------------------------------------------------------------------
+        $lateWeekParam = $request->query('late_week');
+        $lateWeekStart = $lateWeekParam
+            ? Carbon::parse($lateWeekParam)->startOfWeek()
+            : Carbon::now()->startOfWeek();
+        $lateWeekEnd = $lateWeekStart->copy()->endOfWeek();
+
+        $lateGroupId = $request->query('late_group_id') ?: null;
+        $lateClassId = $request->query('late_class_id') ?: null;
+        $lateChildId = $request->query('late_child_id') ?: null;
+
+        $latePickupsByDate = $latePickupService->weeklyOverview($lateWeekStart, $lateWeekEnd, $lateGroupId, $lateClassId);
+
+        $selectedLateChild = $lateChildId ? Child::query()->find($lateChildId) : null;
+        $childLatePickups = $selectedLateChild ? $latePickupService->forChild($selectedLateChild) : collect();
+
+        // Kinder, die (im gewählten Filter) mindestens einmal zu spät abgeholt wurden, für die Auswahl
+        $latePickupChildren = Child::query()
+            ->whereHas('latePickups')
+            ->when($lateGroupId, fn ($q) => $q->where('group_id', $lateGroupId))
+            ->when($lateClassId, fn ($q) => $q->where('class_id', $lateClassId))
+            ->orderBy('last_name')
+            ->get(['id', 'first_name', 'last_name']);
+
         return view('schickzeiten.index_verwaltung', [
             'children'    => $children,
             'weekdays'    => $weekdays,
             'abfragen'    => $abfragen_daten,
             'careGroups'  => $careGroups,
             'careClasses' => $careClasses,
+            'latePickupsByDate'   => $latePickupsByDate,
+            'lateWeekStart'       => $lateWeekStart,
+            'lateWeekEnd'         => $lateWeekEnd,
+            'lateGroupId'         => $lateGroupId,
+            'lateClassId'         => $lateClassId,
+            'lateChildId'         => $lateChildId,
+            'selectedLateChild'   => $selectedLateChild,
+            'childLatePickups'    => $childLatePickups,
+            'latePickupChildren'  => $latePickupChildren,
+            'canManageLatePickups' => \auth()->user()->can('manage late pickups'),
         ]);
     }
 

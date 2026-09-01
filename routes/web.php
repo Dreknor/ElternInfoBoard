@@ -202,6 +202,10 @@ Route::middleware('auth')->group(function () {
         // Schickzeiten Verwaltung
         Route::get('verwaltung/schickzeiten', [SchickzeitenController::class, 'indexVerwaltung'])->middleware('can:edit schickzeiten');
 
+        // Verspätete Abholungen
+        Route::post('verwaltung/late-pickups/{latePickup}/confirm', [\App\Http\Controllers\LatePickupController::class, 'confirm'])->name('latePickups.confirm');
+        Route::post('verwaltung/late-pickups/{latePickup}/reject', [\App\Http\Controllers\LatePickupController::class, 'reject'])->name('latePickups.reject');
+
         Route::delete('verwaltung/schickzeiten/{parent}/trash/{child}', [SchickzeitenController::class, 'deleteChildVerwaltung'])->middleware('can:edit schickzeiten');
         Route::delete('verwaltung/schickzeiten/{day}/{child}/{parent}', [SchickzeitenController::class, 'destroyVerwaltung'])->middleware('can:edit schickzeiten');
         Route::post('verwaltung/schickzeiten/{parent}', [SchickzeitenController::class, 'storeVerwaltung'])->middleware('can:edit schickzeiten');
