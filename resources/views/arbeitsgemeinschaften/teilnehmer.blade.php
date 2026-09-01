@@ -115,7 +115,7 @@
                                                 </td>
                                                 <td class="px-4 py-3 text-sm text-gray-700">
                                                     {{ $participant->group->name }}
-                                                    @if($participant->class->id != $participant->group->id)
+                                                    @if($participant->class && $participant->class->id != $participant->group->id)
                                                         , {{ $participant->class->name }}
                                                     @endif
                                                 </td>
