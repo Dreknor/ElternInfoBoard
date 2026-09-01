@@ -42,6 +42,23 @@
                         </div>
                     @endif
 
+                    @if (session('duplicateNameUsers') && session('duplicateNameUsers')->isNotEmpty())
+                        <div class="alert alert-warning">
+                            <p class="mb-2">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Es existiert bereits ein Benutzer mit dem Namen „{{ old('name') }}“
+                                ({{ session('duplicateNameUsers')->pluck('email')->implode(', ') }}).
+                                Da E-Mail-Adressen das Alleinstellungsmerkmal sind, kann trotzdem ein
+                                weiterer Benutzer mit diesem Namen angelegt werden.
+                            </p>
+                            <label class="flex items-center gap-2 cursor-pointer mb-0">
+                                <input type="checkbox" name="confirm_duplicate_name" value="1"
+                                       class="w-4 h-4 cursor-pointer" style="accent-color: var(--color-primary);">
+                                <span class="text-sm select-none">Trotzdem anlegen</span>
+                            </label>
+                        </div>
+                    @endif
+
                     <div class="form-group mb-0">
                         <label class="label-control">Name <span class="text-red-500">*</span></label>
                         <input type="text" class="form-control" placeholder="Vor- und Nachname"

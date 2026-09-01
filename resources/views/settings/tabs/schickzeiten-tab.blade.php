@@ -59,6 +59,24 @@
             </div>
         </div>
 
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="schicken_erlaube_zeitraum"
+                           name="schicken_erlaube_zeitraum" value="1"
+                           @checked($schickzeitenSettings->schicken_erlaube_zeitraum)>
+                    <label class="custom-control-label" for="schicken_erlaube_zeitraum">
+                        Zeitraum "von ... bis" erlauben
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, können Eltern (und die Verwaltung) bei den Schickzeiten neben "genau um" auch einen Zeitraum "von ... bis" angeben. Ist die Option deaktiviert, wird diese Auswahlmöglichkeit bei der Erstellung von Schickzeiten ausgeblendet.
+                </div>
+            </div>
+        </div>
+
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">
                 Einstellungen speichern

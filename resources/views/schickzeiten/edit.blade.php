@@ -46,7 +46,9 @@
                         <select name="type" id="type" x-model="type"
                                 class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
                             <option value="genau">Genau um ... Uhr</option>
-                            <option value="ab">Ab ... bis ... Uhr</option>
+                            @if($vorgaben->schicken_erlaube_zeitraum)
+                                <option value="ab">Ab ... bis ... Uhr</option>
+                            @endif
                         </select>
                     </div>
 

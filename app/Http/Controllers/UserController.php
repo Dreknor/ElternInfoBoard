@@ -120,7 +120,19 @@ class UserController extends Controller implements HasMiddleware
      */
     public function store(CreateUserRequest $request)
     {
-        $result = $this->userService->createUser($request->safe()->only(['name', 'email']));
+        $data = $request->safe()->only(['name', 'email']);
+
+        if (! $request->boolean('confirm_duplicate_name')) {
+            $duplicates = $this->userService->findUsersWithSameName($data['name']);
+
+            if ($duplicates->isNotEmpty()) {
+                return redirect()->back()->withInput()->with([
+                    'duplicateNameUsers' => $duplicates,
+                ]);
+            }
+        }
+
+        $result = $this->userService->createUser($data);
         $user = $result['user'];
 
         $this->userService->syncGroups($user, $request->input('gruppen'));
@@ -172,6 +184,18 @@ class UserController extends Controller implements HasMiddleware
      */
     public function update(UpdateUserRequest $request, User $user)
     {
+        $newName = $request->input('name');
+
+        if ($newName !== $user->name && ! $request->boolean('confirm_duplicate_name')) {
+            $duplicates = $this->userService->findUsersWithSameName($newName, $user->id);
+
+            if ($duplicates->isNotEmpty()) {
+                return redirect()->back()->withInput()->with([
+                    'duplicateNameUsers' => $duplicates,
+                ]);
+            }
+        }
+
         $this->userService->updateUser($user, $request->validated());
         $this->userService->syncGroups($user, $request->input('gruppen'));
 
