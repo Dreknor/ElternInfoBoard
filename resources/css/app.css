@@ -82,9 +82,14 @@
   --border-radius-base: 0.5rem;
 
   /* Anwesenheit: Detailansicht Kinderkarten (dezent, nicht knallig) */
-  --color-attendance-present-bg: #eaf7ea;
+  --color-attendance-present-bg: #bcffbc;
   --color-attendance-present-bg-hover: #dcf0dc;
-  --color-attendance-absent-bg: #e9ecef;
+    --color-attendance-present-border: #1ef850;
+    --color-attendance-present-border-width: 1px;
+    --color-attendance-present-text: #33383c;
+
+
+    --color-attendance-absent-bg: #e9ecef;
   --color-attendance-absent-bg-hover: #dee2e6;
   --color-attendance-absent-text: #6c757d;
 

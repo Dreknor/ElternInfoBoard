@@ -66,6 +66,9 @@ body {
 .detail-checkedIn,
 .list-group-item.detail-checkedIn {
     background-color: var(--color-attendance-present-bg, #eaf7ea);
+    border-color: var(--color-attendance-present-border, #1ef850);
+    border-width: var(--color-attendance-present-border-width, 2px);
+    color: var(--color-attendance-present-text, #155724);
 }
 
 /* Hover darf die Farbe von detail-checkedIn nicht überschreiben */
