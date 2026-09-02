@@ -264,7 +264,7 @@ class ListenController extends Controller implements HasMiddleware
         } else {
             $listen = $user->listen()
                 ->whereDate('ende', '>=', now())
-                ->where('active', 1)
+                ->where('listen.active', 1)
                 ->get([
                     'id',
                     'listenname',

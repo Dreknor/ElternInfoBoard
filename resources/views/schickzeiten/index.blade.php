@@ -275,7 +275,9 @@
                                             onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')"
                                             onblur="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--color-input-border')">
                                         <option value="genau">Genau um ... Uhr</option>
-                                        <option value="ab">Ab ... bis ... Uhr</option>
+                                        @if($vorgaben->schicken_erlaube_zeitraum)
+                                            <option value="ab">Ab ... bis ... Uhr</option>
+                                        @endif
                                     </select>
                                 </div>
                                 <div class="mb-4" x-show="showTypeForm === 'genau'">

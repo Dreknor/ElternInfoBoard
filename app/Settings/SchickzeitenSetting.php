@@ -14,6 +14,8 @@ class SchickzeitenSetting extends Settings
 
     public int $schicken_intervall;
 
+    public bool $schicken_erlaube_zeitraum = true;
+
     public static function group(): string
     {
         return 'schicken';

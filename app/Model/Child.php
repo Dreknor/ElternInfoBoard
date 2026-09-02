@@ -162,6 +162,11 @@ class Child extends Model implements HasMedia
         return $this->hasMany(ChildCheckIn::class, 'child_id');
     }
 
+    public function latePickups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Model\LatePickup::class, 'child_id');
+    }
+
     public function schickzeiten(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Schickzeiten::class, 'child_id')

@@ -97,6 +97,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $pflichtstunden = Pflichtstunde::query()
             ->where('approved', false)
             ->where('rejected', false)
+            ->where('end', '<=', now())
             ->with('user')
             ->orderBy('end', 'desc')
             ->get();

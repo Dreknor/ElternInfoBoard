@@ -12,8 +12,10 @@ use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
 use App\Services\HolidayService;
+use App\Services\LatePickupService;
 use App\Notifications\AttendanceQueryNotification;
 use App\Settings\CareSetting;
+use App\Settings\SchickzeitenSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -126,6 +128,7 @@ class CareController extends Controller implements HasMiddleware
             'careSettings' => $careSettings,
             'isFerientag' => $isFerientag,
             'sorg2Users' => $sorg2Users,
+            'schickzeitenSettings' => new SchickzeitenSetting,
         ]);
     }
 
@@ -135,15 +138,23 @@ class CareController extends Controller implements HasMiddleware
      * @param Child \$child Child model whose attendance is updated.
      * @return \Illuminate\Http\JsonResponse JSON response confirming success.
      */
-    public function abmelden(Child $child)
+    public function abmelden(Child $child, LatePickupService $latePickupService)
     {
-        $child->checkIns()
+        $checkIn = $child->checkIns()
             ->where('checked_in', true)
             ->where('checked_out', false)
             ->whereDate('date', now()->toDateString())
-            ->update([
+            ->first();
+
+        $pickedUpAt = now();
+
+        if ($checkIn) {
+            $checkIn->update([
                 'checked_out' => true,
             ]);
+
+            $latePickupService->detectAndRecord($child, $checkIn, $pickedUpAt);
+        }
 
         $careSettings = new CareSetting;
 

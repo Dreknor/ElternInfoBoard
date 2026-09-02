@@ -60,6 +60,23 @@
             </div>
         @endif
 
+        @if (session('duplicateNameUsers') && session('duplicateNameUsers')->isNotEmpty())
+            <div class="alert alert-warning mb-4">
+                <p class="mb-2">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    Es existiert bereits ein Benutzer mit dem Namen „{{ old('name', $user->name) }}“
+                    ({{ session('duplicateNameUsers')->pluck('email')->implode(', ') }}).
+                    Da E-Mail-Adressen das Alleinstellungsmerkmal sind, kann der Name trotzdem
+                    übernommen werden.
+                </p>
+                <label class="flex items-center gap-2 cursor-pointer mb-0">
+                    <input type="checkbox" name="confirm_duplicate_name" value="1" form="user-edit-form"
+                           class="w-4 h-4 cursor-pointer" style="accent-color: var(--color-primary);">
+                    <span class="text-sm select-none">Trotzdem übernehmen</span>
+                </label>
+            </div>
+        @endif
+
         {{-- ══ Haupt-Layout: auf Mobile gestapelt, auf Desktop nebeneinander ══ --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
@@ -78,7 +95,7 @@
                         <div class="form-group mb-0">
                             <label class="label-control">Name</label>
                             <input type="text" class="form-control" placeholder="Name"
-                                   name="name" value="{{ $user->name }}" required>
+                                   name="name" value="{{ old('name', $user->name) }}" required>
                         </div>
 
                         {{-- E-Mail --}}

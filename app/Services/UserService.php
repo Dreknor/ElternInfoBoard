@@ -64,6 +64,20 @@ class UserService
     }
 
     /**
+     * Sucht Benutzer mit identischem Namen (case-insensitive), da der Name
+     * kein Alleinstellungsmerkmal ist – nur die E-Mail muss eindeutig sein.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function findUsersWithSameName(string $name, ?int $excludeUserId = null): \Illuminate\Support\Collection
+    {
+        return User::query()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])
+            ->when($excludeUserId, fn ($query) => $query->where('id', '!=', $excludeUserId))
+            ->get();
+    }
+
+    /**
      * Benutzer-Stammdaten aktualisieren.
      * Setzt deactivated_at automatisch bei Deaktivierung/Reaktivierung.
      */

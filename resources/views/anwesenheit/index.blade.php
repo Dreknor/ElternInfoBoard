@@ -142,16 +142,18 @@
                                         <div class="form-group">
                                             <label for="type">Typ</label>
                                             <select class="form-control" id="type" name="type" required>
-                                                <option value="ab">von ... bis ... Uhr</option>
+                                                @if($schickzeitenSettings->schicken_erlaube_zeitraum)
+                                                    <option value="ab">von ... bis ... Uhr</option>
+                                                @endif
                                                 <option value="genau">genau</option>
                                             </select>
                                         </div>
-                                        <div class="form-group d-none" id="genau_row">
+                                        <div class="form-group @if($schickzeitenSettings->schicken_erlaube_zeitraum) d-none @endif" id="genau_row">
                                             <label for="schickzeitTime">Zeit</label>
                                             <input type="time" class="form-control w-100" id="schickzeitTime" name="time">
                                         </div>
 
-                                        <div class="form-group" id="spaet_row">
+                                        <div class="form-group @unless($schickzeitenSettings->schicken_erlaube_zeitraum) d-none @endunless" id="spaet_row">
                                             <div class="row">
                                                 <div class="col-6">
                                                     <label for="ab">ab ... Uhr</label>

@@ -60,7 +60,7 @@
                                             onfocus="this.style.borderColor='var(--color-widget-success-from)'"
                                             onblur="this.style.borderColor='#d1d5db'"
                                             required>
-                                        <option value="">Bitte wählen...</option>
+                                        <option value=""></option>
                                         @foreach($availableChildren->sortBy('last_name') as $child)
                                             <option value="{{ $child->id }}">
                                                 {{ $child->last_name }}, {{ $child->first_name }}
@@ -115,7 +115,7 @@
                                                 </td>
                                                 <td class="px-4 py-3 text-sm text-gray-700">
                                                     {{ $participant->group->name }}
-                                                    @if($participant->class->id != $participant->group->id)
+                                                    @if($participant->class && $participant->class->id != $participant->group->id)
                                                         , {{ $participant->class->name }}
                                                     @endif
                                                 </td>
@@ -148,3 +148,16 @@
         </div>
     </div>
 @endsection
+@push('js')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#child_id').select2({
+                placeholder: 'Bitte wählen...',
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+@endpush

@@ -194,6 +194,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'schicken_bis' => 'required|date_format:H:i|after:schicken_ab',
                     'schicken_text' => 'required|string',
                     'schicken_intervall' => 'required|numeric|min:1|max:60',
+                    'schicken_erlaube_zeitraum' => 'sometimes|boolean',
                 ]);
 
                 $schickzeitenSetting = new SchickzeitenSetting;
@@ -201,6 +202,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $schickzeitenSetting->schicken_bis = $validated['schicken_bis'];
                 $schickzeitenSetting->schicken_text = $validated['schicken_text'];
                 $schickzeitenSetting->schicken_intervall = $validated['schicken_intervall'];
+                $schickzeitenSetting->schicken_erlaube_zeitraum = $request->boolean('schicken_erlaube_zeitraum');
                 $schickzeitenSetting->save();
                 break;
 
