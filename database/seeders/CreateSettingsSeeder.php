@@ -62,7 +62,7 @@ class CreateSettingsSeeder extends Seeder
                 'setting' => 'Krankmeldung',
                 'description' => 'Sorgeberechtigte können Krankmeldungen absenden. Diese erhält die Verwaltung per Mail sofort und eine Zusammenfassung tagesaktuell',
                 'category' => 'module',
-                'options' => '{"active":"0","rights":["view krankmeldung"],"nav":{"name":"Krankmeldung","link":"krankmeldung","icon":"fas fa-medkit", "bottom-nav":"false"}}',
+                'options' => '{"active":"0","rights":["view krankmeldung"],"nav":{"name":"Krankmeldung","link":"krankmeldung","icon":"fas fa-medkit", "bottom-nav":"false"},"adm-nav":{"adm-rights":["create krankmeldung express"],"name":"Krankmeldung Express","link":"krankmeldung\\/express","icon":"fas fa-bolt"}}',
             ],
             [
                 'setting' => 'Reinigung',

@@ -23,6 +23,7 @@ use App\Http\Controllers\PostReportController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\KrankmeldungenController;
+use App\Http\Controllers\KrankmeldungExpressController;
 use App\Http\Controllers\ListenController;
 use App\Http\Controllers\ListenEintragungenController;
 use App\Http\Controllers\ListenTerminController;
@@ -216,6 +217,14 @@ Route::middleware('auth')->group(function () {
         Route::get('krankmeldung/download', [KrankmeldungenController::class, 'download']);
         Route::post('krankmeldung', [KrankmeldungenController::class, 'store']);
         Route::post('krankmeldung/disaese/activate/{disease}', [ActiveDiseaseController::class, 'activate'])->middleware('permission:manage diseases');
+
+        // Krankmeldung Express (Sekretariat Schnellerfassung)
+        Route::middleware('permission:create krankmeldung express')->prefix('krankmeldung/express')->group(function () {
+            Route::get('/', [KrankmeldungExpressController::class, 'index'])->name('krankmeldung.express');
+            Route::get('/search', [KrankmeldungExpressController::class, 'search'])->name('krankmeldung.express.search');
+            Route::get('/current', [KrankmeldungExpressController::class, 'currentList'])->name('krankmeldung.express.current');
+            Route::post('/', [KrankmeldungExpressController::class, 'store'])->name('krankmeldung.express.store');
+        });
 
         // Redirect old disease create route to new manage page
         Route::get('diseases/create', function () {
