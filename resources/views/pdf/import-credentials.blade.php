@@ -5,47 +5,82 @@
     <title>Zugangsdaten Import</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 11pt; color: #222; }
-        h1 { font-size: 14pt; margin-bottom: 4px; }
-        p.meta { font-size: 9pt; color: #666; margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        th { background-color: #3a5a8c; color: #fff; padding: 7px 10px; text-align: left; font-size: 10pt; }
-        td { padding: 6px 10px; border-bottom: 1px solid #ddd; font-size: 10pt; }
-        tr:nth-child(even) td { background-color: #f5f7fa; }
-        .hint { margin-top: 18px; font-size: 9pt; color: #555; border-top: 1px solid #ccc; padding-top: 8px; }
+        h1 { font-size: 16pt; margin-bottom: 4px; color: #3a5a8c; }
+        p.meta { font-size: 9pt; color: #666; margin-top: 0; margin-bottom: 24px; }
+        .page {
+            page-break-after: always;
+        }
+        .page:last-child {
+            page-break-after: auto;
+        }
+        .letter p { margin: 0 0 12px 0; line-height: 1.5; }
+        .credentials-box {
+            margin: 24px 0;
+            border: 1px solid #cbd5e0;
+            border-left: 4px solid #3a5a8c;
+            border-radius: 4px;
+            padding: 16px 20px;
+            background-color: #f5f7fa;
+        }
+        .credentials-box h2 { font-size: 12pt; margin: 0 0 12px 0; color: #3a5a8c; }
+        .credential-item { margin: 8px 0; }
+        .credential-label { font-weight: bold; color: #4a5568; font-size: 10pt; }
+        .credential-value {
+            font-family: DejaVu Sans Mono, monospace;
+            font-size: 11pt;
+            background: #fff;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            padding: 5px 8px;
+            display: inline-block;
+            margin-top: 3px;
+        }
+        .hint { margin-top: 24px; font-size: 9pt; color: #555; border-top: 1px solid #ccc; padding-top: 8px; }
     </style>
 </head>
 <body>
-    <h1>Zugangsdaten – Import vom {{ \Carbon\Carbon::now()->format('d.m.Y H:i') }} Uhr</h1>
-    <p class="meta">Import-Typ: {{ $importType }} &nbsp;|&nbsp; Neue Benutzer: {{ count($users) }}</p>
-
     @if(count($users) > 0)
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>E-Mail / Benutzername</th>
-                    <th>Erstkennwort</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($users as $i => $u)
-                    <tr>
-                        <td>{{ $i + 1 }}</td>
-                        <td>{{ $u['name'] }}</td>
-                        <td>{{ $u['email'] }}</td>
-                        <td><strong>{{ $u['password'] }}</strong></td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+        @foreach($users as $i => $u)
+            <div class="page">
+                <h1>Ihre Zugangsdaten für {{ config('app.name') }}</h1>
+                <p class="meta">Import-Typ: {{ $importType }} &nbsp;|&nbsp; {{ \Carbon\Carbon::now()->format('d.m.Y H:i') }} Uhr</p>
+
+                <div class="letter">
+                    <p>Hallo {{ $u['name'] }},</p>
+                    <p>
+                        für Sie wurde ein neues Benutzerkonto bei {{ config('app.name') }} angelegt.
+                        Nachfolgend finden Sie Ihre persönlichen Zugangsdaten für die erste Anmeldung.
+                    </p>
+                </div>
+
+                <div class="credentials-box">
+                    <h2>Ihre Zugangsdaten</h2>
+                    <div class="credential-item">
+                        <div class="credential-label">Benutzername / E-Mail:</div>
+                        <div class="credential-value">{{ $u['email'] }}</div>
+                    </div>
+                    <div class="credential-item">
+                        <div class="credential-label">Startkennwort:</div>
+                        <div class="credential-value">{{ $u['password'] }}</div>
+                    </div>
+                </div>
+
+                <div class="letter">
+                    <p>
+                        Bitte melden Sie sich zeitnah an und ändern Sie Ihr Kennwort bei der ersten
+                        Anmeldung. Geben Sie Ihr Kennwort niemals an Dritte weiter.
+                    </p>
+                    <p>Mit freundlichen Grüßen,<br>{{ config('app.name') }}</p>
+                </div>
+
+                <p class="hint">
+                    Bitte dieses Dokument nach Aushändigung der Zugangsdaten vertraulich behandeln
+                    und anschließend vernichten.
+                </p>
+            </div>
+        @endforeach
     @else
         <p>Es wurden keine neuen Benutzer angelegt.</p>
     @endif
-
-    <p class="hint">
-        Die Benutzer müssen ihr Kennwort beim ersten Login ändern.
-        Bitte dieses Dokument vertraulich behandeln und nach Aushändigung vernichten.
-    </p>
 </body>
 </html>

@@ -220,10 +220,12 @@
                                     </a>
                                 </div>
                             @else
-                                <label class="label-control" for="sorg2">Verknüpfen mit:</label>
+                                <label class="label-control" for="sorg2-search">Verknüpfen mit:</label>
+                                <input type="text" class="form-control mb-2" id="sorg2-search"
+                                       placeholder="Namen suchen…" autocomplete="off">
                                 <select class="custom-select" name="sorg2" id="sorg2">
                                     <option value="">– Keinen auswählen –</option>
-                                    @foreach($users as $otherUser)
+                                    @foreach($users->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE) as $otherUser)
                                         <option value="{{ $otherUser->id }}">{{ $otherUser->name }}</option>
                                     @endforeach
                                 </select>
@@ -404,6 +406,27 @@ function confirmResendWelcome() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Namensliste beim Verknüpfen durchsuchbar machen
+    const sorg2Search = document.getElementById('sorg2-search');
+    const sorg2Select = document.getElementById('sorg2');
+    if (sorg2Search && sorg2Select) {
+        sorg2Search.addEventListener('input', function () {
+            const term = this.value.trim().toLowerCase();
+            let firstVisible = null;
+            Array.from(sorg2Select.options).forEach(function (option) {
+                if (!option.value) return; // "– Keinen auswählen –" immer sichtbar lassen
+                const matches = option.text.toLowerCase().includes(term);
+                option.hidden = !matches;
+                option.disabled = !matches;
+                if (matches && !firstVisible) firstVisible = option;
+            });
+            // Wenn die aktuelle Auswahl ausgeblendet wurde, zurück auf die leere Option springen
+            if (sorg2Select.selectedOptions[0]?.hidden) {
+                sorg2Select.value = '';
+            }
+        });
+    }
+
     let formChanged = false;
     const saveContainer  = document.getElementById('save-btn-container');
     const stickySaveBar  = document.getElementById('sticky-save-bar');

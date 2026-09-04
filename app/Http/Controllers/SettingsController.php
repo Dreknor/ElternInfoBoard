@@ -117,6 +117,10 @@ class SettingsController extends Controller implements HasMiddleware
                     'mandate_notification_email' => 'nullable|email',
                     'show_mandates' => 'nullable|boolean',
                     'show_parents' => 'nullable|boolean',
+                    'auto_checkin_enabled_schulzeit' => 'nullable|boolean',
+                    'auto_checkin_time_schulzeit' => 'required|date_format:H:i',
+                    'auto_checkin_enabled_ferien' => 'nullable|boolean',
+                    'auto_checkin_time_ferien' => 'required|date_format:H:i',
                 ]);
 
                 $careSettings = new CareSetting;
@@ -147,6 +151,10 @@ class SettingsController extends Controller implements HasMiddleware
                 $careSettings->mandate_notification_email = $validated['mandate_notification_email'] ?? null;
                 $careSettings->show_mandates = $validated['show_mandates'] ?? false;
                 $careSettings->show_parents = $validated['show_parents'] ?? false;
+                $careSettings->auto_checkin_enabled_schulzeit = $validated['auto_checkin_enabled_schulzeit'] ?? false;
+                $careSettings->auto_checkin_time_schulzeit = $validated['auto_checkin_time_schulzeit'];
+                $careSettings->auto_checkin_enabled_ferien = $validated['auto_checkin_enabled_ferien'] ?? false;
+                $careSettings->auto_checkin_time_ferien = $validated['auto_checkin_time_ferien'];
 
                 $careSettings->save();
 

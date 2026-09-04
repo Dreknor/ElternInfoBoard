@@ -32,6 +32,14 @@ class CareSetting extends Settings
 
     public string $bundesland;
 
+    public bool $auto_checkin_enabled_schulzeit;
+
+    public string $auto_checkin_time_schulzeit;
+
+    public bool $auto_checkin_enabled_ferien;
+
+    public string $auto_checkin_time_ferien;
+
     public static function group(): string
     {
         return 'Care';

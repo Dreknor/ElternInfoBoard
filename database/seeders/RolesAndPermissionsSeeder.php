@@ -95,6 +95,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'view external offer', 'guard_name' => 'web', 'module' => 'Nachrichten', 'description' => 'Externe Angebote anzeigen.'],
             ['name' => 'push to wordpress', 'guard_name' => 'web', 'module' => 'Nachrichten', 'description' => 'Inhalte nach WordPress übertragen.'],
             ['name' => 'download krankmeldungen', 'guard_name' => 'web', 'module' => 'Krankmeldungen', 'description' => 'Krankmeldungen herunterladen.'],
+            ['name' => 'create krankmeldung express', 'guard_name' => 'web', 'module' => 'Krankmeldungen', 'description' => 'Express-Krankmeldungen für Kinder erfassen (Sekretariat-Schnellerfassung).'],
             ['name' => 'allow password-less-login', 'guard_name' => 'web', 'module' => 'Benutzerverwaltung', 'description' => 'Passwortlosen Login erlauben.'],
             ['name' => 'create own group', 'guard_name' => 'web', 'module' => 'Gruppen', 'description' => 'Eigene Gruppen erstellen.'],
             ['name' => 'show in contact form', 'guard_name' => 'web', 'module' => 'Kontakt', 'description' => 'Im Kontaktformular angezeigt werden.'],

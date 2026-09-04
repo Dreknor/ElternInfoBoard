@@ -282,9 +282,16 @@ class CareController extends Controller implements HasMiddleware
             return;
         }
 
+        $careSettings = new CareSetting;
         $holidayService = new HolidayService();
+        $isHoliday = $holidayService->isTodayHoliday();
 
-        if ($holidayService->isTodayHoliday()) {
+        // Je nach Ferien-/Schulzeit prüfen, ob der automatische Check-In laut Einstellungen aktiviert ist
+        if ($isHoliday && ! $careSettings->auto_checkin_enabled_ferien) {
+            return;
+        }
+
+        if (! $isHoliday && ! $careSettings->auto_checkin_enabled_schulzeit) {
             return;
         }
 

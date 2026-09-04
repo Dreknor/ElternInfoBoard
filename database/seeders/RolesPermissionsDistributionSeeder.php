@@ -171,6 +171,7 @@ class RolesPermissionsDistributionSeeder extends Seeder
             'see diseases',
             'manage diseases',
             'download krankmeldungen',
+            'create krankmeldung express',
             // Rückmeldungen
             'view rueckmeldungen',
             'manage rueckmeldungen',

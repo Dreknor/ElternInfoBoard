@@ -173,7 +173,7 @@ class UserController extends Controller implements HasMiddleware
             'users' => User::where([
                 ['sorg2', null],
                 ['id', '!=', $user->id],
-            ])->orWhere('sorg2', $user->id)->get(),
+            ])->orWhere('sorg2', $user->id)->orderBy('name')->get(),
         ]);
     }
 
