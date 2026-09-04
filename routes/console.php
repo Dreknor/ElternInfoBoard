@@ -34,7 +34,13 @@ try {
         // Kinder einchecken
         $careModule = Module::where('setting', 'Anwesenheitsliste')->first();
         if ($careModule && $careModule->options['active'] == 1) {
-            Schedule::call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at('08:30');
+            $careSetting = new \App\Settings\CareSetting;
+            // Zeitpunkte für Schulzeit und Ferien werden getrennt über die Settings gesteuert;
+            // die Entscheidung, ob und wann der Check-In tatsächlich ausgeführt wird, trifft dailyCheckIn() selbst.
+            Schedule::call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at($careSetting->auto_checkin_time_schulzeit);
+            if ($careSetting->auto_checkin_time_ferien !== $careSetting->auto_checkin_time_schulzeit) {
+                Schedule::call('App\Http\Controllers\Anwesenheit\CareController@dailyCheckIn')->weekdays()->at($careSetting->auto_checkin_time_ferien);
+            }
         }
 
         Schedule::call('App\Http\Controllers\NotificationController@clean_up')->dailyAt('00:00');

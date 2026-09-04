@@ -218,6 +218,66 @@
             </div>
         </div>
 
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Automatischer Check-In während der Schulzeit
+                    <input type="checkbox" class="form-control" name="auto_checkin_enabled_schulzeit"
+                           value="1" @if($careSettings->auto_checkin_enabled_schulzeit) checked @endif>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, werden Kinder mit aktiviertem automatischen Check-In an Schultagen (außerhalb der Ferien) automatisch angemeldet.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Uhrzeit des automatischen Check-In (Schulzeit)
+                    <input type="time" class="form-control" name="auto_checkin_time_schulzeit"
+                           value="{{ $careSettings->auto_checkin_time_schulzeit }}" required>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Zu dieser Uhrzeit wird der automatische Check-In an Schultagen durchgeführt.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Automatischer Check-In während der Ferien
+                    <input type="checkbox" class="form-control" name="auto_checkin_enabled_ferien"
+                           value="1" @if($careSettings->auto_checkin_enabled_ferien) checked @endif>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Wenn aktiviert, werden Kinder mit aktiviertem automatischen Check-In auch während der Schulferien (laut hinterlegtem Bundesland) automatisch angemeldet.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <label class="label-control w-100">
+                    Uhrzeit des automatischen Check-In (Ferien)
+                    <input type="time" class="form-control" name="auto_checkin_time_ferien"
+                           value="{{ $careSettings->auto_checkin_time_ferien }}" required>
+                </label>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Zu dieser Uhrzeit wird der automatische Check-In während der Ferien durchgeführt.
+                </div>
+            </div>
+        </div>
+
         <div class="form-row">
             <button type="submit" class="btn btn-success btn-block">
                 Save Settings
