@@ -7,6 +7,7 @@ use App\Model\ChildCheckIn;
 use App\Model\LatePickup;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Settings\CareSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -29,6 +30,14 @@ class LatePickupService
         $deadline = $this->resolveDeadline($child, $date);
 
         if ($deadline === null || $pickedUpAt->lessThanOrEqualTo($deadline)) {
+            return null;
+        }
+
+        // Nur erfassen, wenn die Abmeldung auch nach dem in den Settings
+        // hinterlegten Ende der Betreuungszeit erfolgte.
+        $careEndTime = $this->resolveCareEndTime($date);
+
+        if ($careEndTime === null || $pickedUpAt->lessThanOrEqualTo($careEndTime)) {
             return null;
         }
 
@@ -100,6 +109,21 @@ class LatePickupService
         }
 
         return $deadlines->max();
+    }
+
+    /**
+     * Ermittelt das in den Settings hinterlegte Ende der Betreuungszeit für
+     * einen bestimmten Tag. Gibt null zurück, wenn keine Zeit hinterlegt ist.
+     */
+    private function resolveCareEndTime(Carbon $date): ?Carbon
+    {
+        $careSettings = new CareSetting;
+
+        if (! $careSettings->end_time) {
+            return null;
+        }
+
+        return $date->copy()->setTimeFrom(Carbon::parse($careSettings->end_time));
     }
 
     /**
