@@ -26,6 +26,14 @@ class GeneralSetting extends Settings
      */
     public string $login_tracking_mode = 'user';
 
+    /**
+     * Rollen, die vor automatischem/massenhaftem Löschen geschützt sind
+     * (Massenlöschung, Schuljahreswechsel-Bereinigung, Inaktivitäts-Cleanup).
+     *
+     * @var array<int, string>
+     */
+    public array $protected_roles = [];
+
     public static function group(): string
     {
         return 'general';

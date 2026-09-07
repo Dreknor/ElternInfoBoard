@@ -59,6 +59,24 @@
                         </div>
                     @endif
 
+                    @if (session('trashedUser'))
+                        <div class="alert alert-warning">
+                            <p class="mb-2">
+                                <i class="fas fa-trash-restore mr-1"></i>
+                                Für die E-Mail-Adresse „{{ old('email') }}“ existiert bereits ein
+                                <strong>gelöschter</strong> Benutzer ({{ session('trashedUser')->name }}).
+                                Er kann stattdessen wiederhergestellt werden – dabei werden Name und
+                                E-Mail auf die hier eingegebenen Werte aktualisiert und ein neues
+                                Startkennwort per E-Mail versendet.
+                            </p>
+                            <label class="flex items-center gap-2 cursor-pointer mb-0">
+                                <input type="checkbox" name="confirm_restore_trashed" value="1"
+                                       class="w-4 h-4 cursor-pointer" style="accent-color: var(--color-primary);">
+                                <span class="text-sm select-none">Gelöschten Benutzer wiederherstellen</span>
+                            </label>
+                        </div>
+                    @endif
+
                     <div class="form-group mb-0">
                         <label class="label-control">Name <span class="text-red-500">*</span></label>
                         <input type="text" class="form-control" placeholder="Vor- und Nachname"

@@ -132,7 +132,17 @@ class UserController extends Controller implements HasMiddleware
             }
         }
 
-        $result = $this->userService->createUser($data);
+        $trashedUser = $this->userService->findTrashedUserByEmail($data['email']);
+
+        if ($trashedUser && ! $request->boolean('confirm_restore_trashed')) {
+            return redirect()->back()->withInput()->with([
+                'trashedUser' => $trashedUser,
+            ]);
+        }
+
+        $result = $trashedUser
+            ? $this->userService->restoreUser($trashedUser, $data)
+            : $this->userService->createUser($data);
         $user = $result['user'];
 
         $this->userService->syncGroups($user, $request->input('gruppen'));
@@ -140,7 +150,7 @@ class UserController extends Controller implements HasMiddleware
 
         return redirect(url("users/$user->id"))->with([
             'type' => 'success',
-            'Meldung' => 'Benutzer wurde angelegt. '.$result['emailStatus'],
+            'Meldung' => ($trashedUser ? 'Benutzer wurde wiederhergestellt. ' : 'Benutzer wurde angelegt. ').$result['emailStatus'],
         ]);
     }
 
@@ -241,6 +251,67 @@ class UserController extends Controller implements HasMiddleware
             return $Fehler;
         }
 
+    }
+
+    /**
+     * Übersicht der soft-gelöschten Benutzer (Papierkorb).
+     *
+     * @return View
+     */
+    public function trashed()
+    {
+        return view('user.trashed', [
+            'users' => $this->userService->getTrashedUsers(),
+        ]);
+    }
+
+    /**
+     * Stellt einen soft-gelöschten Benutzer wieder her.
+     *
+     * @return RedirectResponse
+     */
+    public function restoreTrashed(int $id)
+    {
+        $user = User::onlyTrashed()->find($id);
+
+        if (! $user) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Benutzer nicht gefunden.',
+            ]);
+        }
+
+        $this->userService->restoreTrashedUser($user);
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => "Benutzer {$user->name} wurde wiederhergestellt.",
+        ]);
+    }
+
+    /**
+     * Löscht einen soft-gelöschten Benutzer endgültig.
+     *
+     * @return RedirectResponse
+     */
+    public function forceDeleteTrashed(int $id)
+    {
+        $user = User::onlyTrashed()->find($id);
+
+        if (! $user) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Benutzer nicht gefunden.',
+            ]);
+        }
+
+        $name = $user->name;
+        $Fehler = $this->userService->forceDeleteTrashedUser($user);
+
+        return redirect()->back()->with([
+            'type' => ($Fehler == '') ? 'success' : 'danger',
+            'Meldung' => ($Fehler != '') ? $Fehler : "Benutzer {$name} wurde endgültig gelöscht.",
+        ]);
     }
 
     /**
