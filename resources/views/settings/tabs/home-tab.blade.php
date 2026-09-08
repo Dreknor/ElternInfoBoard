@@ -77,6 +77,28 @@
                     </div>
                 </div>
             </div>
+            <div class="form-row mt-1 p-2 border">
+                <div class="col-md-6 col-sm-12">
+                    <label class="label-control w-100">Geschützte Rollen</label>
+                    <div class="space-y-1">
+                        @foreach($roles as $role)
+                            <label class="flex items-center gap-2 cursor-pointer mb-0">
+                                <input type="checkbox" name="protected_roles[]" value="{{ $role->name }}"
+                                       class="w-4 h-4 cursor-pointer" style="accent-color: var(--color-primary);"
+                                       @checked(in_array($role->name, $settings->protected_roles ?? []))>
+                                <span class="text-sm select-none">{{ $role->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="col-md-6 col-sm-12 m-auto">
+                    <div class="small">
+                        Benutzer mit einer dieser Rollen werden von der Massenlöschung, dem
+                        automatischen Inaktivitäts-Cleanup und dem Schuljahreswechsel
+                        ausgeschlossen und nicht automatisch gelöscht.
+                    </div>
+                </div>
+            </div>
             <div class="form-row">
                 <button type="submit" class="btn btn-success btn-block">
                     Einstellungen speichern

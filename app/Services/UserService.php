@@ -16,6 +16,7 @@ use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Scopes\GetGroupsScope;
 use App\Settings\EmailSetting;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -46,6 +47,54 @@ class UserService
         $user->lastEmail = Carbon::now();
         $user->save();
 
+        [$emailSent, $emailStatus] = $this->sendNewPasswordMail($user, $password);
+
+        return compact('user', 'password', 'emailSent', 'emailStatus');
+    }
+
+    /**
+     * Sucht einen soft-gelöschten Benutzer anhand der E-Mail-Adresse.
+     * Wird beim Anlegen genutzt, um statt eines Unique-Fehlers eine
+     * Wiederherstellung anzubieten.
+     */
+    public function findTrashedUserByEmail(string $email): ?User
+    {
+        return User::onlyTrashed()->where('email', $email)->first();
+    }
+
+    /**
+     * Stellt einen soft-gelöschten Benutzer wieder her, aktualisiert die
+     * Stammdaten, vergibt ein neues Startkennwort und versendet die
+     * Willkommens-E-Mail erneut.
+     *
+     * @param  array  $data  Validierte Felder: name, email
+     * @return array{user: User, password: string, emailSent: bool, emailStatus: string}
+     */
+    public function restoreUser(User $user, array $data): array
+    {
+        $user->restore();
+        $user->fill($data);
+
+        $password = Str::password(12, true, true, true, false);
+        $user->password = Hash::make($password);
+        $user->changePassword = true;
+        $user->lastEmail = Carbon::now();
+        $user->is_active = true;
+        $user->deactivated_at = null;
+        $user->save();
+
+        [$emailSent, $emailStatus] = $this->sendNewPasswordMail($user, $password);
+
+        return compact('user', 'password', 'emailSent', 'emailStatus');
+    }
+
+    /**
+     * Versendet die Willkommens-E-Mail mit dem neuen Startkennwort.
+     *
+     * @return array{0: bool, 1: string} [$emailSent, $emailStatus]
+     */
+    private function sendNewPasswordMail(User $user, string $password): array
+    {
         $emailSent = false;
         $emailStatus = '';
 
@@ -60,7 +109,41 @@ class UserService
             $emailStatus = 'Warnung: E-Mail konnte nicht versendet werden. Bitte kontaktieren Sie den Administrator.';
         }
 
-        return compact('user', 'password', 'emailSent', 'emailStatus');
+        return [$emailSent, $emailStatus];
+    }
+
+    /**
+     * Liefert alle soft-gelöschten Benutzer (Papierkorb).
+     */
+    public function getTrashedUsers()
+    {
+        return User::onlyTrashed()->orderByDesc('deleted_at')->paginate(50);
+    }
+
+    /**
+     * Stellt einen soft-gelöschten Benutzer ohne weitere Änderungen wieder her.
+     */
+    public function restoreTrashedUser(User $user): void
+    {
+        $user->restore();
+    }
+
+    /**
+     * Löscht einen soft-gelöschten Benutzer endgültig.
+     *
+     * @return string Leerstring bei Erfolg, Fehlermeldung bei Fehler
+     */
+    public function forceDeleteTrashedUser(User $user): string
+    {
+        try {
+            $user->forceDelete();
+
+            return '';
+        } catch (\Exception $e) {
+            Log::error('Fehler beim endgültigen Löschen von User '.$user->id.': '.$e->getMessage());
+
+            return $e->getMessage();
+        }
     }
 
     /**
@@ -322,7 +405,8 @@ class UserService
      */
     public function massDeleteUsers(array $userIds): array
     {
-        $protectedRoles = ['Mitarbeiter', 'Vereinsmitglied', 'Administrator'];
+        $protectedRoles = app(GeneralSetting::class)->protected_roles
+            ?: ['Administrator', 'Mitarbeiter', 'Schulbegleiter', 'Vereinsmitglied'];
         $deleted = 0;
         $errors = '';
 

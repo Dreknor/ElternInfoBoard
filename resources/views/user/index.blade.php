@@ -34,6 +34,10 @@
                             <i class="fas fa-trash-alt"></i>
                             <span class="hidden md:inline">Mehrere löschen</span>
                         </a>
+                        <a href="{{ url('users/trashed') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash-restore"></i>
+                            <span class="hidden md:inline">Papierkorb</span>
+                        </a>
                         <a href="{{ url('users/vereinsmitglieder/non-members') }}" class="btn btn-outline-success btn-sm">
                             <i class="fas fa-user-slash"></i>
                             <span class="hidden md:inline">Nicht-Vereinsmitglieder</span>

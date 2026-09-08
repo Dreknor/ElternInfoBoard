@@ -6,6 +6,7 @@ use App\Model\Arbeitsgemeinschaft;
 use App\Model\Krankmeldungen;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Settings\GeneralSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -184,7 +185,8 @@ class SchoolYearService
     public function getUsersWithoutGroup()
     {
         // Nur Nutzer ohne Gruppen, die NICHT die geschützten Rollen haben
-        $protectedRoles = ['Mitarbeiter', 'Schulbegleiter', 'Administrator'];
+        $protectedRoles = app(GeneralSetting::class)->protected_roles
+            ?: ['Administrator', 'Mitarbeiter', 'Schulbegleiter', 'Vereinsmitglied'];
 
         return User::doesntHave('groups')
             ->whereDoesntHave('roles', function ($query) use ($protectedRoles) {
