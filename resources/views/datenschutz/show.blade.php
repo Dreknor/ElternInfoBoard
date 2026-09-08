@@ -644,7 +644,7 @@
                 <tbody class="divide-y divide-gray-100">
                     @foreach($user->userRueckmeldung as $rueckmeldung)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-5 py-3 font-medium text-gray-900">{{ $rueckmeldung->nachricht->header }}</td>
+                        <td class="px-5 py-3 font-medium text-gray-900">{{ $rueckmeldung?->nachricht?->header }}</td>
                         <td class="px-5 py-3 text-gray-700">{!! $rueckmeldung->text !!}</td>
                         <td class="px-5 py-3 text-gray-600">{{ $rueckmeldung->created_at?->format('d.m.Y H:i') ?? '–' }}</td>
                         <td class="px-5 py-3 text-gray-600">{{ $rueckmeldung->updated_at?->format('d.m.Y H:i') ?? '–' }}</td>

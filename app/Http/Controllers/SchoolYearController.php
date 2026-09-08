@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Model\Group;
 use App\Model\User;
 use App\Services\SchoolYearService;
+use App\Settings\GeneralSetting;
 use Illuminate\Http\Request;
 
 class SchoolYearController extends Controller
@@ -36,8 +37,9 @@ class SchoolYearController extends Controller
 
     public function massDelete(Request $request)
     {
-        // Die geschützten Rollen sind fest im Code definiert und NICHT über die Settings änderbar
-        $protectedRoles = ['Mitarbeiter', 'Vereinsmitglieder', 'Administrator'];
+        // Geschützte Rollen sind über die Settings (Allgemein) konfigurierbar
+        $protectedRoles = app(GeneralSetting::class)->protected_roles
+            ?: ['Administrator', 'Mitarbeiter', 'Schulbegleiter', 'Vereinsmitglied'];
         $userIds = $request->input('user_ids', []);
         $fehler = '';
         $deleted = 0;

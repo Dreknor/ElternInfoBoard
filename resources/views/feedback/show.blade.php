@@ -80,7 +80,7 @@
                             class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                             style="background-color: var(--color-widget-primary-from)">
                         <i class="fas fa-paper-plane"></i>
-                        <span>Feedback senden</span>
+                        <span>Nachricht senden</span>
                     </button>
                     <button type="reset"
                             class="inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-lg transition-colors duration-200"

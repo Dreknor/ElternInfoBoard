@@ -243,6 +243,8 @@ class SettingsController extends Controller implements HasMiddleware
                     'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                     'favicon' => 'sometimes|nullable|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
                     'login_tracking_mode' => 'required|in:user,always,never',
+                    'protected_roles' => 'sometimes|array',
+                    'protected_roles.*' => 'string|exists:roles,name',
                 ]);
 
                 $settings = new GeneralSetting;
@@ -276,6 +278,7 @@ class SettingsController extends Controller implements HasMiddleware
                     $settings->favicon = $name;
                 }
                     $settings->login_tracking_mode = $validated['login_tracking_mode'];
+                    $settings->protected_roles = $validated['protected_roles'] ?? [];
                     $settings->save();
 
                     break;

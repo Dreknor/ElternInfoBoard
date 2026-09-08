@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Model\Notification;
 use App\Model\User;
+use App\Settings\GeneralSetting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
@@ -19,8 +20,15 @@ class CleanupInactiveUsers extends Command
 
     /**
      * Geschützte Rollen werden niemals automatisch entfernt.
+     * Konfigurierbar über Einstellungen > Allgemein.
+     *
+     * @return array<int, string>
      */
-    private const PROTECTED_ROLES = ['Mitarbeiter', 'Schulbegleiter', 'Administrator', 'Vereinsmitglieder'];
+    private function protectedRoles(): array
+    {
+        return app(GeneralSetting::class)->protected_roles
+            ?: ['Administrator', 'Mitarbeiter', 'Schulbegleiter', 'Vereinsmitglied'];
+    }
 
     public function handle(): int
     {
@@ -36,6 +44,7 @@ class CleanupInactiveUsers extends Command
         $purgeDays = (int) $this->option('purge-days');
         $cutoff    = now()->subDays($purgeDays);
 
+        $protectedRoles = $this->protectedRoles();
         $query = User::onlyTrashed()->where('deleted_at', '<', $cutoff);
         $count = $query->count();
 
@@ -58,7 +67,7 @@ class CleanupInactiveUsers extends Command
             foreach ($users as $user) {
                 try {
                     // Schutz: keine geschützte Rolle
-                    if ($user->roles()->whereIn('name', self::PROTECTED_ROLES)->exists()) {
+                    if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
                         continue;
                     }
                     $user->forceDelete();
@@ -86,8 +95,9 @@ class CleanupInactiveUsers extends Command
 
     private function sendInactivityReport(): int
     {
+        $protectedRoles = $this->protectedRoles();
         $candidates = User::query()
-            ->whereDoesntHave('roles', fn ($q) => $q->whereIn('name', self::PROTECTED_ROLES))
+            ->whereDoesntHave('roles', fn ($q) => $q->whereIn('name', $protectedRoles))
             ->whereDoesntHave('groups')
             ->where('created_at', '<', now()->subMonths(6))
             ->where(function ($q) {
