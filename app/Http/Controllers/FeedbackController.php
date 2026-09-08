@@ -7,6 +7,7 @@ use App\Mail\dailyMailReport;
 use App\Mail\SendFeedback;
 use App\Model\Mail as MailModel;
 use App\Model\User;
+use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\View\View;
@@ -78,7 +79,8 @@ class FeedbackController extends Controller implements HasMiddleware
         if ($request->mitarbeiter != '') {
             $email = User::query()->where('id', $request->mitarbeiter)->value('email');
         } else {
-            $email = config('mail.from.address');
+            $emailSettings = app(EmailSetting::class);
+            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
         }
 
         Log::debug('FeedbackController: send() method called', [
