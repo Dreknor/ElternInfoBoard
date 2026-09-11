@@ -158,6 +158,7 @@ class MessengerController extends Controller
         $users = User::whereIn('id', $userIds)
             ->where('is_active', true)
             ->where('messenger_discoverable', true)
+            ->permission('use messenger')
             ->where('name', 'like', '%' . $q . '%')
             ->orderBy('name')
             ->select('id', 'name')
@@ -453,4 +454,3 @@ class MessengerController extends Controller
         return $response;
     }
 }
-

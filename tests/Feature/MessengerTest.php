@@ -564,6 +564,24 @@ class MessengerTest extends TestCase
     }
 
     #[Test]
+    public function search_users_excludes_users_without_use_messenger_permission(): void
+    {
+        $group = \App\Model\Group::withoutGlobalScopes()->create(['name' => 'Klasse 4b']);
+        $group->users()->attach([$this->userA->id, $this->userB->id]);
+
+        $this->userB->revokePermissionTo('use messenger');
+        $this->userB->refresh();
+
+        $response = $this->actingAs($this->userA)
+            ->withoutMiddleware(\App\Http\Middleware\PasswordExpired::class)
+            ->getJson(route('messenger.users.search', ['q' => $this->userB->name]));
+
+        $response->assertOk();
+        $ids = collect($response->json())->pluck('id');
+        $this->assertFalse($ids->contains($this->userB->id), 'User ohne Berechtigung use messenger darf nicht in der Suche erscheinen');
+    }
+
+    #[Test]
     public function user_can_update_messenger_discoverable_in_settings(): void
     {
         $this->actingAs($this->userA)
@@ -580,7 +598,7 @@ class MessengerTest extends TestCase
     }
 
     #[Test]
-    public function messenger_discoverable_does_not_affect_start_direct_controller_logic(): void
+    public function start_direct_does_not_filter_by_messenger_discoverable_or_search_permission_logic(): void
     {
         // messenger_discoverable blockiert nur die SUCHE (searchUsers), nicht startDirect.
         // Prüfe: Der Controller-Code von startDirect filtert NICHT auf messenger_discoverable.
@@ -604,6 +622,8 @@ class MessengerTest extends TestCase
         $searchSource = implode("\n", array_slice(file($searchReflection->getFileName()), $searchReflection->getStartLine() - 1, $searchReflection->getEndLine() - $searchReflection->getStartLine() + 1));
         $this->assertStringContainsString('messenger_discoverable', $searchSource,
             'searchUsers MUSS auf messenger_discoverable filtern');
+        $this->assertStringContainsString("permission('use messenger')", $searchSource,
+            'searchUsers MUSS auf die Berechtigung use messenger filtern');
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -736,7 +756,6 @@ class MessengerTest extends TestCase
         $this->assertFalse((bool) $user->messenger_discoverable);
     }
 }
-
 
 
 
