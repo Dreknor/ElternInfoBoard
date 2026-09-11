@@ -102,7 +102,7 @@
                         <div class="form-group mb-0">
                             <label class="label-control">E-Mail</label>
                             <input type="email" class="form-control" placeholder="E-Mail"
-                                   name="email" value="{{ $user->email }}" required>
+                                   name="email" value="{{ old('email', $user->email) }}" required>
                         </div>
 
                         {{-- Öffentliche Kontaktdaten --}}

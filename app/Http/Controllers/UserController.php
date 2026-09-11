@@ -23,6 +23,8 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -206,7 +208,14 @@ class UserController extends Controller implements HasMiddleware
             }
         }
 
-        $this->userService->updateUser($user, $request->validated());
+        try {
+            $this->userService->updateUser($user, $request->validated());
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'email' => 'Diese E-Mail-Adresse wird bereits von einem anderen Benutzer verwendet.',
+            ]);
+        }
+
         $this->userService->syncGroups($user, $request->input('gruppen'));
 
         if ($request->user()->can('edit permission')) {
