@@ -56,7 +56,7 @@
                         @foreach($users as $user)
                             <tr>
                                 <td>
-                                    <input type="checkbox" name="user_ids[]" value="{{$user->id}}" checked
+                                    <input type="checkbox" name="user_ids[]" value="{{$user->id}}"
                                            class="custom-checkbox">
                                 </td>
                                 <td>
