@@ -61,7 +61,7 @@
                                            class="custom-checkbox">
                                 </td>
                                 <td>
-                                    <a href="{{url('users/'.$user->id.'/edit')}}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <a href="{{url('users/'.$user->id.'')}}" target="_blank" class="btn btn-outline-primary btn-sm">
                                         <i class="fa fa-edit"></i>
                                     </a>
                                 </td>
