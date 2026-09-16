@@ -40,7 +40,7 @@
         </div>
 
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
@@ -53,7 +53,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
@@ -66,19 +66,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex align-items-center justify-content-between">
-                        <div>
-                            <div class="text-muted small">Sicher</div>
-                            <div class="h3 mb-0">Ja</div>
-                        </div>
-                        <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <div class="card shadow-sm border-0">
