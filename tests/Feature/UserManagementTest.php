@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\NewUserPasswordMail;
 use App\Model\Group;
+use App\Model\Pflichtstunde;
 use App\Model\User;
 use App\Scopes\GetGroupsScope;
 use App\Services\UserService;
@@ -157,6 +158,39 @@ class UserManagementTest extends TestCase
         $this->assertEquals('', $error);
         $this->assertDatabaseMissing('users', ['id' => $user->id, 'deleted_at' => null]);
         $this->assertDatabaseHas('groups', ['id' => $group->id]);
+    }
+
+    /**
+     * @test
+     * Beim Löschen eines Users bleibt die Pflichtstunden-Historie erhalten,
+     * die Berechnung für die aktive Familie wird aber unterbrochen.
+     */
+    public function test_deleting_user_keeps_pflichtstunden_history(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $user->update(['sorg2' => $partner->id]);
+        $partner->update(['sorg2' => $user->id]);
+
+        $pflichtstunde = Pflichtstunde::create([
+            'user_id' => $user->id,
+            'description' => 'Testpflichtstunde',
+            'start' => now()->subDay()->setTime(8, 0),
+            'end' => now()->subDay()->setTime(10, 0),
+            'approved' => true,
+            'approved_at' => now(),
+            'approved_by' => $partner->id,
+            'rejected' => false,
+        ]);
+
+        /** @var UserService $service */
+        $service = app(UserService::class);
+        $error = $service->deleteUser($user);
+
+        $this->assertSame('', $error);
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+        $this->assertDatabaseHas('pflichtstunden', ['id' => $pflichtstunde->id]);
+        $this->assertTrue(Pflichtstunde::withTrashed()->whereKey($pflichtstunde->id)->exists());
     }
 
     /**
