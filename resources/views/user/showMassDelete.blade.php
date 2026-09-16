@@ -30,7 +30,10 @@
                     <p class="mb-0 mt-2">
                         Beim Entfernen eines Benutzerkontos wird die Person aus aktiven Familien- und
                         Pflichtstunden-Berechnungen herausgenommen. Bereits erfasste Pflichtstunden bleiben in der
-                        Historie erhalten, zählen in der laufenden Periode aber nicht mehr mit.
+                        Historie erhalten, zählen in der laufenden Periode aber nicht mehr mit. Beim endgültigen
+                        Löschen (Papierkorb) werden alle offenen und rückwirkenden Zeiträume automatisch final
+                        abgerechnet, bevor die Rohdaten entfernt werden – abgerechnete Beträge bleiben so dauerhaft
+                        erhalten.
                     </p>
                 </div>
             </div>
@@ -99,9 +102,41 @@
             </div>
 
             <div class="card-body">
-                <div class="mb-3">
-                    <label for="massDeleteSearch" class="small text-uppercase text-muted mb-2 d-block">Suche</label>
-                    <input id="massDeleteSearch" type="search" class="form-control" placeholder="Nach Name oder E-Mail suchen…">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="massDeleteSearch" class="small text-uppercase text-muted mb-2 d-block">Suche</label>
+                        <input id="massDeleteSearch" type="search" class="form-control" placeholder="Nach Name oder E-Mail suchen…">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="filterRole" class="small text-uppercase text-muted mb-2 d-block">Rolle</label>
+                        <select id="filterRole" class="form-control">
+                            <option value="">Alle Rollen</option>
+                            <option value="__empty__">Ohne Rolle</option>
+                            @foreach($roles as $role)
+                                <option value="{{ strtolower($role) }}">{{ $role }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="filterGroup" class="small text-uppercase text-muted mb-2 d-block">Gruppe</label>
+                        <select id="filterGroup" class="form-control">
+                            <option value="">Alle Gruppen</option>
+                            <option value="__empty__">Ohne Gruppe</option>
+                            @foreach($groups as $group)
+                                <option value="{{ strtolower($group) }}">{{ $group }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <small class="text-muted">
+                        <span id="visibleCount">{{ $users->count() }}</span> von {{ $users->count() }} Benutzern angezeigt
+                    </small>
+                    <button type="button" id="resetFilters" class="btn btn-link btn-sm text-decoration-none p-0">
+                        <i class="fas fa-rotate-left"></i>
+                        Filter zurücksetzen
+                    </button>
                 </div>
 
                 <form action="{{ url('users/mass/delete') }}" method="post" id="massDeleteForm">
@@ -115,6 +150,7 @@
                                 <th class="w-12">
                                     <input type="checkbox" id="selectAllCheckbox" aria-label="Alle Benutzer auswählen">
                                 </th>
+                                <th></th>
                                 <th>Name</th>
                                 <th>E-Mail</th>
                                 <th>Gruppen</th>
@@ -124,8 +160,10 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach($users as $user)
-                                <tr data-search="{{ strtolower($user->name.' '.$user->email) }}">
+                            @forelse($users as $user)
+                                <tr data-search="{{ strtolower($user->name.' '.$user->email) }}"
+                                    data-roles="{{ $user->roles->pluck('name')->map(fn ($name) => strtolower($name))->implode('|') }}"
+                                    data-groups="{{ $user->groups->pluck('name')->map(fn ($name) => strtolower($name))->implode('|') }}">
                                     <td>
                                         <input type="checkbox"
                                               name="user_ids[]"
@@ -135,10 +173,12 @@
                                               aria-label="{{ $user->name }} auswählen">
                                     </td>
                                     <td>
+                                        <a href="{{ url('users/'.$user->id) }}" class="text-decoration-none">
+                                            <i class="fas fa-user-circle"></i>
+                                        </a>
+                                    </td>
+                                    <td>
                                         <div class="d-flex align-items-center gap-3">
-                                           <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: .85rem;">
-                                               {{ strtoupper(mb_substr($user->name, 0, 1, 'UTF-8')) }}
-                                           </div>
                                            <div>
                                                <div class="fw-semibold">{{ $user->name }}</div>
                                                <div class="small text-muted">
@@ -186,9 +226,16 @@
                                         @endif
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Keine Elternkonten vorhanden.</td>
+                                </tr>
+                            @endforelse
                             </tbody>
                         </table>
+                        <div id="noResultsRow" class="text-center text-muted py-4" style="display: none;">
+                            Keine Benutzer entsprechen den aktuellen Filtern.
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
@@ -208,8 +255,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('massDeleteSearch');
+            const roleFilter = document.getElementById('filterRole');
+            const groupFilter = document.getElementById('filterGroup');
+            const resetFiltersBtn = document.getElementById('resetFilters');
             const tableBody = document.querySelector('#userTable tbody');
-            const rows = () => Array.from(tableBody.querySelectorAll('tr'));
+            const noResultsRow = document.getElementById('noResultsRow');
+            const visibleCountEl = document.getElementById('visibleCount');
+            const rows = () => Array.from(tableBody.querySelectorAll('tr[data-search]'));
             const checkboxes = () => Array.from(document.querySelectorAll('.user-checkbox'));
             const selectAllCheckbox = document.getElementById('selectAllCheckbox');
             const selectedCountEl = document.getElementById('selectedCount');
@@ -218,8 +270,8 @@
             const clearSelectionBtn = document.getElementById('clearSelection');
 
             function updateSelectionState() {
-                const items = checkboxes();
-                const selected = items.filter((checkbox) => checkbox.checked).length;
+                const items = checkboxes().filter((checkbox) => checkbox.closest('tr').style.display !== 'none');
+                const selected = checkboxes().filter((checkbox) => checkbox.checked).length;
                 const allSelected = items.length > 0 && items.every((checkbox) => checkbox.checked);
 
                 selectedCountEl.textContent = selected;
@@ -227,26 +279,67 @@
                 selectAllCheckbox.checked = allSelected;
             }
 
-            searchInput.addEventListener('input', function () {
-                const term = this.value.trim().toLowerCase();
+            function matchesTag(value, term) {
+                if (!term) {
+                    return true;
+                }
+                if (term === '__empty__') {
+                    return value === '';
+                }
+
+                return value.split('|').includes(term);
+            }
+
+            function applyFilters() {
+                const term = searchInput.value.trim().toLowerCase();
+                const role = roleFilter.value;
+                const group = groupFilter.value;
+                let visible = 0;
 
                 rows().forEach((row) => {
                     const haystack = (row.dataset.search || row.textContent || '').toLowerCase();
-                    row.style.display = haystack.includes(term) ? '' : 'none';
+                    const matchesSearch = haystack.includes(term);
+                    const matchesRole = matchesTag(row.dataset.roles || '', role);
+                    const matchesGroup = matchesTag(row.dataset.groups || '', group);
+                    const isVisible = matchesSearch && matchesRole && matchesGroup;
+
+                    row.style.display = isVisible ? '' : 'none';
+                    if (isVisible) {
+                        visible++;
+                    }
                 });
+
+                visibleCountEl.textContent = visible;
+                noResultsRow.style.display = (visible === 0 && rows().length > 0) ? '' : 'none';
+                updateSelectionState();
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+            roleFilter.addEventListener('change', applyFilters);
+            groupFilter.addEventListener('change', applyFilters);
+
+            resetFiltersBtn.addEventListener('click', function () {
+                searchInput.value = '';
+                roleFilter.value = '';
+                groupFilter.value = '';
+                applyFilters();
             });
 
             selectAllCheckbox.addEventListener('change', function () {
-                checkboxes().forEach((checkbox) => {
-                    checkbox.checked = this.checked;
-                });
+                checkboxes()
+                    .filter((checkbox) => checkbox.closest('tr').style.display !== 'none')
+                    .forEach((checkbox) => {
+                        checkbox.checked = this.checked;
+                    });
                 updateSelectionState();
             });
 
             selectAllBtn.addEventListener('click', function () {
-                checkboxes().forEach((checkbox) => {
-                    checkbox.checked = true;
-                });
+                checkboxes()
+                    .filter((checkbox) => checkbox.closest('tr').style.display !== 'none')
+                    .forEach((checkbox) => {
+                        checkbox.checked = true;
+                    });
                 updateSelectionState();
             });
 
@@ -277,7 +370,7 @@
                 }
             });
 
-            updateSelectionState();
+            applyFilters();
         });
     </script>
 @endsection

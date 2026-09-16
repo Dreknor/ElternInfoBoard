@@ -424,10 +424,13 @@ class UserController extends Controller implements HasMiddleware
                 return $query->where('name', 'Eltern');
             })
             ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+            ->orderBy('name')
             ->get();
 
         return view('user.showMassDelete')->with([
             'users' => $users,
+            'roles' => Role::orderBy('name')->pluck('name'),
+            'groups' => Group::withoutGlobalScope(\App\Scopes\GetGroupsScope::class)->orderBy('name')->pluck('name'),
         ]);
     }
 
