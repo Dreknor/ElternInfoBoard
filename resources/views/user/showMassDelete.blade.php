@@ -44,6 +44,7 @@
                         <thead>
                         <tr>
                             <td></td>
+                            <td></td>
                             <th>Name</th>
                             <th>E-Mail</th>
                             <th>Gruppen</th>
@@ -60,7 +61,12 @@
                                            class="custom-checkbox">
                                 </td>
                                 <td>
-                                    {{$user->name}}
+                                    <a href="{{url('users/'.$user->id.'/edit')}}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                        {{$user->name}}
                                 </td>
                                 <td>
                                     {{$user->email}}
