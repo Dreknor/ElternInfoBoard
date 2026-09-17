@@ -47,6 +47,24 @@
     @yield('content')
 </div>
 
+<footer class="anwesenheit-footer" aria-live="polite">
+    <div class="container-fluid py-2 px-3 text-right small text-muted">
+        <span>Letzte Aktualisierung:</span>
+        <strong id="last-updated-time">--:--:--</strong>
+    </div>
+</footer>
+
+<style>
+    .anwesenheit-footer {
+        position: sticky;
+        bottom: 0;
+        background: rgba(248, 249, 250, 0.96);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(2px);
+        z-index: 10;
+    }
+</style>
+
 <!-- jQuery -->
 <script src="{{asset('js/core/jquery.min.js')}}"></script>
 
@@ -130,6 +148,22 @@
         }
     });
 })();
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const lastUpdatedElement = document.getElementById('last-updated-time');
+        if (!lastUpdatedElement) {
+            return;
+        }
+
+        const now = new Date();
+        lastUpdatedElement.textContent = now.toLocaleTimeString('de-DE', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    });
 </script>
 
 @stack('js')

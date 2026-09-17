@@ -66,9 +66,16 @@ class PflichtstundenFamilyService
      *   family_name:string
      * }>
      */
-    public function getFamilyGroups(): Collection
+    public function getFamilyGroups(bool $includeTrashed = false): Collection
     {
-        $users = User::query()
+        // Für bereits erfasste (auch rückwirkende) Zeiträume müssen endgültig
+        // gelöschte (soft-deleted) Nutzer weiterhin als Familie auftauchen,
+        // damit ihre freigegebenen Pflichtstunden korrekt abgerechnet werden
+        // können. Für die laufende Übersicht bleiben sie standardmäßig
+        // ausgeblendet.
+        $query = $includeTrashed ? User::withTrashed() : User::query();
+
+        $users = $query
             ->permission('view Pflichtstunden')
             ->orderBy('id')
             ->get()
@@ -94,9 +101,9 @@ class PflichtstundenFamilyService
                 $userIds[] = $partner->id;
             }
 
-            $familyName = $user->name;
+            $familyName = $user->name.($user->trashed() ? ' (gelöscht)' : '');
             if ($partner) {
-                $familyName .= ' / '.$partner->name;
+                $familyName .= ' / '.$partner->name.($partner->trashed() ? ' (gelöscht)' : '');
             }
 
             $groups->push([
@@ -116,10 +123,10 @@ class PflichtstundenFamilyService
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function buildFamilySummaries(Carbon $periodStart, Carbon $periodEnd, bool $persistAccounts = true): Collection
+    public function buildFamilySummaries(Carbon $periodStart, Carbon $periodEnd, bool $persistAccounts = true, bool $includeTrashed = false): Collection
     {
         $periodYear = $this->periodStartYear($periodStart);
-        $groups = $this->getFamilyGroups();
+        $groups = $this->getFamilyGroups($includeTrashed);
         $rules = PflichtstundenFamilyRule::query()
             ->where('period_year', $periodYear)
             ->get()
@@ -350,6 +357,36 @@ class PflichtstundenFamilyService
         }
 
         return $opening;
+    }
+
+    /**
+     * Rechnet alle Perioden ab, in denen der Nutzer Pflichtstunden erfasst hat,
+     * und schreibt die Familienkonten final fest (inkl. bereits gelöschter
+     * Partner). Dadurch bleiben abgerechnete Beträge und Salden dauerhaft in
+     * pflichtstunden_family_accounts erhalten, auch wenn der Nutzer und seine
+     * Rohdaten (Pflichtstunden-Einträge) danach endgültig gelöscht werden.
+     *
+     * Muss vor User::forceDelete() aufgerufen werden, da der Fremdschlüssel
+     * auf pflichtstunden.user_id per Cascade löscht.
+     */
+    public function sealHistoryForUser(User $user): void
+    {
+        $firstStart = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
+            ->withTrashed()
+            ->where('user_id', $user->id)
+            ->min('start');
+
+        if (! $firstStart) {
+            return;
+        }
+
+        $firstYear = Carbon::parse($firstStart)->year;
+        $lastYear = (int) now()->year;
+
+        for ($year = $firstYear; $year <= $lastYear; $year++) {
+            [$periodStart, $periodEnd] = $this->resolvePeriod($year);
+            $this->buildFamilySummaries($periodStart, $periodEnd, true, true);
+        }
     }
 
     private function entryMinutes(Pflichtstunde $entry): int
