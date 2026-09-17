@@ -310,7 +310,6 @@
             var url_abmelden = "{{url('care/anwesenheit/:childId/abmelden')}}";
 
 
-
             document.querySelectorAll('.child-item').forEach(item => {
                 item.addEventListener('click', function () {
                     const childData = JSON.parse(this.dataset.child);

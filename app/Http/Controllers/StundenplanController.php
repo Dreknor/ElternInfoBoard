@@ -275,14 +275,25 @@ class StundenplanController extends Controller
 
         }
 
-        try {
+        $news = collect();
+
+        /*
+         * Zunächst keine News anzeigen - Anzeige nur im Vertretungsplan-Mpdul
+         *
+         *
+         try {
             // Get news for the current week
             $news = VertretungsplanNews::where('start', '<=', $endDate)
                 ->where('end', '>=', $startDate)
                 ->get();
+
         } catch (\Exception $e) {
 
         }
+         *
+         */
+
+
 
         $stundenplanSettings = new StundenplanSetting;
 
