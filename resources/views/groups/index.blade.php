@@ -14,7 +14,7 @@
             </div>
         @endcan
         @foreach($groups as $group)
-            <div class="rounded-lg shadow-lg overflow-hidden {{ !$group->active ? 'opacity-60' : '' }}" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
+            <div class="rounded-lg shadow-lg {{ !$group->active ? 'opacity-60' : '' }}" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                 <!-- Card Header -->
                 <div class="px-4 py-3 border-b"
                      style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
