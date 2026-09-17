@@ -325,6 +325,17 @@
                                            placeholder="Bereich der Gruppe"
                                            value="{{old('bereich')}}">
                                 </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">Benutzer aus Gruppe übernehmen</label>
+                                    <select name="copy_user_from_group" class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none" style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
+                                        <option value="">Keine</option>
+                                        @foreach($groups as $group)
+                                            <option value="{{$group->id}}">{{$group->name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium mb-2" style="color: var(--color-text-secondary)">Geschützt</label>
                                     <label class="relative inline-flex items-center cursor-pointer mt-2">
