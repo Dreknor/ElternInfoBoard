@@ -31,6 +31,11 @@ class CreateGroupRequest extends FormRequest
             'protected' => [
                 'sometimes',
             ],
+            'copy_user_from_group' => [
+                'sometimes',
+                'nullable',
+                'exists:groups,id',
+            ]
         ];
     }
 }

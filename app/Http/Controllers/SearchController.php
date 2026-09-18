@@ -77,7 +77,7 @@ class SearchController extends Controller implements HasMiddleware
                 $query->when($searchString, function ($query, $searchString) {
                     $query
                         ->where('site_blocks.title', 'like', '%'.$searchString.'%')
-                        ->with(['blocks' => function ($query) use ($searchString) {
+                        ->with(['block' => function ($query) use ($searchString) {
                             $query->when($searchString, function ($query, $searchString) {
                                 $query->orWhere('sites_blocks_text.content', 'like', '%'.$searchString.'%');
                             });

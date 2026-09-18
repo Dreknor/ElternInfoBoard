@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Model\Notification;
 use App\Model\User;
+use App\Services\UserService;
 use App\Settings\GeneralSetting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -63,21 +64,27 @@ class CleanupInactiveUsers extends Command
         $deleted = 0;
         $errors  = 0;
 
-        $query->chunkById(50, function ($users) use (&$deleted, &$errors) {
+        /** @var UserService $userService */
+        $userService = app(UserService::class);
+
+        $query->chunkById(50, function ($users) use (&$deleted, &$errors, $protectedRoles, $userService) {
             foreach ($users as $user) {
-                try {
-                    // Schutz: keine geschützte Rolle
-                    if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
-                        continue;
-                    }
-                    $user->forceDelete();
-                    $deleted++;
-                } catch (\Throwable $e) {
+                // Schutz: keine geschützte Rolle
+                if ($user->roles()->whereIn('name', $protectedRoles)->exists()) {
+                    continue;
+                }
+
+                // Über den Service löschen, damit die Pflichtstunden-Familienkonten
+                // vor dem endgültigen Löschen final abgerechnet und persistiert werden.
+                $error = $userService->forceDeleteTrashedUser($user);
+                if ($error !== '') {
                     $errors++;
                     Log::error('User-Cleanup Force-Delete Fehler', [
                         'user_id' => $user->id,
-                        'error'   => $e->getMessage(),
+                        'error'   => $error,
                     ]);
+                } else {
+                    $deleted++;
                 }
             }
         });

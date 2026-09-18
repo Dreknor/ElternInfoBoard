@@ -69,6 +69,13 @@ class GroupsController extends Controller
         $group = new Group($createGroupRequest->validated());
         $group->save();
 
+        if ($createGroupRequest->filled('copy_user_from_group')) {
+            $sourceGroup = Group::find($createGroupRequest->input('copy_user_from_group'));
+            if ($sourceGroup) {
+                $group->users()->sync($sourceGroup->users->pluck('id')->toArray());
+            }
+        }
+
         Cache::forget('groups');
         Cache::remember('groups', 60 * 5, function () {
             return Group::active()->get();
