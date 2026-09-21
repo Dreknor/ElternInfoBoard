@@ -27,9 +27,14 @@ class DatenschutzController extends Controller
     public function show(Request $request): Application|Factory|View
     {
         $user = $request->user();
+        $pflichtstunden = $user->pflichtstunden()
+            ->withoutGlobalScope('aktuellerZeitraum')
+            ->withTrashed()
+            ->get();
 
         return view('datenschutz.show', [
-            'user' => $user,
+            'user'           => $user,
+            'pflichtstunden' => $pflichtstunden,
         ]);
     }
 
@@ -58,10 +63,15 @@ class DatenschutzController extends Controller
     public function exportPdf(Request $request): Response
     {
         $user = $request->user();
+        $pflichtstunden = $user->pflichtstunden()
+            ->withoutGlobalScope('aktuellerZeitraum')
+            ->withTrashed()
+            ->get();
 
         $pdf = PDF::loadView('pdf.datenschutz', [
-            'user'     => $user,
-            'exportAt' => Carbon::now(),
+            'user'           => $user,
+            'pflichtstunden' => $pflichtstunden,
+            'exportAt'       => Carbon::now(),
         ]);
 
         $pdf->setPaper('A4', 'portrait');
@@ -78,7 +88,10 @@ class DatenschutzController extends Controller
     {
         $listenTermine = $user->getListenTermine();
         $schickzeiten  = $user->schickzeiten()->withTrashed()->get();
-        $pflichtstunden = $user->pflichtstunden()->withTrashed()->get();
+        $pflichtstunden = $user->pflichtstunden()
+            ->withoutGlobalScope('aktuellerZeitraum')
+            ->withTrashed()
+            ->get();
 
         return [
             'exportiert_am'   => Carbon::now()->toIso8601String(),

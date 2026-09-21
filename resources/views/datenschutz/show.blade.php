@@ -580,7 +580,6 @@
     @endif
 
     {{-- ===== PFLICHTSTUNDEN ===== --}}
-    @php $pflichtstunden = $user->pflichtstunden()->withTrashed()->get(); @endphp
     @if($pflichtstunden->count())
     <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
         <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-5 py-3">
