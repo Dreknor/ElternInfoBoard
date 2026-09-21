@@ -23,6 +23,8 @@ class AktuelleInformationen extends Mailable
 
     protected Collection|array $gta;
 
+    protected ?array $pflichtstunden;
+
     // protected $files;
 
     protected Collection|array $listen;
@@ -32,7 +34,7 @@ class AktuelleInformationen extends Mailable
      *
      * @return void
      */
-    public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine, Collection|array $gta)
+    public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine, Collection|array $gta, ?array $pflichtstunden = null)
     {
         $news = new Collection($news);
 
@@ -49,6 +51,7 @@ class AktuelleInformationen extends Mailable
         $this->listen = $listen;
         $this->termine = $termine;
         $this->gta = $gta;
+        $this->pflichtstunden = $pflichtstunden;
 
     }
 
@@ -68,6 +71,7 @@ class AktuelleInformationen extends Mailable
                 'listen' => $this->listen,
                 'termine' => $this->termine,
                 'gta' => $this->gta,
+                'pflichtstunden' => $this->pflichtstunden,
             ]);
     }
 }
