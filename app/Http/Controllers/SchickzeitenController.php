@@ -277,7 +277,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                     'kind' => 'notice',
                     'child_id' => $notice->child_id,
                     'child_name' => trim(($notice->child?->first_name ?? '').' '.($notice->child?->last_name ?? '')) ?: ($notice->child_name ?? 'Unbekannt'),
-                    'date' => $notice->date?->format('Y-m-d H:i:s') ?? $notice->created_at?->format('Y-m-d H:i:s'),
+'date' => $notice->created_at?->format('Y-m-d H:i:s') ?? $notice->date?->format('Y-m-d H:i:s'),
                     'content' => trim((string) $notice->notice),
                     'author' => $notice->user?->name ?? 'System',
                     'created_at' => $notice->created_at?->format('Y-m-d H:i:s'),
