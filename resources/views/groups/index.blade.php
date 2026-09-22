@@ -33,8 +33,8 @@
                             @endif
                         </h5>
                         @canany(['edit groups', 'delete groups'])
-                            <div x-data="{ open: false }" class="relative">
-                                <button @click="open = !open" @click.away="open = false"
+                            <div x-data="{ open: false }" class="relative" @click.away="open = false">
+                                <button @click="open = !open"
                                         class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-white/20 transition-all duration-200"
                                         style="color: var(--color-widget-header-text)">
                                     <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
@@ -358,4 +358,3 @@
         @endif
     </div>
 @endsection
-
