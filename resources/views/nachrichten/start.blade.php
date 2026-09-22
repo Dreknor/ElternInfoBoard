@@ -43,16 +43,9 @@
                                             <div class="flex items-start gap-2">
                                                 <!-- Nachricht Text -->
                                                 <div class="flex-1 min-w-0">
-                                                    <span class="block text-sm font-semibold leading-tight break-words
-                                                        @switch($nachricht->type)
-                                                            @case('pflicht')
-                                                                @if($nachricht->released == 1) text-red-100 @else text-red-600 @endif
-                                                                @break
-                                                            @case('wahl')
-                                                                @if($nachricht->released == 1) text-amber-100 @else text-amber-600 @endif
-                                                                @break
-                                                        @endswitch
-                                                    ">
+                                                    <span class="block text-sm font-semibold leading-tight break-words"
+                                                          style="color: {{ $nachricht->released == 1 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }};"
+                                                    >
 
                                                         {{\Illuminate\Support\Str::limit($nachricht->header, 60, $end='...')}}
                                                     </span>
