@@ -569,6 +569,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['can:see logs'])->group(function () {
         Route::get('logs', [LogController::class, 'index']);
+        Route::delete('logs/search/cleanup', [LogController::class, 'cleanupSearchLogs'])->middleware('can:delete logs');
         Route::delete('logs/{id}', [LogController::class, 'destroy'])->middleware('can:delete logs');
         Route::delete('logs/cleanup', [LogController::class, 'cleanup'])->middleware('can:delete logs');
     });

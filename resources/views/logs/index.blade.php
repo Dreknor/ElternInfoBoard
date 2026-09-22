@@ -26,6 +26,14 @@
                             <span>Alte Logs löschen (>30 Tage)</span>
                         </button>
                     </form>
+                    <form action="{{ url('/logs/search/cleanup') }}" method="POST" onsubmit="return confirm('Möchten Sie wirklich alle Suchprotokolle löschen, die älter als 90 Tage sind?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200">
+                            <i class="fas fa-broom"></i>
+                            <span>Alte Suchprotokolle löschen (>90 Tage)</span>
+                        </button>
+                    </form>
                 </div>
                 @endcan
             </div>
@@ -93,6 +101,103 @@
             </div>
         </div>
     @endif
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <div class="xl:col-span-2 bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h6 class="text-lg font-semibold text-gray-900">Suchstatistik</h6>
+                <p class="text-sm text-gray-500">Eigenständige Auswertung der protokollierten Suchanfragen (search_logs)</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="rounded-lg bg-blue-50 p-4">
+                        <div class="text-sm font-medium text-blue-700">Suchanfragen gesamt</div>
+                        <div class="mt-2 text-3xl font-bold text-blue-900">{{ $searchStats['totalSearches'] }}</div>
+                    </div>
+                    <div class="rounded-lg bg-green-50 p-4">
+                        <div class="text-sm font-medium text-green-700">Durchschn. Treffer</div>
+                        <div class="mt-2 text-3xl font-bold text-green-900">{{ number_format($searchStats['averageResults'], 1, ',', '.') }}</div>
+                    </div>
+                    <div class="rounded-lg bg-amber-50 p-4">
+                        <div class="text-sm font-medium text-amber-700">Ohne Treffer</div>
+                        <div class="mt-2 text-3xl font-bold text-amber-900">{{ $searchStats['resultsDistribution']['ohne_treffer'] }}</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <h6 class="text-sm font-semibold text-gray-700 mb-3">Haeufigste Suchbegriffe</h6>
+                        <div class="space-y-3">
+                            @forelse($searchStats['topSearchTerms'] as $term)
+                                <div class="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                                    <span class="text-sm text-gray-900">{{ $term->search_term ?: '(leer)' }}</span>
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                                        {{ $term->searches }}x
+                                    </span>
+                                </div>
+                            @empty
+                                <p class="text-sm text-gray-500">Bisher wurden keine Suchanfragen protokolliert.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="text-sm font-semibold text-gray-700 mb-3">Letzte Suchanfragen</h6>
+                        <div class="space-y-3">
+                            @forelse($searchStats['searchLogs'] as $searchLog)
+                                <div class="rounded-lg border border-gray-200 px-4 py-3">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <span class="text-sm font-medium text-gray-900">{{ $searchLog->search_term ?: '(leer)' }}</span>
+                                        <span class="text-xs text-gray-500">{{ $searchLog->created_at?->format('d.m.Y H:i') }}</span>
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-600">
+                                        Treffer: <span class="font-semibold text-gray-900">{{ $searchLog->results_count }}</span>
+                                        <span class="mx-2 text-gray-300">|</span>
+                                        Nachrichten: {{ $searchLog->nachrichten_count }}
+                                        <span class="mx-2 text-gray-300">|</span>
+                                        Seiten: {{ $searchLog->seiten_count }}
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-sm text-gray-500">Noch keine Suchanfragen vorhanden.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h6 class="text-lg font-semibold text-gray-900">Trefferquote</h6>
+                <p class="text-sm text-gray-500">Suchergebnisse mit und ohne Treffer</p>
+            </div>
+            <div class="p-6 space-y-4">
+                @php
+                    $totalSearches = max($searchStats['totalSearches'], 1);
+                    $successfulSearches = $searchStats['resultsDistribution']['mit_treffern'];
+                    $emptySearches = $searchStats['resultsDistribution']['ohne_treffer'];
+                @endphp
+                <div>
+                    <div class="mb-1 flex items-center justify-between text-sm">
+                        <span class="text-gray-700">Mit Treffern</span>
+                        <span class="font-medium text-gray-900">{{ $successfulSearches }}</span>
+                    </div>
+                    <div class="h-3 overflow-hidden rounded-full bg-gray-100">
+                        <div class="h-full rounded-full bg-green-500" style="width: {{ ($successfulSearches / $totalSearches) * 100 }}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-1 flex items-center justify-between text-sm">
+                        <span class="text-gray-700">Ohne Treffer</span>
+                        <span class="font-medium text-gray-900">{{ $emptySearches }}</span>
+                    </div>
+                    <div class="h-3 overflow-hidden rounded-full bg-gray-100">
+                        <div class="h-full rounded-full bg-amber-500" style="width: {{ ($emptySearches / $totalSearches) * 100 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Logs Table -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">

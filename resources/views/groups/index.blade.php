@@ -14,7 +14,7 @@
             </div>
         @endcan
         @foreach($groups as $group)
-            <div class="rounded-lg shadow-lg overflow-hidden {{ !$group->active ? 'opacity-60' : '' }}" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
+            <div class="rounded-lg shadow-lg {{ !$group->active ? 'opacity-60' : '' }}" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                 <!-- Card Header -->
                 <div class="px-4 py-3 border-b"
                      style="background: linear-gradient(to right, var(--color-widget-primary-from), var(--color-widget-primary-to)); border-color: var(--color-widget-primary-border)">
@@ -25,6 +25,18 @@
                             @else
                                 <i class="fas fa-lock"></i>
                             @endif
+
+                            @canany(['edit groups', 'delete groups'])
+                                @if($group->owner_id != null)
+                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)"></i>
+                                    @elseif($group->owner_id == null)
+                                    <i class="fas fa-globe" style="color: var(--color-widget-accent-from)"></i>
+                                    @elseif($group->owner_id == auth()->user()->id)
+                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)"></i>
+                                @endif
+
+                            @endcanany
+
                             {{$group->name}}
                             @if(!$group->active)
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background: rgba(0,0,0,0.25); color: var(--color-widget-header-text);">
@@ -33,8 +45,8 @@
                             @endif
                         </h5>
                         @canany(['edit groups', 'delete groups'])
-                            <div x-data="{ open: false }" class="relative">
-                                <button @click="open = !open" @click.away="open = false"
+                            <div x-data="{ open: false }" class="relative" @click.away="open = false">
+                                <button @click="open = !open"
                                         class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-white/20 transition-all duration-200"
                                         style="color: var(--color-widget-header-text)">
                                     <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
@@ -358,4 +370,3 @@
         @endif
     </div>
 @endsection
-

@@ -278,7 +278,7 @@ class StundenplanController extends Controller
         $news = collect();
 
         /*
-         * Zunächst keine News anzeigen - Anzeige nur im Vertretungsplan-Mpdul
+         * Zunächst keine News anzeigen - Anzeige nur im Vertretungsplan-Modul
          *
          *
          try {

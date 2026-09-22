@@ -8,6 +8,7 @@ use App\Http\Requests\CreateOwnGroupRequest;
 use App\Model\Conversation;
 use App\Model\Group;
 use App\Model\User;
+use App\Scopes\GetGroupsScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,13 @@ class GroupsController extends Controller
 
         if (auth()->user()->can('edit groups')) {
             $groups = Group::with('users')
+                ->when(! $showInactive, function (Builder $query) {
+                    $query->where('active', true);
+                })
+                ->get();
+        } elseif (auth()->user()->can('delete groups')) {
+            $groups = Group::withoutGlobalScope(GetGroupsScope::class)
+                ->with('users')
                 ->when(! $showInactive, function (Builder $query) {
                     $query->where('active', true);
                 })

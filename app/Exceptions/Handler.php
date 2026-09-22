@@ -42,6 +42,14 @@ class Handler extends ExceptionHandler
      */
     public function report(Throwable $exception)
     {
+        if ($this->shouldReport($exception)) {
+            Log::error('Unbehandelte Ausnahme', [
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+                'url' => Request::fullUrl(),
+            ]);
+        }
+
         if (app()->bound('sentry') && $this->shouldReport($exception) && app()->environment('production')) {
             app('sentry')->captureException($exception);
         }

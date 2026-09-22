@@ -16,10 +16,13 @@ use App\Model\Group;
 use App\Model\Module;
 use App\Model\Notification;
 use App\Model\Post;
+use App\Model\Pflichtstunde;
 use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
+use App\Services\PflichtstundenFamilyService;
 use App\Settings\GeneralSetting;
+use App\Settings\PflichtstundenSetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
@@ -626,12 +629,14 @@ class NachrichtenController extends Controller implements HasMiddleware
                 $gta = [];
             }
 
+            $pflichtstunden = $this->pflichtstundenMailData($user);
+
             // @ToDo neue Dateien
 
-            if (count($Nachrichten) > 0 or count($termine) > 0 or count($listen) > 0 or count($diskussionen) > 0 or count($gta) > 0) {
+            if (count($Nachrichten) > 0 or count($termine) > 0 or count($listen) > 0 or count($diskussionen) > 0 or count($gta) > 0 or ($pflichtstunden['has_changes'] ?? false)) {
                 try {
 
-                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine, $gta));
+                    Mail::to($user->email)->queue(new AktuelleInformationen($Nachrichten, $user->name, $diskussionen, $listen, $termine, $gta, $pflichtstunden));
                     $user->lastEmail = Carbon::now();
                     $user->save();
 
@@ -658,6 +663,55 @@ class NachrichtenController extends Controller implements HasMiddleware
                 }
             }
         }
+    }
+
+    private function pflichtstundenMailData(User $user): ?array
+    {
+        if (! $user->can('view Pflichtstunden')) {
+            return null;
+        }
+
+        $settings = new PflichtstundenSetting;
+        $familyService = new PflichtstundenFamilyService($settings);
+        [$periodStart, $periodEnd] = $familyService->resolvePeriod(null);
+        $summary = $familyService->buildFamilySummaries($periodStart, $periodEnd)
+            ->first(fn (array $summary) => in_array($user->id, $summary['user_ids'], true));
+
+        if (! $summary) {
+            return null;
+        }
+
+        $since = $user->lastEmail ?? $user->created_at;
+        $changedEntries = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
+            ->whereIn('user_id', $summary['user_ids'])
+            ->whereBetween('start', [$periodStart, $periodEnd])
+            ->where(function ($query) use ($since) {
+                $query->where('approved_at', '>', $since)
+                    ->orWhere('rejected_at', '>', $since);
+            })
+            ->orderBy('updated_at')
+            ->get()
+            ->map(function (Pflichtstunde $entry): array {
+                $approved = $entry->approved && $entry->approved_at;
+
+                return [
+                    'status' => $approved ? 'bestätigt' : 'abgelehnt',
+                    'date' => ($approved ? $entry->approved_at : $entry->rejected_at)?->format('d.m.Y H:i'),
+                    'description' => $entry->description,
+                    'hours' => round($entry->duration / 60, 2),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'required_hours' => $summary['required_hours'],
+            'credited_hours' => round(($summary['opening_balance_minutes'] + $summary['totalMinutes']) / 60, 2),
+            'open_hours' => round($summary['openMinutes'] / 60, 2),
+            'percent' => $summary['percent'],
+            'has_changes' => $changedEntries !== [],
+            'changes' => $changedEntries,
+        ];
     }
 
     /**
@@ -1177,4 +1231,3 @@ class NachrichtenController extends Controller implements HasMiddleware
         return null;
     }
 }
-

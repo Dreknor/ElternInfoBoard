@@ -137,14 +137,16 @@ class UserService
     public function forceDeleteTrashedUser(User $user): string
     {
         try {
-            // Vor dem endgültigen Löschen die Pflichtstunden-Familienkonten für
-            // alle betroffenen (auch rückwirkenden) Zeiträume final berechnen
-            // und persistieren. So bleibt der abgerechnete Betrag/Saldo
-            // erhalten, obwohl die Rohdaten (pflichtstunden.user_id, cascade)
-            // mit dem Nutzer endgültig gelöscht werden.
-            $this->pflichtstundenFamilyService->sealHistoryForUser($user);
+            DB::transaction(function () use ($user) {
+                // Vor dem endgültigen Löschen die Pflichtstunden-Familienkonten für
+                // alle betroffenen (auch rückwirkenden) Zeiträume final berechnen
+                // und persistieren. So bleibt der abgerechnete Betrag/Saldo
+                // erhalten, obwohl die Rohdaten (pflichtstunden.user_id, cascade)
+                // mit dem Nutzer endgültig gelöscht werden.
+                $this->pflichtstundenFamilyService->sealHistoryForUser($user);
 
-            $user->forceDelete();
+                $user->forceDelete();
+            });
 
             return '';
         } catch (\Exception $e) {

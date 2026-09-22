@@ -161,8 +161,8 @@
                                               aria-label="{{ $user->name }} auswählen">
                                     </td>
                                     <td>
-                                        <a href="{{ url('users/'.$user->id) }}" class="text-decoration-none">
-                                            <i class="fas fa-user-circle"></i>
+                                        <a href="{{ url('users/'.$user->id) }}" class="text-decoration-none" aria-label="Profil von {{ $user->name }} öffnen">
+                                            <i class="fas fa-user-circle" aria-hidden="true"></i>
                                         </a>
                                     </td>
                                     <td>
@@ -216,7 +216,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">Keine Elternkonten vorhanden.</td>
+                                    <td colspan="8" class="text-center text-muted py-4">Keine Elternkonten vorhanden.</td>
                                 </tr>
                             @endforelse
                             </tbody>

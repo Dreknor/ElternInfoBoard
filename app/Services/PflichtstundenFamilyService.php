@@ -45,6 +45,22 @@ class PflichtstundenFamilyService
         return (int) $periodStart->year;
     }
 
+    /**
+     * Ermittelt das Startjahr der Periode, in die das übergebene Datum fällt,
+     * basierend auf den konfigurierten Perioden-Grenzen (z.B. 08-01–07-31).
+     * Im Gegensatz zu resolvePeriod(null) (das immer die "laufende" Periode
+     * relativ zu "jetzt" bestimmt) funktioniert dies für ein beliebiges Datum.
+     */
+    public function resolvePeriodStartYearForDate(Carbon $date): int
+    {
+        $periodStartInSameYear = Carbon::createFromFormat(
+            'Y-m-d',
+            $date->year.'-'.$this->settings->pflichtstunden_start
+        )->startOfDay();
+
+        return $date->lt($periodStartInSameYear) ? $date->year - 1 : $date->year;
+    }
+
     public function determineFamilyKey(User $user, ?User $partner = null): string
     {
         $ids = [$user->id];
@@ -380,8 +396,10 @@ class PflichtstundenFamilyService
             return;
         }
 
-        $firstYear = Carbon::parse($firstStart)->year;
-        $lastYear = (int) now()->year;
+        $firstYear = $this->resolvePeriodStartYearForDate(Carbon::parse($firstStart));
+
+        [$currentPeriodStart] = $this->resolvePeriod(null);
+        $lastYear = $this->periodStartYear($currentPeriodStart);
 
         for ($year = $firstYear; $year <= $lastYear; $year++) {
             [$periodStart, $periodEnd] = $this->resolvePeriod($year);

@@ -195,6 +195,61 @@ class UserManagementTest extends TestCase
 
     /**
      * @test
+     * UserService::forceDeleteTrashedUser() rechnet vor dem endgültigen Löschen
+     * alle betroffenen (auch historischen) Perioden final ab und persistiert
+     * das Familienkonto, sodass der abgerechnete Betrag/Saldo erhalten bleibt,
+     * obwohl die Pflichtstunden-Rohdaten per Cascade gelöscht werden. Dies gilt
+     * auch, wenn der Partner bereits (soft-)gelöscht ist.
+     */
+    public function test_force_delete_seals_pflichtstunden_family_history(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+        $user->update(['sorg2' => $partner->id]);
+        $partner->update(['sorg2' => $user->id]);
+
+        $permission = Permission::firstOrCreate(['name' => 'view Pflichtstunden', 'guard_name' => 'web']);
+        $user->givePermissionTo($permission);
+        $partner->givePermissionTo($permission);
+
+        // Historischer Eintrag aus einer vergangenen Periode (2 Jahre zurück)
+        $historicalStart = now()->subYears(2);
+        $pflichtstunde = Pflichtstunde::create([
+            'user_id' => $user->id,
+            'description' => 'Historische Pflichtstunde',
+            'start' => $historicalStart->copy()->setTime(8, 0),
+            'end' => $historicalStart->copy()->setTime(10, 0),
+            'approved' => true,
+            'approved_at' => $historicalStart,
+            'approved_by' => $partner->id,
+            'rejected' => false,
+        ]);
+
+        // Partner wird vor dem Hard-Delete des Users bereits soft-gelöscht
+        $partner->delete();
+
+        $user->delete(); // in den Papierkorb
+
+        /** @var UserService $service */
+        $service = app(UserService::class);
+        $error = $service->forceDeleteTrashedUser($user->fresh());
+
+        $this->assertSame('', $error);
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        $this->assertDatabaseMissing('pflichtstunden', ['id' => $pflichtstunde->id]);
+
+        $familyService = app(\App\Services\PflichtstundenFamilyService::class);
+        $familyKey = $familyService->determineFamilyKey($user, $partner);
+        $expectedPeriodYear = $familyService->resolvePeriodStartYearForDate($historicalStart);
+
+        $this->assertDatabaseHas('pflichtstunden_family_accounts', [
+            'family_key' => $familyKey,
+            'period_year' => $expectedPeriodYear,
+        ]);
+    }
+
+    /**
+     * @test
      * Sorg2-Verknüpfung löst vorherige bidirektional auf
      */
     public function test_sorg2_link_clears_old_partner(): void
