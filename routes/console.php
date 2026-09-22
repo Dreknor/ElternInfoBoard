@@ -106,6 +106,8 @@ try {
         Schedule::command('audits:cleanup --days=365')->weeklyOn(1, '02:30');
         // Reminder-Logs auf 12 Monate begrenzen
         Schedule::command('reminder-logs:cleanup --days=365')->dailyAt('02:45');
+        // Such-Protokolle auf 90 Tage begrenzen
+        Schedule::command('search-logs:cleanup --days=90')->weeklyOn(1, '02:35');
         // Lesebestätigungen auf 12 Monate / verwaiste entfernen
         Schedule::command('read-receipts:cleanup --days=365')->dailyAt('02:50');
         // Abgelaufene Sanctum-Tokens entfernen

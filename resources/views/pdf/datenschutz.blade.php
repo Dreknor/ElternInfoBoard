@@ -365,7 +365,6 @@
 @endif
 
 {{-- ===== PFLICHTSTUNDEN ===== --}}
-@php $pflichtstunden = $user->pflichtstunden()->withTrashed()->get(); @endphp
 @if($pflichtstunden->count())
     <div class="section-header" style="background:#059669;">Pflichtstunden</div>
     <table>
@@ -642,4 +641,3 @@
 
 </body>
 </html>
-

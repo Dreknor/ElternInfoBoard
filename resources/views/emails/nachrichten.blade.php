@@ -25,6 +25,33 @@
                             <!-- Greeting -->
                             <p style="margin: 0 0 25px 0; font-size: 18px; color: #2d3748;">Liebe/r {{$name}},</p>
 
+                            @if(isset($pflichtstunden))
+                            <!-- Pflichtstunden Section -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 30px; border: 1px solid #e2e8f0;">
+                                <tr>
+                                    <td bgcolor="#f7fafc" style="padding: 15px 20px; border-bottom: 2px solid #667eea;">
+                                        <h2 style="margin: 0; padding: 0; font-size: 18px; font-weight: 600; color: #667eea;">⏱ Pflichtstunden</h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px 20px; color: #2d3748;">
+                                        <div>Aktueller Stand: <strong>{{number_format($pflichtstunden['credited_hours'], 2, ',', '.')}} von {{number_format($pflichtstunden['required_hours'], 2, ',', '.')}} Stunden bestätigt</strong> ({{$pflichtstunden['percent']}} %).</div>
+                                        @if($pflichtstunden['open_hours'] > 0)
+                                            <div style="margin-top: 5px; color: #718096;">Offen: {{number_format($pflichtstunden['open_hours'], 2, ',', '.')}} Stunden</div>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @foreach($pflichtstunden['changes'] as $change)
+                                <tr>
+                                    <td style="padding: 10px 20px; border-top: 1px solid #e2e8f0; color: #4a5568;">
+                                        Pflichtstunde <strong>{{$change['status']}}</strong>@if($change['description']) ({{$change['description']}})@endif
+                                        @if($change['date']) am {{$change['date']}}@endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </table>
+                            @endif
+
                             @if(count($nachrichten) > 0)
                             <!-- Neue Nachrichten Section -->
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 30px; border: 1px solid #e2e8f0;">
