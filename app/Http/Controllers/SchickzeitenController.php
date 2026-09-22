@@ -267,7 +267,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $noticeHistory = ChildNotice::query()
             ->with(['child', 'user'])
-            ->whereBetween('date', [$historyStart, $historyEnd])
+            ->where('date', '>=', $historyStart)
             ->orderByDesc('date')
             ->get()
             ->map(function (ChildNotice $notice) {
@@ -281,6 +281,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                     'content' => trim((string) $notice->notice),
                     'author' => $notice->user?->name ?? 'System',
                     'created_at' => $notice->created_at?->format('Y-m-d H:i:s'),
+                    'is_future' => $notice->date?->isAfter(today()->endOfDay()) ?? false,
                 ];
             });
 
@@ -320,10 +321,17 @@ class SchickzeitenController extends Controller implements HasMiddleware
                     'content' => trim($dayLabel.' • '.$timeText),
                     'author' => $schickzeit->user?->name ?? 'System',
                     'created_at' => $schickzeit->updated_at?->format('Y-m-d H:i:s'),
+                    'is_future' => false,
                 ];
             });
 
-        $historyEntries = collect($noticeHistory)
+        $futureHistoryEntries = $noticeHistory
+            ->where('is_future', true)
+            ->sortBy(fn ($entry) => $entry['date'])
+            ->values();
+
+        $pastHistoryEntries = $noticeHistory
+            ->where('is_future', false)
             ->merge($schickzeitHistory)
             ->sortByDesc(fn ($entry) => $entry['date'])
             ->values();
@@ -344,7 +352,8 @@ class SchickzeitenController extends Controller implements HasMiddleware
             'childLatePickups'    => $childLatePickups,
             'latePickupChildren'  => $latePickupChildren,
             'canManageLatePickups' => \auth()->user()->can('manage late pickups'),
-            'historyEntries' => $historyEntries,
+            'futureHistoryEntries' => $futureHistoryEntries,
+            'pastHistoryEntries' => $pastHistoryEntries,
         ]);
     }
 

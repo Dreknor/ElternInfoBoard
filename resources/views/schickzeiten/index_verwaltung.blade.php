@@ -31,7 +31,7 @@
                             :class="activeTab === 'verlauf' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
                             class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
                         <i class="fas fa-history"></i>
-                        4 Wochen Verlauf
+                        Nachrichtenverlauf
                     </button>
                     <button @click="activeTab = 'late_pickups'"
                             :class="activeTab === 'late_pickups' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
@@ -757,10 +757,14 @@
                         <div class="bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3">
                             <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
                                 <i class="fas fa-history"></i>
-                                Nachrichten und Schickzeiten der letzten 4 Wochen
+                                Nachrichten und Schickzeiten
                             </h3>
                         </div>
                         <div class="p-4">
+                            <p class="mb-5 text-sm text-gray-600">
+                                Vergangene Einträge der letzten 4 Wochen sowie alle zukünftigen Nachrichten.
+                                Zukünftige Nachrichten sind farblich hervorgehoben.
+                            </p>
                             <div class="flex flex-col lg:flex-row gap-4 mb-5">
                                 <div class="flex-1">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Kind suchen</label>
@@ -778,52 +782,96 @@
                                 </div>
                             </div>
 
-                            @if($historyEntries->isEmpty())
+                            @if($futureHistoryEntries->isEmpty() && $pastHistoryEntries->isEmpty())
                                 <div class="flex flex-col items-center text-gray-500 py-10">
                                     <i class="fas fa-inbox text-4xl mb-3"></i>
-                                    <p class="text-sm">In den letzten 4 Wochen wurden keine Nachrichten oder Schickzeiten erfasst.</p>
+                                    <p class="text-sm">Es wurden keine passenden Nachrichten oder Schickzeiten erfasst.</p>
                                 </div>
                             @else
-                                <div class="space-y-3">
-                                    @foreach($historyEntries as $historyEntry)
-                                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm"
-                                             data-child-name="{{ strtolower($historyEntry['child_name']) }}"
-                                             data-content="{{ strtolower($historyEntry['content'] ?? '') }}"
-                                             x-show="(!childFilter || $el.dataset.childName.includes(childFilter.toLowerCase())) && (!contentFilter || $el.dataset.content.includes(contentFilter.toLowerCase()))">
-                                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
-                                                <div class="flex items-center gap-3 flex-wrap">
-                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $historyEntry['kind'] === 'notice' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700' }}">
-                                                        {{ $historyEntry['type'] }}
-                                                    </span>
-                                                    <h4 class="font-semibold text-gray-800">{{ $historyEntry['child_name'] }}</h4>
-                                                </div>
-                                                <div class="text-xs text-gray-500">
-                                                    {{ \Carbon\Carbon::parse($historyEntry['date'])->locale('de')->isoFormat('DD.MM.YYYY, HH:mm') }} Uhr
-                                                </div>
+                                @foreach([
+                                    [
+                                        'title' => 'Zukünftige Nachrichten',
+                                        'description' => 'Geplante Nachrichten, beginnend mit dem nächsten Termin.',
+                                        'icon' => 'fa-calendar-plus',
+                                        'entries' => $futureHistoryEntries,
+                                        'future' => true,
+                                    ],
+                                    [
+                                        'title' => 'Vergangene Einträge',
+                                        'description' => 'Nachrichten und Schickzeiten der vergangenen 4 Wochen.',
+                                        'icon' => 'fa-history',
+                                        'entries' => $pastHistoryEntries,
+                                        'future' => false,
+                                    ],
+                                ] as $historySection)
+                                    <section class="{{ !$loop->first ? 'mt-8 border-t border-gray-200 pt-6' : '' }}">
+                                        <div class="mb-3 flex items-start justify-between gap-3">
+                                            <div>
+                                                <h4 class="flex items-center gap-2 text-base font-bold {{ $historySection['future'] ? 'text-violet-800' : 'text-gray-800' }}">
+                                                    <i class="fas {{ $historySection['icon'] }}"></i>
+                                                    {{ $historySection['title'] }}
+                                                </h4>
+                                                <p class="mt-1 text-sm text-gray-500">{{ $historySection['description'] }}</p>
                                             </div>
-
-                                            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ $historyEntry['content'] }}</p>
-
-                                            <div class="mt-3 flex items-center justify-between flex-wrap gap-2 text-xs text-gray-500">
-                                                <span class="inline-flex items-center gap-1">
-                                                    <i class="fas fa-user"></i>
-                                                    {{ $historyEntry['author'] }}
-                                                </span>
-                                                @if($historyEntry['kind'] === 'notice')
-                                                    <span class="inline-flex items-center gap-1 text-blue-600">
-                                                        <i class="fas fa-comment-dots"></i>
-                                                        Nachricht
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center gap-1 text-amber-600">
-                                                        <i class="fas fa-clock"></i>
-                                                        Schickzeit
-                                                    </span>
-                                                @endif
-                                            </div>
+                                            <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $historySection['future'] ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
+                                                {{ $historySection['entries']->count() }}
+                                            </span>
                                         </div>
-                                    @endforeach
-                                </div>
+
+                                        @if($historySection['entries']->isEmpty())
+                                            <div class="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500">
+                                                {{ $historySection['future'] ? 'Keine zukünftigen Nachrichten vorhanden.' : 'Keine vergangenen Einträge vorhanden.' }}
+                                            </div>
+                                        @else
+                                            <div class="space-y-3">
+                                                @foreach($historySection['entries'] as $historyEntry)
+                                                    <div class="rounded-lg border p-4 shadow-sm {{ $historyEntry['is_future'] ? 'border-violet-400 bg-violet-50 ring-1 ring-violet-200' : 'border-gray-200 bg-gray-50' }}"
+                                                         data-child-name="{{ strtolower($historyEntry['child_name']) }}"
+                                                         data-content="{{ strtolower($historyEntry['content'] ?? '') }}"
+                                                         x-show="(!childFilter || $el.dataset.childName.includes(childFilter.toLowerCase())) && (!contentFilter || $el.dataset.content.includes(contentFilter.toLowerCase()))">
+                                                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                                                            <div class="flex items-center gap-3 flex-wrap">
+                                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $historyEntry['kind'] === 'notice' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700' }}">
+                                                                    {{ $historyEntry['type'] }}
+                                                                </span>
+                                                                @if($historyEntry['is_future'])
+                                                                    <span class="inline-flex items-center gap-1 rounded-full bg-violet-600 px-2.5 py-1 text-xs font-semibold text-white">
+                                                                        <i class="fas fa-calendar-plus"></i>
+                                                                        Zukünftig
+                                                                    </span>
+                                                                @endif
+                                                                <h4 class="font-semibold text-gray-800">{{ $historyEntry['child_name'] }}</h4>
+                                                            </div>
+                                                            <div class="text-xs {{ $historyEntry['is_future'] ? 'font-semibold text-violet-700' : 'text-gray-500' }}">
+                                                                {{ \Carbon\Carbon::parse($historyEntry['date'])->locale('de')->isoFormat('DD.MM.YYYY, HH:mm') }} Uhr
+                                                            </div>
+                                                        </div>
+
+                                                        <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ $historyEntry['content'] }}</p>
+
+                                                        <div class="mt-3 flex items-center justify-between flex-wrap gap-2 text-xs text-gray-500">
+                                                            <span class="inline-flex items-center gap-1">
+                                                                <i class="fas fa-user"></i>
+                                                                {{ $historyEntry['author'] }}
+                                                            </span>
+                                                            @if($historyEntry['kind'] === 'notice')
+                                                                <span class="inline-flex items-center gap-1 text-blue-600">
+                                                                    <i class="fas fa-comment-dots"></i>
+                                                                    Nachricht
+                                                                </span>
+                                                            @else
+                                                                <span class="inline-flex items-center gap-1 text-amber-600">
+                                                                    <i class="fas fa-clock"></i>
+                                                                    Schickzeit
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </section>
+                                @endforeach
                             @endif
                         </div>
                     </div>
@@ -1135,4 +1183,3 @@
         }
     </script>
 @endpush
-
