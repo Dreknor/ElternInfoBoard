@@ -25,6 +25,18 @@
                             @else
                                 <i class="fas fa-lock"></i>
                             @endif
+
+                            @canany(['edit groups', 'delete groups'])
+                                @if($group->owner_id != null)
+                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)"></i>
+                                    @elseif($group->owner_id == null)
+                                    <i class="fas fa-globe" style="color: var(--color-widget-accent-from)"></i>
+                                    @elseif($group->owner_id == auth()->user()->id)
+                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)"></i>
+                                @endif
+
+                            @endcanany
+
                             {{$group->name}}
                             @if(!$group->active)
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background: rgba(0,0,0,0.25); color: var(--color-widget-header-text);">
