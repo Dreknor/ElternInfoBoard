@@ -109,9 +109,8 @@ class DashboardController extends Controller implements HasMiddleware
         $currentUser = auth()->user();
         $sorg2UserId = $currentUser->sorg2; // ID des verknüpften Sorgeberechtigten 2
 
-        $careChildren = Child::query()
-            ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id'])
-            ->care()
+        $careChildrenQuery = Child::query()
+            ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id', 'children.class_id'])
             ->whereHas('parents', function ($query) use ($userId, $sorg2UserId) {
                 $query->where('users.id', $userId);
                 if ($sorg2UserId) {
@@ -135,8 +134,17 @@ class DashboardController extends Controller implements HasMiddleware
                         ->orderBy('specific_date', 'desc');
                 }
             ])
-            ->orderBy('first_name')
-            ->get();
+            ->orderBy('first_name');
+
+        $careChildren = $careChildrenQuery->care()->get();
+
+        if ($careChildren->isEmpty()) {
+            $careChildren = $careChildrenQuery->get()
+                ->filter(function (Child $child) {
+                    return $child->krankmeldungToday();
+                })
+                ->values();
+        }
 
         // Aktive meldepflichtige Erkrankungen abrufen
         $activeDiseases = Cache::remember('active_diseases', 60 * 5, function () {
