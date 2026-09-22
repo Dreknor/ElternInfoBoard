@@ -221,13 +221,16 @@ class Child extends Model implements HasMedia
     public function scopeCare($query)
     {
         $careSettings = new CareSetting;
+        $allowedGroups = array_values(array_filter((array) $careSettings->groups_list));
+        $allowedClasses = array_values(array_filter((array) $careSettings->class_list));
 
-        if (empty($careSettings->groups_list) && empty($careSettings->class_list)) {
+        if (empty($allowedGroups) && empty($allowedClasses)) {
             return $query;
         }
 
-        return $query->whereIn('group_id', $careSettings->groups_list)
-            ->whereIn('class_id', $careSettings->class_list);
+        return $query
+            ->when(! empty($allowedGroups), fn ($careQuery) => $careQuery->whereIn('group_id', $allowedGroups))
+            ->when(! empty($allowedClasses), fn ($careQuery) => $careQuery->whereIn('class_id', $allowedClasses));
     }
 
     public function krankmeldungen(): HasMany
