@@ -37,9 +37,6 @@ class createNachrichtRequest extends FormRequest
             'archiv_ab' => [
                 'required', 'date',
             ],
-            'password' => [
-                'required_with:urgent',
-            ],
             'type' => [
                 'required',
             ],
