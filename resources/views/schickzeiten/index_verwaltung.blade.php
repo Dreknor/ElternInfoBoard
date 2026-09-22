@@ -27,6 +27,12 @@
                         Schickzeiten
                     </button>
                     @endcan
+                    <button @click="activeTab = 'verlauf'"
+                            :class="activeTab === 'verlauf' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+                            class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-history"></i>
+                        4 Wochen Verlauf
+                    </button>
                     <button @click="activeTab = 'late_pickups'"
                             :class="activeTab === 'late_pickups' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
                             class="flex-1 px-6 py-3 border-b-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
@@ -737,6 +743,91 @@
                     </div>
                 </div>
                 @endcan
+
+                <div x-show="activeTab === 'verlauf'"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform scale-95"
+                     x-transition:enter-end="opacity-100 transform scale-100"
+                     style="display: none;"
+                     x-data="{
+                         childFilter: '',
+                         contentFilter: ''
+                     }">
+                    <div class="bg-white rounded-lg shadow border border-gray-200">
+                        <div class="bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
+                                <i class="fas fa-history"></i>
+                                Nachrichten und Schickzeiten der letzten 4 Wochen
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex flex-col lg:flex-row gap-4 mb-5">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kind suchen</label>
+                                    <input type="text"
+                                           x-model="childFilter"
+                                           placeholder="Nach Kind, Vor- oder Nachname..."
+                                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-200 focus:border-violet-500 outline-none transition duration-200">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Inhalt suchen</label>
+                                    <input type="text"
+                                           x-model="contentFilter"
+                                           placeholder="Nach Nachricht, Uhrzeit oder Hinweis..."
+                                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-200 focus:border-violet-500 outline-none transition duration-200">
+                                </div>
+                            </div>
+
+                            @if($historyEntries->isEmpty())
+                                <div class="flex flex-col items-center text-gray-500 py-10">
+                                    <i class="fas fa-inbox text-4xl mb-3"></i>
+                                    <p class="text-sm">In den letzten 4 Wochen wurden keine Nachrichten oder Schickzeiten erfasst.</p>
+                                </div>
+                            @else
+                                <div class="space-y-3">
+                                    @foreach($historyEntries as $historyEntry)
+                                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm"
+                                             data-child-name="{{ strtolower($historyEntry['child_name']) }}"
+                                             data-content="{{ strtolower($historyEntry['content'] ?? '') }}"
+                                             x-show="(!childFilter || $el.dataset.childName.includes(childFilter.toLowerCase())) && (!contentFilter || $el.dataset.content.includes(contentFilter.toLowerCase()))">
+                                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                                                <div class="flex items-center gap-3 flex-wrap">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $historyEntry['kind'] === 'notice' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700' }}">
+                                                        {{ $historyEntry['type'] }}
+                                                    </span>
+                                                    <h4 class="font-semibold text-gray-800">{{ $historyEntry['child_name'] }}</h4>
+                                                </div>
+                                                <div class="text-xs text-gray-500">
+                                                    {{ \Carbon\Carbon::parse($historyEntry['date'])->locale('de')->isoFormat('DD.MM.YYYY, HH:mm') }} Uhr
+                                                </div>
+                                            </div>
+
+                                            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ $historyEntry['content'] }}</p>
+
+                                            <div class="mt-3 flex items-center justify-between flex-wrap gap-2 text-xs text-gray-500">
+                                                <span class="inline-flex items-center gap-1">
+                                                    <i class="fas fa-user"></i>
+                                                    {{ $historyEntry['author'] }}
+                                                </span>
+                                                @if($historyEntry['kind'] === 'notice')
+                                                    <span class="inline-flex items-center gap-1 text-blue-600">
+                                                        <i class="fas fa-comment-dots"></i>
+                                                        Nachricht
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 text-amber-600">
+                                                        <i class="fas fa-clock"></i>
+                                                        Schickzeit
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Verspätete Abholungen Tab -->
                 <div x-show="activeTab === 'late_pickups'"
