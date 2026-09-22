@@ -1,6 +1,23 @@
 <style>
     /* Verhindert, dass list-items beim Mehrspalten-Layout zerrissen werden */
     .group-col ul.list-group li { break-inside: avoid; }
+
+    .child-search-match {
+        background-color: #fff3cd !important;
+        border-color: #ffca2c !important;
+        box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.75);
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #groups-container.absent-strikethrough-enabled .detail-checkedOut .name,
+    #groups-container.absent-strikethrough-enabled .list-group-item.detail-checkedOut .name {
+        text-decoration: line-through;
+    }
+
+    #groups-container:not(.absent-strikethrough-enabled) .detail-checkedOut .name,
+    #groups-container:not(.absent-strikethrough-enabled) .list-group-item.detail-checkedOut .name {
+        text-decoration: none;
+    }
 </style>
 <div class="container-fluid">
     @php
@@ -16,30 +33,49 @@
     @endphp
 
     {{-- Gruppen-Filter-Leiste --}}
-    <div class="mb-2 d-flex flex-wrap align-items-center" style="gap: 0.4rem;">
-        <small class="text-muted mr-1"><i class="fas fa-filter"></i> Gruppen:</small>
-        @foreach($visibleGroups as $group)
-            <button type="button"
-                    class="btn btn-sm btn-primary group-toggle-btn"
-                    data-group-id="{{ $group->id }}"
-                    title="Gruppe ein-/ausblenden">
-                {{ $group->name }}
-            </button>
-        @endforeach
-        <button type="button" class="btn btn-sm btn-outline-secondary ml-1" id="show-all-groups" title="Alle Gruppen anzeigen">
-            <i class="fas fa-eye"></i> Alle
-        </button>
-        <span class="ml-2 text-muted" style="border-left: 1px solid #ccc; padding-left: 0.6rem;">
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="sort-schickzeit-btn" title="Nach Schickzeit sortieren">
-                <i class="fas fa-sort-numeric-down"></i> Schickzeit
-            </button>
-        </span>
+    <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50/90 p-2 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-2 py-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wide text-slate-500"><i class="fas fa-filter mr-1"></i> Gruppen</span>
+                @foreach($visibleGroups as $group)
+                    <button type="button"
+                            class="group-toggle-btn inline-flex items-center rounded-md border border-blue-600 bg-blue-600 px-2.5 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            data-group-id="{{ $group->id }}"
+                            title="Gruppe ein-/ausblenden">
+                        {{ $group->name }}
+                    </button>
+                @endforeach
+                <button type="button" class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-1" id="show-all-groups" title="Alle Gruppen anzeigen">
+                    <i class="fas fa-eye mr-1"></i> Alle
+                </button>
+            </div>
+
+            <div class="ml-auto flex flex-wrap items-center gap-2">
+                @include('anwesenheit.partials.search')
+
+                <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-2 py-1.5">
+                    <button type="button" class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-1" id="sort-schickzeit-btn" title="Nach Schickzeit sortieren">
+                        <i class="fas fa-sort-numeric-down mr-1"></i> Schickzeit
+                    </button>
+                    <button type="button" class="inline-flex items-center rounded-md border border-slate-300 bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-1" id="absent-strikethrough-btn" title="Abwesende Kinder durchstreichen">
+                        <i class="fas fa-strikethrough mr-1"></i> Abwesende
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-2 py-1.5">
+                    <a href="{{url('/home')}}" class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-1" title="Zurück zur Übersicht">
+                        <i class="fas fa-arrow-left mr-1"></i> Zurück
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row" id="groups-container">
         @foreach($visibleGroups as $group)
             <div class="col-lg-3 col-md-6 mb-1 group-col" data-group-id="{{ $group->id }}">
-                <div class="card">
+                <div class="card"
+                     style="height: 100%;">
                     <div class="card-header bg-primary text-white"
                          style="position: sticky; top: 0; z-index: 1; padding: 0.5rem; background-color: #007bff !important; color: #fff !important;">
                         <span class="badge badge-warning float-right">{{ $children->where($groupingField, $group->id)->count() }}</span>
@@ -72,9 +108,20 @@
                                            ]
                                        );
                                    @endphp
+                                   @php
+                                       $notice = $child->hasNotice()?->loadMissing('user');
+                                       $noticeData = $notice ? [
+                                           'id' => $notice->id,
+                                           'notice' => $notice->notice,
+                                           'date' => $notice->date?->toDateString(),
+                                           'created_at' => $notice->created_at?->toIso8601String(),
+                                           'created_at_formatted' => $notice->created_at?->format('d.m.Y H:i'),
+                                           'author_name' => $notice->user?->name ?? 'Unbekannt',
+                                       ] : null;
+                                   @endphp
                                    <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if($child->checkedIn()) detail-checkedIn @else detail-checkedOut @endif"
                                        data-child='@json($childData)'
-                                       data-notices='@json($child->hasNotice())'
+                                       data-notices='@json($noticeData)'
                                        style="padding: 0.5rem;">
                                        <div class="container-fluid">
                                             <div class="row">
@@ -206,9 +253,20 @@
                                                 ]
                                             );
                                         @endphp
+                                        @php
+                                            $notice = $child->hasNotice()?->loadMissing('user');
+                                            $noticeData = $notice ? [
+                                                'id' => $notice->id,
+                                                'notice' => $notice->notice,
+                                                'date' => $notice->date?->toDateString(),
+                                                'created_at' => $notice->created_at?->toIso8601String(),
+                                                'created_at_formatted' => $notice->created_at?->format('d.m.Y H:i'),
+                                                'author_name' => $notice->user?->name ?? 'Unbekannt',
+                                            ] : null;
+                                        @endphp
                                         <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if($child->checkedIn()) detail-checkedIn @else detail-checkedOut @endif"
                                             data-child='@json($childData)'
-                                            data-notices='@json($child->hasNotice())'
+                                            data-notices='@json($noticeData)'
                                             style="padding: 0.5rem;">
                                             <div class="container-fluid">
                                                 <div class="row">
@@ -341,8 +399,12 @@
         document.querySelectorAll('.group-toggle-btn').forEach(function (btn) {
             const id = btn.dataset.groupId;
             const isHidden = hidden.includes(id);
-            btn.classList.toggle('btn-primary', !isHidden);
-            btn.classList.toggle('btn-outline-primary', isHidden);
+
+            btn.classList.remove('border-blue-600', 'bg-blue-600', 'text-white', 'border-slate-300', 'bg-slate-200', 'text-slate-700', 'hover:bg-blue-700', 'hover:bg-slate-100');
+            btn.classList.add(isHidden ? 'border-slate-300' : 'border-blue-600');
+            btn.classList.add(isHidden ? 'bg-slate-200' : 'bg-blue-600');
+            btn.classList.add(isHidden ? 'text-slate-700' : 'text-white');
+            btn.classList.add(isHidden ? 'hover:bg-slate-100' : 'hover:bg-blue-700');
         });
 
         // Einzelgruppen-Modus: volle Breite + Mehrspalten-Layout
@@ -391,6 +453,63 @@
         applyState();
     });
 
+    // --- Abwesende Kinder durchstreichen ---
+    const ABSENT_STRIKETHROUGH_KEY = 'detailedView_absentStrikethrough';
+
+    function getAbsentStrikethrough() {
+        const value = localStorage.getItem(ABSENT_STRIKETHROUGH_KEY);
+        return value === null ? true : value === 'true';
+    }
+
+    function applyAbsentStrikethroughState() {
+        const groupsContainer = document.getElementById('groups-container');
+        const btn = document.getElementById('absent-strikethrough-btn');
+        const active = getAbsentStrikethrough();
+
+        if (groupsContainer) {
+            groupsContainer.classList.toggle('absent-strikethrough-enabled', active);
+        }
+
+        if (btn) {
+            btn.classList.remove('bg-slate-200', 'bg-white', 'border-slate-300', 'text-slate-700');
+            btn.classList.add(active ? 'bg-slate-200' : 'bg-white');
+            btn.classList.add('border-slate-300');
+            btn.classList.add('text-slate-700');
+        }
+    }
+
+    document.getElementById('absent-strikethrough-btn').addEventListener('click', function () {
+        const next = !getAbsentStrikethrough();
+        localStorage.setItem(ABSENT_STRIKETHROUGH_KEY, String(next));
+        applyAbsentStrikethroughState();
+    });
+
+    // --- Kindersuche mit Hervorhebung ---
+    const childSearchInput = document.getElementById('child-name-search');
+    if (childSearchInput) {
+        function applyChildSearchHighlight() {
+            const query = childSearchInput.value.trim().toLowerCase();
+            const matches = [];
+
+            document.querySelectorAll('.child-item').forEach(function (item) {
+                const name = (item.querySelector('.name')?.textContent || item.textContent || '').trim().toLowerCase();
+                const hasMatch = query !== '' && name.includes(query);
+
+                item.classList.toggle('child-search-match', hasMatch);
+                if (hasMatch) {
+                    matches.push(item);
+                }
+            });
+
+            if (query && matches.length) {
+                matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        childSearchInput.addEventListener('input', applyChildSearchHighlight);
+        applyChildSearchHighlight();
+    }
+
     // --- Schickzeit-Sortierung ---
     const SORT_KEY = 'detailedView_sortBySchickzeit';
 
@@ -426,8 +545,13 @@
     function applySortState() {
         const active = getSchickzeitSort();
         const btn = document.getElementById('sort-schickzeit-btn');
-        btn.classList.toggle('btn-secondary', active);
-        btn.classList.toggle('btn-outline-secondary', !active);
+
+        if (btn) {
+            btn.classList.remove('bg-slate-200', 'bg-white', 'border-slate-300', 'text-slate-700');
+            btn.classList.add(active ? 'bg-slate-200' : 'bg-white');
+            btn.classList.add('border-slate-300');
+            btn.classList.add('text-slate-700');
+        }
 
         document.querySelectorAll('.group-col ul.list-group').forEach(function (ul) {
             const items = Array.from(ul.querySelectorAll('li.child-item'));
@@ -454,5 +578,6 @@
 
     applyState();
     applySortState();
+    applyAbsentStrikethroughState();
 })();
 </script>

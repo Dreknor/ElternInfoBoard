@@ -8,6 +8,7 @@ use App\Http\Requests\SchickzeitRequest;
 use App\Mail\SchickzeitenReminder;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
+use App\Model\ChildNotice;
 use App\Model\Notification;
 use App\Model\Schickzeiten;
 use App\Model\User;
@@ -261,6 +262,80 @@ class SchickzeitenController extends Controller implements HasMiddleware
             ->orderBy('last_name')
             ->get(['id', 'first_name', 'last_name']);
 
+        $historyStart = now()->subWeeks(4)->startOfDay();
+        $historyEnd = now()->endOfDay();
+
+        $noticeHistory = ChildNotice::query()
+            ->with(['child', 'user'])
+            ->where('date', '>=', $historyStart)
+            ->orderByDesc('date')
+            ->get()
+            ->map(function (ChildNotice $notice) {
+                return [
+                    'id' => $notice->id,
+                    'type' => 'Nachricht',
+                    'kind' => 'notice',
+                    'child_id' => $notice->child_id,
+                    'child_name' => trim(($notice->child?->first_name ?? '').' '.($notice->child?->last_name ?? '')) ?: ($notice->child_name ?? 'Unbekannt'),
+'date' => $notice->created_at?->format('Y-m-d H:i:s') ?? $notice->date?->format('Y-m-d H:i:s'),
+                    'content' => trim((string) $notice->notice),
+                    'author' => $notice->user?->name ?? 'System',
+                    'created_at' => $notice->created_at?->format('Y-m-d H:i:s'),
+                    'is_future' => $notice->date?->isAfter(today()->endOfDay()) ?? false,
+                ];
+            });
+
+        $schickzeitHistory = \App\Model\Schickzeiten::query()
+            ->with(['child', 'user'])
+            ->where(function ($query) use ($historyStart, $historyEnd) {
+                $query->whereBetween('specific_date', [$historyStart->toDateString(), $historyEnd->toDateString()])
+                    ->orWhereBetween('updated_at', [$historyStart, $historyEnd]);
+            })
+            ->whereNull('deleted_at')
+            ->orderByDesc('specific_date')
+            ->orderByDesc('updated_at')
+            ->get()
+            ->map(function ($schickzeit) {
+                $childName = trim(($schickzeit->child?->first_name ?? '').' '.($schickzeit->child?->last_name ?? '')) ?: trim((string) ($schickzeit->child_name ?? ''));
+                $timeText = '';
+
+                if ($schickzeit->type === 'genau' && $schickzeit->time) {
+                    $timeText = 'Genau '.$schickzeit->time->format('H:i').' Uhr';
+                } elseif ($schickzeit->time_ab || $schickzeit->time_spaet) {
+                    $timeText = 'Ab '.$schickzeit->time_ab?->format('H:i').' Uhr';
+                    if ($schickzeit->time_spaet) {
+                        $timeText .= ' bis '.$schickzeit->time_spaet?->format('H:i').' Uhr';
+                    }
+                }
+
+                $dayLabel = $schickzeit->specific_date ? $schickzeit->specific_date->format('d.m.Y') : 'Wochentag '.$schickzeit->weekday;
+                $dateValue = $schickzeit->specific_date ? $schickzeit->specific_date->format('Y-m-d H:i:s') : ($schickzeit->updated_at?->format('Y-m-d H:i:s') ?? now()->format('Y-m-d H:i:s'));
+
+                return [
+                    'id' => $schickzeit->id,
+                    'type' => 'Schickzeit',
+                    'kind' => 'schickzeit',
+                    'child_id' => $schickzeit->child_id,
+                    'child_name' => $childName ?: 'Unbekannt',
+                    'date' => $dateValue,
+                    'content' => trim($dayLabel.' • '.$timeText),
+                    'author' => $schickzeit->user?->name ?? 'System',
+                    'created_at' => $schickzeit->updated_at?->format('Y-m-d H:i:s'),
+                    'is_future' => false,
+                ];
+            });
+
+        $futureHistoryEntries = $noticeHistory
+            ->where('is_future', true)
+            ->sortBy(fn ($entry) => $entry['date'])
+            ->values();
+
+        $pastHistoryEntries = $noticeHistory
+            ->where('is_future', false)
+            ->merge($schickzeitHistory)
+            ->sortByDesc(fn ($entry) => $entry['date'])
+            ->values();
+
         return view('schickzeiten.index_verwaltung', [
             'children'    => $children,
             'weekdays'    => $weekdays,
@@ -277,6 +352,8 @@ class SchickzeitenController extends Controller implements HasMiddleware
             'childLatePickups'    => $childLatePickups,
             'latePickupChildren'  => $latePickupChildren,
             'canManageLatePickups' => \auth()->user()->can('manage late pickups'),
+            'futureHistoryEntries' => $futureHistoryEntries,
+            'pastHistoryEntries' => $pastHistoryEntries,
         ]);
     }
 

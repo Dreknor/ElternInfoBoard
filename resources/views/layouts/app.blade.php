@@ -577,6 +577,21 @@
         }
     });
 
+    function scrollActiveSidebarLink() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        const activeLink = sidebar.querySelector('.sidebar-nav-link.sidebar-active, .sidebar-admin-link.sidebar-active');
+        if (!activeLink) return;
+
+        const sidebarRect = sidebar.getBoundingClientRect();
+        const activeRect = activeLink.getBoundingClientRect();
+
+        if (activeRect.top < sidebarRect.top || activeRect.bottom > sidebarRect.bottom) {
+            activeLink.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+    }
+
     // jQuery-spezifische Initialisierungen (falls jQuery geladen)
     if (typeof $ !== 'undefined') {
         $(function () {
@@ -590,6 +605,12 @@
                     this.disabled = true;
                 }
             });
+
+            setTimeout(scrollActiveSidebarLink, 50);
+        });
+    } else {
+        window.addEventListener('DOMContentLoaded', function () {
+            setTimeout(scrollActiveSidebarLink, 50);
         });
     }
 </script>
