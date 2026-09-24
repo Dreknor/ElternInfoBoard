@@ -113,18 +113,18 @@ class UcsLoginControllerTest extends TestCase
     }
 
     // =========================================================================
-    // Kriterium 1: Primary-Match via ucs_uuid (kein API-Call)
+    // Kriterium 1: Primary-Match via ucs_oidc_sub (OIDC sub) (kein API-Call)
     // =========================================================================
 
     /**
      * @test
-     * Gelingenskriterium 1: User mit ucs_uuid='abc', OIDC liefert sub='abc'
+     * Gelingenskriterium 1: User mit ucs_oidc_sub='abc', OIDC liefert sub='abc'
      * → korrekter User eingeloggt, kein UcsSyncService-Aufruf.
      */
     public function test_primary_uuid_match_logt_user_ein_ohne_api_call(): void
     {
         $user = User::factory()->create([
-            'ucs_uuid'     => 'abc-uuid',
+            'ucs_oidc_sub' => 'abc-uuid',
             'ucs_username' => 'elternteil1',
             'is_active'    => true,
         ]);
@@ -151,12 +151,12 @@ class UcsLoginControllerTest extends TestCase
      * @test
      * Gelingenskriterium 2: User existiert nur mit ucs_username='foo',
      * OIDC liefert sub='abc', preferred_username='foo'
-     * → User wird gefunden, ucs_uuid='abc' wird gesetzt.
+     * → User wird gefunden, ucs_oidc_sub='abc' wird gesetzt.
      */
     public function test_secondary_username_match_setzt_uuid_backfill(): void
     {
         $user = User::factory()->create([
-            'ucs_uuid'     => null,
+            'ucs_oidc_sub' => null,
             'ucs_username' => 'foo',
             'is_active'    => true,
         ]);
@@ -169,10 +169,10 @@ class UcsLoginControllerTest extends TestCase
         $response->assertRedirect('/home');
         $this->assertAuthenticatedAs($user);
 
-        // ucs_uuid muss jetzt gesetzt sein
+        // ucs_oidc_sub muss jetzt gesetzt sein
         $this->assertDatabaseHas('users', [
             'id'       => $user->id,
-            'ucs_uuid' => 'abc-new-uuid',
+            'ucs_oidc_sub' => 'abc-new-uuid',
         ]);
     }
 
@@ -202,7 +202,7 @@ class UcsLoginControllerTest extends TestCase
 
         $svcMock = \Mockery::mock(UcsSyncService::class);
         $svcMock->shouldReceive('syncSingleParent')
-                ->with('new_parent')
+                ->with('new_parent', null)
                 ->once()
                 ->andReturn($newUser);
         $this->app->instance(UcsSyncService::class, $svcMock);
@@ -280,7 +280,7 @@ class UcsLoginControllerTest extends TestCase
     public function test_deaktivierter_user_erhaelt_403(): void
     {
         $user = User::factory()->create([
-            'ucs_uuid'  => 'deact-uuid',
+            'ucs_oidc_sub' => 'deact-uuid',
             'is_active' => false,
         ]);
 

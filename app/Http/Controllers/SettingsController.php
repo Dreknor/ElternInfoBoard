@@ -534,9 +534,13 @@ class SettingsController extends Controller implements HasMiddleware
 
             Log::debug("Kelvin-Verbindungstest erfolgreich.", ['schools' => $schools]);
 
+            $schoolName = $schools['display_name'] ?? $schools['name'] ?? null;
+
             return redirect()->back()->with([
                 'type'    => 'success',
-                'Meldung' => 'Verbindung OK.'
+                'Meldung' => $schoolName
+                    ? "Verbindung OK – Schule „{$schoolName}\" gefunden."
+                    : 'Verbindung OK.',
             ]);
         } catch (\Throwable $e) {
 

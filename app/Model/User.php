@@ -51,7 +51,7 @@ class User extends Authenticatable implements Auditable
     protected $fillable = [
         'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
         'is_active', 'deactivated_at', 'messenger_discoverable',
-        'ucs_uuid', 'ucs_username', 'ucs_school', 'ucs_synced_at', 'ucs_source',
+        'ucs_uuid', 'ucs_username', 'ucs_oidc_sub', 'ucs_school', 'ucs_synced_at', 'ucs_source',
     ];
 
     /**

@@ -505,7 +505,7 @@ class UcsSyncServiceTest extends TestCase
         $result = $this->makeService($client)->syncSingleParent('ghost.user');
 
         $this->assertNull($result);
-        $this->assertTrue(Cache::has('ucs.jit.miss:ghost.user'), 'Negativ-Cache gesetzt');
+        $this->assertTrue(Cache::has(UcsSyncService::jitMissKey('ghost.user')), 'Negativ-Cache gesetzt');
     }
 
     // =========================================================================
@@ -782,5 +782,187 @@ class UcsSyncServiceTest extends TestCase
         $count = UcsLinkCandidate::where('ucs_username', 'einzel.duplikattest')->count();
         $this->assertSame(1, $count, 'Genau 1 Link-Kandidat, kein Duplikat nach zweitem Lauf');
     }
-}
 
+    // =========================================================================
+    // Regressionen aus dem Branch-Review (2026-09)
+    // =========================================================================
+
+    /** Hilfsfunktion: führt einen Bulk-Sync mit den gegebenen DTOs aus. */
+    private function runSync(array $students, array $parents, array $settingOverrides = []): array
+    {
+        $client = $this->makeClient();
+        $client->method('listStudents')->willReturnCallback(fn () => $this->asGenerator($students));
+        $client->method('listParents')->willReturnCallback(fn () => $this->asGenerator($parents));
+
+        return $this->makeService($client, $settingOverrides)->run();
+    }
+
+    public function test_regression_fehlende_record_uid_verknuepft_kein_fremdes_lokales_kind(): void
+    {
+        // Lokales Kind ohne UCS-Daten (ucs_uuid = NULL)
+        $local = Child::factory()->create([
+            'first_name' => 'Fremd',
+            'last_name'  => 'Kind',
+            'ucs_source' => 'local',
+        ]);
+
+        $student = KelvinStudentDto::fromArray([
+            'name'           => 'ohne.uid',
+            'record_uid'     => null,
+            'firstname'      => 'Ohne',
+            'lastname'       => 'Uid',
+            'school'         => self::SCHOOL,
+            'roles'          => ['student'],
+            'school_classes' => [self::SCHOOL => ['4b']],
+        ]);
+        $parent = KelvinUserDto::fromArray([
+            'name'        => 'elter.ohne.uid',
+            'record_uid'  => null,
+            'email'       => 'ohne.uid@example.de',
+            'school'      => self::SCHOOL,
+            'roles'       => ['legal_guardian'],
+            'legal_wards' => ['https://ucs.example.de/ucsschool/kelvin/v1/users/ohne.uid'],
+        ]);
+
+        $this->runSync([$student], [$parent]);
+
+        $this->assertNull($local->fresh()->ucs_username, 'Lokales Kind darf nicht verknüpft werden');
+        $this->assertSame(1, Child::withoutGlobalScopes()->where('ucs_username', 'ohne.uid')->count());
+    }
+
+    public function test_regression_fehlgeschlagener_elternteil_loescht_kinder_nicht(): void
+    {
+        $student = $this->studentDto('bleibt.da', 'uid-bleibt');
+        $parent  = $this->parentDto('elter.bleibt', 'uid-p-bleibt', ['bleibt.da']);
+
+        $this->runSync([$student], [$parent]);
+        $this->assertSame(1, Child::where('ucs_username', 'bleibt.da')->count());
+
+        // Zweiter Lauf: Elternteil kann nicht verarbeitet werden (keine E-Mail, neues Konto)
+        $parentOhneMail = KelvinUserDto::fromArray([
+            'name'        => 'anderer.elter',
+            'record_uid'  => 'uid-anderer',
+            'school'      => self::SCHOOL,
+            'roles'       => ['legal_guardian'],
+            'legal_wards' => ['https://ucs.example.de/ucsschool/kelvin/v1/users/bleibt.da'],
+        ]);
+        $this->runSync([$student], [$parentOhneMail]);
+
+        $this->assertSame(1, Child::where('ucs_username', 'bleibt.da')->count(), 'Kind ist weiterhin Schüler in Kelvin');
+    }
+
+    public function test_regression_schulname_in_klassen_case_insensitiv(): void
+    {
+        $student = $this->studentDto('case.kind', 'uid-case', ['2a'], 'GS-XY');
+        $parent  = $this->parentDto('case.elter', 'uid-case-p', ['case.kind']);
+
+        $this->runSync([$student], [$parent], ['school' => 'gs-xy']);
+
+        $child = Child::where('ucs_username', 'case.kind')->first();
+        $this->assertNotNull($child->class_id, 'Klasse trotz abweichender Schreibweise der Schule gesetzt');
+        $this->assertSame('2a', Group::find($child->class_id)->name);
+    }
+
+    public function test_regression_entzogenes_sorgerecht_entfernt_nur_auto_kind_pivot(): void
+    {
+        $s1 = $this->studentDto('kind.eins', 'uid-k1', ['1a']);
+        $s2 = $this->studentDto('kind.zwei', 'uid-k2', ['1b']);
+
+        $this->runSync([$s1, $s2], [$this->parentDto('elter.sorge', 'uid-sorge', ['kind.eins', 'kind.zwei'])]);
+
+        $user = User::where('ucs_username', 'elter.sorge')->first();
+        $this->assertSame(2, $user->children_rel()->count());
+
+        // Manuell verknüpftes lokales Kind
+        $manual = Child::factory()->create(['ucs_source' => 'local']);
+        $user->children_rel()->attach($manual->id, ['is_auto_provisioned' => false]);
+
+        // Sorgerecht für kind.zwei entfällt
+        $this->runSync([$s1, $s2], [$this->parentDto('elter.sorge', 'uid-sorge', ['kind.eins'])]);
+
+        $ids = $user->children_rel()->pluck('children.id')->all();
+        $this->assertContains(Child::where('ucs_username', 'kind.eins')->value('id'), $ids);
+        $this->assertNotContains(Child::where('ucs_username', 'kind.zwei')->value('id'), $ids);
+        $this->assertContains($manual->id, $ids, 'Manuelle Verknüpfung bleibt');
+    }
+
+    public function test_regression_manueller_gruppen_pivot_wird_nicht_zu_auto(): void
+    {
+        $group = Group::factory()->create(['name' => '3c', 'bereich' => 'Klasse']);
+        $user  = User::factory()->create(['ucs_username' => 'elter.manuell', 'ucs_source' => 'local']);
+        $user->groups()->attach($group->id, ['is_auto_provisioned' => false]);
+
+        $student = $this->studentDto('kind.manuell', 'uid-km', ['3c']);
+        $this->runSync([$student], [$this->parentDto('elter.manuell', 'uid-em', ['kind.manuell'])]);
+
+        $pivot = DB::table('group_user')->where('user_id', $user->id)->where('group_id', $group->id)->first();
+        $this->assertNotNull($pivot);
+        $this->assertFalse((bool) $pivot->is_auto_provisioned, 'Manuelle Mitgliedschaft bleibt manuell');
+
+        // Bestehende lokale Klassen-Gruppe wird nur verknüpft, nicht übernommen
+        $this->assertSame('local', $group->fresh()->ucs_source);
+    }
+
+    public function test_wards_werden_auch_ueber_legal_guardians_der_schueler_erkannt(): void
+    {
+        $student = KelvinStudentDto::fromArray([
+            'name'            => 'rueck.kind',
+            'record_uid'      => 'uid-rk',
+            'firstname'       => 'Rück',
+            'lastname'        => 'Kind',
+            'school'          => self::SCHOOL,
+            'roles'           => ['student'],
+            'school_classes'  => [self::SCHOOL => ['1a']],
+            'legal_guardians' => ['https://ucs.example.de/ucsschool/kelvin/v1/users/rueck.elter'],
+        ]);
+        // Elternteil ohne legal_wards
+        $parent = $this->parentDto('rueck.elter', 'uid-re', []);
+
+        $this->runSync([$student], [$parent]);
+
+        $user = User::where('ucs_username', 'rueck.elter')->first();
+        $this->assertSame(1, $user->children_rel()->count());
+    }
+
+    public function test_jit_provisioniert_keine_accounts_ohne_legal_guardian_rolle(): void
+    {
+        $client = $this->makeClient();
+        $client->method('findUser')->willReturn([
+            'name'   => 'lehrer.x',
+            'email'  => 'lehrer@example.de',
+            'school' => self::SCHOOL,
+            'roles'  => ['teacher'],
+        ]);
+
+        $this->assertNull($this->makeService($client)->syncSingleParent('lehrer.x'));
+        $this->assertSame(0, User::where('ucs_username', 'lehrer.x')->count());
+    }
+
+    public function test_jit_nutzt_email_aus_token_wenn_kelvin_keine_liefert(): void
+    {
+        $client = $this->makeClient();
+        $client->method('findUser')->willReturn([
+            'name'   => 'ohne.mail',
+            'school' => self::SCHOOL,
+            'roles'  => ['legal_guardian'],
+        ]);
+
+        $user = $this->makeService($client)->syncSingleParent('ohne.mail', 'Token@Example.de');
+
+        $this->assertNotNull($user);
+        $this->assertSame('token@example.de', $user->email);
+    }
+
+    public function test_bulk_sync_bricht_ab_wenn_bereits_ein_sync_laeuft(): void
+    {
+        $lock = Cache::lock('ucs.sync.lock', 60);
+        $this->assertTrue($lock->get());
+
+        try {
+            $this->expectException(\RuntimeException::class);
+            $this->runSync([], []);
+        } finally {
+            $lock->release();
+        }
+    }
+}

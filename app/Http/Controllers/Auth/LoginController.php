@@ -122,6 +122,12 @@ class LoginController extends Controller implements HasMiddleware
             return redirect()->route('home');
         }
 
+        // Bei aktiver UCS-Integration läuft SSO ausschließlich über den UCS-Flow
+        // (Match über OIDC-sub/Username statt E-Mail, Provisionierung via Kelvin).
+        if ($this->ucsLoginEnabled()) {
+            return redirect()->route('auth.ucs.redirect');
+        }
+
         // Check if KeyCloak is enabled
         if (!config('services.keycloak.enabled')) {
             Log::warning('Keycloak login attempt but Keycloak is disabled in ENV');
@@ -270,5 +276,43 @@ class LoginController extends Controller implements HasMiddleware
     {
         // Remove passwordless login marker for regular email/password login
         $request->session()->forget('passwordless_login');
+    }
+
+    /**
+     * Logout inkl. Single-Logout beim UCS-IdP, falls die Sitzung per SSO entstand.
+     *
+     * Der id_token muss VOR dem Invalidieren der Session gelesen werden.
+     */
+    public function logout(Request $request)
+    {
+        $idToken = $request->session()->pull(UcsLoginController::SESSION_ID_TOKEN);
+
+        $this->guard()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($response = $this->loggedOut($request)) {
+            return $response;
+        }
+
+        $logoutUrl = UcsLoginController::singleLogoutUrl($idToken);
+
+        if ($logoutUrl !== null) {
+            return redirect()->away($logoutUrl);
+        }
+
+        return $request->wantsJson()
+            ? new \Illuminate\Http\JsonResponse([], 204)
+            : redirect('/');
+    }
+
+    private function ucsLoginEnabled(): bool
+    {
+        try {
+            return app(\App\Settings\UcsSetting::class)->enabled
+                && app(\App\Settings\KeyCloakSetting::class)->enabled;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

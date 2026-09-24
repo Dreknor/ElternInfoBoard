@@ -57,6 +57,14 @@ class KelvinClient
     private array $resolvedSchoolNames = [];
 
     /**
+     * Laufzeit-Cache der Roh-Antwort von GET /users/?school=… (pro Schule).
+     * listParents() und listStudents() teilen sich damit EINEN Request pro Sync-Lauf.
+     *
+     * @var array<string, list<array<string, mixed>>>
+     */
+    private array $usersBySchool = [];
+
+    /**
      * Korrelations-ID für diese Client-Instanz.
      * Wird mit jedem Log-Eintrag und per X-Correlation-Id-Header mitgesendet.
      */
@@ -219,23 +227,14 @@ class KelvinClient
     {
         $this->log('info', 'findUser', ['username' => $username]);
 
-        $token    = $this->token();
-        $response = $this->buildClient($token, $timeout)->get('users/'.rawurlencode($username));
-
-        // 401: einmaliger Force-Refresh
-        if ($response->status() === 401) {
-            $this->log('warning', 'findUser: 401 – Token-Force-Refresh', ['username' => $username]);
-            Cache::forget(self::CACHE_KEY);
-            $token    = $this->token(forceRefresh: true);
-            $response = $this->buildClient($token, $timeout)->get('users/'.rawurlencode($username));
-
-            if ($response->status() === 401 || $response->status() === 403) {
-                throw new KelvinAuthException(
-                    'Kelvin findUser: Auch nach Token-Refresh HTTP '.$response->status()
-                    .' für "'.$username.'".'
-                );
-            }
-        }
+        // Mit Timeout-Override (JIT-Login) keine Retries: Der Login darf nicht
+        // durch 3 × Timeout × (Elternteil + Kinder) blockiert werden.
+        $response = $this->executeGet(
+            'users/'.rawurlencode($username),
+            timeout: $timeout,
+            allowNotFound: true,
+            tries: $timeout !== null ? 1 : 3,
+        );
 
         // 404 = legitimer Nicht-Fund → null (Negativ-Cache beim Aufrufer!)
         if ($response->status() === 404) {
@@ -244,9 +243,18 @@ class KelvinClient
             return null;
         }
 
-        $this->assertTypedException($response, 'findUser');
-
         return $response->json();
+    }
+
+    /**
+     * Kanonischer Schulname laut Kelvin (exakte Schreibweise der OU).
+     *
+     * @throws KelvinAuthException
+     * @throws KelvinUnavailableException
+     */
+    public function canonicalSchoolName(string $school): string
+    {
+        return $this->resolveCanonicalSchoolName($school);
     }
 
     // =========================================================================
@@ -271,10 +279,15 @@ class KelvinClient
      *
      * @see docs/kelvin-api-endpunkte.md#1-token-authentifizierung
      */
-    private function token(bool $forceRefresh = false): string
+    private function token(bool $forceRefresh = false, ?int $timeout = null): string
     {
-        if (! $forceRefresh && Cache::has(self::CACHE_KEY)) {
-            return Crypt::decryptString(Cache::get(self::CACHE_KEY));
+        if (! $forceRefresh && ($cached = Cache::get(self::CACHE_KEY)) !== null) {
+            try {
+                return Crypt::decryptString($cached);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException) {
+                // APP_KEY rotiert o. ä. → Token neu holen
+                Cache::forget(self::CACHE_KEY);
+            }
         }
 
         $url = $this->tokenUrl();
@@ -282,7 +295,7 @@ class KelvinClient
 
         try {
             $response = Http::withOptions(['verify' => true])
-                ->timeout($this->settings->kelvin_timeout)
+                ->timeout($timeout ?? $this->settings->kelvin_timeout)
                 ->withHeaders(['X-Correlation-Id' => $this->correlationId])
                 ->asForm()
                 ->post($url, [
@@ -341,7 +354,7 @@ class KelvinClient
      *   (throw: false), Fehlerbehandlung in assertTypedException()
      * – Connection-Exceptions werden ebenfalls per Retry behandelt
      */
-    private function buildClient(string $token, ?int $timeout = null): PendingRequest
+    private function buildClient(string $token, ?int $timeout = null, int $tries = 3): PendingRequest
     {
         return Http::baseUrl($this->baseUrl())
             ->withToken($token)
@@ -351,7 +364,7 @@ class KelvinClient
                 'X-Correlation-Id' => $this->correlationId,
             ])
             ->timeout($timeout ?? $this->settings->kelvin_timeout)
-            ->retry(3, 500, function (\Throwable $e): bool {
+            ->retry($tries, 500, function (\Throwable $e): bool {
                 if ($e instanceof RequestException) {
                     $status = $e->response->status();
                     // 5xx: retry; 429: retry (RateLimitException nach allen Versuchen)
@@ -398,11 +411,13 @@ class KelvinClient
         // Lösung: alle Benutzer der Schule abrufen und clientseitig filtern.
         // Rollen werden normalisiert (URL → Short-Name), damit URL-Formate
         // (z. B. „https://…/roles/legal_guardian") korrekt verglichen werden.
-        $response = $this->executeGet('users/', [
+        //
+        // Die Antwort wird pro Schule gemerkt: listParents() + listStudents()
+        // im selben Sync-Lauf lösen nur EINEN (großen) Request aus.
+        $users = $this->usersBySchool[$canonicalSchool] ??= (array) ($this->executeGet('users/', [
             'school' => $canonicalSchool,
-        ]);
+        ])->json() ?? []);
 
-        $users        = $response->json() ?? [];
         $totalYielded = 0;
         $totalSkipped = 0;
 
@@ -442,17 +457,35 @@ class KelvinClient
      * @throws KelvinRateLimitException
      * @throws KelvinUnavailableException
      */
-    private function executeGet(string $endpoint, array $query = [], ?int $timeout = null): Response
-    {
-        $token    = $this->token();
-        $response = $this->buildClient($token, $timeout)->get($endpoint, $query);
+    private function executeGet(
+        string $endpoint,
+        array $query = [],
+        ?int $timeout = null,
+        bool $allowNotFound = false,
+        int $tries = 3,
+    ): Response {
+        $send = function (bool $forceRefresh) use ($endpoint, $query, $timeout, $tries): Response {
+            $token = $this->token($forceRefresh, $timeout);
+
+            try {
+                return $this->buildClient($token, $timeout, $tries)->get($endpoint, $query);
+            } catch (ConnectionException $e) {
+                // Nach erschöpften Retries wirft Laravel die ConnectionException weiter.
+                throw new KelvinUnavailableException(
+                    "Kelvin {$endpoint} nicht erreichbar: ".$e->getMessage(),
+                    0,
+                    $e
+                );
+            }
+        };
+
+        $response = $send(false);
 
         // 401: einmaliger Force-Refresh
         if ($response->status() === 401) {
             $this->log('warning', "executeGet: 401 – Token-Force-Refresh [{$endpoint}]");
             Cache::forget(self::CACHE_KEY);
-            $token    = $this->token(forceRefresh: true);
-            $response = $this->buildClient($token, $timeout)->get($endpoint, $query);
+            $response = $send(true);
 
             if ($response->status() === 401 || $response->status() === 403) {
                 throw new KelvinAuthException(
@@ -461,12 +494,12 @@ class KelvinClient
             }
         }
 
-        //404: Log-Ausgabe, aber nicht als Exception
         if ($response->status() === 404) {
-            Log::debug("Kelvin {$endpoint}: 404 – Resource nicht gefunden", [
-                'endpoint' => $endpoint,
-                'query'    => $query,
-            ]);
+            $this->log('debug', "Kelvin {$endpoint}: 404 – Resource nicht gefunden", ['query' => $query]);
+
+            if ($allowNotFound) {
+                return $response;
+            }
         }
 
         $this->assertTypedException($response, $endpoint);

@@ -46,8 +46,9 @@
 
     {{-- Beschreibung --}}
     <p class="text-gray-600 text-sm leading-relaxed mb-6">
-        Ihr Konto wird gerade mit dem Schulverwaltungssystem synchronisiert.
-        Bitte haben Sie einen kurzen Moment Geduld.
+        Ihr Schul-Login konnte noch keinem Konto zugeordnet werden.
+        Neue Konten werden in der Regel beim nächsten Abgleich mit der Schulverwaltung
+        eingerichtet. Bitte versuchen Sie es in einigen Minuten erneut.
     </p>
 
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 text-sm text-blue-800 text-left space-y-1">

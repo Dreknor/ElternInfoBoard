@@ -153,7 +153,7 @@ class SettingsControllerUcsTest extends TestCase
         $clientMock = $this->createMock(KelvinClient::class);
         $clientMock->expects($this->once())
                    ->method('ping')
-                   ->willReturn(collect(['GS-XY', 'GS-AB']));
+                   ->willReturn(['name' => 'GS-XY', 'display_name' => 'Grundschule XY']);
 
         $this->app->instance(KelvinClient::class, $clientMock);
 
@@ -165,7 +165,7 @@ class SettingsControllerUcsTest extends TestCase
             'Verbindung OK',
             session('Meldung') ?? ''
         );
-        $this->assertStringContainsString('2', session('Meldung') ?? '');
+        $this->assertStringContainsString('Grundschule XY', session('Meldung') ?? '');
     }
 
     // =========================================================================

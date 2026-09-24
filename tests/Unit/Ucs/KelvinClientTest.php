@@ -217,17 +217,19 @@ class KelvinClientTest extends TestCase
             true
         );
 
-        $usersCalled      = 0;
-        $capturedRoles    = null;
-        Http::fake(function ($request) use ($page1, &$usersCalled, &$capturedRoles) {
+        $usersCalled   = 0;
+        $capturedQuery = null;
+        Http::fake(function ($request) use ($page1, &$usersCalled, &$capturedQuery) {
             if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
+            if (str_contains($request->url(), '/schools/')) {
+                return Http::response(['name' => 'GS-XY'], 200);
+            }
             $usersCalled++;
-            // Prüfen, dass der korrekte „roles"-Parameter (Plural + Schul-Suffix) gesendet wird
-            parse_str(parse_url($request->url(), PHP_URL_QUERY) ?? '', $query);
-            $capturedRoles = $query['roles'] ?? null;
-            // Liefert alle 2 Datensätze auf einmal (kein Paging)
+            parse_str(parse_url($request->url(), PHP_URL_QUERY) ?? '', $capturedQuery);
+
+            // Liefert alle Datensätze auf einmal (kein Paging)
             return Http::response($page1, 200);
         });
 
@@ -236,9 +238,14 @@ class KelvinClientTest extends TestCase
 
         $this->assertCount(2, $parents, '2 Elternteile aus Single-Request');
         $this->assertContainsOnlyInstancesOf(KelvinUserDto::class, $parents);
-        $this->assertSame(1, $usersCalled, 'Nur 1 HTTP-Anfrage an /users/');
-        // Kelvin API erwartet „roles=legal_guardian:school:GS-XY" (Plural, vollständiger Rollen-String)
-        $this->assertSame('legal_guardian:school:GS-XY', $capturedRoles, 'Rollen-String muss legal_guardian:school:GS-XY sein');
+
+        // listStudents() im selben Lauf nutzt die gemerkte Antwort → kein zweiter Request
+        iterator_to_array($client->listStudents('GS-XY'), false);
+        $this->assertSame(1, $usersCalled, 'Nur 1 HTTP-Anfrage an /users/ pro Sync-Lauf');
+
+        // Rollen werden clientseitig gefiltert (kein roles-Parameter, siehe KelvinClient::paginateUsers)
+        $this->assertSame('GS-XY', $capturedQuery['school'] ?? null);
+        $this->assertArrayNotHasKey('roles', $capturedQuery);
     }
 
     public function test_list_parents_large_response_yields_all_records(): void
@@ -357,28 +364,28 @@ class KelvinClientTest extends TestCase
             true
         );
 
-        $capturedRoles = null;
-        Http::fake(function ($request) use ($studentFixture, &$capturedRoles) {
+        // Gemischte Antwort: Schüler + ein Elternteil, der clientseitig herausgefiltert wird
+        $mixed   = $studentFixture;
+        $mixed[] = [
+            'name'  => 'mueller.anna',
+            'roles' => ['https://ucs.example.de/ucsschool/kelvin/v1/roles/legal_guardian'],
+        ];
+
+        Http::fake(function ($request) use ($mixed) {
             if (str_ends_with(rtrim($request->url(), '/'), 'token')) {
                 return Http::response($this->tokenResponse(), 200);
             }
-            parse_str(parse_url($request->url(), PHP_URL_QUERY) ?? '', $query);
-            $capturedRoles = $query['roles'] ?? null;
-            // Erste Seite: 3 Einträge (< page_size 200 → kein weiterer Call)
-            static $called = false;
-            if (! $called) {
-                $called = true;
-                return Http::response($studentFixture, 200);
+            if (str_contains($request->url(), '/schools/')) {
+                return Http::response(['name' => 'GS-XY'], 200);
             }
-            return Http::response([], 200);
+
+            return Http::response($mixed, 200);
         });
 
         $students = iterator_to_array($this->makeClient()->listStudents('GS-XY'), false);
 
         $this->assertCount(3, $students);
         $this->assertContainsOnlyInstancesOf(KelvinStudentDto::class, $students);
-        // Kelvin API erwartet „roles=student:school:GS-XY" (Plural, vollständiger Rollen-String)
-        $this->assertSame('student:school:GS-XY', $capturedRoles, 'Rollen-String muss student:school:GS-XY sein');
     }
 
     // =========================================================================

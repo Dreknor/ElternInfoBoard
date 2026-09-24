@@ -34,6 +34,8 @@ class UcsCommandsTest extends TestCase
             'sync_enabled'     => true,
             'school'           => 'GS-XY',
             'kelvin_base_url'  => 'https://ucs.example.de/ucsschool/kelvin/v1',
+            'kelvin_username'  => 'svc-elterninfo',
+            'kelvin_password'  => 'secret',
             'kelvin_page_size' => 200,
             'kelvin_timeout'   => 5,
             'kelvin_token_ttl' => 3300,
@@ -58,14 +60,12 @@ class UcsCommandsTest extends TestCase
         $this->bindUcsSetting();
 
         $clientMock = $this->createMock(KelvinClient::class);
-        $clientMock->method('ping')->willReturn(collect([
-            ['name' => 'GS-XY', 'display_name' => 'Grundschule XY'],
-        ]));
+        // ping() liefert die konfigurierte Schule (GET /schools/{school})
+        $clientMock->method('ping')->willReturn(['name' => 'GS-XY', 'display_name' => 'Grundschule XY']);
         $this->app->instance(KelvinClient::class, $clientMock);
 
         $this->artisan('ucs:ping')
             ->expectsOutputToContain('Kelvin erreichbar')
-            ->expectsOutputToContain('Schulen zurückgegeben: 1')
             ->expectsOutputToContain('GS-XY')
             ->assertExitCode(0);
     }

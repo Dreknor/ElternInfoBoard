@@ -115,13 +115,14 @@ class SyncUcsParents extends Command
     private function printCounterReport(array $counts): void
     {
         $this->line('');
-        $this->line('=== Sync-Report ===');
+        $this->line($counts['dry_run'] ?? false ? '=== Dry-Run-Report ===' : '=== Sync-Report ===');
         $this->line("Schule:               ".($counts['school'] ?? '–'));
         $this->line("Dry-Run:              ".($counts['dry_run'] ? 'ja' : 'nein'));
         $this->line("Eltern verarbeitet:   ".($counts['parents_processed'] ?? 0));
         $this->line("  neu angelegt:       ".($counts['parents_created'] ?? 0));
         $this->line("  aktualisiert:       ".($counts['parents_updated'] ?? 0));
         $this->line("  deaktiviert:        ".($counts['parents_deactivated'] ?? 0));
+        $this->line("  übersprungen:       ".($counts['parents_skipped'] ?? 0));
         $this->line("Kinder neu:           ".($counts['children_created'] ?? 0));
         $this->line("Kinder aktualisiert:  ".($counts['children_updated'] ?? 0));
         $this->line("Kinder lokal skip:    ".($counts['children_skipped_local'] ?? 0));

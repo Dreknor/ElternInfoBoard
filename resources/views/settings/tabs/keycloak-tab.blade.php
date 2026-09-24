@@ -98,7 +98,11 @@
                     </div>
                     <div class="col-md-6 col-sm-12 text-muted small m-auto">
                         Callback-URI, die im IdP als erlaubte Redirect-URI eingetragen sein muss.
-                        Standard: <code>{{ url('/auth/ucs/callback') }}</code>
+                        Standard: <code>{{ url('/auth/ucs/callback') }}</code><br>
+                        Bei aktiver UCS-Integration wird immer <code>/auth/ucs/callback</code> verwendet.
+                        Im Keycloak-Client zusätzlich <code>{{ url('/') }}</code> als
+                        „Valid post logout redirect URI" eintragen (Single-Logout).<br>
+                        UCS: <code>univention-keycloak oidc/rp create --app-url="{{ url('/') }}/" &lt;client-id&gt;</code>
                     </div>
                 </div>
 

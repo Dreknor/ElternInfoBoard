@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Http\Controllers\Auth\UcsLoginController;
 use App\Jobs\SyncSingleUcsParentJob;
 use App\Model\User;
 use App\Settings\UcsSetting;
@@ -36,7 +37,7 @@ class TriggerUcsProvisioningOnLogin
      *   1. UcsSetting::enabled + on_login_fallback
      *   2. User hat ucs_username (sonst kein JIT-Sync möglich)
      *   3. Kein Dispatch, wenn Login bereits via OIDC-Callback stattfand
-     *      (Session-Marker 'ucs_id_token' ist dann gesetzt)
+     *      (Session-Marker UcsLoginController::SESSION_SSO ist dann gesetzt)
      */
     public function handle(Login $event): void
     {
@@ -49,8 +50,8 @@ class TriggerUcsProvisioningOnLogin
         }
 
         // Nicht nochmal dispatchen, wenn der Login via UCS-OIDC kam
-        // (session 'ucs_id_token' ist in diesem Fall bereits gesetzt)
-        if (session()->has('ucs_id_token')) {
+        // (Session-Marker SESSION_SSO ist in diesem Fall bereits gesetzt)
+        if (session()->has(UcsLoginController::SESSION_SSO)) {
             return;
         }
 
