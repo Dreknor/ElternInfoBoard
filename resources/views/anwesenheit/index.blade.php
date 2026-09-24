@@ -399,12 +399,24 @@
 
                     const noticesContainer = document.getElementById('noticesContainer');
                     noticesContainer.innerHTML = 'keine Nachrichten';
-                    if (notices) {
+                    if (notices && notices.notice) {
                         noticesContainer.innerHTML = '';
-                            const noticeElement = document.createElement('p');
-                            noticeElement.textContent = notices.notice;
-                            noticesContainer.appendChild(noticeElement);
 
+                        const noticeElement = document.createElement('div');
+                        noticeElement.className = 'rounded-md border border-amber-200 bg-amber-50 p-3';
+
+                        const messageElement = document.createElement('p');
+                        messageElement.className = 'mb-2 text-sm text-slate-700 whitespace-pre-wrap';
+                        messageElement.textContent = notices.notice;
+                        noticeElement.appendChild(messageElement);
+
+                        const metaElement = document.createElement('div');
+                        metaElement.className = 'text-xs text-slate-500';
+                        const createdAt = notices.created_at_formatted || new Date(notices.created_at).toLocaleString('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+                        metaElement.textContent = `Von ${notices.author_name || 'Unbekannt'} am ${createdAt}`;
+                        noticeElement.appendChild(metaElement);
+
+                        noticesContainer.appendChild(noticeElement);
                     }
 
                     const vollmachtList = document.querySelector('#vollmacht .list-group');

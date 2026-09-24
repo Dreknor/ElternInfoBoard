@@ -45,9 +45,20 @@
                                             ]
                                         );
                                     @endphp
+                                    @php
+                                        $notice = $child->hasNotice()?->loadMissing('user');
+                                        $noticeData = $notice ? [
+                                            'id' => $notice->id,
+                                            'notice' => $notice->notice,
+                                            'date' => $notice->date?->toDateString(),
+                                            'created_at' => $notice->created_at?->toIso8601String(),
+                                            'created_at_formatted' => $notice->created_at?->format('d.m.Y H:i'),
+                                            'author_name' => $notice->user?->name ?? 'Unbekannt',
+                                        ] : null;
+                                    @endphp
                                     <li class="list-group-item custom-list-item d-flex align-items-center child-item {{ $loop->index % 2 == 0 ? 'list-item-odd' : '' }} @if(!$child->checkedIn()) child-checkedOut @endif"
                                         data-child='@json($childData)'
-                                        data-notices='@json($child->hasNotice())'
+                                        data-notices='@json($noticeData)'
                                         style="padding: 0.5rem;">
                                         <div class="container-fluid">
                                             <div class="row">
