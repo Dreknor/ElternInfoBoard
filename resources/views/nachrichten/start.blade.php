@@ -50,9 +50,18 @@
                                                         {{\Illuminate\Support\Str::limit($nachricht->header, 60, $end='...')}}
                                                     </span>
 
-                                                    <!-- Badges für Rückmeldung / Lesebestätigung -->
-                                                    @if(! is_null($nachricht->rueckmeldung) or $nachricht->read_receipt == 1)
+                                                    <!-- Badges für Aufgabe / Rückmeldung / Lesebestätigung -->
+                                                    @if(in_array($nachricht->type, ['pflicht', 'wahl']) or ! is_null($nachricht->rueckmeldung) or $nachricht->read_receipt == 1)
                                                         <div class="flex flex-wrap items-center gap-1 mt-1.5">
+                                                            @if(in_array($nachricht->type, ['pflicht', 'wahl']))
+                                                                <span title="Aufgabe - {{ $nachricht->type == 'pflicht' ? 'Pflicht' : 'Wahl' }}"
+                                                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
+                                                                          @if($nachricht->type == 'pflicht') bg-red-600 text-white @else bg-amber-400 text-amber-900 @endif">
+                                                                    <i class="fas fa-tasks text-[10px]"></i>
+                                                                    {{ $nachricht->type == 'pflicht' ? 'Pflicht' : 'Wahl' }}
+                                                                </span>
+                                                            @endif
+
                                                             @if(! is_null($nachricht->rueckmeldung))
                                                                 <span title="@if($nachricht->rueckmeldung->pflicht == 1)Rückmeldung erforderlich@else Rückmeldung erwünscht @endif"
                                                                       class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide

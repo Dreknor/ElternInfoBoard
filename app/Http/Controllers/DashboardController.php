@@ -136,14 +136,17 @@ class DashboardController extends Controller implements HasMiddleware
             ])
             ->orderBy('first_name');
 
-        $careChildren = $careChildrenQuery->care()->get();
+        // clone: care() verändert den Builder, sonst würde der Fallback ebenfalls gefiltert
+        $careChildren = (clone $careChildrenQuery)->care()->get();
 
+        // Fallback: Kinder ohne Betreuungszuordnung, die heute krankgemeldet sind
         if ($careChildren->isEmpty()) {
-            $careChildren = $careChildrenQuery->get()
-                ->filter(function (Child $child) {
-                    return $child->krankmeldungToday();
+            $careChildren = $careChildrenQuery
+                ->whereHas('krankmeldungen', function ($query) {
+                    $query->whereDate('start', '<=', Carbon::today())
+                        ->whereDate('ende', '>=', Carbon::today());
                 })
-                ->values();
+                ->get();
         }
 
         // Aktive meldepflichtige Erkrankungen abrufen

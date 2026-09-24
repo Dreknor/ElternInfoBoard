@@ -303,17 +303,35 @@ class NachrichtenController extends Controller implements HasMiddleware
     public function store(createNachrichtRequest $request)
     {
         $user = $request->user();
+        $urgent = $request->input('urgent') == 1;
 
-        if (! auth()->user()->can('create posts')) {
+        if (! $user->can('create posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
-        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and (! $user->can('send urgent message') or ! Hash::check($request->input('password'), $user->password))) {
-            return redirect()->back()->withInput()->with([
-                'type' => 'danger',
-                'Meldung' => 'Berechtigung fehlt für dringende Nachrichten oder Passwort ist falsch',
-            ]);
+        }
+
+        // Dringende Nachricht vor dem Speichern prüfen, damit bei Fehlern nichts angelegt wird
+        if ($urgent) {
+            $urgentError = match (true) {
+                ! $user->can('send urgent message') => 'Berechtigung fehlt für dringende Nachrichten.',
+                ! Hash::check((string) $request->input('password'), $user->password) => 'Passwort falsch.',
+                default => null,
+            };
+
+            if ($urgentError !== null) {
+                Log::warning('Fehler beim Versenden dringender Nachricht', [
+                    'post' => $request->input('header'),
+                    'versender' => $user->name,
+                    'Fehler' => $urgentError,
+                ]);
+
+                return redirect()->back()->withInput($request->except('password'))->with([
+                    'type' => 'danger',
+                    'Meldung' => $urgentError,
+                ]);
+            }
         }
 
         $post = new Post($request->validated());
@@ -331,8 +349,8 @@ class NachrichtenController extends Controller implements HasMiddleware
         if (! auth()->user()->can('release posts')) {
             $permission = Permission::query()->where('name', 'release posts')->first();
 
-            foreach ($permission->users as $user) {
-                Mail::to($user->email)->queue(new newUnveroeffentlichterBeitrag(auth()->user()->name, $post->header));
+            foreach ($permission?->users ?? [] as $releaseUser) {
+                Mail::to($releaseUser->email)->queue(new newUnveroeffentlichterBeitrag($user->name, $post->header));
             }
         } else {
             if ($post->released) {
@@ -363,34 +381,20 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $Meldung = 'Nachricht wurde erstellt.';
 
-        // Versenden dringender Nachrichten
-        if ($request->has('urgent') and $request->input('urgent') == 1 and $user->can('send urgent message') and Hash::check($request->input('password'), $user->password)) {
+        // Versenden dringender Nachrichten (Berechtigung und Passwort wurden oben geprüft)
+        if ($urgent) {
             $sendTo = $this->sendMailToGroupsUsers($gruppen, $post);
 
             Log::info('Dringende Nachricht versandt', [
                 'post' => $post->header,
                 'Empfänger' => count($sendTo),
-                'versender' => auth()->user()->name,
+                'versender' => $user->name,
             ]);
 
-            @Mail::to(auth()->user()->email)->queue(new dringendeNachrichtStatus($sendTo, auth()->user()->email, auth()->user()->name));
+            @Mail::to($user->email)->queue(new dringendeNachrichtStatus($sendTo, $user->email, $user->name));
             $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
             $post->update([
                 'send_at' => Carbon::now(),
-            ]);
-        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and ! $user->can('send urgent message')) {
-            $Meldung = 'Berechtigung fehlt für dringende Nachrichten.';
-            Log::debug('Fehler beim Versenden dringender Nachricht', [
-                'post' => $post->header,
-                'versender' => auth()->user()->name,
-                'Fehler' => 'Berechtigung fehlt für dringende Nachrichten.'
-                ]);
-        } elseif ($request->has('urgent') and $request->input('urgent') == 1 and ! Hash::check($request->input('password'), $user->password)) {
-            $Meldung = 'Passwort falsch.';
-            Log::debug('Fehler beim Versenden dringender Nachricht', [
-                'post' => $post->header,
-                'versender' => auth()->user()->name,
-                'Fehler' => 'Passwort falsch.'
             ]);
         }
 
@@ -557,7 +561,13 @@ class NachrichtenController extends Controller implements HasMiddleware
         $Meldung = 'Nachricht bearbeitet';
 
         if ($request->has('urgent') and $request->input('urgent') == 1 and $user->can('send urgent message')) {
-            if (! Hash::check($request->input('password'), $user->password)) {
+            if (! Hash::check((string) $request->input('password'), $user->password)) {
+                Log::warning('Fehler beim Versenden dringender Nachricht', [
+                    'post' => $posts->header,
+                    'versender' => $user->name,
+                    'Fehler' => 'Passwort falsch.',
+                ]);
+
                 return redirect()->back()->with([
                     'type' => 'danger',
                     'Meldung' => 'Passwort falsch',

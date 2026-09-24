@@ -27,7 +27,10 @@ class GroupsController extends Controller
         $showInactive = $request->boolean('inactive');
         $showPrivate = $request->boolean('private');
 
-        if (auth()->user()->can('delete groups')) {
+        if (auth()->user()->canAny(['edit groups', 'delete groups'])) {
+            // Private Gruppen anderer Nutzer nur mit 'delete groups' einblenden
+            $showPrivate = $showPrivate && auth()->user()->can('delete groups');
+
             $groups = Group::with('users')
                 ->when($showPrivate, function (Builder $query) {
                     $query->withoutGlobalScope(GetGroupsScope::class);
@@ -36,14 +39,7 @@ class GroupsController extends Controller
                     $query->where('active', true);
                 })
                 ->get();
-            }
-        elseif (auth()->user()->can('edit groups')) {
-            $groups = Group::with('users')
-                ->when(! $showInactive, function (Builder $query) {
-                    $query->where('active', true);
-                })
-                ->get();
-        }  elseif (auth()->user()->can('view groups')) {
+        } elseif (auth()->user()->can('view groups')) {
             $groups = auth()->user()->groups;
             $groups = $groups->merge(auth()->user()->ownGroups);
             $groups = $groups->where('active', true)->values();
