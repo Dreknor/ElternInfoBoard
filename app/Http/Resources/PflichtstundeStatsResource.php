@@ -43,6 +43,16 @@ class PflichtstundeStatsResource extends JsonResource
                 'remaining_payment' => $this->resource['remaining_payment'],
                 'currency' => '€',
             ],
+            // Pflichtstunden-Einheit (Familie bzw. zusammengefasste Familien, §6.2)
+            'unit' => isset($this->resource['unit']) ? [
+                'label' => $this->resource['unit']->label,
+                'members' => $this->resource['unit']->members->pluck('name')->values(),
+                'required_minutes' => $this->resource['unit']->requiredMinutes,
+                'children_counted' => $this->resource['unit']->childShare,
+                'basis' => app(\App\Services\Pflichtstunden\PflichtstundenService::class)->basis(),
+                'shared_mode' => app(\App\Services\Pflichtstunden\PflichtstundenService::class)->mode(),
+                'basis_description' => app(\App\Services\Pflichtstunden\PflichtstundenService::class)->basisDescription(),
+            ] : null,
         ];
     }
 }

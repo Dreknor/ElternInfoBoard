@@ -131,6 +131,9 @@ class PflichtstundeController extends Controller implements HasMiddleware
         return response()->json([
             'data' => PflichtstundeResource::collection($pflichtstunden),
             'settings' => [
+                // Soll der eigenen Einheit (Familie bzw. je Kind, Settings-abhängig)
+                'unit_required_minutes' => app(PflichtstundenService::class)->unitFor($user)->requiredMinutes,
+                'basis' => app(PflichtstundenService::class)->basis(),
                 'required_hours' => $this->pflichtstunden_settings->pflichtstunden_anzahl,
                 'price_per_hour' => $this->pflichtstunden_settings->pflichtstunden_betrag,
                 'period_start' => $this->pflichtstunden_settings->pflichtstunden_start,

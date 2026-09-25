@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Enums\GuardianRight;
+use App\Http\Resources\GuardianResource;
 use App\Http\Controllers\Controller;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
@@ -61,7 +62,7 @@ class ParentController extends Controller implements HasMiddleware
     }
 
     /**
-     * Get all children of the authenticated parent and their second guardian (Sorgeberechtigter2).
+     * Get all children the authenticated user has a relation to (child-centric family model).
      *
      * Returns a list of all children associated with the authenticated user
      * and their second guardian (if available).
@@ -82,6 +83,9 @@ class ParentController extends Controller implements HasMiddleware
      * @responseField data.*.auto_checkIn boolean Whether auto check-in is enabled for the child.
      * @responseField data.*.is_in_care_module boolean Whether the child belongs to the Care module (group and class are in care settings).
      * @responseField count int The total count of children.
+     * @responseField data[].guardians array Bezugspersonen des Kindes (id, name, relation, relation_label, has_custody, receives_information, can_manage).
+     * @responseField data[].my_relation string|null Eigene Beziehungsart zum Kind (null bei Zugriff über verknüpftes Konto).
+     * @responseField data[].my_rights object Eigene Rechte: custody, information, manage, view_health.
      */
     public function getChildren(Request $request): JsonResponse
     {
@@ -89,7 +93,7 @@ class ParentController extends Controller implements HasMiddleware
 
         // Load relations for better performance
         // Alle Kinder, zu denen der User eine Beziehung hat (FamilyResolver)
-        $children = $this->childrenOf($user, ['group', 'class'], null);
+        $children = $this->childrenOf($user, ['group', 'class', 'parents'], null);
 
         // If no children found
         if (is_null($children) || $children->isEmpty()) {
@@ -106,7 +110,7 @@ class ParentController extends Controller implements HasMiddleware
         $careClasses = $careSettings->class_list ?? [];
 
         // Map children data
-        $childrenData = $children->map(function ($child) use ($careGroups, $careClasses) {
+        $childrenData = $children->map(function ($child) use ($careGroups, $careClasses, $user) {
             // Check if child is in care module (both group and class must be in care settings)
             $isInCareModule = in_array($child->group_id, $careGroups) && in_array($child->class_id, $careClasses);
 
@@ -128,6 +132,15 @@ class ParentController extends Controller implements HasMiddleware
                 'notification' => $child->notification ?? false,
                 'auto_checkIn' => $child->auto_checkIn ?? false,
                 'is_in_care_module' => $isInCareModule,
+                // Kind-zentriertes Familienmodell (additiv, FAM-14)
+                'guardians' => GuardianResource::collection($child->parents)->resolve(),
+                'my_relation' => $child->parents->firstWhere('id', $user->id)?->pivot?->relation,
+                'my_rights' => [
+                    'custody' => $this->resolver->hasAccessToChild($user, $child, GuardianRight::Custody),
+                    'information' => $this->resolver->hasAccessToChild($user, $child, GuardianRight::Information),
+                    'manage' => $this->resolver->hasAccessToChild($user, $child, GuardianRight::Manage),
+                    'view_health' => $user->can('viewHealth', $child),
+                ],
             ];
         });
 

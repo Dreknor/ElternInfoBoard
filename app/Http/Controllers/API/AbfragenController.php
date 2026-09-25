@@ -187,6 +187,7 @@ class AbfragenController extends Controller implements HasMiddleware
      * }
      *
      * @return \Illuminate\Http\JsonResponse
+     * @bodyParam child_id integer Kind, für das geantwortet wird (Rückmeldung pro Kind; nur Sorgeberechtigte). Example: 5
      */
     public function storeAnswer(Request $request, $post)
     {

@@ -211,6 +211,13 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * Feature 4: Persönlicher Wochenplan / Familien-Dashboard
      */
+    /**
+     * Familie & Kind-Beziehungen (kind-zentriertes Familienmodell)
+     */
+    Route::get('family', [\App\Http\Controllers\API\FamilyController::class, 'show']);
+    Route::get('user/relations', [\App\Http\Controllers\API\FamilyController::class, 'relations']);
+    Route::get('children/{child}/guardians', [\App\Http\Controllers\API\FamilyController::class, 'guardians']);
+
     Route::get('family/weekly', [\App\Http\Controllers\API\FamilyWeeklyController::class, 'index']);
     Route::get('family/weekly/{child_id}', [\App\Http\Controllers\API\FamilyWeeklyController::class, 'show']);
 

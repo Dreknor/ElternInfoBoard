@@ -41,6 +41,10 @@ class UserRueckmeldungenController extends Controller
      *
      * @urlParam post_id integer required The ID of the post. Example: 1
      *
+     * @responseField scope string Wirksamer Scope der Rückmeldung: child, family oder person.
+     * @responseField targets array Antwortziele des Users: type (child|family|person), child_id, child_name, answered, answered_by, can_answer.
+     * @responseField data array Sichtbare Antworten (eigene Kinder bzw. Familie/Person).
+     *
      * @response 200 {
      *   "success": true,
      *   "data": [
@@ -129,6 +133,7 @@ class UserRueckmeldungenController extends Controller
      *
      * @bodyParam post_id integer required The ID of the post to which the feedback is related. Example: 1
      * @bodyParam text string required The feedback text. Example: "Ich nehme teil"
+     * @bodyParam child_id integer Kind, für das geantwortet wird (Pflicht bei Rückmeldung pro Kind mit mehreren Kindern; ohne Angabe wird bei genau einem Kind dieses verwendet, sonst 422). Nur Sorgeberechtigte (403). Example: 5
      *
      * @response 200 {
      *   "success": true,
