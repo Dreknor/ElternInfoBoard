@@ -413,6 +413,8 @@ Route::middleware('auth')->group(function () {
 
             Route::get('users/import', [ImportController::class, 'importForm'])->middleware(['permission:import user']);
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
+            Route::post('users/import/schueler/bestaetigen', [ImportController::class, 'confirmSchuelerImport'])->middleware(['permission:import user'])->name('users.import.schueler.confirm');
+            Route::get('users/vorlage/schueler', [ImportController::class, 'downloadSchuelerVorlage'])->middleware(['permission:import user'])->name('users.vorlage.schueler');
             Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
             Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 

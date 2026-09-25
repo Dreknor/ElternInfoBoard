@@ -3,9 +3,11 @@
 namespace App\Imports;
 
 use App\Mail\NewUserPasswordMail;
+use App\Model\Family;
 use App\Model\Group;
 use App\Model\User;
 use App\Scopes\GetGroupsScope;
+use App\Services\Family\FamilyService;
 use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -134,11 +136,10 @@ class UsersImport implements ToCollection, WithHeadingRow
                     }
 
                     if (isset($user2) and isset($user1) and $user2->id != $user1->id and isset($user2->email) and isset($user1->email)) {
-                        $user2->sorg2 = $user1->id;
-                        $user1->sorg2 = $user2->id;
-
-                        $user2->save();
-                        $user1->save();
+                        // S1 + S2 bilden eine Familie (früher: sorg2)
+                        app(FamilyService::class)->linkPair($user1->fresh(), $user2->fresh(), Family::SOURCE_IMPORT);
+                    } elseif (isset($user1) and $user1->fresh()->family_id === null) {
+                        app(FamilyService::class)->create([$user1], null, Family::SOURCE_IMPORT);
                     }
                 } catch (\Exception $e) {
                     Log::error('Fehler beim Importieren von '.$row[$this->header['S1Vorname']].' '.$row[$this->header['S1Nachname']]);

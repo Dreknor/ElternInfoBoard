@@ -9,7 +9,7 @@
             </h6>
         </div>
 
-        <div class="card-body" x-data="{ importTyp: 'eltern' }">
+        <div class="card-body" x-data="{ importTyp: 'schueler' }">
 
             {{-- Flash-Meldungen --}}
             @if(session('Meldung'))
@@ -22,10 +22,18 @@
             @endif
 
             {{-- Dynamischer Hinweisblock je Typ --}}
+            <div x-show="importTyp === 'schueler'" class="alert alert-info">
+                <i class="fas fa-child mr-1"></i>
+                <strong>Schüler-Import (empfohlen):</strong>
+                Eine Zeile pro Kind mit <strong>Schüler-ID</strong> aus der Schulverwaltung und bis zu drei Bezugspersonen.
+                Kinder werden über die Schüler-ID abgeglichen, Eltern erhalten die Gruppen ihrer Kinder automatisch,
+                Familien werden je Zeile gebildet. Vor dem Import wird eine <strong>Vorschau</strong> angezeigt, erst nach Bestätigung wird gespeichert.
+                Bitte die Vorlage verwenden (Spaltenüberschriften werden ausgewertet).
+            </div>
             <div x-show="importTyp === 'eltern'" class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle mr-1"></i>
-                <strong>Achtung Eltern-Import:</strong>
-                Alle nicht-geschützten Gruppen werden vor dem Import <strong>geleert</strong> (Zuordnungen werden entfernt).
+                <strong>Achtung Eltern-Import (veraltet, ohne Kinder):</strong>
+                Alle <strong>manuellen</strong> Zuordnungen nicht-geschützter Gruppen werden vor dem Import entfernt; aus Kindern abgeleitete Gruppen bleiben.
                 Neue Benutzer erhalten ein zufälliges Passwort per E-Mail.
                 Bitte prüfe, ob die Spaltennummern zur Excel-Überschrift passen.
             </div>
@@ -52,7 +60,8 @@
                         <div class="form-group">
                             <label class="font-weight-bold">Import-Typ</label>
                             <select class="custom-select" name="type" x-model="importTyp">
-                                <option value="eltern">Eltern-Import</option>
+                                <option value="schueler">Schüler-Import (mit Schüler-ID)</option>
+                                <option value="eltern">Eltern-Import (veraltet, ohne Kinder)</option>
                                 <option value="aufnahme">Aufnahme-Import</option>
                                 <option value="mitarbeiter">Mitarbeiter-Import</option>
                             </select>
@@ -61,7 +70,15 @@
                 </div>
 
                 {{-- Spaltenangaben (nur bei Eltern/Aufnahme relevant) --}}
-                <div x-show="importTyp !== 'mitarbeiter'">
+                <div x-show="importTyp === 'schueler'" class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="abgaenger" value="1" id="abgaenger">
+                    <label class="form-check-label" for="abgaenger">
+                        Kinder mit Schüler-ID, die nicht in der Datei stehen, als <strong>Abgänger</strong> markieren
+                        (die Vorschau zeigt, wer betroffen wäre)
+                    </label>
+                </div>
+
+                <div x-show="importTyp !== 'mitarbeiter' && importTyp !== 'schueler'">
                     <h6 class="font-weight-bold text-muted mb-2">Spaltenzuordnung (1-basiert)</h6>
                     <div class="row">
                         <div class="col-md-2 col-sm-4">
@@ -128,7 +145,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="font-weight-bold">Excel-Datei (.xls / .xlsx)</label>
-                            <input type="file" name="file" id="customFile" accept=".xls,.xlsx" class="form-control-file" required>
+                            <input type="file" name="file" id="customFile" accept=".xls,.xlsx,.ods,.csv" class="form-control-file" required>
                         </div>
                     </div>
                     <div class="col-md-6 d-flex align-items-end">
@@ -137,6 +154,11 @@
                                 <i class="fas fa-download mr-1"></i> Import-Vorlage herunterladen
                             </label>
                             <div>
+                                <a x-show="importTyp === 'schueler'"
+                                   href="{{ route('users.vorlage.schueler') }}"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-file-spreadsheet mr-1"></i> Vorlage Schüler (.ods)
+                                </a>
                                 <a x-show="importTyp === 'eltern'"
                                    href="{{ route('users.vorlage.eltern') }}"
                                    class="btn btn-outline-primary btn-sm">
@@ -169,7 +191,8 @@
                 <div class="row">
                     <div class="col-md-4">
                         <button type="submit" class="btn btn-primary btn-block">
-                            <i class="fas fa-file-import mr-1"></i> Import starten
+                            <i class="fas fa-file-import mr-1"></i>
+                            <span x-text="importTyp === 'schueler' ? 'Vorschau anzeigen' : 'Import starten'"></span>
                         </button>
                     </div>
                 </div>
