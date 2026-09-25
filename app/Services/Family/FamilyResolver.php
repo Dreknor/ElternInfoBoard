@@ -47,6 +47,14 @@ interface FamilyResolver
     public function hasAccessToChild(User $user, Child $child, ?GuardianRight $right = null): bool;
 
     /**
+     * Sammelabfrage: Kind-IDs je User (für Statistiken ohne N+1).
+     *
+     * @param  iterable<User>  $users
+     * @return array<int, list<int>> userId => childIds
+     */
+    public function childIdsByUser(iterable $users, ?GuardianRight $right = null): array;
+
+    /**
      * Personen mit Zugriff auf das Kind – optional nur mit einem bestimmten Recht.
      *
      * @return EloquentCollection<int, User>

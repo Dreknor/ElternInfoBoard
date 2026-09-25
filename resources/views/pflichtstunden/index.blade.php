@@ -4,9 +4,10 @@
     <div class="container-fluid px-4 py-3 space-y-4">
         @php
             // Berechne grundlegende Werte für alle Gamification-Cards
-            $approved_minutes = $pflichtstunden->where('approved', true)->sum('duration');
-            $required_minutes = $pflichtstunden_settings->pflichtstunden_anzahl * 60;
-            $progress_percentage = min(round(($approved_minutes / $required_minutes) * 100), 100);
+            // Soll/Ist der Pflichtstunden-Einheit (PflichtstundenService, Settings-abhängig)
+            $approved_minutes = isset($unit) ? $unit->doneMinutes : $pflichtstunden->where('approved', true)->sum('duration');
+            $required_minutes = isset($unit) ? $unit->requiredMinutes : $pflichtstunden_settings->pflichtstunden_anzahl * 60;
+            $progress_percentage = $required_minutes > 0 ? min(round(($approved_minutes / $required_minutes) * 100), 100) : 100;
 
             // Finde die Pflichtstunden-Hilfe-Site
             $helpSite = \App\Model\Site::where('name', 'Pflichtstunden Hilfe')->where('is_active', true)->first();
@@ -52,8 +53,19 @@
 
                         <div class="text-center text-xs text-gray-600">
                             <span class="font-semibold text-green-600">{{ floor($approved_minutes / 60) }}h {{ $approved_minutes % 60 }}m</span>
-                            / <span class="font-semibold">{{ $pflichtstunden_settings->pflichtstunden_anzahl }}h</span>
+                            / <span class="font-semibold">{{ floor($required_minutes / 60) }}h @if($required_minutes % 60){{ $required_minutes % 60 }}m @endif</span>
                         </div>
+                        @isset($basisDescription)
+                            <div class="text-center text-xs text-gray-500 mt-1">
+                                Grundlage: {{ $basisDescription }}
+                                @if(isset($unit) && $unit->childShare > 0 && ($pflichtstunden_settings->pflichtstunden_basis ?? 'family') === 'child')
+                                    · gezählte Kinder: {{ rtrim(rtrim(number_format($unit->childShare, 2, ',', ''), '0'), ',') }}
+                                @endif
+                                @if(!empty($pflichtstunden_settings->pflichtstunden_basis_changed_at))
+                                    · seit {{ \Carbon\Carbon::parse($pflichtstunden_settings->pflichtstunden_basis_changed_at)->format('d.m.Y') }}
+                                @endif
+                            </div>
+                        @endisset
 
                         <!-- Achievement Badge -->
                         @if($progress_percentage >= 100)
@@ -332,7 +344,7 @@
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-orange-600">
                                     @php
-                                        $remaining = $pflichtstunden_settings->pflichtstunden_anzahl *60 - $pflichtstunden->where('approved', true)->sum('duration');
+                                        $remaining = $required_minutes - $approved_minutes;
                                     @endphp
                                     @if($remaining > 60)
                                         {{ floor($remaining / 60) }} Std. {{ $remaining % 60 }} Min.
@@ -349,8 +361,8 @@
                                 </th>
                                 <th class="px-4 py-3 text-sm font-bold text-red-600">
                                    @php
-                                       $remaining_hours = ($pflichtstunden_settings->pflichtstunden_anzahl * 60 - $pflichtstunden->where('approved', true)->sum('duration')) / 60;
-                                       $betrag_gesamt = $pflichtstunden_settings->pflichtstunden_anzahl * $pflichtstunden_settings->pflichtstunden_betrag;
+                                       $remaining_hours = ($required_minutes - $approved_minutes) / 60;
+                                       $betrag_gesamt = round($required_minutes / 60 * $pflichtstunden_settings->pflichtstunden_betrag, 2);
                                        $offener_betrag = $remaining_hours * $pflichtstunden_settings->pflichtstunden_betrag;
                                     @endphp
                                     @if($offener_betrag<0)

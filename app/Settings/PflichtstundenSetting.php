@@ -33,7 +33,7 @@ class PflichtstundenSetting extends Settings
     public ?int $pflichtstunden_max_kinder = null;
 
     /** Umgang mit Kindern mehrerer Familien: 'combined', 'split' oder 'separate'. */
-    public string $pflichtstunden_geteilte_kinder = 'combined';
+    public string $pflichtstunden_geteilte_kinder = 'separate';
 
     /** Nur Kinder dieser Gruppen/Klassen zählen (leer = alle aktiven Kinder). */
     public array $pflichtstunden_kinder_gruppen = [];

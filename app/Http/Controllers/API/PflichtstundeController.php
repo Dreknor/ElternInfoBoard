@@ -9,6 +9,7 @@ use App\Http\Resources\PflichtstundeResource;
 use App\Http\Resources\PflichtstundeStatsResource;
 use App\Model\Pflichtstunde;
 use App\Model\User;
+use App\Services\Pflichtstunden\PflichtstundenService;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -40,7 +41,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     /**
      * Liste aller Pflichtstunden der Familie
      *
-     * Gibt alle Pflichtstunden des angemeldeten Users und seines Partners (sorg2) zurück,
+     * Gibt alle Pflichtstunden des angemeldeten Users und seiner Familie zurück,
      * sortiert nach Start-Datum absteigend. Die Pflichtstunden werden automatisch auf den
      * aktuellen Zeitraum gefiltert.
      *
@@ -124,20 +125,8 @@ class PflichtstundeController extends Controller implements HasMiddleware
             return response()->json(['message' => 'Berechtigung fehlt'], 403);
         }
 
-        // Hole Pflichtstunden des Users
-        $pflichtstunden = $user->pflichtstunden;
-
-        // Hole auch Pflichtstunden des Partners falls vorhanden
-        if ($user->sorg2) {
-            $partner = User::find($user->sorg2);
-            if ($partner) {
-                $partnerPflichtstunden = $partner->pflichtstunden;
-                $pflichtstunden = $pflichtstunden->merge($partnerPflichtstunden);
-            }
-        }
-
-        // Sortiere nach Start-Datum absteigend
-        $pflichtstunden = $pflichtstunden->sortByDesc('start')->values();
+        // Pflichtstunden der eigenen Familie (FamilyResolver)
+        $pflichtstunden = app(PflichtstundenService::class)->entriesFor($user)->values();
 
         return response()->json([
             'data' => PflichtstundeResource::collection($pflichtstunden),
@@ -214,7 +203,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
             return response()->json(['message' => 'Berechtigung fehlt'], 403);
         }
 
-        $stats = $this->calculateParentStats($user);
+        $stats = app(PflichtstundenService::class)->ranking($user);
 
         return response()->json(new PflichtstundeStatsResource($stats));
     }
@@ -441,110 +430,5 @@ class PflichtstundeController extends Controller implements HasMiddleware
         ]);
     }
 
-    /**
-     * Berechne Statistiken für Ranking und Vergleich
-     */
-    private function calculateParentStats(User $currentUser)
-    {
-        // Hole alle Nutzer mit Permission "view Pflichtstunden"
-        $users = User::query()
-            ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function ($query) {
-                $query->where('approved', true);
-            }])
-            ->get();
 
-        $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
-        $familyStats = collect();
-        $processed = collect();
-
-        // Gruppiere Nutzer als Familien (User + sorg2 Partner)
-        foreach ($users as $user) {
-            // Überspringe wenn bereits als sorg2 verarbeitet
-            if ($processed->contains($user->id)) {
-                continue;
-            }
-
-            // Berücksichtige auch den verknüpften Partner (sorg2)
-            $totalMinutes = $user->pflichtstunden->sum('duration');
-            $familyUserIds = [$user->id];
-
-            if ($user->sorg2) {
-                $partner = $users->where('id', $user->sorg2)->first();
-                if ($partner) {
-                    $totalMinutes += $partner->pflichtstunden->sum('duration');
-                    $familyUserIds[] = $partner->id;
-                    $processed->push($partner->id);
-                }
-            }
-
-            $progress = $requiredMinutes > 0 ? min(100, round(($totalMinutes / $requiredMinutes) * 100, 2)) : 0;
-
-            $familyStats->push([
-                'user_ids' => $familyUserIds,
-                'name' => $user->name,
-                'progress' => $progress,
-                'total_minutes' => $totalMinutes,
-            ]);
-
-            $processed->push($user->id);
-        }
-
-        // Sortiere nach Fortschritt absteigend
-        $familyStats = $familyStats->sortByDesc('progress')->values();
-
-        // Berechne Fortschritt des aktuellen Nutzers
-        $currentUserProgress = $currentUser->pflichtstunden->sum('duration');
-        if ($currentUser->sorg2) {
-            $partner = $users->where('id', $currentUser->sorg2)->first();
-            if ($partner) {
-                $currentUserProgress += $partner->pflichtstunden->sum('duration');
-            }
-        }
-        $currentUserProgressPercent = $requiredMinutes > 0 ? min(100, round(($currentUserProgress / $requiredMinutes) * 100, 2)) : 0;
-
-        // Finde Rang des aktuellen Nutzers
-        $userRank = 1;
-        $currentUserProgressValue = null;
-
-        // Finde zuerst den Fortschritt des aktuellen Users
-        foreach ($familyStats as $index => $stat) {
-            if (in_array($currentUser->id, $stat['user_ids'])) {
-                $currentUserProgressValue = $stat['progress'];
-                break;
-            }
-        }
-
-        // Zähle alle Familien mit besserem oder gleichem Fortschritt
-        if ($currentUserProgressValue !== null) {
-            $userRank = $familyStats->filter(function ($stat) use ($currentUserProgressValue) {
-                return $stat['progress'] >= $currentUserProgressValue;
-            })->count();
-        }
-
-        // Berechne Durchschnitt
-        $avgProgress = $familyStats->avg('progress');
-
-        // Berechne noch benötigte Minuten
-        $openMinutes = max(0, $requiredMinutes - $currentUserProgress);
-        $openHours = round($openMinutes / 60, 2);
-
-        // Berechne noch zu zahlenden Beitrag
-        $remainingPayment = $openHours * $this->pflichtstunden_settings->pflichtstunden_betrag;
-
-        return [
-            'total_parents' => $familyStats->count(),
-            'your_rank' => $userRank,
-            'avg_progress' => round($avgProgress, 2),
-            'your_progress' => $currentUserProgressPercent,
-            'total_minutes_completed' => $currentUserProgress,
-            'total_hours_completed' => round($currentUserProgress / 60, 2),
-            'required_minutes' => $requiredMinutes,
-            'required_hours' => $this->pflichtstunden_settings->pflichtstunden_anzahl,
-            'open_minutes' => $openMinutes,
-            'open_hours' => $openHours,
-            'remaining_payment' => round($remainingPayment, 2),
-        ];
-    }
 }
-

@@ -432,9 +432,9 @@
                                     <option value="">-- Nutzer auswählen --</option>
                                     @foreach($allGroupedUsers as $group)
                                         <option value="{{ $group['user']->id }}">
-                                            {{ $group['user']->name }}
-                                            @if($group['partner'])
-                                                / {{ $group['partner']->name }}
+                                            {{ $group['label'] }}
+                                            @if($group['members']->count() > 1 || $group['label'] !== $group['user']->name)
+                                                ({{ $group['unit']->memberNames() }})
                                             @endif
                                         </option>
                                     @endforeach
@@ -536,8 +536,8 @@
                  allUsers: [
                      @foreach ($groupedUsers as $group)
                      {
-                         userName: '{{ addslashes($group['user']->name) }}',
-                         partnerName: '{{ $group['partner'] ? addslashes($group['partner']->name) : '' }}',
+                         userName: '{{ addslashes($group['label']) }}',
+                         partnerName: '{{ addslashes($group['label'] === $group['user']->name ? $group['unit']->otherMembers()->pluck('name')->implode(' / ') : $group['unit']->memberNames()) }}',
                          totalMinutes: {{ $group['totalMinutes'] }},
                          openMinutes: {{ $group['openMinutes'] }},
                          beitrag: {{ $group['beitrag'] }},

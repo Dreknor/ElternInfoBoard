@@ -161,7 +161,7 @@ class GuardianshipSchemaTest extends TestCase
         $settings = app(PflichtstundenSetting::class);
 
         $this->assertSame('family', $settings->pflichtstunden_basis);
-        $this->assertSame('combined', $settings->pflichtstunden_geteilte_kinder);
+        $this->assertSame('separate', $settings->pflichtstunden_geteilte_kinder);
         $this->assertNull($settings->pflichtstunden_max_kinder);
         $this->assertSame([], $settings->pflichtstunden_kinder_gruppen);
     }

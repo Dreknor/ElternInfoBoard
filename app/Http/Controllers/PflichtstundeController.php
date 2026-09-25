@@ -7,6 +7,7 @@ use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
 use App\Model\User;
+use App\Services\Pflichtstunden\PflichtstundenService;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -38,111 +39,18 @@ class PflichtstundeController extends Controller implements HasMiddleware
             return redirect(url('/'))->with('error', 'Berechtigung fehlt');
         }
 
-        $pflichtstunden = auth()->user()->pflichtstunden;
-
-        // Berechne Statistiken für Gamification
-        $parent_stats = $this->calculateParentStats();
+        $user = auth()->user();
+        $service = app(PflichtstundenService::class);
+        $parent_stats = $service->ranking($user);
 
         return view('pflichtstunden.index', [
-            'pflichtstunden' => $pflichtstunden,
+            'pflichtstunden' => $service->entriesFor($user),
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
             'parent_stats' => $parent_stats,
+            'unit' => $parent_stats['unit'],
+            'basisDescription' => $service->basisDescription(),
         ]);
 
-    }
-
-    /**
-     * Berechne Statistiken für Ranking und Vergleich
-     */
-    private function calculateParentStats()
-    {
-        $currentUser = auth()->user();
-
-        // Hole alle Nutzer mit Permission "view Pflichtstunden"
-        $users = User::query()
-            ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function ($query) {
-                $query->where('approved', true);
-            }])
-            ->get();
-
-        $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
-        $familyStats = collect();
-        $processed = collect();
-
-        // Gruppiere Nutzer als Familien (User + sorg2 Partner)
-        foreach ($users as $user) {
-            // Überspringe wenn bereits als sorg2 verarbeitet
-            if ($processed->contains($user->id)) {
-                continue;
-            }
-
-            // Berücksichtige auch den verknüpften Partner (sorg2)
-            $totalMinutes = $user->pflichtstunden->sum('duration');
-            $familyUserIds = [$user->id];
-
-            if ($user->sorg2) {
-                $partner = $users->where('id', $user->sorg2)->first();
-                if ($partner) {
-                    $totalMinutes += $partner->pflichtstunden->sum('duration');
-                    $familyUserIds[] = $partner->id;
-                    $processed->push($partner->id);
-                }
-            }
-
-            $progress = $requiredMinutes > 0 ? min(100, round(($totalMinutes / $requiredMinutes) * 100, 2)) : 0;
-
-            $familyStats->push([
-                'user_ids' => $familyUserIds, // Alle User-IDs dieser Familie
-                'name' => $user->name,
-                'progress' => $progress,
-                'total_minutes' => $totalMinutes,
-            ]);
-
-            $processed->push($user->id);
-        }
-
-        // Sortiere nach Fortschritt absteigend
-        $familyStats = $familyStats->sortByDesc('progress')->values();
-
-        // Berechne Fortschritt des aktuellen Nutzers
-        $currentUserProgress = $currentUser->pflichtstunden->sum('duration');
-        if ($currentUser->sorg2) {
-            $partner = $users->where('id', $currentUser->sorg2)->first();
-            if ($partner) {
-                $currentUserProgress += $partner->pflichtstunden->sum('duration');
-            }
-        }
-        $currentUserProgress = $requiredMinutes > 0 ? min(100, round(($currentUserProgress / $requiredMinutes) * 100, 2)) : 0;
-
-        // Finde Rang des aktuellen Nutzers (schlechtester Rang bei Gleichstand)
-        $userRank = 1;
-        $currentUserProgress = null;
-
-        // Finde zuerst den Fortschritt des aktuellen Users
-        foreach ($familyStats as $index => $stat) {
-            if (in_array($currentUser->id, $stat['user_ids'])) {
-                $currentUserProgress = $stat['progress'];
-                break;
-            }
-        }
-
-        // Zähle alle Familien mit besserem oder gleichem Fortschritt
-        if ($currentUserProgress !== null) {
-            $userRank = $familyStats->filter(function ($stat) use ($currentUserProgress) {
-                return $stat['progress'] >= $currentUserProgress;
-            })->count();
-        }
-
-        // Berechne Durchschnitt
-        $avgProgress = $familyStats->avg('progress');
-
-        return [
-            'total_parents' => $familyStats->count(),
-            'your_rank' => $userRank,
-            'avg_progress' => round($avgProgress, 2),
-            'your_progress' => $currentUserProgress,
-        ];
     }
 
     /**
@@ -179,95 +87,9 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ->orderBy('end', 'desc')
             ->get();
 
-        // Hole alle Nutzer mit Permission "view Pflichtstunden"
-        $users = User::query()
-            ->permission('view Pflichtstunden')
-            ->with(['pflichtstunden' => function ($query) {
-                $query->where('approved', true);
-            }])
-            ->get();
-
-        // Gruppiere nach Hauptnutzer (berücksichtige sorg2-Verknüpfung)
-        $groupedUsers = collect();
-        $processed = collect();
-
-        // Statistiken initialisieren
-        $stats = [
-            'totalFamilies' => 0,
-            'completed' => 0,
-            'partial' => 0,
-            'notStarted' => 0,
-            'totalHoursCompleted' => 0,
-            'totalHoursMissing' => 0,
-            'totalHoursRequired' => 0,
-            'totalBeitrag' => 0,
-            'avgPercent' => 0,
-        ];
-
-        foreach ($users as $user) {
-            // Überspringe wenn bereits als sorg2 verarbeitet
-            if ($processed->contains($user->id)) {
-                continue;
-            }
-
-            // Finde verknüpfte Person
-            $partner = null;
-            if ($user->sorg2) {
-                $partner = $users->where('id', $user->sorg2)->first();
-                if ($partner) {
-                    $processed->push($partner->id);
-                }
-            }
-
-            // Berechne kombinierte Statistiken
-            $totalMinutes = $user->pflichtstunden->sum('duration');
-            if ($partner) {
-                $totalMinutes += $partner->pflichtstunden->sum('duration');
-            }
-
-            $requiredMinutes = $this->pflichtstunden_settings->pflichtstunden_anzahl * 60;
-            $openMinutes = max(0, $requiredMinutes - $totalMinutes);
-
-            // Berechne Beitrag
-            $beitrag = 0;
-            if ($openMinutes > 0) {
-                $openHours = $openMinutes / 60;
-                $beitrag = $openHours * $this->pflichtstunden_settings->pflichtstunden_betrag;
-            }
-
-            $percent = $requiredMinutes > 0 ? min(100, round(($totalMinutes / $requiredMinutes) * 100, 2)) : 0;
-
-            $groupedUsers->push([
-                'user' => $user,
-                'partner' => $partner,
-                'totalMinutes' => $totalMinutes,
-                'openMinutes' => $openMinutes,
-                'beitrag' => $beitrag,
-                'percent' => $percent,
-            ]);
-
-            $processed->push($user->id);
-
-            // Statistiken aktualisieren
-            $stats['totalFamilies']++;
-            $stats['totalHoursCompleted'] += $totalMinutes / 60;
-            $stats['totalHoursMissing'] += $openMinutes / 60;
-            $stats['totalHoursRequired'] += $requiredMinutes / 60;
-            $stats['totalBeitrag'] += $beitrag;
-
-            if ($percent >= 100) {
-                $stats['completed']++;
-            } elseif ($percent > 0) {
-                $stats['partial']++;
-            } else {
-                $stats['notStarted']++;
-            }
-        }
-
-        // Durchschnittliche Erfüllung berechnen
-        if ($stats['totalFamilies'] > 0) {
-            $stats['avgPercent'] = round($groupedUsers->avg('percent'), 2);
-        }
+        $overview = app(PflichtstundenService::class)->overview();
+        $groupedUsers = $overview['rows'];
+        $stats = $overview['stats'];
 
         return view('pflichtstunden.indexVerwaltung', [
             'pflichtstunden' => $pflichtstunden,

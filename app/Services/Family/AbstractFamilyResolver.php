@@ -8,6 +8,8 @@ use App\Model\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Gemeinsame Logik beider Resolver: Zugriff auf Kinder läuft immer über
@@ -57,6 +59,44 @@ abstract class AbstractFamilyResolver implements FamilyResolver
         return $this->childrenQuery($user, $right)->whereKey($child->getKey())->exists();
     }
 
+    /**
+     * Sammelabfrage: Kind-IDs je User (für Statistiken ohne N+1).
+     *
+     * @param  iterable<User>  $users
+     * @return array<int, list<int>> userId => childIds
+     */
+    public function childIdsByUser(iterable $users, ?GuardianRight $right = null): array
+    {
+        $users = collect($users);
+        $accessIds = $users->mapWithKeys(fn (User $user) => [$user->id => $this->childAccessUserIds($user)]);
+        $allIds = $accessIds->flatten()->unique()->values()->all();
+
+        if ($allIds === []) {
+            return [];
+        }
+
+        $query = DB::table('child_user')
+            ->join('children', 'children.id', '=', 'child_user.child_id')
+            ->whereNull('children.deleted_at')
+            ->whereIn('child_user.user_id', $allIds);
+        static::constrainPivot($query, $right);
+
+        $childIdsByLinkUser = $query->get(['child_user.user_id', 'child_user.child_id'])
+            ->groupBy('user_id')
+            ->map(fn ($rows) => $rows->pluck('child_id')->map(fn ($id) => (int) $id)->all());
+
+        $result = [];
+        foreach ($accessIds as $userId => $ids) {
+            $childIds = [];
+            foreach ($ids as $id) {
+                array_push($childIds, ...($childIdsByLinkUser->get($id) ?? []));
+            }
+            $result[$userId] = array_values(array_unique($childIds));
+        }
+
+        return $result;
+    }
+
     public function familyUnitFor(User $user): FamilyUnit
     {
         $members = User::query()->whereIn('id', $this->familyUserIds($user))->get();
@@ -79,7 +119,7 @@ abstract class AbstractFamilyResolver implements FamilyResolver
     /**
      * Filtert child_user auf gültige Beziehungen mit dem gewünschten Recht.
      */
-    public static function constrainPivot(Builder|BelongsToMany $query, ?GuardianRight $right): void
+    public static function constrainPivot(Builder|BelongsToMany|QueryBuilder $query, ?GuardianRight $right): void
     {
         $query->where(function ($q) {
             $q->whereNull('child_user.valid_until')

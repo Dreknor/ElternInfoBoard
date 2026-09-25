@@ -355,12 +355,11 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(Poll_Votes::class, 'author_id');
     }
 
+    /**
+     * Eigene Pflichtstunden. Familien-/Einheitssicht: PflichtstundenService.
+     */
     public function pflichtstunden(): HasMany
     {
-        if ($this->sorg2 != null) {
-            return $this->hasMany(Pflichtstunde::class, 'user_id')->orWhere('user_id', $this->sorg2);
-        }
-
         return $this->hasMany(Pflichtstunde::class, 'user_id');
     }
 

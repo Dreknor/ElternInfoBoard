@@ -14,7 +14,7 @@ return new class extends SettingsMigration
     {
         $this->migrator->add('pflichtstunden.pflichtstunden_basis', 'family');
         $this->migrator->add('pflichtstunden.pflichtstunden_max_kinder', null);
-        $this->migrator->add('pflichtstunden.pflichtstunden_geteilte_kinder', 'combined');
+        $this->migrator->add('pflichtstunden.pflichtstunden_geteilte_kinder', 'separate');
         $this->migrator->add('pflichtstunden.pflichtstunden_kinder_gruppen', []);
         $this->migrator->add('pflichtstunden.pflichtstunden_basis_changed_at', null);
         $this->migrator->add('pflichtstunden.pflichtstunden_basis_changed_by', null);
