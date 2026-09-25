@@ -350,9 +350,12 @@
                                     <p class="text-xs text-gray-600 mb-4 leading-relaxed">
                                         <i class="fas fa-info-circle text-blue-600 mr-1"></i>
                                         Hier werden die Kinder angezeigt, die mit Ihrem Konto verknüpft sind. Sollte Ihr Kind im Hort betreut werden, können Sie mit der Glocke die Benachrichtigung aktivieren.
+                                        Verbindungen und Rechte pflegt die Schule – stimmt etwas nicht, melden Sie es bitte über „Verbindung ist falsch“.
                                     </p>
+                                    @php $ownLinks = $user->children_rel->keyBy('id'); @endphp
                                     <div class="space-y-3">
                                         @foreach($user->children() as $child)
+                                            @php $link = $ownLinks->get($child->id)?->pivot; @endphp
                                             <div class="border border-gray-200 rounded-lg p-4 hover:border-green-500 hover:shadow-sm transition-all duration-200">
                                                 <div class="flex items-start justify-between gap-3">
                                                     <div class="flex-1 min-w-0">
@@ -369,7 +372,35 @@
                                                                 {{$child->class->name ?? ''}}
                                                             </span>
                                                         </div>
+                                                        {{-- Beziehung, Rechte und Herkunft (Konzept §10, E3) --}}
+                                                        <div class="text-xs text-gray-600 mt-2">
+                                                            @if($link)
+                                                                <div>
+                                                                    <strong>{{ $link->relationType()->label() }}</strong>
+                                                                    – {{ collect([
+                                                                        $link->has_custody ? 'sorgeberechtigt' : null,
+                                                                        $link->receives_information ? 'erhält Informationen' : null,
+                                                                        $link->can_manage ? 'darf krankmelden & Betreuung verwalten' : null,
+                                                                    ])->filter()->implode(', ') ?: 'keine Rechte' }}
+                                                                </div>
+                                                                <div class="text-gray-500">Herkunft: {{ $link->sourceLabel() }}</div>
+                                                                @if($link->isPendingReview())
+                                                                    <div class="mt-2 p-2 bg-amber-50 border border-amber-300 rounded text-amber-800">
+                                                                        Diese Verbindung wurde aus der früheren Kontoverknüpfung übernommen.
+                                                                        Stimmt das nicht, melden Sie sich bitte bei der Schule.
+                                                                    </div>
+                                                                @endif
+                                                                <form action="{{ route('einstellungen.guardian.report', $child) }}" method="POST" class="mt-2"
+                                                                      onsubmit="return confirm('Der Schule melden, dass die Verbindung zu {{ addslashes($child->first_name) }} falsch ist?')">
+                                                                    @csrf
+                                                                    <button class="text-red-600 hover:underline text-xs"><i class="fas fa-flag mr-1"></i>Verbindung ist falsch</button>
+                                                                </form>
+                                                            @else
+                                                                <div class="text-gray-500">über ein verknüpftes Konto sichtbar</div>
+                                                            @endif
+                                                        </div>
                                                     </div>
+                                                    @can('manage', $child)
                                                     <div class="flex items-center gap-2">
                                                         @if($child->notification)
                                                             <button class="inline-flex items-center justify-center w-9 h-9 bg-teal-500 hover:bg-teal-600 text-white rounded-lg cursor-pointer child-notification transition-colors"
@@ -393,6 +424,7 @@
                                                             <i class="fas fa-edit text-sm"></i>
                                                         </a>
                                                     </div>
+                                                    @endcan
                                                 </div>
                                             </div>
                                         @endforeach
@@ -600,13 +632,23 @@
                     </div>
                 </div>
 
-                @if($user->sorg2 != null)
+                @php $familyMembers = \App\Model\User::query()->whereIn('id', $user->familyUserIds())->where('id', '!=', $user->id)->orderBy('name')->pluck('name'); @endphp
+                @if($familyMembers->isNotEmpty())
+                    {{-- Familie (kind-zentriertes Familienmodell, ersetzt die Kontoverknüpfung) --}}
                     <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded">
                         <div class="flex items-start gap-2">
-                            <i class="fas fa-link text-amber-600 mt-1"></i>
-                            <p class="text-sm text-amber-800 mb-0">
-                                Das Konto ist verknüpft mit <strong>{{$user->sorgeberechtigter2?->name}}</strong>. Dadurch sind die Rückmeldungen in beiden Konten sichtbar.
-                            </p>
+                            <i class="fas fa-house-user text-amber-600 mt-1"></i>
+                            <div class="text-sm text-amber-800 mb-0">
+                                <p class="mb-1">
+                                    Ihre Familie: <strong>{{ $user->family?->name ?? $user->name }}</strong>
+                                    ({{ $familyMembers->prepend($user->name)->implode(', ') }}).
+                                </p>
+                                <p class="mb-0">
+                                    Rückmeldungen je Familie, Lesebestätigungen, Pflichtstunden und Termine sind für alle Mitglieder Ihrer Familie sichtbar.
+                                    Rückmeldungen pro Kind geben die Sorgeberechtigten des jeweiligen Kindes ab.
+                                    Änderungen an der Familie nimmt die Schule vor.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 @endif

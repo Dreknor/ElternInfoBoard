@@ -56,7 +56,7 @@
             </div>
             <ul class="list-group list-group-flush">
                 @forelse($pending as $row)
-                    @php($suspicious = $row['child']->parents->count() > 3)
+                    @php $suspicious = $row['child']->parents->count() > 3; @endphp
                     <li @class(['list-group-item', 'list-group-item-warning' => $suspicious])>
                         <div class="d-flex flex-wrap align-items-center">
                             <div class="mr-auto">

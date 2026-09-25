@@ -76,7 +76,8 @@ class DatenschutzController extends Controller
      */
     private function collectUserData($user): array
     {
-        $listenTermine = $user->getListenTermine();
+        // Auskunft über eigene Daten: eigene Buchungen (nicht die der Familie)
+        $listenTermine = $user->listen_termine()->with('liste')->get();
         $schickzeiten  = $user->schickzeiten()->withTrashed()->get();
         $pflichtstunden = $user->pflichtstunden()->withTrashed()->get();
 
@@ -106,7 +107,6 @@ class DatenschutzController extends Controller
                 'letzte_info_email' => $user->lastEmail?->toIso8601String(),
                 'kalender_freigabe' => (bool) $user->releaseCalendar,
                 'kalender_prefix'   => $user->calendar_prefix,
-                'sorgeberechtigter_2' => $user->sorgeberechtigter2?->name,
                 'messenger_sichtbar' => (bool) $user->messenger_discoverable,
             ],
 
@@ -122,11 +122,26 @@ class DatenschutzController extends Controller
                 ->map(fn ($p) => $p->name)
                 ->values()->toArray(),
 
+            // Familie und Kind-Beziehungen (kind-zentriertes Familienmodell §6.10)
+            'familie' => $user->family ? [
+                'name'       => $user->family->name,
+                'mitglieder' => $user->family->users()->where('id', '!=', $user->id)->pluck('name')->values()->toArray(),
+                'herkunft'   => $user->family->source,
+            ] : null,
+
             'kinder' => $user->children_rel
                 ->map(fn ($c) => [
-                    'vorname'  => $c->first_name,
-                    'nachname' => $c->last_name,
-                    'gruppe'   => $c->group?->name,
+                    'vorname'       => $c->first_name,
+                    'nachname'      => $c->last_name,
+                    'gruppe'        => $c->group?->name,
+                    'klasse'        => $c->class?->name,
+                    'beziehung'     => $c->pivot->relationType()->label(),
+                    'sorgerecht'    => (bool) $c->pivot->has_custody,
+                    'informationen' => (bool) $c->pivot->receives_information,
+                    'verwalten'     => (bool) $c->pivot->can_manage,
+                    'gueltig_bis'   => $c->pivot->valid_until?->toDateString(),
+                    'herkunft'      => $c->pivot->sourceLabel(),
+                    'ungeprueft'    => $c->pivot->isPendingReview(),
                 ])
                 ->values()->toArray(),
 

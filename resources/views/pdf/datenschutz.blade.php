@@ -198,8 +198,8 @@
                 <td>Aktiviert{{ $user->calendar_prefix ? ' · Prefix: ' . $user->calendar_prefix : '' }}</td>
             </tr>
         @endif
-        @if($user->sorg2)
-            <tr><th>Sorgeberechtigter 2</th><td>{{ $user->sorgeberechtigter2?->name }}</td></tr>
+        @if($user->family)
+            <tr><th>Familie</th><td>{{ $user->family->name }}@php $others = $user->family->users()->where('id', '!=', $user->id)->pluck('name'); @endphp @if($others->isNotEmpty()) (weitere Mitglieder: {{ $others->implode(', ') }})@endif</td></tr>
         @endif
         <tr><th>In Messenger-Suche sichtbar</th><td>{{ $user->messenger_discoverable ? 'Ja' : 'Nein' }}</td></tr>
     </tbody>
@@ -240,12 +240,17 @@
 @if($user->children_rel->count())
     <div class="section-header" style="background:#be185d;">Verknüpfte Kinder / Schutzbefohlene</div>
     <table>
-        <thead><tr><th>Name</th><th>Gruppe / Klasse</th></tr></thead>
+        <thead><tr><th>Name</th><th>Gruppe / Klasse</th><th>Beziehung / Rechte</th><th>Herkunft</th></tr></thead>
         <tbody>
             @foreach($user->children_rel as $child)
                 <tr>
                     <td>{{ $child->first_name }} {{ $child->last_name }}</td>
                     <td>{{ $child->group?->name ?? '–' }}</td>
+                    <td>
+                        {{ $child->pivot->relationType()->label() }}:
+                        {{ collect(['sorgeberechtigt' => $child->pivot->has_custody, 'erhält Informationen' => $child->pivot->receives_information, 'darf verwalten' => $child->pivot->can_manage])->filter()->keys()->implode(', ') ?: 'keine Rechte' }}
+                    </td>
+                    <td>{{ $child->pivot->sourceLabel() }}{{ $child->pivot->isPendingReview() ? ' – ungeprüft' : '' }}</td>
                 </tr>
             @endforeach
         </tbody>

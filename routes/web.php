@@ -389,6 +389,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
+        Route::post('/einstellungen/kinder/{child}/meldung', [BenutzerController::class, 'reportGuardianLink'])->name('einstellungen.guardian.report');
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
 
         // Downloads

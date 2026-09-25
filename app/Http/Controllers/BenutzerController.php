@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
+use App\Model\Child;
+use App\Model\GuardianLinkReport;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,28 @@ class BenutzerController extends Controller implements HasMiddleware
         return [
             'auth',
         ];
+    }
+
+    /**
+     * Eltern melden eine falsche Kind-Beziehung; die Verwaltung klärt (E3/E6).
+     */
+    public function reportGuardianLink(Request $request, Child $child): RedirectResponse
+    {
+        $isLinked = $child->parents()->where('users.id', $request->user()->id)->exists();
+
+        if (! $isLinked) {
+            return redirect()->back()->with(['type' => 'danger', 'Meldung' => 'Diese Verbindung besteht nicht.']);
+        }
+
+        GuardianLinkReport::firstOrCreate(
+            ['child_id' => $child->id, 'user_id' => $request->user()->id, 'resolved_at' => null],
+            ['reported_by' => $request->user()->id, 'note' => $request->input('note')],
+        );
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Danke, die Schule wurde informiert und prüft die Verbindung.',
+        ]);
     }
 
     /**

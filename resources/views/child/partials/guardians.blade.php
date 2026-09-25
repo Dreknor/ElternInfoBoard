@@ -28,7 +28,7 @@
             </thead>
             <tbody>
             @forelse($guardianList as $guardian)
-                @php($pivot = $guardian->pivot)
+                @php $pivot = $guardian->pivot; @endphp
                 <tr @class(['table-warning' => $pivot->isPendingReview()])>
                     <form action="{{ route('guardians.update', [$child, $guardian]) }}" method="POST" id="guardian-form-{{ $guardian->id }}">
                         @csrf

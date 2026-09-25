@@ -1,5 +1,5 @@
 {{-- Wer muss antworten? (Konzept §6.5, E2/E7) --}}
-@php($scopeValue = old('scope', $scope ?? 'child'))
+@php $scopeValue = old('scope', $scope ?? 'child'); @endphp
 <div class="form-group">
     <label>Wer soll antworten?</label>
     <select class="custom-select" name="scope">
