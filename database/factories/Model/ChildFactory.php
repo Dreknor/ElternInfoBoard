@@ -2,8 +2,10 @@
 
 namespace Database\Factories\Model;
 
+use App\Enums\GuardianRelation;
 use App\Model\Child;
 use App\Model\Group;
+use App\Model\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ChildFactory extends Factory
@@ -27,6 +29,21 @@ class ChildFactory extends Factory
             'notification' => true,
             'auto_checkIn' => false,
         ];
+    }
+
+    /**
+     * Kind mit Bezugsperson; Rechte folgen den Standardrechten der Beziehungsart.
+     */
+    public function withGuardian(User $user, GuardianRelation $relation = GuardianRelation::LegalGuardian, array $pivot = []): static
+    {
+        return $this->afterCreating(function (Child $child) use ($user, $relation, $pivot) {
+            $child->parents()->attach($user->id, $pivot + ['relation' => $relation->value] + $relation->defaultRights());
+        });
+    }
+
+    public function inClass(Group $class): static
+    {
+        return $this->state(fn () => ['class_id' => $class->id]);
     }
 
     /**

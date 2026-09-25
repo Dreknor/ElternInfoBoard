@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -52,6 +53,7 @@ class User extends Authenticatable implements Auditable
         'name', 'email', 'publicMail', 'publicPhone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
         'is_active', 'deactivated_at', 'messenger_discoverable',
         'ucs_uuid', 'ucs_username', 'ucs_oidc_sub', 'ucs_school', 'ucs_synced_at', 'ucs_source',
+        'family_id',
     ];
 
     /**
@@ -107,8 +109,29 @@ class User extends Authenticatable implements Auditable
     public function children_rel(): BelongsToMany
     {
         return $this->belongsToMany(Child::class, 'child_user')
-            ->withPivot(['is_auto_provisioned', 'relation', 'synced_at'])
+            ->using(ChildGuardian::class)
+            ->withPivot(ChildGuardian::PIVOT_COLUMNS)
             ->withTimestamps();
+    }
+
+    /**
+     * Familie / Haushalt (Abrechnungseinheit), max. eine pro Person.
+     */
+    public function family(): BelongsTo
+    {
+        return $this->belongsTo(Family::class);
+    }
+
+    /**
+     * Alle Mitglieder der eigenen Familie (inkl. self); ohne Familie nur self.
+     */
+    public function familyMembers(): HasMany
+    {
+        if ($this->family_id === null) {
+            return $this->hasMany(self::class, 'id', 'id');
+        }
+
+        return $this->hasMany(self::class, 'family_id', 'family_id');
     }
 
     /**

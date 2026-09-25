@@ -25,12 +25,12 @@ class Rueckmeldungen extends Model
     /**
      * @var array
      */
-    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date'];
+    protected $fillable = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'commentable', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date', 'scope'];
 
     /**
      * @var array
      */
-    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date', 'commentable'];
+    protected $visible = ['post_id', 'empfaenger', 'ende', 'text', 'pflicht', 'type', 'max_answers', 'multiple', 'liste_id', 'terminliste_start_date', 'terminliste_end_date', 'commentable', 'scope'];
 
     /**
      * @var array

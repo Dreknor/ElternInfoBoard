@@ -801,6 +801,7 @@ class UcsSyncService
                 $user->children_rel()->attach($childId, [
                     'is_auto_provisioned' => true,
                     'relation'            => 'legal_guardian',
+                    'source'              => 'ucs',
                     'synced_at'           => now(),
                 ]);
             } elseif ((bool) $existing->get($childId)) {

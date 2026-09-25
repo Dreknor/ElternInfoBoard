@@ -26,6 +26,23 @@ class PflichtstundenSetting extends Settings
 
     public array $pflichtstunden_bereiche = [];
 
+    /** Berechnungsgrundlage: 'family' (Soll pro Familie) oder 'child' (Soll pro Kind). */
+    public string $pflichtstunden_basis = 'family';
+
+    /** Nur bei Basis 'child': höchstens so viele Kinder zählen (null = unbegrenzt). */
+    public ?int $pflichtstunden_max_kinder = null;
+
+    /** Umgang mit Kindern mehrerer Familien: 'combined', 'split' oder 'separate'. */
+    public string $pflichtstunden_geteilte_kinder = 'combined';
+
+    /** Nur Kinder dieser Gruppen/Klassen zählen (leer = alle aktiven Kinder). */
+    public array $pflichtstunden_kinder_gruppen = [];
+
+    /** Protokoll der letzten Umstellung der Berechnungsgrundlage (E8). */
+    public ?string $pflichtstunden_basis_changed_at = null;
+
+    public ?int $pflichtstunden_basis_changed_by = null;
+
     public static function group(): string
     {
         return 'pflichtstunden';

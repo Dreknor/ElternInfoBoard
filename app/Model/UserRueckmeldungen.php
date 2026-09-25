@@ -16,7 +16,7 @@ class UserRueckmeldungen extends Model
 
     protected $table = 'users_rueckmeldungen';
 
-    protected $fillable = ['post_id', 'users_id', 'text', 'rueckmeldung_number'];
+    protected $fillable = ['post_id', 'users_id', 'child_id', 'text', 'rueckmeldung_number'];
 
     public function nachricht(): BelongsTo
     {

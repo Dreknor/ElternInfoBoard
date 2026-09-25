@@ -21,6 +21,7 @@ class Child extends Model implements HasMedia
     use SoftDeletes;
 
     protected $fillable = [
+        'external_id',
         'first_name',
         'last_name',
         'group_id',
@@ -58,11 +59,23 @@ class Child extends Model implements HasMedia
         return $this->belongsTo(Group::class);
     }
 
+    /**
+     * Bezugspersonen des Kindes inkl. Beziehungsart und Rechten (Pivot ChildGuardian).
+     */
     public function parents(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'child_user')
-            ->withPivot(['is_auto_provisioned', 'relation', 'synced_at'])
+            ->using(ChildGuardian::class)
+            ->withPivot(ChildGuardian::PIVOT_COLUMNS)
             ->withTimestamps();
+    }
+
+    /**
+     * Sprechender Alias für parents() im kind-zentrierten Modell.
+     */
+    public function guardians(): BelongsToMany
+    {
+        return $this->parents();
     }
 
     // ── UCS-Scopes ────────────────────────────────────────────────────────────
