@@ -59,6 +59,16 @@
                             </p>
                         </div>
                     @endcan
+                    @can('manage families')
+                        <div class="col">
+                            <p class=" pull-right">
+                                <a href="{{ route('families.index') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-house-user"></i>
+                                    Familien
+                                </a>
+                            </p>
+                        </div>
+                    @endcan
                 </div>
             </div>
             <div class="card-body">
@@ -128,7 +138,7 @@
                         <th>E-Mail</th>
                         <th>Gruppen</th>
                         <th>Rechte</th>
-                        <th>Verknüpft</th>
+                        <th>Familie</th>
                         <th>E-Mail</th>
                         <td></td>
                     </tr>
@@ -174,9 +184,7 @@
                                 </td>
 
                                 <td>
-                                    @if(!is_null($user->sorgeberechtigter2))
-                                        {{$user->sorgeberechtigter2->name}}
-                                    @endif
+                                    {{ $user->family?->name }}
                                 </td>
                                 <td>
                                     <a class="btn  @if(is_null($user->lastEmail) or $user->lastEmail->lessThan(\Carbon\Carbon::parse('last friday'))) btn-danger @else btn-success @endif  btn-sm"

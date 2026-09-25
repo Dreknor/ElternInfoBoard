@@ -133,30 +133,62 @@
 
                                         <div class="row">
                                             <div class="col-12">
-                                                @if($user->sorg2 != "")
-                                                    <p>
-                                                        Das Konto ist verknüpft mit
-                                                        <b>
-                                                            <a href="{{url('users/'.$user->sorg2)}}">
-                                                                {{$user->sorgeberechtigter2?->name}}
-                                                            </a>
-                                                        </b>.
+                                                {{-- Familie (kind-zentriertes Familienmodell, ersetzt sorg2) --}}
+                                                <label class="font-weight-bold mb-1">Familie</label>
+                                                @if($user->family)
+                                                    <p class="mb-1">
+                                                        @can('manage families')
+                                                            <a href="{{ route('families.show', $user->family) }}">{{ $user->family->name }}</a>
+                                                        @else
+                                                            {{ $user->family->name }}
+                                                        @endcan
+                                                        @if($user->family->is_locked)
+                                                            <span class="badge badge-secondary">gesperrt</span>
+                                                        @endif
                                                     </p>
-
-                                                    <p>
-                                                        <a href="{{url('users/'.$user->id.'/remove/sorg2/'.$user->sorg2)}}">
-                                                            {{$user->sorgeberechtigter2?->name}}
-                                                        </a>
-                                                    </p>
+                                                    <ul class="mb-2">
+                                                        @foreach($user->family->users->where('id', '!=', $user->id) as $member)
+                                                            <li><a href="{{ url('users/'.$member->id) }}">{{ $member->name }}</a></li>
+                                                        @endforeach
+                                                    </ul>
+                                                    @can('manage families')
+                                                        <p class="small">
+                                                            <a href="{{ url('users/'.$user->id.'/remove/sorg2/0') }}"
+                                                               onclick="return confirm('{{ addslashes($user->name) }} aus der Familie lösen?')">aus Familie lösen</a>
+                                                        </p>
+                                                    @endcan
                                                 @else
-                                                    <label for="sorg2">Verknüpfen mit:</label>
+                                                    <p class="text-muted mb-1">keiner Familie zugeordnet</p>
+                                                @endif
+                                                @can('manage families')
+                                                    <label for="sorg2" class="small mb-0">Mit Person zu einer Familie verknüpfen:</label>
                                                     <select class="custom-select" name="sorg2" id="sorg2">
                                                         <option value=""></option>
                                                         @foreach($users as $otherUser)
                                                             <option value="{{$otherUser->id}}">{{$otherUser->name}}</option>
                                                         @endforeach
                                                     </select>
-                                                @endif
+                                                    <small class="text-muted">Die gewählte Person wird dieser Familie hinzugefügt (bzw. umgekehrt).</small>
+                                                @endcan
+
+                                                <label class="font-weight-bold mt-3 mb-1">Kinder</label>
+                                                <ul class="mb-0">
+                                                    @forelse($user->children_rel as $child)
+                                                        <li>
+                                                            <a href="{{ route('child.edit', $child) }}#bezugspersonen">{{ $child->first_name }} {{ $child->last_name }}</a>
+                                                            <small class="text-muted">
+                                                                – {{ $child->pivot->relationType()->label() }}
+                                                                ({{ collect(['S' => $child->pivot->has_custody, 'I' => $child->pivot->receives_information, 'V' => $child->pivot->can_manage])->filter()->keys()->implode('/') ?: 'keine Rechte' }},
+                                                                {{ $child->pivot->sourceLabel() }})
+                                                            </small>
+                                                            @if($child->pivot->isPendingReview())
+                                                                <span class="badge badge-warning">ungeprüft</span>
+                                                            @endif
+                                                        </li>
+                                                    @empty
+                                                        <li class="text-muted">keine Kinder verknüpft</li>
+                                                    @endforelse
+                                                </ul>
                                             </div>
                                         </div>
 

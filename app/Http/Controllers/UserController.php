@@ -61,7 +61,7 @@ class UserController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         // TODO-2.7: Serverseitige Paginierung statt User::all() für bessere Performance
-        $query = User::query()->with(['groups', 'permissions', 'sorgeberechtigter2', 'roles']);
+        $query = User::query()->with(['groups', 'permissions', 'family', 'roles']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -150,7 +150,7 @@ class UserController extends Controller implements HasMiddleware
         }
 
         return view('user.show', [
-            'user' => $user->load('groups'),
+            'user' => $user->load(['groups', 'family.users', 'children_rel']),
             'gruppen' => Cache::remember('groups', 60 * 5, function () {
                 return Group::all();
             }),
@@ -158,10 +158,11 @@ class UserController extends Controller implements HasMiddleware
                 return Permission::all();
             }),
             'roles' => $roles,
-            'users' => User::where([
-                ['sorg2', null],
-                ['id', '!=', $user->id],
-            ])->orWhere('sorg2', $user->id)->get(),
+            // Kandidaten für die Familienverknüpfung: alle außer bisherigen Familienmitgliedern
+            'users' => User::query()
+                ->whereNotIn('id', $user->familyUserIds())
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -188,7 +189,7 @@ class UserController extends Controller implements HasMiddleware
             $this->userService->setPassword($user, $request->input('new-password'));
         }
 
-        if ($request->filled('sorg2')) {
+        if ($request->filled('sorg2') && $request->user()->can('manage families')) {
             $this->userService->linkSorgeberechtigte($user, (int) $request->input('sorg2'));
         }
 
@@ -258,26 +259,26 @@ class UserController extends Controller implements HasMiddleware
     /**
      * @return RedirectResponse
      */
+    /**
+     * Konto aus seiner Familie lösen (Route stammt aus der sorg2-Zeit; der
+     * zweite Parameter wird nicht mehr ausgewertet).
+     *
+     * @return RedirectResponse
+     */
     public function removeVerknuepfung(User $user, int $sorg2)
     {
-        if ($user->sorg2 != $sorg2) {
+        if (auth()->user()->cannot('manage families')) {
             return redirect()->back()->with([
                 'type' => 'danger',
-                'Meldung' => 'Verknüpfung konnte nicht aufgehoben werden, da User und Sorgeberechtigter nicht übereinstimmen.',
+                'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
-        $user->sorgeberechtigter2()->update([
-            'sorg2' => null,
-        ]);
-
-        $user->update([
-            'sorg2' => null,
-        ]);
+        $this->userService->unlinkSorgeberechtigte($user);
 
         return redirect()->back()->with([
             'type' => 'success',
-            'Meldung' => 'Verknüpfung der Konten aufgehoben',
+            'Meldung' => 'Konto aus der Familie gelöst',
         ]);
     }
 
@@ -287,7 +288,7 @@ class UserController extends Controller implements HasMiddleware
             ->whereHas('roles', function ($query) {
                 return $query->where('name', 'Eltern');
             })
-            ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+            ->with(['groups', 'roles', 'permissions', 'family'])
             ->get();
 
         return view('user.showMassDelete')->with([
@@ -316,29 +317,34 @@ class UserController extends Controller implements HasMiddleware
     {
         $vereinsgruppe = Group::where('name', 'Vereinsmitglied')->first();
 
-        // Alle User, die weder selbst noch deren Sorg2 in der Gruppe Vereinsmitglied sind
+        // Eine Familie gilt als Mitglied, wenn ein Familienmitglied in der Gruppe ist
+        $resolver = app(\App\Services\Family\FamilyResolver::class);
+        $memberFamilyUserIds = User::query()
+            ->whereHas('groups', fn ($q) => $q->where('groups.id', $vereinsgruppe?->id))
+            ->get()
+            ->flatMap(fn (User $member) => $resolver->familyUserIds($member))
+            ->unique()
+            ->all();
+
         $users = User::whereDoesntHave('groups', function ($query) use ($vereinsgruppe) {
             $query->where('groups.id', $vereinsgruppe?->id);
         })
-            ->where(function ($query) use ($vereinsgruppe) {
-                // User ohne Sorg2 ODER User deren Sorg2 nicht in der Gruppe ist
-                $query->whereNull('sorg2')
-                    ->orWhereDoesntHave('sorgeberechtigter2.groups', function ($q) use ($vereinsgruppe) {
-                        $q->where('groups.id', $vereinsgruppe?->id);
-                    });
-            })
-            ->with(['groups', 'roles', 'permissions', 'sorgeberechtigter2'])
+            ->whereNotIn('id', $memberFamilyUserIds)
+            ->with(['groups', 'roles', 'permissions'])
             ->get();
 
         // Bereite die User-Daten für Alpine.js vor
-        $usersData = $users->map(function ($u) {
+        $usersData = $users->map(function ($u) use ($resolver) {
+            $familyIds = array_values(array_diff($resolver->familyUserIds($u), [$u->id]));
+
             return [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
                 'groups' => $u->groups->pluck('name')->toArray(),
                 'roles' => $u->roles->pluck('name')->toArray(),
-                'sorg2' => $u->sorgeberechtigter2?->name,
+                'family' => User::query()->whereIn('id', $familyIds)->pluck('name')->implode(', '),
+                'family_ids' => $familyIds,
                 'removed' => false,
             ];
         })->values();

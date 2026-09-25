@@ -45,15 +45,15 @@
                          // Finde den hinzugefügten User
                          const addedUser = this.users.find(u => u.id === userId);
 
-                         // Entferne den User und seinen Sorg2 aus der Liste
+                         // Entferne den User und seine Familienmitglieder aus der Liste
                          setTimeout(() => {
                              this.users = this.users.map(u => {
                                  // Markiere den User selbst als removed
                                  if (u.id === userId) {
                                      return { ...u, removed: true };
                                  }
-                                 // Markiere auch den Sorg2 als removed, wenn dieser User der Sorg2 des hinzugefügten Users ist
-                                 if (addedUser && addedUser.sorg2 && u.name === addedUser.sorg2) {
+                                 // Familienmitglieder gelten ebenfalls als Vereinsmitglied
+                                 if (addedUser && (addedUser.family_ids || []).includes(u.id)) {
                                      return { ...u, removed: true };
                                  }
                                  return u;
@@ -198,7 +198,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">E-Mail</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Gruppen</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Rollen</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Verknüpft</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Familie</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Aktion</th>
                         </tr>
                     </thead>
@@ -235,7 +235,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                                    <span x-text="user.sorg2 || '-'"></span>
+                                    <span x-text="user.family || '-'"></span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <button @click="addToVerein(user.id, user.name)"

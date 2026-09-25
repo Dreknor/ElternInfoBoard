@@ -50,16 +50,6 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="parent_id" class="form-label">Elternteil</label>
-                        <select class="custom-select" id="parent_id" name="parent_id" required>
-                            <option disabled selected>Wähle einen Elternteil</option>
-                            @foreach($parents as $parent)
-                                <option
-                                    value="{{ $parent->id }}" {{ $child->parents->contains($parent->id) ? 'selected' : '' }}>{{ $parent->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
                     <div class="mb-3">
                         <label for="auto_checkIn" class="form-label">Automatisches Anmelden an Schultagen</label>
@@ -73,5 +63,24 @@
                 </form>
             </div>
         </div>
+
+        @can('manage families')
+            @include('child.partials.guardians', ['child' => $child, 'guardianCandidates' => $parents])
+        @else
+            <div class="card mt-3">
+                <div class="card-header"><h5 class="mb-0">Bezugspersonen</h5></div>
+                <ul class="list-group list-group-flush">
+                    @forelse($child->parents as $guardian)
+                        <li class="list-group-item">
+                            {{ $guardian->name }}
+                            <small class="text-muted">– {{ $guardian->pivot->relationType()->label() }}</small>
+                        </li>
+                    @empty
+                        <li class="list-group-item text-muted">Keine Bezugspersonen hinterlegt.</li>
+                    @endforelse
+                </ul>
+                <div class="card-footer small text-muted">Beziehungen pflegt die Verwaltung (Berechtigung „Familien verwalten“).</div>
+            </div>
+        @endcan
     </div>
 @endsection

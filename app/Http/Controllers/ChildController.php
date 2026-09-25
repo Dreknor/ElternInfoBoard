@@ -130,12 +130,9 @@ class ChildController extends Controller implements HasMiddleware
 
     public function edit(Child $child)
     {
-
-        $parents = User::query()
-            ->whereHas('roles', function ($query) {
-                $query->where('name', 'Eltern')->where('guard_name', 'web');
-            })
-            ->get();
+        // Kandidaten für Bezugspersonen: alle aktiven Konten (Großeltern etc. haben
+        // nicht zwingend die Rolle „Eltern“)
+        $parents = User::query()->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('child.edit', [
             'child' => $child,

@@ -46,9 +46,13 @@
                             </td>
                             <td>
                                 @foreach($child->parents as $parent)
-                                    {{ $parent?->name }}@if($parent->sorgeberechtigter2)
-                                        ,  {{$parent->sorgeberechtigter2->name}}
-                                    @endif
+                                    <div>
+                                        {{ $parent->name }}
+                                        <small class="text-muted">({{ $parent->pivot->relationType()->label() }}@unless($parent->pivot->has_custody), ohne Sorgerecht @endunless)</small>
+                                        @if($parent->pivot->isPendingReview())
+                                            <span class="badge badge-warning">ungeprüft</span>
+                                        @endif
+                                    </div>
                                 @endforeach
                             </td>
                             <td>

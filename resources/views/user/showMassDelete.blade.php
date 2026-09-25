@@ -48,7 +48,7 @@
                             <th>E-Mail</th>
                             <th>Gruppen</th>
                             <th>Rechte</th>
-                            <th>Verknüpft</th>
+                            <th>Familie</th>
                             <th>letzte E-Mail</th>
                         </tr>
                         </thead>
@@ -87,9 +87,7 @@
                                 </td>
 
                                 <td>
-                                    @if(!is_null($user->sorgeberechtigter2))
-                                        {{$user->sorgeberechtigter2->name}}
-                                    @endif
+                                    {{ $user->family?->name }}
                                 </td>
                                 <td>
                                     {{$user->lastEmail?->format('d.m.Y')}}
