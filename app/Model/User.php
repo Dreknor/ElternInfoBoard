@@ -309,7 +309,9 @@ class User extends Authenticatable implements Auditable
 
     public function schickzeiten(): HasMany
     {
-        return $this->hasMany(Schickzeiten::class, 'users_id')->orWhere('users_id', $this->sorg2);
+        // Eigene (erstellte) Schickzeiten. Sichtbarkeit für Familie/Kinder läuft
+        // über Kind bzw. FamilyResolver, nicht mehr über orWhere(sorg2).
+        return $this->hasMany(Schickzeiten::class, 'users_id');
     }
 
     public function schickzeiten_own(): HasMany
@@ -319,9 +321,13 @@ class User extends Authenticatable implements Auditable
 
     // Krankmeldungen
 
+    /**
+     * Selbst erstellte Krankmeldungen (Autor). Für die Anzeige aller sichtbaren
+     * Meldungen siehe Krankmeldungen::scopeVisibleTo().
+     */
     public function krankmeldungen(): HasMany
     {
-        return $this->hasMany(Krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
+        return $this->hasMany(Krankmeldungen::class, 'users_id')->orderByDesc('created_at');
     }
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\MorphMany

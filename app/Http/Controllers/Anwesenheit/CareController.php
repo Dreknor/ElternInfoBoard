@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Anwesenheit;
 
+use App\Enums\GuardianRight;
 use App\Exports\AnwesenheitsAbfrageExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
@@ -11,6 +12,7 @@ use App\Model\ChildMandate;
 use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use App\Services\HolidayService;
 use App\Notifications\AttendanceQueryNotification;
 use App\Settings\CareSetting;
@@ -362,6 +364,7 @@ class CareController extends Controller implements HasMiddleware
 
         $checkIns = [];
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
+        $guardiansByChild = [];
         $holidayService = new HolidayService();
 
         for ($date = $date_start; $date->lte($date_end); $date->addDay()) {
@@ -391,8 +394,9 @@ class CareController extends Controller implements HasMiddleware
                     'lock_at' => $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString(),
                 ];
 
-                // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)
-                foreach ($child->parents as $parent) {
+                // Sammle Bezugspersonen mit Verwaltungsrecht (nur einmal pro Person)
+                $guardiansByChild[$child->id] ??= app(FamilyResolver::class)->guardiansFor($child, GuardianRight::Manage);
+                foreach ($guardiansByChild[$child->id] as $parent) {
                     if (!$parentsToNotify->contains('id', $parent->id)) {
                         $parentsToNotify->push($parent);
                     }
@@ -694,16 +698,11 @@ class CareController extends Controller implements HasMiddleware
     }
 
     /**
-     * Empfänger von An-/Abmelde-Benachrichtigungen: alle Eltern des Kindes
-     * inklusive deren verknüpfter Sorgeberechtigter, ohne Duplikate.
+     * Empfänger von An-/Abmelde-Benachrichtigungen: alle Bezugspersonen, die das
+     * Kind verwalten dürfen (FamilyResolver, legacy inkl. sorg2-Partner).
      */
     private function notificationRecipients(Child $child): \Illuminate\Support\Collection
     {
-        $parents = $child->parents()->with('sorgeberechtigter2')->get();
-
-        return $parents
-            ->merge($parents->pluck('sorgeberechtigter2')->filter())
-            ->unique('id')
-            ->values();
+        return app(FamilyResolver::class)->guardiansFor($child, GuardianRight::Manage)->values();
     }
 }

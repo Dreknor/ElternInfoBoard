@@ -101,7 +101,7 @@ class KrankmeldungenController extends Controller implements HasMiddleware
                     ], 404);
                 }
 
-                if (! $request->user()->can('edit schickzeiten') && ! $request->user()->children()?->contains($child)) {
+                if ($request->user()->cannot('reportSick', $child)) {
                     return response()->json([
                         'message' => 'Sie haben keine Berechtigung, dieses Kind krankzumelden.',
                     ], 403);

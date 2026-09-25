@@ -210,7 +210,7 @@ class ChildController extends Controller implements HasMiddleware
 
     public function setNotification(ChildNotificationRequest $request, Child $child)
     {
-        if (auth()->user()->children()->contains($child)) {
+        if (auth()->user()->can('manage', $child)) {
 
             $child->notification = $request->notification;
             $child->save();
@@ -230,7 +230,7 @@ class ChildController extends Controller implements HasMiddleware
     public function storeMandate(Request $request, Child $child)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung',
                 'type' => 'danger',
@@ -257,7 +257,7 @@ class ChildController extends Controller implements HasMiddleware
     public function destroyMandate(Request $request, Child $child, $mandateId)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
                 'type' => 'danger',

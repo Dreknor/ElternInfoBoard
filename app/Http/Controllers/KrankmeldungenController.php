@@ -28,7 +28,11 @@ class KrankmeldungenController extends Controller
      */
     public function index(Request $request)
     {
-        $krankmeldungen = $request->user()->krankmeldungen->load('user')->paginate(15);
+        $krankmeldungen = Krankmeldungen::query()
+            ->visibleTo($request->user())
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->paginate(15);
 
         if (Module::where('setting', 'meldepfl. Erkrankungen')->first()?->options['active'] == 1) {
             $diseases = Cache::remember('diseases', 60 * 60 * 24, function () {
@@ -60,7 +64,7 @@ class KrankmeldungenController extends Controller
         if ($request->child_id) {
             $child = Child::find($request->child_id);
 
-            if (! $this->mayReportSick($request->user(), $child)) {
+            if (! $child || $request->user()->cannot('reportSick', $child)) {
                 return redirect()->back()->with([
                     'type' => 'danger',
                     'Meldung' => 'Sie haben keine Berechtigung, dieses Kind krankzumelden.',
@@ -152,23 +156,6 @@ class KrankmeldungenController extends Controller
             ]);
         }
 
-    }
-
-    /**
-     * Darf der User dieses Kind krankmelden? Eltern nur eigene Kinder,
-     * Personal mit Schickzeiten-Verwaltung alle.
-     */
-    private function mayReportSick($user, ?Child $child): bool
-    {
-        if ($child === null) {
-            return false;
-        }
-
-        if ($user->can('edit schickzeiten')) {
-            return true;
-        }
-
-        return (bool) $user->children()?->contains($child);
     }
 
     /**

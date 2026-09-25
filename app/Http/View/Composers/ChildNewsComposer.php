@@ -15,7 +15,7 @@ class ChildNewsComposer
             return;
         }
 
-        $children = auth()->user()->children();
+        $children = auth()->user()->children(\App\Enums\GuardianRight::Manage);
 
         if ($children->count() > 0) {
             $allowedClasses = Cache::remember('careSettings_classes', now()->addDay(), function () {

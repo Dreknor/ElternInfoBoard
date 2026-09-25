@@ -106,12 +106,10 @@ class DashboardController extends Controller implements HasMiddleware
             ->first();
 
         // Hole die Kinder des Benutzers mit optimiertem Eager Loading
-        $careChildren = auth()->user()->children_rel()
+        $careChildren = app(\App\Services\Family\FamilyResolver::class)
+            ->childrenQuery(auth()->user(), \App\Enums\GuardianRight::Manage)
             ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id'])
             ->care()
-            ->whereHas('parents', function ($query) use ($userId) {
-                $query->where('users.id', $userId);
-            })
             ->with([
                 'group:id,name', // Nur ID und Name der Gruppe
                 'checkIns' => function ($query) {
