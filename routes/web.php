@@ -72,6 +72,15 @@ Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCa
 Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
 
 Auth::routes(['register' => false]);
+
+// Eltern-App: Anmelde-Link aus der E-Mail öffnet die App (einmaliger Code, 15 min gültig).
+Route::get('app/anmelden/{code}', function (string $code) {
+    abort_unless(preg_match('/^[A-Za-z0-9]{48}$/', $code), 404);
+
+    return view('app.open', [
+        'appUrl' => config('services.app.scheme').'://auth?'.http_build_query(['code' => $code, 'type' => 'magic']),
+    ]);
+})->middleware('throttle:30,1')->name('app.login.open');
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
@@ -397,6 +406,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
+        // Eltern-App per QR-Code verbinden und anmelden
+        Route::post('/einstellungen/app-verbinden', [\App\Http\Controllers\User\AppConnectController::class, 'qr'])
+            ->middleware('throttle:10,1')
+            ->name('app.connect.qr');
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
 
         // Nutzer-Theme (Design)

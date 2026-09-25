@@ -97,7 +97,15 @@ class AuthController extends Controller implements HasMiddleware
 
         Log::info('Login successful', ['email' => $email, 'user_id' => $user->id]);
 
-        return response()->json(['token' => $user->createToken($request->device_name)->plainTextToken]);
+        $token = $user->createToken($request->device_name);
+        $minutes = config('sanctum.expiration');
+
+        // Zusätzliche Felder sind abwärtskompatibel (ältere Apps lesen nur `token`).
+        return response()->json([
+            'token' => $token->plainTextToken,
+            'expires_at' => $minutes ? now()->addMinutes($minutes)->toIso8601String() : null,
+            'must_change_password' => (bool) $user->changePassword,
+        ]);
     }
 
     /**

@@ -34,6 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'mark_passwordless_login' => \App\Http\Middleware\MarkPasswordlessLogin::class,
             'password_expired' => \App\Http\Middleware\PasswordExpired::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'idempotency' => \App\Http\Middleware\IdempotencyKey::class,
+            'etag' => \App\Http\Middleware\ETagResponses::class,
+            'api.password' => \App\Http\Middleware\ApiPasswordChangeRequired::class,
         ]);
 
         $middleware->priority([
@@ -55,6 +58,24 @@ return Application::configure(basePath: dirname(__DIR__))
                     'success' => false,
                     'message' => 'Nicht authentifiziert.',
                 ], 401);
+            }
+        });
+
+        /*
+         | App-API v1: deutsche Meldungen für fehlende Rechte und unbekannte Datensätze.
+         */
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/v1/*')) {
+                $message = $e->getMessage();
+
+                return response()->json([
+                    'message' => ($message === '' || $message === 'This action is unauthorized.') ? 'Dafür fehlt Ihnen die Berechtigung.' : $message,
+                ], 403);
+            }
+        });
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/v1/*') && $e->getPrevious() instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                return response()->json(['message' => 'Nicht gefunden.'], 404);
             }
         });
 

@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2",
         "ext-curl": "*",
+        "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "bkwld/cloner": "^3.14",
         "coliving/commentable": "^5.7",

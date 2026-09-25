@@ -8,6 +8,8 @@ use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Disease;
 use App\Model\krankmeldungen;
+use App\Services\App\Family;
+use App\Services\App\KrankmeldungService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -67,127 +69,61 @@ class KrankmeldungenController extends Controller implements HasMiddleware
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request, KrankmeldungService $service)
     {
         $request->validate([
             'name' => 'nullable|string|max:400',
-            'child_id' => 'nullable|exists:children,id',
-            'kommentar' => 'required',
-            'start' => 'required',
-            'ende' => 'required',
-            'disease_id' => 'nullable',
+            'child_id' => 'nullable|integer|exists:children,id',
+            'kommentar' => 'required|string|max:2000',
+            'start' => 'required|string',
+            'ende' => 'required|string',
+            'disease_id' => 'nullable|integer',
+            'files.*' => 'file|max:10240',
         ]);
 
-        // Validate that either name or child_id is provided
         if (! $request->name && ! $request->child_id) {
-            return response()->json([
-                'message' => 'Bitte geben Sie einen Namen oder ein Kind an',
-            ], 422);
+            return response()->json(['message' => 'Bitte geben Sie einen Namen oder ein Kind an'], 422);
+        }
+
+        $user = $request->user();
+        $child = null;
+        if ($request->child_id) {
+            // Nur eigene Kinder (B-40) – vorher konnte jedes Kind krankgemeldet werden.
+            if (! Family::ownsChild($user, (int) $request->child_id)) {
+                return response()->json(['message' => 'Sie können nur Ihre eigenen Kinder krankmelden.'], 403);
+            }
+            $child = Child::find($request->child_id);
         }
 
         try {
-            $name = $request->name;
+            $start = KrankmeldungService::parseDate($request->start);
+            $ende = KrankmeldungService::parseDate($request->ende);
+        } catch (\Throwable) {
+            return response()->json(['message' => 'Bitte geben Sie ein gültiges Datum an.'], 422);
+        }
+        if ($ende->lt($start)) {
+            return response()->json(['message' => 'Das Ende darf nicht vor dem Beginn liegen.'], 422);
+        }
 
-            // If child_id is provided, generate name from child data
-            if ($request->child_id) {
-                $child = Child::find($request->child_id);
-
-                if (!$child) {
-                    return response()->json([
-                        'message' => 'Kind nicht gefunden',
-                    ], 404);
-                }
-
-                $name = $child->first_name.' '.$child->last_name;
-
-                $group = $child->group?->name;
-                $class = $child->class?->name;
-
-                if ($group == $class) {
-                    $class = null;
-                }
-
-                if ($group || $class) {
-                    $name .= ' ('.$group.' '.$class.')';
-                }
-            } else {
-                // Add user's groups to name if only name is provided
-                $gruppen = $request->user()?->groups ?? collect();
-
-                $name .= ' (';
-
-                foreach ($gruppen as $gruppe) {
-                    $name .= $gruppe->name.' ';
-                }
-
-                $name .= ')';
-            }
-
-            $krankmeldung = new krankmeldungen(
-                [
-                    'name' => $name,
-                    'kommentar' => $request->kommentar,
-                    'start' => Carbon::createFromFormat('d.m.Y', $request->start),
-                    'ende' => Carbon::createFromFormat('d.m.Y', $request->ende),
-                    'users_id' => $request->user()->id,
-                ]
+        try {
+            $service->create(
+                $user,
+                $child,
+                $request->name,
+                $start,
+                $ende,
+                $request->kommentar,
+                $request->integer('disease_id') ?: null,
+                $request->file('files', []),
             );
+        } catch (\Throwable $e) {
+            Log::error('Krankmeldung (API): '.$e->getMessage());
 
-            $krankmeldung->save();
-        } catch (\Exception $e) {
-            Log::error('Krankmeldung: Fehler beim Speichern der Krankmeldung: '.$e->getMessage());
-            $text = 'Fehler beim Speichern der Krankmeldung. Bitte überprüfen Sie die Eingaben.';
+            return response()->json(['message' => 'Die Krankmeldung konnte nicht gespeichert werden.'], 500);
         }
 
-        try {
-            if (! empty($request->disease_id) && $request->disease_id != 0) {
-                $disease = Disease::find($request->disease_id);
-
-                if ($disease && isset($krankmeldung)) {
-                    ActiveDisease::insert([
-                        'user_id' => auth()->id(),
-                        'disease_id' => $request->disease_id,
-                        'start' => $krankmeldung->start,
-                        'end' => $krankmeldung->start->addDays($disease->aushang_dauer),
-                        'active' => false,
-                    ]);
-
-                    Cache::forget('active_diseases');
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Krankmeldung: Fehler beim Speichern der Krankheit: '.$e->getMessage());
-            $text .= 'Fehler beim Speichern der Krankheit. Bitte überprüfen Sie die Eingaben.';
-        }
-
-        try {
-            // If API caller uploaded files via multipart/form-data with key 'files', store them
-            $attachments = [];
-            if ($request->hasFile('files')) {
-                $krankmeldung->addAllMediaFromRequest(['files'])
-                    ->each(fn ($fileAdder) => $fileAdder->toMediaCollection('files'));
-
-                foreach ($krankmeldung->getMedia('files') as $media) {
-                    $attachments[] = $media;
-                }
-            }
-
-            Mail::to(config('mail.from.address'))
-                ->cc($request->user()->email)
-                ->queue(new Krankmeldung($request->user()->email, $request->user()->name, $name, $request->start, $request->ende, $request->kommentar, $disease?->name, $attachments));
-
-            return response()->json('Krankmeldung gesendet.', 200);
-        } catch (\Exception $e) {
-            Log::error('Krankmeldung-Fehler:', [
-                'error' => $e->getMessage(),
-            ]);
-            $text .= 'Fehler beim Senden der Krankmeldung. Bitte überprüfen Sie die Eingaben.';
-        }
-
-        return response()->json([
-            'message' => $text,
-        ], 400);
-
+        // Format für ältere App-Versionen unverändert.
+        return response()->json('Krankmeldung gesendet.', 200);
     }
 
     /**
@@ -208,7 +144,7 @@ class KrankmeldungenController extends Controller implements HasMiddleware
     {
         $activeDisease = ActiveDisease::query()
             ->where('active', true)
-            ->whereDate('end', '>=', Carbon::now()->addDay())
+            ->whereDate('end', '>=', Carbon::today())
             ->with('disease')
             ->get();
 
@@ -226,7 +162,8 @@ class KrankmeldungenController extends Controller implements HasMiddleware
             return response()->json(
                 ['data' => $result], 200);
         } else {
-            return response()->json(null, 200);
+            // Immer dasselbe Format (B-41) – vorher kam hier ein leerer Body.
+            return response()->json(['data' => []], 200);
         }
     }
 }

@@ -55,9 +55,10 @@ Route::get('home/{post_id}', function () {
     return redirect(url('/'.'#'.request()->post_id));
 });
 
-Route::post('/token/create', [AuthController::class, 'login']);
+// Rate-Limit wie beim Web-Login (B-08)
+Route::post('/token/create', [AuthController::class, 'login'])->middleware('throttle:login');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'idempotency'])->group(function () {
 
     Route::get('me', [AuthController::class, 'me']);
     Route::get('me/permissions', [\App\Http\Controllers\API\UserPermissionsController::class, 'index']);
@@ -96,6 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
      */
     Route::get('rueckmeldung/{post_id}', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'index']);
     Route::post('rueckmeldung', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'store']);
+    // Methode existierte, war aber nicht erreichbar (B-20)
+    Route::put('rueckmeldung/{id}', [\App\Http\Controllers\API\UserRueckmeldungenController::class, 'update']);
 
     /**
      * Abfragen
@@ -226,3 +229,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
+
+/*
+ * App-API v1 für die Eltern-App (siehe routes/api_v1.php)
+ */
+Route::prefix('v1')->name('api.v1.')->group(base_path('routes/api_v1.php'));

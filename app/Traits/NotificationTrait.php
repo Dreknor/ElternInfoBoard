@@ -3,7 +3,9 @@
 namespace App\Traits;
 
 use App\Model\Notification;
+use App\Services\Push\NativePushService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 trait NotificationTrait
 {
@@ -43,6 +45,12 @@ trait NotificationTrait
                         'message'    => $message,
                         'updated_at' => now(),
                     ]);
+
+                // Weitere Chat-Nachricht o. Ä.: nativen Push höchstens alle 10 Minuten je Nutzer/Ziel.
+                $pushAgain = $alreadyNotifiedIds->keys()
+                    ->filter(fn ($id) => Cache::add("native_push_{$id}_".md5($url), true, now()->addMinutes(10)))
+                    ->all();
+                NativePushService::dispatch($pushAgain, $title, $message, $url, $type);
             }
 
             // Nur Nutzer ohne bestehende Benachrichtigung neu anlegen.
@@ -71,6 +79,8 @@ trait NotificationTrait
 
         if (! empty($notifications)) {
             Notification::insert($notifications);
+            // insert() löst keine Model-Events aus → nativen Push (Eltern-App) hier anstoßen.
+            NativePushService::dispatch(array_column($notifications, 'user_id'), $title, $message, $url, $type);
         }
     }
 }

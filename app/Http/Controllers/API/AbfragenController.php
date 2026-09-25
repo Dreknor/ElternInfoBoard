@@ -8,7 +8,9 @@ use App\Model\AbfrageOptions;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use App\Services\App\FeedbackService;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 
@@ -175,183 +177,31 @@ class AbfragenController extends Controller implements HasMiddleware
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function storeAnswer(Request $request, $post)
+    public function storeAnswer(Request $request, $post, FeedbackService $service)
     {
-
         $request->validate([
             'data' => 'required|array',
             'data.*.id' => 'required|integer',
-            'data.*.value' => 'required',
+            'data.*.value' => 'present',
         ]);
 
-        Log::warning('API: Storing answer for post '.$post.' with data: '.json_encode($request->data));
+        $post = Post::query()->findOrFail($post);
+        $answers = collect($request->input('data'))->mapWithKeys(fn ($item) => [(int) $item['id'] => $item['value']])->all();
 
-        $post = Post::query()->where('id', $post)->firstOrFail();
-
-        if ($post == null) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Post not found',
-                'message' => 'Beitrag nicht gefunden'
-            ], 404);
-        }
-
-        if ($post->groups->intersect(request()->user()->groups)->count() == 0) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Access denied',
-                'message' => 'Sie haben keine Berechtigung, auf diesen Beitrag zu antworten'
-            ], 403);
-        }
-
-        $rueckmeldung = $post->rueckmeldung;
-
-        if ($rueckmeldung == null) {
-            return response()->json([
-                'success' => false,
-                'error' => 'No abfrage found',
-                'message' => 'Keine Abfrage für diesen Beitrag gefunden'
-            ], 404);
-        }
-
-        if ($rueckmeldung->type != 'abfrage') {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid abfrage type',
-                'message' => 'Ungültiger Rückmeldungstyp'
-            ], 400);
-        }
-
-        $userRueckmeldung = UserRueckmeldungen::query()
-            ->where('post_id', $post->id)
-            ->where('users_id', request()->user()->id)
-            ->first();
-
-        if ($rueckmeldung->multiple == 1 or $userRueckmeldung == null) {
-            $userRueckmeldung = UserRueckmeldungen::create([
-                'post_id' => $post->id,
-                'users_id' => request()->user()->id,
-                'text' => ' ',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            $data = [];
-
-            foreach ($request->data as $value) {
-
-                if (is_array($value) && isset($value['id']) && isset($value['value'])) {
-                    if (! is_numeric($value['id'])) {
-                        return response()->json([
-                            'success' => false,
-                            'error' => 'Invalid data',
-                            'message' => 'Ungültige Daten: ID muss numerisch sein'
-                        ], 400);
-                    }
-
-                    // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
-                    $answerValue = is_bool($value['value']) || is_int($value['value'])
-                        ? (string)$value['value']
-                        : $value['value'];
-
-                    $data[] = [
-                        'rueckmeldung_id' => $userRueckmeldung->id,
-                        'user_id' => request()->user()->id,
-                        'option_id' => $value['id'],
-                        'answer' => $answerValue,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    Log::debug('API: Prepared answer data for option_id '.$value['id'].' with value '.$answerValue);
-                    Log::debug($data);
-
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Invalid data',
-                        'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
-                    ], 400);
-                }
-
-            }
-
-        } else {
-            $userRueckmeldung = UserRueckmeldungen::updateOrCreate([
-                'post_id' => $post->id,
-                'users_id' => request()->user()->id],
-                [
-                    'text' => ' ',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-            AbfrageAntworten::query()->where('rueckmeldung_id', $userRueckmeldung->id)->delete();
-
-            $data = [];
-
-            foreach ($request->data as $value) {
-
-                if (is_array($value) && isset($value['id']) && isset($value['value'])) {
-                    if (! is_numeric($value['id'])) {
-                        return response()->json([
-                            'success' => false,
-                            'error' => 'Invalid data',
-                            'message' => 'Ungültige Daten: ID muss numerisch sein'
-                        ], 400);
-                    }
-
-                    // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
-                    $answerValue = is_bool($value['value']) || is_int($value['value'])
-                        ? (string)$value['value']
-                        : $value['value'];
-
-                    $data[] = [
-                        'rueckmeldung_id' => $userRueckmeldung->id,
-                        'user_id' => request()->user()->id,
-                        'option_id' => $value['id'],
-                        'answer' => $answerValue,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Invalid data',
-                        'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
-                    ], 400);
-                }
-
-            }
-
-        }
-
-        if (count($data) == 0) {
-            $userRueckmeldung->delete();
-
+        // Gemeinsame Regeln mit der neuen API (B-21): Frist, Optionen dieser Abfrage, Pflichtfelder, Höchstzahl.
+        try {
+            $service->storeAbfrage($request->user(), $post, $answers);
+        } catch (HttpException $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Invalid data',
-                'message' => 'Keine gültigen Daten zum Speichern'
-            ], 400);
-        }
-
-        try {
-            AbfrageAntworten::insert($data);
-        } catch (\Exception $e) {
-            Log::error('API: Error saving abfrage antworten: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Error saving data',
-                'message' => 'Fehler beim Speichern der Daten'
-            ], 500);
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Antwort gespeichert'
+            'message' => 'Antwort gespeichert',
         ]);
-
     }
 }

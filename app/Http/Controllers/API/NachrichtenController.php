@@ -248,7 +248,7 @@ class NachrichtenController extends Controller
                         'mime_type' => $media->mime_type,
                         'size' => $media->size,
                         'order' => $media->order_column,
-                        'url' => url('/api/file/' . $media->uuid),
+                        'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
                         'url_by_id' => url('/api/image/' . $media->id),
                     ];
                 })->values()->all();
@@ -437,6 +437,13 @@ class NachrichtenController extends Controller
         }
 
         $user = $request->user();
+        if ($user->cannot('react', $post)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Not allowed',
+                'message' => 'Reaktionen sind für diesen Beitrag nicht möglich'
+            ], 403);
+        }
         $user->reactTo($post, $reaction);
 
         return response()->json([
@@ -631,7 +638,7 @@ class NachrichtenController extends Controller
                     'mime_type' => $media->mime_type,
                     'size' => $media->size,
                     'order' => $media->order_column,
-                    'url' => url('/api/file/' . $media->uuid),
+                    'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
                     'url_by_id' => url('/api/image/' . $media->id),
                 ];
             })->values()->all();

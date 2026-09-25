@@ -7,7 +7,9 @@ use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
 use App\Model\User;
+use App\Services\App\ListenService;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
 
@@ -35,103 +37,13 @@ class ListenController extends Controller implements HasMiddleware
      */
     public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag)
     {
-        $user = $request->user();
-
-        if (! $user) {
-            return response()->json(['message' => 'User not found'], 404);
+        try {
+            app(ListenService::class)->reserveEintrag($request->user(), $eintrag);
+        } catch (HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
-        $liste = Liste::findOrFail($eintrag->listen_id);
-
-        // Prüfe, ob der User Zugriff auf die Liste hat
-        if ($liste->users->contains($user->id) == false && !$user->hasPermissionTo('edit terminliste', 'web')) {
-            Log::warning('Reserviere eintrag - User hat keinen Zugriff auf Liste', [
-                'eintrag_id' => $eintrag->id,
-                'user_id' => $user->id,
-                'liste_id' => $liste->id,
-                'liste_name' => $liste->listenname,
-                'reason' => 'User not in liste.users'
-            ]);
-            return response()->json(['message' => 'Not allowed - no access to list'], 403);
-        }
-
-        // Prüfe den Typ der Liste
-        if ($liste->type != 'eintrag') {
-            Log::warning('Reserviere eintrag - Falscher Listentyp', [
-                'eintrag_id' => $eintrag->id,
-                'user_id' => $user->id,
-                'liste_id' => $liste->id,
-                'liste_type' => $liste->type,
-                'reason' => 'Wrong list type'
-            ]);
-            return response()->json(['message' => 'Not allowed - wrong list type'], 403);
-        }
-
-        // Prüfe, ob die Liste aktiv ist
-        if ($liste->active == 0) {
-            Log::warning('Reserviere eintrag - Liste ist inaktiv', [
-                'eintrag_id' => $eintrag->id,
-                'user_id' => $user->id,
-                'liste_id' => $liste->id,
-                'reason' => 'List inactive'
-            ]);
-            return response()->json(['message' => 'Not allowed - list inactive'], 403);
-        }
-
-        // Prüfe, ob die Liste abgelaufen ist
-        if ($liste->ende < now()) {
-            Log::warning('Reserviere eintrag - Liste ist abgelaufen', [
-                'eintrag_id' => $eintrag->id,
-                'user_id' => $user->id,
-                'liste_id' => $liste->id,
-                'liste_ende' => $liste->ende,
-                'reason' => 'List expired'
-            ]);
-            return response()->json(['message' => 'Not allowed - list expired'], 403);
-        }
-
-        // Prüfe, ob der Eintrag bereits vergeben ist
-        if ($eintrag->user_id != null) {
-            Log::warning('Reserviere eintrag - Eintrag bereits vergeben', [
-                'eintrag_id' => $eintrag->id,
-                'user_id' => $user->id,
-                'liste_id' => $liste->id,
-                'eintrag_user_id' => $eintrag->user_id,
-                'reason' => 'Entry already taken'
-            ]);
-            return response()->json(['message' => 'Not allowed - entry already taken'], 403);
-        }
-
-        // Prüfe, ob der User bereits einen Eintrag hat (wenn multiple = false)
-        if ($liste->multiple == false) {
-            $eintragungen = Listen_Eintragungen::query()
-                ->where('listen_id', $liste->id)
-                ->where('user_id', $user->id)
-                ->count();
-
-            if ($eintragungen > 0) {
-                Log::warning('Reserviere eintrag - User hat bereits einen Eintrag', [
-                    'eintrag_id' => $eintrag->id,
-                    'user_id' => $user->id,
-                    'liste_id' => $liste->id,
-                    'existing_entries' => $eintragungen,
-                    'reason' => 'User already has entry'
-                ]);
-                return response()->json(['message' => 'Not allowed - already has entry'], 403);
-            }
-        }
-
-        $eintrag->user_id = $user->id;
-        $eintrag->save();
-
-        Log::info('Eintrag erfolgreich reserviert', [
-            'eintrag_id' => $eintrag->id,
-            'user_id' => $user->id,
-            'liste_id' => $liste->id,
-        ]);
-
-        return response()->json([
-            'message' => 'Eintrag reserved'], 200);
+        return response()->json(['message' => 'Eintrag reserved'], 200);
     }
 
     /**
@@ -150,23 +62,13 @@ class ListenController extends Controller implements HasMiddleware
      */
     public function removeEintrag(Request $request, Listen_Eintragungen $eintrag)
     {
-        $user = $request->user();
-
-        if (! $user) {
-            return response()->json(['message' => 'User not found'], 404);
+        try {
+            app(ListenService::class)->cancelEintrag($request->user(), $eintrag);
+        } catch (HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
-        if ($eintrag->user_id == $user->id) {
-            if ($eintrag->created_by == $user->id) {
-                $eintrag->delete();
-            } else {
-                $eintrag->user_id = null;
-                $eintrag->save();
-            }
-        }
-
-        return response()->json([
-            'message' => 'Eintrag removed'], 200);
+        return response()->json(['message' => 'Eintrag removed'], 200);
     }
 
     /**
@@ -186,41 +88,16 @@ class ListenController extends Controller implements HasMiddleware
     public function addEintrag(Request $request, $liste)
     {
         $request->validate([
-            'eintragung' => 'required| string',
+            'eintragung' => 'required|string|max:500',
         ]);
 
-        $user = $request->user();
-
-        if (! $user) {
-            return response()->json(['message' => 'User not found'], 404);
+        try {
+            app(ListenService::class)->addEintrag($request->user(), Liste::findOrFail($liste), $request->eintragung);
+        } catch (HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
-
-        $liste = Liste::findOrFail($liste);
-
-        if ($liste->type != 'eintrag' or $liste->active == 0 or $liste->ende < now()) {
-            return response()->json(['message' => 'Not allowed'], 403);
-        }
-
-        if ($liste->multiple == false) {
-            $eintragungen = Listen_Eintragungen::query()
-                ->where('listen_id', $liste->id)
-                ->where('user_id', $user->id)
-                ->count();
-
-            if ($eintragungen > 0) {
-                return response()->json(['message' => 'Not allowed'], 403);
-            }
-        }
-
-        $eintrag = new Listen_Eintragungen;
-        $eintrag->listen_id = $liste->id;
-        $eintrag->user_id = $user->id;
-        $eintrag->created_by = $user->id;
-        $eintrag->eintragung = $request->eintragung;
-        $eintrag->save();
 
         return response()->json(['message' => 'Eintrag added'], 200);
-
     }
 
     /**
@@ -435,7 +312,8 @@ class ListenController extends Controller implements HasMiddleware
             return response()->json(['message' => 'Not allowed'], 403);
         }
 
-        if ($liste->users->contains($user->id) == false) {
+        // EXISTS-Abfrage statt alle Gruppenmitglieder zu laden (B-31)
+        if (! app(ListenService::class)->canAccess($user, $liste)) {
             return response()->json(['message' => 'Not allowed'], 403);
         }
 
@@ -468,25 +346,13 @@ class ListenController extends Controller implements HasMiddleware
      */
     public function cancelTermin(Request $request, $id)
     {
-        $user = $request->user();
-
-        if (! $user) {
-
-            return response()->json(['message' => 'User not found'], 404);
+        try {
+            app(ListenService::class)->cancelTermin($request->user(), listen_termine::findOrFail($id), $request->input('text'));
+        } catch (HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
-        $termin = listen_termine::findOrFail($id);
-
-        if ($user->hasPermissionTo('edit terminliste', 'web') or $termin->liste->besitzer == $user->id or $termin->reserviert_fuer == $user->id) {
-            $termin->reserviert_fuer = null;
-            $termin->save();
-
-        } else {
-            return response()->json(['message' => 'Not allowed'], 403);
-        }
-
-        return response()->json([
-            'message' => 'Termin canceled'], 200);
+        return response()->json(['message' => 'Termin canceled'], 200);
     }
 
     /**
@@ -501,30 +367,12 @@ class ListenController extends Controller implements HasMiddleware
      */
     public function reserveTermin(Request $request, $id)
     {
-        $user = $request->user();
-
-        if (! $user) {
-
-            return response()->json(['message' => 'User not found'], 404);
+        try {
+            app(ListenService::class)->reserveTermin($request->user(), listen_termine::findOrFail($id));
+        } catch (HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
-        $termin = listen_termine::findOrFail($id);
-
-        $liste = Liste::findOrFail($termin->listen_id);
-
-        $always_reserved = listen_termine::query()
-            ->where('listen_id', $liste->id)
-            ->where('reserviert_fuer', $user->id)
-            ->count();
-
-        if ($termin->reserviert_fuer == null and ($termin->liste->multiple == true or $always_reserved == 0)) {
-            $termin->reserviert_fuer = $user->id;
-            $termin->save();
-        } else {
-            return response()->json(['message' => 'Not allowed'], 403);
-        }
-
-        return response()->json([
-            'message' => 'Termin reserved'], 200);
+        return response()->json(['message' => 'Termin reserved'], 200);
     }
 }

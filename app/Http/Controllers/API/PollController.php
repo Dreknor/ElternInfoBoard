@@ -56,20 +56,9 @@ class PollController extends Controller
         $userVote = $poll->votes()->where('author_id', $user->id)->first();
         $hasVoted = !is_null($userVote);
 
-        // Get user's selected options if they voted
+        // Umfragen sind anonym: Antworten sind nicht mit der Stimme verknüpft (B-24).
+        // Vorher wurde option_id mit Stimm-IDs verglichen und lieferte falsche Werte.
         $userAnswers = [];
-        if ($hasVoted) {
-            $userAnswers = $poll->answers()
-                ->where('poll_id', $poll->id)
-                ->whereIn('option_id', function ($query) use ($poll, $user) {
-                    $query->select('poll_votes.id')
-                        ->from('poll_votes')
-                        ->where('poll_votes.poll_id', $poll->id)
-                        ->where('poll_votes.author_id', $user->id);
-                })
-                ->pluck('option_id')
-                ->toArray();
-        }
 
         // Get options with vote counts
         $options = $poll->options->map(function ($option) use ($poll) {
@@ -140,10 +129,15 @@ class PollController extends Controller
             return response()->json(['error' => 'No poll found for this post'], 404);
         }
 
+        // Nach dem Ende keine Stimmen mehr (B-24)
+        if ($poll->ends && $poll->ends->endOfDay()->isPast()) {
+            return response()->json(['error' => 'Poll has ended', 'message' => 'Die Umfrage ist beendet.'], 410);
+        }
+
         // Validate request
         $request->validate([
             'option_ids' => 'required|array',
-            'option_ids.*' => 'required|integer|exists:poll__options,id',
+            'option_ids.*' => 'required|integer|exists:poll_options,id',
         ]);
 
         $optionIds = $request->option_ids;

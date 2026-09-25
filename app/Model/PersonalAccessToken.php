@@ -12,5 +12,13 @@ class PersonalAccessToken extends SanctumPersonalAccessToken
      * @var string
      */
     protected $connection = 'mysql';
-}
 
+    /**
+     * Produktiv wie bisher MySQL; in Tests (SQLite im Speicher) die Standardverbindung,
+     * sonst lassen sich dort keine Tokens anlegen.
+     */
+    public function getConnectionName()
+    {
+        return app()->runningUnitTests() ? config('database.default') : $this->connection;
+    }
+}

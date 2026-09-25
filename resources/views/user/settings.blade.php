@@ -532,6 +532,46 @@
                         </div>
                         @endif
 
+                        {{-- Eltern-App per QR-Code einrichten (Schuladresse + einmalige Anmeldung) --}}
+                        <div class="rounded-lg overflow-hidden border" style="border-color: var(--color-card-border);"
+                             x-data="{ qr: null, loading: false, error: null, expires: null,
+                                async load() {
+                                    this.loading = true; this.error = null;
+                                    try {
+                                        const r = await fetch('{{ route('app.connect.qr') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' } });
+                                        if (!r.ok) throw new Error();
+                                        const d = await r.json(); this.qr = d.svg; this.expires = d.expires_at_label;
+                                    } catch (e) { this.error = 'Der QR-Code konnte nicht erzeugt werden.'; }
+                                    this.loading = false;
+                                } }">
+                            <div class="px-4 py-3" style="background-color: var(--color-primary);">
+                                <h6 class="text-sm font-bold text-white mb-0 flex items-center gap-2">
+                                    <i class="fas fa-mobile-alt"></i>ElternInfo-App einrichten
+                                </h6>
+                            </div>
+                            <div class="p-4 space-y-3" style="background-color: var(--color-card-bg);">
+                                <p class="text-sm" style="color: var(--color-text-secondary);">
+                                    Öffnen Sie die ElternInfo-App und wählen Sie „QR-Code scannen“. Die App verbindet sich dann mit der Schule und meldet Sie direkt an.
+                                </p>
+                                <template x-if="!qr">
+                                    <button type="button" @click="load()" :disabled="loading"
+                                            class="px-4 py-2 rounded-lg text-white text-sm font-medium" style="background-color: var(--color-primary);">
+                                        <i class="fas fa-qrcode mr-1"></i><span x-text="loading ? 'Wird erstellt…' : 'QR-Code anzeigen'"></span>
+                                    </button>
+                                </template>
+                                <template x-if="qr">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="bg-white p-3 rounded-lg" style="width: 240px; height: 240px;" x-html="qr"></div>
+                                        <p class="text-xs text-center" style="color: var(--color-text-secondary);">
+                                            Einmalig verwendbar, gültig bis <span x-text="expires"></span> Uhr. Zeigen Sie den Code niemandem sonst.
+                                        </p>
+                                        <button type="button" @click="load()" class="text-sm hover:underline" style="color: var(--color-primary);">Neuen Code erstellen</button>
+                                    </div>
+                                </template>
+                                <p class="text-sm text-red-600" x-show="error" x-text="error"></p>
+                            </div>
+                        </div>
+
                         <div class="rounded-lg overflow-hidden border" style="border-color: var(--color-card-border);">
                             <div class="px-4 py-3 bg-gradient-to-r from-orange-600 to-orange-700">
                                 <h6 class="text-sm font-bold text-white mb-0 flex items-center gap-2">
