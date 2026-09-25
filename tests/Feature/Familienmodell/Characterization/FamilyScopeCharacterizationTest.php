@@ -18,6 +18,7 @@ use App\Model\UserRueckmeldungen;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\Concerns\BuildsFamilies;
@@ -26,11 +27,20 @@ use Tests\TestCase;
 /**
  * Charakterisierung (FAM-01): Funktionen, bei denen eine gekoppelte Familie
  * als Einheit behandelt wird (Pflichtstunden, Rückmeldungen, Lesebestätigungen,
- * Termine, Reinigung).
+ * Termine, Reinigung). Läuft in beiden Resolver-Modi (FAM-05): das Paar ist
+ * als Familie und per sorg2 angelegt.
  */
 class FamilyScopeCharacterizationTest extends TestCase
 {
     use BuildsFamilies;
+
+    public static function modes(): array
+    {
+        return [
+            'legacy' => [\App\Services\Family\FamilyResolver::MODE_LEGACY],
+            'child_centric' => [\App\Services\Family\FamilyResolver::MODE_CHILD_CENTRIC],
+        ];
+    }
 
     protected function setUp(): void
     {
@@ -58,9 +68,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function pflichtstunden_index_shows_entries_of_partner(): void
+    #[DataProvider('modes')]
+    public function pflichtstunden_index_shows_entries_of_partner(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $a->givePermissionTo('view Pflichtstunden');
         $b->givePermissionTo('view Pflichtstunden');
         $entryA = $this->approvedHours($a, 60);
@@ -71,9 +83,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function pflichtstunden_ranking_counts_couple_as_one_family(): void
+    #[DataProvider('modes')]
+    public function pflichtstunden_ranking_counts_couple_as_one_family(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $single = $this->makeParent();
         foreach ([$a, $b, $single] as $user) {
             $user->givePermissionTo('view Pflichtstunden');
@@ -92,9 +106,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function pflichtstunden_api_stats_count_couple_as_one_family(): void
+    #[DataProvider('modes')]
+    public function pflichtstunden_api_stats_count_couple_as_one_family(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $single = $this->makeParent();
         foreach ([$a, $b, $single] as $user) {
             $user->givePermissionTo('view Pflichtstunden');
@@ -115,9 +131,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function pflichtstunden_api_index_contains_entries_of_partner(): void
+    #[DataProvider('modes')]
+    public function pflichtstunden_api_index_contains_entries_of_partner(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $a->givePermissionTo('view Pflichtstunden');
         $b->givePermissionTo('view Pflichtstunden');
         $entryA = $this->approvedHours($a, 60);
@@ -129,9 +147,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function pflichtstunden_verwaltung_groups_couple_into_one_family(): void
+    #[DataProvider('modes')]
+    public function pflichtstunden_verwaltung_groups_couple_into_one_family(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $single = $this->makeParent();
         foreach ([$a, $b, $single] as $user) {
             $user->givePermissionTo('view Pflichtstunden');
@@ -175,9 +195,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function reminder_is_skipped_when_partner_already_answered_rueckmeldung(): void
+    #[DataProvider('modes')]
+    public function reminder_is_skipped_when_partner_already_answered_rueckmeldung(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $single = $this->makeParent();
         [$post] = $this->releasedPostFor($a, $b, $single);
         $rueckmeldung = Rueckmeldungen::factory()->create([
@@ -193,9 +215,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function read_receipt_reminder_is_skipped_when_partner_confirmed(): void
+    #[DataProvider('modes')]
+    public function read_receipt_reminder_is_skipped_when_partner_confirmed(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $single = $this->makeParent();
         [$post] = $this->releasedPostFor($a, $b, $single);
         $post->update(['read_receipt' => true, 'read_receipt_deadline' => now()->addDay()]);
@@ -209,9 +233,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function partner_may_edit_rueckmeldung_of_linked_parent_but_stranger_may_not(): void
+    #[DataProvider('modes')]
+    public function partner_may_edit_rueckmeldung_of_linked_parent_but_stranger_may_not(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         [$post] = $this->releasedPostFor($a, $b);
         Rueckmeldungen::factory()->create(['post_id' => $post->id, 'type' => 'email']);
         $answer = UserRueckmeldungen::factory()->create(['post_id' => $post->id, 'users_id' => $a->id]);
@@ -226,9 +252,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function api_rueckmeldung_index_includes_answer_of_partner(): void
+    #[DataProvider('modes')]
+    public function api_rueckmeldung_index_includes_answer_of_partner(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         [$post] = $this->releasedPostFor($a, $b);
         Rueckmeldungen::factory()->create(['post_id' => $post->id, 'type' => 'email']);
         $answer = UserRueckmeldungen::factory()->create(['post_id' => $post->id, 'users_id' => $a->id]);
@@ -242,9 +270,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     // ── Listen / Termine ─────────────────────────────────────────────────────
 
     #[Test]
-    public function partner_may_cancel_appointment_booked_by_linked_parent(): void
+    #[DataProvider('modes')]
+    public function partner_may_cancel_appointment_booked_by_linked_parent(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $termin = listen_termine::factory()->create([
             'listen_id' => Liste::factory()->create(['besitzer' => $this->makeParent()->id])->id,
             'reserviert_fuer' => $a->id,
@@ -258,9 +288,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     }
 
     #[Test]
-    public function stranger_may_not_cancel_appointment_of_other_family(): void
+    #[DataProvider('modes')]
+    public function stranger_may_not_cancel_appointment_of_other_family(string $mode): void
     {
-        [$a] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a] = $this->coupleWithSharedChild();
         $termin = listen_termine::factory()->create([
             'listen_id' => Liste::factory()->create(['besitzer' => $this->makeParent()->id])->id,
             'reserviert_fuer' => $a->id,
@@ -275,9 +307,11 @@ class FamilyScopeCharacterizationTest extends TestCase
     // ── Reinigung ────────────────────────────────────────────────────────────
 
     #[Test]
-    public function reinigung_auto_assignment_assigns_only_one_member_of_a_family(): void
+    #[DataProvider('modes')]
+    public function reinigung_auto_assignment_assigns_only_one_member_of_a_family(string $mode): void
     {
-        [$a, $b] = $this->coupleWithChildOfA();
+        $this->useResolver($mode);
+        [$a, $b] = $this->coupleWithSharedChild();
         $group = Group::factory()->create(['bereich' => 'Grundschule', 'protected' => false]);
         $a->groups()->attach($group);
         $b->groups()->attach($group);
