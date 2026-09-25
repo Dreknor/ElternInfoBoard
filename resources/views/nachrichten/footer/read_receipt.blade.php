@@ -1,24 +1,19 @@
 @php
-    $receipt = $user->read_receipts()->where('post_id', $post->id)->first();
+    // Lesebestätigung gilt für die ganze Familie (FamilyResolver)
+    $familyReceipts = \App\Model\ReadReceipts::where('post_id', $post->id)
+        ->whereIn('user_id', $user->familyUserIds())
+        ->get();
+    $receipt = $familyReceipts->firstWhere('user_id', $user->id);
+    $otherReceipts = $familyReceipts->where('user_id', '!=', $user->id);
 
-    // Sorg2-Partner-Bestätigung prüfen
-    $sorg2Receipt = null;
-    $sorg2ConfirmedUser = null;
-    if ($user->sorg2) {
-        $sorg2Receipt = \App\Model\ReadReceipts::where('post_id', $post->id)
-            ->where('user_id', $user->sorg2)
-            ->first();
-        if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
-            $sorg2ConfirmedUser = \App\Model\User::find($user->sorg2);
-        }
-    }
-
-    // Bestätigt wenn eigene ODER Sorg2-Bestätigung vorhanden
+    // Bestätigt wenn eigene ODER Bestätigung eines Familienmitglieds vorhanden
     $confirmedReceipt = ($receipt && $receipt->confirmed_at)
         ? $receipt
-        : (($sorg2Receipt && $sorg2Receipt->confirmed_at) ? $sorg2Receipt : null);
+        : $otherReceipts->whereNotNull('confirmed_at')->sortBy('confirmed_at')->first();
     $isConfirmed = !is_null($confirmedReceipt);
     $confirmedBySorg2 = $isConfirmed && !($receipt && $receipt->confirmed_at);
+    $sorg2ConfirmedUser = $confirmedBySorg2 ? \App\Model\User::find($confirmedReceipt->user_id) : null;
+    $sorg2Receipt = $otherReceipts->whereNotNull('reminded_at')->whereNull('confirmed_at')->first();
 @endphp
 
 @if($isConfirmed)

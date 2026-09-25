@@ -2,6 +2,7 @@
 
 namespace App\Http\View\Composers;
 
+use App\Model\listen_termine;
 use App\Model\Termin;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -30,24 +31,16 @@ class TermineComposer
             $Termine = $Termine->sortBy('start');
 
             // Termine aus Listen holen
-            $listen_termine = auth()->user()->listen_termine()->whereDate('termin', '>', Carbon::now()->startOfDay())->get();
+            // Listentermine der ganzen Familie (FamilyResolver)
+            $listen_termine = listen_termine::query()
+                ->whereIn('reserviert_fuer', auth()->user()->familyUserIds())
+                ->whereDate('termin', '>', Carbon::now()->startOfDay())
+                ->with('liste')
+                ->get();
 
             // Ergänze Listeneintragungen
             if (! is_null($listen_termine) and count($listen_termine) > 0) {
                 foreach ($listen_termine as $termin) {
-                    $newTermin = new Termin([
-                        'terminname' => '(Liste) '.$termin->liste->listenname,
-                        'start' => $termin->termin,
-                        'ende' => $termin->termin->copy()->addMinutes($termin->liste->duration),
-                        'fullDay' => null,
-                    ]);
-                    $Termine->push($newTermin);
-                }
-            }
-
-            // Listentermine von Sorg2
-            if (! is_null(auth()->user()->sorgeberechtigter2)) {
-                foreach (auth()->user()->sorgeberechtigter2->listen_termine()->whereDate('termin', '>', Carbon::now()->startOfDay())->get() as $termin) {
                     $newTermin = new Termin([
                         'terminname' => '(Liste) '.$termin->liste->listenname,
                         'start' => $termin->termin,

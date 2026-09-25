@@ -87,13 +87,9 @@ class UserRueckmeldungenController extends Controller
             ], 403);
         }
 
-        // Collect user IDs: authenticated user and sorgeberechtigter2
-        $userIds = [$user->id];
-        if (! is_null($user->sorg2)) {
-            $userIds[] = $user->sorg2;
-        }
+        // Rückmeldungen aller Familienmitglieder (FamilyResolver)
+        $userIds = $user->familyUserIds();
 
-        // Get all feedback from the user and sorgeberechtigter2 for this post
         $rueckmeldungen = UserRueckmeldungen::query()
             ->where('post_id', $post_id)
             ->whereIn('users_id', $userIds)
@@ -325,11 +321,8 @@ class UserRueckmeldungenController extends Controller
             ], 404);
         }
 
-        // Check if the user owns this feedback or is the sorgeberechtigter2
-        $isOwner = $userRueckmeldung->users_id === $user->id;
-        $isSorgeberechtigter = !is_null($user->sorg2) && $userRueckmeldung->users_id === $user->sorg2;
-
-        if (!$isOwner && !$isSorgeberechtigter) {
+        // Eigene Rückmeldung oder die eines Familienmitglieds
+        if (! $user->isFamilyMember($userRueckmeldung->users_id)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Not authorized',

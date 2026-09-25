@@ -60,12 +60,7 @@ class ChildController extends Controller implements HasMiddleware
 
                 $schickzeitenQuery = Schickzeiten::query()
                     ->where('child_name', $schickzeit->child_name)
-                    ->where(function ($query) use ($schickzeit) {
-                        $query->where('users_id', $schickzeit->users_id);
-                        if (isset($schickzeit->user->sorg2)) {
-                            $query->orWhere('users_id', $schickzeit->user->sorg2);
-                        }
-                    });
+                    ->whereIn('users_id', $schickzeit->user?->familyUserIds() ?? [$schickzeit->users_id]);
 
                 $schickzeitenQuery->update([
                     'child_id' => $child->id,

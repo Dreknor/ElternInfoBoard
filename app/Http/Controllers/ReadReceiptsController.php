@@ -109,12 +109,9 @@ class ReadReceiptsController extends Controller
                     continue;
                 }
 
-                // Überspringe wenn Sorg2-Partner bereits bestätigt hat
-                if ($user->sorg2) {
-                    $sorg2Receipt = $receipts->where('user_id', $user->sorg2)->first();
-                    if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
-                        continue;
-                    }
+                // Überspringe wenn ein Familienmitglied bereits bestätigt hat
+                if ($receipts->whereIn('user_id', $user->familyUserIds())->whereNotNull('confirmed_at')->isNotEmpty()) {
+                    continue;
                 }
 
                 // Überspringe bereits erinnerte Nutzer – Erinnerung wird nur einmal versendet
@@ -195,12 +192,9 @@ class ReadReceiptsController extends Controller
                 // Nur wenn Nutzer nicht bestätigt hat (confirmed_at null) und bereits erinnert wurde
                 if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && ! $existingReceipt->final_reminder_sent_at) {
 
-                    // Überspringe wenn Sorg2-Partner bereits bestätigt hat
-                    if ($user->sorg2) {
-                        $sorg2Receipt = $receipts->where('user_id', $user->sorg2)->first();
-                        if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
-                            continue;
-                        }
+                    // Überspringe wenn ein Familienmitglied bereits bestätigt hat
+                    if ($receipts->whereIn('user_id', $user->familyUserIds())->whereNotNull('confirmed_at')->isNotEmpty()) {
+                        continue;
                     }
 
                     // Hole die E-Mail-Adresse des Autors

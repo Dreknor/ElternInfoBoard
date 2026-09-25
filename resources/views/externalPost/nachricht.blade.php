@@ -180,7 +180,7 @@
                         @for($x=1; $x <= $nachricht->userRueckmeldung->count(); $x++)
                             <i class="fas fa-user-alt text-green-600" title="{{$x}}"></i>
                         @endfor
-                        @for($x=1; $x <= ((round($nachricht->users->where('sorg2', '!=', null)->unique('email')->count()/2)) + $nachricht->users->where('sorg2', 0)->unique('email')->count())-$nachricht->userRueckmeldung->count(); $x++)
+                        @for($x=1; $x <= app(\App\Services\Rueckmeldungen\RueckmeldungStatusService::class)->summary($nachricht)['open']; $x++)
                             <i class="fas fa-user-alt text-red-600" title="{{$x}}"></i>
                         @endfor
                     </div>

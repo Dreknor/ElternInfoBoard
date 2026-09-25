@@ -117,6 +117,34 @@ class User extends Authenticatable implements Auditable
             ->withTimestamps();
     }
 
+    /** @var list<int>|null */
+    protected ?array $familyUserIdsCache = null;
+
+    /**
+     * IDs aller Familienmitglieder inkl. self (FamilyResolver, pro Instanz gemerkt).
+     *
+     * @return list<int>
+     */
+    public function familyUserIds(): array
+    {
+        return $this->familyUserIdsCache ??= app(FamilyResolver::class)->familyUserIds($this);
+    }
+
+    public function isFamilyMember(self|int|null $other): bool
+    {
+        if ($other === null) {
+            return false;
+        }
+
+        return in_array($other instanceof self ? $other->id : (int) $other, $this->familyUserIds(), true);
+    }
+
+    public function forgetFamilyCache(): void
+    {
+        $this->familyUserIdsCache = null;
+        $this->familyRueckmeldungenCache = null;
+    }
+
     /**
      * Familie / Haushalt (Abrechnungseinheit), max. eine pro Person.
      */
@@ -216,21 +244,12 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
     }
 
+    /**
+     * Gebuchte Listentermine der ganzen Familie.
+     */
     public function getListenTermine()
     {
-        $eigeneEintragungen = $this->listen_termine;
-
-        if (! is_null($this->sorg2)) {
-            $sorgEintragung = $this->sorgeberechtigter2?->listen_termine;
-            if (! is_null($sorgEintragung) and ! is_null($eigeneEintragungen)) {
-                return $eigeneEintragungen->merge($sorgEintragung);
-            } elseif (is_null($eigeneEintragungen)) {
-                return $sorgEintragung;
-            }
-        }
-
-        // Merge collections and return single collection.
-        return $eigeneEintragungen;
+        return listen_termine::query()->whereIn('reserviert_fuer', $this->familyUserIds())->get();
     }
 
     // Sorgeberechtigter 2
@@ -253,23 +272,17 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
     }
 
+    /**
+     * Rückmeldungen der ganzen Familie (FamilyResolver).
+     */
     public function getRueckmeldung(): mixed
     {
-        $eigeneRueckmeldung = $this->userRueckmeldung;
-
-        if (! is_null($this->sorg2)) {
-            $sorgPartner = self::find($this->sorg2);
-            $sorgRueckmeldung = $sorgPartner?->userRueckmeldung;
-            if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
-                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-            } elseif (is_null($eigeneRueckmeldung)) {
-                return $sorgRueckmeldung;
-            }
-        }
-
-        // Merge collections and return single collection.
-        return $eigeneRueckmeldung;
+        return $this->familyRueckmeldungenCache ??= UserRueckmeldungen::query()
+            ->whereIn('users_id', $this->familyUserIds())
+            ->get();
     }
+
+    protected ?Collection $familyRueckmeldungenCache = null;
 
     public function Reinigung(): HasMany
     {

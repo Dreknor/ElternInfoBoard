@@ -37,7 +37,7 @@
             @if($eintrag->reserviert_fuer != null)
                 <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     <i class="fas fa-user mr-1"></i>
-                    @if($eintrag->eingetragenePerson->id == auth()->id() or $eintrag->eingetragenePerson->sorg2 == auth()->id() or $liste->visible_for_all or auth()->user()->can('edit terminliste'))
+                    @if(auth()->user()->isFamilyMember($eintrag->reserviert_fuer) or $liste->visible_for_all or auth()->user()->can('edit terminliste'))
                         {{ $eintrag->eingetragenePerson->name }}
                     @else
                         reserviert

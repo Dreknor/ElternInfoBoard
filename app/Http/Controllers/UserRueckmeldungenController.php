@@ -108,7 +108,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
     {
-        if ($userRueckmeldungen->users_id != auth()->id() and $userRueckmeldungen->users_id != auth()->user()->sorg2) {
+        if (! auth()->user()->isFamilyMember($userRueckmeldungen->users_id)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -146,7 +146,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
-        if ($userRueckmeldungen->users_id != $user->id and $userRueckmeldungen->users_id != $user->sorg2) {
+        if (! $user->isFamilyMember($userRueckmeldungen->users_id)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Fehlende Berechtigung',

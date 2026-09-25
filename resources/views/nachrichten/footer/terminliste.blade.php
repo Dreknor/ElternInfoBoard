@@ -18,10 +18,7 @@
         ->get();
 
     // Filtere nach Nutzer
-    $userTermine = $termine->where('reserviert_fuer', auth()->id());
-    if (auth()->user()->sorg2) {
-        $userTermine = $userTermine->merge($termine->where('reserviert_fuer', auth()->user()->sorg2));
-    }
+    $userTermine = $termine->whereIn('reserviert_fuer', auth()->user()->familyUserIds());
 
     // Freie Termine (nur wenn Nutzer noch keine Buchung hat oder Multiple erlaubt ist)
     $hasBooking = $userTermine->count() > 0;

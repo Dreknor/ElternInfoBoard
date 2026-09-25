@@ -8,6 +8,7 @@ use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
 use App\Model\Liste;
 use App\Model\listen_termine;
+use App\Model\User;
 use App\Notifications\Push;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
@@ -119,7 +120,7 @@ class ListenTerminController extends Controller
      */
     public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {
-        if ($request->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == $request->user()->sorg2 or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
+        if ($request->user()->isFamilyMember($listen_termine->reserviert_fuer) or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
 
             // Email an Listenersteller
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
@@ -156,16 +157,11 @@ class ListenTerminController extends Controller
     {
         if ($request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
             if ($listen_termine->reserviert_fuer != null) {
-                // WebPush
+                // WebPush an die buchende Familie und den Absagenden
                 $user = $listen_termine->eingetragenePerson;
-                if ($user->sorg2 != '' and $user->sorg2 != null) {
-                    $sorg2 = $user->sorgeberechtigter2;
-                }
-
-                $users = collect([$user, $request->user()]);
-                if (! is_null($sorg2)) {
-                    $users->push($sorg2);
-                }
+                $users = User::query()->whereIn('id', $user->familyUserIds())->get()
+                    ->push($request->user())
+                    ->unique('id');
 
                 $body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde abgesagt.';
                 Notification::send($users, new PushTerminAbsage($body));

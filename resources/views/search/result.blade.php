@@ -103,7 +103,7 @@
                                                   bg-yellow-100 hover:bg-yellow-600 text-yellow-700 hover:text-white border border-yellow-300
                                               @endif
                                               rounded-lg font-medium transition-all duration-200 text-sm">
-                                        @if(!is_null($nachricht->rueckmeldung) and (is_null($user->userRueckmeldung->where('posts_id', $nachricht->id)->first()) or (!is_null($user->sorgeberechtigter2) and is_null($user->sorgeberechtigter2->userRueckmeldung->where('posts_id', $nachricht->id)->first()))))
+                                        @if(!is_null($nachricht->rueckmeldung) and $user->getRueckmeldung()->where('post_id', $nachricht->id)->isEmpty())
                                             <i class="fas fa-reply text-red-500" data-toggle="tooltip" data-placement="top" title="Rückmeldung benötigt"></i>
                                         @endif
                                         <span>{{$nachricht->header}}</span>

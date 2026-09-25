@@ -9,6 +9,7 @@ use App\Model\Group;
 use App\Model\Reinigung;
 use App\Model\ReinigungsTask;
 use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -82,47 +83,41 @@ class ReinigungController extends Controller implements HasMiddleware
                 ->where('bereich', '=', $bereich);
         }, '<', 1)->get();
 
-        $users_all = $users->shuffle();
-        Log::info('Nutzer:'.$users_all->count());
-        $users_all = $users_all->unique('id');
-        Log::info('Nutzer unique:'.$users_all->count());
+        // Pro Familie genau eine Zuteilung: Familien, in denen bereits ein Mitglied
+        // im Zeitraum eingeteilt ist, fallen heraus (FamilyResolver).
+        $alreadyAssigned = Reinigung::query()
+            ->whereBetween('datum', [$start, $ende])
+            ->where('bereich', '=', $bereich)
+            ->pluck('users_id')
+            ->filter()
+            ->all();
+
+        $candidates = $users->unique('id');
+        $units_all = app(FamilyResolver::class)
+            ->familyUnits($candidates)
+            ->reject(function ($unit) use ($candidates, $alreadyAssigned) {
+                return $candidates->whereIn('id', $unit->userIds)
+                    ->contains(fn (User $member) => array_intersect($member->familyUserIds(), $alreadyAssigned) !== []);
+            })
+            ->shuffle()
+            ->values();
+        Log::info('Familien für Reinigung: '.$units_all->count());
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
         $date = $start->copy();
 
         while ($date->lte($ende)) {
-            if ($users_all->count() > 0) {
+            if ($units_all->count() > 0) {
                 foreach ($tasks as $task) {
-                    $user = $users_all->shift();
-                    if (! is_null($user)) {
+                    $unit = $units_all->shift();
+                    if (! is_null($unit)) {
                         $reinigung = new Reinigung;
                         $reinigung->bereich = $bereich;
                         $reinigung->datum = $date;
-                        $reinigung->users_id = $user->id;
+                        $reinigung->users_id = collect($unit->userIds)->random();
                         $reinigung->aufgabe = $task->task;
                         $reinigung->save();
-
-                        // Sorgeberechtigter 2 entfernen
-                        if ($user->sorg2 != null) {
-                            $key = $users_all->search(function ($item) use ($user) {
-                                return $item->id == $user->sorg2;
-                            });
-
-                            if ($key !== false) {
-                                $users_all->forget($key);
-                            }
-                        }
-
-                        // Auch Nutzer entfernen, die (ggf. einseitig) auf diesen User verknüpft sind
-                        $key = $users_all->search(function ($item) use ($user) {
-                            return $item->sorg2 == $user->id;
-                        });
-
-                        if ($key !== false) {
-                            $users_all->forget($key);
-                        }
                     }
-
                 }
 
             } else {
