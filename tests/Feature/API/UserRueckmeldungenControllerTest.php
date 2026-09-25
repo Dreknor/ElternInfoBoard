@@ -33,7 +33,6 @@ class UserRueckmeldungenControllerTest extends TestCase
 
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'post_id' => $post->id,
-            'active' => true,
         ]);
 
         $userRueckmeldung = UserRueckmeldungen::factory()->create([
@@ -61,14 +60,13 @@ class UserRueckmeldungenControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_get_rueckmeldungen_including_sorgeberechtigter2(): void
+    public function user_can_get_rueckmeldungen_including_family_members(): void
     {
-        // Arrange: Create user and sorgeberechtigter2
+        // Arrange: Zwei Konten einer Familie (früher: sorg2-Verknüpfung)
         $sorg2 = User::factory()->create(['password_changed_at' => now()]);
-        $user = User::factory()->create([
-            'password_changed_at' => now(),
-            'sorg2' => $sorg2->id,
-        ]);
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        app(\App\Services\Family\FamilyService::class)->create([$user, $sorg2]);
+        $user->refresh();
 
         $group = Group::factory()->create();
         $group->users()->attach($user);
@@ -79,7 +77,6 @@ class UserRueckmeldungenControllerTest extends TestCase
 
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'post_id' => $post->id,
-            'active' => true,
         ]);
 
         // Create rueckmeldungen for both users
@@ -188,11 +185,13 @@ class UserRueckmeldungenControllerTest extends TestCase
 
         $rueckmeldung = Rueckmeldungen::factory()->create([
             'post_id' => $post->id,
-            'active' => true,
             'multiple' => 1,
+            'ende' => now()->addDay(),
+            'empfaenger' => 'schule@example.com',
         ]);
 
         // Act
+        \Illuminate\Support\Facades\Mail::fake();
         Sanctum::actingAs($user);
         $response = $this->postJson('/api/rueckmeldung', [
             'post_id' => $post->id,

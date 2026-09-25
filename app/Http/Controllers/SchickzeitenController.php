@@ -1026,19 +1026,26 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         // Wenn es eine regelmäßige Schickzeit ist (weekday gesetzt)
         if ($schickzeit->weekday) {
-            // Prüfe, ob auch tagesaktuelle Schickzeiten gelöscht werden sollen
-            $deleteDailyTimes = $request->input('delete_daily_times', false);
+            // Zukünftige tagesaktuelle Schickzeiten desselben Wochentags (datenbankunabhängig
+            // gefiltert; weekday: 1=Montag … 5=Freitag wie Carbon::dayOfWeek)
+            $dailyTimes = $schickzeit->child->schickzeiten()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::today())
+                ->get()
+                ->filter(fn (Schickzeiten $daily) => $daily->specific_date->dayOfWeek == $schickzeit->weekday);
 
-            if ($deleteDailyTimes) {
-                // Lösche alle zukünftigen tagesaktuellen Schickzeiten für diesen Wochentag
-                // weekday: 1=Montag, 2=Dienstag, ... 5=Freitag
-                // DAYOFWEEK: 1=Sonntag, 2=Montag, ... 7=Samstag
-                // Konvertierung: weekday + 1 = DAYOFWEEK (1->2, 2->3, ..., 5->6)
-                $schickzeit->child->schickzeiten()
-                    ->whereNotNull('specific_date')
-                    ->where('specific_date', '>=', Carbon::today())
-                    ->whereRaw('DAYOFWEEK(specific_date) = ?', [$schickzeit->weekday + 1])
-                    ->delete();
+            // Noch keine Entscheidung getroffen → Bestätigungsdialog anzeigen
+            if (! $request->has('delete_daily_times') && $dailyTimes->isNotEmpty()) {
+                return redirect()->back()->with([
+                    'type' => 'confirm_delete_schickzeit',
+                    'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'confirm_delete_schickzeit_data' => ['schickzeit_id' => $schickzeit->id],
+                ]);
+            }
+
+            // „yes“ löscht auch die tagesaktuellen Zeiten, „no“ behält sie
+            if ($request->boolean('delete_daily_times')) {
+                $dailyTimes->each->delete();
             }
         }
 

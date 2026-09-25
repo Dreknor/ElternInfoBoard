@@ -42,17 +42,20 @@ class RueckmeldungenTest extends TestCase
     {
         $rueckmeldung = Rueckmeldungen::factory()->create();
         $user = User::factory()->create(['password_changed_at' => now()]);
+        $child = \App\Model\Child::factory()->create();
 
-        $userRueckmeldung = UserRueckmeldungen::factory()->create([
-            'rueckmeldung_id' => $rueckmeldung->id,
-            'user_id' => $user->id,
-            'response' => 'Ja',
+        UserRueckmeldungen::factory()->create([
+            'post_id' => $rueckmeldung->post_id,
+            'users_id' => $user->id,
+            'child_id' => $child->id,
+            'text' => 'Ja',
         ]);
 
-        $this->assertDatabaseHas('user_rueckmeldungen', [
-            'rueckmeldung_id' => $rueckmeldung->id,
-            'user_id' => $user->id,
-            'response' => 'Ja',
+        $this->assertDatabaseHas('users_rueckmeldungen', [
+            'post_id' => $rueckmeldung->post_id,
+            'users_id' => $user->id,
+            'child_id' => $child->id,
+            'text' => 'Ja',
         ]);
     }
 
@@ -62,11 +65,11 @@ class RueckmeldungenTest extends TestCase
     public function rueckmeldung_has_many_user_responses(): void
     {
         $rueckmeldung = Rueckmeldungen::factory()->create();
-        $responses = UserRueckmeldungen::factory()->count(10)->create([
-            'rueckmeldung_id' => $rueckmeldung->id,
+        UserRueckmeldungen::factory()->count(10)->create([
+            'post_id' => $rueckmeldung->post_id,
         ]);
 
-        $this->assertCount(10, $rueckmeldung->userRueckmeldungen);
+        $this->assertCount(10, $rueckmeldung->post->userRueckmeldung);
     }
 
     /**
@@ -78,16 +81,16 @@ class RueckmeldungenTest extends TestCase
         $user = User::factory()->create(['password_changed_at' => now()]);
 
         $userRueckmeldung = UserRueckmeldungen::factory()->create([
-            'rueckmeldung_id' => $rueckmeldung->id,
-            'user_id' => $user->id,
-            'response' => 'Ja',
+            'post_id' => $rueckmeldung->post_id,
+            'users_id' => $user->id,
+            'text' => 'Ja',
         ]);
 
-        $userRueckmeldung->update(['response' => 'Nein']);
+        $userRueckmeldung->update(['text' => 'Nein']);
 
-        $this->assertDatabaseHas('user_rueckmeldungen', [
+        $this->assertDatabaseHas('users_rueckmeldungen', [
             'id' => $userRueckmeldung->id,
-            'response' => 'Nein',
+            'text' => 'Nein',
         ]);
     }
 

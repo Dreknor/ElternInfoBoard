@@ -192,9 +192,10 @@ class RueckmeldungStatusService
         if ($scope === self::SCOPE_CHILD) {
             $children = $this->affectedChildren($post);
             $answeredChildIds = $answers->pluck('child_id')->filter()->unique()->all();
+            $custodians = $this->custodiansByChild($children);
 
             foreach ($children as $child) {
-                if ($this->resolver->guardiansFor($child, GuardianRight::Custody)->isEmpty()) {
+                if (($custodians[$child->id] ?? []) === []) {
                     $unanswerable++;
 
                     continue;
@@ -245,12 +246,18 @@ class RueckmeldungStatusService
         if ($scope === self::SCOPE_CHILD) {
             $children = $this->affectedChildren($post);
             $answeredChildIds = $answers->pluck('child_id')->filter()->unique()->all();
+            $custodians = $this->custodiansByChild($children);
+            $custodianUsers = User::query()->whereIn('id', collect($custodians)->flatten()->unique()->all())->get()->keyBy('id');
 
             foreach ($children as $child) {
                 if (in_array($child->id, $answeredChildIds)) {
                     continue;
                 }
-                foreach ($this->resolver->guardiansFor($child, GuardianRight::Custody) as $guardian) {
+                foreach (($custodians[$child->id] ?? []) as $guardianId) {
+                    $guardian = $custodianUsers->get($guardianId);
+                    if ($guardian === null) {
+                        continue;
+                    }
                     $entry = $open->get($guardian->id, ['user' => $guardian, 'children' => []]);
                     $entry['children'][] = trim($child->first_name.' '.$child->last_name);
                     $open->put($guardian->id, $entry);
@@ -271,6 +278,37 @@ class RueckmeldungStatusService
         }
 
         return $open;
+    }
+
+    /**
+     * Sorgeberechtigte je Kind per Sammelabfrage. Der Scope „child“ wirkt nur im
+     * kind-zentrierten Modus – dort zählen ausschließlich direkte Beziehungen.
+     *
+     * @param  EloquentCollection<int, Child>  $children
+     * @return array<int, list<int>> childId => userIds
+     */
+    private function custodiansByChild(EloquentCollection $children): array
+    {
+        if ($children->isEmpty()) {
+            return [];
+        }
+
+        if ($this->resolver->mode() !== FamilyResolver::MODE_CHILD_CENTRIC) {
+            return $children->mapWithKeys(fn (Child $child) => [
+                $child->id => $this->resolver->guardiansFor($child, GuardianRight::Custody)->modelKeys(),
+            ])->all();
+        }
+
+        $query = DB::table('child_user')
+            ->join('users', 'users.id', '=', 'child_user.user_id')
+            ->whereNull('users.deleted_at')
+            ->whereIn('child_user.child_id', $children->modelKeys());
+        \App\Services\Family\AbstractFamilyResolver::constrainPivot($query, GuardianRight::Custody);
+
+        return $query->get(['child_user.child_id', 'child_user.user_id'])
+            ->groupBy('child_id')
+            ->map(fn ($rows) => $rows->pluck('user_id')->map(fn ($id) => (int) $id)->all())
+            ->all();
     }
 
     /**
