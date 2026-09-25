@@ -56,14 +56,26 @@ class KrankmeldungenController extends Controller
             ]);
         }
 
+        $child = null;
+        if ($request->child_id) {
+            $child = Child::find($request->child_id);
+
+            if (! $this->mayReportSick($request->user(), $child)) {
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Sie haben keine Berechtigung, dieses Kind krankzumelden.',
+                ]);
+            }
+        }
+
+        $disease = null;
+
         try {
             $krankmeldung = new Krankmeldungen;
             $krankmeldung->fill($request->validated());
 
-            if ($request->child_id) {
-                $child = Child::find($request->child_id);
+            if ($child) {
                 $krankmeldung->name = $child->first_name.' '.$child->last_name;
-
             }
 
             $krankmeldung->users_id = auth()->id();
@@ -101,11 +113,11 @@ class KrankmeldungenController extends Controller
                 Cache::forget('active_diseases');
             }
 
-            if ($child ?? false) {
-                 $gruppe = $child->gruppe?->name;
-                 $class = $child->klassen?->name;
+            if ($child) {
+                $gruppe = $child->group?->name;
+                $class = $child->class?->name;
 
-                 $name = $krankmeldung->name . ' ('.$gruppe.' - '.$class.')';
+                $name = $krankmeldung->name.' ('.$gruppe.' - '.$class.')';
             } else {
                 $name = $krankmeldung->name;
 
@@ -140,6 +152,23 @@ class KrankmeldungenController extends Controller
             ]);
         }
 
+    }
+
+    /**
+     * Darf der User dieses Kind krankmelden? Eltern nur eigene Kinder,
+     * Personal mit Schickzeiten-Verwaltung alle.
+     */
+    private function mayReportSick($user, ?Child $child): bool
+    {
+        if ($child === null) {
+            return false;
+        }
+
+        if ($user->can('edit schickzeiten')) {
+            return true;
+        }
+
+        return (bool) $user->children()?->contains($child);
     }
 
     /**

@@ -20,7 +20,8 @@ class PflichtstundeFactory extends Factory
     public function definition(): array
     {
         $start = $this->faker->dateTimeBetween('-1 month', '+1 month');
-        $end = $this->faker->dateTimeBetween($start, '+4 hours');
+        // Ende relativ zum Start (nicht zu "jetzt"), sonst kann Start > Ende entstehen
+        $end = (clone $start)->modify('+'.$this->faker->numberBetween(30, 240).' minutes');
 
         return [
             'user_id' => \App\Model\User::factory(),

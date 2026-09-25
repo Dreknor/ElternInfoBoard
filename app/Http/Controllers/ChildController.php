@@ -148,9 +148,8 @@ class ChildController extends Controller implements HasMiddleware
     {
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
-            if (! $child->parents->contains($request->parent_id)) {
-                $child->parents()->sync($request->parent_id);
-            }
+            // Nur ergänzen – bestehende Bezugspersonen (inkl. UCS-Verknüpfungen) bleiben erhalten.
+            $child->parents()->syncWithoutDetaching([$request->parent_id]);
         }
 
         $child->update(

@@ -25,17 +25,21 @@ class Mail extends Model implements HasMedia
 
     protected static function booted(): void
     {
+        // Mail-Archiv ist personenbezogen: eigene gesendete und an die eigene Adresse
+        // gerichtete Mails. Bedingungen geklammert, damit weitere where() greifen.
         static::addGlobalScope('own', function (Builder $builder) {
+            $user = auth()->user();
 
-            if (auth()->user()->sorg2 != null) {
-                $builder->where('senders_id', auth()->id())
-                    ->orWhere('to', auth()->user()->email)
-                    ->orWhere('to', auth()->user()->sorg2);
-            } else {
-                $builder->where('senders_id', auth()->id())
-                    ->orWhere('to', auth()->user()->email);
+            if ($user === null) {
+                $builder->whereRaw('1 = 0');
+
+                return;
             }
 
+            $builder->where(function (Builder $query) use ($user) {
+                $query->where('senders_id', $user->id)
+                    ->orWhere('to', $user->email);
+            });
         });
     }
 }

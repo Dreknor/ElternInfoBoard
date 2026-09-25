@@ -191,13 +191,9 @@ class CareController extends Controller implements HasMiddleware
 
         }
 
-        $parent = $child->parents()->first();
-
         if ($child->notification) {
-            dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkOut'));
-
-            if ($parent->sorgorgeberechtigter2) {
-                dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkOut'));
+            foreach ($this->notificationRecipients($child) as $recipient) {
+                dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkOut'));
             }
         }
 
@@ -249,16 +245,11 @@ class CareController extends Controller implements HasMiddleware
             ]);
         }
 
-        $parent = $child->parents()->first();
-
         if ($child->notification) {
 
             try {
-                dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkIn'));
-
-                if ($parent->sorgorgeberechtigter2) {
-
-                    dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
+                foreach ($this->notificationRecipients($child) as $recipient) {
+                    dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkIn'));
                 }
             } catch (\Exception $e) {
                 Log::error('Error sending notification: '.$e->getMessage());
@@ -700,5 +691,19 @@ class CareController extends Controller implements HasMiddleware
             . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Empfänger von An-/Abmelde-Benachrichtigungen: alle Eltern des Kindes
+     * inklusive deren verknüpfter Sorgeberechtigter, ohne Duplikate.
+     */
+    private function notificationRecipients(Child $child): \Illuminate\Support\Collection
+    {
+        $parents = $child->parents()->with('sorgeberechtigter2')->get();
+
+        return $parents
+            ->merge($parents->pluck('sorgeberechtigter2')->filter())
+            ->unique('id')
+            ->values();
     }
 }

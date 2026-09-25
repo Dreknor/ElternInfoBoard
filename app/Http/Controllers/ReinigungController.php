@@ -113,8 +113,9 @@ class ReinigungController extends Controller implements HasMiddleware
                             }
                         }
 
+                        // Auch Nutzer entfernen, die (ggf. einseitig) auf diesen User verknüpft sind
                         $key = $users_all->search(function ($item) use ($user) {
-                            return $item->id == $user->sorg1;
+                            return $item->sorg2 == $user->id;
                         });
 
                         if ($key !== false) {

@@ -104,7 +104,7 @@
                                                 }) as $reinigung)
                                                     <div class="col">
                                                         <div
-                                                            class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
+                                                            class="card @if($reinigung->users_id == auth()->id() or (!is_null($reinigung->users_id) and $reinigung->users_id == auth()->user()->sorg2)) bg-warning @else bg-light @endif">
                                                             <div class="card-header">
                                                                 <h6>
                                                                     @can('edit reinigung')
@@ -164,7 +164,7 @@
                                                 }) as $reinigung)
                                                     <div class="col">
                                                         <div
-                                                            class="card @if($reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id()) bg-warning @else bg-light @endif">
+                                                            class="card @if($reinigung->users_id == auth()->id() or (!is_null($reinigung->users_id) and $reinigung->users_id == auth()->user()->sorg2)) bg-warning @else bg-light @endif">
                                                             <div class="card-header">
                                                                 <h6>
                                                                     @can('edit reinigung')

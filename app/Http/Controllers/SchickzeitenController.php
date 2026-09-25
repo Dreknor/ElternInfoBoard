@@ -547,7 +547,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'type' => $request->type,
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
 
         } else {
@@ -635,7 +635,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->time_ab,
                 'time_spaet' => $time_spaet ?? null,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
 
         }
@@ -658,7 +658,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
                 'changedBy' => \auth()->user()->name,
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
             // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
             $exists = $child->schickzeiten()
@@ -672,7 +672,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
                 'child_id' => $child->id,
             ]);
 
@@ -996,7 +996,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'type' => $request->type,
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
         } else {
             $child->schickzeiten()->create([
@@ -1005,7 +1005,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->ab,
                 'time_spaet' => $request->spaet,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
 
         }
@@ -1334,5 +1334,14 @@ class SchickzeitenController extends Controller implements HasMiddleware
             'type' => 'success',
             'Meldung' => $message,
         ]);
+    }
+
+    /**
+     * Besitzer-ID für neue Schickzeiten: erster Elternteil des Kindes, sonst der
+     * handelnde User (Kind ohne verknüpfte Eltern darf nicht zum Fehler führen).
+     */
+    private function ownerIdFor(Child $child): int
+    {
+        return $child->parents()->first()?->id ?? (int) Auth::id();
     }
 }
