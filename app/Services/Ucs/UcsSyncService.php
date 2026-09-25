@@ -3,6 +3,11 @@
 namespace App\Services\Ucs;
 
 use App\Model\Child;
+use App\Model\ChildGuardian;
+use App\Model\Family;
+use App\Services\Family\FamilyBuilder;
+use App\Services\Family\GroupMembershipService;
+use App\Services\Family\GuardianshipService;
 use App\Model\Group;
 use App\Model\UcsLinkCandidate;
 use App\Model\User;
@@ -58,6 +63,9 @@ class UcsSyncService
      */
     private array $groupCache = [];
 
+    /** @var array<int, true> User, deren Beziehungen in diesem Lauf abgeglichen wurden */
+    private array $touchedUserIds = [];
+
     public function __construct(
         private readonly KelvinClient $client,
         private readonly UcsSetting   $settings,
@@ -106,6 +114,7 @@ class UcsSyncService
         }
 
         $this->groupCache = [];
+        $this->touchedUserIds = [];
         $counts = $this->emptyCounters($school, $dryRun);
 
         try {
@@ -176,6 +185,9 @@ class UcsSyncService
                     $studentMap->map(fn (KelvinStudentDto $s) => $s->username)->values()->all(),
                     $counts,
                 );
+
+                // ── Schritt 6: Familien für UCS-Eltern bilden (nur Personen ohne Familie) ──
+                $counts['families_created'] = $this->buildFamilies();
             }
 
             $counts['duration_seconds'] = round(microtime(true) - $startedAt, 2);
@@ -227,6 +239,7 @@ class UcsSyncService
 
         $this->log('info', "syncSingleParent: [{$username}]");
         $this->groupCache = [];
+        $this->touchedUserIds = [];
 
         try {
             $parentData = $this->client->findUser($username, $this->settings->on_login_timeout);
@@ -298,6 +311,8 @@ class UcsSyncService
             if ($user === null) {
                 return null;
             }
+
+            $this->buildFamilies();
 
             Cache::forget(self::jitMissKey($username));
             $this->log('info', "syncSingleParent: erfolgreich [{$username}]", [
@@ -618,9 +633,10 @@ class UcsSyncService
                 continue;
             }
 
-            // Kombiklasse: >1 Klassen → erste alphabetisch für class_id
+            // Kombiklasse: >1 Klassen → erste alphabetisch für class_id, alle in child_group
             sort($classNames);
             $primaryClass = $classNames[0];
+            $ucsClassGroupIds = [];
 
             foreach ($classNames as $className) {
                 $group = $this->resolveClassGroup($className, $this->buildClassUrl($className, $school));
@@ -634,6 +650,11 @@ class UcsSyncService
 
                 $desiredGroupIds[]      = $group->id;
                 $childIdMap[$group->id] = $child->id;
+                $ucsClassGroupIds[]     = $group->id;
+            }
+
+            if ($child->ucs_source === 'kelvin') {
+                $this->syncChildClasses($child, $ucsClassGroupIds);
             }
         }
 
@@ -780,34 +801,15 @@ class UcsSyncService
      */
     private function syncChildPivots(User $user, array $desiredChildIds, bool $detach): void
     {
-        $existing = DB::table('child_user')
-            ->where('user_id', $user->id)
-            ->pluck('is_auto_provisioned', 'child_id');
+        $result = app(GuardianshipService::class)->syncFromSource(
+            $user, $desiredChildIds, ChildGuardian::SOURCE_UCS, $detach, syncGroups: false
+        );
 
-        if ($detach) {
-            $toDetach = $existing
-                ->filter(fn ($auto, $childId) => (bool) $auto && ! in_array((int) $childId, $desiredChildIds, true))
-                ->keys()
-                ->all();
-
-            if ($toDetach !== []) {
-                $user->children_rel()->detach($toDetach);
-                $this->log('info', 'Auto-Kind-Verknüpfungen entfernt', ['user_id' => $user->id, 'child_ids' => $toDetach]);
-            }
+        if ($result['detached'] !== []) {
+            $this->log('info', 'Auto-Kind-Verknüpfungen entfernt', ['user_id' => $user->id, 'child_ids' => $result['detached']]);
         }
 
-        foreach ($desiredChildIds as $childId) {
-            if (! $existing->has($childId)) {
-                $user->children_rel()->attach($childId, [
-                    'is_auto_provisioned' => true,
-                    'relation'            => 'legal_guardian',
-                    'source'              => 'ucs',
-                    'synced_at'           => now(),
-                ]);
-            } elseif ((bool) $existing->get($childId)) {
-                $user->children_rel()->updateExistingPivot($childId, ['synced_at' => now()]);
-            }
-        }
+        $this->touchedUserIds[$user->id] = true;
     }
 
     /**
@@ -822,33 +824,12 @@ class UcsSyncService
      */
     private function syncGroupPivots(User $user, array $desiredGroupIds, array $childIdMap, bool $detach): void
     {
-        $existing = DB::table('group_user')
-            ->where('user_id', $user->id)
-            ->pluck('is_auto_provisioned', 'group_id');
+        // Abgeleitete Gruppen kommen aus allen Kindern des Users (Klasse, weitere
+        // Klassen/child_group, Betreuungsgruppe, AGs) – inkl. Messenger-Konversationen.
+        $result = app(GroupMembershipService::class)->syncDerivedGroups($user);
 
-        if ($detach) {
-            $toDetach = $existing
-                ->filter(fn ($auto, $groupId) => (bool) $auto && ! in_array((int) $groupId, $desiredGroupIds, true))
-                ->keys()
-                ->all();
-
-            if ($toDetach !== []) {
-                $user->groups()->detach($toDetach);
-                $this->log('info', 'Auto-Gruppen-Verknüpfungen entfernt', ['user_id' => $user->id, 'group_ids' => $toDetach]);
-            }
-        }
-
-        foreach ($desiredGroupIds as $gid) {
-            $pivot = [
-                'provisioned_via_child_id' => $childIdMap[$gid] ?? null,
-                'synced_at'                => now(),
-            ];
-
-            if (! $existing->has($gid)) {
-                $user->groups()->attach($gid, $pivot + ['is_auto_provisioned' => true]);
-            } elseif ((bool) $existing->get($gid)) {
-                $user->groups()->updateExistingPivot($gid, $pivot);
-            }
+        if ($result['detached'] !== []) {
+            $this->log('info', 'Auto-Gruppen-Verknüpfungen entfernt', ['user_id' => $user->id, 'group_ids' => $result['detached']]);
         }
     }
 
@@ -958,8 +939,9 @@ class UcsSyncService
             ->get();
 
         foreach ($orphans as $orphan) {
-            DB::table('group_user')->where('user_id', $orphan->id)->where('is_auto_provisioned', true)->delete();
+            // UCS-Beziehungen lösen, manuelle bleiben; Gruppen folgen den verbleibenden Kindern
             DB::table('child_user')->where('user_id', $orphan->id)->where('is_auto_provisioned', true)->delete();
+            app(GroupMembershipService::class)->syncDerivedGroups($orphan);
 
             if ($orphan->ucs_source === 'kelvin' && $orphan->is_active) {
                 $orphan->update([
@@ -1142,9 +1124,57 @@ class UcsSyncService
             'children_skipped_local'  => 0,
             'link_candidates_created' => 0,
             'groups_provisioned'      => 0,
+            'families_created'        => 0,
             'failed_parents'          => 0,
             'duration_seconds'        => 0.0,
         ];
+    }
+
+    /**
+     * Weitere Klassen eines UCS-Kindes (Kombiklassen) in child_group spiegeln;
+     * Einträge anderer Quellen bleiben unberührt.
+     *
+     * @param  list<int>  $groupIds
+     */
+    private function syncChildClasses(Child $child, array $groupIds): void
+    {
+        $groupIds = array_values(array_unique($groupIds));
+
+        DB::table('child_group')
+            ->where('child_id', $child->id)
+            ->where('source', 'ucs')
+            ->whereNotIn('group_id', $groupIds)
+            ->delete();
+
+        foreach ($groupIds as $groupId) {
+            DB::table('child_group')->insertOrIgnore([
+                'child_id' => $child->id,
+                'group_id' => $groupId,
+                'source' => 'ucs',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Familien für die in diesem Lauf abgeglichenen Eltern bilden (§7, nur ohne Familie).
+     */
+    private function buildFamilies(): int
+    {
+        if ($this->touchedUserIds === []) {
+            return 0;
+        }
+
+        try {
+            $report = app(FamilyBuilder::class)->rebuild(onlyUserIds: array_keys($this->touchedUserIds), onlyUnassigned: true, source: Family::SOURCE_UCS);
+
+            return count($report->created);
+        } catch (Throwable $e) {
+            $this->log('warning', 'Familienbildung nach UCS-Sync fehlgeschlagen', ['error' => $e->getMessage()]);
+
+            return 0;
+        }
     }
 
     /** @param  array<string, mixed>  $context */
