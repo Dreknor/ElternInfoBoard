@@ -2,8 +2,10 @@
 
 namespace App\Model;
 
+use App\Observers\ChildObserver;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([ChildObserver::class])]
 class Child extends Model implements HasMedia
 {
     use HasFactory;
@@ -47,6 +50,37 @@ class Child extends Model implements HasMedia
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * Weitere Gruppen/Klassen (z. B. UCS-Kombiklassen) neben class_id/group_id.
+     */
+    public function additionalGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'child_group')
+            ->withoutGlobalScopes()
+            ->withPivot('source')
+            ->withTimestamps();
+    }
+
+    /**
+     * Alle Gruppen-IDs, aus denen sich Eltern-Mitgliedschaften ableiten
+     * (Klasse, Gruppe, weitere Gruppen, AG-Gruppen).
+     *
+     * @return list<int>
+     */
+    public function derivedGroupIds(): array
+    {
+        $ids = array_filter([$this->class_id, $this->group_id]);
+
+        $ids = array_merge($ids, \DB::table('child_group')->where('child_id', $this->id)->pluck('group_id')->all());
+
+        $agNames = $this->arbeitsgemeinschaften()->pluck('arbeitsgemeinschaften.name')->all();
+        if ($agNames !== []) {
+            $ids = array_merge($ids, Group::withoutGlobalScopes()->whereIn('name', $agNames)->pluck('id')->all());
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
     }
 
     public function mandates(): HasMany

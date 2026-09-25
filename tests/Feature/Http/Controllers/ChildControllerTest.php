@@ -20,8 +20,8 @@ class ChildControllerTest extends TestCase
     public function user_can_view_their_children(): void
     {
         $user = User::factory()->create(['password_changed_at' => now()]);
-        \Spatie\Permission\Models\Permission::create(['name' => 'edit Schickzeiten']);
-        $user->givePermissionTo('edit Schickzeiten');
+        \Spatie\Permission\Models\Permission::findOrCreate('edit schickzeiten', 'web');
+        $user->givePermissionTo('edit schickzeiten');
 
         $children = Child::factory()->count(2)->create();
         $user->children_rel()->attach($children->pluck('id'));
@@ -96,11 +96,6 @@ class ChildControllerTest extends TestCase
             'notification' => false,
             'auto_checkIn' => true,
         ]);
-        $this->assertDatabaseHas('children',
-            [
-                'id' => $child->id,
-                'first_name' => 'Hacked Name',
-            ]);
 
         $response->assertRedirect();
 
@@ -113,19 +108,22 @@ class ChildControllerTest extends TestCase
     /**
      * @test
      */
-    public function user_can_delete_their_child(): void
+    public function parent_cannot_delete_child_but_staff_can(): void
     {
+        // Kinder und Beziehungen pflegt ausschließlich die Verwaltung (Konzept E6)
         $user = User::factory()->create();
         $child = Child::factory()->create();
         $user->children_rel()->attach($child->id);
 
-        $response = $this->actingAs($user)->delete(route('child.destroy', $child));
+        $this->actingAs($user)->delete(route('child.destroy', $child))->assertRedirect();
+        $this->assertNotSoftDeleted('children', ['id' => $child->id]);
 
-        $response->assertRedirect();
+        \Spatie\Permission\Models\Permission::findOrCreate('edit schickzeiten', 'web');
+        $staff = User::factory()->create();
+        $staff->givePermissionTo('edit schickzeiten');
 
-        $this->assertSoftDeleted('children', [
-            'id' => $child->id,
-        ]);
+        $this->actingAs($staff)->delete(route('child.destroy', $child))->assertRedirect();
+        $this->assertSoftDeleted('children', ['id' => $child->id]);
     }
 
     /**

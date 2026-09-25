@@ -14,6 +14,7 @@ use App\Model\Poll_Votes;
 use App\Model\Post;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
+use App\Services\Family\FamilyService;
 use App\Scopes\GetGroupsScope;
 use App\Settings\EmailSetting;
 use Carbon\Carbon;
@@ -96,7 +97,16 @@ class UserService
         }
 
         $gruppen = $this->groupsRepository->getGroups($groupInput);
-        $user->groups()->sync($gruppen);
+
+        // Abgeleitete Mitgliedschaften (aus Kindern, is_auto_provisioned) bleiben
+        // erhalten – die Verwaltung pflegt hier nur manuelle Gruppen.
+        $autoGroupIds = DB::table('group_user')
+            ->where('user_id', $user->id)
+            ->where('is_auto_provisioned', true)
+            ->pluck('group_id')
+            ->all();
+        $user->groups()->sync(array_values(array_unique(array_merge($gruppen->pluck('id')->all(), $autoGroupIds))));
+        $gruppen = Group::withoutGlobalScopes()->whereIn('id', array_merge($gruppen->pluck('id')->all(), $autoGroupIds))->get();
 
         // Gruppen-Konversationen synchronisieren:
         // Der User wird in alle aktiven Gruppen-Chats seiner neuen Gruppen aufgenommen.
@@ -182,38 +192,23 @@ class UserService
     }
 
     /**
-     * Sorg2-Verknüpfung bidirektional setzen.
-     * Entkoppelt vorherige Partner beider Seiten.
+     * Zwei Konten als Familie verknüpfen (früher: sorg2). Die Familie wird über
+     * den FamilyService gepflegt; sorg2 wird per Dual-Write mitgeführt.
      */
     public function linkSorgeberechtigte(User $user, int $sorg2Id): void
     {
-        DB::transaction(function () use ($user, $sorg2Id) {
-            // 1. Alten Partner des Users entkoppeln
-            if ($user->sorg2 && $user->sorg2 !== $sorg2Id) {
-                User::where('id', $user->sorg2)->update(['sorg2' => null]);
-            }
-
-            // 2. Alten Partner des neuen Sorg2 entkoppeln
-            $newPartner = User::findOrFail($sorg2Id);
-            if ($newPartner->sorg2 && $newPartner->sorg2 !== $user->id) {
-                User::where('id', $newPartner->sorg2)->update(['sorg2' => null]);
-            }
-
-            // 3. Neue Verknüpfung bidirektional setzen
-            $user->update(['sorg2' => $sorg2Id]);
-            $newPartner->update(['sorg2' => $user->id]);
-        });
+        $partner = User::findOrFail($sorg2Id);
+        app(FamilyService::class)->linkPair($user, $partner);
+        $user->refresh();
     }
 
     /**
-     * Sorg2-Verknüpfung bidirektional auflösen.
+     * Konto aus seiner Familie lösen (früher: sorg2 auflösen).
      */
     public function unlinkSorgeberechtigte(User $user): void
     {
-        if ($user->sorg2) {
-            User::where('id', $user->sorg2)->update(['sorg2' => null]);
-        }
-        $user->update(['sorg2' => null]);
+        app(FamilyService::class)->removeMember($user);
+        $user->refresh();
     }
 
     /**
@@ -227,13 +222,8 @@ class UserService
             DB::transaction(function () use ($user) {
                 $user->groups()->detach();
 
-                if ($user->sorg2 != null) {
-                    $sorg2 = User::where('id', '=', $user->sorg2)->first();
-                    if (! is_null($sorg2)) {
-                        $sorg2->update(['sorg2' => null]);
-                    }
-                    $user->update(['sorg2' => null]);
-                }
+                // Aus der Familie lösen (räumt auch sorg2 auf)
+                app(FamilyService::class)->removeMember($user);
 
                 $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
 

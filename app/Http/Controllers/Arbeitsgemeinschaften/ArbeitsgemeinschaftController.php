@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Arbeitsgemeinschaften;
 
+use App\Enums\GuardianRight;
 use App\Http\Controllers\Controller;
+use App\Services\Family\GroupMembershipService;
 use App\Mail\NeuerTeilnehmerMail;
 use App\Model\Arbeitsgemeinschaft;
 use App\Model\Group;
@@ -23,7 +25,7 @@ class ArbeitsgemeinschaftController extends Controller
             5 => 'Freitag',
         ];
 
-        $children = auth()->user()->children();
+        $children = auth()->user()->children(GuardianRight::Manage);
 
         $arbeitsgemeinschaften = Arbeitsgemeinschaft::query()
             ->with(['manager', 'groups', 'participants'])
@@ -36,7 +38,7 @@ class ArbeitsgemeinschaftController extends Controller
 
         $availableChildrenByAg = [];
         foreach ($arbeitsgemeinschaften as $ag) {
-            $availableChildrenByAg[$ag->id] = auth()->user()->children()
+            $availableChildrenByAg[$ag->id] = $children
                 ->filter(function ($child) use ($ag) {
                     return ($ag->groups->pluck('id')->intersect($child->group_id)->isNotEmpty() or $ag->groups->pluck('id')->intersect($child->class_id)->isNotEmpty())
                         && ! $ag->participants->contains($child->id);
@@ -58,7 +60,7 @@ class ArbeitsgemeinschaftController extends Controller
         ]);
 
         // Prüfen ob das Kind zum eingeloggten User gehört
-        $child = auth()->user()->children()->find($request->child_id);
+        $child = auth()->user()->children(GuardianRight::Manage)->find($request->child_id);
         if (! $child) {
             return back()->with(
                 [
@@ -102,29 +104,9 @@ class ArbeitsgemeinschaftController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        /*
-         * Die Eltern der gruppe hinzufügen
-         *
-         */
-        $parents = $child->parents;
-
-        // Nur die automatisch erstellte AG-Gruppe verwenden
-        $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
-
-        if ($agGroup) {
-            foreach ($parents as $parent) {
-                // Prüfen, ob der Elternteil bereits in der Gruppe ist
-                if (! $agGroup->users()->where('users.id', $parent->id)->exists()) {
-                    $agGroup->users()->attach($parent->id);
-                }
-
-                if ($parent->sorg2 != null && ! $agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
-                    // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
-                    $agGroup->users()->attach($parent->sorg2);
-                }
-            }
-
-        }
+        // Bezugspersonen (mit Informationsrecht) erhalten die AG-Gruppe als abgeleitete Mitgliedschaft
+        $agGroup = Group::withoutGlobalScopes()->where('name', $arbeitsgemeinschaft->name)->first();
+        app(GroupMembershipService::class)->syncForChild($child, $agGroup ? [$agGroup->id] : []);
 
         // E-Mail an den AG-Leiter senden
         try {

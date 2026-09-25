@@ -10,6 +10,7 @@ use App\Model\Arbeitsgemeinschaft;
 use App\Model\Child;
 use App\Model\Group;
 use App\Model\User;
+use App\Services\Family\GroupMembershipService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -212,27 +213,10 @@ class GTAController extends Controller
             ]);
         }
 
-        // Sorgeberechtigte der Gruppe hinzufügen
+        // Bezugspersonen erhalten die AG-Gruppe als abgeleitete Mitgliedschaft
         $child = Child::find($validated['child_id']);
-        $parents = $child->parents;
-
-        // Nur die automatisch erstellte AG-Gruppe verwenden
-        $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
-
-        if ($agGroup) {
-            foreach ($parents as $parent) {
-                // Prüfen, ob der Elternteil bereits in der Gruppe ist
-                if (! $agGroup->users()->where('users.id', $parent->id)->exists()) {
-                    $agGroup->users()->attach($parent->id);
-                }
-
-                if ($parent->sorg2 != null && ! $agGroup->users()->where('users.id', $parent->sorg2)->exists()) {
-                    // Füge den zweiten Sorgeberechtigten hinzu, falls vorhanden
-                    $agGroup->users()->attach($parent->sorg2);
-                }
-            }
-
-        }
+        $agGroup = Group::withoutGlobalScopes()->where('name', $arbeitsgemeinschaft->name)->first();
+        app(GroupMembershipService::class)->syncForChild($child, $agGroup ? [$agGroup->id] : []);
 
         return redirect()
             ->route('verwaltung.arbeitsgemeinschaften.teilnehmer', $arbeitsgemeinschaft)
@@ -243,18 +227,9 @@ class GTAController extends Controller
     {
         $arbeitsgemeinschaft->participants()->detach($child->id);
 
-        // Sorgeberechtigte aus der Gruppe entfernen
-        $parents = $child->parents;
-        $agGroup = Group::query()->where('name', $arbeitsgemeinschaft->name)->first();
-        if ($agGroup) {
-            foreach ($parents as $parent) {
-                $agGroup->users()->detach($parent->id);
-                if ($parent->sorg2 != null) {
-                    // Entferne den zweiten Sorgeberechtigten, falls vorhanden
-                    $agGroup->users()->detach($parent->sorg2);
-                }
-            }
-        }
+        // AG-Gruppe nur entfernen, wenn kein anderes Kind der Bezugsperson mehr teilnimmt
+        $agGroup = Group::withoutGlobalScopes()->where('name', $arbeitsgemeinschaft->name)->first();
+        app(GroupMembershipService::class)->syncForChild($child, $agGroup ? [$agGroup->id] : []);
 
         return redirect()
             ->route('verwaltung.arbeitsgemeinschaften.teilnehmer', $arbeitsgemeinschaft)

@@ -8,6 +8,7 @@ use App\Model\Child;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Services\Family\GuardianshipService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -49,11 +50,15 @@ class ChildController extends Controller implements HasMiddleware
             ]);
         }
 
+        $guardianship = app(GuardianshipService::class);
+
         if (! $request->has('parent_id')) {
-            auth()->user()->children_rel()->create($request->validated());
+            $child = Child::create($request->safe()->except(['parent_id']));
+            $guardianship->link($child, auth()->user());
         } else {
             $parent = User::find($request->parent_id);
-            $child = $parent->children_rel()->create($request->validated());
+            $child = Child::create($request->safe()->except(['parent_id']));
+            $guardianship->link($child, $parent);
 
             if (session()->has('schickzeiten')) {
                 $schickzeit = session()->get('schickzeiten');
@@ -141,10 +146,16 @@ class ChildController extends Controller implements HasMiddleware
 
     public function update(CreateChildRequest $request, Child $child)
     {
+        if ($request->user()->cannot('manage', $child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung',
+                'type' => 'danger',
+            ]);
+        }
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
             // Nur ergänzen – bestehende Bezugspersonen (inkl. UCS-Verknüpfungen) bleiben erhalten.
-            $child->parents()->syncWithoutDetaching([$request->parent_id]);
+            app(GuardianshipService::class)->link($child, User::findOrFail($request->parent_id));
         }
 
         $child->update(

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Model\Arbeitsgemeinschaft;
+use App\Model\Child;
+use App\Services\Family\GroupMembershipService;
 use App\Model\krankmeldungen;
 use App\Model\Schickzeiten;
 use App\Model\User;
@@ -106,10 +108,18 @@ class SchoolYearService
         }
 
         $this->moveChildrenToNewGroup($groupMapping);
-        DB::table('children')
-            ->whereNull('class_id')
-            ->orWhereNull('group_id')
-            ->delete();
+
+        // Kinder ohne Klasse oder Gruppe sind Abgänger: weich löschen, damit
+        // Beziehungen und Historie erhalten bleiben (früher: harter DELETE).
+        $leavers = Child::query()
+            ->where(fn ($q) => $q->whereNull('class_id')->orWhereNull('group_id'))
+            ->get();
+        $affectedUserIds = DB::table('child_user')->whereIn('child_id', $leavers->modelKeys())->pluck('user_id')->all();
+        $leavers->each->delete();
+
+        // Abgeleitete Eltern-Gruppen an die neuen Klassen/Gruppen der Kinder anpassen
+        $affectedUserIds = array_merge($affectedUserIds, DB::table('child_user')->pluck('user_id')->all());
+        app(GroupMembershipService::class)->syncUsers(array_unique($affectedUserIds));
     }
 
     /**
