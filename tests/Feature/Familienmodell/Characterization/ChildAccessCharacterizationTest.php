@@ -20,11 +20,18 @@ class ChildAccessCharacterizationTest extends TestCase
 {
     use BuildsFamilies;
 
+    /**
+     * Hook zwischen Datenaufbau und Prüfung. Die Variante „nach Migration“
+     * überführt hier die Altdaten und schaltet auf das kind-zentrierte Modell.
+     */
+    protected function prepareFamilies(): void {}
+
     #[Test]
     public function partner_sees_children_of_linked_parent(): void
     {
         [$a, $b, $child] = $this->coupleWithChildOfA();
         $stranger = $this->makeParent();
+        $this->prepareFamilies();
 
         $this->assertTrue($a->children()->contains($child));
         $this->assertTrue($b->children()->contains($child));
@@ -37,6 +44,7 @@ class ChildAccessCharacterizationTest extends TestCase
         [$a, $b, $childOfA] = $this->coupleWithChildOfA();
         $childOfB = $this->childFor([$b]);
         $shared = $this->childFor([$a, $b]);
+        $this->prepareFamilies();
 
         $ids = $a->children()->pluck('id')->sort()->values()->all();
 
@@ -48,6 +56,7 @@ class ChildAccessCharacterizationTest extends TestCase
     public function schickzeiten_index_lists_partner_children(): void
     {
         [, $b, $child] = $this->coupleWithChildOfA();
+        $this->prepareFamilies();
 
         $this->actingAs($b)->get('schickzeiten')
             ->assertOk()
@@ -60,6 +69,7 @@ class ChildAccessCharacterizationTest extends TestCase
         [$a, $b, $child] = $this->coupleWithChildOfA();
         $report = Krankmeldungen::factory()->create(['users_id' => $a->id, 'child_id' => $child->id]);
         $foreign = Krankmeldungen::factory()->create(['users_id' => $this->makeParent()->id]);
+        $this->prepareFamilies();
 
         $this->actingAs($b)->get('krankmeldung')
             ->assertOk()
@@ -74,6 +84,7 @@ class ChildAccessCharacterizationTest extends TestCase
     public function api_parent_children_contains_partner_children_with_stable_structure(): void
     {
         [, $b, $child] = $this->coupleWithChildOfA();
+        $this->prepareFamilies();
         Sanctum::actingAs($b);
 
         $this->getJson('api/parent/children')
@@ -94,6 +105,7 @@ class ChildAccessCharacterizationTest extends TestCase
     public function api_parent_children_is_empty_for_stranger(): void
     {
         $this->coupleWithChildOfA();
+        $this->prepareFamilies();
         Sanctum::actingAs($this->makeParent());
 
         $this->getJson('api/parent/children')
@@ -108,6 +120,7 @@ class ChildAccessCharacterizationTest extends TestCase
         $class = Group::factory()->create();
         $this->configureCare([$group->id], [$class->id]);
         [, $b, $child] = $this->coupleWithChildOfA(['group_id' => $group->id, 'class_id' => $class->id]);
+        $this->prepareFamilies();
 
         Sanctum::actingAs($b);
         $this->postJson('api/parent/child-notices', [
