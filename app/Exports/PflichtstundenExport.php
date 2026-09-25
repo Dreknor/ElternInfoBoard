@@ -59,6 +59,7 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
             $this->formatMinutes($unit->openMinutes()),
             number_format($unit->beitrag(), 2, ',', '.').' €',
             round($unit->percent(), 2).'%',
+            $this->service->basisDescription(),
         ];
     }
 
@@ -76,6 +77,7 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
             'Offene Stunden',
             'Zu zahlender Beitrag',
             'Erfüllung',
+            'Berechnungsgrundlage',
         ];
     }
 

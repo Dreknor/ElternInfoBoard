@@ -97,6 +97,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
             'groupedUsers' => $groupedUsers,
             'allGroupedUsers' => $groupedUsers, // Für Select2
             'stats' => $stats,
+            'basisDescription' => app(PflichtstundenService::class)->basisDescription(),
         ]);
     }
 

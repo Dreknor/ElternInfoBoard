@@ -44,6 +44,75 @@ class SettingsController extends Controller implements HasMiddleware
         ];
     }
 
+    /**
+     * Vorschau der Pflichtstunden-Berechnung mit geänderter Grundlage (ohne Speichern).
+     */
+    public function pflichtstundenPreview(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'pflichtstunden_basis' => 'nullable|in:family,child',
+            'pflichtstunden_geteilte_kinder' => 'nullable|in:combined,split,separate',
+            'pflichtstunden_max_kinder' => 'nullable|integer|min:1',
+            'pflichtstunden_kinder_gruppen' => 'nullable|array',
+            'pflichtstunden_anzahl' => 'nullable|integer|min:1',
+        ]);
+
+        $current = new PflichtstundenSetting;
+        $preview = new PflichtstundenSetting;
+        $basis = $this->pflichtstundenBasisFromRequest($request, $current);
+        $preview->pflichtstunden_basis = $basis['basis'];
+        $preview->pflichtstunden_geteilte_kinder = $basis['geteilte_kinder'];
+        $preview->pflichtstunden_max_kinder = $basis['max_kinder'];
+        $preview->pflichtstunden_kinder_gruppen = $basis['kinder_gruppen'];
+        if ($request->filled('pflichtstunden_anzahl')) {
+            $preview->pflichtstunden_anzahl = (int) $request->input('pflichtstunden_anzahl');
+        }
+
+        $resolver = app(\App\Services\Family\FamilyResolver::class);
+        $summarize = function (PflichtstundenSetting $settings) use ($resolver) {
+            $stats = (new \App\Services\Pflichtstunden\PflichtstundenService($resolver, $settings))->overview()['stats'];
+
+            return [
+                'einheiten' => $stats['totalFamilies'],
+                'soll_stunden' => round($stats['totalHoursRequired'], 1),
+                'ist_stunden' => round($stats['totalHoursCompleted'], 1),
+                'offen_stunden' => round($stats['totalHoursMissing'], 1),
+                'beitrag' => round($stats['totalBeitrag'], 2),
+            ];
+        };
+
+        return response()->json([
+            'aktuell' => $summarize($current),
+            'neu' => $summarize($preview),
+        ]);
+    }
+
+    /**
+     * @return array{basis: string, geteilte_kinder: string, max_kinder: ?int, kinder_gruppen: list<int>}
+     */
+    private function pflichtstundenBasisFromRequest(Request $request, PflichtstundenSetting $fallback): array
+    {
+        return [
+            'basis' => $request->input('pflichtstunden_basis', $fallback->pflichtstunden_basis),
+            'geteilte_kinder' => $request->input('pflichtstunden_geteilte_kinder', $fallback->pflichtstunden_geteilte_kinder),
+            'max_kinder' => $request->filled('pflichtstunden_max_kinder') ? (int) $request->input('pflichtstunden_max_kinder') : null,
+            'kinder_gruppen' => array_values(array_map('intval', (array) $request->input('pflichtstunden_kinder_gruppen', []))),
+        ];
+    }
+
+    /**
+     * @return array{basis: string, geteilte_kinder: string, max_kinder: ?int, kinder_gruppen: list<int>}
+     */
+    private function pflichtstundenBasisOf(PflichtstundenSetting $settings): array
+    {
+        return [
+            'basis' => $settings->pflichtstunden_basis,
+            'geteilte_kinder' => $settings->pflichtstunden_geteilte_kinder,
+            'max_kinder' => $settings->pflichtstunden_max_kinder,
+            'kinder_gruppen' => array_values(array_map('intval', $settings->pflichtstunden_kinder_gruppen ?? [])),
+        ];
+    }
+
     public function index()
     {
         $settings = new GeneralSetting;
@@ -79,6 +148,10 @@ class SettingsController extends Controller implements HasMiddleware
             'ucsSettings' => new UcsSetting,
             'keycloakSettings' => new KeyCloakSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
+            'allGroups' => Group::withoutGlobalScopes()->orderBy('name')->get(['id', 'name']),
+            'pflichtstundenBasisChangedBy' => $pflichtstundenSetting->pflichtstunden_basis_changed_by
+                ? User::find($pflichtstundenSetting->pflichtstunden_basis_changed_by)
+                : null,
             'users' => $users,
             'roles' => $roles,
         ]);
@@ -312,6 +385,11 @@ class SettingsController extends Controller implements HasMiddleware
                     'gamification_show_ranking' => 'nullable|boolean',
                     'gamification_show_comparison' => 'nullable|boolean',
                     'pflichtstunden_bereiche' => 'nullable|string',
+                    'pflichtstunden_basis' => 'nullable|in:family,child',
+                    'pflichtstunden_geteilte_kinder' => 'nullable|in:combined,split,separate',
+                    'pflichtstunden_max_kinder' => 'nullable|integer|min:1',
+                    'pflichtstunden_kinder_gruppen' => 'nullable|array',
+                    'pflichtstunden_kinder_gruppen.*' => 'integer|exists:groups,id',
                 ]);
 
                 try {
@@ -361,6 +439,19 @@ class SettingsController extends Controller implements HasMiddleware
                 $pflichtstundenSetting->gamification_show_ranking = $request->has('gamification_show_ranking');
                 $pflichtstundenSetting->gamification_show_comparison = $request->has('gamification_show_comparison');
                 $pflichtstundenSetting->pflichtstunden_bereiche = $bereiche;
+
+                // Berechnungsgrundlage (E1) – Änderungen wirken ab sofort für den
+                // laufenden Zeitraum und werden protokolliert (E8).
+                $basis = $this->pflichtstundenBasisFromRequest($request, $pflichtstundenSetting);
+                if ($basis !== $this->pflichtstundenBasisOf($pflichtstundenSetting)) {
+                    $pflichtstundenSetting->pflichtstunden_basis_changed_at = now()->toDateTimeString();
+                    $pflichtstundenSetting->pflichtstunden_basis_changed_by = $request->user()->id;
+                }
+                $pflichtstundenSetting->pflichtstunden_basis = $basis['basis'];
+                $pflichtstundenSetting->pflichtstunden_geteilte_kinder = $basis['geteilte_kinder'];
+                $pflichtstundenSetting->pflichtstunden_max_kinder = $basis['max_kinder'];
+                $pflichtstundenSetting->pflichtstunden_kinder_gruppen = $basis['kinder_gruppen'];
+
                 $pflichtstundenSetting->save();
                 break;
 

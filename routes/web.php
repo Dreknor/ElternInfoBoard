@@ -462,6 +462,7 @@ Route::middleware('auth')->group(function () {
             Route::get('settings/losungen/import', [LosungController::class, 'importView']);
             Route::post('settings/losungen/import', [LosungController::class, 'import']);
             Route::get('settings', [SettingsController::class, 'index']);
+            Route::post('settings/pflichtstunden/preview', [SettingsController::class, 'pflichtstundenPreview'])->name('settings.pflichtstunden.preview');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
             Route::post('settings/ucs/test', [SettingsController::class, 'ucsTestConnection'])->name('settings.ucs.test');
