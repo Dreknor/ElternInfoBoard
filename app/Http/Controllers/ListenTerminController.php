@@ -6,6 +6,7 @@ use App\Http\Requests\StoreListeTerminRequest;
 use App\Http\Requests\TerminabsageRequest;
 use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
+use App\Model\Child;
 use App\Model\Liste;
 use App\Model\listen_termine;
 use App\Model\User;
@@ -92,17 +93,40 @@ class ListenTerminController extends Controller
      */
     public function update(Request $request, listen_termine $listen_termine)
     {
-        $Eintragungen = $request->user()->getListenTermine()->where('listen_id', $listen_termine->liste->id);
+        // Optional: Termin für ein bestimmtes Kind buchen (z. B. Elterngespräch, FAM-16)
+        $child = null;
+        if ($request->filled('child_id')) {
+            $child = Child::find($request->integer('child_id'));
+            if (! $child || $request->user()->cannot('view', $child)) {
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Für dieses Kind kann kein Termin gebucht werden.',
+                ]);
+            }
+        }
+
+        if ($listen_termine->reserviert_fuer !== null) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Der Termin ist bereits vergeben.',
+            ]);
+        }
+
+        // Ohne Mehrfachbuchung: ein Termin je Kind bzw. je Familie
+        $Eintragungen = $child
+            ? listen_termine::query()->where('listen_id', $listen_termine->liste->id)->where('child_id', $child->id)->get()
+            : $request->user()->getListenTermine()->where('listen_id', $listen_termine->liste->id);
 
         if (count($Eintragungen) > 0 and $listen_termine->liste->multiple != 1) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Es kann nur ein Termin reserviert werden',
+                'Meldung' => $child ? 'Für '.$child->first_name.' ist bereits ein Termin reserviert.' : 'Es kann nur ein Termin reserviert werden',
             ]);
         }
 
         $listen_termine->update([
             'reserviert_fuer' => $request->user()->id,
+            'child_id' => $child?->id,
         ]);
 
         Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', $request->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
@@ -136,7 +160,7 @@ class ListenTerminController extends Controller
                     $listen_termine->termin,
                     $request->text));
 
-            $listen_termine->update(['reserviert_fuer' => null]);
+            $listen_termine->update(['reserviert_fuer' => null, 'child_id' => null]);
 
             return redirect()->back()->with([
                 'type' => 'success',
@@ -171,6 +195,7 @@ class ListenTerminController extends Controller
                     ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name, $listen_termine->liste, $listen_termine->termin, $request->user()));
                 $listen_termine->update([
                     'reserviert_fuer' => null,
+                    'child_id' => null,
                 ]);
             } else {
                 $listen_termine->delete();

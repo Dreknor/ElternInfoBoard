@@ -213,6 +213,8 @@ class SchuelerImportService
 
             return Child::create([
                 'external_id' => $externalId,
+                'status' => Child::STATUS_ACTIVE,
+                'entry_date' => today(),
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'class_id' => $class?->id,
@@ -223,6 +225,7 @@ class SchuelerImportService
 
         if ($child->trashed()) {
             $child->restore();
+            $child->update(['status' => Child::STATUS_ACTIVE, 'exit_date' => null]);
         }
 
         if ($child->ucs_source === 'kelvin') {
@@ -341,6 +344,7 @@ class SchuelerImportService
                 $this->touchedUserIds[(int) $userId] = true;
             }
             $report->leavers[] = trim($child->first_name.' '.$child->last_name).' ('.$child->external_id.')';
+            $child->update(['status' => Child::STATUS_LEFT, 'exit_date' => today()]);
             $child->delete();
         }
     }

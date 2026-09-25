@@ -20,7 +20,7 @@ class listen_termine extends Model
 
     protected $table = 'listen_termine';
 
-    protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
+    protected $fillable = ['listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration', 'child_id'];
 
     protected $visible = ['id', 'listen_id', 'termin', 'comment', 'reserviert_fuer', 'duration'];
 
@@ -29,6 +29,14 @@ class listen_termine extends Model
         return [
             'termin' => 'datetime',
         ];
+    }
+
+    /**
+     * Kind, für das der Termin gebucht wurde (z. B. Elterngespräch).
+     */
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class, 'child_id')->withTrashed();
     }
 
     public function eingetragenePerson(): BelongsTo

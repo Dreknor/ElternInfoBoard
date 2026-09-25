@@ -313,6 +313,7 @@ class PflichtstundenService
 
         return Child::query()
             ->whereIn('id', $childIds)
+            ->where('status', Child::STATUS_ACTIVE)
             ->where(fn ($q) => $q->whereNotNull('class_id')->orWhereNotNull('group_id'))
             ->when($groups !== [], fn ($q) => $q->where(fn ($g) => $g->whereIn('class_id', $groups)->orWhereIn('group_id', $groups)))
             ->pluck('id')

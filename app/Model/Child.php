@@ -23,8 +23,17 @@ class Child extends Model implements HasMedia
     use InteractsWithMedia;
     use SoftDeletes;
 
+    public const STATUS_APPLICANT = 'applicant';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_LEFT = 'left';
+
     protected $fillable = [
         'external_id',
+        'status',
+        'entry_date',
+        'exit_date',
         'first_name',
         'last_name',
         'group_id',
@@ -44,6 +53,8 @@ class Child extends Model implements HasMedia
             'notification' => 'boolean',
             'auto_checkIn' => 'boolean',
             'ucs_synced_at' => 'datetime',
+            'entry_date' => 'date',
+            'exit_date' => 'date',
         ];
     }
 

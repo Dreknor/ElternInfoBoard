@@ -115,7 +115,10 @@ class SchoolYearService
             ->where(fn ($q) => $q->whereNull('class_id')->orWhereNull('group_id'))
             ->get();
         $affectedUserIds = DB::table('child_user')->whereIn('child_id', $leavers->modelKeys())->pluck('user_id')->all();
-        $leavers->each->delete();
+        $leavers->each(function (Child $child) {
+            $child->update(['status' => Child::STATUS_LEFT, 'exit_date' => today()]);
+            $child->delete();
+        });
 
         // Abgeleitete Eltern-Gruppen an die neuen Klassen/Gruppen der Kinder anpassen
         $affectedUserIds = array_merge($affectedUserIds, DB::table('child_user')->pluck('user_id')->all());

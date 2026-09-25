@@ -20,9 +20,18 @@
     // Filtere nach Nutzer
     $userTermine = $termine->whereIn('reserviert_fuer', auth()->user()->familyUserIds());
 
+    // Rückmeldung pro Kind: Termin je betroffenem Kind (z. B. Elterngespräch, FAM-16)
+    $bookingChildren = app(\App\Services\Rueckmeldungen\RueckmeldungStatusService::class)
+        ->targetsFor(auth()->user(), $nachricht)
+        ->filter(fn ($target) => $target->isChild())
+        ->map(fn ($target) => $target->child)
+        ->values();
+    $bookedChildIds = $termine->whereNotNull('child_id')->pluck('child_id')->all();
+    $openChildren = $liste->multiple ? $bookingChildren : $bookingChildren->reject(fn ($child) => in_array($child->id, $bookedChildIds));
+
     // Freie Termine (nur wenn Nutzer noch keine Buchung hat oder Multiple erlaubt ist)
     $hasBooking = $userTermine->count() > 0;
-    $canBook = !$hasBooking || $liste->multiple;
+    $canBook = $bookingChildren->isNotEmpty() ? $openChildren->isNotEmpty() : (!$hasBooking || $liste->multiple);
     $freieTermine = $canBook ? $termine->whereNull('reserviert_fuer') : collect();
 @endphp
 
@@ -107,6 +116,9 @@
                                     - {{$termin->termin->copy()->addMinutes($termin->duration)->format('H:i')}} Uhr
                                 @endif
                             </p>
+                            @if($termin->child)
+                                <p class="text-sm text-teal-800 mt-1"><i class="fas fa-child mr-1"></i>für {{ $termin->child->first_name }} {{ $termin->child->last_name }}</p>
+                            @endif
                             @if($termin->comment)
                                 <p class="text-sm text-gray-600 mt-1">{{$termin->comment}}</p>
                             @endif
@@ -154,6 +166,15 @@
                                 <form method="post" action="{{url('listen/termine/'.$termin->id)}}" style="display: inline;">
                                     @csrf
                                     @method('PUT')
+                                    @if($openChildren->count() > 1)
+                                        <select name="child_id" class="text-sm border border-gray-300 rounded-lg px-2 py-1 mr-1" required>
+                                            @foreach($openChildren as $bookingChild)
+                                                <option value="{{ $bookingChild->id }}">{{ $bookingChild->first_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @elseif($openChildren->count() === 1)
+                                        <input type="hidden" name="child_id" value="{{ $openChildren->first()->id }}">
+                                    @endif
                                     <button type="submit"
                                             class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
                                         <i class="fas fa-check"></i>
