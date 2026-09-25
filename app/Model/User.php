@@ -2,9 +2,12 @@
 
 namespace App\Model;
 
+use App\Enums\GuardianRight;
+use App\Services\Family\FamilyResolver;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -135,21 +138,14 @@ class User extends Authenticatable implements Auditable
     }
 
     /**
-     * @return mixed
+     * Kinder, auf die dieser User Zugriff hat (optional mit bestimmtem Recht).
+     * Welche Beziehungen zählen, entscheidet der FamilyResolver.
+     *
+     * @return EloquentCollection<int, Child>
      */
-    public function children()
+    public function children(?GuardianRight $right = null): EloquentCollection
     {
-        $children = $this->children_rel;
-        if (! is_null($this->sorg2)) {
-            $children2 = $this->sorgeberechtigter2?->children_rel;
-            if (! is_null($children2) and ! is_null($children)) {
-                return $children->merge($children2);
-            } elseif (is_null($children)) {
-                return $children2;
-            }
-        }
-
-        return $children;
+        return app(FamilyResolver::class)->childrenFor($this, $right);
     }
 
     /**

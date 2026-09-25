@@ -6,4 +6,5 @@ return [
     App\Providers\SettingsServiceProvider::class,
     App\Providers\KeycloakProvider::class,
     App\Providers\UcsServiceProvider::class,
+    App\Providers\FamilyServiceProvider::class,
 ];

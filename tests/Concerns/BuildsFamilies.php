@@ -2,7 +2,9 @@
 
 namespace Tests\Concerns;
 
+use App\Enums\GuardianRelation;
 use App\Model\Child;
+use App\Model\Family;
 use App\Model\User;
 
 /**
@@ -42,6 +44,72 @@ trait BuildsFamilies
         $child = $this->childFor([$a], $childAttributes);
 
         return [$a, $b, $child];
+    }
+
+    protected function useResolver(string $mode): void
+    {
+        config(['family.resolver' => $mode]);
+    }
+
+    /**
+     * Legt eine Familie an. Bei genau zwei Mitgliedern wird zusätzlich sorg2
+     * gesetzt (Dual-Write), damit das Szenario in beiden Modi gleich gilt.
+     */
+    protected function familyOf(User ...$members): Family
+    {
+        $family = Family::factory()->create(['name' => Family::suggestName($members)]);
+        foreach ($members as $member) {
+            $member->update(['family_id' => $family->id]);
+        }
+        if (count($members) === 2) {
+            $this->linkPartners($members[0], $members[1]);
+        }
+        foreach ($members as $member) {
+            $member->refresh();
+        }
+
+        return $family;
+    }
+
+    /**
+     * Elternpaar mit gemeinsamem Kind – in beiden Resolver-Modi gleichwertig
+     * (Familie + sorg2, Kind direkt an beiden).
+     *
+     * @return array{0: User, 1: User, 2: Child, 3: Family}
+     */
+    protected function coupleWithSharedChild(array $childAttributes = []): array
+    {
+        $a = $this->makeParent();
+        $b = $this->makeParent();
+        $family = $this->familyOf($a, $b);
+        $child = $this->childFor([$a, $b], $childAttributes);
+
+        return [$a, $b, $child, $family];
+    }
+
+    /**
+     * Patchwork (§1): A hat Kind X mit B (getrennt lebend) und Kind Y mit
+     * Partner C. Familien: {A, C} und {B}.
+     *
+     * @return array{a: User, b: User, c: User, x: Child, y: Child, familyAC: Family, familyB: Family}
+     */
+    protected function patchwork(): array
+    {
+        $a = $this->makeParent();
+        $b = $this->makeParent();
+        $c = $this->makeParent();
+        $familyAC = $this->familyOf($a, $c);
+        $familyB = $this->familyOf($b);
+        $x = $this->childFor([$a, $b]);
+        $y = $this->childFor([$a]);
+        $y->parents()->attach($c->id, ['relation' => GuardianRelation::Partner->value] + GuardianRelation::Partner->defaultRights());
+
+        return ['a' => $a, 'b' => $b, 'c' => $c, 'x' => $x, 'y' => $y, 'familyAC' => $familyAC, 'familyB' => $familyB];
+    }
+
+    protected function linkGuardian(Child $child, User $user, GuardianRelation $relation = GuardianRelation::LegalGuardian, array $pivot = []): void
+    {
+        $child->parents()->attach($user->id, $pivot + ['relation' => $relation->value] + $relation->defaultRights());
     }
 
     /**
