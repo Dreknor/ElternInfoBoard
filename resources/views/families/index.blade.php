@@ -6,7 +6,14 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">
-                <h3>Familien</h3>
+                <h3>
+                    Familien
+                    @if(config('family.resolver') === 'child_centric')
+                        <span class="badge badge-success" title="FAMILY_RESOLVER=child_centric">kind-zentriertes Modell aktiv</span>
+                    @else
+                        <span class="badge badge-secondary" title="FAMILY_RESOLVER=legacy – Umschalten nach Prüfung mit php artisan family:status">Übergangsmodus (Kontoverknüpfung)</span>
+                    @endif
+                </h3>
                 <p class="text-muted mb-2">
                     Familien sind die Einheit für Pflichtstunden, Reinigung, Lesebestätigungen und Rückmeldungen je Familie.
                     Zugriff auf Kinder entsteht ausschließlich über die Beziehung zum Kind.
