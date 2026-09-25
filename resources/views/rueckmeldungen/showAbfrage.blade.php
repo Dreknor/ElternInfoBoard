@@ -55,6 +55,9 @@
                             </td>
                             <td>
                                 {{$userRueckmeldung->user->name}}
+                                @if($userRueckmeldung->child)
+                                    <br><small class="text-muted">für {{ $userRueckmeldung->child->first_name }} {{ $userRueckmeldung->child->last_name }}</small>
+                                @endif
                             </td>
                             <td>
                                 {{$userRueckmeldung->user->email}}

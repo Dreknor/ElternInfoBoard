@@ -53,6 +53,7 @@
                                         <option value="1">Ja</option>
                                     </select>
                                 </label>
+                                @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => 'child'])
                             </div>
                     <div class="col-3">
                                 <label class="w-100">mehrere Rückmeldungen?

@@ -82,7 +82,8 @@ class FamilyScopeTest extends TestCase
             ->where('remindable_type', Rueckmeldungen::class)->pluck('user_id')->unique()->values()->all());
 
         $status = app(RueckmeldungStatusService::class)->summary($post->fresh());
-        $this->assertSame(['expected' => 2, 'answered' => 1, 'open' => 1, 'percent' => 50.0], $status);
+        $this->assertSame(['expected' => 2, 'answered' => 1, 'open' => 1, 'percent' => 50.0],
+            array_intersect_key($status, array_flip(['expected', 'answered', 'open', 'percent'])));
     }
 
     #[Test]

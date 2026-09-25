@@ -18,6 +18,14 @@ class UserRueckmeldungen extends Model
 
     protected $fillable = ['post_id', 'users_id', 'child_id', 'text', 'rueckmeldung_number'];
 
+    /**
+     * Kind, für das die Rückmeldung abgegeben wurde (Rückmeldung pro Kind).
+     */
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class, 'child_id')->withTrashed();
+    }
+
     public function nachricht(): BelongsTo
     {
         return $this->belongsTo(Post::class, 'post_id', 'id');

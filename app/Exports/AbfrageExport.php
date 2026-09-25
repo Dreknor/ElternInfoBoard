@@ -25,7 +25,7 @@ class AbfrageExport implements FromCollection, ShouldAutoSize, withHeadings, wit
 
     public function headings(): array
     {
-        $options = ['Benutzer', 'Email', 'Zeitpunkt'];
+        $options = ['Benutzer', 'Email', 'Kind', 'Zeitpunkt'];
 
         foreach ($this->options as $option) {
             $options[] = "$option->option";
@@ -40,6 +40,7 @@ class AbfrageExport implements FromCollection, ShouldAutoSize, withHeadings, wit
         $row = [];
         $row[] = $userrueckmeldung->user->name;
         $row[] = $userrueckmeldung->user->email;
+        $row[] = $userrueckmeldung->child ? trim($userrueckmeldung->child->first_name.' '.$userrueckmeldung->child->last_name) : '';
         $row[] = $userrueckmeldung->created_at;
         foreach ($this->options as $option) {
             $answer = $answers->where('option_id', $option->id)->first()?->answer;

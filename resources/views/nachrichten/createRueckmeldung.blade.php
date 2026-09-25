@@ -37,6 +37,11 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12">
+                        @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => 'child'])
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
                         <div class="form-group">
                             <label>Rückmeldung</label>
                             <textarea class="form-control border-input" name="text">

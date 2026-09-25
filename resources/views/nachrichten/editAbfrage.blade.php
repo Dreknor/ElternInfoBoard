@@ -56,6 +56,7 @@
                                         <option value="1" @if($rueckmeldung->pflicht == 1) selected @endif>Ja</option>
                                     </select>
                                 </label>
+                                @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => $rueckmeldung?->scope ?? 'family'])
                             </div>
                             <div class="col-6">
                                 <label class="w-100">mehrere Rückmeldungen?

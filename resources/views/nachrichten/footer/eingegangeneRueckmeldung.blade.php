@@ -25,7 +25,12 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-900 text-sm">{{$rueckmeldung->user->name}}</p>
+                                <p class="font-semibold text-gray-900 text-sm">
+                                    {{$rueckmeldung->user->name}}
+                                    @if($rueckmeldung->child)
+                                        <span class="font-normal text-gray-600">für {{ $rueckmeldung->child->first_name }} {{ $rueckmeldung->child->last_name }}</span>
+                                    @endif
+                                </p>
                                 <p class="text-xs text-gray-500">
                                     <i class="far fa-clock mr-1"></i>
                                     {{$rueckmeldung->updated_at->format('d.m.Y H:i')}}
@@ -91,7 +96,12 @@
                                 </span>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-900 text-sm">{{$rueckmeldung->user->name}}</p>
+                                <p class="font-semibold text-gray-900 text-sm">
+                                    {{$rueckmeldung->user->name}}
+                                    @if($rueckmeldung->child)
+                                        <span class="font-normal text-gray-600">für {{ $rueckmeldung->child->first_name }} {{ $rueckmeldung->child->last_name }}</span>
+                                    @endif
+                                </p>
                                 <p class="text-xs text-gray-500">
                                     <i class="far fa-clock mr-1"></i>
                                     {{$rueckmeldung->updated_at->format('d.m.Y H:i')}}

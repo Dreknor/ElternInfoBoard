@@ -7,6 +7,7 @@ use App\Model\AbfrageAntworten;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Mail;
 
 class UserRueckmeldungenController extends Controller implements HasMiddleware
 {
+    public function __construct(private readonly RueckmeldungStatusService $status) {}
+
     public static function middleware(): array
     {
         return [
@@ -30,17 +33,21 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
      */
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
     {
-        if (auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() > 0 and $rueckmeldung->multiple != 1) {
+        // Antwortziel (Kind bzw. Familie/Person) prüfen – E2/E7
+        $resolved = $this->status->resolveTarget($request->user(), $rueckmeldung->post, $request->integer('child_id') ?: null);
+        if ($resolved['error'] !== null) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Abfrage wurde bereits beantwortet',
+                'Meldung' => $resolved['status'] === 409 ? 'Abfrage wurde bereits beantwortet' : $resolved['error'],
             ]);
         }
+        $target = $resolved['target'];
 
         $userRueckmeldung = new UserRueckmeldungen([
             'post_id' => $rueckmeldung->post->id,
             'users_id' => auth()->id(),
-            'rueckmeldung_number' => auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() + 1,
+            'child_id' => $target->child?->id,
+            'rueckmeldung_number' => $target->answers->count() + 1,
             'text' => '',
         ]);
         $userRueckmeldung->save();
@@ -60,28 +67,31 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
     {
         $user = $request->user();
         $post_id = Post::find($post_id);
-        $rueckmeldung = $post_id->rueckmeldung;
 
-        if (auth()->user()->rueckmeldung?->where('rueckmeldung_id', $rueckmeldung->post->id)->count() > 0 and $rueckmeldung->multiple != 1) {
+        // Antwortziel (Kind bzw. Familie/Person) prüfen – E2/E7
+        $resolved = $this->status->resolveTarget($user, $post_id, $request->integer('child_id') ?: null);
+        if ($resolved['error'] !== null) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Abfrage wurde bereits beantwortet',
+                'Meldung' => $resolved['status'] === 409 ? 'Rückmeldung wurde bereits abgegeben' : $resolved['error'],
             ]);
         }
+        $target = $resolved['target'];
+
         $rueckmeldungUser = UserRueckmeldungen::create([
             'post_id' => $post_id->id,
             'users_id' => $user->id,
-            'rueckmeldung_number' => auth()->user()->rueckmeldung?->where('post_id', $rueckmeldung->post->id)->count() + 1,
+            'child_id' => $target->child?->id,
+            'rueckmeldung_number' => $target->answers->count() + 1,
             'text' => $request->input('text'),
         ]);
 
-        $rueckmeldungUser->save();
-
         $Empfaenger = $post_id->rueckmeldung->empfaenger;
+        $fuer = $target->isChild() ? ' für '.$target->label() : '';
 
         $Rueckmeldung = [
-            'text' => $request->input('text').'<br>'.$request->user()->name,
-            'subject' => "Rückmeldung $post_id->header",
+            'text' => $request->input('text').'<br>'.$request->user()->name.($fuer ? '<br>Rückmeldung'.$fuer : ''),
+            'subject' => "Rückmeldung $post_id->header".$fuer,
             'name' => $user->name,
             'email' => $user->email,
             'empfaenger' => $Empfaenger,
@@ -108,7 +118,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
      */
     public function edit(UserRueckmeldungen $userRueckmeldungen)
     {
-        if (! auth()->user()->isFamilyMember($userRueckmeldungen->users_id)) {
+        if (! $this->status->mayEdit(auth()->user(), $userRueckmeldungen)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -146,7 +156,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
-        if (! $user->isFamilyMember($userRueckmeldungen->users_id)) {
+        if (! $this->status->mayEdit($user, $userRueckmeldungen)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Fehlende Berechtigung',
@@ -165,7 +175,8 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
 
                 $Rueckmeldung = [
                     'text' => $request->input('text').'<br>'.$request->user()->name,
-                    'subject' => 'geänderte Rückmeldung '.$userRueckmeldungen->nachricht->header,
+                    'subject' => 'geänderte Rückmeldung '.$userRueckmeldungen->nachricht->header
+                        .($userRueckmeldungen->child ? ' für '.$userRueckmeldungen->child->first_name.' '.$userRueckmeldungen->child->last_name : ''),
                     'name' => $user->name,
                     'email' => $user->email,
                     'empfaenger' => $Empfaenger,
@@ -210,6 +221,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
                 $answers[] = [
                     'rueckmeldung_id' => $userRueckmeldung->id,
                     'user_id' => auth()->id(),
+                    'child_id' => $userRueckmeldung->child_id,
                     'option_id' => $option,
                     'answer' => '1',
                 ];
@@ -220,6 +232,7 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
                 $answers[] = [
                     'rueckmeldung_id' => $userRueckmeldung->id,
                     'user_id' => auth()->id(),
+                    'child_id' => $userRueckmeldung->child_id,
                     'option_id' => $key,
                     'answer' => $answer,
                 ];

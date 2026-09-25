@@ -8,6 +8,7 @@ use App\Model\AbfrageOptions;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Log;
  */
 class AbfragenController extends Controller implements HasMiddleware
 {
+    public function __construct(private readonly RueckmeldungStatusService $status) {}
+
     public static function middleware(): array
     {
         return [
@@ -133,6 +136,16 @@ class AbfragenController extends Controller implements HasMiddleware
             'data' => [
                 'fields' => $optionen,
                 'rueckmeldung' => $rueckmeldung,
+                // Rückmeldung pro Kind: für welche Kinder kann/muss geantwortet werden?
+                'scope' => $this->status->effectiveScope($post->rueckmeldung),
+                'targets' => $this->status->targetsFor(auth()->user(), $post)->map(fn ($target) => [
+                    'type' => $target->isChild() ? 'child' : $target->scope,
+                    'child_id' => $target->child?->id,
+                    'child_name' => $target->label(),
+                    'answered' => $target->isAnswered(),
+                    'answered_by' => $target->answeredBy(),
+                    'can_answer' => $target->canAnswer,
+                ])->values(),
             ],
             'message' => 'Felder erfolgreich abgerufen',
         ]);
@@ -182,6 +195,7 @@ class AbfragenController extends Controller implements HasMiddleware
             'data' => 'required|array',
             'data.*.id' => 'required|integer',
             'data.*.value' => 'required',
+            'child_id' => 'nullable|integer|exists:children,id',
         ]);
 
         Log::warning('API: Storing answer for post '.$post.' with data: '.json_encode($request->data));
@@ -222,108 +236,65 @@ class AbfragenController extends Controller implements HasMiddleware
             ], 400);
         }
 
-        $userRueckmeldung = UserRueckmeldungen::query()
-            ->where('post_id', $post->id)
-            ->where('users_id', request()->user()->id)
-            ->first();
+        // Antwortziel prüfen (Rückmeldung pro Kind nur durch Sorgeberechtigte – E7)
+        $resolved = $this->status->resolveTarget(request()->user(), $post, $request->integer('child_id') ?: null, allowExisting: true);
+        if ($resolved['error'] !== null) {
+            return response()->json([
+                'success' => false,
+                'error' => $resolved['status'] === 422 ? 'Child required' : 'Not allowed',
+                'message' => $resolved['error'],
+            ], $resolved['status']);
+        }
+        $target = $resolved['target'];
+        $existing = $target->answers->first();
 
-        if ($rueckmeldung->multiple == 1 or $userRueckmeldung == null) {
+        if ($rueckmeldung->multiple == 1 or $existing === null) {
             $userRueckmeldung = UserRueckmeldungen::create([
                 'post_id' => $post->id,
                 'users_id' => request()->user()->id,
+                'child_id' => $target->child?->id,
                 'text' => ' ',
+            ]);
+        } else {
+            // Bestehende Antwort dieses Ziels (Kind/Familie) wird ersetzt
+            $userRueckmeldung = $existing;
+            $userRueckmeldung->update(['users_id' => request()->user()->id]);
+            AbfrageAntworten::query()->where('rueckmeldung_id', $userRueckmeldung->id)->delete();
+        }
+
+        $data = [];
+
+        foreach ($request->data as $value) {
+            if (! is_array($value) || ! isset($value['id']) || ! isset($value['value'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Invalid data',
+                    'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
+                ], 400);
+            }
+
+            if (! is_numeric($value['id'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Invalid data',
+                    'message' => 'Ungültige Daten: ID muss numerisch sein'
+                ], 400);
+            }
+
+            // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
+            $answerValue = is_bool($value['value']) || is_int($value['value'])
+                ? (string) $value['value']
+                : $value['value'];
+
+            $data[] = [
+                'rueckmeldung_id' => $userRueckmeldung->id,
+                'user_id' => request()->user()->id,
+                'child_id' => $target->child?->id,
+                'option_id' => $value['id'],
+                'answer' => $answerValue,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
-
-            $data = [];
-
-            foreach ($request->data as $value) {
-
-                if (is_array($value) && isset($value['id']) && isset($value['value'])) {
-                    if (! is_numeric($value['id'])) {
-                        return response()->json([
-                            'success' => false,
-                            'error' => 'Invalid data',
-                            'message' => 'Ungültige Daten: ID muss numerisch sein'
-                        ], 400);
-                    }
-
-                    // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
-                    $answerValue = is_bool($value['value']) || is_int($value['value'])
-                        ? (string)$value['value']
-                        : $value['value'];
-
-                    $data[] = [
-                        'rueckmeldung_id' => $userRueckmeldung->id,
-                        'user_id' => request()->user()->id,
-                        'option_id' => $value['id'],
-                        'answer' => $answerValue,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    Log::debug('API: Prepared answer data for option_id '.$value['id'].' with value '.$answerValue);
-                    Log::debug($data);
-
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Invalid data',
-                        'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
-                    ], 400);
-                }
-
-            }
-
-        } else {
-            $userRueckmeldung = UserRueckmeldungen::updateOrCreate([
-                'post_id' => $post->id,
-                'users_id' => request()->user()->id],
-                [
-                    'text' => ' ',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-            AbfrageAntworten::query()->where('rueckmeldung_id', $userRueckmeldung->id)->delete();
-
-            $data = [];
-
-            foreach ($request->data as $value) {
-
-                if (is_array($value) && isset($value['id']) && isset($value['value'])) {
-                    if (! is_numeric($value['id'])) {
-                        return response()->json([
-                            'success' => false,
-                            'error' => 'Invalid data',
-                            'message' => 'Ungültige Daten: ID muss numerisch sein'
-                        ], 400);
-                    }
-
-                    // Konvertiere den Wert zu String, um Konsistenz mit dem Web-Controller zu gewährleisten
-                    $answerValue = is_bool($value['value']) || is_int($value['value'])
-                        ? (string)$value['value']
-                        : $value['value'];
-
-                    $data[] = [
-                        'rueckmeldung_id' => $userRueckmeldung->id,
-                        'user_id' => request()->user()->id,
-                        'option_id' => $value['id'],
-                        'answer' => $answerValue,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Invalid data',
-                        'message' => 'Ungültige Daten: Jedes Element muss "id" und "value" enthalten'
-                    ], 400);
-                }
-
-            }
-
+            ];
         }
 
         if (count($data) == 0) {

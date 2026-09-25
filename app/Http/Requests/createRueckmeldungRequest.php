@@ -31,6 +31,11 @@ class createRueckmeldungRequest extends FormRequest
             'text' => [
                 'required',
             ],
+            // Rückmeldung pro Kind (Default), pro Familie oder pro Person (E2)
+            'scope' => [
+                'nullable',
+                'in:person,family,child',
+            ],
         ];
     }
 }

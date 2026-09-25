@@ -15,6 +15,7 @@ use App\Model\User;
 use App\Model\UserRueckmeldungen;
 use App\Notifications\ReminderPushNotification;
 use App\Services\Family\FamilyResolver;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Settings\ReminderSetting;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -79,18 +80,12 @@ class ProcessRemindersJob implements ShouldQueue
                 continue;
             }
 
-            $allUsers = $post->users->unique('id');
+            // Offene Empfänger je Scope (Person, Familie, Kind – E2/E7)
+            $openRecipients = app(RueckmeldungStatusService::class)->openRecipients($post);
             $usersToEscalate = [];
 
-            foreach ($allUsers as $user) {
-                // Prüfe ob User oder ein Familienmitglied bereits geantwortet hat
-                $hasResponded = UserRueckmeldungen::where('post_id', $post->id)
-                    ->whereIn('users_id', $user->familyUserIds())
-                    ->exists();
-
-                if ($hasResponded) {
-                    continue;
-                }
+            foreach ($openRecipients as $open) {
+                $user = $open['user'];
 
                 // Bestimme die passende Erinnerungsstufe
                 $level = $this->determineLevel($settings, $deadline, $now);
