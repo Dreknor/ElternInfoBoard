@@ -34,7 +34,13 @@ class ThemeService
             $userSettings = UserAppSettings::where('user_id', Auth::id())->first();
             $userTheme = data_get($userSettings?->settings, 'theme');
 
-            if ($userTheme && $this->registry->exists($userTheme)) {
+            // Die App-Einstellungen legen unter `theme` ein Objekt ab ({mode, compact_view}),
+            // die Web-Auswahl einen Theme-Namen. Nur Namen auswerten – sonst TypeError und 500 auf allen Seiten.
+            if (is_array($userTheme)) {
+                $userTheme = $userTheme['id'] ?? null;
+            }
+
+            if (is_string($userTheme) && $userTheme !== '' && $this->registry->exists($userTheme)) {
                 return $this->resolvedCache = $this->registry->get($userTheme);
             }
         }

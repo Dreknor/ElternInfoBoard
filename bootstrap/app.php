@@ -64,19 +64,25 @@ return Application::configure(basePath: dirname(__DIR__))
         /*
          | App-API v1: deutsche Meldungen für fehlende Rechte und unbekannte Datensätze.
          */
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, \Illuminate\Http\Request $request) {
-            if ($request->is('api/v1/*')) {
-                $message = $e->getMessage();
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e, \Illuminate\Http\Request $request) {
+            if (! $request->is('api/v1/*')) {
+                return null;
+            }
+            $status = $e->getStatusCode();
+            $message = $e->getMessage();
+            $defaults = [
+                403 => 'Dafür fehlt Ihnen die Berechtigung.',
+                404 => 'Nicht gefunden.',
+                409 => 'Das ist bereits erledigt oder wurde inzwischen geändert.',
+                410 => 'Die Frist ist abgelaufen.',
+                422 => 'Bitte überprüfen Sie Ihre Eingaben.',
+            ];
+            // Englische Standardtexte (Policies, Model-Binding) durch deutsche ersetzen.
+            if ($message === '' || $message === 'This action is unauthorized.' || str_starts_with($message, 'No query results')) {
+                $message = $defaults[$status] ?? 'Die Anfrage konnte nicht ausgeführt werden.';
+            }
 
-                return response()->json([
-                    'message' => ($message === '' || $message === 'This action is unauthorized.') ? 'Dafür fehlt Ihnen die Berechtigung.' : $message,
-                ], 403);
-            }
-        });
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, \Illuminate\Http\Request $request) {
-            if ($request->is('api/v1/*') && $e->getPrevious() instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
-                return response()->json(['message' => 'Nicht gefunden.'], 404);
-            }
+            return response()->json(['message' => $message], $status, $e->getHeaders());
         });
 
         /*

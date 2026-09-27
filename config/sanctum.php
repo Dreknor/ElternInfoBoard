@@ -53,6 +53,12 @@ return [
     'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 30),
 
     /*
+     | Datenbankverbindung der Tokens (App\Model\PersonalAccessToken). Standard wie bisher „mysql“;
+     | für lokale Tests mit SQLite z. B. SANCTUM_TOKEN_CONNECTION=sqlite setzen.
+     */
+    'token_connection' => env('SANCTUM_TOKEN_CONNECTION', 'mysql'),
+
+    /*
     |--------------------------------------------------------------------------
     | Token Prefix
     |--------------------------------------------------------------------------

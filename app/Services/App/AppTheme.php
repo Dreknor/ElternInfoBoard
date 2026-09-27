@@ -35,17 +35,37 @@ class AppTheme
         'losungTo' => ['--color-losung-header-to', '#4f46e5'],
     ];
 
+    /**
+     * CSS-Farbe → `#rrggbb`. Akzeptiert #rgb, #rrggbb, #rrggbbaa sowie rgb()/rgba();
+     * Verläufe, Variablen o. Ä. ergeben `null` (dann gilt der Standardwert).
+     */
+    public static function toHex(string $value): ?string
+    {
+        $value = strtolower(trim($value));
+        if (preg_match('/^#([0-9a-f]{3})$/', $value, $m)) {
+            return '#'.implode('', array_map(fn ($c) => $c.$c, str_split($m[1])));
+        }
+        if (preg_match('/^#([0-9a-f]{6})([0-9a-f]{2})?$/', $value, $m)) {
+            return '#'.$m[1];
+        }
+        if (preg_match('/^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/', $value, $m)) {
+            return sprintf('#%02x%02x%02x', min(255, (int) $m[1]), min(255, (int) $m[2]), min(255, (int) $m[3]));
+        }
+
+        return null;
+    }
+
     public static function from(ThemeInterface $theme): array
     {
         $vars = $theme->variables();
         $colors = [];
         foreach (self::MAP as $token => [$var, $fallback]) {
-            $value = $vars[$var] ?? $fallback;
-            // Nur einfache Hex-Farben übernehmen (keine Verläufe o. Ä.).
-            $colors[$token] = preg_match('/^#([0-9a-f]{6}|[0-9a-f]{3})$/i', trim($value)) ? strtolower(trim($value)) : $fallback;
+            $colors[$token] = self::toHex((string) ($vars[$var] ?? '')) ?? $fallback;
         }
 
         return [
+            // Kennung ändert sich mit jeder Farbänderung (auch beim eigenen Design) – die App erkennt so Updates.
+            'version' => substr(md5(json_encode($colors)), 0, 12),
             'id' => $theme->id(),
             'name' => $theme->name(),
             'dark' => str_contains($theme->bodyClasses(), 'dark') || $theme->id() === 'dark',

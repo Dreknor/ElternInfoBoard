@@ -252,6 +252,8 @@ class UserAppSettingsService
             'modules.care',
             'modules.care.default_tab',
             'modules.care.show_sick_on_dashboard',
+            // Push-Kategorien der Eltern-App (NativePushService): push.nachrichten, push.termine, push.messenger, push.hort
+            'push',
         ];
 
         // Check if path is in valid paths or is a child of an array path

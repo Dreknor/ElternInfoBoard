@@ -5,7 +5,11 @@ namespace Tests\Feature\API\V1;
 use App\Model\Arbeitsgemeinschaft;
 use App\Model\Conversation;
 use App\Model\Notification;
+use App\Model\UserAppSettings;
+use App\Services\App\AppTheme;
 use App\Services\Push\PushTarget;
+use App\Services\ThemeService;
+use App\Services\UserAppSettingsService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +18,36 @@ use Spatie\Permission\Models\Permission;
 
 class ExtrasTest extends AppApiTestCase
 {
+    /** @test */
+    public function bootstrap_delivers_current_theme_even_with_app_settings(): void
+    {
+        $user = $this->parentIn($this->group());
+        // So legen die App-Einstellungen (`/api/user/settings`) den Eintrag an: `theme` ist ein Objekt.
+        UserAppSettings::create(['user_id' => $user->id, 'settings' => UserAppSettingsService::getDefaultSettings()]);
+        Sanctum::actingAs($user);
+
+        $first = $this->getJson('/api/v1/bootstrap')->assertOk()->json('data.theme');
+
+        // Design auf der Webseite wechseln → neue Farben und neue Version
+        $theme = app(\App\Themes\ThemeRegistry::class)->all()->keys()->first(fn ($id) => $id !== $first['id']);
+        $this->mock(ThemeService::class, function ($mock) use ($theme) {
+            $mock->shouldReceive('resolveActive')->andReturn(app(\App\Themes\ThemeRegistry::class)->get($theme));
+        });
+        $second = $this->getJson('/api/v1/bootstrap')->assertOk()->json('data.theme');
+
+        $this->assertNotSame($first['version'], $second['version']);
+        $this->assertSame($theme, $second['id']);
+    }
+
+    /** @test */
+    public function theme_colors_accept_common_css_formats(): void
+    {
+        $this->assertSame('#aabbcc', AppTheme::toHex('#ABC'));
+        $this->assertSame('#425a8f', AppTheme::toHex('#425a8fcc'));
+        $this->assertSame('#0a141e', AppTheme::toHex('rgb(10, 20, 30)'));
+        $this->assertNull(AppTheme::toHex('linear-gradient(#fff, #000)'));
+    }
+
     /** @test */
     public function media_of_foreign_posts_cannot_be_downloaded_by_id_or_uuid(): void
     {
