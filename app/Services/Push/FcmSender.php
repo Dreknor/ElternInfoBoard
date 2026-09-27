@@ -49,12 +49,12 @@ class FcmSender
         return null;
     }
 
-    private function credentials(): array
+    public function credentials(): array
     {
-        return json_decode(file_get_contents(base_path(config('services.fcm.credentials'))), true);
+        return json_decode(file_get_contents(base_path(config('services.fcm.credentials'))), true) ?? [];
     }
 
-    private function accessToken(): string
+    public function accessToken(): string
     {
         return Cache::remember('fcm_access_token', now()->addMinutes(50), function () {
             $c = $this->credentials();

@@ -40,6 +40,17 @@ class ExtrasTest extends AppApiTestCase
     }
 
     /** @test */
+    public function push_check_reports_missing_firebase_setup(): void
+    {
+        config(['services.fcm.credentials' => null]);
+
+        $this->artisan('push:check')
+            ->expectsOutputToContain('App-API v1 vorhanden')
+            ->expectsOutputToContain('FCM_CREDENTIALS gesetzt (leer)')
+            ->assertFailed();
+    }
+
+    /** @test */
     public function theme_colors_accept_common_css_formats(): void
     {
         $this->assertSame('#aabbcc', AppTheme::toHex('#ABC'));
