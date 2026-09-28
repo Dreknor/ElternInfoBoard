@@ -42,6 +42,34 @@ class ParentViewAndPrivacyTest extends TestCase
     }
 
     #[Test]
+    public function settings_list_other_people_with_access_to_each_child(): void
+    {
+        [$a, $b, $child] = $this->coupleWithSharedChild();
+        $grandma = $this->makeParent();
+        $this->linkGuardian($child, $grandma, GuardianRelation::Grandparent);
+        $stranger = $this->makeParent();
+        $this->childFor([$stranger]);
+
+        $this->actingAs($a)->get('einstellungen')
+            ->assertOk()
+            ->assertSee('Weitere Personen mit Zugriff')
+            ->assertSee($b->name.' (Sorgeberechtigte/r) – sorgeberechtigt, erhält Informationen, darf krankmelden & Betreuung verwalten')
+            ->assertSee($grandma->name.' (Großelternteil) – erhält Informationen')
+            ->assertDontSee($stranger->name);
+    }
+
+    #[Test]
+    public function settings_list_legacy_partner_as_access_via_account_link(): void
+    {
+        $this->useResolver(FamilyResolver::MODE_LEGACY);
+        [$a, $b] = $this->coupleWithChildOfA();
+
+        $this->actingAs($a)->get('einstellungen')
+            ->assertOk()
+            ->assertSee($b->name.' – über die Kontoverknüpfung mit einem Elternteil');
+    }
+
+    #[Test]
     public function parent_can_report_wrong_link_but_not_for_foreign_child(): void
     {
         [$a, , $child] = $this->coupleWithSharedChild();

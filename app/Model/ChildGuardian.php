@@ -83,6 +83,16 @@ class ChildGuardian extends Pivot implements Auditable
         return (bool) $this->getAttribute($right->column());
     }
 
+    /** Rechte in Worten für Eltern-Ansichten, z. B. „sorgeberechtigt, erhält Informationen“. */
+    public function rightsLabel(): string
+    {
+        return collect([
+            $this->has_custody ? 'sorgeberechtigt' : null,
+            $this->receives_information ? 'erhält Informationen' : null,
+            $this->can_manage ? 'darf krankmelden & Betreuung verwalten' : null,
+        ])->filter()->implode(', ') ?: 'keine Rechte';
+    }
+
     /** Aus der früheren sorg2-Verknüpfung übernommen und noch nicht geprüft (E3). */
     public function isPendingReview(): bool
     {

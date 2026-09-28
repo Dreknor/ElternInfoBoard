@@ -434,11 +434,7 @@
                                                     @if($link)
                                                         <div>
                                                             <strong>{{ $link->relationType()->label() }}</strong>
-                                                            – {{ collect([
-                                                                $link->has_custody ? 'sorgeberechtigt' : null,
-                                                                $link->receives_information ? 'erhält Informationen' : null,
-                                                                $link->can_manage ? 'darf krankmelden & Betreuung verwalten' : null,
-                                                            ])->filter()->implode(', ') ?: 'keine Rechte' }}
+                                                            – {{ $link->rightsLabel() }}
                                                         </div>
                                                         <div style="color: var(--color-text-muted);">Herkunft: {{ $link->sourceLabel() }}</div>
                                                         @if($link->isPendingReview())
@@ -455,6 +451,19 @@
                                                     @else
                                                         <div style="color: var(--color-text-muted);">über ein verknüpftes Konto sichtbar</div>
                                                     @endif
+                                                </div>
+                                                {{-- Weitere Personen mit Zugriff auf das Kind (gleiche Logik wie die Rechteprüfung) --}}
+                                                @php $otherGuardians = app(\App\Services\Family\FamilyResolver::class)->guardiansFor($child)->where('id', '!=', $user->id)->sortBy('name'); @endphp
+                                                <div class="text-xs mt-2 pt-2 border-t" style="border-color: var(--color-card-border); color: var(--color-text-secondary);">
+                                                    <div class="font-medium mb-0.5" style="color: var(--color-text-primary);">
+                                                        <i class="fas fa-user-shield mr-1"></i>Weitere Personen mit Zugriff
+                                                    </div>
+                                                    @forelse($otherGuardians as $guardian)
+                                                        <div>{{ $guardian->name }} {{ $guardian->pivot ? '('.$guardian->pivot->relationType()->label().') – '.$guardian->pivot->rightsLabel() : '– über die Kontoverknüpfung mit einem Elternteil' }}</div>
+                                                    @empty
+                                                        <div style="color: var(--color-text-muted);">keine</div>
+                                                    @endforelse
+                                                    <div class="mt-0.5" style="color: var(--color-text-muted);">Außerdem Verwaltung und Betreuungspersonal der Schule im Rahmen ihrer Aufgaben.</div>
                                                 </div>
                                             </div>
                                             @can('manage', $child)

@@ -126,13 +126,26 @@ class CareController extends Controller implements HasMiddleware
             ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email', 'phone', 'publicPhone'])->keyBy('id')
             : collect();
 
+        // Kontakte je Kind für den Eltern-Tab (einfache Liste und Detailansicht)
+        $parentContacts = $childs->mapWithKeys(fn (Child $child) => [
+            $child->id => $child->parents
+                ->flatMap(fn (User $parent) => array_filter([
+                    $parent,
+                    $parent->sorg2 ? $sorg2Users->get($parent->sorg2) : null,
+                ]))
+                ->map(fn (User $contact) => $contact->only(['name', 'email', 'phone', 'publicPhone']))
+                ->unique('email')
+                ->values()
+                ->all(),
+        ]);
+
         return view('anwesenheit.index', [
             'children' => $childs,
             'groups' => $groups,
             'classes' => $classes,
             'careSettings' => $careSettings,
             'isFerientag' => $isFerientag,
-            'sorg2Users' => $sorg2Users,
+            'parentContacts' => $parentContacts,
             'schickzeitenSettings' => new SchickzeitenSetting,
         ]);
     }
