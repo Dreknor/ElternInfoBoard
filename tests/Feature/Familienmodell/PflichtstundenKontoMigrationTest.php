@@ -128,4 +128,25 @@ class PflichtstundenKontoMigrationTest extends TestCase
         $this->assertSame('custom', $legacy['rule_mode']);
         $this->assertSame(90, $legacy['opening_balance_minutes']);
     }
+
+    #[Test]
+    public function viewing_a_closed_period_does_not_overwrite_its_account(): void
+    {
+        $this->familyOf($this->c, $this->a, $this->b);
+        $this->useResolver(FamilyResolver::MODE_CHILD_CENTRIC);
+
+        $service = app(PflichtstundenFamilyService::class);
+        [$start, $end] = $service->resolvePeriod($this->periodYear - 1);
+
+        // Ansehen (Verwaltung/Export) eines abgelaufenen Zeitraums: Konto bleibt unverändert
+        $service->buildFamilySummaries($start, $end, true);
+        $this->assertSame(1, PflichtstundenFamilyAccount::where('period_year', $this->periodYear - 1)->count());
+        $account = PflichtstundenFamilyAccount::where('period_year', $this->periodYear - 1)->first();
+        $this->assertSame((string) $this->a->id, $account->family_key);
+        $this->assertSame(90, $account->closing_balance_minutes);
+
+        // Bewusster Jahresabschluss darf neu schreiben
+        $service->buildFamilySummaries($start, $end, true, false, true);
+        $this->assertSame(2, PflichtstundenFamilyAccount::where('period_year', $this->periodYear - 1)->count());
+    }
 }

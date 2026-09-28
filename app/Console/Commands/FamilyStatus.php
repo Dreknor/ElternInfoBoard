@@ -23,8 +23,12 @@ class FamilyStatus extends Command
     public function handle(FamilyResolver $resolver, FamilyBuilder $builder): int
     {
         $sorg2Users = DB::table('users')->whereNull('deleted_at')->whereNotNull('sorg2')->get(['id', 'sorg2', 'family_id']);
-        $familyById = DB::table('users')->whereIn('id', $sorg2Users->pluck('sorg2'))->pluck('family_id', 'id');
-        $unmigratedPairs = $sorg2Users->filter(fn ($u) => $u->family_id === null || $u->family_id !== ($familyById[$u->sorg2] ?? null))->count();
+        // Nur Partner mit aktivem Konto: Verweise auf gelöschte/fehlende Konten kann die
+        // Migration nicht auflösen – sie werden gemeldet, blockieren das Umschalten aber nicht.
+        $familyById = DB::table('users')->whereNull('deleted_at')->whereIn('id', $sorg2Users->pluck('sorg2'))->pluck('family_id', 'id');
+        $danglingLinks = $sorg2Users->filter(fn ($u) => ! $familyById->has($u->sorg2))->count();
+        $unmigratedPairs = $sorg2Users->filter(fn ($u) => $familyById->has($u->sorg2)
+            && ($u->family_id === null || $u->family_id !== $familyById[$u->sorg2]))->count();
 
         $usersWithChildrenWithoutFamily = DB::table('users')->whereNull('deleted_at')->whereNull('family_id')
             ->whereExists(fn ($q) => $q->from('child_user')->whereColumn('child_user.user_id', 'users.id'))->count();
@@ -44,6 +48,7 @@ class FamilyStatus extends Command
             ['Familien', Family::count()],
             ['Konten mit sorg2', $sorg2Users->count()],
             ['sorg2-Verknüpfungen ohne gemeinsame Familie', $unmigratedPairs],
+            ['sorg2-Verweise auf gelöschte Konten (nur Hinweis)', $danglingLinks],
             ['Personen mit Kind, aber ohne Familie', $usersWithChildrenWithoutFamily],
             ['Kinder ohne Bezugsperson', $childrenWithoutGuardian],
             ['Kinder ohne sorgeberechtigte Bezugsperson', $childrenWithoutCustody],
@@ -55,7 +60,7 @@ class FamilyStatus extends Command
 
         $blockers = [];
         if ($unmigratedPairs > 0) {
-            $blockers[] = 'sorg2-Verknüpfungen ohne Familie → php artisan family:migrate-from-sorg2';
+            $blockers[] = 'sorg2-Verknüpfungen ohne Familie → php artisan family:migrate-from-sorg2 (Konflikte laut Report manuell in der Familienverwaltung klären)';
         }
         if ($usersWithChildrenWithoutFamily > 0) {
             $blockers[] = 'Personen ohne Familie → php artisan family:rebuild --only-unassigned';

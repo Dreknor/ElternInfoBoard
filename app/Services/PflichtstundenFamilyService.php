@@ -183,8 +183,16 @@ class PflichtstundenFamilyService
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function buildFamilySummaries(Carbon $periodStart, Carbon $periodEnd, bool $persistAccounts = true, bool $includeTrashed = false): Collection
+    /**
+     * Bei abgelaufenen Zeiträumen werden vorhandene Konten nur mit
+     * $overwriteClosedAccounts überschrieben (Jahresabschluss, Versiegeln vor
+     * dem endgültigen Löschen). Sonst würde bereits das Ansehen eines alten
+     * Zeitraums abgerechnete Salden neu berechnen – etwa nach der Umstellung
+     * auf das Familienmodell mit anderer Familienzusammensetzung.
+     */
+    public function buildFamilySummaries(Carbon $periodStart, Carbon $periodEnd, bool $persistAccounts = true, bool $includeTrashed = false, bool $overwriteClosedAccounts = false): Collection
     {
+        $protectExisting = ! $overwriteClosedAccounts && $periodEnd->isPast();
         $periodYear = $this->periodStartYear($periodStart);
         $groups = $this->getFamilyGroups($includeTrashed, [$periodStart, $periodEnd]);
         $rules = PflichtstundenFamilyRule::query()
@@ -222,7 +230,7 @@ class PflichtstundenFamilyService
 
         $accountsToUpsert = [];
 
-        $summaries = $groups->map(function (array $group) use ($periodYear, $rules, $entriesByUser, $currentAccounts, $previousAccounts, &$accountsToUpsert) {
+        $summaries = $groups->map(function (array $group) use ($periodYear, $rules, $entriesByUser, $currentAccounts, $previousAccounts, $protectExisting, &$accountsToUpsert) {
             $familyEntries = collect();
             foreach ($group['user_ids'] as $userId) {
                 $familyEntries = $familyEntries->merge($entriesByUser->get($userId, collect()));
@@ -260,19 +268,21 @@ class PflichtstundenFamilyService
                 }
             }
 
-            $accountsToUpsert[] = [
-                'family_key' => $group['family_key'],
-                'period_year' => $periodYear,
-                'opening_balance_minutes' => $openingBalance,
-                'earned_minutes' => $approvedMinutes,
-                'required_minutes' => $requiredMinutes,
-                'closing_balance_minutes' => $closingBalance,
-                'carried_to_next_minutes' => $carryoverMinutes,
-                'carryover_applied' => $this->settings->konto_uebertrag_aktiv,
-                'last_calculated_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            if (! $protectExisting || $this->lookupForGroup($currentAccounts, $group) === null) {
+                $accountsToUpsert[] = [
+                    'family_key' => $group['family_key'],
+                    'period_year' => $periodYear,
+                    'opening_balance_minutes' => $openingBalance,
+                    'earned_minutes' => $approvedMinutes,
+                    'required_minutes' => $requiredMinutes,
+                    'closing_balance_minutes' => $closingBalance,
+                    'carried_to_next_minutes' => $carryoverMinutes,
+                    'carryover_applied' => $this->settings->konto_uebertrag_aktiv,
+                    'last_calculated_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
 
             return [
                 'family_key' => $group['family_key'],
@@ -479,7 +489,7 @@ class PflichtstundenFamilyService
 
         for ($year = $firstYear; $year <= $lastYear; $year++) {
             [$periodStart, $periodEnd] = $this->resolvePeriod($year);
-            $this->buildFamilySummaries($periodStart, $periodEnd, true, true);
+            $this->buildFamilySummaries($periodStart, $periodEnd, true, true, true);
         }
     }
 

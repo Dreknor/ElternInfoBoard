@@ -30,7 +30,7 @@ class PflichtstundenJahresabschlussCommand extends Command
 
         $this->info("Jahresabschluss Zeitraum {$periodStart->format('d.m.Y')} - {$periodEnd->format('d.m.Y')}");
 
-        $summaries = $service->buildFamilySummaries($periodStart, $periodEnd, ! $this->option('dry-run'));
+        $summaries = $service->buildFamilySummaries($periodStart, $periodEnd, ! $this->option('dry-run'), false, true);
 
         $rows = $summaries->map(function (array $summary) {
             return [
