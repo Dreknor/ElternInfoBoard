@@ -66,6 +66,21 @@
                 </div>
             </div>
         </div>
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-md-6 col-sm-12">
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="krankmeldung_notify_guardians" name="krankmeldung_notify_guardians" value="1"
+                           @if($notifySettings->krankmeldung_notify_guardians ?? true) checked @endif>
+                    <label class="custom-control-label" for="krankmeldung_notify_guardians">Weitere Berechtigte bei Krankmeldungen informieren</label>
+                </div>
+            </div>
+            <div class="col-md-6 col-sm-12 m-auto">
+                <div class="small">
+                    Meldet eine Bezugsperson ein Kind krank, erhalten die übrigen Bezugspersonen mit Zugriff auf Gesundheitsdaten
+                    (z. B. der getrennt lebende Elternteil) eine Benachrichtigung und E-Mail. So wird doppeltes Krankmelden vermieden.
+                </div>
+            </div>
+        </div>
 
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">

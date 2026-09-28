@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Krankmeldungen\GuardianNotifier;
 use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\Krankmeldung;
@@ -146,6 +147,11 @@ class KrankmeldungenController extends Controller
             Mail::to(config('mail.from.address'))
                 ->cc($authUser?->email)
                 ->queue(new Krankmeldung($authUser?->email ?? '', $authUser?->name ?? '', $name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease?->name, $attachments));
+
+            // Weitere Berechtigte des Kindes informieren (z. B. getrennt lebender Elternteil)
+            if ($authUser) {
+                app(GuardianNotifier::class)->notifyOthers($krankmeldung, $authUser);
+            }
 
             return redirect()->back()->with([
                 'type' => 'success',

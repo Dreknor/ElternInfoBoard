@@ -59,6 +59,9 @@ class editPostRequest extends FormRequest
             'read_receipt_deadline' => [
                 'nullable', 'date',
             ],
+            'read_receipt_scope' => [
+                'nullable', 'in:family,person,child',
+            ],
             'external' => [
                 'nullable', 'sometimes', 'boolean',
             ],

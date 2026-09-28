@@ -78,6 +78,9 @@ class KrankmeldungService
                 $krankmeldung->getMedia('files')->all(),
             ));
 
+        // Weitere Berechtigte des Kindes informieren (z. B. getrennt lebender Elternteil)
+        app(\App\Services\Krankmeldungen\GuardianNotifier::class)->notifyOthers($krankmeldung, $user);
+
         return $krankmeldung;
     }
 

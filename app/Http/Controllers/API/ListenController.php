@@ -38,7 +38,7 @@ class ListenController extends Controller implements HasMiddleware
     public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag)
     {
         try {
-            app(ListenService::class)->reserveEintrag($request->user(), $eintrag);
+            app(ListenService::class)->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null);
         } catch (HttpException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
@@ -92,7 +92,7 @@ class ListenController extends Controller implements HasMiddleware
         ]);
 
         try {
-            app(ListenService::class)->addEintrag($request->user(), Liste::findOrFail($liste), $request->eintragung);
+            app(ListenService::class)->addEintrag($request->user(), Liste::findOrFail($liste), $request->eintragung, $request->integer('child_id') ?: null);
         } catch (HttpException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
@@ -367,7 +367,7 @@ class ListenController extends Controller implements HasMiddleware
     public function reserveTermin(Request $request, $id)
     {
         try {
-            app(ListenService::class)->reserveTermin($request->user(), listen_termine::findOrFail($id));
+            app(ListenService::class)->reserveTermin($request->user(), listen_termine::findOrFail($id), $request->integer('child_id') ?: null);
         } catch (HttpException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }

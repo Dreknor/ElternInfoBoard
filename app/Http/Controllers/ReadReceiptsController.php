@@ -7,6 +7,7 @@ use App\Mail\RemindReadReceiptMail;
 use App\Model\Post;
 use App\Model\ReadReceipts;
 use App\Notifications\ReadReceiptReminderNotification;
+use App\Services\ReadReceiptStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -109,8 +110,8 @@ class ReadReceiptsController extends Controller
                     continue;
                 }
 
-                // Überspringe wenn ein Familienmitglied bereits bestätigt hat
-                if ($receipts->whereIn('user_id', $user->familyUserIds())->whereNotNull('confirmed_at')->isNotEmpty()) {
+                // Überspringe, wenn bereits erledigt (Familie, Person oder je Kind)
+                if (app(ReadReceiptStatusService::class)->isSatisfied($user, $post, $receipts->whereNotNull('confirmed_at')->keyBy('user_id'))) {
                     continue;
                 }
 
@@ -192,8 +193,8 @@ class ReadReceiptsController extends Controller
                 // Nur wenn Nutzer nicht bestätigt hat (confirmed_at null) und bereits erinnert wurde
                 if ($existingReceipt && is_null($existingReceipt->confirmed_at) && $existingReceipt->reminded_at && ! $existingReceipt->final_reminder_sent_at) {
 
-                    // Überspringe wenn ein Familienmitglied bereits bestätigt hat
-                    if ($receipts->whereIn('user_id', $user->familyUserIds())->whereNotNull('confirmed_at')->isNotEmpty()) {
+                    // Überspringe, wenn bereits erledigt (Familie, Person oder je Kind)
+                    if (app(ReadReceiptStatusService::class)->isSatisfied($user, $post, $receipts->whereNotNull('confirmed_at')->keyBy('user_id'))) {
                         continue;
                     }
 

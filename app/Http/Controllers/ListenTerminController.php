@@ -93,18 +93,6 @@ class ListenTerminController extends Controller
      */
     public function update(Request $request, listen_termine $listen_termine)
     {
-        // Optional: Termin für ein bestimmtes Kind buchen (z. B. Elterngespräch, FAM-16)
-        $child = null;
-        if ($request->filled('child_id')) {
-            $child = Child::find($request->integer('child_id'));
-            if (! $child || $request->user()->cannot('view', $child)) {
-                return redirect()->back()->with([
-                    'type' => 'danger',
-                    'Meldung' => 'Für dieses Kind kann kein Termin gebucht werden.',
-                ]);
-            }
-        }
-
         if ($listen_termine->reserviert_fuer !== null) {
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -112,15 +100,16 @@ class ListenTerminController extends Controller
             ]);
         }
 
-        // Ohne Mehrfachbuchung: ein Termin je Kind bzw. je Familie
-        $Eintragungen = $child
-            ? listen_termine::query()->where('listen_id', $listen_termine->liste->id)->where('child_id', $child->id)->get()
-            : $request->user()->getListenTermine()->where('listen_id', $listen_termine->liste->id);
-
-        if (count($Eintragungen) > 0 and $listen_termine->liste->multiple != 1) {
+        // Kind der Buchung (Pflicht bei Listen je Kind, sonst optional – z. B. Elterngespräch)
+        // und „nur ein Termin“ je Kind bzw. je Familie (gemeinsame Regeln mit der App-API)
+        $service = app(\App\Services\App\ListenService::class);
+        try {
+            $child = $service->resolveChild($request->user(), $listen_termine->liste, $request->integer('child_id') ?: null);
+            $service->assertLimit($request->user(), $listen_termine->liste, $child, 'termin');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => $child ? 'Für '.$child->first_name.' ist bereits ein Termin reserviert.' : 'Es kann nur ein Termin reserviert werden',
+                'Meldung' => $e->getMessage(),
             ]);
         }
 
@@ -144,7 +133,7 @@ class ListenTerminController extends Controller
      */
     public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {
-        if ($request->user()->isFamilyMember($listen_termine->reserviert_fuer) or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
+        if (app(\App\Services\App\ListenService::class)->mayCancel($request->user(), $listen_termine->reserviert_fuer ? (int) $listen_termine->reserviert_fuer : null, $listen_termine->child_id) or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
 
             // Email an Listenersteller
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)

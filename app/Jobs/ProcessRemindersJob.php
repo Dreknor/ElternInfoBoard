@@ -144,16 +144,14 @@ class ProcessRemindersJob implements ShouldQueue
             }
 
             $allUsers = $post->users->unique('id');
-            $confirmedUserIds = $post->receipts
-                ->whereNotNull('confirmed_at')
-                ->pluck('user_id')
-                ->toArray();
+            $readReceiptStatus = app(\App\Services\ReadReceiptStatusService::class);
+            $confirmedReceipts = $readReceiptStatus->confirmedReceipts($post);
 
             $usersToEscalate = [];
 
             foreach ($allUsers as $user) {
-                // Bestätigung durch User oder ein Familienmitglied genügt
-                if (array_intersect($user->familyUserIds(), $confirmedUserIds) !== []) {
+                // Erledigt je nach Modus: selbst, durch die Familie oder je Kind durch eine Bezugsperson
+                if ($readReceiptStatus->isSatisfied($user, $post, $confirmedReceipts)) {
                     continue;
                 }
 

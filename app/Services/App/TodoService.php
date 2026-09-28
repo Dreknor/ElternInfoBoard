@@ -26,11 +26,10 @@ class TodoService
             ->where(function ($q) {
                 $q->where('read_receipt', true)->orWhereHas('rueckmeldung', fn ($r) => $r->where('pflicht', true));
             })
-            ->get(['posts.id', 'posts.header', 'posts.read_receipt', 'posts.read_receipt_deadline']);
+            ->get(['posts.id', 'posts.header', 'posts.read_receipt', 'posts.read_receipt_deadline', 'posts.read_receipt_scope']);
 
         $postIds = $posts->pluck('id');
-        $confirmed = DB::table('read_receipts')->whereIn('post_id', $postIds)->whereIn('user_id', $family)
-            ->whereNotNull('confirmed_at')->pluck('post_id')->flip();
+        $confirmed = $postIds->diff(app(\App\Services\ReadReceiptStatusService::class)->openPostIds($user, $posts))->flip();
         $answered = DB::table('users_rueckmeldungen')->whereIn('post_id', $postIds)->whereIn('users_id', $family)
             ->whereNull('deleted_at')->pluck('post_id')->flip();
 

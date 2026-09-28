@@ -283,8 +283,12 @@ class DashboardController extends Controller implements HasMiddleware
                     ->whereDoesntHave('receipts', function ($q) use ($userId) {
                         $q->where('user_id', $userId)->whereNotNull('confirmed_at');
                     })
-                    ->select(['id', 'header', 'read_receipt_deadline', 'archiv_ab'])
+                    ->select(['id', 'header', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'archiv_ab'])
                     ->get();
+
+                // Offen nur, wenn nicht schon durch Familie bzw. Bezugsperson des Kindes erledigt
+                $openReceiptIds = app(\App\Services\ReadReceiptStatusService::class)->openPostIds(auth()->user(), $readReceiptPosts);
+                $readReceiptPosts = $readReceiptPosts->whereIn('id', $openReceiptIds);
 
                 foreach ($readReceiptPosts as $post) {
                     $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;

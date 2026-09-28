@@ -6,12 +6,17 @@ use App\Http\Requests\createListenEintragungsRequest;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\Notification;
+use App\Services\App\ListenService;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ListenEintragungenController extends Controller
 {
+    public function __construct(private readonly ListenService $listen) {}
+
     /**
      * @return RedirectResponse
      */
@@ -30,8 +35,18 @@ class ListenEintragungenController extends Controller
             'created_by' => auth()->id(),
         ]);
 
+        // Verwaltung legt freie Einträge an; Eltern tragen sich (ggf. für ein Kind) ein
         if (! auth()->user()->can('edit terminliste')) {
+            try {
+                $child = $this->listen->resolveChild($request->user(), $liste, $request->integer('child_id') ?: null);
+                if ($child !== null) {
+                    $this->listen->assertLimit($request->user(), $liste, $child, 'eintrag');
+                }
+            } catch (HttpException $e) {
+                return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+            }
             $eintrag->user_id = auth()->id();
+            $eintrag->child_id = $child?->id;
         }
 
         $eintrag->save();
@@ -49,11 +64,22 @@ class ListenEintragungenController extends Controller
      *
      * @throws Throwable
      */
-    public function update(Listen_Eintragungen $listen_eintragung)
+    public function update(Request $request, Listen_Eintragungen $listen_eintragung)
     {
         if ($listen_eintragung->user_id == null) {
+            $liste = $listen_eintragung->liste;
+            try {
+                $child = $this->listen->resolveChild($request->user(), $liste, $request->integer('child_id') ?: null);
+                if ($child !== null) {
+                    $this->listen->assertLimit($request->user(), $liste, $child, 'eintrag');
+                }
+            } catch (HttpException $e) {
+                return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+            }
+
             $listen_eintragung->updateOrFail([
                 'user_id' => auth()->id(),
+                'child_id' => $child?->id,
             ]);
 
             return redirect()->back()->with([
@@ -82,8 +108,9 @@ class ListenEintragungenController extends Controller
             ]);
         }
         $benachrichtigung = '';
-        if (! is_null($listen_eintragung->user_id) and auth()->user()->isFamilyMember($listen_eintragung->user_id)) {
+        if (! is_null($listen_eintragung->user_id) and $this->listen->mayCancel(auth()->user(), (int) $listen_eintragung->user_id, $listen_eintragung->child_id)) {
             $listen_eintragung->user_id = null;
+            $listen_eintragung->child_id = null;
 
             try {
                 $listen_eintragung->saveOrFail();
@@ -141,6 +168,7 @@ class ListenEintragungenController extends Controller
 
             try {
                 $listen_eintragung->user_id = null;
+                $listen_eintragung->child_id = null;
                 $listen_eintragung->saveOrFail();
             } catch (Throwable $e) {
                 Log::error($e->getMessage());

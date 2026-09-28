@@ -54,8 +54,8 @@ class PostPresenter
         return [
             'available_reactions' => Reaction::query()->pluck('name')->all(),
             'reactions' => $reactionRows->groupBy('reactable_id'),
-            'confirmed' => DB::table('read_receipts')->whereIn('post_id', $ids)->whereIn('user_id', $family)
-                ->whereNotNull('confirmed_at')->pluck('post_id')->flip(),
+            // Erledigt je nach Modus der Nachricht (Familie, Person, je Kind)
+            'confirmed' => $ids->diff(app(\App\Services\ReadReceiptStatusService::class)->openPostIds($this->user, $posts))->flip(),
             'responses' => UserRueckmeldungen::query()
                 ->whereIn('post_id', $ids)
                 ->whereIn('users_id', $family)
@@ -111,6 +111,8 @@ class PostPresenter
                 'required' => $readRequired,
                 'confirmed' => $readConfirmed,
                 'deadline' => $post->read_receipt_deadline?->toIso8601String(),
+                // additiv: "family" (ein Familienmitglied), "person" (jede Person) oder "child" (je Kind)
+                'scope' => $readRequired ? app(\App\Services\ReadReceiptStatusService::class)->effectiveScope($post) : null,
             ],
             'feedback' => $r ? [
                 'type' => $r->type,

@@ -20,11 +20,17 @@ class Liste extends Model
     use HasRelationships;
     use NotificationTrait;
 
+    /** Begrenzung „einmal buchbar“ je Familie (bisheriges Verhalten). */
+    public const BOOKING_FAMILY = 'family';
+
+    /** Begrenzung je Kind: jede Buchung/Eintragung gehört zu einem Kind („1 Helfer je Kind“). */
+    public const BOOKING_CHILD = 'child';
+
     protected $table = 'listen';
 
-    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'creates_pflichtstunden'];
+    protected $fillable = ['listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'booking_scope', 'make_new_entry', 'creates_pflichtstunden'];
 
-    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'make_new_entry', 'creates_pflichtstunden'];
+    protected $visible = ['id', 'listenname', 'type', 'comment', 'besitzer', 'visible_for_all', 'active', 'ende', 'duration', 'multiple', 'booking_scope', 'make_new_entry', 'creates_pflichtstunden'];
 
     protected function casts(): array
     {
@@ -36,6 +42,11 @@ class Liste extends Model
             'make_new_entry' => 'boolean',
             'creates_pflichtstunden' => 'boolean',
         ];
+    }
+
+    public function bookingPerChild(): bool
+    {
+        return $this->booking_scope === self::BOOKING_CHILD;
     }
 
     public function ersteller(): BelongsTo

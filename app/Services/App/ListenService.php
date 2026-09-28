@@ -3,6 +3,7 @@
 namespace App\Services\App;
 
 use App\Mail\TerminAbsageEltern;
+use App\Model\Child;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Model\listen_termine;
@@ -15,8 +16,10 @@ use Illuminate\Support\Facades\Notification;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Listen: Terminbuchungen und Eintragungen (B-31, B-32).
- * Buchungen sind atomar (keine Doppelbuchung) und gelten für die ganze Familie.
+ * Listen: Terminbuchungen und Eintragungen (B-31, B-32) – gemeinsam für Web und App-API.
+ * Buchungen sind atomar (keine Doppelbuchung). Die Begrenzung „einmal buchbar“ gilt je
+ * Familie oder – bei Listen mit booking_scope "child" – je Kind: dann gehört jede Buchung
+ * zu einem Kind, und alle Bezugspersonen des Kindes sehen sie.
  */
 class ListenService
 {
@@ -60,21 +63,103 @@ class ListenService
             ->count();
     }
 
-    public function reserveTermin(User $user, listen_termine $termin): listen_termine
+    /**
+     * Kinder, für die $user in dieser Liste buchen kann: eigene Kinder (FamilyResolver),
+     * bevorzugt die in den Gruppen der Liste.
+     *
+     * @return \Illuminate\Support\Collection<int, Child>
+     */
+    public function bookableChildren(User $user, Liste $liste): \Illuminate\Support\Collection
+    {
+        $children = Family::children($user)->loadMissing(['class', 'group'])->sortBy('first_name')->values();
+        $groupIds = $liste->groups()->pluck('groups.id')->all();
+        $inGroups = $children->filter(fn (Child $c) => in_array($c->class_id, $groupIds) || in_array($c->group_id, $groupIds))->values();
+
+        return $inGroups->isNotEmpty() ? $inGroups : $children;
+    }
+
+    /**
+     * Kind der Buchung bestimmen. Bei Listen je Kind ist ein Kind Pflicht (genau ein
+     * buchbares Kind wird automatisch gewählt); sonst ist es optional (z. B. Elterngespräch).
+     */
+    public function resolveChild(User $user, Liste $liste, ?int $childId): ?Child
+    {
+        if ($childId === null) {
+            if (! $liste->bookingPerChild()) {
+                return null;
+            }
+            $bookable = $this->bookableChildren($user, $liste);
+            if ($bookable->count() !== 1) {
+                throw new HttpException(422, $bookable->isEmpty()
+                    ? 'In dieser Liste wird je Kind gebucht – Ihrem Konto ist kein Kind zugeordnet.'
+                    : 'Bitte wählen Sie aus, für welches Kind Sie buchen.');
+            }
+
+            return $bookable->first();
+        }
+
+        $child = $this->bookableChildren($user, $liste)->firstWhere('id', $childId)
+            ?? Family::children($user)->firstWhere('id', $childId);
+        if (! $child) {
+            throw new HttpException(403, 'Für dieses Kind können Sie nicht buchen.');
+        }
+
+        return $child;
+    }
+
+    /** Buchungen je Kind (alle Bezugspersonen) bzw. je Familie prüfen. */
+    public function assertLimit(User $user, Liste $liste, ?Child $child, ?string $kind = null): void
+    {
+        if ($liste->multiple) {
+            return;
+        }
+
+        // Art der Buchung (Termin/Eintrag); Standard: Typ der Liste
+        $kind ??= $liste->type;
+
+        if ($child !== null) {
+            $query = $kind === 'termin'
+                ? listen_termine::where('listen_id', $liste->id)
+                : Listen_Eintragungen::where('listen_id', $liste->id);
+            if ($query->where('child_id', $child->id)->exists()) {
+                throw new HttpException(409, 'Für dieses Kind ist in dieser Liste bereits gebucht.');
+            }
+
+            return;
+        }
+
+        if ($kind === 'termin' && $this->familyTerminCount($user, $liste) > 0) {
+            throw new HttpException(409, 'Ihre Familie hat in dieser Liste bereits einen Termin gebucht.');
+        }
+        if ($kind === 'eintrag' && $this->familyEintragCount($user, $liste) > 0) {
+            throw new HttpException(409, 'Ihre Familie hat sich in dieser Liste bereits eingetragen.');
+        }
+    }
+
+    /** Darf $user eine Buchung (für ein Kind) absagen/austragen? */
+    public function mayCancel(User $user, ?int $bookedBy, ?int $childId): bool
+    {
+        if ($bookedBy !== null && in_array($bookedBy, Family::userIds($user), true)) {
+            return true;
+        }
+
+        return $childId !== null && Family::ownsChild($user, $childId);
+    }
+
+    public function reserveTermin(User $user, listen_termine $termin, ?int $childId = null): listen_termine
     {
         $liste = $termin->liste;
         $this->requireOpen($user, $liste, 'termin');
         if ($termin->termin && $termin->termin->isPast()) {
             throw new HttpException(410, 'Dieser Termin liegt in der Vergangenheit.');
         }
-        if (! $liste->multiple && $this->familyTerminCount($user, $liste) > 0) {
-            throw new HttpException(409, 'Ihre Familie hat in dieser Liste bereits einen Termin gebucht.');
-        }
+        $child = $this->resolveChild($user, $liste, $childId);
+        $this->assertLimit($user, $liste, $child, 'termin');
 
         // Atomar: nur buchen, wenn noch frei (verhindert Doppelbuchung bei gleichzeitigen Anfragen).
         $updated = listen_termine::where('id', $termin->id)
             ->whereNull('reserviert_fuer')
-            ->update(['reserviert_fuer' => $user->id, 'updated_at' => now()]);
+            ->update(['reserviert_fuer' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
         if ($updated === 0) {
             throw new HttpException(409, 'Dieser Termin wurde gerade von jemand anderem gebucht.');
         }
@@ -98,13 +183,13 @@ class ListenService
         $liste = $termin->liste;
         $allowed = $user->can('edit terminliste')
             || (int) $liste->besitzer === $user->id
-            || in_array((int) $termin->reserviert_fuer, Family::userIds($user), true);
+            || $this->mayCancel($user, $termin->reserviert_fuer ? (int) $termin->reserviert_fuer : null, $termin->child_id);
         if (! $termin->reserviert_fuer || ! $allowed) {
             throw new HttpException(403, 'Sie können diesen Termin nicht absagen.');
         }
 
         $booked = $termin->eingetragenePerson;
-        $termin->update(['reserviert_fuer' => null]);
+        $termin->update(['reserviert_fuer' => null, 'child_id' => null]);
 
         // Wie im Web: Listen-Ersteller und eingetragene Person informieren.
         foreach (array_filter([$liste->ersteller, $booked]) as $recipient) {
@@ -113,31 +198,30 @@ class ListenService
         }
     }
 
-    public function addEintrag(User $user, Liste $liste, string $text): Listen_Eintragungen
+    public function addEintrag(User $user, Liste $liste, string $text, ?int $childId = null): Listen_Eintragungen
     {
         $this->requireOpen($user, $liste, 'eintrag');
-        if (! $liste->multiple && $this->familyEintragCount($user, $liste) > 0) {
-            throw new HttpException(409, 'Ihre Familie hat sich in dieser Liste bereits eingetragen.');
-        }
+        $child = $this->resolveChild($user, $liste, $childId);
+        $this->assertLimit($user, $liste, $child, 'eintrag');
 
         return Listen_Eintragungen::create([
             'listen_id' => $liste->id,
             'eintragung' => $text,
             'user_id' => $user->id,
+            'child_id' => $child?->id,
             'created_by' => $user->id,
         ]);
     }
 
-    public function reserveEintrag(User $user, Listen_Eintragungen $eintrag): void
+    public function reserveEintrag(User $user, Listen_Eintragungen $eintrag, ?int $childId = null): void
     {
         $liste = $eintrag->liste;
         $this->requireOpen($user, $liste, 'eintrag');
-        if (! $liste->multiple && $this->familyEintragCount($user, $liste) > 0) {
-            throw new HttpException(409, 'Ihre Familie hat sich in dieser Liste bereits eingetragen.');
-        }
+        $child = $this->resolveChild($user, $liste, $childId);
+        $this->assertLimit($user, $liste, $child, 'eintrag');
         $updated = Listen_Eintragungen::where('id', $eintrag->id)
             ->whereNull('user_id')
-            ->update(['user_id' => $user->id, 'updated_at' => now()]);
+            ->update(['user_id' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
         if ($updated === 0) {
             throw new HttpException(409, 'Dieser Eintrag wurde gerade von jemand anderem übernommen.');
         }
@@ -145,14 +229,14 @@ class ListenService
 
     public function cancelEintrag(User $user, Listen_Eintragungen $eintrag): void
     {
-        if (! in_array((int) $eintrag->user_id, Family::userIds($user), true)) {
+        if (! $eintrag->user_id || ! $this->mayCancel($user, (int) $eintrag->user_id, $eintrag->child_id)) {
             throw new HttpException(403, 'Sie können diesen Eintrag nicht austragen.');
         }
         // Selbst angelegte Einträge löschen, vorgegebene wieder freigeben.
         if (in_array((int) $eintrag->created_by, Family::userIds($user), true)) {
             $eintrag->delete();
         } else {
-            $eintrag->update(['user_id' => null]);
+            $eintrag->update(['user_id' => null, 'child_id' => null]);
         }
     }
 }

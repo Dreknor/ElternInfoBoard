@@ -23,6 +23,9 @@ class NotifySetting extends Settings
 
     public int $schickzeiten_report_weekday;
 
+    /** Bei Krankmeldungen die weiteren Berechtigten des Kindes informieren */
+    public bool $krankmeldung_notify_guardians;
+
     public static function group(): string
     {
         return 'notify_setting';

@@ -17,15 +17,19 @@
         ->orderBy('termin')
         ->get();
 
-    // Filtere nach Nutzer
-    $userTermine = $termine->whereIn('reserviert_fuer', auth()->user()->familyUserIds());
+    // Eigene Buchungen: Familie bzw. (bei Buchung je Kind) eigene Kinder
+    $myChildIds = \App\Services\App\Family::childIds(auth()->user());
+    $userTermine = $termine->filter(fn ($t) => in_array($t->reserviert_fuer, auth()->user()->familyUserIds())
+        || ($t->child_id && in_array($t->child_id, $myChildIds)));
 
-    // Rückmeldung pro Kind: Termin je betroffenem Kind (z. B. Elterngespräch, FAM-16)
-    $bookingChildren = app(\App\Services\Rueckmeldungen\RueckmeldungStatusService::class)
-        ->targetsFor(auth()->user(), $nachricht)
-        ->filter(fn ($target) => $target->isChild())
-        ->map(fn ($target) => $target->child)
-        ->values();
+    // Termin je Kind: Liste „je Kind“ oder Rückmeldung pro Kind (z. B. Elterngespräch, FAM-16)
+    $bookingChildren = $liste->bookingPerChild()
+        ? app(\App\Services\App\ListenService::class)->bookableChildren(auth()->user(), $liste)
+        : app(\App\Services\Rueckmeldungen\RueckmeldungStatusService::class)
+            ->targetsFor(auth()->user(), $nachricht)
+            ->filter(fn ($target) => $target->isChild())
+            ->map(fn ($target) => $target->child)
+            ->values();
     $bookedChildIds = $termine->whereNotNull('child_id')->pluck('child_id')->all();
     $openChildren = $liste->multiple ? $bookingChildren : $bookingChildren->reject(fn ($child) => in_array($child->id, $bookedChildIds));
 

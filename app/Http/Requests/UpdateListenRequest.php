@@ -32,6 +32,10 @@ class UpdateListenRequest extends FormRequest
                 'required',
                 'boolean',
             ],
+            'booking_scope' => [
+                'nullable',
+                'in:family,child',
+            ],
             'active' => [
                 'required',
                 'boolean',

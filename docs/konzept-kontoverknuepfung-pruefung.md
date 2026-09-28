@@ -85,9 +85,9 @@ Rechte am Kind über `child_user` laufen, nicht über die Familie.
 | Modul | Spezifikation | Stand |
 |---|---|---|
 | Pflichtstunden | Soll je Kind oder Familie; Handelnder = `user_id` | umgesetzt: Basis Familie/Kind, geteilte Kinder getrennt/anteilig/zusammen, Obergrenze, Gruppenfilter. Mit der Kontoführung aus `dev` (ermäßigt/individuell, Übertrag) zusammengeführt. **Zusätzlich:** abgelaufene Zeiträume werden beim Ansehen nicht mehr neu berechnet, sonst hätte die Umstellung abgerechnete Salden verändert. |
-| Listen / Termine | Eintrag mit `user_id` + `child_id`, „1 Helfer je Kind“ | Terminlisten: Buchung je Kind (`listen_termine.child_id`) umgesetzt. **Offen:** Eintragungslisten (`listen_eintragungen`) je Kind. |
-| Rückmeldungen | Modus A je Kind (ein Sorgeberechtigter reicht), Modus B je Elternteil | umgesetzt als `scope = child` bzw. `person`; `family` = bisheriges Verhalten. **Offen:** Lesebestätigungen gelten weiter je Familie, nicht je Kind/Person. |
-| Krankmeldungen | an `child_id` gebunden, Sicht für alle Berechtigten, optional Info an anderen Elternteil | Bindung und Sicht umgesetzt (Policy `reportSick`, `viewHealth`). **Offen:** Benachrichtigung des anderen Elternteils. |
+| Listen / Termine | Eintrag mit `user_id` + `child_id`, „1 Helfer je Kind“ | umgesetzt: Einstellung „Begrenzung je Familie / je Kind“ an der Liste; bei „je Kind“ gehört jede Buchung und Eintragung zu einem Kind, das Limit gilt über alle Bezugspersonen (Web, API, App). |
+| Rückmeldungen | Modus A je Kind (ein Sorgeberechtigter reicht), Modus B je Elternteil | umgesetzt als `scope = child` bzw. `person`; `family` = bisheriges Verhalten. Lesebestätigungen ebenso wählbar (`read_receipt_scope` = `family` / `person` / `child`). |
+| Krankmeldungen | an `child_id` gebunden, Sicht für alle Berechtigten, optional Info an anderen Elternteil | umgesetzt (Policy `reportSick`, `viewHealth`); weitere Berechtigte erhalten Glocke, App-Push (ohne Kind-/Gesundheitsdaten) und E-Mail – abschaltbar unter Einstellungen › Benachrichtigungen. |
 | Import | zwei Konten, Mandate, Abgleich per E-Mail | umgesetzt: Schüler-Import (eine Zeile je Kind, Schüler-ID, bis zu drei Bezugspersonen, Vorschau vor dem Speichern, Abgänger); Eltern-/Aufnahme-Import bilden Familien statt `sorg2`. |
 
 ### 2.5 Recht, Audit, Formulare (Spez. §4–5, Arbeitspakete 3–5)
@@ -204,11 +204,11 @@ Lokale Datenbank (420 aktive Konten, 334 Kinder, 549 Kind-Verknüpfungen,
 
 ## 7. Offene Punkte
 
-| Priorität | Punkt |
-|---|---|
-| hoch | App: Antwortziele je Kind (`feedback.targets`, `child_id`) |
-| mittel | Eintragungslisten „1 Eintrag je Kind“ |
-| mittel | Lesebestätigung wahlweise je Kind oder je Person |
-| mittel | Krankmeldung: optionale Info an weitere Berechtigte |
-| niedrig | Konzeptdokumente `docs/kind-zentriertes-familienmodell-konzept.md` und `docs/ucs-kelvin-integration-konzept.md` fehlen bzw. sind leer, werden aber im Code referenziert |
-| später | Digitale Formulare (eigenes Projekt) |
+| Priorität | Punkt | Stand |
+|---|---|---|
+| hoch | App: Antwortziele je Kind (`feedback.targets`, `child_id`) | umgesetzt in `elterninfo_app` (Commit `c913dde`), Version muss noch veröffentlicht werden |
+| mittel | Eintragungslisten „1 Eintrag je Kind“ | umgesetzt (`listen.booking_scope`) |
+| mittel | Lesebestätigung je Kind oder je Person | umgesetzt (`posts.read_receipt_scope`, `ReadReceiptStatusService`) |
+| mittel | Krankmeldung: Info an weitere Berechtigte | umgesetzt (`GuardianNotifier`, Setting `krankmeldung_notify_guardians`) |
+| niedrig | Konzeptdokumente | `docs/kind-zentriertes-familienmodell-konzept.md`, `docs/ucs-kelvin-integration-konzept.md` |
+| später | Digitale Formulare | eigenes Projekt |

@@ -301,6 +301,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'krankmeldungen_report_time' => 'required|date_format:H:i',
                     'schickzeiten_report_hour' => 'required|numeric',
                     'schickzeiten_report_weekday' => 'required|numeric',
+                    'krankmeldung_notify_guardians' => 'nullable|boolean',
                 ]);
 
                 $krankmeldungen_report_time = explode(':', $validated['krankmeldungen_report_time']);
@@ -313,6 +314,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $notifySettings->krankmeldungen_report_minute = $krankmeldungen_report_time[1];
                 $notifySettings->schickzeiten_report_hour = $validated['schickzeiten_report_hour'];
                 $notifySettings->schickzeiten_report_weekday = $validated['schickzeiten_report_weekday'];
+                $notifySettings->krankmeldung_notify_guardians = $request->boolean('krankmeldung_notify_guardians');
                 $notifySettings->save();
 
                 break;
