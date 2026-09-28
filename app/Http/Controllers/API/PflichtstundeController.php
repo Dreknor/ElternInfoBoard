@@ -136,7 +136,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
             ->orderBy('start', 'desc')
             ->get();
 
-        $summaries = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $summaries = $this->cachedSummaries($periodStart, $periodEnd);
         $currentSummary = $summaries->first(fn (array $summary) => in_array($user->id, $summary['user_ids']));
 
         return response()->json([
@@ -456,7 +456,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     private function calculateParentStats(\App\Model\User $currentUser)
     {
         [$periodStart, $periodEnd] = $this->familyService->resolvePeriod(null);
-        $summaries = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $summaries = $this->cachedSummaries($periodStart, $periodEnd);
         $sorted = $summaries->sortByDesc('percent')->values();
         $current = $summaries->first(fn (array $summary) => in_array($currentUser->id, $summary['user_ids']));
 
@@ -494,5 +494,20 @@ class PflichtstundeController extends Controller implements HasMiddleware
                 'children_counted' => count($current['child_ids'] ?? []),
             ] : null,
         ];
+    }
+
+    /**
+     * Familienauswertung für die App: 10 Minuten zwischengespeichert und ohne Schreibzugriff (B-50).
+     * Vorher wurden bei jedem Aufruf alle Familien berechnet und alle Konten neu gespeichert.
+     * Neue/geänderte Pflichtstunden verwerfen den Cache (Pflichtstunde::booted).
+     */
+    private function cachedSummaries(\Carbon\Carbon $periodStart, \Carbon\Carbon $periodEnd): \Illuminate\Support\Collection
+    {
+        $version = (int) \Illuminate\Support\Facades\Cache::get('pflichtstunden_summaries_version', 0);
+        $key = 'pflichtstunden_summaries_'.$periodStart->toDateString().'_v'.$version;
+
+        return \Illuminate\Support\Facades\Cache::remember($key, now()->addMinutes(10), fn () => $this->familyService
+            ->buildFamilySummaries($periodStart, $periodEnd, false)
+            ->map(fn (array $summary) => collect($summary)->except(['user', 'partner', 'entries'])->all()));
     }
 }

@@ -124,7 +124,7 @@ class PostReportController extends Controller implements HasMiddleware
     /**
      * Benachrichtige alle Admins über eine neue Beitragsmeldung.
      */
-    private function notifyAdmins(PostReport $report, Post $post, User $reporter): void
+    public function notifyAdmins(PostReport $report, Post $post, User $reporter): void
     {
         $admins = User::permission('edit settings')
             ->where('is_active', true)

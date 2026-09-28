@@ -56,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
+        Gate::policy(\App\Model\Post::class, \App\Policies\PostPolicy::class);
 
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);

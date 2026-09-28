@@ -157,4 +157,23 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
             ->where('responder_id', $user->id)
             ->where('responder_type', get_class($user))->first()?->name;
     }
+
+    /**
+     * Verkleinerte Bildfassungen für die App (B-12): Listenvorschau und Detailansicht.
+     * Originale bleiben unverändert; ältere Bilder ohne Vorschau werden im Original geliefert.
+     */
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    {
+        if ($media && ! str_starts_with((string) $media->mime_type, 'image/')) {
+            return;
+        }
+
+        $this->addMediaConversion('thumb')
+            ->width(400)
+            ->performOnCollections('images', 'header');
+
+        $this->addMediaConversion('preview')
+            ->width(1200)
+            ->performOnCollections('images', 'header');
+    }
 }

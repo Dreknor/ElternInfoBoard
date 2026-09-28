@@ -103,6 +103,11 @@ class CommentController extends Controller
             return response()->json(['error' => 'User not allowed to comment on this post'], 403);
         }
 
+        // Kommentare nur, wenn der Beitrag sie erlaubt (B-14)
+        if ($user->cannot('comment', $post)) {
+            return response()->json(['error' => 'Comments disabled', 'message' => 'Kommentare sind für diesen Beitrag nicht aktiviert.'], 403);
+        }
+
         // Validate request
         $request->validate([
             'body' => 'required|string|max:5000',

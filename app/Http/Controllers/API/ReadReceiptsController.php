@@ -43,6 +43,11 @@ class ReadReceiptsController extends Controller
 
         $user = $request->user();
 
+        // Nur für Beiträge, die der Nutzer sehen darf (B-13).
+        if ($user->cannot('view', $post)) {
+            return response()->json(['success' => false, 'message' => 'Keine Berechtigung für diesen Beitrag'], 403);
+        }
+
         try {
             // Create a new read receipt if it doesn't already exist
             $receipt = ReadReceipts::firstOrCreate(

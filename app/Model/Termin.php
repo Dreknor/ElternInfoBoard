@@ -40,11 +40,8 @@ class Termin extends Model implements Auditable
 
     public function getfullDayAttribute($value): bool
     {
-        if (is_null($value) or $value = false) {
-            return false;
-        }
-
-        return true;
+        // Vorher `$value = false` (Zuweisung) – dadurch galt jeder Termin mit gespeichertem Wert als ganztägig.
+        return (bool) $value;
     }
 
     public function groups(): BelongsToMany

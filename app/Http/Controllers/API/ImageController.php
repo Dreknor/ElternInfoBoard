@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Services\App\MediaAccess;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -35,39 +36,7 @@ class ImageController extends Controller implements HasMiddleware
     {
         $media = Media::where('uuid', $uuid)->firstOrFail();
 
-        // Zugriffsschutz: Prüfen ob der authentifizierte User Zugriff auf diese Datei hat.
-        // Dateien gehören zu Gruppen; der User muss Mitglied der Gruppe sein
-        // oder die Berechtigung 'upload files' (Admin) haben.
-        $user = $request->user();
-
-        if (! $user->can('upload files')) {
-            // Prüfen ob die Datei zu einer Gruppe gehört, in der der User Mitglied ist
-            $model = $media->model;
-            $userGroupIds = $user->groups()->pluck('groups.id');
-
-            $hasAccess = false;
-
-            if ($model instanceof \App\Model\Group) {
-                $hasAccess = $userGroupIds->contains($model->id);
-            } elseif ($model && method_exists($model, 'groups')) {
-                // Post, Rueckmeldung etc. – über zugehörige Gruppen prüfen
-                $modelGroupIds = $model->groups()->pluck('groups.id');
-                $hasAccess = $userGroupIds->intersect($modelGroupIds)->isNotEmpty();
-            } else {
-                // Fallback: Für unbekannte Model-Typen Zugriff verweigern
-                $hasAccess = false;
-            }
-
-            if (! $hasAccess) {
-                abort(403, 'Zugriff verweigert.');
-            }
-        }
-
-        return response()->file($media->getPath(), [
-            'Content-Type' => $media->mime_type,
-            'content-transfer-encoding' => 'binary',
-        ]);
-
+        return $this->serve($request, $media);
     }
 
     /**
@@ -79,15 +48,32 @@ class ImageController extends Controller implements HasMiddleware
      *
      * @urlParam media_id required The id of the file
      *
+     * @queryParam size Vorschaugröße für Bilder: thumb (400 px) oder preview (1200 px). Example: thumb
+     *
      * @responseField file The file
      *
-     * @return Media|BinaryFileResponse
+     * @return BinaryFileResponse
      */
-    public function getImage(Media $media_id)
+    public function getImage(Request $request, Media $media_id)
     {
-        return response()->file($media_id->getPath(), [
-            'Content-Type' => $media_id->mime_type,
-            'content-transfer-encoding' => 'binary',
+        return $this->serve($request, $media_id);
+    }
+
+    /**
+     * Zugriff prüfen (B-07) und – falls angefragt und vorhanden – eine verkleinerte Fassung liefern (B-12).
+     */
+    private function serve(Request $request, Media $media): BinaryFileResponse
+    {
+        abort_unless(MediaAccess::canView($request->user(), $media), 403, 'Zugriff verweigert.');
+
+        $size = $request->query('size');
+        $path = in_array($size, ['thumb', 'preview'], true) && $media->hasGeneratedConversion($size)
+            ? $media->getPath($size)
+            : $media->getPath();
+
+        return response()->file($path, [
+            'Content-Type' => $path === $media->getPath() ? $media->mime_type : (mime_content_type($path) ?: $media->mime_type),
+            'Cache-Control' => 'private, max-age=86400',
         ]);
     }
 }

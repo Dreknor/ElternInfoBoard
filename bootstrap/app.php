@@ -35,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'mark_passwordless_login' => \App\Http\Middleware\MarkPasswordlessLogin::class,
             'password_expired' => \App\Http\Middleware\PasswordExpired::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'idempotency' => \App\Http\Middleware\IdempotencyKey::class,
+            'etag' => \App\Http\Middleware\ETagResponses::class,
+            'api.password' => \App\Http\Middleware\ApiPasswordChangeRequired::class,
         ]);
 
         $middleware->priority([
@@ -57,6 +60,30 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Nicht authentifiziert.',
                 ], 401);
             }
+        });
+
+        /*
+         | App-API v1: deutsche Meldungen für fehlende Rechte und unbekannte Datensätze.
+         */
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e, \Illuminate\Http\Request $request) {
+            if (! $request->is('api/v1/*')) {
+                return null;
+            }
+            $status = $e->getStatusCode();
+            $message = $e->getMessage();
+            $defaults = [
+                403 => 'Dafür fehlt Ihnen die Berechtigung.',
+                404 => 'Nicht gefunden.',
+                409 => 'Das ist bereits erledigt oder wurde inzwischen geändert.',
+                410 => 'Die Frist ist abgelaufen.',
+                422 => 'Bitte überprüfen Sie Ihre Eingaben.',
+            ];
+            // Englische Standardtexte (Policies, Model-Binding) durch deutsche ersetzen.
+            if ($message === '' || $message === 'This action is unauthorized.' || str_starts_with($message, 'No query results')) {
+                $message = $defaults[$status] ?? 'Die Anfrage konnte nicht ausgeführt werden.';
+            }
+
+            return response()->json(['message' => $message], $status, $e->getHeaders());
         });
 
         /*
