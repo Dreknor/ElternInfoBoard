@@ -39,7 +39,7 @@ class ProcessReinigungRemindersJob implements ShouldQueue
         $reinigungen = Reinigung::query()
             ->whereDate('datum', $targetDate->toDateString())
             ->whereNotNull('users_id')
-            ->with('user.sorgeberechtigter2')
+            ->with('user')
             ->get();
 
         foreach ($reinigungen as $reinigung) {
@@ -47,10 +47,10 @@ class ProcessReinigungRemindersJob implements ShouldQueue
                 continue;
             }
 
-            $this->remindUser($reinigung->user, $reinigung, $settings);
-
-            if (! is_null($reinigung->user->sorgeberechtigter2)) {
-                $this->remindUser($reinigung->user->sorgeberechtigter2, $reinigung, $settings);
+            // Alle Familienmitglieder erinnern (FamilyResolver: legacy = sorg2-Partner)
+            $familyMembers = User::query()->whereIn('id', $reinigung->user->familyUserIds())->get();
+            foreach ($familyMembers as $member) {
+                $this->remindUser($member, $reinigung, $settings);
             }
         }
     }

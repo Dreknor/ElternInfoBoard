@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\GuardianRight;
 use App\Mail\ReminderEscalationMail;
 use App\Mail\ReminderMail;
 use App\Model\ChildCheckIn;
@@ -13,6 +14,8 @@ use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Model\UserRueckmeldungen;
 use App\Notifications\ReminderPushNotification;
+use App\Services\Family\FamilyResolver;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Settings\ReminderSetting;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -77,25 +80,12 @@ class ProcessRemindersJob implements ShouldQueue
                 continue;
             }
 
-            $allUsers = $post->users->unique('id');
+            // Offene Empfänger je Scope (Person, Familie, Kind – E2/E7)
+            $openRecipients = app(RueckmeldungStatusService::class)->openRecipients($post);
             $usersToEscalate = [];
 
-            foreach ($allUsers as $user) {
-                // Prüfe ob User bereits geantwortet hat
-                $hasResponded = UserRueckmeldungen::where('post_id', $post->id)
-                    ->where('users_id', $user->id)
-                    ->exists();
-
-                // Prüfe ob Sorg2-Partner bereits geantwortet hat
-                if (!$hasResponded && $user->sorg2) {
-                    $hasResponded = UserRueckmeldungen::where('post_id', $post->id)
-                        ->where('users_id', $user->sorg2)
-                        ->exists();
-                }
-
-                if ($hasResponded) {
-                    continue;
-                }
+            foreach ($openRecipients as $open) {
+                $user = $open['user'];
 
                 // Bestimme die passende Erinnerungsstufe
                 $level = $this->determineLevel($settings, $deadline, $now);
@@ -162,12 +152,8 @@ class ProcessRemindersJob implements ShouldQueue
             $usersToEscalate = [];
 
             foreach ($allUsers as $user) {
-                if (in_array($user->id, $confirmedUserIds)) {
-                    continue;
-                }
-
-                // Prüfe ob Sorg2-Partner bereits bestätigt hat
-                if ($user->sorg2 && in_array($user->sorg2, $confirmedUserIds)) {
+                // Bestätigung durch User oder ein Familienmitglied genügt
+                if (array_intersect($user->familyUserIds(), $confirmedUserIds) !== []) {
                     continue;
                 }
 
@@ -214,16 +200,24 @@ class ProcessRemindersJob implements ShouldQueue
 
         // Alle unbeantworteten Anwesenheitsabfragen innerhalb des Erinnerungsfensters
         $windowEnd = $now->copy()->addDays($settings->level1_days_before_deadline)->toDateString();
+        $resolver = app(FamilyResolver::class);
+        $guardiansByChild = [];
         $openCheckIns = ChildCheckIn::query()
             ->whereNull('should_be')
             ->whereNotNull('lock_at')
             ->where('lock_at', '>=', $now->toDateString())
             ->where('lock_at', '<=', $windowEnd)
-            ->with('child.parents')
+            ->with('child')
             ->get()
-            ->groupBy(function ($checkIn) {
-                // Gruppiere nach Elternteil + lock_at Datum
-                $parentIds = $checkIn->child?->parents?->pluck('id')->join('_') ?? 'none';
+            ->groupBy(function ($checkIn) use ($resolver, &$guardiansByChild) {
+                // Gruppiere nach Bezugspersonen (mit Verwaltungsrecht) + lock_at Datum
+                if ($checkIn->child) {
+                    $guardiansByChild[$checkIn->child_id] ??= $resolver->guardiansFor($checkIn->child, GuardianRight::Manage);
+                }
+                $parentIds = isset($guardiansByChild[$checkIn->child_id])
+                    ? $guardiansByChild[$checkIn->child_id]->pluck('id')->sort()->join('_')
+                    : 'none';
+
                 return $parentIds . '_' . $checkIn->lock_at->format('Y-m-d');
             });
 
@@ -231,11 +225,11 @@ class ProcessRemindersJob implements ShouldQueue
             $firstCheckIn = $checkIns->first();
             $deadline = $firstCheckIn->lock_at;
 
-            if (!$firstCheckIn->child || !$firstCheckIn->child->parents) {
+            if (!$firstCheckIn->child || empty($guardiansByChild[$firstCheckIn->child_id])) {
                 continue;
             }
 
-            $parents = $firstCheckIn->child->parents;
+            $parents = $guardiansByChild[$firstCheckIn->child_id];
 
             foreach ($parents as $parent) {
                 $level = $this->determineLevel($settings, $deadline, $now);

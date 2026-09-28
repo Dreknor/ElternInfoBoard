@@ -477,6 +477,7 @@
                                                                 Ja
                                                             </option>
                                                         </select>
+                                                        @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => $rueckmeldung?->exists ? ($rueckmeldung->scope ?? 'family') : 'child'])
                                                     </div>
                                                 </div>
                                             </div>
@@ -856,6 +857,7 @@
                                                 <option value="0" selected>Nein</option>
                                                 <option value="1">Ja</option>
                                             </select>
+                                            @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => 'child'])
                                         </div>
                                     </div>
                                 </div>

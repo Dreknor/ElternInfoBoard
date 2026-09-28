@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\UserRueckmeldung as UserRueckmeldungMail;
 use App\Model\Post;
 use App\Model\UserRueckmeldungen;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -16,12 +17,33 @@ use Illuminate\Support\Facades\Mail;
  */
 class UserRueckmeldungenController extends Controller
 {
+    public function __construct(private readonly RueckmeldungStatusService $status) {}
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, \App\Services\Rueckmeldungen\RueckmeldungTarget>  $targets
+     */
+    private function targetsPayload($targets): array
+    {
+        return $targets->map(fn ($target) => [
+            'type' => $target->isChild() ? 'child' : $target->scope,
+            'child_id' => $target->child?->id,
+            'child_name' => $target->label(),
+            'answered' => $target->isAnswered(),
+            'answered_by' => $target->answeredBy(),
+            'can_answer' => $target->canAnswer,
+        ])->values()->all();
+    }
+
     /**
      * Get existing user feedback for a post.
      *
      * @group Rückmeldungen
      *
      * @urlParam post_id integer required The ID of the post. Example: 1
+     *
+     * @responseField scope string Wirksamer Scope der Rückmeldung: child, family oder person.
+     * @responseField targets array Antwortziele des Users: type (child|family|person), child_id, child_name, answered, answered_by, can_answer.
+     * @responseField data array Sichtbare Antworten (eigene Kinder bzw. Familie/Person).
      *
      * @response 200 {
      *   "success": true,
@@ -87,22 +109,19 @@ class UserRueckmeldungenController extends Controller
             ], 403);
         }
 
-        // Collect user IDs: authenticated user and sorgeberechtigter2
-        $userIds = [$user->id];
-        if (! is_null($user->sorg2)) {
-            $userIds[] = $user->sorg2;
-        }
+        // Antwortziele (pro Kind bzw. Familie/Person) und sichtbare Antworten
+        $targets = $this->status->targetsFor($user, $post);
 
-        // Get all feedback from the user and sorgeberechtigter2 for this post
         $rueckmeldungen = UserRueckmeldungen::query()
-            ->where('post_id', $post_id)
-            ->whereIn('users_id', $userIds)
+            ->whereIn('id', $targets->flatMap(fn ($t) => $t->answers->pluck('id'))->all())
             ->with('user:id,name,email')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
             'success' => true,
+            'scope' => $this->status->effectiveScope($post->rueckmeldung),
+            'targets' => $this->targetsPayload($targets),
             'data' => $rueckmeldungen,
         ], 200);
     }
@@ -114,6 +133,7 @@ class UserRueckmeldungenController extends Controller
      *
      * @bodyParam post_id integer required The ID of the post to which the feedback is related. Example: 1
      * @bodyParam text string required The feedback text. Example: "Ich nehme teil"
+     * @bodyParam child_id integer Kind, für das geantwortet wird (Pflicht bei Rückmeldung pro Kind mit mehreren Kindern; ohne Angabe wird bei genau einem Kind dieses verwendet, sonst 422). Nur Sorgeberechtigte (403). Example: 5
      *
      * @response 200 {
      *   "success": true,
@@ -155,6 +175,7 @@ class UserRueckmeldungenController extends Controller
         $request->validate([
             'post_id' => 'required|integer|exists:posts,id',
             'text' => 'required|string|max:5000',
+            'child_id' => 'nullable|integer|exists:children,id',
         ]);
 
         $post = Post::query()->find($request->post_id);
@@ -200,26 +221,28 @@ class UserRueckmeldungenController extends Controller
             ], 404);
         }
 
-        if ($post->rueckmeldung->multiple != 1) {
-            $userRueckmeldung = UserRueckmeldungen::query()
-                ->where('post_id', $request->post_id)
-                ->where('users_id', $user->id)
-                ->first();
-
-            if ($userRueckmeldung) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Already responded',
-                    'message' => 'Rückmeldung bereits abgegeben',
-                    'data' => $userRueckmeldung,
-                ], 409);
-            }
+        // Antwortziel prüfen (pro Kind nur Sorgeberechtigte – E7). Alte Apps ohne
+        // child_id: genau ein Kind → dieses, mehrere → 422, ohne Sorgerecht → 403.
+        $resolved = $this->status->resolveTarget($user, $post, $request->integer('child_id') ?: null);
+        if ($resolved['error'] !== null) {
+            return response()->json([
+                'success' => false,
+                'error' => match ($resolved['status']) {
+                    409 => 'Already responded',
+                    422 => 'Child required',
+                    default => 'Not allowed',
+                },
+                'message' => $resolved['error'],
+                'data' => $resolved['status'] === 409 ? $resolved['target']?->answers->first() : null,
+            ], $resolved['status']);
         }
+        $target = $resolved['target'];
 
         $userRueckmeldung = new UserRueckmeldungen(
             [
                 'post_id' => $request->post_id,
                 'users_id' => $user->id,
+                'child_id' => $target->child?->id,
                 'text' => $request->text,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -231,7 +254,7 @@ class UserRueckmeldungenController extends Controller
             'email' => $user->email,
             'name' => $user->name,
             'text' => $request->text,
-            'subject' => 'Rückmeldung zu '.$post->header,
+            'subject' => 'Rückmeldung zu '.$post->header.($target->isChild() ? ' für '.$target->label() : ''),
         ];
 
         $empfaenger = $post->rueckmeldung->empfaenger;
@@ -325,11 +348,8 @@ class UserRueckmeldungenController extends Controller
             ], 404);
         }
 
-        // Check if the user owns this feedback or is the sorgeberechtigter2
-        $isOwner = $userRueckmeldung->users_id === $user->id;
-        $isSorgeberechtigter = !is_null($user->sorg2) && $userRueckmeldung->users_id === $user->sorg2;
-
-        if (!$isOwner && !$isSorgeberechtigter) {
+        // Eigene Rückmeldung oder die eines Familienmitglieds
+        if (! $this->status->mayEdit($user, $userRueckmeldung)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Not authorized',

@@ -2,8 +2,10 @@
 
 namespace App\Model;
 
+use App\Observers\ChildObserver;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,13 +16,24 @@ use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([ChildObserver::class])]
 class Child extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
     use SoftDeletes;
 
+    public const STATUS_APPLICANT = 'applicant';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_LEFT = 'left';
+
     protected $fillable = [
+        'external_id',
+        'status',
+        'entry_date',
+        'exit_date',
         'first_name',
         'last_name',
         'group_id',
@@ -40,12 +53,45 @@ class Child extends Model implements HasMedia
             'notification' => 'boolean',
             'auto_checkIn' => 'boolean',
             'ucs_synced_at' => 'datetime',
+            'entry_date' => 'date',
+            'exit_date' => 'date',
         ];
     }
 
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * Weitere Gruppen/Klassen (z. B. UCS-Kombiklassen) neben class_id/group_id.
+     */
+    public function additionalGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'child_group')
+            ->withoutGlobalScopes()
+            ->withPivot('source')
+            ->withTimestamps();
+    }
+
+    /**
+     * Alle Gruppen-IDs, aus denen sich Eltern-Mitgliedschaften ableiten
+     * (Klasse, Gruppe, weitere Gruppen, AG-Gruppen).
+     *
+     * @return list<int>
+     */
+    public function derivedGroupIds(): array
+    {
+        $ids = array_filter([$this->class_id, $this->group_id]);
+
+        $ids = array_merge($ids, \DB::table('child_group')->where('child_id', $this->id)->pluck('group_id')->all());
+
+        $agNames = $this->arbeitsgemeinschaften()->pluck('arbeitsgemeinschaften.name')->all();
+        if ($agNames !== []) {
+            $ids = array_merge($ids, Group::withoutGlobalScopes()->whereIn('name', $agNames)->pluck('id')->all());
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
     }
 
     public function mandates(): HasMany
@@ -58,11 +104,23 @@ class Child extends Model implements HasMedia
         return $this->belongsTo(Group::class);
     }
 
+    /**
+     * Bezugspersonen des Kindes inkl. Beziehungsart und Rechten (Pivot ChildGuardian).
+     */
     public function parents(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'child_user')
-            ->withPivot(['is_auto_provisioned', 'relation', 'synced_at'])
+            ->using(ChildGuardian::class)
+            ->withPivot(ChildGuardian::PIVOT_COLUMNS)
             ->withTimestamps();
+    }
+
+    /**
+     * Sprechender Alias für parents() im kind-zentrierten Modell.
+     */
+    public function guardians(): BelongsToMany
+    {
+        return $this->parents();
     }
 
     // ── UCS-Scopes ────────────────────────────────────────────────────────────

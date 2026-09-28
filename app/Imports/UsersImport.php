@@ -4,9 +4,13 @@ namespace App\Imports;
 
 use App\Mail\NewUserPasswordMail;
 use App\Model\Child;
+use App\Model\ChildGuardian;
+use App\Model\Family;
 use App\Model\Group;
 use App\Model\User;
 use App\Scopes\GetGroupsScope;
+use App\Services\Family\FamilyService;
+use App\Services\Family\GuardianshipService;
 use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -288,12 +292,17 @@ class UsersImport implements ToCollection, WithHeadingRow
             // ── Sorg1 ↔ Sorg2-Verknüpfung ────────────────────────────────────────
             if ($user1 && $user2 && $user1->id !== $user2->id) {
                 try {
-                    $user1->sorg2 = $user2->id;
-                    $user2->sorg2 = $user1->id;
-                    $user1->save();
-                    $user2->save();
+                    // S1 + S2 bilden eine Familie (früher: sorg2; sorg2 wird während der
+                    // Übergangsphase von FamilyService mitgepflegt)
+                    app(FamilyService::class)->linkPair($user1->fresh(), $user2->fresh(), Family::SOURCE_IMPORT);
                 } catch (\Throwable $e) {
                     Log::error("Fehler beim Verknüpfen von Sorg1 ({$user1->email}) und Sorg2 ({$user2->email}): " . $e->getMessage());
+                }
+            } elseif ($user1 && $user1->fresh()->family_id === null) {
+                try {
+                    app(FamilyService::class)->create([$user1], null, Family::SOURCE_IMPORT);
+                } catch (\Throwable $e) {
+                    Log::error("Fehler beim Anlegen der Familie für {$user1->email}: " . $e->getMessage());
                 }
             }
 
@@ -351,11 +360,15 @@ class UsersImport implements ToCollection, WithHeadingRow
                         }
                     }
 
-                    if ($user1) {
-                        $child->parents()->syncWithoutDetaching([$user1->id]);
-                    }
-                    if ($user2) {
-                        $child->parents()->syncWithoutDetaching([$user2->id]);
+                    // Beziehung mit Standardrechten (Herkunft: Import); bestehende Beziehungen
+                    // behalten ihre Rechte. Gruppen kommen bei diesem Import aus der Zeile.
+                    foreach (array_filter([$user1, $user2]) as $guardian) {
+                        app(GuardianshipService::class)->link(
+                            $child,
+                            $guardian,
+                            source: ChildGuardian::SOURCE_IMPORT,
+                            syncGroups: false,
+                        );
                     }
                     Log::info("Kind verknüpft: {$kindVorname} {$kindNachname} (ID: {$child->id})");
                 } catch (\Throwable $e) {

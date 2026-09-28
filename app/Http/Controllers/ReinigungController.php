@@ -9,6 +9,7 @@ use App\Model\Group;
 use App\Model\Reinigung;
 use App\Model\ReinigungsTask;
 use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use App\Services\HolidayService;
 use App\Settings\ReinigungSetting;
 use Carbon\Carbon;
@@ -141,17 +142,33 @@ class ReinigungController extends Controller implements HasMiddleware
             ->withCount('reinigung') // Fairness: Gesamtzahl bisheriger Einsätze je Nutzer
             ->get();
 
-        // Vorschlag 1 - Fairness-Algorithmus: Nutzer mit den wenigsten bisherigen
+        // Pro Familie eine Einheit (FamilyResolver: legacy = sorg2-Paar, child_centric = families).
+        // Familien, in denen bereits ein Mitglied im Zeitraum eingeteilt ist, fallen heraus.
+        $alreadyAssigned = Reinigung::query()
+            ->whereBetween('datum', [$start, $ende])
+            ->when($bereich !== Reinigung::BEREICH_GESAMT, fn ($query) => $query->where('bereich', '=', $bereich))
+            ->pluck('users_id')
+            ->filter()
+            ->all();
+
+        $candidates = $users->unique('id')->keyBy('id');
+
+        // Vorschlag 1 - Fairness-Algorithmus: Familien mit den wenigsten bisherigen
         // Einsätzen werden zuerst eingeteilt. Innerhalb derselben Einsatzzahl wird
         // weiterhin zufällig gemischt, damit die Verteilung nicht vorhersehbar ist.
-        $users_all = $users->groupBy('reinigung_count')
+        $units_all = app(FamilyResolver::class)
+            ->familyUnits($candidates->values())
+            ->reject(function ($unit) use ($candidates, $alreadyAssigned) {
+                return $candidates->only($unit->userIds)
+                    ->contains(fn (User $member) => array_intersect($member->familyUserIds(), $alreadyAssigned) !== []);
+            })
+            ->groupBy(fn ($unit) => (int) $candidates->only($unit->userIds)->sum('reinigung_count'))
             ->sortKeys()
             ->map(fn ($group) => $group->shuffle())
             ->flatten(1)
             ->values();
-        $users_all = $users_all->unique('id');
 
-        if ($users_all->isEmpty()) {
+        if ($units_all->isEmpty()) {
             return redirect(url('reinigung'))->with([
                 'type' => 'danger',
                 'Meldung' => 'Keine Nutzer für die Aufgaben im gewählten Bereich vorhanden',
@@ -160,8 +177,8 @@ class ReinigungController extends Controller implements HasMiddleware
 
         // Zähler für die Verteilung innerhalb dieses Laufs (nicht die historische
         // Gesamtzahl): stellt sicher, dass bei Wiederverwendung (siehe unten) immer
-        // der/die am wenigsten in diesem Durchlauf eingeteilte Familie drankommt.
-        $runCounts = $users_all->mapWithKeys(fn ($u) => [$u->id => 0])->all();
+        // die am wenigsten in diesem Durchlauf eingeteilte Familie drankommt.
+        $runCounts = $units_all->mapWithKeys(fn ($unit) => [$unit->key => 0])->all();
 
         $tasks = ReinigungsTask::whereIn('id', $request->aufgaben)->get();
         $date = $start->copy();
@@ -176,26 +193,28 @@ class ReinigungController extends Controller implements HasMiddleware
                 continue;
             }
 
-            // In dieser Woche bereits verplante Nutzer-IDs (inkl. sorg1/sorg2), um
-            // eine Familie nach Möglichkeit nicht zweimal in derselben Woche
-            // einzuteilen.
+            // In dieser Woche bereits verplante Familien, um eine Familie nach
+            // Möglichkeit nicht zweimal in derselben Woche einzuteilen.
             $assignedThisWeek = [];
 
             foreach ($tasks as $task) {
-                // Nutzer mit den wenigsten Einsätzen in diesem Lauf wählen, der/die
+                // Familie mit den wenigsten Einsätzen in diesem Lauf wählen, die
                 // diese Woche noch nicht eingeteilt ist.
-                $user = $users_all
-                    ->reject(fn ($u) => in_array($u->id, $assignedThisWeek))
-                    ->sortBy(fn ($u) => $runCounts[$u->id])
+                $unit = $units_all
+                    ->reject(fn ($u) => in_array($u->key, $assignedThisWeek, true))
+                    ->sortBy(fn ($u) => $runCounts[$u->key])
                     ->first();
 
                 // Sind nicht genügend unterschiedliche Familien vorhanden (z. B. nur
                 // eine Familie im Bereich), wird die Familie mit den wenigsten
                 // Einsätzen trotzdem erneut eingesetzt (Vorschlag: Mehrfach-Einsatz
                 // statt Abbruch mit "Nicht genügend Nutzer").
-                if (is_null($user)) {
-                    $user = $users_all->sortBy(fn ($u) => $runCounts[$u->id])->first();
+                if (is_null($unit)) {
+                    $unit = $units_all->sortBy(fn ($u) => $runCounts[$u->key])->first();
                 }
+
+                // Innerhalb der Familie das Mitglied mit den wenigsten bisherigen Einsätzen
+                $user = $candidates->only($unit->userIds)->sortBy('reinigung_count')->first();
 
                 $reinigung = new Reinigung;
                 $reinigung->bereich = $bereich;
@@ -204,16 +223,8 @@ class ReinigungController extends Controller implements HasMiddleware
                 $reinigung->aufgabe = $task->task;
                 $reinigung->save();
 
-                $runCounts[$user->id]++;
-                $assignedThisWeek[] = $user->id;
-
-                if ($user->sorg2 != null) {
-                    $assignedThisWeek[] = $user->sorg2;
-                }
-
-                if ($user->sorg1 != null) {
-                    $assignedThisWeek[] = $user->sorg1;
-                }
+                $runCounts[$unit->key]++;
+                $assignedThisWeek[] = $unit->key;
             }
 
             $date->addWeek();

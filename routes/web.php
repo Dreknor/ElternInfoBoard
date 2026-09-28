@@ -411,6 +411,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
+        Route::post('/einstellungen/kinder/{child}/meldung', [BenutzerController::class, 'reportGuardianLink'])->name('einstellungen.guardian.report');
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
 
         // Nutzer-Theme (Design)
@@ -440,6 +441,8 @@ Route::middleware('auth')->group(function () {
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
             Route::post('users/import/headers', [ImportController::class, 'previewHeaders'])->middleware(['permission:import user'])->name('users.import.headers');
             Route::post('users/import/groups', [ImportController::class, 'previewGroups'])->middleware(['permission:import user'])->name('users.import.groups');
+            Route::post('users/import/schueler/bestaetigen', [ImportController::class, 'confirmSchuelerImport'])->middleware(['permission:import user'])->name('users.import.schueler.confirm');
+            Route::get('users/vorlage/schueler', [ImportController::class, 'downloadSchuelerVorlage'])->middleware(['permission:import user'])->name('users.vorlage.schueler');
             Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
             Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 
@@ -466,6 +469,27 @@ Route::middleware('auth')->group(function () {
             // Route::get('users/{user}/delete', [UserController::class, 'destroy']);
             // Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
             // Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
+        });
+
+        // Familien & Bezugspersonen (kind-zentriertes Familienmodell, nur Verwaltung – E6)
+        Route::middleware('permission:manage families')->prefix('verwaltung')->group(function () {
+            Route::get('familien', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'index'])->name('families.index');
+            Route::post('familien', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'store'])->name('families.store');
+            Route::get('familien/pruefen', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'review'])->name('families.review');
+            Route::post('familien/automatik', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'rebuild'])->name('families.rebuild');
+            Route::post('familien/meldungen/{report}/erledigt', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'resolveReport'])->name('families.reports.resolve');
+            Route::get('familien/{family}', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'show'])->name('families.show');
+            Route::put('familien/{family}', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'update'])->name('families.update');
+            Route::post('familien/{family}/mitglieder', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'addMember'])->name('families.members.add');
+            Route::delete('familien/{family}/mitglieder/{user}', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'removeMember'])->name('families.members.remove');
+            Route::post('familien/{family}/zusammenfuehren', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'merge'])->name('families.merge');
+            Route::post('familien/{family}/trennen', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'split'])->name('families.split');
+
+            Route::post('kinder/{child}/bezugspersonen', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'store'])->name('guardians.store');
+            Route::put('kinder/{child}/bezugspersonen/{user}', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'update'])->name('guardians.update');
+            Route::post('kinder/{child}/bezugspersonen/{user}/standardrechte', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'applyDefaults'])->name('guardians.defaults');
+            Route::post('kinder/{child}/bezugspersonen/{user}/geprueft', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'review'])->name('guardians.review');
+            Route::delete('kinder/{child}/bezugspersonen/{user}', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'destroy'])->name('guardians.destroy');
         });
 
         // Gruppenverwaltung
@@ -502,6 +526,7 @@ Route::middleware('auth')->group(function () {
                 ->name('settings.custom-theme.update');
             Route::post('settings/custom-theme/reset', [\App\Http\Controllers\Settings\CustomThemeController::class, 'reset'])
                 ->name('settings.custom-theme.reset');
+            Route::post('settings/pflichtstunden/preview', [SettingsController::class, 'pflichtstundenPreview'])->name('settings.pflichtstunden.preview');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
             Route::post('settings/ucs/test', [SettingsController::class, 'ucsTestConnection'])->name('settings.ucs.test');

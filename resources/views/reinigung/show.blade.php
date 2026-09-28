@@ -26,7 +26,13 @@
         @endif
 
         {{-- Eigene Reinigungstermine --}}
-        @if($user?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0 or (!is_null($user->sorgeberechtigter2) and $user->sorgeberechtigter2->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->count() > 0))
+        @php
+            // Termine der ganzen Familie (FamilyResolver)
+            $familyReinigungen = $user
+                ? \App\Model\Reinigung::query()->whereIn('users_id', $user->familyUserIds())->whereDate('datum', '>', Carbon\Carbon::yesterday())->orderBy('datum')->get()
+                : collect();
+        @endphp
+        @if($familyReinigungen->count() > 0)
             <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
                 <div class="px-4 py-3 border-b"
                      style="background: linear-gradient(to right, var(--color-widget-warning-from), var(--color-widget-warning-to)); border-color: var(--color-widget-warning-border);">
@@ -37,7 +43,7 @@
                 </div>
                 <div class="p-4">
                     <div class="space-y-2">
-                        @foreach($user?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
+                        @foreach($familyReinigungen as $reinigung)
                             <div class="p-3 rounded-lg d-flex align-items-center gap-2" style="background: var(--color-widget-body-bg); border: 1px solid var(--color-card-border);">
                                 <i class="far fa-calendar-alt" style="color: var(--color-widget-warning-from);"></i>
                                 <span style="color: var(--color-text-primary);">
@@ -45,16 +51,6 @@
                                 </span>
                             </div>
                         @endforeach
-                        @if(!is_null($user->sorg2) and !is_null($user->sorgeberechtigter2))
-                            @foreach($user?->sorgeberechtigter2?->reinigung()->whereDate('datum', '>', Carbon\Carbon::yesterday())->get() as $reinigung)
-                                <div class="p-3 rounded-lg d-flex align-items-center gap-2" style="background: var(--color-widget-body-bg); border: 1px solid var(--color-card-border);">
-                                    <i class="far fa-calendar-alt" style="color: var(--color-widget-warning-from);"></i>
-                                    <span style="color: var(--color-text-primary);">
-                                        Woche: {{$reinigung->datum->startOfWeek()->format('d.m.')}} - {{$reinigung->datum->endOfWeek()->format('d.m.Y')}}
-                                    </span>
-                                </div>
-                            @endforeach
-                        @endif
                     </div>
                 </div>
             </div>
@@ -127,7 +123,7 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         @foreach($wocheEintraege as $reinigung)
                                             @php
-                                                $isOwn = $reinigung->user->id == auth()->id() or auth()->user()->sorg2 == auth()->id();
+                                                $isOwn = auth()->user()->isFamilyMember($reinigung->users_id);
                                             @endphp
                                             <div class="rounded-lg p-3"
                                                  style="background: {{ $isOwn ? 'var(--color-widget-warning-bg)' : 'var(--color-widget-body-bg)' }};

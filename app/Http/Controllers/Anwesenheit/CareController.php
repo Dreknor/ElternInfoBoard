@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Anwesenheit;
 
+use App\Enums\GuardianRight;
 use App\Exports\AnwesenheitsAbfrageExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
@@ -11,6 +12,7 @@ use App\Model\ChildMandate;
 use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use App\Services\HolidayService;
 use App\Services\LatePickupService;
 use App\Notifications\AttendanceQueryNotification;
@@ -115,8 +117,11 @@ class CareController extends Controller implements HasMiddleware
 
         $isFerientag = (new HolidayService())->isTodayHoliday();
 
-        // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1)
-        $sorg2Ids = $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values();
+        // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1). Nur im Legacy-Modus:
+        // im kind-zentrierten Modell sind ausschließlich direkte Bezugspersonen Kontakte.
+        $sorg2Ids = app(FamilyResolver::class)->mode() === FamilyResolver::MODE_LEGACY
+            ? $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values()
+            : collect();
         $sorg2Users = $sorg2Ids->isNotEmpty()
             ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email', 'phone', 'publicPhone'])->keyBy('id')
             : collect();
@@ -186,13 +191,9 @@ class CareController extends Controller implements HasMiddleware
 
         }
 
-        $parent = $child->parents()->first();
-
         if ($child->notification) {
-            dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkOut'));
-
-            if ($parent->sorgorgeberechtigter2) {
-                dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkOut'));
+            foreach ($this->notificationRecipients($child) as $recipient) {
+                dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkOut'));
             }
         }
 
@@ -244,16 +245,11 @@ class CareController extends Controller implements HasMiddleware
             ]);
         }
 
-        $parent = $child->parents()->first();
-
         if ($child->notification) {
 
             try {
-                dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkIn'));
-
-                if ($parent->sorgorgeberechtigter2) {
-
-                    dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
+                foreach ($this->notificationRecipients($child) as $recipient) {
+                    dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkIn'));
                 }
             } catch (\Exception $e) {
                 Log::error('Error sending notification: '.$e->getMessage());
@@ -442,6 +438,7 @@ class CareController extends Controller implements HasMiddleware
         $checkInsToUpdate = []; // IDs bestehender Einträge, die aktualisiert werden sollen
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
         $lockAtValue = $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString();
+        $guardiansByChild = [];
 
        for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
             foreach ($children as $child) {
@@ -470,8 +467,9 @@ class CareController extends Controller implements HasMiddleware
                     'updated_at' => now(),
                 ];
 
-                // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)
-                foreach ($child->parents as $parent) {
+                // Sammle Bezugspersonen mit Verwaltungsrecht (nur einmal pro Person)
+                $guardiansByChild[$child->id] ??= app(FamilyResolver::class)->guardiansFor($child, GuardianRight::Manage);
+                foreach ($guardiansByChild[$child->id] as $parent) {
                     if (!$parentsToNotify->contains('id', $parent->id)) {
                         $parentsToNotify->push($parent);
                     }
@@ -789,5 +787,14 @@ class CareController extends Controller implements HasMiddleware
             . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Empfänger von An-/Abmelde-Benachrichtigungen: alle Bezugspersonen, die das
+     * Kind verwalten dürfen (FamilyResolver, legacy inkl. sorg2-Partner).
+     */
+    private function notificationRecipients(Child $child): \Illuminate\Support\Collection
+    {
+        return app(FamilyResolver::class)->guardiansFor($child, GuardianRight::Manage)->values();
     }
 }

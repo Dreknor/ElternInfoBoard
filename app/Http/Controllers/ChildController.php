@@ -8,6 +8,7 @@ use App\Model\Child;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Services\Family\GuardianshipService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -49,23 +50,22 @@ class ChildController extends Controller implements HasMiddleware
             ]);
         }
 
+        $guardianship = app(GuardianshipService::class);
+
         if (! $request->has('parent_id')) {
-            auth()->user()->children_rel()->create($request->validated());
+            $child = Child::create($request->safe()->except(['parent_id']));
+            $guardianship->link($child, auth()->user());
         } else {
             $parent = User::find($request->parent_id);
-            $child = $parent->children_rel()->create($request->validated());
+            $child = Child::create($request->safe()->except(['parent_id']));
+            $guardianship->link($child, $parent);
 
             if (session()->has('schickzeiten')) {
                 $schickzeit = session()->get('schickzeiten');
 
                 $schickzeitenQuery = Schickzeiten::query()
                     ->where('child_name', $schickzeit->child_name)
-                    ->where(function ($query) use ($schickzeit) {
-                        $query->where('users_id', $schickzeit->users_id);
-                        if (isset($schickzeit->user->sorg2)) {
-                            $query->orWhere('users_id', $schickzeit->user->sorg2);
-                        }
-                    });
+                    ->whereIn('users_id', $schickzeit->user?->familyUserIds() ?? [$schickzeit->users_id]);
 
                 $schickzeitenQuery->update([
                     'child_id' => $child->id,
@@ -130,12 +130,9 @@ class ChildController extends Controller implements HasMiddleware
 
     public function edit(Child $child)
     {
-
-        $parents = User::query()
-            ->whereHas('roles', function ($query) {
-                $query->where('name', 'Eltern')->where('guard_name', 'web');
-            })
-            ->get();
+        // Kandidaten für Bezugspersonen: alle aktiven Konten (Großeltern etc. haben
+        // nicht zwingend die Rolle „Eltern“)
+        $parents = User::query()->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('child.edit', [
             'child' => $child,
@@ -146,11 +143,16 @@ class ChildController extends Controller implements HasMiddleware
 
     public function update(CreateChildRequest $request, Child $child)
     {
+        if ($request->user()->cannot('manage', $child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung',
+                'type' => 'danger',
+            ]);
+        }
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
-            if (! $child->parents->contains($request->parent_id)) {
-                $child->parents()->sync($request->parent_id);
-            }
+            // Nur ergänzen – bestehende Bezugspersonen (inkl. UCS-Verknüpfungen) bleiben erhalten.
+            app(GuardianshipService::class)->link($child, User::findOrFail($request->parent_id));
         }
 
         $child->update(
@@ -211,7 +213,7 @@ class ChildController extends Controller implements HasMiddleware
 
     public function setNotification(ChildNotificationRequest $request, Child $child)
     {
-        if (auth()->user()->children()->contains($child)) {
+        if (auth()->user()->can('manage', $child)) {
 
             $child->notification = $request->notification;
             $child->save();
@@ -231,7 +233,7 @@ class ChildController extends Controller implements HasMiddleware
     public function storeMandate(Request $request, Child $child)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung',
                 'type' => 'danger',
@@ -258,7 +260,7 @@ class ChildController extends Controller implements HasMiddleware
     public function destroyMandate(Request $request, Child $child, $mandateId)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
                 'type' => 'danger',

@@ -143,7 +143,7 @@
                                 <th>E-Mail</th>
                                 <th>Gruppen</th>
                                 <th>Rechte</th>
-                                <th>Verknüpft</th>
+                                <th>Familie</th>
                                 <th>letzte E-Mail</th>
                             </tr>
                             </thead>
@@ -198,10 +198,10 @@
                                         </div>
                                     </td>
                                     <td>
-                                        @if($user->sorgeberechtigter2)
-                                           <span class="badge badge-secondary">{{ $user->sorgeberechtigter2->name }}</span>
+                                        @if($user->family)
+                                           <span class="badge badge-secondary">{{ $user->family->name }}</span>
                                         @else
-                                           <span class="text-muted small">Keine Verknüpfung</span>
+                                           <span class="text-muted small">Keine Familie</span>
                                         @endif
                                     </td>
                                     <td>

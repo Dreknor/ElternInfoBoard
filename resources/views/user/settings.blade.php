@@ -86,11 +86,17 @@
                     </template>
                 </div>
 
-                @if($user->sorg2 != null)
+                @php $familyMembers = \App\Model\User::query()->whereIn('id', $user->familyUserIds())->where('id', '!=', $user->id)->orderBy('name')->pluck('name'); @endphp
+                @if($familyMembers->isNotEmpty())
+                    {{-- Familie (kind-zentriertes Familienmodell, ersetzt die Kontoverknüpfung) --}}
                     <div class="mx-2 mb-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
-                        <p class="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
-                            <i class="fas fa-link mt-0.5 flex-shrink-0"></i>
-                            <span>Verknüpft mit <strong>{{$user->sorgeberechtigter2?->name}}</strong></span>
+                        <p class="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5 mb-0">
+                            <i class="fas fa-house-user mt-0.5 flex-shrink-0"></i>
+                            <span>
+                                Ihre Familie <strong>{{ $user->family?->name ?? $user->name }}</strong>: {{ $familyMembers->implode(', ') }}.
+                                Rückmeldungen je Familie, Lesebestätigungen, Pflichtstunden und Termine sind für alle Mitglieder sichtbar.
+                                Änderungen an der Familie nimmt die Schule vor.
+                            </span>
                         </p>
                     </div>
                 @endif
@@ -403,9 +409,12 @@
                             <p class="text-xs mb-3 leading-relaxed" style="color: var(--color-text-secondary);">
                                 <i class="fas fa-info-circle text-blue-600 mr-1"></i>
                                 Hier werden die Kinder angezeigt, die mit Ihrem Konto verknüpft sind. Mit der Glocke können Sie Benachrichtigungen aktivieren.
+                                Verbindungen und Rechte pflegt die Schule – stimmt etwas nicht, melden Sie es bitte über „Verbindung ist falsch“.
                             </p>
+                            @php $ownLinks = $user->children_rel->keyBy('id'); @endphp
                             <div class="space-y-2 mb-5">
                                 @foreach($user->children() as $child)
+                                    @php $link = $ownLinks->get($child->id)?->pivot; @endphp
                                     <div class="border rounded-lg p-3 hover:border-green-500 hover:shadow-sm transition-all duration-200" style="border-color: var(--color-card-border);">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex-1 min-w-0">
@@ -420,7 +429,35 @@
                                                         <i class="fas fa-graduation-cap mr-1 text-[10px]"></i>{{$child->class->name ?? ''}}
                                                     </span>
                                                 </div>
+                                                {{-- Beziehung, Rechte und Herkunft --}}
+                                                <div class="text-xs mt-2" style="color: var(--color-text-secondary);">
+                                                    @if($link)
+                                                        <div>
+                                                            <strong>{{ $link->relationType()->label() }}</strong>
+                                                            – {{ collect([
+                                                                $link->has_custody ? 'sorgeberechtigt' : null,
+                                                                $link->receives_information ? 'erhält Informationen' : null,
+                                                                $link->can_manage ? 'darf krankmelden & Betreuung verwalten' : null,
+                                                            ])->filter()->implode(', ') ?: 'keine Rechte' }}
+                                                        </div>
+                                                        <div style="color: var(--color-text-muted);">Herkunft: {{ $link->sourceLabel() }}</div>
+                                                        @if($link->isPendingReview())
+                                                            <div class="mt-2 p-2 bg-amber-50 border border-amber-300 rounded text-amber-800">
+                                                                Diese Verbindung wurde aus der früheren Kontoverknüpfung übernommen.
+                                                                Stimmt das nicht, melden Sie sich bitte bei der Schule.
+                                                            </div>
+                                                        @endif
+                                                        <form action="{{ route('einstellungen.guardian.report', $child) }}" method="POST" class="mt-1"
+                                                              onsubmit="return confirm('Der Schule melden, dass die Verbindung zu {{ addslashes($child->first_name) }} falsch ist?')">
+                                                            @csrf
+                                                            <button class="text-red-600 hover:underline text-xs"><i class="fas fa-flag mr-1"></i>Verbindung ist falsch</button>
+                                                        </form>
+                                                    @else
+                                                        <div style="color: var(--color-text-muted);">über ein verknüpftes Konto sichtbar</div>
+                                                    @endif
+                                                </div>
                                             </div>
+                                            @can('manage', $child)
                                             <div class="flex items-center gap-1.5">
                                                 @if($child->notification)
                                                     <button class="inline-flex items-center justify-center w-8 h-8 bg-teal-500 hover:bg-teal-600 text-white rounded-lg cursor-pointer child-notification transition-colors"
@@ -439,6 +476,7 @@
                                                     <i class="fas fa-edit text-xs"></i>
                                                 </a>
                                             </div>
+                                            @endcan
                                         </div>
                                     </div>
                                 @endforeach

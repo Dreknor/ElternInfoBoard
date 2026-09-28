@@ -18,7 +18,7 @@ class PflichtstundenJahresabschlussCommand extends Command
 
     public function handle(PflichtstundenSetting $settings): int
     {
-        $service = new PflichtstundenFamilyService($settings);
+        $service = app(PflichtstundenFamilyService::class);
 
         $resolvedPeriod = $this->resolvePeriod($service);
         if ($resolvedPeriod === null) {

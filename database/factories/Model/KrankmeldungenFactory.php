@@ -2,17 +2,17 @@
 
 namespace Database\Factories\Model;
 
-use App\Model\krankmeldungen;
+use App\Model\Krankmeldungen;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class krankmeldungenFactory extends Factory
+class KrankmeldungenFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = krankmeldungen::class;
+    protected $model = Krankmeldungen::class;
 
     /**
      * Define the model's default state.

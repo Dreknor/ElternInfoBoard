@@ -702,7 +702,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         $settings = new PflichtstundenSetting;
-        $familyService = new PflichtstundenFamilyService($settings);
+        $familyService = app(PflichtstundenFamilyService::class);
         [$periodStart, $periodEnd] = $familyService->resolvePeriod(null);
         $summary = $familyService->buildFamilySummaries($periodStart, $periodEnd)
             ->first(fn (array $summary) => in_array($user->id, $summary['user_ids'], true));
@@ -859,7 +859,7 @@ class NachrichtenController extends Controller implements HasMiddleware
     public function pdf($archiv = null)
     {
         $user = auth()->user();
-        $user->with(['userRueckmeldung', 'sorgeberechtigter2', 'sorgeberechtigter2.userRueckmeldung']);
+        $user->load('userRueckmeldung');
         $archivDate = Carbon::now()->endOfDay()->subWeeks();
 
         if (! $user->can('create posts')) {

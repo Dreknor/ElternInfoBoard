@@ -374,17 +374,22 @@ class TerminlisteRueckmeldungTest extends TestCase
     }
 
     /** @test */
-    public function user_with_sorg2_sees_both_bookings(): void
+    public function family_members_see_all_family_bookings(): void
     {
-        $sorg2 = User::factory()->create();
-        $this->user->update(['sorg2' => $sorg2->id]);
-        $sorg2->groups()->attach($this->group);
+        // Familie aus zwei Konten (früher: sorg2-Verknüpfung) – gilt in beiden Resolver-Modi
+        $partner = User::factory()->create();
+        $partner->groups()->attach($this->group);
+        app(\App\Services\Family\FamilyService::class)->create([$this->user, $partner]);
+        $stranger = User::factory()->create();
 
-        $termin1 = $this->liste->termine()->first();
-        $termin1->update(['reserviert_fuer' => $this->user->id]);
+        $termin1 = $this->liste->termine()->orderBy('id')->first();
+        $termin1->update(['reserviert_fuer' => $this->user->id, 'termin' => Carbon::now()->addDays(2)]);
 
-        $termin2 = $this->liste->termine()->skip(1)->first();
-        $termin2->update(['reserviert_fuer' => $sorg2->id]);
+        $termin2 = $this->liste->termine()->orderBy('id')->skip(1)->first();
+        $termin2->update(['reserviert_fuer' => $partner->id, 'termin' => Carbon::now()->addDays(3)]);
+
+        $termin3 = $this->liste->termine()->orderBy('id')->skip(2)->first();
+        $termin3->update(['reserviert_fuer' => $stranger->id, 'termin' => Carbon::now()->addDays(4)]);
 
         Rueckmeldungen::create([
             'post_id' => $this->post->id,
@@ -398,11 +403,16 @@ class TerminlisteRueckmeldungTest extends TestCase
             'pflicht' => 0,
         ]);
 
-        $response = $this->actingAs($this->user)->get('/home');
+        foreach (['legacy', 'child_centric'] as $mode) {
+            config(['family.resolver' => $mode]);
+            $this->actingAs($this->user->fresh());
 
-        $response->assertStatus(200);
-        $response->assertSee($termin1->termin->format('d.m.Y'));
-        $response->assertSee($termin2->termin->format('d.m.Y'));
+            $userTermine = view('nachrichten.footer.terminliste', ['nachricht' => $this->post->fresh()])->render();
+
+            $this->assertStringContainsString($termin1->termin->format('d.m.Y H:i'), $userTermine, $mode);
+            $this->assertStringContainsString($termin2->termin->format('d.m.Y H:i'), $userTermine, $mode);
+            $this->assertStringNotContainsString($termin3->termin->format('d.m.Y H:i'), $userTermine, $mode);
+        }
     }
 
     /** @test */

@@ -7,7 +7,7 @@ use App\Mail\Krankmeldung;
 use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Disease;
-use App\Model\krankmeldungen;
+use App\Model\Krankmeldungen;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -85,6 +85,9 @@ class KrankmeldungenController extends Controller implements HasMiddleware
             ], 422);
         }
 
+        $text = '';
+        $disease = null;
+
         try {
             $name = $request->name;
 
@@ -96,6 +99,12 @@ class KrankmeldungenController extends Controller implements HasMiddleware
                     return response()->json([
                         'message' => 'Kind nicht gefunden',
                     ], 404);
+                }
+
+                if ($request->user()->cannot('reportSick', $child)) {
+                    return response()->json([
+                        'message' => 'Sie haben keine Berechtigung, dieses Kind krankzumelden.',
+                    ], 403);
                 }
 
                 $name = $child->first_name.' '.$child->last_name;
@@ -123,20 +132,24 @@ class KrankmeldungenController extends Controller implements HasMiddleware
                 $name .= ')';
             }
 
-            $krankmeldung = new krankmeldungen(
+            $krankmeldung = new Krankmeldungen(
                 [
                     'name' => $name,
                     'kommentar' => $request->kommentar,
                     'start' => Carbon::createFromFormat('d.m.Y', $request->start),
                     'ende' => Carbon::createFromFormat('d.m.Y', $request->ende),
                     'users_id' => $request->user()->id,
+                    'child_id' => $request->child_id,
                 ]
             );
 
             $krankmeldung->save();
         } catch (\Exception $e) {
             Log::error('Krankmeldung: Fehler beim Speichern der Krankmeldung: '.$e->getMessage());
-            $text = 'Fehler beim Speichern der Krankmeldung. Bitte überprüfen Sie die Eingaben.';
+
+            return response()->json([
+                'message' => 'Fehler beim Speichern der Krankmeldung. Bitte überprüfen Sie die Eingaben.',
+            ], 400);
         }
 
         try {

@@ -83,16 +83,10 @@ class ListenController extends Controller
 
         $listen = $listen->unique('id');
 
-        if (auth()->user()->sorg2 == null) {
-            $eintragungen = Listen_Eintragungen::query()
-                ->where('user_id', auth()->id())
-                ->get();
-        } else {
-            $eintragungen = Listen_Eintragungen::query()
-                ->where('user_id', auth()->id())
-                ->orWhere('user_id', auth()->user()->sorg2)
-                ->get();
-        }
+        // Eintragungen der ganzen Familie (FamilyResolver)
+        $eintragungen = Listen_Eintragungen::query()
+            ->whereIn('user_id', auth()->user()->familyUserIds())
+            ->get();
 
         $termine = auth()->user()->getListenTermine();
 

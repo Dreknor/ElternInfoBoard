@@ -58,6 +58,9 @@
                                 </td>
                                 <td data-sort="{{trim($userRueckmeldung->user->familie_name)}}">
                                     {{trim($userRueckmeldung->user->familie_name)}}, {{$userRueckmeldung->user->vorname}}
+                                    @if($userRueckmeldung->child)
+                                        <br><small class="text-muted">für {{ $userRueckmeldung->child->first_name }} {{ $userRueckmeldung->child->last_name }}</small>
+                                    @endif
                                 </td>
                                 <td>
                                     {{$userRueckmeldung->user->email}}

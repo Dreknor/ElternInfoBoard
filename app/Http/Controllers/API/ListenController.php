@@ -368,9 +368,8 @@ class ListenController extends Controller implements HasMiddleware
                 ->where('listen_id', $liste->id)
                 ->whereDate('termin', '>=', now())
                 ->where(function ($query) use ($user) {
-                    if ($user->sorg2 != null) {
-                        $query->where('reserviert_fuer', $user->id)
-                            ->orWhere('reserviert_fuer', $user->sorg2)
+                    if (count($user->familyUserIds()) > 1) {
+                        $query->whereIn('reserviert_fuer', $user->familyUserIds())
                             ->orWhere('reserviert_fuer', null);
                     } else {
                         $query->where('reserviert_fuer', $user->id)
@@ -385,7 +384,7 @@ class ListenController extends Controller implements HasMiddleware
         foreach ($termine as $key => $termin) {
 
             if ($termin->reserviert_fuer != null) {
-                if ($termin->reserviert_fuer == $user->id or $termin->reserviert_fuer == $user->sorg2) {
+                if ($user->isFamilyMember($termin->reserviert_fuer)) {
                     $termine[$key]->reserviert_fuer = 'own';
                 } else {
                     if ($liste->visible_for_all == true or $user->hasPermissionTo('edit terminliste', 'web')) {

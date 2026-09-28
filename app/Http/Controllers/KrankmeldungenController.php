@@ -28,7 +28,11 @@ class KrankmeldungenController extends Controller
      */
     public function index(Request $request)
     {
-        $krankmeldungen = $request->user()->krankmeldungen->load('user')->paginate(15);
+        $krankmeldungen = Krankmeldungen::query()
+            ->visibleTo($request->user())
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->paginate(15);
 
         if (Module::where('setting', 'meldepfl. Erkrankungen')->first()?->options['active'] == 1) {
             $diseases = Cache::remember('diseases', 60 * 60 * 24, function () {
@@ -56,20 +60,25 @@ class KrankmeldungenController extends Controller
             ]);
         }
 
+        $child = null;
+        if ($request->child_id) {
+            $child = Child::find($request->child_id);
+
+            if (! $child || $request->user()->cannot('reportSick', $child)) {
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Sie haben keine Berechtigung, dieses Kind krankzumelden.',
+                ]);
+            }
+        }
+
+        $disease = null;
+
         try {
             $krankmeldung = new Krankmeldungen;
             $krankmeldung->fill($request->validated());
 
-            if ($request->child_id) {
-                $child = Child::find($request->child_id);
-
-                if (! $child) {
-                    return redirect()->back()->with([
-                        'type' => 'danger',
-                        'Meldung' => 'Das angegebene Kind wurde nicht gefunden.',
-                    ]);
-                }
-
+            if ($child) {
                 $krankmeldung->name = $child->first_name.' '.$child->last_name;
             }
 
@@ -112,7 +121,7 @@ class KrankmeldungenController extends Controller
                 }
             }
 
-            if ($child ?? false) {
+            if ($child) {
                 $gruppe = $child->group?->name;
                 $class = $child->class?->name;
 

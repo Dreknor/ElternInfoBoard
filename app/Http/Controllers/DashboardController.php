@@ -105,18 +105,13 @@ class DashboardController extends Controller implements HasMiddleware
             ->whereDate('date', Carbon::today())
             ->first();
 
-        // Hole die Kinder des Benutzers – eigene + Kinder des Sorg2-Partners
+        // Kinder, die der Benutzer verwalten darf (FamilyResolver: legacy = eigene + sorg2-Partner,
+        // child_centric = direkte Beziehung mit Verwaltungsrecht)
         $currentUser = auth()->user();
-        $sorg2UserId = $currentUser->sorg2; // ID des verknüpften Sorgeberechtigten 2
 
-        $careChildrenQuery = Child::query()
+        $careChildrenQuery = app(\App\Services\Family\FamilyResolver::class)
+            ->childrenQuery($currentUser, \App\Enums\GuardianRight::Manage)
             ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id', 'children.class_id'])
-            ->whereHas('parents', function ($query) use ($userId, $sorg2UserId) {
-                $query->where('users.id', $userId);
-                if ($sorg2UserId) {
-                    $query->orWhere('users.id', $sorg2UserId);
-                }
-            })
             ->with([
                 'group:id,name',
                 'checkIns' => function ($query) {

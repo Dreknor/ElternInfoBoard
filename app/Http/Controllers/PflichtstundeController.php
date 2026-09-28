@@ -7,6 +7,7 @@ use App\Http\Requests\CreatePflichtstundeRequest;
 use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Model\Pflichtstunde;
 use App\Model\PflichtstundenFamilyRuleHistory;
+use App\Services\Pflichtstunden\PflichtstundenService;
 use App\Services\PflichtstundenFamilyService;
 use App\Services\PflichtstundenReportPdfService;
 use App\Settings\PflichtstundenSetting;
@@ -26,7 +27,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     public function __construct()
     {
         $this->pflichtstunden_settings = new PflichtstundenSetting;
-        $this->familyService = new PflichtstundenFamilyService($this->pflichtstunden_settings);
+        $this->familyService = app(PflichtstundenFamilyService::class);
         $this->reportPdfService = new PflichtstundenReportPdfService($this->familyService);
     }
 
@@ -47,7 +48,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
         [$periodStart, $periodEnd] = $this->familyService->resolvePeriod($selectedYear);
 
         $currentUser = auth()->user();
-        $familyUserIds = array_filter([$currentUser->id, $currentUser->sorg2]);
+        $familyUserIds = $currentUser->familyUserIds();
 
         $pflichtstunden = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
             ->whereIn('user_id', $familyUserIds)
@@ -64,6 +65,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
             'pflichtstunden_settings' => $this->pflichtstunden_settings,
             'parent_stats' => $parentStats,
             'currentFamilySummary' => $currentFamilySummary,
+            'basisDescription' => app(PflichtstundenService::class)->basisDescription(),
             'selectedYear' => $selectedYear,
             'periodStart' => $periodStart,
             'periodEnd' => $periodEnd,
@@ -199,7 +201,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
         $overviewUsers = $groupedUsers->map(function (array $group) {
             return [
                 'userName' => $group['user']->name ?? '',
-                'partnerName' => $group['partner']?->name ?? '',
+                'partnerName' => collect($group['members'] ?? [])->slice(1)->pluck('name')->implode(' / '),
                 'modeLabel' => match ($group['rule_mode'] ?? 'standard') {
                     'reduced' => 'Ermäßigt',
                     'custom' => 'Individuell',
@@ -236,6 +238,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
             'asOfDate' => $asOfDate,
             'ruleHistoryEntries' => $ruleHistoryEntries,
             'availableYears' => $this->availablePeriodYears(),
+            'basisDescription' => app(PflichtstundenService::class)->basisDescription(),
         ]);
     }
 
@@ -534,8 +537,11 @@ class PflichtstundeController extends Controller implements HasMiddleware
             }
         }
 
+        $current = $summaries->first(fn (array $summary) => in_array($currentUserId, $summary['user_ids']));
+
         return [
             'your_rank' => $yourRank,
+            'your_progress' => (float) ($current['percent'] ?? 0),
             'total_parents' => $summaries->count(),
             'avg_progress' => round((float) $summaries->avg('percent'), 2),
             'avgPercent' => round((float) $summaries->avg('percent'), 2),

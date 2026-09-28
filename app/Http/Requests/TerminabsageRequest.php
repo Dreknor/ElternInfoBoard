@@ -12,7 +12,7 @@ class TerminabsageRequest extends FormRequest
     public function authorize(): bool
     {
         $listen_termine = $this->route('listen_termine');
-        if (auth()->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == auth()->user()->sorg2 or auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')) {
+        if (auth()->user()->isFamilyMember($listen_termine->reserviert_fuer) or auth()->user()->id == $listen_termine->liste->besitzer or auth()->user()->can('edit terminliste')) {
             return true;
         }
 

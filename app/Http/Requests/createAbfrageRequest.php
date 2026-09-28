@@ -29,6 +29,8 @@ class createAbfrageRequest extends FormRequest
             'empfaenger' => ['required', 'exists:users,email'],
             'pflicht' => ['integer', 'nullable', 'max:1'],
             'multiple' => ['integer', 'nullable', 'max:1'],
+            // Rückmeldung pro Kind (Default), pro Familie oder pro Person (E2)
+            'scope' => ['nullable', 'in:person,family,child'],
 
         ];
     }

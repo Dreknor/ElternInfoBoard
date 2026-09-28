@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Http\Resources\PflichtstundeResource;
 use App\Http\Resources\PflichtstundeStatsResource;
 use App\Model\Pflichtstunde;
+use App\Services\Pflichtstunden\PflichtstundenService;
 use App\Services\PflichtstundenFamilyService;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     /**
      * Liste aller Pflichtstunden der Familie
      *
-     * Gibt alle Pflichtstunden des angemeldeten Users und seines Partners (sorg2) zurück,
+     * Gibt alle Pflichtstunden des angemeldeten Users und seines seiner Familie zurück,
      * sortiert nach Start-Datum absteigend. Die Pflichtstunden werden automatisch auf den
      * aktuellen Zeitraum gefiltert.
      *
@@ -128,7 +129,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
         }
 
         [$periodStart, $periodEnd] = $this->familyService->resolvePeriod(null);
-        $familyUserIds = array_filter([$user->id, $user->sorg2]);
+        $familyUserIds = $user->familyUserIds();
         $pflichtstunden = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
             ->whereIn('user_id', $familyUserIds)
             ->whereBetween('start', [$periodStart, $periodEnd])
@@ -141,6 +142,9 @@ class PflichtstundeController extends Controller implements HasMiddleware
         return response()->json([
             'data' => PflichtstundeResource::collection($pflichtstunden),
             'settings' => [
+                // Soll der eigenen Einheit (Familie bzw. je Kind, Settings-abhängig)
+                'unit_required_minutes' => (int) ($currentSummary['required_minutes'] ?? $this->pflichtstunden_settings->pflichtstunden_anzahl * 60),
+                'basis' => app(PflichtstundenService::class)->basis(),
                 'required_hours' => $currentSummary['required_hours'] ?? $this->pflichtstunden_settings->pflichtstunden_anzahl,
                 'price_per_hour' => $currentSummary['hourly_rate'] ?? $this->pflichtstunden_settings->pflichtstunden_betrag,
                 'global_required_hours' => $this->pflichtstunden_settings->pflichtstunden_anzahl,
@@ -483,6 +487,12 @@ class PflichtstundeController extends Controller implements HasMiddleware
             'opening_balance_minutes' => (int) ($current['opening_balance_minutes'] ?? 0),
             'closing_balance_minutes' => (int) ($current['closing_balance_minutes'] ?? 0),
             'carryover_preview_minutes' => (int) ($current['carryover_preview_minutes'] ?? 0),
+            'unit' => $current ? [
+                'label' => $current['family_name'],
+                'members' => collect($current['members'] ?? [])->pluck('name')->values(),
+                'required_minutes' => $currentRequiredMinutes,
+                'children_counted' => count($current['child_ids'] ?? []),
+            ] : null,
         ];
     }
 }

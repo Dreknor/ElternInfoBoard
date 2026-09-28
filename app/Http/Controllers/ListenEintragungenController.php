@@ -82,7 +82,7 @@ class ListenEintragungenController extends Controller
             ]);
         }
         $benachrichtigung = '';
-        if (! is_null($listen_eintragung->user_id) and ($listen_eintragung->user_id == auth()->id() or (auth()->user()->sorg2 != null and $listen_eintragung->user_id == auth()->user()->sorg2))) {
+        if (! is_null($listen_eintragung->user_id) and auth()->user()->isFamilyMember($listen_eintragung->user_id)) {
             $listen_eintragung->user_id = null;
 
             try {
