@@ -859,9 +859,9 @@ class DemoSetup extends Command
             ]
         );
         AbfrageOptions::firstOrCreate(['rueckmeldung_id' => $rueck2->id, 'option' => 'Ja, mein Kind nimmt teil'],
-            ['type' => 'checkbox', 'required' => false]);
+            ['type' => 'check', 'required' => false]);
         AbfrageOptions::firstOrCreate(['rueckmeldung_id' => $rueck2->id, 'option' => 'Nein, mein Kind nimmt nicht teil'],
-            ['type' => 'checkbox', 'required' => false]);
+            ['type' => 'check', 'required' => false]);
         AbfrageOptions::firstOrCreate(['rueckmeldung_id' => $rueck2->id, 'option' => 'Ich benötige mehr Informationen'],
             ['type' => 'text', 'required' => false]);
         // Demo-Rückmeldungen

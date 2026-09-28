@@ -44,7 +44,7 @@ class CreateSettingsSeeder extends Seeder
                 'setting' => 'Termine',
                 'description' => 'Ermöglich das veröffentlichen einer Terminübersicht im Nachrichtenbereich. Die Nutzer haben die Möglichkeit Termine direkt in ihren Kalender zu exportieren.',
                 'category' => 'module',
-                'options' => '{"active":"0","rights":[],"home-view-top":"termine.nachricht","adm-nav":{"adm-rights":["edit termin"],"name":"neuer Termin","link":"termin\\/create","icon":"far fa-calendar-alt"}}',
+                'options' => '{"active":"0","rights":[],"home-view-top":"termine.nachricht","adm-nav":{"adm-rights":["edit termin"],"name":"neuer Termin","link":"termine\\/create","icon":"far fa-calendar-alt"}}',
             ],
             [
                 'setting' => 'Archiv',

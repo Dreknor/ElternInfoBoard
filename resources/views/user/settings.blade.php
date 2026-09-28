@@ -99,6 +99,21 @@
             {{-- Tab-Inhalte --}}
             <div class="settings-content-panel flex-1 overflow-y-auto" style="max-height: calc(100vh - 180px);">
 
+                {{-- Hinweis-Banner: fehlende E-Mail (UCS-Nutzer ohne E-Mail) --}}
+                @if(empty($user->email))
+                    <div class="mx-6 mt-5 flex items-start gap-4 p-5 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-400 rounded-xl">
+                        <i class="fas fa-exclamation-triangle text-amber-600 text-xl mt-0.5"></i>
+                        <div>
+                            <h6 class="text-base font-bold text-amber-800 dark:text-amber-300 mb-1">E-Mail-Adresse erforderlich</h6>
+                            <p class="text-sm text-amber-700 dark:text-amber-300 mb-0">
+                                Ihr Konto wurde über das Schulverwaltungssystem (UCS) angelegt, jedoch wurde dabei
+                                keine E-Mail-Adresse übermittelt. Bitte tragen Sie Ihre E-Mail-Adresse im Profil ein,
+                                um Benachrichtigungen und wichtige Mitteilungen der Schule zu erhalten.
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <div class="mx-6 mt-5 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
                         <div class="flex items-start gap-2">

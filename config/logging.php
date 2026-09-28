@@ -40,6 +40,13 @@ return [
             'driver' => 'custom',
             'via' => danielme85\LaravelLogToDB\LogToDbHandler::class,
         ],
+
+        'ucs' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/ucs-sync.log'),
+            'level'  => env('LOG_LEVEL', 'info'),
+            'days'   => 30,
+        ],
     ],
 
 ];

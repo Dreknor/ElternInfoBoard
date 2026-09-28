@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncUcsSchoolJob;
 use App\Mail\TestEmail;
 use App\Model\Group;
 use App\Model\Groups;
 use App\Model\Module;
 use App\Model\User;
+use App\Rules\CronExpression;
 use App\Services\HolidayService;
+use App\Services\Ucs\KelvinClient;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
@@ -21,6 +24,7 @@ use App\Settings\CustomThemeSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
 use App\Themes\ThemeRegistry;
+use App\Settings\UcsSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +32,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
@@ -90,6 +95,7 @@ class SettingsController extends Controller implements HasMiddleware
             'keycloakSettings' => $keycloakSettings,
             'reinigungSettings' => $reinigungSettings,
             'reinigungBereiche' => $reinigungBereiche,
+            'ucsSettings' => new UcsSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
             'users' => $users,
             'roles' => $roles,
@@ -544,11 +550,97 @@ class SettingsController extends Controller implements HasMiddleware
                 $reinigungSettings->reminder_time = $validated['reminder_time'];
                 $reinigungSettings->save();
                 break;
+
+            case 'ucs':
+                $validated = $request->validate([
+                    'enabled'           => 'nullable|boolean',
+                    'kelvin_base_url'   => 'nullable|url|max:255',
+                    'school'            => 'nullable|string|max:255',
+                    'kelvin_username'   => 'nullable|string|max:255',
+                    'kelvin_password'   => 'nullable|string|max:255',
+                    'kelvin_page_size'  => 'required|integer|min:1|max:1000',
+                    'kelvin_timeout'    => 'required|integer|min:5|max:300',
+                    'kelvin_token_ttl'  => 'required|integer|min:60|max:86400',
+                    'sync_enabled'      => 'nullable|boolean',
+                    'sync_cron'         => ['required', 'string', new CronExpression],
+                    'on_login_fallback' => 'nullable|boolean',
+                    'on_login_timeout'  => 'required|integer|min:1|max:60',
+                    'purge_after_days'  => 'required|integer|min:1|max:365',
+                ]);
+
+                $ucsSettings = new UcsSetting;
+                $ucsSettings->enabled           = $request->has('enabled');
+                $ucsSettings->kelvin_base_url   = $validated['kelvin_base_url'] ?? null;
+                $ucsSettings->school            = $validated['school'] ?? null;
+                $ucsSettings->kelvin_page_size  = (int) $validated['kelvin_page_size'];
+                $ucsSettings->kelvin_timeout    = (int) $validated['kelvin_timeout'];
+                $ucsSettings->kelvin_token_ttl  = (int) $validated['kelvin_token_ttl'];
+                $ucsSettings->sync_enabled      = $request->has('sync_enabled');
+                $ucsSettings->sync_cron         = $validated['sync_cron'];
+                $ucsSettings->on_login_fallback = $request->has('on_login_fallback');
+                $ucsSettings->on_login_timeout  = (int) $validated['on_login_timeout'];
+                $ucsSettings->purge_after_days  = (int) $validated['purge_after_days'];
+
+                // Credentials nur überschreiben, wenn tatsächlich eingegeben
+                if ($request->filled('kelvin_username')) {
+                    $ucsSettings->kelvin_username = $validated['kelvin_username'];
+                }
+                if ($request->filled('kelvin_password')) {
+                    $ucsSettings->kelvin_password = $validated['kelvin_password'];
+                }
+
+                $ucsSettings->save();
+                break;
         }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Einstellungen gespeichert',
+        ]);
+    }
+
+    /**
+     * Verbindungstest zur Kelvin API.
+     */
+    public function ucsTestConnection(KelvinClient $client): RedirectResponse
+    {
+        try {
+            $schools = $client->ping();
+
+            Log::debug("Kelvin-Verbindungstest erfolgreich.", ['schools' => $schools]);
+
+            $schoolName = $schools['display_name'] ?? $schools['name'] ?? null;
+
+            return redirect()->back()->with([
+                'type'    => 'success',
+                'Meldung' => $schoolName
+                    ? "Verbindung OK – Schule „{$schoolName}\" gefunden."
+                    : 'Verbindung OK.',
+            ]);
+        } catch (\Throwable $e) {
+
+            Log::error("Verbindungsfehler bei Kelvin-Verbindungstest: " . $e->getMessage(), ['exception' => $e]);
+
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Verbindungsfehler: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Manuellen UCS-Sync in die Queue stellen.
+     */
+    public function ucsRunSync(): RedirectResponse
+    {
+
+        SyncUcsSchoolJob::dispatch();
+
+        Log::info("UCS-Sync manuell gestartet.");
+
+        return redirect()->back()->with([
+            'type'    => 'success',
+            'Meldung' => 'Sync wurde in die Warteschlange gestellt',
         ]);
     }
 
@@ -560,6 +652,10 @@ class SettingsController extends Controller implements HasMiddleware
         $stundenplanSetting = new StundenplanSetting;
         $stundenplanSetting->import_api_key = \Illuminate\Support\Str::random(64);
         $stundenplanSetting->save();
+
+        Log::info("Stundenplan API Key erneuert.",[
+            'user' => auth()->user()->name,
+        ]);
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -636,6 +732,12 @@ class SettingsController extends Controller implements HasMiddleware
         }
         $modul->options = $options;
         $modul->save();
+
+        Log::debug("Modul '{$modulname}' Status geändert.", [
+            'modul' => $modulname,
+            'active' => $options['active'],
+            'user' => auth()->user()->name,
+        ]);
 
         Cache::forget('modules');
 

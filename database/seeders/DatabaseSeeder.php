@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             StundenplanSettingsSeeder::class,
             UpdateNachrichtenModuleLinkSeeder::class,
             RolesPermissionsDistributionSeeder::class,
+            UcsSyncPermissionSeeder::class,
         ]);
     }
 }

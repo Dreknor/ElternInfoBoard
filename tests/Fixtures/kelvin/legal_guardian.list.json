@@ -1,0 +1,41 @@
+[
+  {
+    "username": "mueller.anna",
+    "record_uid": "a1b2c3d4-1111-2222-3333-aaaaaaaaaaaa",
+    "firstname": "Anna",
+    "lastname": "Müller",
+    "email": "anna.mueller@example.de",
+    "school": "GS-XY",
+    "roles": ["legal_guardian"],
+    "legal_wards": [
+      "https://ucs.example.de/ucsschool/kelvin/v1/users/max.mueller",
+      "https://ucs.example.de/ucsschool/kelvin/v1/users/lena.mueller"
+    ],
+    "url": "https://ucs.example.de/ucsschool/kelvin/v1/users/mueller.anna"
+  },
+  {
+    "username": "schmidt.peter",
+    "record_uid": "b2c3d4e5-2222-3333-4444-bbbbbbbbbbbb",
+    "firstname": "Peter",
+    "lastname": "Schmidt",
+    "email": "peter.schmidt@example.de",
+    "school": "GS-XY",
+    "roles": ["legal_guardian"],
+    "legal_wards": [
+      "https://ucs.example.de/ucsschool/kelvin/v1/users/tom.schmidt"
+    ],
+    "url": "https://ucs.example.de/ucsschool/kelvin/v1/users/schmidt.peter"
+  },
+  {
+    "username": "wagner.karin",
+    "record_uid": "c3d4e5f6-3333-4444-5555-cccccccccccc",
+    "firstname": "Karin",
+    "lastname": "Wagner",
+    "email": null,
+    "school": "GS-XY",
+    "roles": ["legal_guardian"],
+    "legal_wards": [],
+    "url": "https://ucs.example.de/ucsschool/kelvin/v1/users/wagner.karin"
+  }
+]
+

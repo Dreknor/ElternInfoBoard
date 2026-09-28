@@ -3,6 +3,7 @@
 use App\Model\Module;
 use App\Settings\NotifySetting;
 use App\Settings\ReminderSetting;
+use App\Settings\UcsSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -123,6 +124,29 @@ try {
         Schedule::command('users:cleanup --purge-days=400')->dailyAt('04:00');
         // Monatlicher Inaktivitätsbericht an Administratoren
         Schedule::command('users:cleanup --report')->monthlyOn(1, '09:00');
+
+        // ── UCS@school-Scheduler ─────────────────────────────────────────────
+        // Läuft vollständig über den Scheduler (kein Queue-Worker / Supervisor nötig).
+        // Funktioniert damit auch auf Shared-Hosting, das nur einen Cron-Job erlaubt.
+        try {
+            $ucsSetting = app(UcsSetting::class);
+
+            // Bulk-Sync: Cron aus UcsSetting, Fallback 02:30 Uhr
+            // Wird als Artisan-Command synchron ausgeführt – kein Queue-Worker erforderlich.
+            Schedule::command('sync:ucs-parents')
+                ->cron($ucsSetting->sync_cron ?: '30 2 * * *')
+                ->when(fn () => $ucsSetting->enabled && $ucsSetting->sync_enabled)
+                ->onOneServer()
+                ->withoutOverlapping();
+
+            // Hard-Purge verwaister Klassen-Gruppen: sonntags 03:00 Uhr
+            Schedule::command('ucs:purge-stale-classes')
+                ->weeklyOn(0, '03:00')
+                ->when(fn () => $ucsSetting->enabled)
+                ->onOneServer();
+        } catch (\Exception $e) {
+            // Silently ignore – UCS-Settings noch nicht migriert
+        }
 
         $messengerModule = Module::where('setting', 'Eltern-Nachrichten')->first();
         if ($messengerModule && ($messengerModule->options['active'] ?? false)) {

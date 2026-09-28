@@ -92,8 +92,6 @@
                     @endif
                 </div>
             </div>
-            {{-- Beitrag melden --}}
-            @include('nachrichten.footer.report')
         </div>
     @elseif($nachricht->no_header)
         <!-- No Header Type -->
