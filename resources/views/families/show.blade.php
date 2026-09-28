@@ -3,6 +3,7 @@
 @section('title') - {{ $family->name }} @endsection
 
 @section('content')
+    @include('partials.select-search')
     <div class="container-fluid">
         <a href="{{ route('families.index') }}" class="btn btn-primary mb-2">Zurück</a>
 
@@ -56,7 +57,7 @@
                     <div class="card-footer">
                         <form action="{{ route('families.members.add', $family) }}" method="POST" class="form-inline mb-2">
                             @csrf
-                            <select name="user_id" class="custom-select mr-2" required>
+                            <select name="user_id" class="custom-select mr-2 js-select-search" required>
                                 <option value="">Person ohne Familie hinzufügen …</option>
                                 @foreach($candidates as $candidate)
                                     <option value="{{ $candidate->id }}">{{ $candidate->name }} ({{ $candidate->email }})</option>
@@ -78,7 +79,7 @@
                         <form action="{{ route('families.merge', $family) }}" method="POST" class="form-inline"
                               onsubmit="return confirm('Die gewählte Familie wird in diese Familie übernommen. Fortfahren?')">
                             @csrf
-                            <select name="source_id" class="custom-select mr-2" required>
+                            <select name="source_id" class="custom-select mr-2 js-select-search" required>
                                 <option value="">Familie wählen …</option>
                                 @foreach($otherFamilies as $other)
                                     <option value="{{ $other->id }}">{{ $other->name }}</option>

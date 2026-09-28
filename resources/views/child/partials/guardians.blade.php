@@ -3,6 +3,7 @@
     $relationOptions = \App\Enums\GuardianRelation::options();
     $guardianList = $child->parents()->orderBy('name')->get();
 @endphp
+@include('partials.select-search')
 <div class="card mt-3" id="bezugspersonen">
     <div class="card-header">
         <h5 class="mb-0">Bezugspersonen</h5>
@@ -86,7 +87,7 @@
     <div class="card-footer">
         <form action="{{ route('guardians.store', $child) }}" method="POST" class="form-inline">
             @csrf
-            <select name="user_id" class="custom-select mr-2 mb-2" required>
+            <select name="user_id" class="custom-select mr-2 mb-2 js-select-search" required>
                 <option value="">Person wählen …</option>
                 @foreach(($guardianCandidates ?? collect()) as $candidate)
                     @unless($guardianList->contains('id', $candidate->id))
