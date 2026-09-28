@@ -40,7 +40,7 @@ Zu den Kernfunktionen gehören:
 - 🔑 **SSO via Keycloak / OIDC** – Single Sign-On für Eltern
 - 🔄 **UCS@school-Synchronisation** – automatische Klassen- und Elternsynchronisation
 - 🖥️ **Kiosk-Modus** – Anzeige für öffentliche Bildschirme
-- 📱 **Mobile App** – Native App via NativePHP
+- 📱 **Eltern-App** – eigene App (React Native/Expo) über die App-API v1
 - 📤 **Excel-Import/Export** – Daten importieren und exportieren
 - 🎨 **Theme-System** – anpassbare Themes pro Schule
 - 🔍 **Audit-Log** – lückenlose Nachverfolgung aller Datenänderungen
