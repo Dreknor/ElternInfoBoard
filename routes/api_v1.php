@@ -96,6 +96,7 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
     Route::get('parent/ags', [ParentController::class, 'ags'])->name('ags');
     Route::post('parent/ags/{ag}/enrollments', [ParentController::class, 'enroll'])->name('ags.enroll');
     Route::get('parent/reinigung', [ParentController::class, 'reinigung'])->name('reinigung');
+    Route::get('vertretungsplan', [ParentController::class, 'vertretungsplan'])->name('vertretungsplan');
 
     // Infoseiten & Elternrat
     Route::get('sites', [CommunityController::class, 'sites'])->name('sites');

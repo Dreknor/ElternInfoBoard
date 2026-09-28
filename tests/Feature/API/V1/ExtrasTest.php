@@ -6,6 +6,7 @@ use App\Model\Arbeitsgemeinschaft;
 use App\Model\Conversation;
 use App\Model\Notification;
 use App\Model\UserAppSettings;
+use App\Model\Vertretung;
 use App\Services\App\AppTheme;
 use App\Services\Push\PushTarget;
 use App\Services\ThemeService;
@@ -37,6 +38,27 @@ class ExtrasTest extends AppApiTestCase
 
         $this->assertNotSame($first['version'], $second['version']);
         $this->assertSame($theme, $second['id']);
+    }
+
+    /** @test */
+    public function vertretungsplan_shows_class_name_instead_of_group_id(): void
+    {
+        Permission::findOrCreate('view vertretungsplan', 'web');
+        Permission::findOrCreate('view vertretungsplan all', 'web');
+        $group = $this->group('Klasse 3b');
+        $user = $this->parentIn($group);
+        $user->givePermissionTo('view vertretungsplan');
+        Vertretung::create([
+            'date' => today()->addDay()->toDateString(), 'klasse' => $group->id, 'stunde' => 2,
+            'altFach' => 'Ma', 'neuFach' => 'De', 'lehrer' => 'Frau M.',
+        ]);
+        Vertretung::create(['date' => today()->addDay()->toDateString(), 'klasse' => $this->group('Andere')->id, 'stunde' => 1, 'altFach' => 'Mu']);
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/v1/vertretungsplan')->assertOk()
+            ->assertJsonCount(1, 'data.vertretungen')
+            ->assertJsonPath('data.vertretungen.0.klasse', 'Klasse 3b')
+            ->assertJsonPath('data.vertretungen.0.date', today()->addDay()->toDateString());
     }
 
     /** @test */

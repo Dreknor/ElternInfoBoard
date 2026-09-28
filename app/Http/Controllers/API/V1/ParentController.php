@@ -9,6 +9,10 @@ use App\Model\Child;
 use App\Model\Group;
 use App\Model\Reinigung;
 use App\Model\ReinigungsTask;
+use App\Model\Vertretung;
+use App\Model\VertretungsplanAbsence;
+use App\Model\VertretungsplanNews;
+use App\Model\VertretungsplanWeek;
 use App\Services\App\Family;
 use App\Services\App\KrankmeldungService;
 use App\Services\FamilyWeeklyService;
@@ -224,6 +228,39 @@ class ParentController extends ApiController
                 'bemerkung' => $r->bemerkung,
             ])->values(),
             'aufgaben' => ReinigungsTask::query()->pluck('task'),
+        ]]);
+    }
+
+    /**
+     * Vertretungsplan der eigenen Klassen (bzw. alle mit `view vertretungsplan all`).
+     * `klasse` ist der Anzeigename – die Tabelle speichert nur die Gruppen-ID bzw. Kurzform.
+     */
+    public function vertretungsplan(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user->can('view vertretungsplan'), 403, 'Sie haben keine Berechtigung, den Vertretungsplan anzuzeigen.');
+
+        $query = $user->can('view vertretungsplan all')
+            ? Vertretung::query()->orderBy('date')
+            : $user->vertretungen()->orderBy('vertretungen.date');
+        $vertretungen = $query->orderBy('stunde')->with('group:id,name')->get();
+
+        return response()->json(['data' => [
+            'vertretungen' => $vertretungen->map(fn (Vertretung $v) => [
+                'date' => Carbon::parse($v->getRawOriginal('date'))->toDateString(),
+                'klasse' => $v->group?->name ?? $v->klasse_kurzform,
+                'stunde' => $v->stunde,
+                'altFach' => $v->altFach,
+                'neuFach' => $v->neuFach,
+                'lehrer' => $v->lehrer,
+                'comment' => $v->comment,
+            ])->values(),
+            'news' => VertretungsplanNews::where('end', '>=', today())->get(['start', 'end', 'news']),
+            'week' => VertretungsplanWeek::where('week', today()->startOfWeek()->toDateString())->first(['type', 'week']),
+            'absences' => VertretungsplanAbsence::query()
+                ->whereDate('start_date', '<=', today()->endOfWeek())
+                ->whereDate('end_date', '>=', today()->startOfWeek())
+                ->get(['name', 'start_date', 'end_date', 'reason']),
         ]]);
     }
 }
