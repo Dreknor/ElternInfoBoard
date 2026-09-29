@@ -43,7 +43,9 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
 
     public function collection()
     {
-        return $this->familyService->buildFamilySummaries($this->startDate, $this->endDate, true);
+        // Konten nur für vollständige Perioden fortschreiben – ein frei gewählter
+        // Teilzeitraum darf den Kontostand der Periode nicht überschreiben.
+        return $this->familyService->buildFamilySummaries($this->startDate, $this->endDate, $this->customLabel === null);
     }
 
     public function map($item): array

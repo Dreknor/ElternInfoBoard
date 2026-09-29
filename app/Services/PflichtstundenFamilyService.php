@@ -64,9 +64,14 @@ class PflichtstundenFamilyService
         return [$start, $end];
     }
 
+    /**
+     * Startjahr der Periode, zu der $periodStart gehört. Bei frei gewählten
+     * Zeiträumen (z. B. 01.01.–30.06.) ist das nicht das Kalenderjahr des
+     * Startdatums, sondern das Jahr des vorangegangenen Periodenbeginns.
+     */
     public function periodStartYear(Carbon $periodStart): int
     {
-        return (int) $periodStart->year;
+        return $this->resolvePeriodStartYearForDate($periodStart);
     }
 
     /**

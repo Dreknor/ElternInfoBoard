@@ -101,9 +101,11 @@ class PflichtstundenReportPdfTest extends TestCase
 
     public function test_plausibility_report_only_includes_approved_entries(): void
     {
+        Permission::findOrCreate('view Pflichtstunden');
         Permission::findOrCreate('edit Pflichtstunden');
 
         $admin = User::factory()->create(['changePassword' => false]);
+        $admin->givePermissionTo('view Pflichtstunden');
         $admin->givePermissionTo('edit Pflichtstunden');
 
         $periodStart = now()->startOfYear()->addDays(15)->startOfDay();
@@ -204,8 +206,71 @@ class PflichtstundenReportPdfTest extends TestCase
         $this->assertStringNotContainsString('Ausstehend', $anonymousHtml);
         $this->assertStringNotContainsString('Auffällige Hilfe', $anonymousHtml);
         $this->assertStringNotContainsString('Erste Familie', $anonymousHtml);
+        $this->assertStringNotContainsString('Top-Helfer', $anonymousHtml);
+        $this->assertStringNotContainsString('Familie 1', $anonymousHtml);
+        $this->assertStringContainsString('Familien gesamt', $anonymousHtml);
+        $this->assertCount(0, $anonymous['family_rows']);
+        $this->assertSame(2, $anonymous['family_stats']['families_count']);
+        $this->assertSame(0, $anonymous['family_stats']['fulfilled_count']);
+        $this->assertSame(1, $anonymous['family_stats']['partial_count']);
+        $this->assertSame(1, $anonymous['family_stats']['none_count']);
         $this->assertStringContainsString('Wartende Einträge', $namedHtml);
+        $this->assertStringContainsString('Top-Helfer', $namedHtml);
+        $this->assertStringContainsString('Erste Familie', $namedHtml);
         $this->assertStringContainsString('Auffällige Einträge', $namedHtml);
         $this->assertStringContainsString('Ausstehend', $namedHtml);
+    }
+
+    public function test_report_only_counts_entries_of_billed_families(): void
+    {
+        Permission::findOrCreate('view Pflichtstunden');
+
+        $family = User::factory()->create(['name' => 'Abgerechnete Familie']);
+        $family->givePermissionTo('view Pflichtstunden');
+        $outsider = User::factory()->create(['name' => 'Ohne Pflichtstunden']);
+
+        $periodStart = now()->startOfYear()->addDays(15)->startOfDay();
+        foreach ([$family, $outsider] as $user) {
+            Pflichtstunde::create([
+                'user_id' => $user->id,
+                'start' => $periodStart->copy(),
+                'end' => $periodStart->copy()->addHours(2),
+                'approved' => true,
+            ]);
+        }
+
+        $report = app(\App\Services\PflichtstundenReportPdfService::class)
+            ->buildReport($periodStart, $periodStart->copy()->addDays(30));
+
+        $this->assertEquals(2, $report['summary']['total_approved_hours']);
+        $this->assertEquals(
+            $report['family_rows']->sum('approved_hours'),
+            $report['summary']['total_approved_hours']
+        );
+    }
+
+    public function test_average_approval_duration_is_measured_in_days(): void
+    {
+        Permission::findOrCreate('view Pflichtstunden');
+
+        $user = User::factory()->create();
+        $user->givePermissionTo('view Pflichtstunden');
+
+        $periodStart = now()->startOfYear()->addDays(15)->startOfDay();
+        $entry = Pflichtstunde::create([
+            'user_id' => $user->id,
+            'start' => $periodStart->copy(),
+            'end' => $periodStart->copy()->addHours(2),
+            'approved' => true,
+        ]);
+        $entry->forceFill([
+            'created_at' => $periodStart->copy(),
+            'approved_at' => $periodStart->copy()->addHours(36),
+        ])->saveQuietly();
+
+        $report = app(\App\Services\PflichtstundenReportPdfService::class)
+            ->buildReport($periodStart, $periodStart->copy()->addDays(30));
+
+        $this->assertEquals(1.5, $report['process_metrics']['avg_approval_days']);
     }
 }
