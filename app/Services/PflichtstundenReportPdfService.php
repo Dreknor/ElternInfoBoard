@@ -143,6 +143,8 @@ class PflichtstundenReportPdfService
             'partial_count' => $open->filter(fn (array $row) => $row['approved_minutes'] + $row['opening_balance_minutes'] > 0)->count(),
             'none_count' => $open->filter(fn (array $row) => $row['approved_minutes'] + $row['opening_balance_minutes'] <= 0)->count(),
             'open_hours' => round($familyRows->sum('open_minutes') / 60, 2),
+            // Mehrstunden einzelner Familien mindern nicht die Fehlstunden anderer.
+            'surplus_hours' => round($familyRows->sum(fn (array $row) => max(0, $row['difference_minutes'])) / 60, 2),
             'billed_families_count' => $familyRows->filter(fn (array $row) => $row['beitrag'] > 0)->count(),
         ];
     }

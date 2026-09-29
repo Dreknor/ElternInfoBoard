@@ -173,6 +173,7 @@
             <td>
                 <span class="label">Summe abzurechnender Beträge</span>
                 <span class="value">{{ number_format((float) $summary['total_billed_amount'], 2, ',', '.') }} €</span>
+                <span class="label" style="margin-top: 4px; text-transform: none; letter-spacing: 0;">Summe der Fehlstunden je Familie × Stundensatz</span>
             </td>
                 @if(!$anonymized)
 
@@ -344,10 +345,18 @@
             <td>{{ number_format((float) $family_stats['open_hours'], 2, ',', '.') }}h</td>
         </tr>
         <tr>
+            <th>Mehrstunden gesamt</th>
+            <td>{{ number_format((float) $family_stats['surplus_hours'], 2, ',', '.') }}h</td>
+        </tr>
+        <tr>
             <th>Familien mit Ausgleichsbetrag</th>
             <td>{{ $family_stats['billed_families_count'] }}</td>
         </tr>
     </table>
+    <p class="muted">
+        Abgerechnet wird je Familie: Fehlstunden einer Familie werden nicht mit Mehrstunden anderer Familien verrechnet.
+        Deshalb ergibt sich der Betrag aus den offenen Stunden gesamt und nicht aus der Differenz zwischen Soll- und freigegebenen Stunden.
+    </p>
 
     @unless($anonymized)
         @php

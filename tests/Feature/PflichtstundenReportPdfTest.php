@@ -209,6 +209,8 @@ class PflichtstundenReportPdfTest extends TestCase
         $this->assertStringNotContainsString('Top-Helfer', $anonymousHtml);
         $this->assertStringNotContainsString('Familie 1', $anonymousHtml);
         $this->assertStringContainsString('Familien gesamt', $anonymousHtml);
+        $this->assertStringContainsString('Mehrstunden gesamt', $anonymousHtml);
+        $this->assertStringContainsString('Summe der Fehlstunden je Familie', $anonymousHtml);
         $this->assertCount(0, $anonymous['family_rows']);
         $this->assertSame(2, $anonymous['family_stats']['families_count']);
         $this->assertSame(0, $anonymous['family_stats']['fulfilled_count']);
@@ -272,5 +274,33 @@ class PflichtstundenReportPdfTest extends TestCase
             ->buildReport($periodStart, $periodStart->copy()->addDays(30));
 
         $this->assertEquals(1.5, $report['process_metrics']['avg_approval_days']);
+    }
+
+    public function test_surplus_of_one_family_does_not_reduce_billed_amount_of_another(): void
+    {
+        Permission::findOrCreate('view Pflichtstunden');
+
+        $busy = User::factory()->create(['name' => 'Fleißige Familie']);
+        $idle = User::factory()->create(['name' => 'Untätige Familie']);
+        $busy->givePermissionTo('view Pflichtstunden');
+        $idle->givePermissionTo('view Pflichtstunden');
+
+        $periodStart = now()->startOfYear()->addDays(15)->startOfDay();
+        Pflichtstunde::create([
+            'user_id' => $busy->id,
+            'start' => $periodStart->copy(),
+            'end' => $periodStart->copy()->addHours(30),
+            'approved' => true,
+        ]);
+
+        $report = app(\App\Services\PflichtstundenReportPdfService::class)
+            ->buildReport($periodStart, $periodStart->copy()->addDays(30), 'family_name', true);
+
+        // Soll 2 × 20h, geleistet 30h: Gesamtdifferenz nur 10h, abgerechnet werden aber 20h.
+        $this->assertEquals(40, $report['summary']['total_required_hours']);
+        $this->assertEquals(30, $report['summary']['total_approved_hours']);
+        $this->assertEquals(20, $report['family_stats']['open_hours']);
+        $this->assertEquals(10, $report['family_stats']['surplus_hours']);
+        $this->assertEquals(20 * 25, $report['summary']['total_billed_amount']);
     }
 }
