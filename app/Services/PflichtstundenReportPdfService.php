@@ -29,14 +29,17 @@ class PflichtstundenReportPdfService
 
         $totalApprovedMinutes = $approvedEntries->sum(fn (Pflichtstunde $entry) => $this->durationMinutes($entry));
         $pendingEntriesCount = $pendingEntries->count();
-        $highRiskEntries = $entries
-            ->filter(fn (Pflichtstunde $entry) =>
-                $entry->approved
-                && ! $entry->rejected
-                && ! $entry->trashed()
-                && $this->durationMinutes($entry) > 12 * 60
-            )
-            ->values();
+
+        $highRiskEntries = $anonymized
+            ? collect()
+            : $entries
+                ->filter(fn (Pflichtstunde $entry) =>
+                    $entry->approved
+                    && ! $entry->rejected
+                    && ! $entry->trashed()
+                    && $this->durationMinutes($entry) > 12 * 60
+                )
+                ->values();
 
         $areas = $this->collectAreaDistribution($approvedEntries);
         $calendarDays = $this->collectWeekdayDistribution($approvedEntries);
@@ -53,6 +56,8 @@ class PflichtstundenReportPdfService
             'summary' => [
                 'total_approved_minutes' => $totalApprovedMinutes,
                 'total_approved_hours' => round($totalApprovedMinutes / 60, 2),
+                'total_required_hours' => round($familyRows->sum('required_minutes') / 60, 2),
+                'total_billed_amount' => round($familyRows->sum('beitrag'), 2),
                 'pending_entries_count' => $pendingEntriesCount,
                 'rejected_entries_count' => $rejectedEntries->count(),
             ],
@@ -103,6 +108,7 @@ class PflichtstundenReportPdfService
                     'approved_minutes' => $approvedMinutes,
                     'pending_minutes' => $pendingMinutes,
                     'open_minutes' => (int) ($summary['openMinutes'] ?? 0),
+                    'beitrag' => (float) ($summary['beitrag'] ?? 0),
                     'percent' => (float) ($summary['percent'] ?? 0),
                     'sort_key' => $this->familySortKey($summary['family_name']),
                 ];

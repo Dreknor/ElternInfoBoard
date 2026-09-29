@@ -156,4 +156,56 @@ class PflichtstundenReportPdfTest extends TestCase
         $this->assertNotContains($rejected->id, $ids);
         $this->assertNotContains($deleted->id, $ids);
     }
+
+    public function test_anonymized_report_shows_required_hours_and_outstanding_amount_without_pending_or_suspicious_entries(): void
+    {
+        Permission::findOrCreate('view Pflichtstunden');
+
+        $first = User::factory()->create(['name' => 'Erste Familie']);
+        $second = User::factory()->create(['name' => 'Zweite Familie']);
+        $first->givePermissionTo('view Pflichtstunden');
+        $second->givePermissionTo('view Pflichtstunden');
+
+        $periodStart = now()->startOfYear()->addDays(15)->startOfDay();
+        Pflichtstunde::create([
+            'user_id' => $first->id,
+            'start' => $periodStart->copy(),
+            'end' => $periodStart->copy()->addHours(13),
+            'description' => 'Auffällige Hilfe',
+            'approved' => true,
+        ]);
+        Pflichtstunde::create([
+            'user_id' => $first->id,
+            'start' => $periodStart->copy()->addDays(1),
+            'end' => $periodStart->copy()->addDays(1)->addHours(3),
+            'description' => 'Wartende Hilfe',
+            'approved' => false,
+            'rejected' => false,
+        ]);
+
+        $service = app(\App\Services\PflichtstundenReportPdfService::class);
+        $periodEnd = $periodStart->copy()->addDays(30);
+        $anonymous = $service->buildReport($periodStart, $periodEnd, 'family_name', true);
+        $named = $service->buildReport($periodStart, $periodEnd, 'family_name', false);
+
+        $this->assertEquals(40, $anonymous['summary']['total_required_hours']);
+        $this->assertEquals(675, $anonymous['summary']['total_billed_amount']);
+        $this->assertCount(0, $anonymous['error_entries']);
+        $this->assertCount(1, $named['error_entries']);
+
+        $anonymousHtml = view('pflichtstunden.report-pdf', $anonymous)->render();
+        $namedHtml = view('pflichtstunden.report-pdf', $named)->render();
+
+        $this->assertStringContainsString('Soll-Stunden', $anonymousHtml);
+        $this->assertStringContainsString('40,00h', $anonymousHtml);
+        $this->assertStringContainsString('675,00 €', $anonymousHtml);
+        $this->assertStringNotContainsString('Wartende Einträge', $anonymousHtml);
+        $this->assertStringNotContainsString('Auffällige Einträge', $anonymousHtml);
+        $this->assertStringNotContainsString('Ausstehend', $anonymousHtml);
+        $this->assertStringNotContainsString('Auffällige Hilfe', $anonymousHtml);
+        $this->assertStringNotContainsString('Erste Familie', $anonymousHtml);
+        $this->assertStringContainsString('Wartende Einträge', $namedHtml);
+        $this->assertStringContainsString('Auffällige Einträge', $namedHtml);
+        $this->assertStringContainsString('Ausstehend', $namedHtml);
+    }
 }

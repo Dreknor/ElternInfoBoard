@@ -149,29 +149,43 @@
     <h1>Pflichtstunden-Report</h1>
     <p class="meta">Zeitraum: {{ $period_start->format('d.m.Y') }} bis {{ $period_end->format('d.m.Y') }} | Sortierung: {{ $sort === 'highest_debt' ? 'Höchste Stundenschuld' : 'Nachname A-Z' }} | Anonymisiert: {{ $anonymized ? 'Ja' : 'Nein' }}</p>
 
-    <h2>Teil 1: Management Summary &amp; Plausibilität</h2>
+    <h2>Teil 1: Zusammenfassung</h2>
     <table class="kpis">
         <tr>
             <td>
                 <span class="label">Freigegebene Stunden</span>
                 <span class="value">{{ number_format((float) $summary['total_approved_hours'], 2, ',', '.') }}h</span>
             </td>
+            @if(!$anonymized)
+                <td>
+                    <span class="label">Wartende Einträge</span>
+                    <span class="value">{{ $summary['pending_entries_count'] }}</span>
+                </td>
+            @endif
             <td>
-                <span class="label">Wartende Einträge</span>
-                <span class="value">{{ $summary['pending_entries_count'] }}</span>
+                <span class="label">Soll-Stunden</span>
+                <span class="value">{{ number_format((float) $summary['total_required_hours'], 2, ',', '.') }}h</span>
             </td>
             <td>
                 <span class="label">Abgelehnte Einträge</span>
                 <span class="value">{{ $summary['rejected_entries_count'] }}</span>
             </td>
             <td>
-                <span class="label">Auffällige Einträge</span>
-                <span class="value">{{ $error_entries->count() }}</span>
+                <span class="label">Summe abzurechnender Beträge</span>
+                <span class="value">{{ number_format((float) $summary['total_billed_amount'], 2, ',', '.') }} €</span>
             </td>
-        </tr>
-    </table>
+                @if(!$anonymized)
 
-    @if($error_entries->isNotEmpty())
+                    <td>
+                        <span class="label">Auffällige Einträge</span>
+                        <span class="value">{{ $error_entries->count() }}</span>
+                    </td>
+                @endif
+            </tr>
+        </table>
+
+    @if($error_entries->isNotEmpty() && !$anonymized)
+        <p class="muted">Auffällige Einträge (> 12 Stunden)</p>
         <table class="table-small">
             <thead>
             <tr>
@@ -196,7 +210,7 @@
             @endforeach
             </tbody>
         </table>
-    @else
+    @elseif(!$anonymized)
         <p class="muted">Keine auffälligen Einträge (> 12 Stunden) im gewählten Zeitraum.</p>
     @endif
 
@@ -284,8 +298,8 @@
             <td>{{ $process_metrics['rejection_count'] }}</td>
         </tr>
     </table>
-
-    <table class="table-small">
+    @if(!$anonymized)
+        <table class="table-small">
         <thead>
         <tr>
             <th>Admin</th>
@@ -305,7 +319,7 @@
         @endforeach
         </tbody>
     </table>
-
+    @endif
     <h2>Teil 4: Familien-Abrechnung</h2>
 
     <table class="table-small">
@@ -332,7 +346,9 @@
             <th>Familie</th>
             <th>Soll</th>
             <th>Geleistet</th>
-            <th>Ausstehend</th>
+            @unless($anonymized)
+                <th>Ausstehend</th>
+            @endunless
             <th>Differenz</th>
             <th>Erfüllung</th>
         </tr>
@@ -346,7 +362,9 @@
                 <td>{{ $family['family_name'] }}</td>
                 <td>{{ number_format((float) $family['required_hours'], 2, ',', '.') }}h</td>
                 <td>{{ number_format((float) $family['approved_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $family['pending_hours'], 2, ',', '.') }}h</td>
+                @unless($anonymized)
+                    <td>{{ number_format((float) $family['pending_hours'], 2, ',', '.') }}h</td>
+                @endunless
                 <td><span class="badge {{ $alertClass }}">{{ $formatMinutes($family['difference_minutes']) }}</span></td>
                 <td>{{ number_format((float) $family['percent'], 2, ',', '.') }}%</td>
             </tr>
