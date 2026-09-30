@@ -280,7 +280,7 @@ class Child extends Model implements HasMedia
     {
         // Wenn die Beziehung bereits geladen ist, auf heute filtern
         if ($this->relationLoaded('schickzeiten')) {
-            return $this->schickzeiten->filter(function ($schickzeit) {
+            $todayTimes = $this->schickzeiten->filter(function ($schickzeit) {
                 // Wochentagsbasierte Einträge (specific_date = null): nur wenn weekday dem heutigen Tag entspricht
                 if (is_null($schickzeit->specific_date)) {
                     return $schickzeit->weekday == now()->dayOfWeek;
@@ -288,6 +288,8 @@ class Child extends Model implements HasMedia
                 // Datumsspezifische Einträge: nur wenn das Datum heute ist
                 return $schickzeit->specific_date->isToday();
             })->values();
+
+            return $this->preferDateSpecific($todayTimes);
         }
 
         // Fallback mit Cache für direkte Aufrufe
@@ -305,7 +307,17 @@ class Child extends Model implements HasMedia
                 ->get();
         });
 
-        return $schickzeiten;
+        return $this->preferDateSpecific($schickzeiten);
+    }
+
+    /**
+     * Ein tagesaktueller Eintrag ersetzt die wochentagsbasierten Einträge des Tages.
+     */
+    private function preferDateSpecific($schickzeiten)
+    {
+        $dateSpecific = $schickzeiten->filter(fn ($schickzeit) => ! is_null($schickzeit->specific_date));
+
+        return $dateSpecific->isNotEmpty() ? $dateSpecific->values() : $schickzeiten->values();
     }
 
     public function scopeCare($query)
