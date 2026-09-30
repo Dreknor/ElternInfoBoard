@@ -15,7 +15,14 @@ class PflichtstundenReportPdfService
 
     public function buildReport(Carbon $periodStart, Carbon $periodEnd, string $sort = 'family_name', bool $anonymized = false): array
     {
+        $familyRows = $this->buildFamilyRows($periodStart, $periodEnd, $sort);
+
+        // Nur Einträge der abgerechneten Familien auswerten, damit Summen,
+        // Verteilungen und Familien-Abrechnung auf derselben Grundlage beruhen.
+        $billedUserIds = $familyRows->flatMap(fn (array $row) => $row['user_ids'])->unique()->values();
+
         $entries = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
+            ->whereIn('user_id', $billedUserIds)
             ->whereBetween('start', [$periodStart->copy()->startOfDay(), $periodEnd->copy()->endOfDay()])
             ->with(['user'])
             ->orderBy('start')
@@ -25,25 +32,20 @@ class PflichtstundenReportPdfService
         $pendingEntries = $entries->filter(fn (Pflichtstunde $entry) => ! $entry->approved && ! $entry->rejected);
         $rejectedEntries = $entries->filter(fn (Pflichtstunde $entry) => $entry->rejected);
 
-        $familyRows = $this->buildFamilyRows($periodStart, $periodEnd, $anonymized, $sort);
-
         $totalApprovedMinutes = $approvedEntries->sum(fn (Pflichtstunde $entry) => $this->durationMinutes($entry));
         $pendingEntriesCount = $pendingEntries->count();
-        $highRiskEntries = $entries
-            ->filter(fn (Pflichtstunde $entry) =>
-                $entry->approved
-                && ! $entry->rejected
-                && ! $entry->trashed()
-                && $this->durationMinutes($entry) > 12 * 60
-            )
-            ->values();
+
+        $highRiskEntries = $anonymized
+            ? collect()
+            : $approvedEntries
+                ->filter(fn (Pflichtstunde $entry) => $this->durationMinutes($entry) > 12 * 60)
+                ->values();
 
         $areas = $this->collectAreaDistribution($approvedEntries);
         $calendarDays = $this->collectWeekdayDistribution($approvedEntries);
         $dayTimes = $this->collectTimeDistribution($approvedEntries);
         $monthly = $this->collectMonthlyDistribution($periodStart, $periodEnd, $approvedEntries);
         $processMetrics = $this->collectProcessMetrics($entries);
-        $topHelpers = $this->buildTopHelpers($familyRows);
 
         return [
             'period_start' => $periodStart,
@@ -53,9 +55,12 @@ class PflichtstundenReportPdfService
             'summary' => [
                 'total_approved_minutes' => $totalApprovedMinutes,
                 'total_approved_hours' => round($totalApprovedMinutes / 60, 2),
+                'total_required_hours' => round($familyRows->sum('required_minutes') / 60, 2),
+                'total_billed_amount' => round($familyRows->sum('beitrag'), 2),
                 'pending_entries_count' => $pendingEntriesCount,
                 'rejected_entries_count' => $rejectedEntries->count(),
             ],
+            'family_stats' => $this->buildFamilyStats($familyRows),
             'error_entries' => $highRiskEntries->map(function (Pflichtstunde $entry) {
                 return [
                     'id' => $entry->id,
@@ -67,8 +72,10 @@ class PflichtstundenReportPdfService
                     'description' => $entry->description,
                 ];
             })->values(),
-            'family_rows' => $familyRows,
-            'top_helpers' => $topHelpers,
+            // Der anonymisierte Report (für den Elternrat) enthält keine
+            // Angaben zu einzelnen Familien, nur die aggregierten family_stats.
+            'family_rows' => $anonymized ? collect() : $familyRows,
+            'top_helpers' => $anonymized ? collect() : $this->buildTopHelpers($familyRows),
             'areas' => $areas,
             'weekday_distribution' => $calendarDays,
             'time_distribution' => $dayTimes,
@@ -80,29 +87,35 @@ class PflichtstundenReportPdfService
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    protected function buildFamilyRows(Carbon $periodStart, Carbon $periodEnd, bool $anonymized, string $sort): Collection
+    protected function buildFamilyRows(Carbon $periodStart, Carbon $periodEnd, string $sort): Collection
     {
         $summaries = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, false)
-            ->map(function (array $summary, int $index) use ($anonymized) {
-                $displayName = $anonymized ? 'Familie '.($index + 1) : $summary['family_name'];
+            ->map(function (array $summary) {
                 $approvedMinutes = (int) ($summary['totalMinutes'] ?? 0);
                 $allMinutes = (int) ($summary['allMinutes'] ?? 0);
                 $pendingMinutes = max(0, $allMinutes - $approvedMinutes);
-                $differenceMinutes = $approvedMinutes - (int) ($summary['required_minutes'] ?? 0);
+                $requiredMinutes = (int) ($summary['required_minutes'] ?? 0);
+                $openingBalanceMinutes = (int) ($summary['opening_balance_minutes'] ?? 0);
+                // Differenz = Kontostand inkl. Übertrag aus dem Vorjahr, damit
+                // sie zu offenen Stunden, Betrag und Erfüllungsgrad passt.
+                $differenceMinutes = (int) ($summary['closing_balance_minutes'] ?? ($openingBalanceMinutes + $approvedMinutes - $requiredMinutes));
 
                 return [
                     'family_key' => $summary['family_key'],
-                    'family_name' => $displayName,
-                    'raw_family_name' => $summary['family_name'],
-                    'required_hours' => round(((int) ($summary['required_minutes'] ?? 0)) / 60, 2),
+                    'family_name' => $summary['family_name'],
+                    'user_ids' => $summary['user_ids'] ?? [],
+                    'required_hours' => round($requiredMinutes / 60, 2),
+                    'opening_balance_hours' => round($openingBalanceMinutes / 60, 2),
                     'approved_hours' => round($approvedMinutes / 60, 2),
                     'pending_hours' => round($pendingMinutes / 60, 2),
                     'difference_hours' => round($differenceMinutes / 60, 2),
                     'difference_minutes' => $differenceMinutes,
-                    'required_minutes' => (int) ($summary['required_minutes'] ?? 0),
+                    'required_minutes' => $requiredMinutes,
+                    'opening_balance_minutes' => $openingBalanceMinutes,
                     'approved_minutes' => $approvedMinutes,
                     'pending_minutes' => $pendingMinutes,
                     'open_minutes' => (int) ($summary['openMinutes'] ?? 0),
+                    'beitrag' => (float) ($summary['beitrag'] ?? 0),
                     'percent' => (float) ($summary['percent'] ?? 0),
                     'sort_key' => $this->familySortKey($summary['family_name']),
                 ];
@@ -114,10 +127,32 @@ class PflichtstundenReportPdfService
         };
     }
 
+    /**
+     * Aggregierte Kennzahlen ohne Bezug zu einzelnen Familien.
+     *
+     * @return array<string, int|float>
+     */
+    protected function buildFamilyStats(Collection $familyRows): array
+    {
+        $fulfilled = $familyRows->filter(fn (array $row) => $row['open_minutes'] === 0);
+        $open = $familyRows->filter(fn (array $row) => $row['open_minutes'] > 0);
+
+        return [
+            'families_count' => $familyRows->count(),
+            'fulfilled_count' => $fulfilled->count(),
+            'partial_count' => $open->filter(fn (array $row) => $row['approved_minutes'] + $row['opening_balance_minutes'] > 0)->count(),
+            'none_count' => $open->filter(fn (array $row) => $row['approved_minutes'] + $row['opening_balance_minutes'] <= 0)->count(),
+            'open_hours' => round($familyRows->sum('open_minutes') / 60, 2),
+            // Mehrstunden einzelner Familien mindern nicht die Fehlstunden anderer.
+            'surplus_hours' => round($familyRows->sum(fn (array $row) => max(0, $row['difference_minutes'])) / 60, 2),
+            'billed_families_count' => $familyRows->filter(fn (array $row) => $row['beitrag'] > 0)->count(),
+        ];
+    }
+
     protected function buildTopHelpers(Collection $familyRows): Collection
     {
         return $familyRows
-            ->filter(fn (array $row) => $row['approved_minutes'] >= $row['required_minutes'])
+            ->filter(fn (array $row) => $row['approved_minutes'] > 0 && $row['difference_minutes'] >= 0)
             ->sortByDesc('approved_minutes')
             ->take(5)
             ->values()
@@ -125,7 +160,7 @@ class PflichtstundenReportPdfService
                 'family_name' => $row['family_name'],
                 'approved_hours' => $row['approved_hours'],
                 'required_hours' => $row['required_hours'],
-                'extra_hours' => round(($row['approved_minutes'] - $row['required_minutes']) / 60, 2),
+                'extra_hours' => $row['difference_hours'],
             ]);
     }
 
@@ -250,22 +285,25 @@ class PflichtstundenReportPdfService
                     return 0.0;
                 }
 
-                return $entry->created_at->diffInDays($entry->approved_at, false) + ($entry->created_at->diffInHours($entry->approved_at) % 24) / 24;
+                // Carbon 3 liefert gebrochene Werte – Stunden/24 ergibt die Dauer in Tagen.
+                return $entry->created_at->diffInHours($entry->approved_at) / 24;
             })
             ->filter(fn ($value) => $value > 0)
             ->values();
 
+        $adminNames = User::withTrashed()
+            ->whereIn('id', $entries->pluck('approved_by')->merge($entries->pluck('rejected_by'))->filter()->unique())
+            ->pluck('name', 'id');
+
         $workload = [];
         foreach ($entries as $entry) {
             if ($entry->approved_by) {
-                $user = User::find($entry->approved_by);
-                $key = $user?->name ?? 'Unbekannt';
+                $key = $adminNames->get($entry->approved_by, 'Unbekannt');
                 $workload[$key]['approved'] = ($workload[$key]['approved'] ?? 0) + 1;
             }
 
             if ($entry->rejected_by) {
-                $user = User::find($entry->rejected_by);
-                $key = $user?->name ?? 'Unbekannt';
+                $key = $adminNames->get($entry->rejected_by, 'Unbekannt');
                 $workload[$key]['rejected'] = ($workload[$key]['rejected'] ?? 0) + 1;
             }
         }

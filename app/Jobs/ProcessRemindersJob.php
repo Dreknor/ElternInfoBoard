@@ -66,8 +66,16 @@ class ProcessRemindersJob implements ShouldQueue
     {
         $count = 0;
 
+        $window = $this->reminderWindow($settings, $now);
+        if ($window === null) {
+            return 0;
+        }
+
+        // Nur Fristen im Erinnerungsfenster laden – abgelaufene Rückmeldungen
+        // samt Empfängern zu laden sprengt sonst das Speicherlimit des Workers.
         $rueckmeldungen = Rueckmeldungen::where('pflicht', true)
             ->whereNotNull('ende')
+            ->whereBetween('ende', $window)
             ->whereHas('post', fn ($q) => $q->where('released', 1))
             ->with(['post.users'])
             ->get();
@@ -80,19 +88,18 @@ class ProcessRemindersJob implements ShouldQueue
                 continue;
             }
 
+            // Die Stufe hängt nur von der Frist ab – vor der teuren Empfänger-Auflösung prüfen
+            $level = $this->determineLevel($settings, $deadline, $now);
+            if ($level === null) {
+                continue;
+            }
+
             // Offene Empfänger je Scope (Person, Familie, Kind – E2/E7)
             $openRecipients = app(RueckmeldungStatusService::class)->openRecipients($post);
             $usersToEscalate = [];
 
             foreach ($openRecipients as $open) {
                 $user = $open['user'];
-
-                // Bestimme die passende Erinnerungsstufe
-                $level = $this->determineLevel($settings, $deadline, $now);
-
-                if ($level === null) {
-                    continue;
-                }
 
                 // Prüfe ob diese Stufe bereits gesendet wurde
                 $alreadySent = ReminderLog::where('remindable_type', Rueckmeldungen::class)
@@ -132,14 +139,29 @@ class ProcessRemindersJob implements ShouldQueue
     {
         $count = 0;
 
+        $window = $this->reminderWindow($settings, $now);
+        if ($window === null) {
+            return 0;
+        }
+
+        // Frist = read_receipt_deadline, ersatzweise archiv_ab – nur Fristen im Erinnerungsfenster laden
         $posts = Post::where('read_receipt', true)
             ->where('released', 1)
+            ->where(function ($q) use ($window) {
+                $q->whereBetween('read_receipt_deadline', $window)
+                    ->orWhere(fn ($q) => $q->whereNull('read_receipt_deadline')->whereBetween('archiv_ab', $window));
+            })
             ->with(['users', 'receipts'])
             ->get();
 
         foreach ($posts as $post) {
             $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;
             if (!$deadline) {
+                continue;
+            }
+
+            $level = $this->determineLevel($settings, $deadline, $now);
+            if ($level === null) {
                 continue;
             }
 
@@ -152,11 +174,6 @@ class ProcessRemindersJob implements ShouldQueue
             foreach ($allUsers as $user) {
                 // Erledigt je nach Modus: selbst, durch die Familie oder je Kind durch eine Bezugsperson
                 if ($readReceiptStatus->isSatisfied($user, $post, $confirmedReceipts)) {
-                    continue;
-                }
-
-                $level = $this->determineLevel($settings, $deadline, $now);
-                if ($level === null) {
                     continue;
                 }
 
@@ -261,6 +278,30 @@ class ProcessRemindersJob implements ShouldQueue
     // ═══════════════════════════════════════════════════════════════
     //  Hilfsmethoden
     // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Zeitraum, in dem Fristen liegen müssen, damit überhaupt eine aktive Stufe greift:
+     * von heute bis heute + größter Vorlauf der aktiven Stufen. Null, wenn keine Stufe aktiv ist.
+     *
+     * Untergrenze als reines Datum, damit date- und datetime-Spalten gleichermaßen passen.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    private function reminderWindow(ReminderSetting $s, Carbon $now): ?array
+    {
+        $days = collect([1, 2, 3])
+            ->filter(fn (int $level) => $s->{"level{$level}_active"})
+            ->map(fn (int $level) => (int) $s->{"level{$level}_days_before_deadline"});
+
+        if ($days->isEmpty()) {
+            return null;
+        }
+
+        return [
+            $now->copy()->startOfDay()->toDateString(),
+            $now->copy()->startOfDay()->addDays($days->max())->endOfDay()->toDateTimeString(),
+        ];
+    }
 
     /**
      * Bestimmt die aktuelle Erinnerungsstufe basierend auf dem Zeitpunkt.

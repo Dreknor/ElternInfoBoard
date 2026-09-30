@@ -146,6 +146,8 @@ class UserService
                 // mit dem Nutzer endgültig gelöscht werden.
                 $this->pflichtstundenFamilyService->sealHistoryForUser($user);
 
+                $this->releaseRestrictingReferences($user);
+
                 $user->forceDelete();
             });
 
@@ -155,6 +157,36 @@ class UserService
 
             return $e->getMessage();
         }
+    }
+
+    /**
+     * Löst alle Fremdschlüssel auf users (ON DELETE RESTRICT), die das endgültige
+     * Löschen blockieren würden. deleteUser() räumt diese Daten beim Soft-Delete
+     * zwar auf, arbeitet aber über Eloquent – soft-gelöschte Posts/Umfragen und
+     * nur soft-gelöschte Schickzeiten/Rückmeldungen/Krankmeldungen/Krankheiten
+     * referenzieren den User danach weiterhin. Daher hier direkt über den
+     * Query Builder, ohne SoftDeletes und Global Scopes.
+     */
+    private function releaseRestrictingReferences(User $user): void
+    {
+        $id = $user->id;
+
+        // Inhalte anderer bleiben erhalten, nur der Bezug wird entfernt
+        DB::table('posts')->where('author', $id)->update(['author' => null]);
+        DB::table('polls')->where('author_id', $id)->update(['author_id' => null]);
+        DB::table('listen_eintragungen')->where('user_id', $id)->update(['user_id' => null]);
+        // Termin freigeben statt löschen – listen_termine kaskadiert auf pflichtstunden
+        DB::table('listen_termine')->where('reserviert_fuer', $id)->update(['reserviert_fuer' => null]);
+
+        // Personenbezogene Daten des Users
+        DB::table('votes')->where('author_id', $id)->delete();
+        DB::table('listen_eintragungen')->where('created_by', $id)->delete();
+        DB::table('reinigung')->where('users_id', $id)->delete();
+        DB::table('schickzeiten')->where('users_id', $id)->delete();
+        DB::table('users_rueckmeldungen')->where('users_id', $id)->delete();
+        DB::table('krankmeldungen')->where('users_id', $id)->delete();
+        DB::table('active_diseases')->where('user_id', $id)->delete();
+        DB::table('group_user')->where('user_id', $id)->delete();
     }
 
     /**
