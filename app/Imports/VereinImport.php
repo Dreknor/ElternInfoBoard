@@ -6,6 +6,7 @@ use App\Mail\NewUserPasswordMail;
 use App\Model\Group;
 use App\Model\User;
 use App\Settings\EmailSetting;
+use App\Support\PasswordGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -61,8 +62,10 @@ class VereinImport implements ToCollection, WithHeadingRow
                     $email = $row['person_e_mail_privat'];
                 }
 
-                // TODO-1.1: Sicheres Zufallspasswort generieren
-                $password = Str::password(12, true, true, true, false);
+                // Zufallspasswort generieren (vgl. App\Support\PasswordGenerator): nur
+                // eindeutig unterscheidbare Zeichen, damit der Nutzer es aus der E-Mail
+                // fehlerfrei abtippen kann.
+                $password = PasswordGenerator::generate();
 
                 $user1 = User::firstOrCreate([
                     'email' => "$email",

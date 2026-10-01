@@ -13,6 +13,7 @@ use App\Services\Family\FamilyService;
 use App\Services\Family\GroupMembershipService;
 use App\Services\Family\GuardianshipService;
 use App\Settings\EmailSetting;
+use App\Support\PasswordGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -257,7 +258,7 @@ class SchuelerImportService
         $user = User::query()->where('email', $email)->orderByRaw("CASE WHEN ucs_source = 'local' THEN 0 ELSE 1 END")->first();
 
         if ($user === null) {
-            $password = Str::password(12, true, true, true, false);
+            $password = PasswordGenerator::generate();
             $user = User::create([
                 'email' => $email,
                 'name' => $name !== '' ? $name : $email,
