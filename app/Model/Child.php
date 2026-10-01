@@ -239,6 +239,7 @@ class Child extends Model implements HasMedia
                 ->first();
         });
 
+
         if (is_null($checkIn)) {
             return false;
 

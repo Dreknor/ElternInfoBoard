@@ -47,11 +47,18 @@ class CareController extends Controller implements HasMiddleware
     {
         $careSettings = new CareSetting;
 
-        if ($showAll == 1) {
-            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
+        if ($showAll === 'expected') {
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', 'expected'));
+        } elseif ($showAll == 1) {
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', '1'));
         } elseif ($showAll == 'off') {
-            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', false));
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', ''));
         }
+
+        $viewMode = request()->cookie('showAll');
+        $viewMode = $viewMode === 'expected' && $careSettings->view_detailed_care
+            ? 'expected'
+            : ($viewMode && $viewMode !== 'expected' ? 'all' : 'present');
 
         $configuredGroupIds = array_values((array) ($careSettings->groups_list ?? []));
         $configuredClassIds = array_values((array) ($careSettings->class_list ?? []));
@@ -72,11 +79,22 @@ class CareController extends Controller implements HasMiddleware
                 $childQuery->whereIn('class_id', $configuredClassIds);
             }
 
-            if ($careSettings->hide_childs_when_absent == true && ! request()->cookie('showAll')) {
+            if ($careSettings->hide_childs_when_absent == true && $viewMode === 'present') {
                 $childQuery->whereHas('checkIns', function ($query) {
                     $query
                         ->checkedIn()
                         ->whereDate('date', now()->toDateString());
+                });
+            } elseif ($careSettings->hide_childs_when_absent == true && $viewMode === 'expected') {
+                $childQuery->whereHas('checkIns', function ($query) {
+                    $query
+                        ->whereDate('date', now()->toDateString())
+                        ->where(function ($q) {
+                            $q->where('should_be', true)
+                                ->orWhere(function ($q2) {
+                                    $q2->checkedIn();
+                                });
+                        });
                 });
             }
 
@@ -116,6 +134,7 @@ class CareController extends Controller implements HasMiddleware
         }
 
         $isFerientag = (new HolidayService())->isTodayHoliday();
+
 
         // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1). Nur im Legacy-Modus:
         // im kind-zentrierten Modell sind ausschließlich direkte Bezugspersonen Kontakte.
