@@ -251,7 +251,7 @@ class ImportController extends Controller implements HasMiddleware
 
             $importer = new UsersImport($header, $sendEmail);
 
-            $this->debugExcelImport($importer, $storedPath);
+            $this->runImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Eltern wurden importiert';
         } elseif ($validated['type'] === 'aufnahme') {
@@ -268,12 +268,12 @@ class ImportController extends Controller implements HasMiddleware
             if (! empty($validated['kind_nachname'])) $header['kind_nachname']= $validated['kind_nachname'] - 1;
 
             $importer = new AufnahmeImport($header, $sendEmail);
-            $this->debugExcelImport($importer, $storedPath);
+            $this->runImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Aufnahme-Import abgeschlossen';
         } else {
             $importer = new MitarbeiterImport($sendEmail);
-            $this->debugExcelImport($importer, $storedPath);
+            $this->runImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Mitarbeiter-Import abgeschlossen';
         }
@@ -322,28 +322,16 @@ class ImportController extends Controller implements HasMiddleware
     }
 
     /**
-     * TEMPORÄR: Führt Excel::import() aus und protokolliert bei einem Fehler
-     * die vollständige Exception (Klasse, Nachricht, Datei, Zeile, Trace) im
-     * Laravel-Log, damit der tatsächliche Ursprungsort des "Path must not be
-     * empty"-Fehlers ermittelt werden kann. Kann nach der Fehlersuche wieder
-     * entfernt werden.
+     * Führt Excel::import() aus und protokolliert eine fehlschlagende Datei-Verarbeitung
+     * mit vollständigem Kontext (Exception-Klasse, Nachricht, Ort), da Fehler beim
+     * Einlesen sonst nur generisch an den Nutzer durchgereicht würden.
      */
-    private function debugExcelImport(object $importer, string $storedPath): void
+    private function runImport(object $importer, string $storedPath): void
     {
         try {
-            \Log::info('debugExcelImport: Starte Import', [
-                'storedPath' => $storedPath,
-                'exists'     => file_exists($storedPath),
-                'realpath'   => realpath($storedPath),
-                'is_file'    => is_file($storedPath),
-                'filesize'   => @filesize($storedPath),
-            ]);
-
             Excel::import($importer, $storedPath);
-
-            \Log::info('debugExcelImport: Import erfolgreich');
         } catch (\Throwable $e) {
-            \Log::error('debugExcelImport: Fehler beim Import', [
+            \Log::error('Import fehlgeschlagen', [
                 'exception' => get_class($e),
                 'message'   => $e->getMessage(),
                 'file'      => $e->getFile(),
