@@ -188,6 +188,7 @@ Route::middleware('auth')->group(function () {
         Route::post('child', [\App\Http\Controllers\ChildController::class, 'store'])->name('child.store');
         Route::get('child/{child}/edit', [\App\Http\Controllers\ChildController::class, 'edit'])->name('child.edit');
         Route::put('child/{child}', [\App\Http\Controllers\ChildController::class, 'update'])->name('child.update');
+        Route::put('child/{child}/guardian/{guardian}/phone', [\App\Http\Controllers\ChildController::class, 'updateGuardianPhone'])->name('child.guardian.phone');
         Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
         Route::delete('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');

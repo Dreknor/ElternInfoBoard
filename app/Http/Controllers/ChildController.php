@@ -19,7 +19,7 @@ class ChildController extends Controller implements HasMiddleware
     {
         return [
             'auth',
-            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit']),
+            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
         ];
     }
 
@@ -135,9 +135,35 @@ class ChildController extends Controller implements HasMiddleware
         $parents = User::query()->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('child.edit', [
-            'child' => $child,
+            'child' => $child->load('parents'),
             'groups' => Group::active()->get(),
             'parents' => $parents,
+        ]);
+    }
+
+    public function updateGuardianPhone(Request $request, Child $child, User $guardian)
+    {
+        $data = $request->validate([
+            'phone' => ['present', 'nullable', 'string', 'max:50'],
+        ]);
+
+        $isCurrentCustodian = $child->parents()
+            ->whereKey($guardian->id)
+            ->wherePivot('has_custody', true)
+            ->where(function ($query) {
+                $query->whereNull('child_user.valid_until')
+                    ->orWhereDate('child_user.valid_until', '>=', today());
+            })
+            ->exists();
+
+        abort_unless($isCurrentCustodian, 404);
+
+        $guardian->phone = $data['phone'] ?? null;
+        $guardian->save();
+
+        return redirect()->back()->with([
+            'Meldung' => 'Nichtöffentliche Telefonnummer für '.$guardian->name.' gespeichert',
+            'type' => 'success',
         ]);
     }
 
