@@ -35,6 +35,27 @@ class ChildControllerTest extends TestCase
 
     /**
      * @test
+     */
+    public function child_management_marks_children_with_duplicate_names(): void
+    {
+        $user = User::factory()->create(['password_changed_at' => now()]);
+        \Spatie\Permission\Models\Permission::findOrCreate('edit schickzeiten', 'web');
+        $user->givePermissionTo('edit schickzeiten');
+
+        $first = Child::factory()->create(['first_name' => 'Anna', 'last_name' => 'Muster']);
+        $second = Child::factory()->create(['first_name' => 'Anna Maria', 'last_name' => 'Muster']);
+
+        $response = $this->actingAs($user)->get(route('child.index'));
+
+        $response->assertOk();
+        $response->assertViewHas('duplicateIds', function (array $duplicateIds) use ($first, $second): bool {
+            return in_array($first->id, $duplicateIds, true)
+                && in_array($second->id, $duplicateIds, true);
+        });
+    }
+
+    /**
+     * @test
      * */
     public function user_can_create_child(): void
     {

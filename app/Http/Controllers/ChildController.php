@@ -27,10 +27,37 @@ class ChildController extends Controller implements HasMiddleware
     {
         $childs = Child::query()
             ->with(['group', 'class', 'parents'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
             ->get();
+
+        $duplicateIds = [];
+        foreach ($childs->groupBy(fn (Child $child): string => mb_strtolower(trim($child->last_name))) as $sameLastName) {
+            foreach ($sameLastName as $index => $child) {
+                $firstName = mb_strtolower(trim($child->first_name));
+                foreach ($sameLastName->slice($index + 1) as $otherChild) {
+                    $otherFirstName = mb_strtolower(trim($otherChild->first_name));
+                    $sameFirstName = $firstName === $otherFirstName
+                        || str_starts_with($firstName, $otherFirstName.' ')
+                        || str_starts_with($otherFirstName, $firstName.' ');
+
+                    if ($sameFirstName) {
+                        $duplicateIds[] = $child->id;
+                        $duplicateIds[] = $otherChild->id;
+                    }
+                }
+            }
+        }
+        $duplicateIds = array_values(array_unique($duplicateIds));
 
         return view('child.index', [
             'children' => $childs,
+            'duplicateIds' => $duplicateIds,
+            'statuses' => [
+                Child::STATUS_ACTIVE => 'Aktiv',
+                Child::STATUS_APPLICANT => 'Bewerber',
+                Child::STATUS_LEFT => 'Ausgeschieden',
+            ],
         ]);
     }
 
