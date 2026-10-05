@@ -95,6 +95,7 @@
                             </div>
                         </div>
 
+                        @can('manage attendance queries')
                         <div class="bg-white rounded-lg shadow border border-gray-200">
                             <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3">
                                 <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
@@ -104,6 +105,7 @@
                             <div class="p-4">
                                 <p class="text-sm text-gray-600 mb-4">
                                     Anwesenheitsabfragen dienen dem Erfassen von Anwesenheiten zu einzelnen Tagen (z.B. Ferientage). Hier können neue Abfragen erstellt werden.
+                                    Je Kind und Tag gibt es nur eine Abfrage: Wird eine Abfrage für einen bestehenden Zeitraum erneut erstellt, werden nur fehlende Kinder nachgetragen.
                                 </p>
 
                                 <form action="{{route('care.abfrage.store')}}" method="post" class="max-w-2xl"
@@ -279,7 +281,7 @@
                                             <option value="1">Kind kommt</option>
                                             <option value="0">Kind kommt nicht</option>
                                         </select>
-                                        <p class="mt-1 text-xs text-gray-500">Optional: Legen Sie direkt fest, ob das Kind anwesend sein wird. Bestehende Einträge werden entsprechend aktualisiert.</p>
+                                        <p class="mt-1 text-xs text-gray-500">Optional: Legen Sie direkt fest, ob das Kind anwesend sein wird. Nur wenn hier ein Wert gewählt ist, werden bestehende Einträge entsprechend aktualisiert – sonst bleiben vorhandene Rückmeldungen unverändert.</p>
                                     </div>
 
                                     <button type="submit"
@@ -293,6 +295,7 @@
                                 </form>
                             </div>
                         </div>
+                        @endcan
 
                         </div>
 
@@ -328,6 +331,7 @@
                                                             data-comment="{{ $detail['comment'] ?? '' }}">
                                                         <i class="fa fa-edit"></i>
                                                     </button>
+                                                    @can('manage attendance queries')
                                                     <form action="{{ route('care.abfrage.destroy', ['date' => $date]) }}" method="post" class="delete-form inline">
                                                         @csrf
                                                         @method('delete')
@@ -336,6 +340,7 @@
                                                             <i class="fa fa-trash"></i>
                                                         </button>
                                                     </form>
+                                                    @endcan
                                                 </div>
                                             @endif
                                         </div>

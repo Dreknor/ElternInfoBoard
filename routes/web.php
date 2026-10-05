@@ -650,9 +650,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
         Route::post('child/{child}/notice', [ChildNoticeController::class, 'noticeVerwaltung'])->name('child.notice.verwaltung');
 
-        Route::delete('abfrage/{date}/destroy', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyAbfrage'])->name('care.abfrage.destroy');
-        Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
-        Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
+        Route::middleware(['can:manage attendance queries'])->group(function () {
+            Route::delete('abfrage/{date}/destroy', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyAbfrage'])->name('care.abfrage.destroy');
+            Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
+            Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
+        });
         Route::post('care/abfrage/anwesenheit/download', [\App\Http\Controllers\Anwesenheit\CareController::class, 'downloadAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.download');
         Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
         Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
