@@ -6,6 +6,7 @@ use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
 use App\Model\UserAppSettings;
+use App\Services\Notifications\NotificationPreferences;
 use App\Settings\GeneralSetting;
 use App\Themes\ThemeRegistry;
 use App\Model\Child;
@@ -69,6 +70,7 @@ class BenutzerController extends Controller implements HasMiddleware
                 ''
             ),
             'generalSettings' => app(GeneralSetting::class),
+            'notificationPreferences' => NotificationPreferences::forUser(auth()->user()),
         ]);
     }
 
@@ -99,6 +101,20 @@ class BenutzerController extends Controller implements HasMiddleware
                 'password' => Hash::make($request->password),
                 'changePassword' => false,
             ]);
+        }
+
+        // Benachrichtigungskanäle (Tab „Benachrichtigungen“): nicht angehakte Kästchen = aus
+        if ($request->boolean('notifications_present')) {
+            $checked = (array) $request->input('notifications', []);
+            $categories = [];
+            foreach (NotificationPreferences::forUser($user) as $category) {
+                foreach ($category['channels'] as $channel => $value) {
+                    if ($value !== null) {
+                        $categories[$category['key']][$channel] = isset($checked[$category['key']][$channel]);
+                    }
+                }
+            }
+            NotificationPreferences::update($user, $categories);
         }
 
         return redirect()->back()->with([

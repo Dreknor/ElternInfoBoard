@@ -31,6 +31,7 @@ class PushTarget
             '#/pflichtstunden#' => 'pflichtstunden',
             '#/reinigung#' => 'reinigung',
             '#/arbeitsgemeinschaften#' => 'ags',
+            '#/vertretungsplan#' => 'vertretungsplan',
             '#/termine#' => 'termin',
             '#/listen#' => 'liste',
         ];

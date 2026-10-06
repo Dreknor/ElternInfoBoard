@@ -15,12 +15,15 @@ use App\Model\ReminderLog;
 use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Model\UserRueckmeldungen;
+use App\Jobs\SendPushNotifications;
+use App\Model\UserDevice;
 use App\Notifications\ReminderPushNotification;
 use App\Settings\ReminderSetting;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Support\Facades\Queue;
 use App\Settings\CareSetting;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
@@ -704,7 +707,8 @@ class ProcessRemindersTest extends TestCase
     #[Test]
     public function job_sends_push_when_enabled(): void
     {
-        NotificationFacade::fake();
+        Queue::fake([SendPushNotifications::class]);
+        UserDevice::create(['user_id' => $this->user->id, 'token' => 'fcm-test', 'provider' => UserDevice::PROVIDER_FCM]);
 
         // Push für Level 2 aktivieren (default: true)
         $this->rueckmeldung->update(['ende' => now()->addDays(1)]);
@@ -717,8 +721,9 @@ class ProcessRemindersTest extends TestCase
 
         $job->handle($settings);
 
-        // Push-Notification sollte gesendet worden sein
-        NotificationFacade::assertSentTo($this->user, ReminderPushNotification::class);
+        // App-/Browser-Push wurde genau einmal eingeplant (nicht zusätzlich zur In-App-Benachrichtigung)
+        Queue::assertPushed(SendPushNotifications::class, 1);
+        Queue::assertPushed(SendPushNotifications::class, fn ($push) => $push->userIds === [$this->user->id]);
 
         // Push-Log sollte existieren
         $this->assertDatabaseHas('reminder_logs', [
@@ -731,8 +736,6 @@ class ProcessRemindersTest extends TestCase
     #[Test]
     public function job_does_not_send_push_when_disabled(): void
     {
-        NotificationFacade::fake();
-
         // Level 1 hat Push standardmäßig deaktiviert
         $this->rueckmeldung->update(['ende' => now()->addDays(4)]);
 
@@ -741,9 +744,6 @@ class ProcessRemindersTest extends TestCase
 
         $job = new ProcessRemindersJob;
         $job->handle($settings);
-
-        // Push sollte NICHT gesendet worden sein
-        NotificationFacade::assertNotSentTo($this->user, ReminderPushNotification::class);
 
         // Kein Push-Log
         $this->assertDatabaseMissing('reminder_logs', [

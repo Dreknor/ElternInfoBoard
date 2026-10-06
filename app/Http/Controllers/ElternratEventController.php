@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 
 class ElternratEventController extends Controller implements HasMiddleware
 {
@@ -151,7 +153,7 @@ class ElternratEventController extends Controller implements HasMiddleware
 
                 // Sende Erinnerung an alle Mitglieder
                 foreach ($users as $user) {
-                    if ($user->email) {
+                    if ($user->email && NotificationPreferences::allows($user, NotificationCategory::ELTERNRAT, 'mail')) {
                         try {
                             Mail::to($user->email)->send(
                                 new EventReminderMail($event, (int) $hoursUntilEvent)

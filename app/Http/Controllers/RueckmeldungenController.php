@@ -15,6 +15,8 @@ use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -625,18 +627,20 @@ class RueckmeldungenController extends Controller
                 foreach ($openRecipients as $open) {
                     $User = $open['user'];
                     try {
-                        $notify = new Notification(
-                            [
-                                'users_id' => $User->id,
-                                'type' => 'Erinnerung',
-                                'text' => 'Rückmeldung für '.$Rueckmeldung->post->header.' fehlt'
-                                    .($open['children'] !== [] ? ' ('.implode(', ', $open['children']).')' : ''),
-                                'link' => url('post/'.$Rueckmeldung->post->id),
-                            ]
-                        );
-                        $notify->save();
+                        // Glocke + App-/Browser-Push; Kindernamen nicht im Text (erscheint auf dem Sperrbildschirm)
+                        Notification::create([
+                            'user_id' => $User->id,
+                            'type' => 'Erinnerung',
+                            'title' => 'Rückmeldung fehlt',
+                            'message' => 'Rückmeldung für '.$Rueckmeldung->post->header.' fehlt.',
+                            'url' => url('post/'.$Rueckmeldung->post->id),
+                        ]);
                     } catch (\Exception $e) {
-                        // do nothing
+                        Log::warning('Erinnerung (Rückmeldung) konnte nicht angelegt werden: '.$e->getMessage());
+                    }
+
+                    if (! $User->email || ! NotificationPreferences::allows($User, NotificationCategory::ERINNERUNGEN, 'mail')) {
+                        continue;
                     }
 
                     try {

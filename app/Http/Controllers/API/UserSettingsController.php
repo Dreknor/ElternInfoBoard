@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\API\StoreUserSettingsRequest;
 use App\Http\Requests\API\UpdateUserSettingsRequest;
 use App\Model\UserAppSettings;
+use App\Services\Notifications\NotificationPreferences;
 use App\Services\UserAppSettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -95,6 +96,11 @@ class UserSettingsController extends Controller
         // Update the specific path
         $settings->setSettingByPath($validated['path'], $validated['value']);
         $settings->save();
+
+        // Ältere App-Versionen schalten App-Push über `push.<kategorie>` – in die Kanalwahl übernehmen.
+        if (preg_match('/^push\.([a-z]+)$/', $validated['path'], $m) && is_bool($validated['value'])) {
+            NotificationPreferences::set($user->id, $m[1], 'app', $validated['value']);
+        }
 
         return response()->json([
             'success' => true,

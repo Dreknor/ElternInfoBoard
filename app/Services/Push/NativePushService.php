@@ -2,9 +2,10 @@
 
 namespace App\Services\Push;
 
-use App\Jobs\SendNativePush;
 use App\Model\UserDevice;
-use App\Model\UserAppSettings;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
+use App\Services\Notifications\PushDispatcher;
 
 /**
  * Versand nativer Push-Mitteilungen an die Eltern-App.
@@ -17,32 +18,40 @@ class NativePushService
         private readonly FcmSender $fcm,
     ) {}
 
-    /** Asynchron über die Queue einplanen – nur wenn überhaupt Geräte existieren. */
+    /** @deprecated Über PushDispatcher::dispatch() versenden (App und Browser). */
     public static function dispatch(array $userIds, string $title, string $message, ?string $url, string $type = 'info'): void
     {
-        if (empty($userIds) || ! UserDevice::whereIn('user_id', $userIds)->exists()) {
-            return;
-        }
-        SendNativePush::dispatch(array_values(array_unique($userIds)), $title, $message, $url, $type);
+        PushDispatcher::dispatch($userIds, $title, $message, $url, $type);
     }
 
+    /**
+     * Titel und Text für Push-Mitteilungen (Sperrbildschirm): bei Hort-/Kinderbezug neutral.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function texts(string $title, string $message, ?string $url): array
+    {
+        if (PushTarget::isSensitive(PushTarget::fromUrl($url))) {
+            return ['Hort & Betreuung', 'Es gibt eine neue Information zu Ihrem Kind.'];
+        }
+
+        return [$title, mb_strimwidth(strip_tags($message), 0, 180, '…')];
+    }
+
+    /** Nur an Nutzer, die App-Push für die Kategorie zulassen (Einstellungen → Benachrichtigungen). */
     public function send(array $userIds, string $title, string $message, ?string $url, string $type): void
     {
-        $target = PushTarget::fromUrl($url);
-        if (PushTarget::isSensitive($target)) {
-            $title = 'Hort & Betreuung';
-            $message = 'Es gibt eine neue Information zu Ihrem Kind.';
+        $category = NotificationCategory::resolve($type, $url);
+        $userIds = NotificationPreferences::filter($userIds, $category, 'app');
+        if ($userIds === []) {
+            return;
         }
-        $body = mb_strimwidth(strip_tags($message), 0, 180, '…');
+
+        $target = PushTarget::fromUrl($url);
+        [$title, $body] = self::texts($title, $message, $url);
         $data = ['type' => $target['type'] ?? $type, 'id' => $target['id'] ?? null];
 
-        $devices = UserDevice::whereIn('user_id', $userIds)->get();
-        $muted = $this->mutedUsers($devices->pluck('user_id')->unique()->all(), $data['type']);
-
-        foreach ($devices as $device) {
-            if (in_array($device->user_id, $muted, true)) {
-                continue;
-            }
+        foreach (UserDevice::whereIn('user_id', $userIds)->get() as $device) {
             $result = match ($device->provider) {
                 UserDevice::PROVIDER_APNS => $this->apns->isConfigured()
                     ? $this->apns->send($device->token, [
@@ -60,23 +69,5 @@ class NativePushService
                 $device->delete();
             }
         }
-    }
-
-    /**
-     * Nutzer, die diese Kategorie in der App abgeschaltet haben (`user/settings` Pfad `push.<kategorie>` = false).
-     */
-    private function mutedUsers(array $userIds, string $type): array
-    {
-        $category = match ($type) {
-            'conversation' => 'messenger',
-            'attendance', 'child', 'krankmeldung' => 'hort',
-            'termin', 'liste' => 'termine',
-            default => 'nachrichten',
-        };
-
-        return UserAppSettings::whereIn('user_id', $userIds)->get()
-            ->filter(fn ($s) => data_get($s->settings, "push.{$category}") === false)
-            ->pluck('user_id')
-            ->all();
     }
 }

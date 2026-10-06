@@ -47,6 +47,8 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
     Route::get('me/tokens', [MeController::class, 'tokens'])->name('me.tokens');
     Route::delete('me/tokens/{id}', [MeController::class, 'destroyToken'])->whereNumber('id')->name('me.tokens.destroy');
     Route::get('me/datenschutz', [MeController::class, 'datenschutz'])->name('me.datenschutz');
+    Route::get('me/notification-settings', [MeController::class, 'notificationSettings'])->name('me.notification-settings');
+    Route::put('me/notification-settings', [MeController::class, 'updateNotificationSettings'])->name('me.notification-settings.update');
     Route::post('devices', [MeController::class, 'storeDevice'])->name('devices.store');
     Route::delete('devices/{token}', [MeController::class, 'destroyDevice'])->where('token', '.+')->name('devices.destroy');
 

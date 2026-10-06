@@ -11,6 +11,7 @@ use App\Services\App\Family;
 use App\Services\App\MessengerUnread;
 use App\Services\App\Modules;
 use App\Services\App\TodoService;
+use App\Services\Notifications\NotificationPreferences;
 use App\Services\ThemeService;
 use App\Settings\GeneralSetting;
 use App\Settings\SchickzeitenSetting;
@@ -170,6 +171,42 @@ class MeController extends Controller
         UserDevice::where('user_id', $request->user()->id)->where('token', $token)->delete();
 
         return response()->json(['message' => 'Gerät entfernt.']);
+    }
+
+    /**
+     * Benachrichtigungskanäle je Kategorie. `channels.<kanal>` = null: Kanal für diese Kategorie nicht verfügbar.
+     * `digest`: Rhythmus der E-Mail-Zusammenfassung für neue Nachrichten.
+     */
+    public function notificationSettings(Request $request): JsonResponse
+    {
+        return response()->json(['data' => [
+            'categories' => NotificationPreferences::forUser($request->user()),
+            'digest' => $request->user()->benachrichtigung ?? 'daily',
+        ]]);
+    }
+
+    /**
+     * @bodyParam categories object Je Kategorie die Kanäle, z. B. {"nachrichten": {"app": true, "mail": false}}.
+     * @bodyParam digest string daily|weekly
+     */
+    public function updateNotificationSettings(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'categories' => 'sometimes|array',
+            'categories.*' => 'array',
+            'categories.*.app' => 'sometimes|boolean',
+            'categories.*.web' => 'sometimes|boolean',
+            'categories.*.mail' => 'sometimes|boolean',
+            'digest' => 'sometimes|in:daily,weekly',
+        ]);
+        $user = $request->user();
+
+        NotificationPreferences::update($user, $data['categories'] ?? []);
+        if (isset($data['digest'])) {
+            $user->update(['benachrichtigung' => $data['digest']]);
+        }
+
+        return $this->notificationSettings($request);
     }
 
     /**

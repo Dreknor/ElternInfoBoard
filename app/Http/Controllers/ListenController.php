@@ -256,18 +256,29 @@ class ListenController extends Controller
      */
     public function activate($liste)
     {
-        if (!auth()->user()->can('edit terminliste') and !$liste->besitzer == auth()->id()) {
+        $liste = Liste::findOrFail($liste);
+
+        if (! auth()->user()->can('edit terminliste') and $liste->besitzer != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
-
         }
 
-        $liste = Liste::find($liste);
+        $wasActive = (bool) $liste->active;
         $liste->update([
             'active' => 1,
         ]);
+
+        if (! $wasActive) {
+            $liste->notify(
+                users: $liste->users->unique('id'),
+                title: 'Neue Liste',
+                message: 'Die Liste '.$liste->listenname.' wurde veröffentlicht.',
+                url: url('listen/'.$liste->id),
+                type: 'Listen'
+            );
+        }
 
         return redirect()->back();
     }

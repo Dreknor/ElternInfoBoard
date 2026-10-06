@@ -274,14 +274,64 @@
                             </div>
                             <div>
                                 <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Benachrichtigungen</h2>
-                                <p class="text-xs mb-0" style="color: var(--color-text-secondary);">E-Mail-Benachrichtigungen und Kopien</p>
+                                <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Wie Sie über welche Information benachrichtigt werden</p>
                             </div>
                         </div>
+
+                        {{-- Kanäle je Kategorie (App, Browser, E-Mail). Die Glocke im Board zeigt immer alles. --}}
+                        <input type="hidden" name="notifications_present" value="1">
+                        <div class="overflow-x-auto mb-7 rounded-lg border" style="border-color: var(--color-card-border);">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr style="background-color: var(--color-widget-primary-bg);">
+                                        <th class="text-left px-4 py-3 font-semibold" style="color: var(--color-text-primary);">Information</th>
+                                        <th class="px-3 py-3 font-semibold text-center" style="color: var(--color-text-primary);" title="Push-Mitteilung in der ElternInfo-App">
+                                            <i class="fas fa-mobile-alt mr-1"></i>App
+                                        </th>
+                                        <th class="px-3 py-3 font-semibold text-center" style="color: var(--color-text-primary);" title="Push-Mitteilung im Browser (wenn im Browser erlaubt)">
+                                            <i class="fas fa-desktop mr-1"></i>Browser
+                                        </th>
+                                        <th class="px-3 py-3 font-semibold text-center" style="color: var(--color-text-primary);">
+                                            <i class="fas fa-envelope mr-1"></i>E-Mail
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($notificationPreferences as $category)
+                                        <tr class="border-t" style="border-color: var(--color-card-border);">
+                                            <td class="px-4 py-3">
+                                                <span class="block font-medium" style="color: var(--color-text-primary);">{{ $category['label'] }}</span>
+                                                <span class="block text-xs" style="color: var(--color-text-secondary);">{{ $category['description'] }}</span>
+                                            </td>
+                                            @foreach(['app' => 'App', 'web' => 'Browser', 'mail' => 'E-Mail'] as $channel => $channelLabel)
+                                                <td class="px-3 py-3 text-center">
+                                                    @if(is_null($category['channels'][$channel]))
+                                                        <span class="text-xs" style="color: var(--color-text-secondary);" title="Für diese Information nicht verfügbar">–</span>
+                                                    @else
+                                                        <input type="checkbox"
+                                                               class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                               name="notifications[{{ $category['key'] }}][{{ $channel }}]" value="1"
+                                                               aria-label="{{ $category['label'] }}: {{ $channelLabel }}"
+                                                               @checked($category['channels'][$channel])>
+                                                    @endif
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <p class="text-xs px-4 py-3 mb-0 border-t" style="color: var(--color-text-secondary); border-color: var(--color-card-border);">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Die Glocke im ElternInfoBoard zeigt weiterhin alle Benachrichtigungen. Dringende Nachrichten der Schule
+                                und Bestätigungen Ihrer eigenen Eingaben werden immer zugestellt.
+                            </p>
+                        </div>
+
                         <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-envelope-circle-check text-blue-600 mr-1"></i>
-                                    E-Mail Benachrichtigungen
+                                    Rhythmus der E-Mail-Zusammenfassung
                                     <span class="block text-xs font-normal mt-0.5" style="color: var(--color-text-secondary);">Zuletzt: {{$user->lastEmail?->format('d.m.Y H:i') ?? 'Nie'}}</span>
                                 </label>
                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"

@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 
 class SchickzeitenController extends Controller implements HasMiddleware
 {
@@ -1060,6 +1062,9 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $sent = 0;
         foreach ($recipients as $recipient) {
+            if (! NotificationPreferences::allows($recipient['user'], NotificationCategory::HORT, 'mail')) {
+                continue;
+            }
             $children = collect($recipient['children'])->values();
             $schickzeiten = $children->flatMap(fn (Child $child) => $child->schickzeiten)->values();
 
