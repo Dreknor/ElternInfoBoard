@@ -117,9 +117,12 @@ class ChildStatusAndBookingTest extends TestCase
     public function parents_book_one_termin_per_child(): void
     {
         $parent = $this->makeParent();
-        $max = $this->childFor([$parent]);
-        $mia = $this->childFor([$parent]);
-        $first = $this->termin();
+        $klasse = Group::factory()->create(['protected' => false]);
+        $parent->groups()->attach($klasse);
+        $max = $this->childFor([$parent], ['class_id' => $klasse->id]);
+        $mia = $this->childFor([$parent], ['class_id' => $klasse->id]);
+        $first = $this->termin([], ['type' => 'termin', 'active' => 1, 'ende' => now()->addMonth(), 'booking_scope' => Liste::BOOKING_CHILD]);
+        $first->liste->groups()->attach($klasse);
         $second = $this->termin(['listen_id' => $first->listen_id]);
         $third = $this->termin(['listen_id' => $first->listen_id]);
 

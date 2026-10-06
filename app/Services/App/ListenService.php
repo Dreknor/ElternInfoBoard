@@ -117,7 +117,8 @@ class ListenService
         // Art der Buchung (Termin/Eintrag); Standard: Typ der Liste
         $kind ??= $liste->type;
 
-        if ($child !== null) {
+        // Je Kind nur bei Listen „je Kind“ – sonst gilt die Familie, auch wenn ein Kind angegeben ist.
+        if ($child !== null && $liste->bookingPerChild()) {
             $query = $kind === 'termin'
                 ? listen_termine::where('listen_id', $liste->id)
                 : Listen_Eintragungen::where('listen_id', $liste->id);
@@ -154,15 +155,18 @@ class ListenService
             throw new HttpException(410, 'Dieser Termin liegt in der Vergangenheit.');
         }
         $child = $this->resolveChild($user, $liste, $childId);
-        $this->assertLimit($user, $liste, $child, 'termin');
 
-        // Atomar: nur buchen, wenn noch frei (verhindert Doppelbuchung bei gleichzeitigen Anfragen).
-        $updated = listen_termine::where('id', $termin->id)
-            ->whereNull('reserviert_fuer')
-            ->update(['reserviert_fuer' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
-        if ($updated === 0) {
-            throw new HttpException(409, 'Dieser Termin wurde gerade von jemand anderem gebucht.');
-        }
+        // Atomar: Begrenzung prüfen und nur buchen, wenn noch frei (Sperre auf die Liste
+        // verhindert, dass gleichzeitige Anfragen derselben Familie beide durchkommen).
+        $this->lockedForBooking($liste, function () use ($user, $liste, $child, $termin) {
+            $this->assertLimit($user, $liste, $child, 'termin');
+            $updated = listen_termine::where('id', $termin->id)
+                ->whereNull('reserviert_fuer')
+                ->update(['reserviert_fuer' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
+            if ($updated === 0) {
+                throw new HttpException(409, 'Dieser Termin wurde gerade von jemand anderem gebucht.');
+            }
+        });
 
         try {
             if ($liste->ersteller) {
@@ -202,15 +206,18 @@ class ListenService
     {
         $this->requireOpen($user, $liste, 'eintrag');
         $child = $this->resolveChild($user, $liste, $childId);
-        $this->assertLimit($user, $liste, $child, 'eintrag');
 
-        return Listen_Eintragungen::create([
-            'listen_id' => $liste->id,
-            'eintragung' => $text,
-            'user_id' => $user->id,
-            'child_id' => $child?->id,
-            'created_by' => $user->id,
-        ]);
+        return $this->lockedForBooking($liste, function () use ($user, $liste, $child, $text) {
+            $this->assertLimit($user, $liste, $child, 'eintrag');
+
+            return Listen_Eintragungen::create([
+                'listen_id' => $liste->id,
+                'eintragung' => $text,
+                'user_id' => $user->id,
+                'child_id' => $child?->id,
+                'created_by' => $user->id,
+            ]);
+        });
     }
 
     public function reserveEintrag(User $user, Listen_Eintragungen $eintrag, ?int $childId = null): void
@@ -218,13 +225,39 @@ class ListenService
         $liste = $eintrag->liste;
         $this->requireOpen($user, $liste, 'eintrag');
         $child = $this->resolveChild($user, $liste, $childId);
-        $this->assertLimit($user, $liste, $child, 'eintrag');
-        $updated = Listen_Eintragungen::where('id', $eintrag->id)
-            ->whereNull('user_id')
-            ->update(['user_id' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
-        if ($updated === 0) {
-            throw new HttpException(409, 'Dieser Eintrag wurde gerade von jemand anderem übernommen.');
+
+        $this->lockedForBooking($liste, function () use ($user, $liste, $child, $eintrag) {
+            $this->assertLimit($user, $liste, $child, 'eintrag');
+            $updated = Listen_Eintragungen::where('id', $eintrag->id)
+                ->whereNull('user_id')
+                ->update(['user_id' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
+            if ($updated === 0) {
+                throw new HttpException(409, 'Dieser Eintrag wurde gerade von jemand anderem übernommen.');
+            }
+        });
+    }
+
+    /**
+     * Buchung unter Sperre der Liste ausführen: Prüfung der Begrenzung und Buchung laufen
+     * serialisiert, sonst könnten zwei gleichzeitige Anfragen beide die Prüfung bestehen.
+     * Bei Listen mit Mehrfachbuchung ist keine Sperre nötig.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    private function lockedForBooking(Liste $liste, callable $callback): mixed
+    {
+        if ($liste->multiple) {
+            return $callback();
         }
+
+        return DB::transaction(function () use ($liste, $callback) {
+            Liste::whereKey($liste->id)->lockForUpdate()->first();
+
+            return $callback();
+        });
     }
 
     public function cancelEintrag(User $user, Listen_Eintragungen $eintrag): void

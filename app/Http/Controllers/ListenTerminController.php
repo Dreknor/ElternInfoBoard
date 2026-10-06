@@ -10,7 +10,6 @@ use App\Model\Child;
 use App\Model\Liste;
 use App\Model\listen_termine;
 use App\Model\User;
-use App\Notifications\Push;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
 use Exception;
@@ -101,24 +100,15 @@ class ListenTerminController extends Controller
         }
 
         // Kind der Buchung (Pflicht bei Listen je Kind, sonst optional – z. B. Elterngespräch)
-        // und „nur ein Termin“ je Kind bzw. je Familie (gemeinsame Regeln mit der App-API)
-        $service = app(\App\Services\App\ListenService::class);
+        // und „nur ein Termin“ je Kind bzw. je Familie (gemeinsame, atomare Buchung mit der App-API)
         try {
-            $child = $service->resolveChild($request->user(), $listen_termine->liste, $request->integer('child_id') ?: null);
-            $service->assertLimit($request->user(), $listen_termine->liste, $child, 'termin');
+            app(\App\Services\App\ListenService::class)->reserveTermin($request->user(), $listen_termine, $request->integer('child_id') ?: null);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => $e->getMessage(),
             ]);
         }
-
-        $listen_termine->update([
-            'reserviert_fuer' => $request->user()->id,
-            'child_id' => $child?->id,
-        ]);
-
-        Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', $request->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
 
         return redirect()->to(url('listen'))->with([
             'type' => 'success',

@@ -136,4 +136,25 @@ class ListenJeKindTest extends TestCase
         $this->assertSame($this->mother->id, $e1->fresh()->user_id);
         $this->assertNull($e1->fresh()->child_id);
     }
+
+    #[Test]
+    public function family_scope_limits_termine_even_when_child_is_given(): void
+    {
+        $liste = $this->liste('termin');
+        $liste->update(['booking_scope' => Liste::BOOKING_FAMILY]);
+        $t1 = listen_termine::create(['listen_id' => $liste->id, 'termin' => now()->addDays(2)]);
+        $t2 = listen_termine::create(['listen_id' => $liste->id, 'termin' => now()->addDays(3)]);
+        $t3 = listen_termine::create(['listen_id' => $liste->id, 'termin' => now()->addDays(4)]);
+
+        // „Je Familie“: ein Kind (z. B. Elterngespräch) hebt die Begrenzung nicht auf
+        Sanctum::actingAs($this->mother);
+        $this->postJson("/api/v1/listen/termine/{$t1->id}/reservation", ['child_id' => $this->mia->id])->assertCreated();
+        $this->postJson("/api/v1/listen/termine/{$t2->id}/reservation", ['child_id' => $this->ben->id])->assertStatus(409);
+        $this->postJson("/api/v1/listen/termine/{$t2->id}/reservation")->assertStatus(409);
+
+        // Web: ebenfalls kein zweiter Termin
+        $this->actingAs($this->mother)->put("listen/termine/{$t3->id}");
+        $this->assertNull($t3->fresh()->reserviert_fuer);
+        $this->assertNull($t2->fresh()->reserviert_fuer);
+    }
 }
