@@ -15,6 +15,9 @@ use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Module;
 use App\Model\Notification;
+use App\Model\NotificationPreference;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\PushDispatcher;
 use App\Model\Post;
 use App\Model\Pflichtstunde;
 use App\Model\Rueckmeldungen;
@@ -605,7 +608,11 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         if (is_null($userSend)) {
-            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            // Ohne Nutzer, die die E-Mail-Zusammenfassung abbestellt haben (Einstellungen → Benachrichtigungen)
+            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())
+                ->whereNotIn('id', NotificationPreference::where('category', NotificationCategory::NACHRICHTEN)
+                    ->where('mail', false)->select('user_id'))
+                ->get();
         } else {
             $users = User::where('id', $userSend)->get();
         }
@@ -1013,6 +1020,14 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         Notification::insert($notifications);
+        // insert() löst keine Model-Events aus → App- und Browser-Push hier anstoßen.
+        PushDispatcher::dispatch(
+            $User->pluck('id')->all(),
+            $header,
+            $post->header,
+            url('post/'.$post->id),
+            $post->external ? 'Ex. Angebot' : 'Nachrichten'
+        );
 
         return redirect()->back();
     }

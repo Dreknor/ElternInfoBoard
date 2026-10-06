@@ -81,6 +81,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'edit schickzeiten', 'guard_name' => 'web', 'module' => 'Care', 'description' => 'Schickzeiten bearbeiten und Anwesenheiten verwalten.'],
             ['name' => 'view schickzeiten', 'guard_name' => 'web', 'module' => 'Care', 'description' => 'Schickzeiten einsehen. (Sorgeberechtigte)'],
             ['name' => 'manage late pickups', 'guard_name' => 'web', 'module' => 'Care', 'description' => 'Verspätete Abholungen bestätigen oder verwerfen.'],
+            ['name' => 'manage attendance queries', 'guard_name' => 'web', 'module' => 'Care', 'description' => 'Anwesenheitsabfragen erstellen, Kinder nachtragen und Abfragen löschen.'],
             ['name' => 'view krankmeldung', 'guard_name' => 'web', 'module' => 'Krankmeldungen', 'description' => 'Krankmeldungen einsehen.'],
             ['name' => 'view groups', 'guard_name' => 'web', 'module' => 'Gruppen', 'description' => 'Gruppen einsehen.'],
             ['name' => 'view mitarbeiterboard', 'guard_name' => 'web', 'module' => 'Links', 'description' => 'Mitarbeiterboard einsehen.'],

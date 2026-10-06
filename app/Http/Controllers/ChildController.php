@@ -19,7 +19,7 @@ class ChildController extends Controller implements HasMiddleware
     {
         return [
             'auth',
-            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit']),
+            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
         ];
     }
 
@@ -27,10 +27,37 @@ class ChildController extends Controller implements HasMiddleware
     {
         $childs = Child::query()
             ->with(['group', 'class', 'parents'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
             ->get();
+
+        $duplicateIds = [];
+        foreach ($childs->groupBy(fn (Child $child): string => mb_strtolower(trim($child->last_name))) as $sameLastName) {
+            foreach ($sameLastName as $index => $child) {
+                $firstName = mb_strtolower(trim($child->first_name));
+                foreach ($sameLastName->slice($index + 1) as $otherChild) {
+                    $otherFirstName = mb_strtolower(trim($otherChild->first_name));
+                    $sameFirstName = $firstName === $otherFirstName
+                        || str_starts_with($firstName, $otherFirstName.' ')
+                        || str_starts_with($otherFirstName, $firstName.' ');
+
+                    if ($sameFirstName) {
+                        $duplicateIds[] = $child->id;
+                        $duplicateIds[] = $otherChild->id;
+                    }
+                }
+            }
+        }
+        $duplicateIds = array_values(array_unique($duplicateIds));
 
         return view('child.index', [
             'children' => $childs,
+            'duplicateIds' => $duplicateIds,
+            'statuses' => [
+                Child::STATUS_ACTIVE => 'Aktiv',
+                Child::STATUS_APPLICANT => 'Bewerber',
+                Child::STATUS_LEFT => 'Ausgeschieden',
+            ],
         ]);
     }
 
@@ -135,9 +162,35 @@ class ChildController extends Controller implements HasMiddleware
         $parents = User::query()->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('child.edit', [
-            'child' => $child,
+            'child' => $child->load('parents'),
             'groups' => Group::active()->get(),
             'parents' => $parents,
+        ]);
+    }
+
+    public function updateGuardianPhone(Request $request, Child $child, User $guardian)
+    {
+        $data = $request->validate([
+            'phone' => ['present', 'nullable', 'string', 'max:50'],
+        ]);
+
+        $isCurrentCustodian = $child->parents()
+            ->whereKey($guardian->id)
+            ->wherePivot('has_custody', true)
+            ->where(function ($query) {
+                $query->whereNull('child_user.valid_until')
+                    ->orWhereDate('child_user.valid_until', '>=', today());
+            })
+            ->exists();
+
+        abort_unless($isCurrentCustodian, 404);
+
+        $guardian->phone = $data['phone'] ?? null;
+        $guardian->save();
+
+        return redirect()->back()->with([
+            'Meldung' => 'Nichtöffentliche Telefonnummer für '.$guardian->name.' gespeichert',
+            'type' => 'success',
         ]);
     }
 

@@ -12,6 +12,8 @@ use App\Traits\NotificationTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 
 /**
  * Informiert bei einer Krankmeldung die übrigen Bezugspersonen des Kindes
@@ -65,7 +67,7 @@ class GuardianNotifier
         );
 
         foreach ($recipients as $recipient) {
-            if (! $recipient->email) {
+            if (! $recipient->email || ! NotificationPreferences::allows($recipient, NotificationCategory::HORT, 'mail')) {
                 continue;
             }
             try {

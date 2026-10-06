@@ -459,8 +459,9 @@ class AttendanceQueryImprovementsTest extends TestCase
             'checked_out' => false,
         ]);
 
+        // Je Kind und Tag ist nur eine Abfrage zulässig – daher ein zweites Kind
         ChildCheckIn::create([
-            'child_id'    => $this->child->id,
+            'child_id'    => Child::factory()->create()->id,
             'date'        => now()->addDays(3)->toDateString(),
             'should_be'   => null,
             'lock_at'     => now()->addDays(2)->toDateString(),

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Mail\FinalReadReceiptReminderMail;
 use App\Mail\RemindReadReceiptMail;
+use App\Model\Notification;
 use App\Model\Post;
 use App\Model\ReadReceipts;
-use App\Notifications\ReadReceiptReminderNotification;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 use App\Services\ReadReceiptStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -131,28 +133,32 @@ class ReadReceiptsController extends Controller
                     $existingReceipt->update(['reminded_at' => now()]);
                 }
 
-                // Versende E-Mail
-                $mail = new RemindReadReceiptMail(
-                    $user->email,
-                    $user->name,
-                    $post->header,
-                    $deadline->format('d.m.Y'),
-                    $post->id
-                );
-                $mail->subject('Lesebestätigung fehlt: '.$post->header);
+                // Versende E-Mail (sofern der Nutzer E-Mails für Erinnerungen zulässt)
+                if ($user->email && NotificationPreferences::allows($user, NotificationCategory::ERINNERUNGEN, 'mail')) {
+                    $mail = new RemindReadReceiptMail(
+                        $user->email,
+                        $user->name,
+                        $post->header,
+                        $deadline->format('d.m.Y'),
+                        $post->id
+                    );
+                    $mail->subject('Lesebestätigung fehlt: '.$post->header);
 
-                try {
-                    Mail::to($user->email)->queue($mail);
-                } catch (\Exception $e) {
-                    Log::error('Mail konnte nicht versendet werden: '.$e->getMessage());
+                    try {
+                        Mail::to($user->email)->queue($mail);
+                    } catch (\Exception $e) {
+                        Log::error('Mail konnte nicht versendet werden: '.$e->getMessage());
+                    }
                 }
 
-                // Versende In-App-Benachrichtigung
-                try {
-                    $user->notify(new ReadReceiptReminderNotification($post, $deadline->format('d.m.Y')));
-                } catch (\Exception $e) {
-                    Log::error('In-App-Benachrichtigung konnte nicht versendet werden: '.$e->getMessage());
-                }
+                // Glocke + App-/Browser-Push (über das created-Event des Modells)
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'Lesebestätigung',
+                    'title' => 'Lesebestätigung fehlt',
+                    'message' => 'Bitte bestätigen Sie die Nachricht „'.$post->header.'“ bis zum '.$deadline->format('d.m.Y').'.',
+                    'url' => url('post/'.$post->id),
+                ]);
             }
         }
     }

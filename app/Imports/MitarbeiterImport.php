@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Mail\NewUserPasswordMail;
 use App\Model\User;
 use App\Settings\EmailSetting;
+use App\Support\PasswordGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -50,14 +51,13 @@ class MitarbeiterImport implements ToCollection, WithHeadingRow
     {
         foreach ($collection as $row) {
             if ($row->has('e_mail') && ! is_null($row['e_mail'])) {
-                $password = Str::password(12, true, true, true, false);
+                $password = PasswordGenerator::generate();
 
                 $user = User::firstOrCreate([
                     'email' => $row['e_mail'],
                 ], [
                     'name' => $row['vorname'].' '.$row['nachname'],
                     'changePassword' => 1,
-                    'password' => Hash::make($this->getImportPassword()),
                     'password' => Hash::make($password),
                     'lastEmail' => Carbon::now(),
                 ]);

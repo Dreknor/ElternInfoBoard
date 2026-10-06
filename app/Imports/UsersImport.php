@@ -12,6 +12,7 @@ use App\Scopes\GetGroupsScope;
 use App\Services\Family\FamilyService;
 use App\Services\Family\GuardianshipService;
 use App\Settings\EmailSetting;
+use App\Support\PasswordGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -151,7 +152,7 @@ class UsersImport implements ToCollection, WithHeadingRow
         }
 
         $isNewUser = ! User::where('email', $email)->exists();
-        $password = Str::password(12, true, true, true, false);
+        $password = PasswordGenerator::generate();
 
         $user = User::firstOrCreate(
             ['email' => $email],

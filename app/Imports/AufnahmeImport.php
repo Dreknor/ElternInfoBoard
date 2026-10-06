@@ -9,6 +9,7 @@ use App\Model\User;
 use App\Scopes\GetGroupsScope;
 use App\Services\Family\FamilyService;
 use App\Settings\EmailSetting;
+use App\Support\PasswordGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -92,8 +93,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'deleted_at' => null,
                     ]);
                 } else {
-                    // TODO-1.1: Sicheres Zufallspasswort generieren
-                    $password1 = Str::password(12, true, true, true, false);
+                    $password1 = PasswordGenerator::generate();
 
                     $user1 = User::create([
                         'email' => $row[$this->header['S1Email']],
@@ -141,8 +141,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'deleted_at' => null,
                     ]);
                 } else {
-                    // TODO-1.1: Sicheres Zufallspasswort generieren
-                    $password2 = Str::password(12, true, true, true, false);
+                    $password2 = PasswordGenerator::generate();
 
                     $user2 = User::create([
                         'email' => $row[$this->header['S2Email']],

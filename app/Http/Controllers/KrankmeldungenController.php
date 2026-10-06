@@ -11,6 +11,7 @@ use App\Model\Child;
 use App\Model\Disease;
 use App\Model\Krankmeldungen;
 use App\Model\Module;
+use App\Settings\EmailSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -144,7 +145,10 @@ class KrankmeldungenController extends Controller
 
             $authUser = $request->user();
 
-            Mail::to(config('mail.from.address'))
+            $emailSettings = app(EmailSetting::class);
+            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
+
+            Mail::to($email)
                 ->cc($authUser?->email)
                 ->queue(new Krankmeldung($authUser?->email ?? '', $authUser?->name ?? '', $name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease?->name, $attachments));
 

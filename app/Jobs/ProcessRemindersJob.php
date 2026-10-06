@@ -13,8 +13,10 @@ use App\Model\ReminderLog;
 use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Model\UserRueckmeldungen;
-use App\Notifications\ReminderPushNotification;
 use App\Services\Family\FamilyResolver;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
+use App\Services\Notifications\PushDispatcher;
 use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Settings\ReminderSetting;
 use Carbon\Carbon;
@@ -368,15 +370,17 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'in_app';
         }
 
-        // E-Mail
-        if ($s->{"{$levelKey}_email"}) {
+        // E-Mail (sofern der Nutzer E-Mails für Erinnerungen zulässt)
+        if ($s->{"{$levelKey}_email"} && NotificationPreferences::allows($user, NotificationCategory::ERINNERUNGEN, 'mail')) {
             $this->sendEmailReminder($user, $post, $level, $deadline, $type);
             $channels[] = 'email';
         }
 
-        // Push-Benachrichtigung
+        // Push-Benachrichtigung – die In-App-Benachrichtigung löst bereits App-/Browser-Push aus
         if ($s->{"{$levelKey}_push"}) {
-            $this->sendPushReminder($user, $post, $level, $deadline, $type);
+            if (! in_array('in_app', $channels, true)) {
+                $this->sendPushReminder($user, $post, $level, $deadline, $type);
+            }
             $channels[] = 'push';
         }
 
@@ -440,8 +444,9 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'in_app';
         }
 
-        // E-Mail
-        if ($s->{"{$levelKey}_email"} && $parent->email) {
+        // E-Mail (sofern der Elternteil E-Mails für Hort & Krankmeldungen zulässt)
+        if ($s->{"{$levelKey}_email"} && $parent->email
+            && NotificationPreferences::allows($parent, NotificationCategory::HORT, 'mail')) {
             try {
                 Mail::to($parent->email)->send(new ReminderMail(
                     userName: $parent->name,
@@ -457,16 +462,10 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'email';
         }
 
-        // Push
+        // Push – die In-App-Benachrichtigung löst bereits App-/Browser-Push aus
         if ($s->{"{$levelKey}_push"}) {
-            try {
-                $parent->notify(new ReminderPushNotification(
-                    $title,
-                    $body,
-                    url('schickzeiten')
-                ));
-            } catch (\Exception $e) {
-                Log::error("[ProcessRemindersJob] Push-Fehler (Anwesenheit): " . $e->getMessage());
+            if (! in_array('in_app', $channels, true)) {
+                PushDispatcher::dispatch([$parent->id], $title, $body, url('schickzeiten'), 'Anwesenheitsabfrage');
             }
             $channels[] = 'push';
         }
@@ -574,7 +573,8 @@ class ProcessRemindersJob implements ShouldQueue
             : url('post/' . $post->id);
 
         try {
-            $user->notify(new ReminderPushNotification($title, $body, $actionUrl));
+            // Ohne Glocken-Eintrag: nur App-/Browser-Push nach den Kanälen des Nutzers
+            PushDispatcher::dispatch([$user->id], $title, $body, $actionUrl, $typeLabel);
         } catch (\Exception $e) {
             Log::error("[ProcessRemindersJob] Push-Fehler: " . $e->getMessage(), [
                 'user' => $user->id,

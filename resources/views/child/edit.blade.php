@@ -82,5 +82,7 @@
                 <div class="card-footer small text-muted">Beziehungen pflegt die Verwaltung (Berechtigung „Familien verwalten“).</div>
             </div>
         @endcan
+
+        @include('child.partials.guardian-phones', ['child' => $child])
     </div>
 @endsection

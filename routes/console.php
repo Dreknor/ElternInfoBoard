@@ -163,5 +163,6 @@ try {
 // Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
 // Default ist die Queue über Supervisor zu starten
 if (config('queue.use_cronjob')) {
-    Schedule::command('queue:work --stop-when-empty')->withoutOverlapping();
+    Schedule::command('queue:work --stop-when-empty --memory='.(int) config('queue.cronjob_memory'))
+        ->withoutOverlapping();
 }

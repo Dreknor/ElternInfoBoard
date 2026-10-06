@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 
 class SchickzeitenController extends Controller implements HasMiddleware
 {
@@ -1060,6 +1062,9 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $sent = 0;
         foreach ($recipients as $recipient) {
+            if (! NotificationPreferences::allows($recipient['user'], NotificationCategory::HORT, 'mail')) {
+                continue;
+            }
             $children = collect($recipient['children'])->values();
             $schickzeiten = $children->flatMap(fn (Child $child) => $child->schickzeiten)->values();
 
@@ -1240,7 +1245,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
     public function storeAbfrageAnwesenheit(Request $request)
     {
-        if (! auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('manage attendance queries')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -1264,7 +1269,9 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $child = Child::find($request->child_id);
 
-        $child->load(['checkIns' => fn ($query) => $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()])]);
+        $child->load(['checkIns' => fn ($query) => $query
+            ->whereDate('date', '>=', $date_start->toDateString())
+            ->whereDate('date', '<=', $date_end->toDateString())]);
 
         $newCheckInsCreated = false;
 
@@ -1273,7 +1280,8 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 continue;
             }
 
-            $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
+            // 'date' ist als Carbon gecastet – ein where() gegen den Datums-String würde nie treffen
+            $existingCheckIn = $child->checkIns->first(fn (ChildCheckIn $checkIn) => $checkIn->date?->isSameDay($date));
 
             if ($existingCheckIn) {
                 // Bestehenden Eintrag: nur should_be aktualisieren, lock_at und check-in-Status nicht überschreiben
