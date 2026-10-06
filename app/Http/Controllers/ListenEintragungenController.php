@@ -29,27 +29,22 @@ class ListenEintragungenController extends Controller
             ]);
         }
 
-        $eintrag = new Listen_Eintragungen([
-            'listen_id' => $liste->id,
-            'eintragung' => $request->eintragung,
-            'created_by' => auth()->id(),
-        ]);
-
-        // Verwaltung legt freie Einträge an; Eltern tragen sich (ggf. für ein Kind) ein
-        if (! auth()->user()->can('edit terminliste')) {
+        // Verwaltung und Listen-Ersteller legen freie bzw. eigene Einträge ohne Begrenzung an
+        if (auth()->user()->can('edit terminliste') || (int) $liste->besitzer === auth()->id()) {
+            Listen_Eintragungen::create([
+                'listen_id' => $liste->id,
+                'eintragung' => $request->eintragung,
+                'created_by' => auth()->id(),
+                'user_id' => auth()->user()->can('edit terminliste') ? null : auth()->id(),
+            ]);
+        } else {
+            // Eltern tragen sich (ggf. für ein Kind) ein – „einmal“ je Kind bzw. je Familie, atomar
             try {
-                $child = $this->listen->resolveChild($request->user(), $liste, $request->integer('child_id') ?: null);
-                if ($child !== null) {
-                    $this->listen->assertLimit($request->user(), $liste, $child, 'eintrag');
-                }
+                $this->listen->addEintrag($request->user(), $liste, $request->eintragung, $request->integer('child_id') ?: null);
             } catch (HttpException $e) {
                 return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
             }
-            $eintrag->user_id = auth()->id();
-            $eintrag->child_id = $child?->id;
         }
-
-        $eintrag->save();
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -67,20 +62,12 @@ class ListenEintragungenController extends Controller
     public function update(Request $request, Listen_Eintragungen $listen_eintragung)
     {
         if ($listen_eintragung->user_id == null) {
-            $liste = $listen_eintragung->liste;
+            // „einmal“ je Kind bzw. je Familie, atomar (gleiche Regeln wie die App-API)
             try {
-                $child = $this->listen->resolveChild($request->user(), $liste, $request->integer('child_id') ?: null);
-                if ($child !== null) {
-                    $this->listen->assertLimit($request->user(), $liste, $child, 'eintrag');
-                }
+                $this->listen->reserveEintrag($request->user(), $listen_eintragung, $request->integer('child_id') ?: null);
             } catch (HttpException $e) {
                 return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
             }
-
-            $listen_eintragung->updateOrFail([
-                'user_id' => auth()->id(),
-                'child_id' => $child?->id,
-            ]);
 
             return redirect()->back()->with([
                 'type' => 'success',

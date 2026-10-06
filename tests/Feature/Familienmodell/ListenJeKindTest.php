@@ -157,4 +157,39 @@ class ListenJeKindTest extends TestCase
         $this->assertNull($t3->fresh()->reserviert_fuer);
         $this->assertNull($t2->fresh()->reserviert_fuer);
     }
+
+    #[Test]
+    public function family_scope_limits_eintragungen_in_web(): void
+    {
+        $liste = $this->liste('eintrag');
+        $liste->update(['booking_scope' => Liste::BOOKING_FAMILY]);
+        $e1 = Listen_Eintragungen::create(['listen_id' => $liste->id, 'eintragung' => 'Kuchen', 'created_by' => $liste->besitzer]);
+        $e2 = Listen_Eintragungen::create(['listen_id' => $liste->id, 'eintragung' => 'Saft', 'created_by' => $liste->besitzer]);
+
+        // Mutter übernimmt einen vorgegebenen Eintrag …
+        $this->actingAs($this->mother)->put("listen/eintragungen/{$e1->id}");
+        $this->assertSame($this->mother->id, $e1->fresh()->user_id);
+
+        // … keinen zweiten, auch nicht mit Kind …
+        $this->actingAs($this->mother)->put("listen/eintragungen/{$e2->id}", ['child_id' => $this->ben->id]);
+        $this->assertNull($e2->fresh()->user_id);
+
+        // … und legt auch keinen eigenen zusätzlich an
+        $this->actingAs($this->mother)->post("listen/{$liste->id}/eintragungen", ['eintragung' => 'Obst']);
+        $this->assertSame(1, Listen_Eintragungen::where('listen_id', $liste->id)->whereNotNull('user_id')->count());
+        $this->assertSame(2, Listen_Eintragungen::where('listen_id', $liste->id)->count());
+    }
+
+    #[Test]
+    public function family_scope_limits_new_eintragungen_in_web(): void
+    {
+        $liste = $this->liste('eintrag');
+        $liste->update(['booking_scope' => Liste::BOOKING_FAMILY]);
+
+        $this->actingAs($this->mother)->post("listen/{$liste->id}/eintragungen", ['eintragung' => 'Kuchen']);
+        $this->actingAs($this->mother)->post("listen/{$liste->id}/eintragungen", ['eintragung' => 'Saft']);
+
+        $this->assertSame(1, Listen_Eintragungen::where('listen_id', $liste->id)->count());
+        $this->assertSame($this->mother->id, Listen_Eintragungen::where('listen_id', $liste->id)->first()->user_id);
+    }
 }
