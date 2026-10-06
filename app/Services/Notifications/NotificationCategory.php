@@ -35,6 +35,9 @@ final class NotificationCategory
 
     public const CHANNELS = ['app', 'web', 'mail'];
 
+    /** Recht, die E-Mail-Zusammenfassung für neue Nachrichten abzubestellen. */
+    public const DISABLE_NEWS_MAIL_PERMISSION = 'disable news mail';
+
     /**
      * Beschriftung, Beschreibung und verfügbare Kanäle. E-Mail nur dort, wo das Board
      * tatsächlich E-Mails versendet (Nachrichten = tägliche/wöchentliche Zusammenfassung).
@@ -95,6 +98,16 @@ final class NotificationCategory
     public static function supports(string $category, string $channel): bool
     {
         return in_array($channel, self::definitions()[$category]['channels'] ?? [], true);
+    }
+
+    /**
+     * Kanal ist für den Nutzer fest aktiv und kann nicht abgewählt werden.
+     */
+    public static function locked(User $user, string $category, string $channel): bool
+    {
+        return $category === self::NACHRICHTEN
+            && $channel === 'mail'
+            && ! $user->can(self::DISABLE_NEWS_MAIL_PERMISSION);
     }
 
     /**

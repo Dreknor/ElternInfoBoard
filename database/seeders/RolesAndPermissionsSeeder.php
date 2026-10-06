@@ -62,6 +62,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'import user', 'guard_name' => 'web', 'module' => 'Benutzerverwaltung', 'description' => 'Benutzer per Import anlegen.'],
             ['name' => 'release posts', 'guard_name' => 'web', 'module' => 'Nachrichten', 'description' => 'Beiträge veröffentlichen.'],
             ['name' => 'use scriptTag', 'guard_name' => 'web', 'module' => 'Nachrichten', 'description' => 'Script-Tags in Inhalten verwenden.'],
+            ['name' => 'disable news mail', 'guard_name' => 'web', 'module' => 'Nachrichten', 'description' => 'E-Mail-Zusammenfassung für neue Nachrichten in den Benachrichtigungseinstellungen abwählen.'],
             ['name' => 'view elternrat', 'guard_name' => 'web', 'module' => 'Elternrat', 'description' => 'Den Elternrat-Bereich einsehen.'],
             ['name' => 'send urgent message', 'guard_name' => 'web', 'module' => 'Nachrichten', 'description' => 'Dringende Nachrichten versenden.'],
             ['name' => 'edit reinigung', 'guard_name' => 'web', 'module' => 'Reinigung', 'description' => 'Reinigungspläne bearbeiten.'],

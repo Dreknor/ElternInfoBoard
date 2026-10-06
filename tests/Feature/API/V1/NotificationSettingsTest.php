@@ -24,6 +24,8 @@ class NotificationSettingsTest extends AppApiTestCase
     public function settings_have_defaults_and_can_be_changed_per_category_and_channel(): void
     {
         $user = $this->parentIn($this->group());
+        Permission::findOrCreate(NotificationCategory::DISABLE_NEWS_MAIL_PERMISSION, 'web');
+        $user->givePermissionTo(NotificationCategory::DISABLE_NEWS_MAIL_PERMISSION);
         Sanctum::actingAs($user);
 
         $categories = collect($this->getJson('/api/v1/me/notification-settings')->assertOk()->json('data.categories'))->keyBy('key');
@@ -45,6 +47,36 @@ class NotificationSettingsTest extends AppApiTestCase
         $this->assertSame('weekly', $user->fresh()->benachrichtigung);
         // Kanal, den es für die Kategorie nicht gibt, wird ignoriert
         $this->assertDatabaseMissing('notification_preferences', ['user_id' => $user->id, 'category' => 'termine']);
+    }
+
+    /** @test */
+    public function news_mail_can_only_be_disabled_with_permission(): void
+    {
+        Permission::findOrCreate(NotificationCategory::DISABLE_NEWS_MAIL_PERMISSION, 'web');
+        $user = $this->parentIn($this->group());
+        Sanctum::actingAs($user);
+
+        $nachrichten = collect($this->getJson('/api/v1/me/notification-settings')->assertOk()->json('data.categories'))->keyBy('key')['nachrichten'];
+        $this->assertSame(['mail'], $nachrichten['locked']);
+        $this->assertTrue($nachrichten['channels']['mail']);
+
+        $this->putJson('/api/v1/me/notification-settings', [
+            'categories' => ['nachrichten' => ['app' => false, 'mail' => false]],
+        ])->assertOk();
+
+        $this->assertFalse(NotificationPreferences::allows($user, 'nachrichten', 'app'));
+        $this->assertTrue(NotificationPreferences::allows($user, 'nachrichten', 'mail'));
+        $this->assertDatabaseMissing('notification_preferences', ['user_id' => $user->id, 'category' => 'nachrichten', 'mail' => false]);
+
+        // Früher gespeichertes „aus“ gilt ohne Recht nicht
+        NotificationPreference::where('user_id', $user->id)->update(['mail' => false]);
+        $this->assertTrue(NotificationPreferences::allows($user, 'nachrichten', 'mail'));
+        $this->assertSame([$user->id], NotificationPreferences::filter([$user->id], 'nachrichten', 'mail'));
+
+        $user->givePermissionTo(NotificationCategory::DISABLE_NEWS_MAIL_PERMISSION);
+        $user = $user->fresh();
+        $this->assertFalse(NotificationPreferences::allows($user, 'nachrichten', 'mail'));
+        $this->assertSame([], NotificationPreferences::filter([$user->id], 'nachrichten', 'mail'));
     }
 
     /** @test */
@@ -146,8 +178,10 @@ class NotificationSettingsTest extends AppApiTestCase
 
         $this->assertTrue(NotificationPreferences::allows($user, 'nachrichten', 'app'));
         $this->assertFalse(NotificationPreferences::allows($user, 'nachrichten', 'web'));
-        $this->assertFalse(NotificationPreferences::allows($user, 'nachrichten', 'mail'));
+        // Ohne Recht „disable news mail“ bleibt die E-Mail-Zusammenfassung aktiv
+        $this->assertTrue(NotificationPreferences::allows($user, 'nachrichten', 'mail'));
         $this->assertFalse(NotificationPreferences::allows($user, 'erinnerungen', 'app'));
+        $this->assertFalse(NotificationPreferences::allows($user, 'erinnerungen', 'mail'));
     }
 
     /** @test */

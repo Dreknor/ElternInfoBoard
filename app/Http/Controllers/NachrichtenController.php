@@ -15,7 +15,7 @@ use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Module;
 use App\Model\Notification;
-use App\Model\NotificationPreference;
+use App\Services\Notifications\NotificationPreferences;
 use App\Services\Notifications\NotificationCategory;
 use App\Services\Notifications\PushDispatcher;
 use App\Model\Post;
@@ -608,11 +608,12 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         if (is_null($userSend)) {
-            // Ohne Nutzer, die die E-Mail-Zusammenfassung abbestellt haben (Einstellungen → Benachrichtigungen)
-            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())
-                ->whereNotIn('id', NotificationPreference::where('category', NotificationCategory::NACHRICHTEN)
-                    ->where('mail', false)->select('user_id'))
-                ->get();
+            // Ohne Nutzer, die die E-Mail-Zusammenfassung abbestellt haben (Einstellungen → Benachrichtigungen);
+            // die Abwahl gilt nur mit dem Recht „disable news mail“.
+            $users = User::where('benachrichtigung', $daily)->whereDate('lastEmail', '<', Carbon::now())->get();
+            $users = $users->whereIn('id', NotificationPreferences::filter(
+                $users->pluck('id')->all(), NotificationCategory::NACHRICHTEN, 'mail'
+            ));
         } else {
             $users = User::where('id', $userSend)->get();
         }

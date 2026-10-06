@@ -12,22 +12,29 @@ use App\Model\User;
 class NotificationPreferences
 {
     /**
-     * Einstellungen für die Anzeige: nur relevante Kategorien, nicht verfügbare Kanäle = null.
+     * Einstellungen für die Anzeige: nur relevante Kategorien, nicht verfügbare Kanäle = null,
+     * `locked` = Kanäle, die der Nutzer nicht abwählen darf (immer aktiv).
      *
-     * @return array<int, array{key: string, label: string, description: string, channels: array<string, bool|null>}>
+     * @return array<int, array{key: string, label: string, description: string, channels: array<string, bool|null>, locked: string[]}>
      */
     public static function forUser(User $user): array
     {
         $stored = NotificationPreference::where('user_id', $user->id)->get()->keyBy('category');
         $definitions = NotificationCategory::definitions();
 
-        return array_map(function (string $key) use ($stored, $definitions) {
+        return array_map(function (string $key) use ($stored, $definitions, $user) {
             $row = $stored->get($key);
             $channels = [];
+            $locked = [];
             foreach (NotificationCategory::CHANNELS as $channel) {
-                $channels[$channel] = NotificationCategory::supports($key, $channel)
-                    ? (bool) ($row?->{$channel} ?? true)
-                    : null;
+                if (! NotificationCategory::supports($key, $channel)) {
+                    $channels[$channel] = null;
+                } elseif (NotificationCategory::locked($user, $key, $channel)) {
+                    $channels[$channel] = true;
+                    $locked[] = $channel;
+                } else {
+                    $channels[$channel] = (bool) ($row?->{$channel} ?? true);
+                }
             }
 
             return [
@@ -35,6 +42,7 @@ class NotificationPreferences
                 'label' => $definitions[$key]['label'],
                 'description' => $definitions[$key]['description'],
                 'channels' => $channels,
+                'locked' => $locked,
             ];
         }, NotificationCategory::visibleFor($user));
     }
@@ -50,7 +58,9 @@ class NotificationPreferences
             }
             $values = [];
             foreach (NotificationCategory::CHANNELS as $channel) {
-                if (array_key_exists($channel, $channels) && NotificationCategory::supports($category, $channel)) {
+                if (array_key_exists($channel, $channels)
+                    && NotificationCategory::supports($category, $channel)
+                    && ! NotificationCategory::locked($user, $category, $channel)) {
                     $values[$channel] = filter_var($channels[$channel], FILTER_VALIDATE_BOOLEAN);
                 }
             }
@@ -74,7 +84,13 @@ class NotificationPreferences
             return true;
         }
 
-        return ! NotificationPreference::where('user_id', $user instanceof User ? $user->id : $user)
+        // Ohne Recht zum Abwählen gilt ein (z. B. früher gespeichertes) „aus“ nicht.
+        $model = $user instanceof User ? $user : User::find($user);
+        if (! $model || NotificationCategory::locked($model, $category, $channel)) {
+            return true;
+        }
+
+        return ! NotificationPreference::where('user_id', $model->id)
             ->where('category', $category)
             ->where($channel, false)
             ->exists();
@@ -99,6 +115,14 @@ class NotificationPreferences
                 ->where($channel, false)
                 ->pluck('user_id')
                 ->all());
+        }
+
+        // Abwahl zählt nur bei Nutzern, die den Kanal abwählen dürfen
+        if ($optedOut !== [] && $category === NotificationCategory::NACHRICHTEN && $channel === 'mail') {
+            $optedOut = User::whereIn('id', $optedOut)->get()
+                ->reject(fn (User $user) => NotificationCategory::locked($user, $category, $channel))
+                ->pluck('id')
+                ->all();
         }
 
         return array_values(array_diff($userIds, $optedOut));

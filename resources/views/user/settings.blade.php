@@ -307,6 +307,11 @@
                                                 <td class="px-3 py-3 text-center">
                                                     @if(is_null($category['channels'][$channel]))
                                                         <span class="text-xs" style="color: var(--color-text-secondary);" title="Für diese Information nicht verfügbar">–</span>
+                                                    @elseif(in_array($channel, $category['locked'], true))
+                                                        <input type="checkbox"
+                                                               class="w-5 h-5 rounded border-gray-300 text-blue-600 opacity-60 cursor-not-allowed"
+                                                               aria-label="{{ $category['label'] }}: {{ $channelLabel }} (immer aktiv)"
+                                                               title="Wird immer zugestellt" checked disabled>
                                                     @else
                                                         <input type="checkbox"
                                                                class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
