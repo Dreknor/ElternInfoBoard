@@ -407,7 +407,8 @@ class CareController extends Controller implements HasMiddleware
 
 
         Log::debug('Anwesenheitsabfrage gespeichert.', [
-            'request' => $request->all()
+            'request' => $request->all(),
+            'user' => auth()->user()->name
         ]);
 
         $date_start  = Carbon::parse($request->date_start);
