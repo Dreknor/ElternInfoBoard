@@ -42,6 +42,16 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+// Fallback, falls weder Netzwerk noch Cache eine Antwort liefern.
+// respondWith() verlangt zwingend ein Response-Objekt – undefined führt zu
+// "TypeError: Failed to convert value to 'Response'".
+const offlineResponse = () =>
+    new Response('Offline – Inhalt nicht verfügbar.', {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
@@ -53,7 +63,12 @@ self.addEventListener('fetch', (event) => {
     // Navigationen (HTML-Seiten): Network-first mit Cache-Fallback
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request).catch(() => caches.match(request).then((res) => res || caches.match('/')))
+            fetch(request).catch(() =>
+                caches
+                    .match(request)
+                    .then((res) => res || caches.match('/'))
+                    .then((res) => res || offlineResponse())
+            )
         );
         return;
     }
@@ -69,7 +84,7 @@ self.addEventListener('fetch', (event) => {
                     }
                     return response;
                 })
-                .catch(() => cached);
+                .catch(() => cached || offlineResponse());
             return cached || network;
         })
     );
