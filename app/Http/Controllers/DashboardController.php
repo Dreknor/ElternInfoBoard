@@ -6,6 +6,7 @@ use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Conversation;
 use App\Model\Losung;
+use App\Model\Module;
 use App\Model\Post;
 use App\Model\ReadReceipts;
 use App\Model\Rueckmeldungen;
@@ -109,6 +110,9 @@ class DashboardController extends Controller implements HasMiddleware
         // child_centric = direkte Beziehung mit Verwaltungsrecht)
         $currentUser = auth()->user();
 
+        // CheckIn-Status nur anzeigen, wenn das Care-Modul (Anwesenheitsliste) aktiv ist
+        $careModuleActive = (bool) (Module::where('setting', 'Anwesenheitsliste')->first()?->options['active'] ?? false);
+
         $careChildrenQuery = app(\App\Services\Family\FamilyResolver::class)
             ->childrenQuery($currentUser, \App\Enums\GuardianRight::Manage)
             ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id', 'children.class_id'])
@@ -132,10 +136,10 @@ class DashboardController extends Controller implements HasMiddleware
             ->orderBy('first_name');
 
         // clone: care() verändert den Builder, sonst würde der Fallback ebenfalls gefiltert
-        $careChildren = (clone $careChildrenQuery)->care()->get();
+        $careChildren = $careModuleActive ? (clone $careChildrenQuery)->care()->get() : collect();
 
         // Fallback: Kinder ohne Betreuungszuordnung, die heute krankgemeldet sind
-        if ($careChildren->isEmpty()) {
+        if ($careModuleActive && $careChildren->isEmpty()) {
             $careChildren = $careChildrenQuery
                 ->whereHas('krankmeldungen', function ($query) {
                     $query->whereDate('start', '<=', Carbon::today())

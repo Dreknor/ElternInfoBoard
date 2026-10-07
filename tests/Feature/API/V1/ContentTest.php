@@ -3,7 +3,9 @@
 namespace Tests\Feature\API\V1;
 
 use App\Model\AbfrageOptions;
+use App\Model\ChildCheckIn;
 use App\Model\Liste;
+use App\Model\Module;
 use App\Model\listen_termine;
 use App\Model\Poll;
 use App\Model\Rueckmeldungen;
@@ -160,5 +162,26 @@ class ContentTest extends AppApiTestCase
         $this->getJson('/api/v1/bootstrap')->assertOk()
             ->assertJsonPath('data.counters.todo', 1)
             ->assertJsonStructure(['data' => ['user', 'permissions', 'modules', 'children' => [['my_rights']], 'theme' => ['colors'], 'logo_url']]);
+    }
+
+    /** @test */
+    public function dashboard_only_contains_check_in_status_when_care_module_is_active(): void
+    {
+        $group = $this->group();
+        $user = $this->parentIn($group);
+        $child = $this->childOf($user, $group);
+        ChildCheckIn::create(['child_id' => $child->id, 'date' => today(), 'checked_in' => true, 'checked_out' => false, 'should_be' => true]);
+        $module = Module::create(['setting' => 'Anwesenheitsliste', 'category' => 'module', 'options' => ['active' => '0', 'rights' => []]]);
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/v1/parent/dashboard')->assertOk()
+            ->assertJsonPath('data.care_active', false)
+            ->assertJsonPath('data.children.0.today.check_in', null);
+
+        $module->update(['options' => ['active' => '1', 'rights' => []]]);
+
+        $this->getJson('/api/v1/parent/dashboard')->assertOk()
+            ->assertJsonPath('data.care_active', true)
+            ->assertJsonPath('data.children.0.today.check_in.checked_in', true);
     }
 }

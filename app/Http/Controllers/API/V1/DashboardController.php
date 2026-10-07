@@ -7,6 +7,7 @@ use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Losung;
 use App\Services\App\Family;
+use App\Services\App\Modules;
 use App\Services\App\PostPresenter;
 use App\Services\App\PostQuery;
 use App\Services\App\TodoService;
@@ -23,17 +24,20 @@ class DashboardController extends ApiController
      * Startseite in einer Anfrage – B-03.
      *
      * Offene Aufgaben, Kinder heute, nächste Termine, neueste Beiträge, Losung, Erkrankungen.
+     * `care_active` gibt an, ob das Care-Modul (Anwesenheitsliste) aktiv ist; nur dann enthält
+     * `children.*.today.check_in` den CheckIn-Status, sonst ist er immer `null`.
      */
     public function index(Request $request, TodoService $todos): JsonResponse
     {
         $user = $request->user();
         $childIds = Family::childIds($user);
+        $careActive = in_array('Anwesenheitsliste', Modules::activeFor($user), true);
 
         $children = Child::query()
             ->whereIn('id', $childIds)
             ->with([
                 'group', 'class',
-                'checkIns' => fn ($q) => $q->whereDate('date', today()),
+                'checkIns' => fn ($q) => $careActive ? $q->whereDate('date', today()) : $q->whereRaw('1 = 0'),
                 'krankmeldungen' => fn ($q) => $q->whereDate('start', '<=', today())->whereDate('ende', '>=', today()),
                 'schickzeiten' => fn ($q) => $q->where(fn ($w) => $w->whereDate('specific_date', today())
                     ->orWhere(fn ($r) => $r->whereNull('specific_date')->where('weekday', today()->dayOfWeekIso))),
@@ -53,6 +57,7 @@ class DashboardController extends ApiController
 
         return response()->json(['data' => [
             'todo' => $todos->forUser($user),
+            'care_active' => $careActive,
             'children' => $children->map(function (Child $child) use ($request) {
                 $checkIn = $child->checkIns->first();
                 $specific = $child->schickzeiten->firstWhere('specific_date', '!=', null);
