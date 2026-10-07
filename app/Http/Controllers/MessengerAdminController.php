@@ -7,25 +7,9 @@ use App\Model\MessageReport;
 use App\Model\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class MessengerAdminController extends Controller
 {
-    /**
-     * Übersicht aller offenen Meldungen.
-     */
-    public function reports(): View
-    {
-        $reports = MessageReport::with(['message.sender', 'message.conversation', 'reporter'])
-            ->whereNull('resolved_at')
-            ->orderByDesc('created_at')
-            ->paginate(20);
-
-        $resolvedCount = MessageReport::whereNotNull('resolved_at')->count();
-
-        return view('messenger.admin.reports', compact('reports', 'resolvedCount'));
-    }
-
     /**
      * Gemeldete Nachricht als erledigt markieren.
      */

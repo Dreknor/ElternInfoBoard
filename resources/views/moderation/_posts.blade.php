@@ -1,28 +1,4 @@
-@extends('layouts.app')
-
-@section('title', '| Gemeldete Beiträge')
-
-@section('content')
-<div class="container-fluid px-4 py-6">
-    <div class="mb-6 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <i class="fas fa-flag text-red-600"></i>
-                Gemeldete Beiträge
-            </h1>
-            <p class="text-sm text-gray-600 mt-1">Gemeldete Beiträge prüfen und bearbeiten</p>
-        </div>
-        <div class="text-sm text-gray-500">
-            <span class="font-semibold text-gray-700">{{ $resolvedCount }}</span> bereits gelöst
-        </div>
-    </div>
-
-    @if(session('Meldung'))
-        <div class="mb-4 p-4 @if(session('type') == 'success') bg-green-50 border-l-4 border-green-500 text-green-800 @elseif(session('type') == 'danger') bg-red-50 border-l-4 border-red-500 text-red-800 @else bg-blue-50 border-l-4 border-blue-500 text-blue-800 @endif rounded-lg text-sm">
-            {{ session('Meldung') }}
-        </div>
-    @endif
-
+{{-- Moderation: gemeldete Beiträge (Tab "Beiträge") --}}
     @if($reports->isEmpty())
         <div class="bg-white rounded-xl shadow-md p-8 text-center">
             <i class="fas fa-check-circle text-green-400 text-5xl mb-4"></i>
@@ -121,6 +97,3 @@
             {{ $reports->links() }}
         </div>
     @endif
-</div>
-@endsection
-

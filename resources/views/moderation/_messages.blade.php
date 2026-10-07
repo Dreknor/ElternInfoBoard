@@ -1,28 +1,4 @@
-@extends('layouts.app')
-
-@section('title', '| Moderationscenter')
-
-@section('content')
-<div class="container-fluid px-4 py-6">
-    <div class="mb-6 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <i class="fas fa-shield-alt text-red-600"></i>
-                Nachrichten-Moderation
-            </h1>
-            <p class="text-sm text-gray-600 mt-1">Gemeldete Nachrichten prüfen und bearbeiten</p>
-        </div>
-        <div class="text-sm text-gray-500">
-            <span class="font-semibold text-gray-700">{{ $resolvedCount }}</span> bereits gelöst
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg text-green-800 text-sm">
-            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-        </div>
-    @endif
-
+{{-- Moderation: gemeldete Messenger-Nachrichten (Tab "Nachrichten") --}}
     @if($reports->isEmpty())
         <div class="bg-white rounded-lg shadow-lg p-12 text-center">
             <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -105,7 +81,6 @@
 
         <div class="mt-4">{{ $reports->links() }}</div>
     @endif
-</div>
 
 {{-- Modal: User stumm schalten --}}
 <div id="muteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -134,11 +109,9 @@
 @push('js')
 <script>
 function openMuteModal(userId, userName) {
-    document.getElementById('muteForm').action = '/messenger/admin/user/' + userId + '/mute';
+    document.getElementById('muteForm').action = @json(route('messenger.admin.mute', ['user' => '__USER__'])).replace('__USER__', userId);
     document.getElementById('muteName').textContent = userName + ' in allen Gruppenkonversationen stummschalten';
     document.getElementById('muteModal').classList.remove('hidden');
 }
 </script>
 @endpush
-@endsection
-

@@ -20,6 +20,7 @@ use App\Http\Controllers\ICalController;
 use App\Http\Controllers\FamilyWeeklyController;
 use App\Http\Controllers\MessengerAdminController;
 use App\Http\Controllers\MessengerController;
+use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PostReportController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
@@ -331,9 +332,14 @@ Route::middleware('auth')->group(function () {
         // Beitrag melden (alle authentifizierten Nutzer)
         Route::post('post/{post}/report', [PostReportController::class, 'store'])->name('post.report');
 
+        // Moderation: gemeldete Beiträge und Messenger-Nachrichten an einer Stelle
+        Route::get('verwaltung/moderation', [ModerationController::class, 'index'])
+            ->middleware('permission:edit settings|moderate messages')
+            ->name('moderation.index');
+
         // Admin: Gemeldete Beiträge verwalten
         Route::middleware('permission:edit settings')->prefix('verwaltung/beitragsmeldungen')->group(function () {
-            Route::get('/', [PostReportController::class, 'index'])->name('post-reports.index');
+            Route::get('/', fn () => redirect()->route('moderation.index', ['tab' => ModerationController::TAB_POSTS]))->name('post-reports.index');
             Route::post('/{report}/resolve', [PostReportController::class, 'resolve'])->name('post-reports.resolve');
             Route::delete('/{report}/destroy-post', [PostReportController::class, 'destroyPost'])->name('post-reports.destroy-post');
         });
@@ -737,7 +743,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/attachment/{message}',                 [MessengerController::class, 'serveAttachment'])->name('messenger.attachment');
     });
     Route::middleware(['password_expired', 'permission:moderate messages'])->prefix('messenger/admin')->group(function () {
-        Route::get('/reports',                   [MessengerAdminController::class, 'reports'])->name('messenger.admin.reports');
+        Route::get('/reports',                   fn () => redirect()->route('moderation.index', ['tab' => ModerationController::TAB_MESSAGES]))->name('messenger.admin.reports');
         Route::post('/reports/{report}/resolve', [MessengerAdminController::class, 'resolveReport'])->name('messenger.admin.resolve');
         Route::post('/user/{user}/mute',         [MessengerAdminController::class, 'muteUser'])->name('messenger.admin.mute');
     });

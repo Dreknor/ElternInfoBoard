@@ -9,7 +9,6 @@ use App\Model\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\View\View;
 
 class PostReportController extends Controller implements HasMiddleware
 {
@@ -67,21 +66,6 @@ class PostReportController extends Controller implements HasMiddleware
     }
 
     /**
-     * Admin: Übersicht aller gemeldeten Beiträge.
-     */
-    public function index(): View
-    {
-        $reports = PostReport::with(['post.autor', 'post.groups', 'reporter'])
-            ->whereNull('resolved_at')
-            ->orderByDesc('created_at')
-            ->paginate(20);
-
-        $resolvedCount = PostReport::whereNotNull('resolved_at')->count();
-
-        return view('nachrichten.admin.reports', compact('reports', 'resolvedCount'));
-    }
-
-    /**
      * Admin: Meldung als erledigt markieren.
      */
     public function resolve(PostReport $report): RedirectResponse
@@ -116,7 +100,7 @@ class PostReportController extends Controller implements HasMiddleware
             $post->delete();
         }
 
-        return redirect()->route('post-reports.index')
+        return redirect()->route('moderation.index', ['tab' => ModerationController::TAB_POSTS])
             ->with('Meldung', 'Beitrag wurde gelöscht und alle zugehörigen Meldungen als erledigt markiert.')
             ->with('type', 'success');
     }
@@ -137,7 +121,7 @@ class PostReportController extends Controller implements HasMiddleware
 
         $title = 'Beitrag gemeldet: ' . mb_substr($post->header, 0, 50);
         $message = "{$reporter->name} hat den Beitrag \"{$post->header}\" gemeldet. Grund: " . mb_substr($report->reason, 0, 100);
-        $url = route('post-reports.index');
+        $url = route('moderation.index', ['tab' => ModerationController::TAB_POSTS]);
 
         $notifications = [];
         foreach ($admins as $admin) {
