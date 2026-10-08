@@ -388,18 +388,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
         Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
-        // Reinigungsplan
-        Route::get('reinigung', [ReinigungController::class, 'index']);
+        // Reinigungsplan (nur bei aktivem Modul)
+        Route::middleware('module:Reinigung')->group(function () {
+            Route::get('reinigung', [ReinigungController::class, 'index']);
 
-        Route::middleware('permission:edit reinigung')->group(function () {
-            Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
-            Route::delete('reinigung/task/trash', [ReinigungsTaskController::class, 'destroy'])->name('reinigung.trash.task');
-            Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
-            Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
-            Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
-            Route::delete('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
-            Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
-            Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
+            Route::middleware('permission:edit reinigung')->group(function () {
+                Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
+                Route::delete('reinigung/task/trash', [ReinigungsTaskController::class, 'destroy'])->name('reinigung.trash.task');
+                Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
+                Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
+                Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+                Route::delete('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+                Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
+                Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
+            });
         });
 
         // Edit and create posts

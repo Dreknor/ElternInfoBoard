@@ -23,6 +23,12 @@ class Termin extends Model implements Auditable
 
     protected $table = 'termine';
 
+    /**
+     * Gesetzt bei nicht gespeicherten Einträgen aus anderen Modulen (z. B.
+     * Reinigungsdienst, siehe Reinigung::toTermin()): Ziel-Link statt Bearbeiten.
+     */
+    public ?string $sourceUrl = null;
+
     protected $fillable = ['start', 'ende', 'terminname', 'fullDay', 'public'];
 
     protected $visible = ['start', 'ende', 'terminname', 'fullDay', 'public', 'id'];

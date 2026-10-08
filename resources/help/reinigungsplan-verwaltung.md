@@ -36,7 +36,20 @@ Einzelne Einträge kannst du direkt in der Planübersicht löschen. Im gemeinsam
 
 ## Export
 
-Pro Bereich/Plan kannst du die Einteilungen als **Excel-Datei** exportieren.
+Pro Bereich/Plan kannst du die Einteilungen als **Excel-Datei** exportieren. Der Export ist als druckbare **Abhakliste** aufgebaut (Querformat, Kopfzeile auf jeder Seite):
+
+- Jede Einteilung hat ein Kästchen **„Erledigt"**.
+- Die **Bemerkungen** werden mit exportiert – jeder Punkt (eine Zeile bzw. durch Semikolon getrennt) erscheint als eigenes Abhak-Kästchen.
+
+## Benachrichtigung der Familien
+
+Betroffene Familien werden automatisch per Glocke, Push und E-Mail (je nach eigener Einstellung unter „Reinigung, Pflichtstunden & AGs") informiert, wenn
+
+- sie manuell für eine Woche eingeteilt werden,
+- ihr Einsatz gelöscht wird,
+- sie beim automatischen Befüllen eingeteilt werden (eine zusammenfassende Benachrichtigung je Familie).
+
+Einsätze in bereits vergangenen Wochen lösen keine Benachrichtigung aus.
 
 ## Erinnerungen
 

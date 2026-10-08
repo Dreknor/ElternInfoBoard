@@ -9,6 +9,7 @@ use App\Model\Losung;
 use App\Model\Module;
 use App\Model\Post;
 use App\Model\ReadReceipts;
+use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\UserRueckmeldungen;
@@ -100,6 +101,14 @@ class DashboardController extends Controller implements HasMiddleware
                     ->get();
             }
         }
+
+        // Eigene Reinigungsdienste: eigenes Widget + Eintrag bei den nächsten Terminen
+        $reinigungen = Reinigung::upcomingForFamily(auth()->user(), Carbon::now()->addWeeks(4)->endOfWeek());
+        $termine = $termine
+            ->concat($reinigungen->map->toTermin())
+            ->sortBy('start')
+            ->take(5)
+            ->values();
 
         // Hole die heutige Losung (nur notwendige Felder)
         $losung = Losung::select(['date', 'Losungstext', 'Losungsvers', 'Lehrtext', 'Lehrtextvers'])
@@ -219,6 +228,7 @@ class DashboardController extends Controller implements HasMiddleware
         return view('dashboard.index', [
             'nachrichten' => $nachrichten,
             'termine' => $termine,
+            'reinigungen' => $reinigungen,
             'losung' => $losung,
             'datum' => Carbon::now(),
             'careChildren' => $careChildren,

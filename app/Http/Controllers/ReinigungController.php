@@ -11,6 +11,7 @@ use App\Model\ReinigungsTask;
 use App\Model\User;
 use App\Services\Family\FamilyResolver;
 use App\Services\HolidayService;
+use App\Services\Reinigung\ReinigungNotifier;
 use App\Settings\ReinigungSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
@@ -186,6 +187,8 @@ class ReinigungController extends Controller implements HasMiddleware
         // Vorschlag 2 - Ferienausschluss: nur aktiv, wenn per Setting eingeschaltet.
         $holidayService = $reinigungSetting->skip_holidays ? new HolidayService : null;
 
+        $created = collect();
+
         while ($date->lte($ende)) {
             if ($holidayService and $holidayService->isHoliday($date)) {
                 $date->addWeek();
@@ -218,10 +221,11 @@ class ReinigungController extends Controller implements HasMiddleware
 
                 $reinigung = new Reinigung;
                 $reinigung->bereich = $bereich;
-                $reinigung->datum = $date;
+                $reinigung->datum = $date->format('Y-m-d');
                 $reinigung->users_id = $user->id;
                 $reinigung->aufgabe = $task->task;
                 $reinigung->save();
+                $created->push($reinigung->setRelation('user', $user));
 
                 $runCounts[$unit->key]++;
                 $assignedThisWeek[] = $unit->key;
@@ -229,6 +233,8 @@ class ReinigungController extends Controller implements HasMiddleware
 
             $date->addWeek();
         }
+
+        app(ReinigungNotifier::class)->assignedMany($created);
 
         return redirect()->to(url('reinigung'))->with([
             'type' => 'success',
@@ -261,6 +267,7 @@ class ReinigungController extends Controller implements HasMiddleware
 
         if (auth()->user()->can('edit reinigung') and ($combined or $reinigung->bereich == $Bereich)) {
             $reinigung->delete();
+            app(ReinigungNotifier::class)->removed($reinigung);
 
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -414,6 +421,8 @@ class ReinigungController extends Controller implements HasMiddleware
         $reinigung->bereich = $Bereich;
         $reinigung->aufgabe = $task->task;
         $reinigung->save();
+
+        app(ReinigungNotifier::class)->assigned($reinigung);
 
         return redirect()->to(url('reinigung'))->with([
             'type' => 'success',

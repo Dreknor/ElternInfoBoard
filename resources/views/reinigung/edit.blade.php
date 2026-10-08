@@ -58,10 +58,13 @@
                     </div>
                     <div>
                         <label class="d-block mb-1" style="color: var(--color-text-primary);">
-                            Bemerkung
+                            Bemerkungen
                         </label>
-                        <input type="text" name="bemerkung" class="w-100 px-3 py-2 rounded-lg outline-none"
-                               style="border: 2px solid var(--color-input-border); background: var(--color-input-bg); color: var(--color-text-primary);">
+                        <textarea name="bemerkung" rows="3" class="w-100 px-3 py-2 rounded-lg outline-none"
+                                  style="border: 2px solid var(--color-input-border); background: var(--color-input-bg); color: var(--color-text-primary);"></textarea>
+                        <small class="d-block mt-1" style="color: var(--color-text-secondary);">
+                            Ein Punkt pro Zeile (oder durch Semikolon getrennt) &ndash; im Export erscheint jeder Punkt als Abhak-Kästchen.
+                        </small>
                     </div>
                 </form>
             </div>

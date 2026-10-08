@@ -153,9 +153,11 @@
                                                     <i class="fas fa-clipboard-list mr-1"></i>{{$reinigung->aufgabe}}
                                                 </div>
                                                 @if($reinigung->bemerkung)
-                                                    <div class="text-xs mt-1" style="color: var(--color-text-muted);">
-                                                        <i class="fas fa-comment-dots mr-1"></i>{{$reinigung->bemerkung}}
-                                                    </div>
+                                                    <ul class="text-xs mt-1 mb-0 pl-0" style="color: var(--color-text-muted); list-style: none;">
+                                                        @foreach($reinigung->bemerkungPunkte() as $punkt)
+                                                            <li><i class="far fa-square mr-1"></i>{{ $punkt }}</li>
+                                                        @endforeach
+                                                    </ul>
                                                 @endif
                                             </div>
                                         @endforeach

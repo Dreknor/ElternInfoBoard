@@ -7,6 +7,7 @@ use App\Model\Notification;
 use App\Model\Reinigung;
 use App\Model\ReminderLog;
 use App\Model\User;
+use App\Services\App\Modules;
 use App\Services\Notifications\NotificationCategory;
 use App\Services\Notifications\NotificationPreferences;
 use App\Settings\ReinigungSetting;
@@ -52,6 +53,9 @@ class ProcessReinigungRemindersJob implements ShouldQueue
             // Alle Familienmitglieder erinnern (FamilyResolver: legacy = sorg2-Partner)
             $familyMembers = User::query()->whereIn('id', $reinigung->user->familyUserIds())->get();
             foreach ($familyMembers as $member) {
+                if (! Modules::isActiveFor($member, 'Reinigung')) {
+                    continue;
+                }
                 $this->remindUser($member, $reinigung, $settings);
             }
         }

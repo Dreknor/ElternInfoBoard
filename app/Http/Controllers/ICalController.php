@@ -77,7 +77,8 @@ class ICalController extends Controller
 
                 // Vorschlag 7: eigene Reinigungsdienste in den persönlichen Kalender aufnehmen
                 // inkl. der Dienste anderer Familienmitglieder (FamilyResolver)
-                $reinigungTermine = \App\Model\Reinigung::query()
+                // (nur bei aktivem Modul "Reinigung")
+                $reinigungTermine = ! \App\Services\App\Modules::isActiveFor($user, 'Reinigung') ? collect() : \App\Model\Reinigung::query()
                     ->whereIn('users_id', $user->familyUserIds())
                     ->whereDate('datum', '>', Carbon::now()->subWeek()->startOfDay())
                     ->get()

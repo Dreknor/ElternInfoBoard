@@ -21,6 +21,7 @@ use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\ActivatesModules;
 use Tests\Concerns\BuildsFamilies;
 use Tests\TestCase;
 
@@ -32,7 +33,7 @@ use Tests\TestCase;
  */
 class FamilyScopeCharacterizationTest extends TestCase
 {
-    use BuildsFamilies;
+    use ActivatesModules, BuildsFamilies;
 
     public static function modes(): array
     {
@@ -45,6 +46,8 @@ class FamilyScopeCharacterizationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->activateModule('Reinigung');
 
         Mail::fake();
         Notification::fake();

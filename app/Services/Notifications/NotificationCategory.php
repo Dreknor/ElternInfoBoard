@@ -79,7 +79,7 @@ final class NotificationCategory
             ],
             self::ORGANISATION => [
                 'label' => 'Reinigung, Pflichtstunden & AGs',
-                'description' => 'Erinnerungen an den Reinigungsdienst und Rückmeldungen zu Pflichtstunden.',
+                'description' => 'Erinnerungen und Änderungen beim Reinigungsdienst sowie Rückmeldungen zu Pflichtstunden.',
                 'channels' => ['app', 'web', 'mail'],
             ],
             self::ELTERNRAT => [

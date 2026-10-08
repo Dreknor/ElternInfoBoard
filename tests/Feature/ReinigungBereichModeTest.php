@@ -8,6 +8,7 @@ use App\Model\User;
 use App\Settings\ReinigungSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\ActivatesModules;
 use Tests\TestCase;
 
 /**
@@ -16,11 +17,13 @@ use Tests\TestCase;
  */
 class ReinigungBereichModeTest extends TestCase
 {
-    use RefreshDatabase;
+    use ActivatesModules, RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->activateModule('Reinigung');
 
         // Settings auf Standardwerte zurücksetzen (verhindert Kontamination bei
         // in-memory SQLite, das keine Transaktions-Isolation zwischen Tests bietet)

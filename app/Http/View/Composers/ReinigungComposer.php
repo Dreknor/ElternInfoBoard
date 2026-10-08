@@ -3,6 +3,7 @@
 namespace App\Http\View\Composers;
 
 use App\Model\Reinigung;
+use App\Services\App\Modules;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -10,7 +11,7 @@ class ReinigungComposer
 {
     public function compose($view): void
     {
-        if (!auth()->check()) {
+        if (!auth()->check() || ! Modules::isActiveFor(auth()->user(), 'Reinigung')) {
             $view->with('reinigung', null);
             return;
         }

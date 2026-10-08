@@ -3,6 +3,7 @@
 namespace App\Services\App;
 
 use App\Model\listen_termine;
+use App\Model\Reinigung;
 use App\Model\Termin;
 use App\Model\User;
 use Carbon\Carbon;
@@ -34,6 +35,19 @@ class TerminQuery
                 'all_day' => (bool) $t->fullDay,
                 'liste_id' => null,
             ]);
+
+        // Eigene Reinigungsdienste der Familie (ganztägig über die Einsatzwoche)
+        $reinigungen = Reinigung::upcomingForFamily($user, $to, $from)
+            ->map(fn (Reinigung $r) => [
+                'id' => 'reinigung-'.$r->id,
+                'source' => 'reinigung',
+                'title' => $r->terminTitle(),
+                'start' => $r->weekStart()->toIso8601String(),
+                'end' => $r->weekEnd()->endOfDay()->toIso8601String(),
+                'all_day' => true,
+                'liste_id' => null,
+            ]);
+        $termine = $termine->concat($reinigungen)->sortBy('start');
 
         if ($withListen) {
             $booked = listen_termine::query()

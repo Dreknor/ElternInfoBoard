@@ -30,4 +30,10 @@ class Modules
             ->values()
             ->all();
     }
+
+    /** Ist das Modul (`modules.setting`) aktiv und für den Nutzer sichtbar? */
+    public static function isActiveFor(User $user, string $module): bool
+    {
+        return in_array($module, self::activeFor($user), true);
+    }
 }

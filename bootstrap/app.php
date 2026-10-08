@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotency' => \App\Http\Middleware\IdempotencyKey::class,
             'etag' => \App\Http\Middleware\ETagResponses::class,
             'api.password' => \App\Http\Middleware\ApiPasswordChangeRequired::class,
+            'module' => \App\Http\Middleware\EnsureModuleActive::class,
         ]);
 
         $middleware->priority([

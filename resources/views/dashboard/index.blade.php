@@ -81,6 +81,13 @@
     </div>
     @endif
 
+    <!-- Eigene Reinigungsdienste -->
+    @if($reinigungen->isNotEmpty())
+    <div class="row">
+        @include('dashboard.components.reinigung')
+    </div>
+    @endif
+
     <!-- Offene Rückmeldungen -->
     <div class="row">
         @include('dashboard.components.pending-feedback')
@@ -183,7 +190,13 @@
                                         </div>
                                         <div class="flex-1">
                                             <div class="d-flex justify-content-between align-items-start mb-1">
-                                                <h6 class="font-bold mb-0" style="color: var(--color-text-primary);">{{ $termin->terminname }}</h6>
+                                                <h6 class="font-bold mb-0" style="color: var(--color-text-primary);">
+                                                    @if($termin->sourceUrl)
+                                                        <a href="{{ $termin->sourceUrl }}" style="color: inherit;"><i class="fas fa-broom mr-1"></i>{{ $termin->terminname }}</a>
+                                                    @else
+                                                        {{ $termin->terminname }}
+                                                    @endif
+                                                </h6>
                                                 <div class="d-flex gap-1">
                                                     <a href="{{$termin->link(auth()->user()->calendar_prefix)->ics()}}"
                                                        class="btn btn-sm btn-outline-secondary p-1"

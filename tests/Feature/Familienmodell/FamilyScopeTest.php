@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\ActivatesModules;
 use Tests\Concerns\BuildsFamilies;
 use Tests\TestCase;
 
@@ -31,7 +32,7 @@ use Tests\TestCase;
  */
 class FamilyScopeTest extends TestCase
 {
-    use BuildsFamilies;
+    use ActivatesModules, BuildsFamilies;
 
     private User $a;
 
@@ -42,6 +43,8 @@ class FamilyScopeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->activateModule('Reinigung');
 
         Mail::fake();
         Notification::fake();
