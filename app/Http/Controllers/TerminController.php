@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateTerminRequest;
 use App\Model\Group;
 use App\Model\Post;
+use App\Model\Reinigung;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
 use Carbon\Carbon;
@@ -62,6 +63,12 @@ class TerminController extends Controller implements HasMiddleware
                 ->orderBy('start')
                 ->get();
         }
+
+        // Eigene Reinigungsdienste der Familie als (nicht gespeicherte) Wochentermine ergänzen
+        $termine = $termine
+            ->concat(Reinigung::upcomingForFamily(auth()->user())->map->toTermin())
+            ->sortBy('start')
+            ->values();
 
         return view('termine.index', [
             'termine' => $termine,

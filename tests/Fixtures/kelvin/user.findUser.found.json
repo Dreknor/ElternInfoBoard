@@ -1,0 +1,14 @@
+{
+  "username": "jit.parent",
+  "record_uid": "jit00001-aaaa-bbbb-cccc-dddddddddddd",
+  "firstname": "JIT",
+  "lastname": "Elter",
+  "email": "jit.parent@example.de",
+  "school": "GS-XY",
+  "roles": ["legal_guardian"],
+  "legal_wards": [
+    "https://ucs.example.de/ucsschool/kelvin/v1/users/jit.child"
+  ],
+  "url": "https://ucs.example.de/ucsschool/kelvin/v1/users/jit.parent"
+}
+

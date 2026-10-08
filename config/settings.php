@@ -20,6 +20,7 @@ return [
         \App\Settings\StundenplanSetting::class,
         \App\Settings\KeycloakSetting::class,
         \App\Settings\ReinigungSetting::class,
+        \App\Settings\UcsSetting::class,
 
     ],
 

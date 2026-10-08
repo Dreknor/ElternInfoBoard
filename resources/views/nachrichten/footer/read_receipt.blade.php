@@ -1,25 +1,17 @@
 @php
-    $receipt = $user->read_receipts()->where('post_id', $post->id)->first();
     $canSubmitReadReceipt = !auth()->user()->can('view all') && $post->users->contains(auth()->user());
 
-    // Sorg2-Partner-Bestätigung prüfen
-    $sorg2Receipt = null;
-    $sorg2ConfirmedUser = null;
-    if ($user->sorg2) {
-        $sorg2Receipt = \App\Model\ReadReceipts::where('post_id', $post->id)
-            ->where('user_id', $user->sorg2)
-            ->first();
-        if ($sorg2Receipt && $sorg2Receipt->confirmed_at) {
-            $sorg2ConfirmedUser = \App\Model\User::find($user->sorg2);
-        }
-    }
-
-    // Bestätigt wenn eigene ODER Sorg2-Bestätigung vorhanden
-    $confirmedReceipt = ($receipt && $receipt->confirmed_at)
-        ? $receipt
-        : (($sorg2Receipt && $sorg2Receipt->confirmed_at) ? $sorg2Receipt : null);
+    // Wann gilt die Lesebestätigung als erledigt? Familie (Standard), Person oder je Kind
+    $readReceiptStatus = app(\App\Services\ReadReceiptStatusService::class);
+    $receipt = \App\Model\ReadReceipts::where('post_id', $post->id)->where('user_id', $user->id)->first();
+    $confirmedReceipt = $readReceiptStatus->satisfyingReceipt($user, $post);
     $isConfirmed = !is_null($confirmedReceipt);
-    $confirmedBySorg2 = $isConfirmed && !($receipt && $receipt->confirmed_at);
+    $confirmedBySorg2 = $isConfirmed && $confirmedReceipt->user_id !== $user->id;
+    $sorg2ConfirmedUser = $confirmedBySorg2 ? \App\Model\User::find($confirmedReceipt->user_id) : null;
+    $sorg2Receipt = $readReceiptStatus->effectiveScope($post) === \App\Services\ReadReceiptStatusService::SCOPE_PERSON
+        ? null
+        : \App\Model\ReadReceipts::where('post_id', $post->id)->whereIn('user_id', $user->familyUserIds())
+            ->where('user_id', '!=', $user->id)->whereNotNull('reminded_at')->whereNull('confirmed_at')->first();
 @endphp
 
 @if($canSubmitReadReceipt)
@@ -64,6 +56,7 @@
                         </p>
                         <p class="text-xs {{ $wasReminded ? 'text-yellow-700' : 'text-red-700' }} mb-0">
                             {{ $wasReminded ? 'Sie wurden bereits erinnert, die Lesebestätigung fehlt weiterhin.' : 'Bitte bestätigen Sie, dass Sie diese Nachricht gelesen haben' }}
+                            <span class="block opacity-80">{{ $readReceiptStatus->scopeHint($post) }}</span>
                         </p>
                     </div>
                 </div>
@@ -87,13 +80,17 @@
         // Build buckets - Filter unique users to avoid duplicates from multiple groups
         $allUsers = $post->users->filter(fn($u) => !is_null($u))->unique('id');
         $receipts = $post->receipts->keyBy('user_id');
+        $readReceiptStatus ??= app(\App\Services\ReadReceiptStatusService::class);
+        $confirmedReceipts = $receipts->whereNotNull('confirmed_at');
         $confirmed = collect();
         $reminded = collect();
         $pending = collect();
         foreach ($allUsers as $u) {
             $r = $receipts->get($u->id);
-            if ($r && $r->confirmed_at) {
-                $confirmed->push(['user' => $u, 'receipt' => $r]);
+            // Bestätigt: selbst oder – je nach Modus – durch Familie bzw. Bezugsperson des Kindes
+            $satisfying = $readReceiptStatus->satisfyingReceipt($u, $post, $confirmedReceipts);
+            if ($satisfying) {
+                $confirmed->push(['user' => $u, 'receipt' => $satisfying]);
             } elseif ($r && $r->reminded_at) {
                 $reminded->push(['user' => $u, 'receipt' => $r]);
             } else {
@@ -119,6 +116,7 @@
                 <div class="flex items-center gap-3">
                     <span class="px-3 py-1 bg-white/20 text-white text-sm font-bold rounded-full">
                         {{ $confirmedUsers }} bestätigt • {{ $remindedUsers }} erinnert • {{ $totalUsers }} gesamt
+                        · {{ $readReceiptStatus->scopeHint($post) }}
                     </span>
                     <button onclick="document.getElementById('{{$post->id}}_receipts').classList.toggle('hidden')"
                             class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white font-medium rounded-lg transition-colors duration-200">
@@ -186,7 +184,11 @@
                                             </div>
                                             <div>
                                                 <p class="text-sm font-medium text-gray-900 mb-0">{{ $u->name }}</p>
-                                                <p class="text-xs text-gray-500 mb-0"><i class="far fa-clock mr-1"></i>{{ $receipt->confirmed_at->format('d.m.Y H:i') }} Uhr</p>
+                                                <p class="text-xs text-gray-500 mb-0"><i class="far fa-clock mr-1"></i>{{ $receipt->confirmed_at->format('d.m.Y H:i') }} Uhr
+                                                    @if((int) $receipt->user_id !== $u->id)
+                                                        · über {{ $allUsers->firstWhere('id', $receipt->user_id)?->name ?? \App\Model\User::find($receipt->user_id)?->name }}
+                                                    @endif
+                                                </p>
                                             </div>
                                         </div>
                                         <i class="fas fa-check text-green-500"></i>

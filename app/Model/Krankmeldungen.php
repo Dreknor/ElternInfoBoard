@@ -2,6 +2,9 @@
 
 namespace App\Model;
 
+use App\Enums\GuardianRight;
+use App\Services\Family\FamilyResolver;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +39,32 @@ class Krankmeldungen extends Model implements HasMedia
             // und wird daher AES-verschlüsselt in der DB abgelegt.
             'kommentar' => 'encrypted',
         ];
+    }
+
+    /**
+     * Krankmeldungen, die $user sehen darf: Meldungen zu Kindern mit Zugriff auf
+     * Gesundheitsdaten (Sorgerecht oder Verwaltung), eigene Meldungen sowie
+     * Freitext-Meldungen (ohne Kind) der eigenen Familie.
+     *
+     * @see docs/kind-zentriertes-familienmodell-konzept.md §6.4
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        $resolver = app(FamilyResolver::class);
+        $childIds = $resolver->childrenQuery($user, GuardianRight::Custody)->pluck('children.id')
+            ->merge($resolver->childrenQuery($user, GuardianRight::Manage)->pluck('children.id'))
+            ->unique()
+            ->values()
+            ->all();
+        $familyUserIds = $resolver->familyUserIds($user);
+
+        return $query->where(function (Builder $q) use ($user, $childIds, $familyUserIds) {
+            $q->where('users_id', $user->id)
+                ->orWhereIn('child_id', $childIds)
+                ->orWhere(function (Builder $free) use ($familyUserIds) {
+                    $free->whereNull('child_id')->whereIn('users_id', $familyUserIds);
+                });
+        });
     }
 
     public function child(): BelongsTo

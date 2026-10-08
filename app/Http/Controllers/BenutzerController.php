@@ -6,8 +6,11 @@ use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
 use App\Model\UserAppSettings;
+use App\Services\Notifications\NotificationPreferences;
 use App\Settings\GeneralSetting;
 use App\Themes\ThemeRegistry;
+use App\Model\Child;
+use App\Model\GuardianLinkReport;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +25,28 @@ class BenutzerController extends Controller implements HasMiddleware
         return [
             'auth',
         ];
+    }
+
+    /**
+     * Eltern melden eine falsche Kind-Beziehung; die Verwaltung klärt (E3/E6).
+     */
+    public function reportGuardianLink(Request $request, Child $child): RedirectResponse
+    {
+        $isLinked = $child->parents()->where('users.id', $request->user()->id)->exists();
+
+        if (! $isLinked) {
+            return redirect()->back()->with(['type' => 'danger', 'Meldung' => 'Diese Verbindung besteht nicht.']);
+        }
+
+        GuardianLinkReport::firstOrCreate(
+            ['child_id' => $child->id, 'user_id' => $request->user()->id, 'resolved_at' => null],
+            ['reported_by' => $request->user()->id, 'note' => $request->input('note')],
+        );
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Danke, die Schule wurde informiert und prüft die Verbindung.',
+        ]);
     }
 
     /**
@@ -45,6 +70,7 @@ class BenutzerController extends Controller implements HasMiddleware
                 ''
             ),
             'generalSettings' => app(GeneralSetting::class),
+            'notificationPreferences' => NotificationPreferences::forUser(auth()->user()),
         ]);
     }
 
@@ -75,6 +101,20 @@ class BenutzerController extends Controller implements HasMiddleware
                 'password' => Hash::make($request->password),
                 'changePassword' => false,
             ]);
+        }
+
+        // Benachrichtigungskanäle (Tab „Benachrichtigungen“): nicht angehakte Kästchen = aus
+        if ($request->boolean('notifications_present')) {
+            $checked = (array) $request->input('notifications', []);
+            $categories = [];
+            foreach (NotificationPreferences::forUser($user) as $category) {
+                foreach ($category['channels'] as $channel => $value) {
+                    if ($value !== null) {
+                        $categories[$category['key']][$channel] = isset($checked[$category['key']][$channel]);
+                    }
+                }
+            }
+            NotificationPreferences::update($user, $categories);
         }
 
         return redirect()->back()->with([

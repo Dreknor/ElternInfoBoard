@@ -2,11 +2,13 @@
 
 namespace App\Jobs;
 
+use App\Enums\GuardianRight;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\Notification;
 use App\Model\User;
 use App\Notifications\AttendanceQueryNotification;
+use App\Services\Family\FamilyResolver;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,13 +43,16 @@ class SendAttendanceQueryReminderJob implements ShouldQueue
 
         // Gruppiere nach Eltern und Datum, um nur eine Benachrichtigung pro Elternteil zu senden
         $parentNotifications = [];
+        $guardiansByChild = [];
 
         foreach ($checkIns as $checkIn) {
             if (!$checkIn->child) {
                 continue;
             }
 
-            foreach ($checkIn->child->parents as $parent) {
+            $guardiansByChild[$checkIn->child_id] ??= app(FamilyResolver::class)->guardiansFor($checkIn->child, GuardianRight::Manage);
+
+            foreach ($guardiansByChild[$checkIn->child_id] as $parent) {
                 $parentId = $parent->id;
                 $lockDate = $checkIn->lock_at->format('d.m.Y');
 

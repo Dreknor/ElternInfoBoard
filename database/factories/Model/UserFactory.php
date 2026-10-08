@@ -24,7 +24,7 @@ class UserFactory extends Factory
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->email(),
             'password' => Hash::make('password'),
-            'changePassword' => $this->faker->boolean(),
+            'changePassword' => false, // zufällige Werte lösen PasswordExpired-Redirects (302) in Feature-Tests aus
             'benachrichtigung' => $this->faker->word(),
             'sendCopy' => $this->faker->boolean(),
             'last_online_at' => $this->faker->dateTime(),

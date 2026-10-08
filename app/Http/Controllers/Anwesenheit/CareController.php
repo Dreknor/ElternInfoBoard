@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Anwesenheit;
 
+use App\Enums\GuardianRight;
 use App\Exports\AnwesenheitsAbfrageExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\AnwesenheitNotificationJob;
@@ -11,6 +12,7 @@ use App\Model\ChildMandate;
 use App\Model\Groups;
 use App\Model\Notification;
 use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use App\Services\HolidayService;
 use App\Services\LatePickupService;
 use App\Notifications\AttendanceQueryNotification;
@@ -45,11 +47,18 @@ class CareController extends Controller implements HasMiddleware
     {
         $careSettings = new CareSetting;
 
-        if ($showAll == 1) {
-            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', true));
+        if ($showAll === 'expected') {
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', 'expected'));
+        } elseif ($showAll == 1) {
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', '1'));
         } elseif ($showAll == 'off') {
-            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', false));
+            return redirect()->route('anwesenheit.index')->withCookie(cookie()->forever('showAll', ''));
         }
+
+        $viewMode = request()->cookie('showAll');
+        $viewMode = $viewMode === 'expected' && $careSettings->view_detailed_care
+            ? 'expected'
+            : ($viewMode && $viewMode !== 'expected' ? 'all' : 'present');
 
         $configuredGroupIds = array_values((array) ($careSettings->groups_list ?? []));
         $configuredClassIds = array_values((array) ($careSettings->class_list ?? []));
@@ -70,11 +79,22 @@ class CareController extends Controller implements HasMiddleware
                 $childQuery->whereIn('class_id', $configuredClassIds);
             }
 
-            if ($careSettings->hide_childs_when_absent == true && ! request()->cookie('showAll')) {
+            if ($careSettings->hide_childs_when_absent == true && $viewMode === 'present') {
                 $childQuery->whereHas('checkIns', function ($query) {
                     $query
                         ->checkedIn()
                         ->whereDate('date', now()->toDateString());
+                });
+            } elseif ($careSettings->hide_childs_when_absent == true && $viewMode === 'expected') {
+                $childQuery->whereHas('checkIns', function ($query) {
+                    $query
+                        ->whereDate('date', now()->toDateString())
+                        ->where(function ($q) {
+                            $q->where('should_be', true)
+                                ->orWhere(function ($q2) {
+                                    $q2->checkedIn();
+                                });
+                        });
                 });
             }
 
@@ -115,11 +135,28 @@ class CareController extends Controller implements HasMiddleware
 
         $isFerientag = (new HolidayService())->isTodayHoliday();
 
-        // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1)
-        $sorg2Ids = $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values();
+
+        // Sorg2-Partner in einer einzigen Extra-Query laden (kein N+1). Nur im Legacy-Modus:
+        // im kind-zentrierten Modell sind ausschließlich direkte Bezugspersonen Kontakte.
+        $sorg2Ids = app(FamilyResolver::class)->mode() === FamilyResolver::MODE_LEGACY
+            ? $childs->flatMap->parents->pluck('sorg2')->filter()->unique()->values()
+            : collect();
         $sorg2Users = $sorg2Ids->isNotEmpty()
             ? User::whereIn('id', $sorg2Ids)->get(['id', 'name', 'email', 'phone', 'publicPhone'])->keyBy('id')
             : collect();
+
+        // Kontakte je Kind für den Eltern-Tab (einfache Liste und Detailansicht)
+        $parentContacts = $childs->mapWithKeys(fn (Child $child) => [
+            $child->id => $child->parents
+                ->flatMap(fn (User $parent) => array_filter([
+                    $parent,
+                    $parent->sorg2 ? $sorg2Users->get($parent->sorg2) : null,
+                ]))
+                ->map(fn (User $contact) => $contact->only(['name', 'email', 'phone', 'publicPhone']))
+                ->unique('email')
+                ->values()
+                ->all(),
+        ]);
 
         return view('anwesenheit.index', [
             'children' => $childs,
@@ -127,7 +164,7 @@ class CareController extends Controller implements HasMiddleware
             'classes' => $classes,
             'careSettings' => $careSettings,
             'isFerientag' => $isFerientag,
-            'sorg2Users' => $sorg2Users,
+            'parentContacts' => $parentContacts,
             'schickzeitenSettings' => new SchickzeitenSetting,
         ]);
     }
@@ -186,13 +223,9 @@ class CareController extends Controller implements HasMiddleware
 
         }
 
-        $parent = $child->parents()->first();
-
         if ($child->notification) {
-            dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkOut'));
-
-            if ($parent->sorgorgeberechtigter2) {
-                dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkOut'));
+            foreach ($this->notificationRecipients($child) as $recipient) {
+                dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkOut'));
             }
         }
 
@@ -244,16 +277,11 @@ class CareController extends Controller implements HasMiddleware
             ]);
         }
 
-        $parent = $child->parents()->first();
-
         if ($child->notification) {
 
             try {
-                dispatch(new AnwesenheitNotificationJob($parent, $child->first_name, 'checkIn'));
-
-                if ($parent->sorgorgeberechtigter2) {
-
-                    dispatch(new AnwesenheitNotificationJob($parent->sorgorgeberechtigter2, $child->first_name, 'checkIn'));
+                foreach ($this->notificationRecipients($child) as $recipient) {
+                    dispatch(new AnwesenheitNotificationJob($recipient, $child->first_name, 'checkIn'));
                 }
             } catch (\Exception $e) {
                 Log::error('Error sending notification: '.$e->getMessage());
@@ -297,12 +325,24 @@ class CareController extends Controller implements HasMiddleware
 
         $children = Child::query()
             ->where('auto_checkIn', true)
+            ->with(['checkIns' => fn ($query) => $query->whereDate('date', today())])
             ->get();
 
         $checkIn = [];
         foreach ($children as $child) {
 
             if ($child->krankmeldungToday() || ! $child->auto_checkIn) {
+                continue;
+            }
+
+            // Je Kind und Tag nur ein Eintrag: besteht bereits einer (z. B. aus einer Anwesenheitsabfrage
+            // oder einem früheren Lauf), wird dieser genutzt statt einen weiteren anzulegen.
+            $existingCheckIn = $child->checkIns->first();
+            if ($existingCheckIn) {
+                if (! $existingCheckIn->checked_in && ! $existingCheckIn->checked_out && $existingCheckIn->should_be !== false) {
+                    $existingCheckIn->update(['checked_in' => true]);
+                }
+
                 continue;
             }
 
@@ -315,12 +355,12 @@ class CareController extends Controller implements HasMiddleware
 
         }
 
-        ChildCheckIn::query()->insert($checkIn);
+        ChildCheckIn::query()->insertOrIgnore($checkIn);
     }
 
     public function destroyAbfrage($date)
     {
-        if (! auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('manage attendance queries')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -348,6 +388,13 @@ class CareController extends Controller implements HasMiddleware
 
     public function storeAbfrage(Request $request)
     {
+        if (! auth()->user()->can('manage attendance queries')) {
+            return redirect()->back()->with([
+                'type' => 'danger',
+                'Meldung' => 'Sie haben keine Berechtigung, Anwesenheitsabfragen zu erstellen.',
+            ]);
+        }
+
         $request->validate([
             'date_start'  => 'required|date',
             'date_end'    => 'nullable|date|after_or_equal:date_start',
@@ -360,7 +407,8 @@ class CareController extends Controller implements HasMiddleware
 
 
         Log::debug('Anwesenheitsabfrage gespeichert.', [
-            'request' => $request->all()
+            'request' => $request->all(),
+            'user' => auth()->user()->name
         ]);
 
         $date_start  = Carbon::parse($request->date_start);
@@ -432,7 +480,8 @@ class CareController extends Controller implements HasMiddleware
         $children = $childQuery
             ->with([
                 'checkIns' => function ($query) use ($date_start, $date_end) {
-                    $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()]);
+                    $query->whereDate('date', '>=', $date_start->toDateString())
+                        ->whereDate('date', '<=', $date_end->toDateString());
                 },
                 'parents',
             ])
@@ -442,15 +491,25 @@ class CareController extends Controller implements HasMiddleware
         $checkInsToUpdate = []; // IDs bestehender Einträge, die aktualisiert werden sollen
         $parentsToNotify = collect(); // Sammle Eltern, die benachrichtigt werden sollen
         $lockAtValue = $lock_at ? $lock_at->toDateString() : $date_start->copy()->subDay()->toDateString();
+        $guardiansByChild = [];
+        $checkInsSkipped = 0; // bestehende Einträge, die unverändert bleiben
 
-       for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
+        for ($date = $date_start->copy(); $date->lte($date_end); $date->addDay()) {
             foreach ($children as $child) {
-                // Prüfe, ob bereits ein CheckIn für dieses Datum existiert
-                $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
+                // Je Kind und Tag darf nur eine Abfrage bestehen. 'date' ist als Carbon gecastet,
+                // ein Collection-where() gegen den Datums-String trifft daher nie.
+                $existingCheckIn = $child->checkIns->first(
+                    fn (ChildCheckIn $checkIn) => $checkIn->date?->isSameDay($date)
+                );
 
                 if ($existingCheckIn) {
-                    // Bestehende Einträge immer aktualisieren – unabhängig von Ferien/Wochenende
-                    $checkInsToUpdate[] = $existingCheckIn->id;
+                    // Bestehende Einträge nur aktualisieren, wenn ausdrücklich ein Wert vorgegeben wurde –
+                    // sonst würden beim Nachtragen weiterer Kinder bereits abgegebene Rückmeldungen überschrieben.
+                    if ($shouldBeValue !== null) {
+                        $checkInsToUpdate[] = $existingCheckIn->id;
+                    } else {
+                        $checkInsSkipped++;
+                    }
                     continue;
                 }
 
@@ -470,8 +529,9 @@ class CareController extends Controller implements HasMiddleware
                     'updated_at' => now(),
                 ];
 
-                // Sammle Eltern für Benachrichtigungen (nur einmal pro Elternteil)
-                foreach ($child->parents as $parent) {
+                // Sammle Bezugspersonen mit Verwaltungsrecht (nur einmal pro Person)
+                $guardiansByChild[$child->id] ??= app(FamilyResolver::class)->guardiansFor($child, GuardianRight::Manage);
+                foreach ($guardiansByChild[$child->id] as $parent) {
                     if (!$parentsToNotify->contains('id', $parent->id)) {
                         $parentsToNotify->push($parent);
                     }
@@ -479,11 +539,15 @@ class CareController extends Controller implements HasMiddleware
             }
         }
 
+        $created = 0;
         if (!empty($checkInsToCreate)) {
-            ChildCheckIn::query()->insert($checkInsToCreate);
+            // insertOrIgnore + Unique-Index (child_id, date) verhindert Duplikate auch bei parallelen Anfragen
+            $created = ChildCheckIn::query()->insertOrIgnore($checkInsToCreate);
 
             // Benachrichtige alle betroffenen Eltern einmalig
-            $this->notifyParentsAboutNewAttendanceQuery($parentsToNotify, $date_start, $date_end, $lock_at);
+            if ($created > 0) {
+                $this->notifyParentsAboutNewAttendanceQuery($parentsToNotify, $date_start, $date_end, $lock_at);
+            }
         }
 
         // Bestehende Abfragen aktualisieren: nur should_be setzen, lock_at bleibt unverändert
@@ -491,18 +555,22 @@ class CareController extends Controller implements HasMiddleware
             ChildCheckIn::whereIn('id', $checkInsToUpdate)->update(['should_be' => $shouldBeValue]);
         }
 
-        $created = count($checkInsToCreate);
         $updated = count($checkInsToUpdate);
 
-        if ($created > 0 && $updated > 0) {
-            $meldung = "{$created} Abfrage(n) neu erstellt, {$updated} bestehende(r) Eintrag/Einträge aktualisiert.";
-        } elseif ($created > 0) {
-            $meldung = "Die Abfrage wurde erstellt.";
-        } elseif ($updated > 0) {
-            $meldung = "{$updated} bestehende Abfrage(n) wurden aktualisiert.";
-        } else {
-            $meldung = 'Es wurden keine Abfragen erstellt oder aktualisiert.';
+        $parts = [];
+        if ($created > 0) {
+            $parts[] = "{$created} Abfrage(n) neu erstellt";
         }
+        if ($updated > 0) {
+            $parts[] = "{$updated} bestehende Abfrage(n) aktualisiert";
+        }
+        if ($checkInsSkipped > 0) {
+            $parts[] = "{$checkInsSkipped} bereits bestehende Abfrage(n) unverändert gelassen";
+        }
+
+        $meldung = empty($parts)
+            ? 'Es wurden keine Abfragen erstellt oder aktualisiert.'
+            : implode(', ', $parts).'.';
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -789,5 +857,14 @@ class CareController extends Controller implements HasMiddleware
             . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Empfänger von An-/Abmelde-Benachrichtigungen: alle Bezugspersonen, die das
+     * Kind verwalten dürfen (FamilyResolver, legacy inkl. sorg2-Partner).
+     */
+    private function notificationRecipients(Child $child): \Illuminate\Support\Collection
+    {
+        return app(FamilyResolver::class)->guardiansFor($child, GuardianRight::Manage)->values();
     }
 }

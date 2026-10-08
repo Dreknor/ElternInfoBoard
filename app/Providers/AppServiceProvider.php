@@ -56,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
+        Gate::policy(\App\Model\Post::class, \App\Policies\PostPolicy::class);
 
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
@@ -211,6 +212,11 @@ class AppServiceProvider extends ServiceProvider
         // Verhindert E-Mail-Bombing und Brute-Force auf Passwörter.
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Rate-Limit für UCS OIDC-JIT-Callback (schützt vor Kellvin-API-Überlast).
+        RateLimiter::for('ucs-jit', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
         });
 
         Route::model('event', \App\Model\ElternratEvent::class);

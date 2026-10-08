@@ -13,6 +13,8 @@
 
 - Deine eigenen Einsätze sind in der Liste optisch hervorgehoben.
 - Ist unter den Einstellungen eine **Erinnerung** aktiviert, bekommst du vor deinem Einsatz automatisch eine Erinnerung per E-Mail und/oder Push-Benachrichtigung (Vorlauf und Uhrzeit legt die Verwaltung fest).
+- Wirst du neu eingeteilt oder wird dein Einsatz entfernt, bekommst du eine **Benachrichtigung** (Glocke, Push und/oder E-Mail – abhängig von deinen Benachrichtigungs-Einstellungen unter „Reinigung, Pflichtstunden & AGs").
+- Deine anstehenden Einsätze erscheinen im **Dashboard** (Kasten „Ihr Reinigungsdienst" mit den Bemerkungen als Abhakliste) und als ganztägiger Wochentermin bei den **Terminen** – auch in der App.
 - Über deinen persönlichen **iCal-Kalenderlink** (siehe Profil/Konto-Einstellungen) werden deine Reinigungstermine automatisch in deinen privaten Kalender (z. B. Google/Outlook/Apple) übernommen.
 
 ## Was es nicht gibt

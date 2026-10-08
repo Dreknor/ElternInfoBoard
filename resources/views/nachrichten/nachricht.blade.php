@@ -92,8 +92,6 @@
                     @endif
                 </div>
             </div>
-            {{-- Beitrag melden --}}
-            @include('nachrichten.footer.report')
         </div>
     @elseif($nachricht->no_header)
         <!-- No Header Type -->
@@ -185,7 +183,7 @@
             @endif
 
             <!-- Header Section -->
-            <div class="relative @if(count($nachricht->getMedia('header'))>0) @if($nachricht->released == 0) backdrop-blur-sm bg-gradient-to-br from-amber-100 to-amber-200 hover:from-amber-400 hover:to-amber-600  @else backdrop-blur-sm bg-gradient-to-r from-gray-50 to-gray-100 @endif @else @if($nachricht->released == 0) bg-gradient-to-r from-amber-200 to-amber-300 @else bg-gradient-to-r from-gray-50 to-gray-100 @endif @endif px-6 py-3 border-b @if($nachricht->released == 0) border-amber-800 @else border-gray-200 @endif"
+            <div class="relative @if(count($nachricht->getMedia('header'))>0) @if($nachricht->released == 0) bg-gradient-to-br from-amber-100 to-amber-200 hover:from-amber-400 hover:to-amber-600  @else bg-gradient-to-r from-gray-50 to-gray-100 @endif @else @if($nachricht->released == 0) bg-gradient-to-r from-amber-200 to-amber-300 @else bg-gradient-to-r from-gray-50 to-gray-100 @endif @endif px-6 py-3 border-b @if($nachricht->released == 0) border-amber-800 @else border-gray-200 @endif"
                  @if(count($nachricht->getMedia('header'))>0) style="margin-top: -4rem;" @endif>
                     <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                         <!-- Title Section -->

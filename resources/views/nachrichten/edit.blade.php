@@ -129,6 +129,14 @@
                         </div>
                         <div class="col-12" id="read_receipt_deadline_group" @if($post->read_receipt != 1) style="display: none;" @endif>
                             <div class="form-group">
+                                <label>Lesebestätigung gilt je</label>
+                                <select class="custom-select" name="read_receipt_scope">
+                                    <option value="family" @if(old('read_receipt_scope', $post->read_receipt_scope ?? 'family') === 'family') selected @endif>Familie – ein Familienmitglied bestätigt</option>
+                                    <option value="person" @if(old('read_receipt_scope', $post->read_receipt_scope ?? 'family') === 'person') selected @endif>Person – jede Person bestätigt selbst</option>
+                                    <option value="child" @if(old('read_receipt_scope', $post->read_receipt_scope ?? 'family') === 'child') selected @endif>Kind – je Kind eine Bezugsperson (auch getrennt lebende Eltern)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Frist für Lesebestätigung (optional)</label>
                                 <input type="datetime-local" class="form-control" name="read_receipt_deadline" id="read_receipt_deadline"
                                        value="{{ $post->read_receipt_deadline ? $post->read_receipt_deadline->format('Y-m-d\TH:i') : '' }}">
@@ -477,6 +485,7 @@
                                                                 Ja
                                                             </option>
                                                         </select>
+                                                        @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => $rueckmeldung?->exists ? ($rueckmeldung->scope ?? 'family') : 'child'])
                                                     </div>
                                                 </div>
                                             </div>
@@ -856,6 +865,7 @@
                                                 <option value="0" selected>Nein</option>
                                                 <option value="1">Ja</option>
                                             </select>
+                                            @include('nachrichten.partials.rueckmeldung_scope_select', ['scope' => 'child'])
                                         </div>
                                     </div>
                                 </div>

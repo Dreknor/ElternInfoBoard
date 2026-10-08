@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Krankmeldungen\GuardianNotifier;
 use App\Http\Requests\KrankmeldungRequest;
 use App\Mail\DailyReportKrankmeldungen;
 use App\Mail\Krankmeldung;
@@ -10,6 +11,7 @@ use App\Model\Child;
 use App\Model\Disease;
 use App\Model\Krankmeldungen;
 use App\Model\Module;
+use App\Settings\EmailSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +30,11 @@ class KrankmeldungenController extends Controller
      */
     public function index(Request $request)
     {
-        $krankmeldungen = $request->user()->krankmeldungen->load('user')->paginate(15);
+        $krankmeldungen = Krankmeldungen::query()
+            ->visibleTo($request->user())
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->paginate(15);
 
         if (Module::where('setting', 'meldepfl. Erkrankungen')->first()?->options['active'] == 1) {
             $diseases = Cache::remember('diseases', 60 * 60 * 24, function () {
@@ -56,20 +62,25 @@ class KrankmeldungenController extends Controller
             ]);
         }
 
+        $child = null;
+        if ($request->child_id) {
+            $child = Child::find($request->child_id);
+
+            if (! $child || $request->user()->cannot('reportSick', $child)) {
+                return redirect()->back()->with([
+                    'type' => 'danger',
+                    'Meldung' => 'Sie haben keine Berechtigung, dieses Kind krankzumelden.',
+                ]);
+            }
+        }
+
+        $disease = null;
+
         try {
             $krankmeldung = new Krankmeldungen;
             $krankmeldung->fill($request->validated());
 
-            if ($request->child_id) {
-                $child = Child::find($request->child_id);
-
-                if (! $child) {
-                    return redirect()->back()->with([
-                        'type' => 'danger',
-                        'Meldung' => 'Das angegebene Kind wurde nicht gefunden.',
-                    ]);
-                }
-
+            if ($child) {
                 $krankmeldung->name = $child->first_name.' '.$child->last_name;
             }
 
@@ -112,7 +123,7 @@ class KrankmeldungenController extends Controller
                 }
             }
 
-            if ($child ?? false) {
+            if ($child) {
                 $gruppe = $child->group?->name;
                 $class = $child->class?->name;
 
@@ -134,9 +145,17 @@ class KrankmeldungenController extends Controller
 
             $authUser = $request->user();
 
-            Mail::to(config('mail.from.address'))
+            $emailSettings = app(EmailSetting::class);
+            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
+
+            Mail::to($email)
                 ->cc($authUser?->email)
                 ->queue(new Krankmeldung($authUser?->email ?? '', $authUser?->name ?? '', $name, Carbon::createFromFormat('Y-m-d', $request->start)->format('d.m.Y'), Carbon::createFromFormat('Y-m-d', $request->ende)->format('d.m.Y'), $request->kommentar, $disease?->name, $attachments));
+
+            // Weitere Berechtigte des Kindes informieren (z. B. getrennt lebender Elternteil)
+            if ($authUser) {
+                app(GuardianNotifier::class)->notifyOthers($krankmeldung, $authUser);
+            }
 
             return redirect()->back()->with([
                 'type' => 'success',

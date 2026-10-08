@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Services\Pflichtstunden\PflichtstundenService;
 use App\Services\PflichtstundenFamilyService;
 use App\Settings\PflichtstundenSetting;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -14,6 +15,8 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
     protected PflichtstundenSetting $settings;
 
     protected PflichtstundenFamilyService $familyService;
+
+    private ?string $basisDescription = null;
 
     protected ?int $year;
 
@@ -40,7 +43,9 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
 
     public function collection()
     {
-        return $this->familyService->buildFamilySummaries($this->startDate, $this->endDate, true);
+        // Konten nur für vollständige Perioden fortschreiben – ein frei gewählter
+        // Teilzeitraum darf den Kontostand der Periode nicht überschreiben.
+        return $this->familyService->buildFamilySummaries($this->startDate, $this->endDate, $this->customLabel === null);
     }
 
     public function map($item): array
@@ -59,6 +64,8 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
             $this->formatMinutes((int) $item['carryover_preview_minutes']),
             number_format((float) $item['beitrag'], 2, ',', '.').' €',
             round((float) $item['percent'], 2).'%',
+            count($item['child_ids'] ?? []),
+            $this->basisDescription ??= app(PflichtstundenService::class)->basisDescription(),
         ];
     }
 
@@ -75,6 +82,8 @@ class PflichtstundenExport implements FromCollection, WithHeadings, WithMapping,
             'Übertrag',
             'Zu zahlender Beitrag',
             'Erfüllung',
+            'Kinder',
+            'Berechnungsgrundlage',
         ];
     }
 

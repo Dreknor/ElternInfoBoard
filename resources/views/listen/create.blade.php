@@ -95,6 +95,19 @@
                         </div>
 
                         <div>
+                            <label for="booking_scope" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Begrenzung gilt je
+                            </label>
+                            <select name="booking_scope" id="booking_scope"
+                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none">
+                                <option value="family" @if(old('booking_scope', $liste->booking_scope ?? 'family') === 'family') selected @endif>Familie</option>
+                                <option value="child" @if(old('booking_scope', $liste->booking_scope ?? 'family') === 'child') selected @endif>Kind (Eltern wählen beim Buchen das Kind)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">„Kind“: z. B. ein Elterngespräch oder ein Helfer je Kind – getrennt lebende Eltern sehen die Buchung für ihr gemeinsames Kind.</p>
+                        </div>
+
+
+                        <div>
                             <label for="active" class="block text-sm font-semibold text-gray-700 mb-2">
                                 Aktiviert?
                             </label>

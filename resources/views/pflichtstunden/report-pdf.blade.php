@@ -147,31 +147,46 @@
     @endphp
 
     <h1>Pflichtstunden-Report</h1>
-    <p class="meta">Zeitraum: {{ $period_start->format('d.m.Y') }} bis {{ $period_end->format('d.m.Y') }} | Sortierung: {{ $sort === 'highest_debt' ? 'Höchste Stundenschuld' : 'Nachname A-Z' }} | Anonymisiert: {{ $anonymized ? 'Ja' : 'Nein' }}</p>
+    <p class="meta">Zeitraum: {{ $period_start->format('d.m.Y') }} bis {{ $period_end->format('d.m.Y') }}@unless($anonymized) | Sortierung: {{ $sort === 'highest_debt' ? 'Höchste Stundenschuld' : 'Nachname A-Z' }}@endunless | Anonymisiert: {{ $anonymized ? 'Ja' : 'Nein' }}</p>
 
-    <h2>Teil 1: Management Summary &amp; Plausibilität</h2>
+    <h2>Teil 1: Zusammenfassung</h2>
     <table class="kpis">
         <tr>
             <td>
                 <span class="label">Freigegebene Stunden</span>
                 <span class="value">{{ number_format((float) $summary['total_approved_hours'], 2, ',', '.') }}h</span>
             </td>
+            @if(!$anonymized)
+                <td>
+                    <span class="label">Wartende Einträge</span>
+                    <span class="value">{{ $summary['pending_entries_count'] }}</span>
+                </td>
+            @endif
             <td>
-                <span class="label">Wartende Einträge</span>
-                <span class="value">{{ $summary['pending_entries_count'] }}</span>
+                <span class="label">Soll-Stunden</span>
+                <span class="value">{{ number_format((float) $summary['total_required_hours'], 2, ',', '.') }}h</span>
             </td>
             <td>
                 <span class="label">Abgelehnte Einträge</span>
                 <span class="value">{{ $summary['rejected_entries_count'] }}</span>
             </td>
             <td>
-                <span class="label">Auffällige Einträge</span>
-                <span class="value">{{ $error_entries->count() }}</span>
+                <span class="label">Summe abzurechnender Beträge</span>
+                <span class="value">{{ number_format((float) $summary['total_billed_amount'], 2, ',', '.') }} €</span>
+                <span class="label" style="margin-top: 4px; text-transform: none; letter-spacing: 0;">Summe der Fehlstunden je Familie × Stundensatz</span>
             </td>
-        </tr>
-    </table>
+                @if(!$anonymized)
 
-    @if($error_entries->isNotEmpty())
+                    <td>
+                        <span class="label">Auffällige Einträge</span>
+                        <span class="value">{{ $error_entries->count() }}</span>
+                    </td>
+                @endif
+            </tr>
+        </table>
+
+    @if($error_entries->isNotEmpty() && !$anonymized)
+        <p class="muted">Auffällige Einträge (> 12 Stunden)</p>
         <table class="table-small">
             <thead>
             <tr>
@@ -196,7 +211,7 @@
             @endforeach
             </tbody>
         </table>
-    @else
+    @elseif(!$anonymized)
         <p class="muted">Keine auffälligen Einträge (> 12 Stunden) im gewählten Zeitraum.</p>
     @endif
 
@@ -284,8 +299,8 @@
             <td>{{ $process_metrics['rejection_count'] }}</td>
         </tr>
     </table>
-
-    <table class="table-small">
+    @if(!$anonymized)
+        <table class="table-small">
         <thead>
         <tr>
             <th>Admin</th>
@@ -305,53 +320,102 @@
         @endforeach
         </tbody>
     </table>
-
+    @endif
     <h2>Teil 4: Familien-Abrechnung</h2>
 
     <table class="table-small">
-        <thead>
         <tr>
-            <th>Top-Helfer</th>
-            <th>Erfüllt</th>
-            <th>Überschuss</th>
+            <th>Familien gesamt</th>
+            <td>{{ $family_stats['families_count'] }}</td>
         </tr>
-        </thead>
-        <tbody>
-        @foreach($top_helpers as $helper)
-            <tr>
-                <td>{{ $helper['family_name'] }}</td>
-                <td>{{ number_format((float) $helper['approved_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $helper['extra_hours'], 2, ',', '.') }}h</td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-    <table class="table-small">
-        <thead>
         <tr>
-            <th>Familie</th>
-            <th>Soll</th>
-            <th>Geleistet</th>
-            <th>Ausstehend</th>
-            <th>Differenz</th>
-            <th>Erfüllung</th>
+            <th>Soll vollständig erfüllt</th>
+            <td>{{ $family_stats['fulfilled_count'] }}</td>
         </tr>
-        </thead>
-        <tbody>
-        @foreach($family_rows as $family)
-            @php
-                $alertClass = $family['difference_minutes'] < 0 ? 'badge-danger' : 'badge';
-            @endphp
-            <tr>
-                <td>{{ $family['family_name'] }}</td>
-                <td>{{ number_format((float) $family['required_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $family['approved_hours'], 2, ',', '.') }}h</td>
-                <td>{{ number_format((float) $family['pending_hours'], 2, ',', '.') }}h</td>
-                <td><span class="badge {{ $alertClass }}">{{ $formatMinutes($family['difference_minutes']) }}</span></td>
-                <td>{{ number_format((float) $family['percent'], 2, ',', '.') }}%</td>
-            </tr>
-        @endforeach
-        </tbody>
+        <tr>
+            <th>Soll teilweise erfüllt</th>
+            <td>{{ $family_stats['partial_count'] }}</td>
+        </tr>
+        <tr>
+            <th>Keine Stunden geleistet</th>
+            <td>{{ $family_stats['none_count'] }}</td>
+        </tr>
+        <tr>
+            <th>Offene Stunden gesamt</th>
+            <td>{{ number_format((float) $family_stats['open_hours'], 2, ',', '.') }}h</td>
+        </tr>
+        <tr>
+            <th>Mehrstunden gesamt</th>
+            <td>{{ number_format((float) $family_stats['surplus_hours'], 2, ',', '.') }}h</td>
+        </tr>
+        <tr>
+            <th>Familien mit Ausgleichsbetrag</th>
+            <td>{{ $family_stats['billed_families_count'] }}</td>
+        </tr>
     </table>
+    <p class="muted">
+        Abgerechnet wird je Familie: Fehlstunden einer Familie werden nicht mit Mehrstunden anderer Familien verrechnet.
+        Deshalb ergibt sich der Betrag aus den offenen Stunden gesamt und nicht aus der Differenz zwischen Soll- und freigegebenen Stunden.
+    </p>
+
+    @unless($anonymized)
+        @php
+            $showOpeningBalance = $family_rows->contains(fn ($family) => $family['opening_balance_minutes'] !== 0);
+        @endphp
+
+        <table class="table-small">
+            <thead>
+            <tr>
+                <th>Top-Helfer</th>
+                <th>Erfüllt</th>
+                <th>Überschuss</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach($top_helpers as $helper)
+                <tr>
+                    <td>{{ $helper['family_name'] }}</td>
+                    <td>{{ number_format((float) $helper['approved_hours'], 2, ',', '.') }}h</td>
+                    <td>{{ number_format((float) $helper['extra_hours'], 2, ',', '.') }}h</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+        <table class="table-small">
+            <thead>
+            <tr>
+                <th>Familie</th>
+                <th>Soll</th>
+                @if($showOpeningBalance)
+                    <th>Übertrag</th>
+                @endif
+                <th>Geleistet</th>
+                <th>Ausstehend</th>
+                <th>Saldo</th>
+                <th>Erfüllung</th>
+                <th>Betrag</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach($family_rows as $family)
+                @php
+                    $alertClass = $family['difference_minutes'] < 0 ? 'badge-danger' : 'badge';
+                @endphp
+                <tr>
+                    <td>{{ $family['family_name'] }}</td>
+                    <td>{{ number_format((float) $family['required_hours'], 2, ',', '.') }}h</td>
+                    @if($showOpeningBalance)
+                        <td>{{ $formatMinutes($family['opening_balance_minutes']) }}</td>
+                    @endif
+                    <td>{{ number_format((float) $family['approved_hours'], 2, ',', '.') }}h</td>
+                    <td>{{ number_format((float) $family['pending_hours'], 2, ',', '.') }}h</td>
+                    <td><span class="badge {{ $alertClass }}">{{ $formatMinutes($family['difference_minutes']) }}</span></td>
+                    <td>{{ number_format((float) $family['percent'], 2, ',', '.') }}%</td>
+                    <td>{{ number_format((float) $family['beitrag'], 2, ',', '.') }} €</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    @endunless
 </body>
 </html>

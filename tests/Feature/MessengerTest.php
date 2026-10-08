@@ -364,9 +364,10 @@ class MessengerTest extends TestCase
     {
         $this->actingAs($this->moderator)
             ->withoutMiddleware(\App\Http\Middleware\PasswordExpired::class)
-            ->get(route('messenger.admin.reports'))
+            ->get(route('moderation.index'))
             ->assertOk()
-            ->assertViewIs('messenger.admin.reports');
+            ->assertViewIs('moderation.index')
+            ->assertViewHas('active', 'nachrichten');
     }
 
     #[Test]

@@ -159,7 +159,7 @@ class PostReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->get(route('post-reports.index'));
+            ->get(route('moderation.index'));
 
         $response->assertStatus(200);
         $response->assertSee('Gemeldete Beiträge');
@@ -170,9 +170,29 @@ class PostReportTest extends TestCase
     public function non_admin_cannot_view_reports_page(): void
     {
         $response = $this->actingAs($this->user)
-            ->get(route('post-reports.index'));
+            ->get(route('moderation.index'));
 
         $response->assertStatus(403);
+    }
+
+    #[Test]
+    public function old_reports_url_redirects_to_moderation(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('post-reports.index'))
+            ->assertRedirect(route('moderation.index', ['tab' => 'beitraege']));
+    }
+
+    #[Test]
+    public function admin_without_moderate_messages_sees_no_messenger_tab(): void
+    {
+        Permission::findOrCreate('moderate messages', 'web');
+
+        $this->actingAs($this->admin)
+            ->get(route('moderation.index', ['tab' => 'nachrichten']))
+            ->assertOk()
+            ->assertSee('Gemeldete Beiträge')
+            ->assertDontSee('User stummschalten');
     }
 
     #[Test]
@@ -206,7 +226,7 @@ class PostReportTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->delete(route('post-reports.destroy-post', $report));
 
-        $response->assertRedirect(route('post-reports.index'));
+        $response->assertRedirect(route('moderation.index', ['tab' => 'beitraege']));
 
         // Beitrag ist soft-deleted
         $this->assertSoftDeleted('posts', ['id' => $this->post->id]);
@@ -261,7 +281,7 @@ class PostReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->get(route('post-reports.index'));
+            ->get(route('moderation.index'));
 
         $response->assertStatus(200);
         $response->assertSee('Keine offenen Meldungen');

@@ -5,6 +5,7 @@ namespace Tests;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use JMac\Testing\Traits\AdditionalAssertions;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -23,5 +24,13 @@ abstract class TestCase extends BaseTestCase
         // Spatie Permission-Cache vor jedem Test leeren, um PermissionAlreadyExists /
         // PermissionDoesNotExist-Fehler durch In-Memory-Cache-Kontamination zu vermeiden.
         $this->app->make(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // App\Model\PersonalAccessToken erzwingt die Verbindung „mysql“. Unter SQLite
+        // (Tests) wird sie auf dieselbe In-Memory-Datenbank umgelenkt.
+        if (config('database.default') === 'sqlite') {
+            config(['database.connections.mysql' => config('database.connections.sqlite')]);
+            DB::purge('mysql');
+            DB::connection('mysql')->setPdo(DB::connection()->getPdo());
+        }
     }
 }

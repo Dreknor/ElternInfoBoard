@@ -6,9 +6,10 @@ use App\Http\Requests\StoreListeTerminRequest;
 use App\Http\Requests\TerminabsageRequest;
 use App\Mail\TerminAbsage;
 use App\Mail\TerminAbsageEltern;
+use App\Model\Child;
 use App\Model\Liste;
 use App\Model\listen_termine;
-use App\Notifications\Push;
+use App\Model\User;
 use App\Notifications\PushTerminAbsage;
 use Carbon\Carbon;
 use Exception;
@@ -91,20 +92,23 @@ class ListenTerminController extends Controller
      */
     public function update(Request $request, listen_termine $listen_termine)
     {
-        $Eintragungen = $request->user()->getListenTermine()->where('listen_id', $listen_termine->liste->id);
-
-        if (count($Eintragungen) > 0 and $listen_termine->liste->multiple != 1) {
+        if ($listen_termine->reserviert_fuer !== null) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Es kann nur ein Termin reserviert werden',
+                'Meldung' => 'Der Termin ist bereits vergeben.',
             ]);
         }
 
-        $listen_termine->update([
-            'reserviert_fuer' => $request->user()->id,
-        ]);
-
-        Notification::send($listen_termine->liste->ersteller, new Push($listen_termine->liste->listenname.': Termin vergeben', $request->user()->name.' hat den Termin '.$listen_termine->termin->format('d.m.Y H:i').' reserviert.'));
+        // Kind der Buchung (Pflicht bei Listen je Kind, sonst optional – z. B. Elterngespräch)
+        // und „nur ein Termin“ je Kind bzw. je Familie (gemeinsame, atomare Buchung mit der App-API)
+        try {
+            app(\App\Services\App\ListenService::class)->reserveTermin($request->user(), $listen_termine, $request->integer('child_id') ?: null);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->to(url('listen'))->with([
             'type' => 'success',
@@ -119,7 +123,7 @@ class ListenTerminController extends Controller
      */
     public function absagen(TerminabsageRequest $request, listen_termine $listen_termine)
     {
-        if ($request->user()->id == $listen_termine->reserviert_fuer or $listen_termine->reserviert_fuer == $request->user()->sorg2 or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
+        if (app(\App\Services\App\ListenService::class)->mayCancel($request->user(), $listen_termine->reserviert_fuer ? (int) $listen_termine->reserviert_fuer : null, $listen_termine->child_id) or $request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
 
             // Email an Listenersteller
             Mail::to($listen_termine->liste->ersteller->email, $listen_termine->liste->ersteller->name)
@@ -135,7 +139,7 @@ class ListenTerminController extends Controller
                     $listen_termine->termin,
                     $request->text));
 
-            $listen_termine->update(['reserviert_fuer' => null]);
+            $listen_termine->update(['reserviert_fuer' => null, 'child_id' => null]);
 
             return redirect()->back()->with([
                 'type' => 'success',
@@ -156,16 +160,11 @@ class ListenTerminController extends Controller
     {
         if ($request->user()->id == $listen_termine->liste->besitzer or $request->user()->can('edit terminliste')) {
             if ($listen_termine->reserviert_fuer != null) {
-                // WebPush
+                // WebPush an die buchende Familie und den Absagenden
                 $user = $listen_termine->eingetragenePerson;
-                if ($user->sorg2 != '' and $user->sorg2 != null) {
-                    $sorg2 = $user->sorgeberechtigter2;
-                }
-
-                $users = collect([$user, $request->user()]);
-                if (! is_null($sorg2)) {
-                    $users->push($sorg2);
-                }
+                $users = User::query()->whereIn('id', $user->familyUserIds())->get()
+                    ->push($request->user())
+                    ->unique('id');
 
                 $body = $listen_termine->liste->listenname.': Termin am '.$listen_termine->termin->format('d.m.Y H:i').' wurde abgesagt.';
                 Notification::send($users, new PushTerminAbsage($body));
@@ -175,6 +174,7 @@ class ListenTerminController extends Controller
                     ->queue(new TerminAbsage($listen_termine->eingetragenePerson->name, $listen_termine->liste, $listen_termine->termin, $request->user()));
                 $listen_termine->update([
                     'reserviert_fuer' => null,
+                    'child_id' => null,
                 ]);
             } else {
                 $listen_termine->delete();

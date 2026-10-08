@@ -26,6 +26,7 @@ class CareControllerTest extends TestCase
         parent::setUp();
 
         // Create a user with the required permission
+        \Spatie\Permission\Models\Permission::findOrCreate('edit schickzeiten', 'web');
         $this->user = User::factory()->create();
         $this->user->givePermissionTo('edit schickzeiten');
 

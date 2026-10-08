@@ -88,6 +88,9 @@
                                                                     <i class="fas fa-calendar-week"></i> Mehrtägig
                                                                 </span>
                                                             @endif
+                                                            @if($termin->sourceUrl)
+                                                                <span class="badge badge-warning ml-2" title="Ihr Reinigungsdienst"><i class="fas fa-broom"></i> Ihr Einsatz</span>
+                                                            @endif
                                                             @if(auth()->user()->can('view all') && ($termin->public ?? false))
                                                                 <span class="badge badge-success ml-2" title="Dieser Termin ist öffentlich">Öffentlich</span>
                                                             @endif
@@ -106,11 +109,17 @@
                                                                 <img src="{{asset('img/icon-google-cal.png')}}" style="width: 16px; height: 16px;" alt="Google Calendar">
                                                             </a>
 
-                                                            @can('edit termin')
-                                                                <a href="{{ url('/termine/'.$termin->id.'/edit') }}" class="btn btn-sm btn-outline-primary">
-                                                                    <i class="fas fa-edit"></i>
+                                                            @if($termin->sourceUrl)
+                                                                <a href="{{ $termin->sourceUrl }}" class="btn btn-sm btn-outline-primary" title="Zum Reinigungsplan">
+                                                                    <i class="fas fa-broom"></i>
                                                                 </a>
-                                                            @endcan
+                                                            @else
+                                                                @can('edit termin')
+                                                                    <a href="{{ url('/termine/'.$termin->id.'/edit') }}" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </a>
+                                                                @endcan
+                                                            @endif
                                                         </div>
                                                     </div>
 

@@ -3,26 +3,24 @@
 
 @section('content')
     <div class="container-fluid px-4 py-3 space-y-4">
-        @can('edit groups')
-            <div class="flex justify-end">
-                <a href="{{ url('groups') }}?inactive={{ $showInactive ? 0 : 1 }}{{ $showPrivate ? '&private=1' : '' }}"
+        @canany(['edit groups', 'delete groups'])
+            <div class="flex flex-wrap justify-end gap-2">
+                <a href="{{ url('groups') }}?{{ http_build_query(array_filter(['inactive' => ! $showInactive, 'private' => $showPrivate])) }}"
                    class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors"
                    style="border-color: var(--color-card-border); color: var(--color-text-secondary);">
                     <i class="fas {{ $showInactive ? 'fa-eye-slash' : 'fa-eye' }}"></i>
                     {{ $showInactive ? 'Inaktive Gruppen ausblenden' : 'Inaktive Gruppen anzeigen' }}
                 </a>
+                @can('delete groups')
+                    <a href="{{ url('groups') }}?{{ http_build_query(array_filter(['inactive' => $showInactive, 'private' => ! $showPrivate])) }}"
+                       class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors"
+                       style="border-color: var(--color-card-border); color: var(--color-text-secondary);">
+                        <i class="fas {{ $showPrivate ? 'fa-eye-slash' : 'fa-eye' }}"></i>
+                        {{ $showPrivate ? 'Private Gruppen ausblenden' : 'Private Gruppen anzeigen' }}
+                    </a>
+                @endcan
             </div>
-        @endcan
-        @can('delete groups')
-            <div class="flex justify-end">
-                <a href="{{ url('groups') }}?private={{ $showPrivate ? 0 : 1 }}{{ $showInactive ? '&inactive=1' : '' }}"
-                   class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors"
-                   style="border-color: var(--color-card-border); color: var(--color-text-secondary);">
-                    <i class="fas {{ $showPrivate ? 'fa-eye-slash' : 'fa-eye' }}"></i>
-                    {{ $showPrivate ? 'Private Gruppen ausblenden' : 'Private Gruppen anzeigen' }}
-                </a>
-            </div>
-        @endcan
+        @endcanany
         @foreach($groups as $group)
             <div class="rounded-lg shadow-lg {{ !$group->active ? 'opacity-60' : '' }}" style="background-color: var(--color-card-bg); border: 1px solid var(--color-card-border)">
                 <!-- Card Header -->
@@ -37,14 +35,11 @@
                             @endif
 
                             @canany(['edit groups', 'delete groups'])
-                                @if($group->owner_id != null)
-                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)"></i>
-                                    @elseif($group->owner_id == null)
-                                    <i class="fas fa-globe" style="color: var(--color-widget-accent-from)"></i>
-                                    @elseif($group->owner_id == auth()->user()->id)
-                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)"></i>
+                                @if($group->owner_id)
+                                    <i class="fas fa-user-shield" style="color: var(--color-widget-accent-from)" title="Private Gruppe"></i>
+                                @else
+                                    <i class="fas fa-globe" style="color: var(--color-widget-accent-from)" title="Öffentliche Gruppe"></i>
                                 @endif
-
                             @endcanany
 
                             {{$group->name}}

@@ -32,6 +32,7 @@
                             ['id' => 'schickzeiten',  'label' => 'Schickzeiten',       'icon' => 'fas fa-clock'],
                             ['id' => 'care',          'label' => 'Care',               'icon' => 'fas fa-heart'],
                             ['id' => 'keycloak',      'label' => 'OIDC / Keycloak',   'icon' => 'fas fa-key'],
+                           ['id' => 'ucs',           'label' => 'UCS@school',        'icon' => 'fas fa-school'],
                             ['id' => 'pflichtstunden','label' => 'Pflichtstunden',     'icon' => 'fas fa-tasks'],
                             ['id' => 'schoolyear',    'label' => 'Schuljahreswechsel', 'icon' => 'fas fa-graduation-cap'],
                             ['id' => 'stundenplan',   'label' => 'Stundenplan',        'icon' => 'fas fa-calendar-alt'],
@@ -78,6 +79,11 @@
                         @include('settings.tabs.keycloak-tab')
                     @endif
                 </div>
+                <div x-show="activeTab === 'ucs'" x-cloak class="p-6">
+                    @if(View::exists('settings.tabs.ucs-tab'))
+                        @include('settings.tabs.ucs-tab')
+                    @endif
+                </div>
                 <div x-show="activeTab === 'pflichtstunden'" x-cloak class="p-6">
                     @include('settings.tabs.pflichtstunden-tab')
                 </div>
@@ -117,7 +123,7 @@
                 activeTab: 'home',
                 init() {
                     const hash = window.location.hash?.slice(1);
-                    const validTabs = ['home','email','notify','schickzeiten','care','keycloak',
+                    const validTabs = ['home','email','notify','schickzeiten','care','keycloak','ucs',
                                        'pflichtstunden','schoolyear','stundenplan','reminder','reinigung','messenger','design'];
                     if (hash && validTabs.includes(hash)) {
                         this.activeTab = hash;

@@ -3,10 +3,13 @@
 namespace App\Jobs;
 
 use App\Mail\ReinigungReminderMail;
+use App\Model\Notification;
 use App\Model\Reinigung;
 use App\Model\ReminderLog;
 use App\Model\User;
-use App\Notifications\ReminderPushNotification;
+use App\Services\App\Modules;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 use App\Settings\ReinigungSetting;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -39,7 +42,7 @@ class ProcessReinigungRemindersJob implements ShouldQueue
         $reinigungen = Reinigung::query()
             ->whereDate('datum', $targetDate->toDateString())
             ->whereNotNull('users_id')
-            ->with('user.sorgeberechtigter2')
+            ->with('user')
             ->get();
 
         foreach ($reinigungen as $reinigung) {
@@ -47,10 +50,13 @@ class ProcessReinigungRemindersJob implements ShouldQueue
                 continue;
             }
 
-            $this->remindUser($reinigung->user, $reinigung, $settings);
-
-            if (! is_null($reinigung->user->sorgeberechtigter2)) {
-                $this->remindUser($reinigung->user->sorgeberechtigter2, $reinigung, $settings);
+            // Alle Familienmitglieder erinnern (FamilyResolver: legacy = sorg2-Partner)
+            $familyMembers = User::query()->whereIn('id', $reinigung->user->familyUserIds())->get();
+            foreach ($familyMembers as $member) {
+                if (! Modules::isActiveFor($member, 'Reinigung')) {
+                    continue;
+                }
+                $this->remindUser($member, $reinigung, $settings);
             }
         }
     }
@@ -59,17 +65,21 @@ class ProcessReinigungRemindersJob implements ShouldQueue
     {
         $woche = $reinigung->datum->copy()->startOfWeek()->format('d.m.').' - '.$reinigung->datum->copy()->endOfWeek()->format('d.m.Y');
 
-        if ($settings->reminder_email and $user->email and ! $this->alreadySent($user, $reinigung, 'email')) {
+        if ($settings->reminder_email and $user->email and ! $this->alreadySent($user, $reinigung, 'email')
+            and NotificationPreferences::allows($user, NotificationCategory::ORGANISATION, 'mail')) {
             Mail::to($user->email)->queue(new ReinigungReminderMail($user->name, $reinigung->aufgabe, $woche, $reinigung->bereich));
             $this->logReminder($user, $reinigung, 'email');
         }
 
         if ($settings->reminder_push and ! $this->alreadySent($user, $reinigung, 'push')) {
-            $user->notify(new ReminderPushNotification(
-                title: 'Erinnerung: Reinigungsdienst',
-                body: 'Reinigungsdienst "'.($reinigung->aufgabe ?: 'Reinigungsdienst').'" in der Woche '.$woche,
-                actionUrl: url('reinigung'),
-            ));
+            // Glocke + App-/Browser-Push (created-Event, Kanäle nach Nutzereinstellung)
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => 'Reinigung',
+                'title' => 'Erinnerung: Reinigungsdienst',
+                'message' => 'Reinigungsdienst "'.($reinigung->aufgabe ?: 'Reinigungsdienst').'" in der Woche '.$woche,
+                'url' => url('reinigung'),
+            ]);
             $this->logReminder($user, $reinigung, 'push');
         }
     }

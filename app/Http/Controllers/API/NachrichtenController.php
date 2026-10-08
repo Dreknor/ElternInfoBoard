@@ -248,7 +248,7 @@ class NachrichtenController extends Controller
                         'mime_type' => $media->mime_type,
                         'size' => $media->size,
                         'order' => $media->order_column,
-                        'url' => url('/api/file/' . $media->uuid),
+                        'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
                         'url_by_id' => url('/api/image/' . $media->id),
                     ];
                 })->values()->all();
@@ -266,7 +266,8 @@ class NachrichtenController extends Controller
             }
 
             $nachricht->read_receipt = ($nachricht->read_receipt == true) ? '1' : false;
-            $nachricht->userReceipt = (is_null($nachricht->receipts()->where('user_id', $user->id)->first())) ? false : true;
+            // Erledigt je nach Modus (Familie, Person, je Kind)
+            $nachricht->userReceipt = app(\App\Services\ReadReceiptStatusService::class)->isSatisfied($user, $nachricht);
 
             unset($nachricht->reactions);
             $nachricht->userReaction = $nachricht->userReaction($user);
@@ -437,6 +438,13 @@ class NachrichtenController extends Controller
         }
 
         $user = $request->user();
+        if ($user->cannot('react', $post)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Not allowed',
+                'message' => 'Reaktionen sind für diesen Beitrag nicht möglich'
+            ], 403);
+        }
         $user->reactTo($post, $reaction);
 
         return response()->json([
@@ -631,7 +639,7 @@ class NachrichtenController extends Controller
                     'mime_type' => $media->mime_type,
                     'size' => $media->size,
                     'order' => $media->order_column,
-                    'url' => url('/api/file/' . $media->uuid),
+                    'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
                     'url_by_id' => url('/api/image/' . $media->id),
                 ];
             })->values()->all();
@@ -649,7 +657,8 @@ class NachrichtenController extends Controller
         }
 
         $post->read_receipt = ($post->read_receipt == true) ? '1' : false;
-        $post->userReceipt = (is_null($post->receipts()->where('user_id', $user->id)->first())) ? false : true;
+        // Erledigt je nach Modus (Familie, Person, je Kind)
+            $post->userReceipt = app(\App\Services\ReadReceiptStatusService::class)->isSatisfied($user, $post);
 
         unset($post->reactions);
         $post->userReaction = $post->userReaction($user);

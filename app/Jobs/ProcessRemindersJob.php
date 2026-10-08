@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\GuardianRight;
 use App\Mail\ReminderEscalationMail;
 use App\Mail\ReminderMail;
 use App\Model\ChildCheckIn;
@@ -12,7 +13,11 @@ use App\Model\ReminderLog;
 use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Model\UserRueckmeldungen;
-use App\Notifications\ReminderPushNotification;
+use App\Services\Family\FamilyResolver;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
+use App\Services\Notifications\PushDispatcher;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Settings\ReminderSetting;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -63,8 +68,16 @@ class ProcessRemindersJob implements ShouldQueue
     {
         $count = 0;
 
+        $window = $this->reminderWindow($settings, $now);
+        if ($window === null) {
+            return 0;
+        }
+
+        // Nur Fristen im Erinnerungsfenster laden – abgelaufene Rückmeldungen
+        // samt Empfängern zu laden sprengt sonst das Speicherlimit des Workers.
         $rueckmeldungen = Rueckmeldungen::where('pflicht', true)
             ->whereNotNull('ende')
+            ->whereBetween('ende', $window)
             ->whereHas('post', fn ($q) => $q->where('released', 1))
             ->with(['post.users'])
             ->get();
@@ -77,32 +90,18 @@ class ProcessRemindersJob implements ShouldQueue
                 continue;
             }
 
-            $allUsers = $post->users->unique('id');
+            // Die Stufe hängt nur von der Frist ab – vor der teuren Empfänger-Auflösung prüfen
+            $level = $this->determineLevel($settings, $deadline, $now);
+            if ($level === null) {
+                continue;
+            }
+
+            // Offene Empfänger je Scope (Person, Familie, Kind – E2/E7)
+            $openRecipients = app(RueckmeldungStatusService::class)->openRecipients($post);
             $usersToEscalate = [];
 
-            foreach ($allUsers as $user) {
-                // Prüfe ob User bereits geantwortet hat
-                $hasResponded = UserRueckmeldungen::where('post_id', $post->id)
-                    ->where('users_id', $user->id)
-                    ->exists();
-
-                // Prüfe ob Sorg2-Partner bereits geantwortet hat
-                if (!$hasResponded && $user->sorg2) {
-                    $hasResponded = UserRueckmeldungen::where('post_id', $post->id)
-                        ->where('users_id', $user->sorg2)
-                        ->exists();
-                }
-
-                if ($hasResponded) {
-                    continue;
-                }
-
-                // Bestimme die passende Erinnerungsstufe
-                $level = $this->determineLevel($settings, $deadline, $now);
-
-                if ($level === null) {
-                    continue;
-                }
+            foreach ($openRecipients as $open) {
+                $user = $open['user'];
 
                 // Prüfe ob diese Stufe bereits gesendet wurde
                 $alreadySent = ReminderLog::where('remindable_type', Rueckmeldungen::class)
@@ -142,8 +141,18 @@ class ProcessRemindersJob implements ShouldQueue
     {
         $count = 0;
 
+        $window = $this->reminderWindow($settings, $now);
+        if ($window === null) {
+            return 0;
+        }
+
+        // Frist = read_receipt_deadline, ersatzweise archiv_ab – nur Fristen im Erinnerungsfenster laden
         $posts = Post::where('read_receipt', true)
             ->where('released', 1)
+            ->where(function ($q) use ($window) {
+                $q->whereBetween('read_receipt_deadline', $window)
+                    ->orWhere(fn ($q) => $q->whereNull('read_receipt_deadline')->whereBetween('archiv_ab', $window));
+            })
             ->with(['users', 'receipts'])
             ->get();
 
@@ -153,26 +162,20 @@ class ProcessRemindersJob implements ShouldQueue
                 continue;
             }
 
+            $level = $this->determineLevel($settings, $deadline, $now);
+            if ($level === null) {
+                continue;
+            }
+
             $allUsers = $post->users->unique('id');
-            $confirmedUserIds = $post->receipts
-                ->whereNotNull('confirmed_at')
-                ->pluck('user_id')
-                ->toArray();
+            $readReceiptStatus = app(\App\Services\ReadReceiptStatusService::class);
+            $confirmedReceipts = $readReceiptStatus->confirmedReceipts($post);
 
             $usersToEscalate = [];
 
             foreach ($allUsers as $user) {
-                if (in_array($user->id, $confirmedUserIds)) {
-                    continue;
-                }
-
-                // Prüfe ob Sorg2-Partner bereits bestätigt hat
-                if ($user->sorg2 && in_array($user->sorg2, $confirmedUserIds)) {
-                    continue;
-                }
-
-                $level = $this->determineLevel($settings, $deadline, $now);
-                if ($level === null) {
+                // Erledigt je nach Modus: selbst, durch die Familie oder je Kind durch eine Bezugsperson
+                if ($readReceiptStatus->isSatisfied($user, $post, $confirmedReceipts)) {
                     continue;
                 }
 
@@ -214,16 +217,24 @@ class ProcessRemindersJob implements ShouldQueue
 
         // Alle unbeantworteten Anwesenheitsabfragen innerhalb des Erinnerungsfensters
         $windowEnd = $now->copy()->addDays($settings->level1_days_before_deadline)->toDateString();
+        $resolver = app(FamilyResolver::class);
+        $guardiansByChild = [];
         $openCheckIns = ChildCheckIn::query()
             ->whereNull('should_be')
             ->whereNotNull('lock_at')
             ->where('lock_at', '>=', $now->toDateString())
             ->where('lock_at', '<=', $windowEnd)
-            ->with('child.parents')
+            ->with('child')
             ->get()
-            ->groupBy(function ($checkIn) {
-                // Gruppiere nach Elternteil + lock_at Datum
-                $parentIds = $checkIn->child?->parents?->pluck('id')->join('_') ?? 'none';
+            ->groupBy(function ($checkIn) use ($resolver, &$guardiansByChild) {
+                // Gruppiere nach Bezugspersonen (mit Verwaltungsrecht) + lock_at Datum
+                if ($checkIn->child) {
+                    $guardiansByChild[$checkIn->child_id] ??= $resolver->guardiansFor($checkIn->child, GuardianRight::Manage);
+                }
+                $parentIds = isset($guardiansByChild[$checkIn->child_id])
+                    ? $guardiansByChild[$checkIn->child_id]->pluck('id')->sort()->join('_')
+                    : 'none';
+
                 return $parentIds . '_' . $checkIn->lock_at->format('Y-m-d');
             });
 
@@ -231,11 +242,11 @@ class ProcessRemindersJob implements ShouldQueue
             $firstCheckIn = $checkIns->first();
             $deadline = $firstCheckIn->lock_at;
 
-            if (!$firstCheckIn->child || !$firstCheckIn->child->parents) {
+            if (!$firstCheckIn->child || empty($guardiansByChild[$firstCheckIn->child_id])) {
                 continue;
             }
 
-            $parents = $firstCheckIn->child->parents;
+            $parents = $guardiansByChild[$firstCheckIn->child_id];
 
             foreach ($parents as $parent) {
                 $level = $this->determineLevel($settings, $deadline, $now);
@@ -269,6 +280,30 @@ class ProcessRemindersJob implements ShouldQueue
     // ═══════════════════════════════════════════════════════════════
     //  Hilfsmethoden
     // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Zeitraum, in dem Fristen liegen müssen, damit überhaupt eine aktive Stufe greift:
+     * von heute bis heute + größter Vorlauf der aktiven Stufen. Null, wenn keine Stufe aktiv ist.
+     *
+     * Untergrenze als reines Datum, damit date- und datetime-Spalten gleichermaßen passen.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    private function reminderWindow(ReminderSetting $s, Carbon $now): ?array
+    {
+        $days = collect([1, 2, 3])
+            ->filter(fn (int $level) => $s->{"level{$level}_active"})
+            ->map(fn (int $level) => (int) $s->{"level{$level}_days_before_deadline"});
+
+        if ($days->isEmpty()) {
+            return null;
+        }
+
+        return [
+            $now->copy()->startOfDay()->toDateString(),
+            $now->copy()->startOfDay()->addDays($days->max())->endOfDay()->toDateTimeString(),
+        ];
+    }
 
     /**
      * Bestimmt die aktuelle Erinnerungsstufe basierend auf dem Zeitpunkt.
@@ -335,15 +370,17 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'in_app';
         }
 
-        // E-Mail
-        if ($s->{"{$levelKey}_email"}) {
+        // E-Mail (sofern der Nutzer E-Mails für Erinnerungen zulässt)
+        if ($s->{"{$levelKey}_email"} && NotificationPreferences::allows($user, NotificationCategory::ERINNERUNGEN, 'mail')) {
             $this->sendEmailReminder($user, $post, $level, $deadline, $type);
             $channels[] = 'email';
         }
 
-        // Push-Benachrichtigung
+        // Push-Benachrichtigung – die In-App-Benachrichtigung löst bereits App-/Browser-Push aus
         if ($s->{"{$levelKey}_push"}) {
-            $this->sendPushReminder($user, $post, $level, $deadline, $type);
+            if (! in_array('in_app', $channels, true)) {
+                $this->sendPushReminder($user, $post, $level, $deadline, $type);
+            }
             $channels[] = 'push';
         }
 
@@ -407,8 +444,9 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'in_app';
         }
 
-        // E-Mail
-        if ($s->{"{$levelKey}_email"} && $parent->email) {
+        // E-Mail (sofern der Elternteil E-Mails für Hort & Krankmeldungen zulässt)
+        if ($s->{"{$levelKey}_email"} && $parent->email
+            && NotificationPreferences::allows($parent, NotificationCategory::HORT, 'mail')) {
             try {
                 Mail::to($parent->email)->send(new ReminderMail(
                     userName: $parent->name,
@@ -424,16 +462,10 @@ class ProcessRemindersJob implements ShouldQueue
             $channels[] = 'email';
         }
 
-        // Push
+        // Push – die In-App-Benachrichtigung löst bereits App-/Browser-Push aus
         if ($s->{"{$levelKey}_push"}) {
-            try {
-                $parent->notify(new ReminderPushNotification(
-                    $title,
-                    $body,
-                    url('schickzeiten')
-                ));
-            } catch (\Exception $e) {
-                Log::error("[ProcessRemindersJob] Push-Fehler (Anwesenheit): " . $e->getMessage());
+            if (! in_array('in_app', $channels, true)) {
+                PushDispatcher::dispatch([$parent->id], $title, $body, url('schickzeiten'), 'Anwesenheitsabfrage');
             }
             $channels[] = 'push';
         }
@@ -541,7 +573,8 @@ class ProcessRemindersJob implements ShouldQueue
             : url('post/' . $post->id);
 
         try {
-            $user->notify(new ReminderPushNotification($title, $body, $actionUrl));
+            // Ohne Glocken-Eintrag: nur App-/Browser-Push nach den Kanälen des Nutzers
+            PushDispatcher::dispatch([$user->id], $title, $body, $actionUrl, $typeLabel);
         } catch (\Exception $e) {
             Log::error("[ProcessRemindersJob] Push-Fehler: " . $e->getMessage(), [
                 'user' => $user->id,

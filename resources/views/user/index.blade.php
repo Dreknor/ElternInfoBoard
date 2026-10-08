@@ -29,6 +29,12 @@
                             <span class="md:hidden hidden sm:inline">Verein</span>
                         </a>
                     @endcan
+                    @can('manage families')
+                        <a href="{{ route('families.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-house-user"></i>
+                            <span class="hidden sm:inline">Familien</span>
+                        </a>
+                    @endcan
                     @can('edit user')
                         <a href="{{ url('users/mass/delete') }}" class="btn btn-warning btn-sm">
                             <i class="fas fa-trash-alt"></i>
@@ -116,7 +122,7 @@
                                 <th>E-Mail</th>
                                 <th>Gruppen</th>
                                 <th>Rechte</th>
-                                <th class="hidden lg:table-cell">Verknüpft</th>
+                                <th class="hidden lg:table-cell">Familie</th>
                                 <th class="hidden lg:table-cell">zuletzt online</th>
                                 <th class="hidden lg:table-cell">E-Mail-Status</th>
                                 <th class="text-right">Aktionen</th>
@@ -157,7 +163,7 @@
                                         </div>
                                     </td>
                                     <td class="hidden lg:table-cell text-sm" style="color: var(--color-text-secondary);">
-                                        {{ $user->sorgeberechtigter2?->name }}
+                                        {{ $user->family?->name }}
                                     </td>
                                     <td class="hidden lg:table-cell">
                                         @if(($generalSettings->login_tracking_mode ?? 'user') !== 'never')

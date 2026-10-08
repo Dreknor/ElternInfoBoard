@@ -112,9 +112,10 @@
                         </div>
                     @endif
 
+                    @php $bookableChildren = app(\App\Services\App\ListenService::class)->bookableChildren(auth()->user(), $liste); @endphp
                     <div class="space-y-3">
                         @foreach($liste->termine->sortBy('termin') as $eintrag)
-                            @include('listen.terminListen.termin')
+                            @include('listen.terminListen.termin', ['bookableChildren' => $bookableChildren])
                         @endforeach
                     </div>
                 @else

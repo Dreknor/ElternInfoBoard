@@ -86,11 +86,17 @@
                     </template>
                 </div>
 
-                @if($user->sorg2 != null)
+                @php $familyMembers = \App\Model\User::query()->whereIn('id', $user->familyUserIds())->where('id', '!=', $user->id)->orderBy('name')->pluck('name'); @endphp
+                @if($familyMembers->isNotEmpty())
+                    {{-- Familie (kind-zentriertes Familienmodell, ersetzt die Kontoverknüpfung) --}}
                     <div class="mx-2 mb-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
-                        <p class="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
-                            <i class="fas fa-link mt-0.5 flex-shrink-0"></i>
-                            <span>Verknüpft mit <strong>{{$user->sorgeberechtigter2?->name}}</strong></span>
+                        <p class="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5 mb-0">
+                            <i class="fas fa-house-user mt-0.5 flex-shrink-0"></i>
+                            <span>
+                                Ihre Familie <strong>{{ $user->family?->name ?? $user->name }}</strong>: {{ $familyMembers->implode(', ') }}.
+                                Rückmeldungen je Familie, Lesebestätigungen, Pflichtstunden und Termine sind für alle Mitglieder sichtbar.
+                                Änderungen an der Familie nimmt die Schule vor.
+                            </span>
                         </p>
                     </div>
                 @endif
@@ -98,6 +104,21 @@
 
             {{-- Tab-Inhalte --}}
             <div class="settings-content-panel flex-1 overflow-y-auto" style="max-height: calc(100vh - 180px);">
+
+                {{-- Hinweis-Banner: fehlende E-Mail (UCS-Nutzer ohne E-Mail) --}}
+                @if(empty($user->email))
+                    <div class="mx-6 mt-5 flex items-start gap-4 p-5 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-400 rounded-xl">
+                        <i class="fas fa-exclamation-triangle text-amber-600 text-xl mt-0.5"></i>
+                        <div>
+                            <h6 class="text-base font-bold text-amber-800 dark:text-amber-300 mb-1">E-Mail-Adresse erforderlich</h6>
+                            <p class="text-sm text-amber-700 dark:text-amber-300 mb-0">
+                                Ihr Konto wurde über das Schulverwaltungssystem (UCS) angelegt, jedoch wurde dabei
+                                keine E-Mail-Adresse übermittelt. Bitte tragen Sie Ihre E-Mail-Adresse im Profil ein,
+                                um Benachrichtigungen und wichtige Mitteilungen der Schule zu erhalten.
+                            </p>
+                        </div>
+                    </div>
+                @endif
 
                 @if ($errors->any())
                     <div class="mx-6 mt-5 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
@@ -253,14 +274,69 @@
                             </div>
                             <div>
                                 <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Benachrichtigungen</h2>
-                                <p class="text-xs mb-0" style="color: var(--color-text-secondary);">E-Mail-Benachrichtigungen und Kopien</p>
+                                <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Wie Sie über welche Information benachrichtigt werden</p>
                             </div>
                         </div>
+
+                        {{-- Kanäle je Kategorie (App, Browser, E-Mail). Die Glocke im Board zeigt immer alles. --}}
+                        <input type="hidden" name="notifications_present" value="1">
+                        <div class="overflow-x-auto mb-7 rounded-lg border" style="border-color: var(--color-card-border);">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr style="background-color: var(--color-widget-primary-bg);">
+                                        <th class="text-left px-4 py-3 font-semibold" style="color: var(--color-text-primary);">Information</th>
+                                        <th class="px-3 py-3 font-semibold text-center" style="color: var(--color-text-primary);" title="Push-Mitteilung in der ElternInfo-App">
+                                            <i class="fas fa-mobile-alt mr-1"></i>App
+                                        </th>
+                                        <th class="px-3 py-3 font-semibold text-center" style="color: var(--color-text-primary);" title="Push-Mitteilung im Browser (wenn im Browser erlaubt)">
+                                            <i class="fas fa-desktop mr-1"></i>Browser
+                                        </th>
+                                        <th class="px-3 py-3 font-semibold text-center" style="color: var(--color-text-primary);">
+                                            <i class="fas fa-envelope mr-1"></i>E-Mail
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($notificationPreferences as $category)
+                                        <tr class="border-t" style="border-color: var(--color-card-border);">
+                                            <td class="px-4 py-3">
+                                                <span class="block font-medium" style="color: var(--color-text-primary);">{{ $category['label'] }}</span>
+                                                <span class="block text-xs" style="color: var(--color-text-secondary);">{{ $category['description'] }}</span>
+                                            </td>
+                                            @foreach(['app' => 'App', 'web' => 'Browser', 'mail' => 'E-Mail'] as $channel => $channelLabel)
+                                                <td class="px-3 py-3 text-center">
+                                                    @if(is_null($category['channels'][$channel]))
+                                                        <span class="text-xs" style="color: var(--color-text-secondary);" title="Für diese Information nicht verfügbar">–</span>
+                                                    @elseif(in_array($channel, $category['locked'], true))
+                                                        <input type="checkbox"
+                                                               class="w-5 h-5 rounded border-gray-300 text-blue-600 opacity-60 cursor-not-allowed"
+                                                               aria-label="{{ $category['label'] }}: {{ $channelLabel }} (immer aktiv)"
+                                                               title="Wird immer zugestellt" checked disabled>
+                                                    @else
+                                                        <input type="checkbox"
+                                                               class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                               name="notifications[{{ $category['key'] }}][{{ $channel }}]" value="1"
+                                                               aria-label="{{ $category['label'] }}: {{ $channelLabel }}"
+                                                               @checked($category['channels'][$channel])>
+                                                    @endif
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <p class="text-xs px-4 py-3 mb-0 border-t" style="color: var(--color-text-secondary); border-color: var(--color-card-border);">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Die Glocke im ElternInfoBoard zeigt weiterhin alle Benachrichtigungen. Dringende Nachrichten der Schule
+                                und Bestätigungen Ihrer eigenen Eingaben werden immer zugestellt.
+                            </p>
+                        </div>
+
                         <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
                                     <i class="fas fa-envelope-circle-check text-blue-600 mr-1"></i>
-                                    E-Mail Benachrichtigungen
+                                    Rhythmus der E-Mail-Zusammenfassung
                                     <span class="block text-xs font-normal mt-0.5" style="color: var(--color-text-secondary);">Zuletzt: {{$user->lastEmail?->format('d.m.Y H:i') ?? 'Nie'}}</span>
                                 </label>
                                 <select class="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
@@ -388,9 +464,12 @@
                             <p class="text-xs mb-3 leading-relaxed" style="color: var(--color-text-secondary);">
                                 <i class="fas fa-info-circle text-blue-600 mr-1"></i>
                                 Hier werden die Kinder angezeigt, die mit Ihrem Konto verknüpft sind. Mit der Glocke können Sie Benachrichtigungen aktivieren.
+                                Verbindungen und Rechte pflegt die Schule – stimmt etwas nicht, melden Sie es bitte über „Verbindung ist falsch“.
                             </p>
+                            @php $ownLinks = $user->children_rel->keyBy('id'); @endphp
                             <div class="space-y-2 mb-5">
                                 @foreach($user->children() as $child)
+                                    @php $link = $ownLinks->get($child->id)?->pivot; @endphp
                                     <div class="border rounded-lg p-3 hover:border-green-500 hover:shadow-sm transition-all duration-200" style="border-color: var(--color-card-border);">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex-1 min-w-0">
@@ -405,7 +484,44 @@
                                                         <i class="fas fa-graduation-cap mr-1 text-[10px]"></i>{{$child->class->name ?? ''}}
                                                     </span>
                                                 </div>
+                                                {{-- Beziehung, Rechte und Herkunft --}}
+                                                <div class="text-xs mt-2" style="color: var(--color-text-secondary);">
+                                                    @if($link)
+                                                        <div>
+                                                            <strong>{{ $link->relationType()->label() }}</strong>
+                                                            – {{ $link->rightsLabel() }}
+                                                        </div>
+                                                        <div style="color: var(--color-text-muted);">Herkunft: {{ $link->sourceLabel() }}</div>
+                                                        @if($link->isPendingReview())
+                                                            <div class="mt-2 p-2 bg-amber-50 border border-amber-300 rounded text-amber-800">
+                                                                Diese Verbindung wurde aus der früheren Kontoverknüpfung übernommen.
+                                                                Stimmt das nicht, melden Sie sich bitte bei der Schule.
+                                                            </div>
+                                                        @endif
+                                                        <form action="{{ route('einstellungen.guardian.report', $child) }}" method="POST" class="mt-1"
+                                                              onsubmit="return confirm('Der Schule melden, dass die Verbindung zu {{ addslashes($child->first_name) }} falsch ist?')">
+                                                            @csrf
+                                                            <button class="text-red-600 hover:underline text-xs"><i class="fas fa-flag mr-1"></i>Verbindung ist falsch</button>
+                                                        </form>
+                                                    @else
+                                                        <div style="color: var(--color-text-muted);">über ein verknüpftes Konto sichtbar</div>
+                                                    @endif
+                                                </div>
+                                                {{-- Weitere Personen mit Zugriff auf das Kind (gleiche Logik wie die Rechteprüfung) --}}
+                                                @php $otherGuardians = app(\App\Services\Family\FamilyResolver::class)->guardiansFor($child)->where('id', '!=', $user->id)->sortBy('name'); @endphp
+                                                <div class="text-xs mt-2 pt-2 border-t" style="border-color: var(--color-card-border); color: var(--color-text-secondary);">
+                                                    <div class="font-medium mb-0.5" style="color: var(--color-text-primary);">
+                                                        <i class="fas fa-user-shield mr-1"></i>Weitere Personen mit Zugriff
+                                                    </div>
+                                                    @forelse($otherGuardians as $guardian)
+                                                        <div>{{ $guardian->name }} {{ $guardian->pivot ? '('.$guardian->pivot->relationType()->label().') – '.$guardian->pivot->rightsLabel() : '– über die Kontoverknüpfung mit einem Elternteil' }}</div>
+                                                    @empty
+                                                        <div style="color: var(--color-text-muted);">keine</div>
+                                                    @endforelse
+                                                    <div class="mt-0.5" style="color: var(--color-text-muted);">Außerdem Verwaltung und Betreuungspersonal der Schule im Rahmen ihrer Aufgaben.</div>
+                                                </div>
                                             </div>
+                                            @can('manage', $child)
                                             <div class="flex items-center gap-1.5">
                                                 @if($child->notification)
                                                     <button class="inline-flex items-center justify-center w-8 h-8 bg-teal-500 hover:bg-teal-600 text-white rounded-lg cursor-pointer child-notification transition-colors"
@@ -424,6 +540,7 @@
                                                     <i class="fas fa-edit text-xs"></i>
                                                 </a>
                                             </div>
+                                            @endcan
                                         </div>
                                     </div>
                                 @endforeach
@@ -531,6 +648,46 @@
                             </p>
                         </div>
                         @endif
+
+                        {{-- Eltern-App per QR-Code einrichten (Schuladresse + einmalige Anmeldung) --}}
+                        <div class="rounded-lg overflow-hidden border" style="border-color: var(--color-card-border);"
+                             x-data="{ qr: null, loading: false, error: null, expires: null,
+                                async load() {
+                                    this.loading = true; this.error = null;
+                                    try {
+                                        const r = await fetch('{{ route('app.connect.qr') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' } });
+                                        if (!r.ok) throw new Error();
+                                        const d = await r.json(); this.qr = d.svg; this.expires = d.expires_at_label;
+                                    } catch (e) { this.error = 'Der QR-Code konnte nicht erzeugt werden.'; }
+                                    this.loading = false;
+                                } }">
+                            <div class="px-4 py-3" style="background-color: var(--color-primary);">
+                                <h6 class="text-sm font-bold text-white mb-0 flex items-center gap-2">
+                                    <i class="fas fa-mobile-alt"></i>ElternInfo-App einrichten
+                                </h6>
+                            </div>
+                            <div class="p-4 space-y-3" style="background-color: var(--color-card-bg);">
+                                <p class="text-sm" style="color: var(--color-text-secondary);">
+                                    Öffnen Sie die ElternInfo-App und wählen Sie „QR-Code scannen“. Die App verbindet sich dann mit der Schule und meldet Sie direkt an.
+                                </p>
+                                <template x-if="!qr">
+                                    <button type="button" @click="load()" :disabled="loading"
+                                            class="px-4 py-2 rounded-lg text-white text-sm font-medium" style="background-color: var(--color-primary);">
+                                        <i class="fas fa-qrcode mr-1"></i><span x-text="loading ? 'Wird erstellt…' : 'QR-Code anzeigen'"></span>
+                                    </button>
+                                </template>
+                                <template x-if="qr">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="bg-white p-3 rounded-lg" style="width: 240px; height: 240px;" x-html="qr"></div>
+                                        <p class="text-xs text-center" style="color: var(--color-text-secondary);">
+                                            Einmalig verwendbar, gültig bis <span x-text="expires"></span> Uhr. Zeigen Sie den Code niemandem sonst.
+                                        </p>
+                                        <button type="button" @click="load()" class="text-sm hover:underline" style="color: var(--color-primary);">Neuen Code erstellen</button>
+                                    </div>
+                                </template>
+                                <p class="text-sm text-red-600" x-show="error" x-text="error"></p>
+                            </div>
+                        </div>
 
                         <div class="rounded-lg overflow-hidden border" style="border-color: var(--color-card-border);">
                             <div class="px-4 py-3 bg-gradient-to-r from-orange-600 to-orange-700">

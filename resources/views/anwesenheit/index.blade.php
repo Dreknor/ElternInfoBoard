@@ -29,7 +29,7 @@
             <div class="alert alert-warning">
                 <h4>Keine Kinder gefunden</h4>
                 <p>Es wurden keine Kinder für die ausgewählten Gruppen und Klassen gefunden.</p>
-                @if($careSettings->hide_childs_when_absent && !request()->cookie('showAll'))
+                @if($careSettings->hide_childs_when_absent && (!request()->cookie('showAll') || request()->cookie('showAll') === 'expected'))
                     <p>Möglicherweise sind heute keine Kinder angemeldet. Versuchen Sie, alle Kinder anzuzeigen.</p>
                 @endif
             </div>
@@ -44,12 +44,21 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                @if($careSettings->hide_childs_when_absent && !request()->cookie('showAll'))
-                    <a href="{{ route('anwesenheit.index', ['showAll' => 1]) }}" class="btn btn-primary">Alle Kinder
-                        anzeigen</a>
-                @elseif(request()->cookie('showAll'))
-                    <a href="{{ route('anwesenheit.index', ['showAll' => 'off']) }}" class="btn btn-primary"
-                       id="removeCookie">Nur anwesende Kinder anzeigen</a>
+                @if($careSettings->hide_childs_when_absent)
+                    @php
+                        $currentMode = request()->cookie('showAll');
+                        $currentMode = $currentMode === 'expected' && $careSettings->view_detailed_care ? 'expected' : ($currentMode && $currentMode !== 'expected' ? 'all' : 'present');
+                    @endphp
+                    @if($currentMode !== 'present')
+                        <a href="{{ route('anwesenheit.index', ['showAll' => 'off']) }}" class="btn btn-primary"
+                           id="removeCookie">Nur anwesende Kinder anzeigen</a>
+                    @endif
+                    @if($currentMode !== 'expected' && $careSettings->view_detailed_care)
+                        <a href="{{ route('anwesenheit.index', ['showAll' => 'expected']) }}" class="btn btn-primary">Anwesende und erwartete Kinder anzeigen</a>
+                    @endif
+                    @if($currentMode !== 'all')
+                        <a href="{{ route('anwesenheit.index', ['showAll' => 1]) }}" class="btn btn-primary">Alle Kinder anzeigen</a>
+                    @endif
                 @endif
             </div>
     </div>

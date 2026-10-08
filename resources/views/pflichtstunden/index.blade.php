@@ -222,6 +222,9 @@
                 <div class="rounded-lg border p-3">
                     <div class="text-xs text-gray-500">Soll-Modell</div>
                     <div class="font-semibold text-gray-900">{{ $mode_label }}</div>
+                    @isset($basisDescription)
+                        <div class="text-[11px] text-gray-500 mt-0.5">{{ $basisDescription }}</div>
+                    @endisset
                 </div>
                 <div class="rounded-lg border p-3">
                     <div class="text-xs text-gray-500">Startsaldo</div>

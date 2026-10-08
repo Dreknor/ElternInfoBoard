@@ -13,6 +13,19 @@
                 {{ session('error') }}
             </div>
         @endif
+
+        @isset($basisDescription)
+            <div class="mb-4 text-sm text-gray-600">
+                <i class="fas fa-calculator mr-1"></i>
+                Berechnungsgrundlage: <strong>{{ $basisDescription }}</strong>
+                @if(!empty($pflichtstunden_settings->pflichtstunden_basis_changed_at))
+                    · seit {{ \Carbon\Carbon::parse($pflichtstunden_settings->pflichtstunden_basis_changed_at)->format('d.m.Y H:i') }}
+                    @if($pflichtstunden_settings->pflichtstunden_basis_changed_by)
+                        durch {{ \App\Model\User::find($pflichtstunden_settings->pflichtstunden_basis_changed_by)?->name }}
+                    @endif
+                @endif
+            </div>
+        @endisset
         <!-- Statistik-Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <!-- Gesamt Familien -->
@@ -425,7 +438,7 @@
                                     <select name="user_id" id="user_id" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 @error('user_id') border-red-500 @enderror" required>
                                         <option value="">-- Nutzer auswählen --</option>
                                         @foreach($allGroupedUsers as $group)
-                                            <option value="{{ $group['user']->id }}">{{ $group['user']->name }} @if($group['partner']) / {{ $group['partner']->name }} @endif</option>
+                                            <option value="{{ $group['user']->id }}">{{ $group['family_name'] }}</option>
                                         @endforeach
                                     </select>
                                 </div>

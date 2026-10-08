@@ -8,6 +8,7 @@ use App\Model\Child;
 use App\Model\Group;
 use App\Model\Schickzeiten;
 use App\Model\User;
+use App\Services\Family\GuardianshipService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -18,7 +19,7 @@ class ChildController extends Controller implements HasMiddleware
     {
         return [
             'auth',
-            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit']),
+            new Middleware('can:edit schickzeiten', only: ['index', 'create', 'createFromSchickzeit', 'edit', 'updateGuardianPhone']),
         ];
     }
 
@@ -26,10 +27,37 @@ class ChildController extends Controller implements HasMiddleware
     {
         $childs = Child::query()
             ->with(['group', 'class', 'parents'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
             ->get();
+
+        $duplicateIds = [];
+        foreach ($childs->groupBy(fn (Child $child): string => mb_strtolower(trim($child->last_name))) as $sameLastName) {
+            foreach ($sameLastName as $index => $child) {
+                $firstName = mb_strtolower(trim($child->first_name));
+                foreach ($sameLastName->slice($index + 1) as $otherChild) {
+                    $otherFirstName = mb_strtolower(trim($otherChild->first_name));
+                    $sameFirstName = $firstName === $otherFirstName
+                        || str_starts_with($firstName, $otherFirstName.' ')
+                        || str_starts_with($otherFirstName, $firstName.' ');
+
+                    if ($sameFirstName) {
+                        $duplicateIds[] = $child->id;
+                        $duplicateIds[] = $otherChild->id;
+                    }
+                }
+            }
+        }
+        $duplicateIds = array_values(array_unique($duplicateIds));
 
         return view('child.index', [
             'children' => $childs,
+            'duplicateIds' => $duplicateIds,
+            'statuses' => [
+                Child::STATUS_ACTIVE => 'Aktiv',
+                Child::STATUS_APPLICANT => 'Bewerber',
+                Child::STATUS_LEFT => 'Ausgeschieden',
+            ],
         ]);
     }
 
@@ -49,23 +77,22 @@ class ChildController extends Controller implements HasMiddleware
             ]);
         }
 
+        $guardianship = app(GuardianshipService::class);
+
         if (! $request->has('parent_id')) {
-            auth()->user()->children_rel()->create($request->validated());
+            $child = Child::create($request->safe()->except(['parent_id']));
+            $guardianship->link($child, auth()->user());
         } else {
             $parent = User::find($request->parent_id);
-            $child = $parent->children_rel()->create($request->validated());
+            $child = Child::create($request->safe()->except(['parent_id']));
+            $guardianship->link($child, $parent);
 
             if (session()->has('schickzeiten')) {
                 $schickzeit = session()->get('schickzeiten');
 
                 $schickzeitenQuery = Schickzeiten::query()
                     ->where('child_name', $schickzeit->child_name)
-                    ->where(function ($query) use ($schickzeit) {
-                        $query->where('users_id', $schickzeit->users_id);
-                        if (isset($schickzeit->user->sorg2)) {
-                            $query->orWhere('users_id', $schickzeit->user->sorg2);
-                        }
-                    });
+                    ->whereIn('users_id', $schickzeit->user?->familyUserIds() ?? [$schickzeit->users_id]);
 
                 $schickzeitenQuery->update([
                     'child_id' => $child->id,
@@ -130,27 +157,55 @@ class ChildController extends Controller implements HasMiddleware
 
     public function edit(Child $child)
     {
-
-        $parents = User::query()
-            ->whereHas('roles', function ($query) {
-                $query->where('name', 'Eltern')->where('guard_name', 'web');
-            })
-            ->get();
+        // Kandidaten für Bezugspersonen: alle aktiven Konten (Großeltern etc. haben
+        // nicht zwingend die Rolle „Eltern“)
+        $parents = User::query()->orderBy('name')->get(['id', 'name', 'email']);
 
         return view('child.edit', [
-            'child' => $child,
+            'child' => $child->load('parents'),
             'groups' => Group::active()->get(),
             'parents' => $parents,
         ]);
     }
 
+    public function updateGuardianPhone(Request $request, Child $child, User $guardian)
+    {
+        $data = $request->validate([
+            'phone' => ['present', 'nullable', 'string', 'max:50'],
+        ]);
+
+        $isCurrentCustodian = $child->parents()
+            ->whereKey($guardian->id)
+            ->wherePivot('has_custody', true)
+            ->where(function ($query) {
+                $query->whereNull('child_user.valid_until')
+                    ->orWhereDate('child_user.valid_until', '>=', today());
+            })
+            ->exists();
+
+        abort_unless($isCurrentCustodian, 404);
+
+        $guardian->phone = $data['phone'] ?? null;
+        $guardian->save();
+
+        return redirect()->back()->with([
+            'Meldung' => 'Nichtöffentliche Telefonnummer für '.$guardian->name.' gespeichert',
+            'type' => 'success',
+        ]);
+    }
+
     public function update(CreateChildRequest $request, Child $child)
     {
+        if ($request->user()->cannot('manage', $child)) {
+            return redirect()->back()->with([
+                'Meldung' => 'Sie haben keine Berechtigung',
+                'type' => 'danger',
+            ]);
+        }
 
         if (auth()->user()->can('edit schickzeiten') && $request->has('parent_id')) {
-            if (! $child->parents->contains($request->parent_id)) {
-                $child->parents()->sync($request->parent_id);
-            }
+            // Nur ergänzen – bestehende Bezugspersonen (inkl. UCS-Verknüpfungen) bleiben erhalten.
+            app(GuardianshipService::class)->link($child, User::findOrFail($request->parent_id));
         }
 
         $child->update(
@@ -211,7 +266,7 @@ class ChildController extends Controller implements HasMiddleware
 
     public function setNotification(ChildNotificationRequest $request, Child $child)
     {
-        if (auth()->user()->children()->contains($child)) {
+        if (auth()->user()->can('manage', $child)) {
 
             $child->notification = $request->notification;
             $child->save();
@@ -231,7 +286,7 @@ class ChildController extends Controller implements HasMiddleware
     public function storeMandate(Request $request, Child $child)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung',
                 'type' => 'danger',
@@ -258,7 +313,7 @@ class ChildController extends Controller implements HasMiddleware
     public function destroyMandate(Request $request, Child $child, $mandateId)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion',
                 'type' => 'danger',

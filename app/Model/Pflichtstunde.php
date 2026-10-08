@@ -87,5 +87,10 @@ class Pflichtstunde extends Model implements \OwenIt\Auditing\Contracts\Auditabl
             $query->whereBetween('start', [$start, $end]);
 
         });
+
+        // Zwischengespeicherte Familienauswertungen der App-API verwerfen (B-50).
+        $bump = fn () => \Illuminate\Support\Facades\Cache::increment('pflichtstunden_summaries_version');
+        static::saved($bump);
+        static::deleted($bump);
     }
 }

@@ -1,9 +1,14 @@
-@if(!$nachricht->is_archived and $nachricht->rueckmeldung->pflicht == 1 and ($nachricht->users->unique('email')->count() - $nachricht->users()->doesnthave('sorgeberechtigter2')->count())> 1)
+@php
+    $ruecklauf = (! $nachricht->is_archived && $nachricht->rueckmeldung->pflicht == 1)
+        ? app(\App\Services\Rueckmeldungen\RueckmeldungStatusService::class)->summary($nachricht)
+        : null;
+@endphp
+@if($ruecklauf && $ruecklauf['expected'] > 1)
     @php
-        $totalUsers = $nachricht->users->unique('email')->count() - $nachricht->users()->doesnthave('sorgeberechtigter2')->count();
-        $responses = $nachricht->userRueckmeldung->groupBy('users_id')->count();
-        $percentage = round(($responses / $totalUsers) * 100, 2);
-        $remaining = $totalUsers - $responses;
+        $totalUsers = $ruecklauf['expected'];
+        $responses = $ruecklauf['answered'];
+        $percentage = $ruecklauf['percent'];
+        $remaining = $ruecklauf['open'];
     @endphp
 
     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">

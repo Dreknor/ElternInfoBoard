@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AufnahmeImportVorlage;
+use App\Exports\SchuelerImportVorlage;
 use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
+use App\Imports\SchuelerImportRows;
 use App\Imports\UsersImport;
 use App\Imports\VereinImport;
+use App\Services\Import\SchuelerImportService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\ElternImportVorlage;
 use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
@@ -135,6 +140,11 @@ class ImportController extends Controller implements HasMiddleware
     {
         $type = $request->input('type');
 
+        // Kind-zentrierter Schüler-Import (Vorschau → Bestätigung)
+        if ($type === 'schueler' && $request->hasFile('file')) {
+            return $this->previewSchuelerImport($request);
+        }
+
         $rules = [
             'file'          => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
             'type'          => ['required', 'in:eltern,aufnahme,mitarbeiter'],
@@ -218,9 +228,12 @@ class ImportController extends Controller implements HasMiddleware
 
         try {
         if ($validated['type'] === 'eltern') {
-            foreach (Group::where('protected', 0)->get() as $group) {
-                $group->users()->detach();
-            }
+            // Nur manuelle Mitgliedschaften nicht geschützter Gruppen leeren – aus Kindern
+            // abgeleitete Mitgliedschaften (is_auto_provisioned) bleiben erhalten.
+            DB::table('group_user')
+                ->whereIn('group_id', Group::withoutGlobalScopes()->where('protected', 0)->pluck('id'))
+                ->where('is_auto_provisioned', false)
+                ->delete();
 
             $header = [
                 'klassenstufe' => $validated['klassenstufe'] - 1,
@@ -238,7 +251,7 @@ class ImportController extends Controller implements HasMiddleware
 
             $importer = new UsersImport($header, $sendEmail);
 
-            $this->debugExcelImport($importer, $storedPath);
+            $this->runImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Eltern wurden importiert';
         } elseif ($validated['type'] === 'aufnahme') {
@@ -255,12 +268,12 @@ class ImportController extends Controller implements HasMiddleware
             if (! empty($validated['kind_nachname'])) $header['kind_nachname']= $validated['kind_nachname'] - 1;
 
             $importer = new AufnahmeImport($header, $sendEmail);
-            $this->debugExcelImport($importer, $storedPath);
+            $this->runImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Aufnahme-Import abgeschlossen';
         } else {
             $importer = new MitarbeiterImport($sendEmail);
-            $this->debugExcelImport($importer, $storedPath);
+            $this->runImport($importer, $storedPath);
             $newUsers = $importer->getNewUsers();
             $Meldung  = 'Mitarbeiter-Import abgeschlossen';
         }
@@ -309,28 +322,16 @@ class ImportController extends Controller implements HasMiddleware
     }
 
     /**
-     * TEMPORÄR: Führt Excel::import() aus und protokolliert bei einem Fehler
-     * die vollständige Exception (Klasse, Nachricht, Datei, Zeile, Trace) im
-     * Laravel-Log, damit der tatsächliche Ursprungsort des "Path must not be
-     * empty"-Fehlers ermittelt werden kann. Kann nach der Fehlersuche wieder
-     * entfernt werden.
+     * Führt Excel::import() aus und protokolliert eine fehlschlagende Datei-Verarbeitung
+     * mit vollständigem Kontext (Exception-Klasse, Nachricht, Ort), da Fehler beim
+     * Einlesen sonst nur generisch an den Nutzer durchgereicht würden.
      */
-    private function debugExcelImport(object $importer, string $storedPath): void
+    private function runImport(object $importer, string $storedPath): void
     {
         try {
-            \Log::info('debugExcelImport: Starte Import', [
-                'storedPath' => $storedPath,
-                'exists'     => file_exists($storedPath),
-                'realpath'   => realpath($storedPath),
-                'is_file'    => is_file($storedPath),
-                'filesize'   => @filesize($storedPath),
-            ]);
-
             Excel::import($importer, $storedPath);
-
-            \Log::info('debugExcelImport: Import erfolgreich');
         } catch (\Throwable $e) {
-            \Log::error('debugExcelImport: Fehler beim Import', [
+            \Log::error('Import fehlgeschlagen', [
                 'exception' => get_class($e),
                 'message'   => $e->getMessage(),
                 'file'      => $e->getFile(),
@@ -340,6 +341,57 @@ class ImportController extends Controller implements HasMiddleware
 
             throw $e;
         }
+    }
+
+    /**
+     * Schritt 1 des Schüler-Imports: Datei ablegen und Probelauf anzeigen.
+     */
+    private function previewSchuelerImport(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:xls,xlsx,ods,csv']]);
+
+        $path = $request->file('file')->store('imports');
+        $report = app(SchuelerImportService::class)->run($this->schuelerRows($path), dryRun: true, markLeavers: $request->boolean('abgaenger'));
+
+        return view('user.importPreview', [
+            'report' => $report,
+            'token' => basename($path),
+            'abgaenger' => $request->boolean('abgaenger'),
+        ]);
+    }
+
+    /**
+     * Schritt 2: Import nach Bestätigung ausführen.
+     */
+    public function confirmSchuelerImport(Request $request)
+    {
+        $data = $request->validate(['token' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+$/']]);
+        $path = 'imports/'.$data['token'];
+
+        if (! Storage::exists($path)) {
+            return redirect()->to(url('users/import'))->with(['type' => 'danger', 'Meldung' => 'Importdatei nicht mehr vorhanden – bitte erneut hochladen.']);
+        }
+
+        $report = app(SchuelerImportService::class)->run($this->schuelerRows($path), dryRun: false, markLeavers: $request->boolean('abgaenger'));
+        Storage::delete($path);
+
+        return view('user.importPreview', [
+            'report' => $report,
+            'token' => null,
+            'abgaenger' => $request->boolean('abgaenger'),
+        ]);
+    }
+
+    public function downloadSchuelerVorlage()
+    {
+        return Excel::download(new SchuelerImportVorlage(), 'schueler-import-vorlage.ods', ExcelFormat::ODS);
+    }
+
+    private function schuelerRows(string $path): array
+    {
+        $sheets = Excel::toArray(new SchuelerImportRows, Storage::path($path));
+
+        return $sheets[0] ?? [];
     }
 
     public function importVereinForm()

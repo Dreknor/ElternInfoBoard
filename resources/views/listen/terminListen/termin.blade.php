@@ -37,8 +37,11 @@
             @if($eintrag->reserviert_fuer != null)
                 <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     <i class="fas fa-user mr-1"></i>
-                    @if($eintrag->eingetragenePerson->id == auth()->id() or $eintrag->eingetragenePerson->sorg2 == auth()->id() or $liste->visible_for_all or auth()->user()->can('edit terminliste'))
+                    @if(auth()->user()->isFamilyMember($eintrag->reserviert_fuer) or $liste->visible_for_all or auth()->user()->can('edit terminliste') or ($eintrag->child_id && \App\Services\App\Family::ownsChild(auth()->user(), $eintrag->child_id)))
                         {{ $eintrag->eingetragenePerson->name }}
+                        @if($eintrag->child)
+                            · für {{ $eintrag->child->first_name }}
+                        @endif
                     @else
                         reserviert
                     @endif
@@ -58,6 +61,7 @@
                 <form method="post" action="{{ url("listen/termine/" . $eintrag->id) }}" style="display: inline;">
                     @csrf
                     @method('PUT')
+                    @include('listen.partials.child_select')
                     <button type="submit"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
                         <i class="fas fa-check"></i>
@@ -88,6 +92,7 @@
                 <form method="post" action="{{ url("listen/termine/" . $eintrag->id) }}" style="display: inline;">
                     @csrf
                     @method('PUT')
+                    @include('listen.partials.child_select')
                     <button type="submit"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
                         <i class="fas fa-check"></i>

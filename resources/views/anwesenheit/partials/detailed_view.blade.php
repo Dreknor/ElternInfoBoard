@@ -97,14 +97,7 @@
                                                 'schickzeiten' => $child->getSchickzeitenForToday()?->toArray(),
                                                 'regular_schickzeiten' => $child->regularSchickzeiten?->toArray(),
                                                 'mandates' => $child->mandates?->toArray(),
-                                               'parents' => $child->parents?->flatMap(function($u) use ($sorg2Users) {
-                                                   $list = [['name' => $u->name, 'email' => $u->email, 'phone' => $u->phone, 'publicPhone' => $u->publicPhone]];
-                                                   if ($u->sorg2 && isset($sorg2Users[$u->sorg2])) {
-                                                       $partner = $sorg2Users[$u->sorg2];
-                                                       $list[] = ['name' => $partner->name, 'email' => $partner->email, 'phone' => $partner->phone, 'publicPhone' => $partner->publicPhone];
-                                                   }
-                                                   return $list;
-                                               })->unique('email')->values()->toArray(),
+                                               'parents' => $parentContacts[$child->id] ?? [],
                                            ]
                                        );
                                    @endphp
@@ -242,14 +235,7 @@
                                                     'schickzeiten' => $child->getSchickzeitenForToday()?->toArray(),
                                                     'regular_schickzeiten' => $child->regularSchickzeiten?->toArray(),
                                                     'mandates' => $child->mandates?->toArray(),
-                                                    'parents' => $child->parents?->flatMap(function($u) use ($sorg2Users) {
-                                                        $list = [['name' => $u->name, 'email' => $u->email, 'phone' => $u->phone, 'publicPhone' => $u->publicPhone]];
-                                                        if ($u->sorg2 && isset($sorg2Users[$u->sorg2])) {
-                                                            $partner = $sorg2Users[$u->sorg2];
-                                                            $list[] = ['name' => $partner->name, 'email' => $partner->email, 'phone' => $partner->phone, 'publicPhone' => $partner->publicPhone];
-                                                        }
-                                                        return $list;
-                                                    })->unique('email')->values()->toArray(),
+                                                    'parents' => $parentContacts[$child->id] ?? [],
                                                 ]
                                             );
                                         @endphp

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncUcsSchoolJob;
 use App\Mail\TestEmail;
 use App\Model\Group;
 use App\Model\Groups;
 use App\Model\Module;
 use App\Model\User;
+use App\Rules\CronExpression;
 use App\Services\HolidayService;
+use App\Services\Ucs\KelvinClient;
 use App\Settings\CareSetting;
 use App\Settings\EmailSetting;
 use App\Settings\GeneralSetting;
@@ -21,6 +24,7 @@ use App\Settings\CustomThemeSetting;
 use App\Settings\SchickzeitenSetting;
 use App\Settings\StundenplanSetting;
 use App\Themes\ThemeRegistry;
+use App\Settings\UcsSetting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +32,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
@@ -39,6 +44,75 @@ class SettingsController extends Controller implements HasMiddleware
         return [
             'auth',
             ['permission:edit settings'],
+        ];
+    }
+
+    /**
+     * Vorschau der Pflichtstunden-Berechnung mit geänderter Grundlage (ohne Speichern).
+     */
+    public function pflichtstundenPreview(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'pflichtstunden_basis' => 'nullable|in:family,child',
+            'pflichtstunden_geteilte_kinder' => 'nullable|in:combined,split,separate',
+            'pflichtstunden_max_kinder' => 'nullable|integer|min:1',
+            'pflichtstunden_kinder_gruppen' => 'nullable|array',
+            'pflichtstunden_anzahl' => 'nullable|integer|min:1',
+        ]);
+
+        $current = new PflichtstundenSetting;
+        $preview = new PflichtstundenSetting;
+        $basis = $this->pflichtstundenBasisFromRequest($request, $current);
+        $preview->pflichtstunden_basis = $basis['basis'];
+        $preview->pflichtstunden_geteilte_kinder = $basis['geteilte_kinder'];
+        $preview->pflichtstunden_max_kinder = $basis['max_kinder'];
+        $preview->pflichtstunden_kinder_gruppen = $basis['kinder_gruppen'];
+        if ($request->filled('pflichtstunden_anzahl')) {
+            $preview->pflichtstunden_anzahl = (int) $request->input('pflichtstunden_anzahl');
+        }
+
+        $resolver = app(\App\Services\Family\FamilyResolver::class);
+        $summarize = function (PflichtstundenSetting $settings) use ($resolver) {
+            $stats = (new \App\Services\Pflichtstunden\PflichtstundenService($resolver, $settings))->overview()['stats'];
+
+            return [
+                'einheiten' => $stats['totalFamilies'],
+                'soll_stunden' => round($stats['totalHoursRequired'], 1),
+                'ist_stunden' => round($stats['totalHoursCompleted'], 1),
+                'offen_stunden' => round($stats['totalHoursMissing'], 1),
+                'beitrag' => round($stats['totalBeitrag'], 2),
+            ];
+        };
+
+        return response()->json([
+            'aktuell' => $summarize($current),
+            'neu' => $summarize($preview),
+        ]);
+    }
+
+    /**
+     * @return array{basis: string, geteilte_kinder: string, max_kinder: ?int, kinder_gruppen: list<int>}
+     */
+    private function pflichtstundenBasisFromRequest(Request $request, PflichtstundenSetting $fallback): array
+    {
+        return [
+            'basis' => $request->input('pflichtstunden_basis', $fallback->pflichtstunden_basis),
+            'geteilte_kinder' => $request->input('pflichtstunden_geteilte_kinder', $fallback->pflichtstunden_geteilte_kinder),
+            'max_kinder' => $request->filled('pflichtstunden_max_kinder') ? (int) $request->input('pflichtstunden_max_kinder') : null,
+            'kinder_gruppen' => array_values(array_map('intval', (array) $request->input('pflichtstunden_kinder_gruppen', []))),
+        ];
+    }
+
+    /**
+     * @return array{basis: string, geteilte_kinder: string, max_kinder: ?int, kinder_gruppen: list<int>}
+     */
+    private function pflichtstundenBasisOf(PflichtstundenSetting $settings): array
+    {
+        return [
+            'basis' => $settings->pflichtstunden_basis,
+            'geteilte_kinder' => $settings->pflichtstunden_geteilte_kinder,
+            'max_kinder' => $settings->pflichtstunden_max_kinder,
+            'kinder_gruppen' => array_values(array_map('intval', $settings->pflichtstunden_kinder_gruppen ?? [])),
         ];
     }
 
@@ -90,7 +164,12 @@ class SettingsController extends Controller implements HasMiddleware
             'keycloakSettings' => $keycloakSettings,
             'reinigungSettings' => $reinigungSettings,
             'reinigungBereiche' => $reinigungBereiche,
+            'ucsSettings' => new UcsSetting,
             'groups' => Groups::query()->where('protected', 0)->get(),
+            'allGroups' => Group::withoutGlobalScopes()->orderBy('name')->get(['id', 'name']),
+            'pflichtstundenBasisChangedBy' => $pflichtstundenSetting->pflichtstunden_basis_changed_by
+                ? User::find($pflichtstundenSetting->pflichtstunden_basis_changed_by)
+                : null,
             'users' => $users,
             'roles' => $roles,
             'themes'              => $themes,
@@ -222,6 +301,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'krankmeldungen_report_time' => 'required|date_format:H:i',
                     'schickzeiten_report_hour' => 'required|numeric',
                     'schickzeiten_report_weekday' => 'required|numeric',
+                    'krankmeldung_notify_guardians' => 'nullable|boolean',
                 ]);
 
                 $krankmeldungen_report_time = explode(':', $validated['krankmeldungen_report_time']);
@@ -234,6 +314,7 @@ class SettingsController extends Controller implements HasMiddleware
                 $notifySettings->krankmeldungen_report_minute = $krankmeldungen_report_time[1];
                 $notifySettings->schickzeiten_report_hour = $validated['schickzeiten_report_hour'];
                 $notifySettings->schickzeiten_report_weekday = $validated['schickzeiten_report_weekday'];
+                $notifySettings->krankmeldung_notify_guardians = $request->boolean('krankmeldung_notify_guardians');
                 $notifySettings->save();
 
                 break;
@@ -356,6 +437,11 @@ class SettingsController extends Controller implements HasMiddleware
                     'gamification_show_ranking' => 'nullable|boolean',
                     'gamification_show_comparison' => 'nullable|boolean',
                     'pflichtstunden_bereiche' => 'nullable|string',
+                    'pflichtstunden_basis' => 'nullable|in:family,child',
+                    'pflichtstunden_geteilte_kinder' => 'nullable|in:combined,split,separate',
+                    'pflichtstunden_max_kinder' => 'nullable|integer|min:1',
+                    'pflichtstunden_kinder_gruppen' => 'nullable|array',
+                    'pflichtstunden_kinder_gruppen.*' => 'integer|exists:groups,id',
                 ]);
 
                 try {
@@ -409,6 +495,19 @@ class SettingsController extends Controller implements HasMiddleware
                 $pflichtstundenSetting->gamification_show_ranking = $request->has('gamification_show_ranking');
                 $pflichtstundenSetting->gamification_show_comparison = $request->has('gamification_show_comparison');
                 $pflichtstundenSetting->pflichtstunden_bereiche = $bereiche;
+
+                // Berechnungsgrundlage (E1) – Änderungen wirken ab sofort für den
+                // laufenden Zeitraum und werden protokolliert (E8).
+                $basis = $this->pflichtstundenBasisFromRequest($request, $pflichtstundenSetting);
+                if ($basis !== $this->pflichtstundenBasisOf($pflichtstundenSetting)) {
+                    $pflichtstundenSetting->pflichtstunden_basis_changed_at = now()->toDateTimeString();
+                    $pflichtstundenSetting->pflichtstunden_basis_changed_by = $request->user()->id;
+                }
+                $pflichtstundenSetting->pflichtstunden_basis = $basis['basis'];
+                $pflichtstundenSetting->pflichtstunden_geteilte_kinder = $basis['geteilte_kinder'];
+                $pflichtstundenSetting->pflichtstunden_max_kinder = $basis['max_kinder'];
+                $pflichtstundenSetting->pflichtstunden_kinder_gruppen = $basis['kinder_gruppen'];
+
                 $pflichtstundenSetting->save();
                 break;
 
@@ -544,11 +643,97 @@ class SettingsController extends Controller implements HasMiddleware
                 $reinigungSettings->reminder_time = $validated['reminder_time'];
                 $reinigungSettings->save();
                 break;
+
+            case 'ucs':
+                $validated = $request->validate([
+                    'enabled'           => 'nullable|boolean',
+                    'kelvin_base_url'   => 'nullable|url|max:255',
+                    'school'            => 'nullable|string|max:255',
+                    'kelvin_username'   => 'nullable|string|max:255',
+                    'kelvin_password'   => 'nullable|string|max:255',
+                    'kelvin_page_size'  => 'required|integer|min:1|max:1000',
+                    'kelvin_timeout'    => 'required|integer|min:5|max:300',
+                    'kelvin_token_ttl'  => 'required|integer|min:60|max:86400',
+                    'sync_enabled'      => 'nullable|boolean',
+                    'sync_cron'         => ['required', 'string', new CronExpression],
+                    'on_login_fallback' => 'nullable|boolean',
+                    'on_login_timeout'  => 'required|integer|min:1|max:60',
+                    'purge_after_days'  => 'required|integer|min:1|max:365',
+                ]);
+
+                $ucsSettings = new UcsSetting;
+                $ucsSettings->enabled           = $request->has('enabled');
+                $ucsSettings->kelvin_base_url   = $validated['kelvin_base_url'] ?? null;
+                $ucsSettings->school            = $validated['school'] ?? null;
+                $ucsSettings->kelvin_page_size  = (int) $validated['kelvin_page_size'];
+                $ucsSettings->kelvin_timeout    = (int) $validated['kelvin_timeout'];
+                $ucsSettings->kelvin_token_ttl  = (int) $validated['kelvin_token_ttl'];
+                $ucsSettings->sync_enabled      = $request->has('sync_enabled');
+                $ucsSettings->sync_cron         = $validated['sync_cron'];
+                $ucsSettings->on_login_fallback = $request->has('on_login_fallback');
+                $ucsSettings->on_login_timeout  = (int) $validated['on_login_timeout'];
+                $ucsSettings->purge_after_days  = (int) $validated['purge_after_days'];
+
+                // Credentials nur überschreiben, wenn tatsächlich eingegeben
+                if ($request->filled('kelvin_username')) {
+                    $ucsSettings->kelvin_username = $validated['kelvin_username'];
+                }
+                if ($request->filled('kelvin_password')) {
+                    $ucsSettings->kelvin_password = $validated['kelvin_password'];
+                }
+
+                $ucsSettings->save();
+                break;
         }
 
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Einstellungen gespeichert',
+        ]);
+    }
+
+    /**
+     * Verbindungstest zur Kelvin API.
+     */
+    public function ucsTestConnection(KelvinClient $client): RedirectResponse
+    {
+        try {
+            $schools = $client->ping();
+
+            Log::debug("Kelvin-Verbindungstest erfolgreich.", ['schools' => $schools]);
+
+            $schoolName = $schools['display_name'] ?? $schools['name'] ?? null;
+
+            return redirect()->back()->with([
+                'type'    => 'success',
+                'Meldung' => $schoolName
+                    ? "Verbindung OK – Schule „{$schoolName}\" gefunden."
+                    : 'Verbindung OK.',
+            ]);
+        } catch (\Throwable $e) {
+
+            Log::error("Verbindungsfehler bei Kelvin-Verbindungstest: " . $e->getMessage(), ['exception' => $e]);
+
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Verbindungsfehler: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Manuellen UCS-Sync in die Queue stellen.
+     */
+    public function ucsRunSync(): RedirectResponse
+    {
+
+        SyncUcsSchoolJob::dispatch();
+
+        Log::info("UCS-Sync manuell gestartet.");
+
+        return redirect()->back()->with([
+            'type'    => 'success',
+            'Meldung' => 'Sync wurde in die Warteschlange gestellt',
         ]);
     }
 
@@ -560,6 +745,10 @@ class SettingsController extends Controller implements HasMiddleware
         $stundenplanSetting = new StundenplanSetting;
         $stundenplanSetting->import_api_key = \Illuminate\Support\Str::random(64);
         $stundenplanSetting->save();
+
+        Log::info("Stundenplan API Key erneuert.",[
+            'user' => auth()->user()->name,
+        ]);
 
         return redirect()->back()->with([
             'type' => 'success',
@@ -636,6 +825,12 @@ class SettingsController extends Controller implements HasMiddleware
         }
         $modul->options = $options;
         $modul->save();
+
+        Log::debug("Modul '{$modulname}' Status geändert.", [
+            'modul' => $modulname,
+            'active' => $options['active'],
+            'user' => auth()->user()->name,
+        ]);
 
         Cache::forget('modules');
 

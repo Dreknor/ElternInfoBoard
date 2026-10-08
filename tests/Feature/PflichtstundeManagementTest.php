@@ -117,8 +117,8 @@ class PflichtstundeManagementTest extends TestCase
             'end' => $end,
         ]);
 
-        $duration = $pflichtstunde->end->diffInHours($pflichtstunde->start);
-        $this->assertEquals(3, $duration);
+        // Carbon 3 liefert vorzeichenbehaftete Differenzen → Accessor (Minuten) prüfen
+        $this->assertEquals(180, $pflichtstunde->duration);
     }
 
     /**

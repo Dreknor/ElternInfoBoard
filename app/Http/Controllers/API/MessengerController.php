@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class MessengerController extends Controller
 {
-    public function __construct(private readonly MessengerSetting $settings) {}
+    public function __construct(protected readonly MessengerSetting $settings) {}
 
     /**
      * Alle Konversationen des eingeloggten Users.
@@ -158,7 +158,7 @@ class MessengerController extends Controller
 
     // ── Hilfsmethoden ────────────────────────────────────────────
 
-    private function notifyParticipants(Conversation $conversation, Message $message): void
+    protected function notifyParticipants(Conversation $conversation, Message $message): void
     {
         $sender = auth()->user();
         if (! $sender) {
@@ -216,7 +216,7 @@ class MessengerController extends Controller
         }
     }
 
-    private function formatMessage(Message $message, int $currentUserId): array
+    protected function formatMessage(Message $message, int $currentUserId): array
     {
         return [
             'id'         => $message->id,

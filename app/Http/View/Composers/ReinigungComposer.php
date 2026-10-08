@@ -2,6 +2,8 @@
 
 namespace App\Http\View\Composers;
 
+use App\Model\Reinigung;
+use App\Services\App\Modules;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -9,7 +11,7 @@ class ReinigungComposer
 {
     public function compose($view): void
     {
-        if (!auth()->check()) {
+        if (!auth()->check() || ! Modules::isActiveFor(auth()->user(), 'Reinigung')) {
             $view->with('reinigung', null);
             return;
         }
@@ -17,12 +19,12 @@ class ReinigungComposer
         $expire = now()->diffInSeconds(now()->endOfDay());
 
         $reinigung = Cache::remember('reinigung'.auth()->id(), $expire, function () {
-            $reinigung = auth()->user()->Reinigung()->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
-            if ($reinigung == '' and auth()->user()->sorgeberechtigter2 != '') {
-                $reinigung = auth()->user()->sorgeberechtigter2->Reinigung()->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])->first();
-            }
-
-            return $reinigung;
+            // Reinigungsdienst der ganzen Familie (FamilyResolver)
+            return Reinigung::query()
+                ->whereIn('users_id', auth()->user()->familyUserIds())
+                ->whereBetween('datum', [Carbon::now()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()])
+                ->orderBy('datum')
+                ->first();
         });
 
         $view->with('reinigung', $reinigung);

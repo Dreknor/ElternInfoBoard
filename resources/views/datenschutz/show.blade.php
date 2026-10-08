@@ -242,10 +242,16 @@
                         </td>
                     </tr>
                     @endif
-                    @if($user->sorg2)
+                    @if($user->family)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-5 py-3 font-medium text-gray-700"><i class="fas fa-link text-indigo-400 mr-2"></i>Verknüpfter Sorgeberechtigter&nbsp;2</td>
-                        <td class="px-5 py-3 text-gray-900">{{ $user->sorgeberechtigter2?->name }}</td>
+                        <td class="px-5 py-3 font-medium text-gray-700"><i class="fas fa-house-user text-indigo-400 mr-2"></i>Familie</td>
+                        <td class="px-5 py-3 text-gray-900">
+                            {{ $user->family->name }}
+                            @php $others = $user->family->users()->where('id', '!=', $user->id)->pluck('name'); @endphp
+                            @if($others->isNotEmpty())
+                                <div class="text-xs text-gray-500">weitere Mitglieder: {{ $others->implode(', ') }}</div>
+                            @endif
+                        </td>
                     </tr>
                     @endif
                     <tr class="hover:bg-gray-50">
@@ -333,6 +339,8 @@
                     <tr>
                         <th class="px-5 py-3 text-left font-semibold text-gray-700">Name</th>
                         <th class="px-5 py-3 text-left font-semibold text-gray-700">Gruppe / Klasse</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Beziehung / Rechte</th>
+                        <th class="px-5 py-3 text-left font-semibold text-gray-700">Herkunft</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -340,6 +348,18 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-3 font-medium text-gray-900">{{ $child->first_name }} {{ $child->last_name }}</td>
                         <td class="px-5 py-3 text-gray-600">{{ $child->group?->name ?? '–' }}</td>
+                        <td class="px-5 py-3 text-gray-600">
+                            {{ $child->pivot->relationType()->label() }}
+                            <div class="text-xs text-gray-500">
+                                {{ collect(['sorgeberechtigt' => $child->pivot->has_custody, 'erhält Informationen' => $child->pivot->receives_information, 'darf verwalten' => $child->pivot->can_manage])->filter()->keys()->implode(', ') ?: 'keine Rechte' }}
+                            </div>
+                        </td>
+                        <td class="px-5 py-3 text-gray-600">
+                            {{ $child->pivot->sourceLabel() }}
+                            @if($child->pivot->isPendingReview())
+                                <span class="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded">ungeprüft</span>
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

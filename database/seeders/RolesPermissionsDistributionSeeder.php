@@ -166,6 +166,7 @@ class RolesPermissionsDistributionSeeder extends Seeder
             'edit schickzeiten',
             'download schickzeiten',
             'manage late pickups',
+            'manage attendance queries',
             // Krankmeldungen
             'view krankmeldung',
             'see diseases',
@@ -246,6 +247,7 @@ class RolesPermissionsDistributionSeeder extends Seeder
             'edit schickzeiten',
             'download schickzeiten',
             'manage late pickups',
+            'manage attendance queries',
             // Krankmeldungen
             'view krankmeldung',
             'see diseases',

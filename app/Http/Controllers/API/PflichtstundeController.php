@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePflichtstundeRequest;
 use App\Http\Resources\PflichtstundeResource;
 use App\Http\Resources\PflichtstundeStatsResource;
 use App\Model\Pflichtstunde;
+use App\Services\Pflichtstunden\PflichtstundenService;
 use App\Services\PflichtstundenFamilyService;
 use App\Settings\PflichtstundenSetting;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     /**
      * Liste aller Pflichtstunden der Familie
      *
-     * Gibt alle Pflichtstunden des angemeldeten Users und seines Partners (sorg2) zurück,
+     * Gibt alle Pflichtstunden des angemeldeten Users und seines seiner Familie zurück,
      * sortiert nach Start-Datum absteigend. Die Pflichtstunden werden automatisch auf den
      * aktuellen Zeitraum gefiltert.
      *
@@ -128,19 +129,22 @@ class PflichtstundeController extends Controller implements HasMiddleware
         }
 
         [$periodStart, $periodEnd] = $this->familyService->resolvePeriod(null);
-        $familyUserIds = array_filter([$user->id, $user->sorg2]);
+        $familyUserIds = $user->familyUserIds();
         $pflichtstunden = Pflichtstunde::withoutGlobalScope('aktuellerZeitraum')
             ->whereIn('user_id', $familyUserIds)
             ->whereBetween('start', [$periodStart, $periodEnd])
             ->orderBy('start', 'desc')
             ->get();
 
-        $summaries = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $summaries = $this->cachedSummaries($periodStart, $periodEnd);
         $currentSummary = $summaries->first(fn (array $summary) => in_array($user->id, $summary['user_ids']));
 
         return response()->json([
             'data' => PflichtstundeResource::collection($pflichtstunden),
             'settings' => [
+                // Soll der eigenen Einheit (Familie bzw. je Kind, Settings-abhängig)
+                'unit_required_minutes' => (int) ($currentSummary['required_minutes'] ?? $this->pflichtstunden_settings->pflichtstunden_anzahl * 60),
+                'basis' => app(PflichtstundenService::class)->basis(),
                 'required_hours' => $currentSummary['required_hours'] ?? $this->pflichtstunden_settings->pflichtstunden_anzahl,
                 'price_per_hour' => $currentSummary['hourly_rate'] ?? $this->pflichtstunden_settings->pflichtstunden_betrag,
                 'global_required_hours' => $this->pflichtstunden_settings->pflichtstunden_anzahl,
@@ -452,7 +456,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     private function calculateParentStats(\App\Model\User $currentUser)
     {
         [$periodStart, $periodEnd] = $this->familyService->resolvePeriod(null);
-        $summaries = $this->familyService->buildFamilySummaries($periodStart, $periodEnd, true);
+        $summaries = $this->cachedSummaries($periodStart, $periodEnd);
         $sorted = $summaries->sortByDesc('percent')->values();
         $current = $summaries->first(fn (array $summary) => in_array($currentUser->id, $summary['user_ids']));
 
@@ -483,6 +487,27 @@ class PflichtstundeController extends Controller implements HasMiddleware
             'opening_balance_minutes' => (int) ($current['opening_balance_minutes'] ?? 0),
             'closing_balance_minutes' => (int) ($current['closing_balance_minutes'] ?? 0),
             'carryover_preview_minutes' => (int) ($current['carryover_preview_minutes'] ?? 0),
+            'unit' => $current ? [
+                'label' => $current['family_name'],
+                'members' => collect($current['members'] ?? [])->pluck('name')->values(),
+                'required_minutes' => $currentRequiredMinutes,
+                'children_counted' => count($current['child_ids'] ?? []),
+            ] : null,
         ];
+    }
+
+    /**
+     * Familienauswertung für die App: 10 Minuten zwischengespeichert und ohne Schreibzugriff (B-50).
+     * Vorher wurden bei jedem Aufruf alle Familien berechnet und alle Konten neu gespeichert.
+     * Neue/geänderte Pflichtstunden verwerfen den Cache (Pflichtstunde::booted).
+     */
+    private function cachedSummaries(\Carbon\Carbon $periodStart, \Carbon\Carbon $periodEnd): \Illuminate\Support\Collection
+    {
+        $version = (int) \Illuminate\Support\Facades\Cache::get('pflichtstunden_summaries_version', 0);
+        $key = 'pflichtstunden_summaries_'.$periodStart->toDateString().'_v'.$version;
+
+        return \Illuminate\Support\Facades\Cache::remember($key, now()->addMinutes(10), fn () => $this->familyService
+            ->buildFamilySummaries($periodStart, $periodEnd, false)
+            ->map(fn (array $summary) => collect($summary)->except(['user', 'partner', 'entries'])->all()));
     }
 }

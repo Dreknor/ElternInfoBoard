@@ -57,7 +57,7 @@ class SendUnresolvedReportsDigest implements ShouldQueue
                                 "Hallo {$moderator->name},\n\n" .
                                 "es gibt aktuell {$unresolvedCount} ungelöste Nachrichtenmeldung(en):\n\n" .
                                 $reportLines . "\n\n" .
-                                "Bitte prüfe und bearbeite diese unter: " . url('messenger/admin/reports') . "\n\n" .
+                                "Bitte prüfe und bearbeite diese unter: " . route('moderation.index', ['tab' => 'nachrichten']) . "\n\n" .
                                 "Viele Grüße\n" . config('app.name')
                             );
                     }

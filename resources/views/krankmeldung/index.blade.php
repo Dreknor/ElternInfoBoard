@@ -39,7 +39,8 @@
                         <span class="text-red-500">*</span>
                     </label>
 
-                    @if(auth()->user()->children()->count() > 0)
+                    @php $reportableChildren = auth()->user()->children(\App\Enums\GuardianRight::Manage); @endphp
+                    @if($reportableChildren->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Kind auswählen -->
                             <div>
@@ -48,7 +49,7 @@
                                         class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
                                         style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
                                     <option value="">Bitte wählen</option>
-                                    @foreach(auth()->user()->children() as $child)
+                                    @foreach($reportableChildren as $child)
                                         <option value="{{ $child->id }}">{{ $child->first_name }}</option>
                                     @endforeach
                                 </select>

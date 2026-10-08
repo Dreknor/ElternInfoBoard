@@ -7,13 +7,37 @@ use App\Model\PflichtstundenFamilyAccount;
 use App\Model\PflichtstundenFamilyRule;
 use App\Model\PflichtstundenFamilyRuleHistory;
 use App\Model\User;
+use App\Services\Pflichtstunden\PflichtstundenService;
+use App\Services\Pflichtstunden\PflichtstundenUnit;
 use App\Settings\PflichtstundenSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
+/**
+ * Kontoführung der Pflichtstunden je Familie und Zeitraum (Sollmodell,
+ * Salden, Übertrag).
+ *
+ * Die Familien-Einheiten und ihr Basis-Soll kommen aus dem
+ * PflichtstundenService und damit aus dem FamilyResolver (legacy: sorg2,
+ * child_centric: families). Regeln und Konten werden unter einem
+ * family_key gespeichert (kleinste User-ID der Einheit – identisch zur
+ * bisherigen sorg2-Logik). Beim Lesen wird zusätzlich über die IDs aller
+ * Mitglieder gesucht, damit gespeicherte Regeln/Salden nach Änderungen der
+ * Familienzusammensetzung (z. B. Umstellung auf das Familienmodell) erhalten
+ * bleiben.
+ */
 class PflichtstundenFamilyService
 {
-    public function __construct(private readonly PflichtstundenSetting $settings) {}
+    public function __construct(
+        private readonly PflichtstundenSetting $settings,
+        private readonly ?PflichtstundenService $unitService = null,
+    ) {}
+
+    private function unitService(): PflichtstundenService
+    {
+        return $this->unitService ?? app(PflichtstundenService::class);
+    }
 
     /**
      * @return array{0: Carbon, 1: Carbon}
@@ -40,9 +64,14 @@ class PflichtstundenFamilyService
         return [$start, $end];
     }
 
+    /**
+     * Startjahr der Periode, zu der $periodStart gehört. Bei frei gewählten
+     * Zeiträumen (z. B. 01.01.–30.06.) ist das nicht das Kalenderjahr des
+     * Startdatums, sondern das Jahr des vorangegangenen Periodenbeginns.
+     */
     public function periodStartYear(Carbon $periodStart): int
     {
-        return (int) $periodStart->year;
+        return $this->resolvePeriodStartYearForDate($periodStart);
     }
 
     /**
@@ -68,9 +97,15 @@ class PflichtstundenFamilyService
             $ids[] = $partner->id;
         }
 
-        sort($ids);
+        return $this->familyKeyForUserIds($ids);
+    }
 
-        return (string) $ids[0];
+    /**
+     * @param  array<int, int>  $userIds
+     */
+    public function familyKeyForUserIds(array $userIds): string
+    {
+        return (string) min(array_map('intval', $userIds));
     }
 
     /**
@@ -78,11 +113,14 @@ class PflichtstundenFamilyService
      *   family_key:string,
      *   user:User,
      *   partner:?User,
+     *   members:Collection<int, User>,
      *   user_ids:array<int,int>,
-     *   family_name:string
+     *   family_name:string,
+     *   base_required_minutes:int,
+     *   child_ids:array<int,int>
      * }>
      */
-    public function getFamilyGroups(bool $includeTrashed = false): Collection
+    public function getFamilyGroups(bool $includeTrashed = false, ?array $period = null): Collection
     {
         // Für bereits erfasste (auch rückwirkende) Zeiträume müssen endgültig
         // gelöschte (soft-deleted) Nutzer weiterhin als Familie auftauchen,
@@ -91,58 +129,77 @@ class PflichtstundenFamilyService
         // ausgeblendet.
         $query = $includeTrashed ? User::withTrashed() : User::query();
 
-        $users = $query
-            ->permission('view Pflichtstunden')
-            ->orderBy('id')
-            ->get()
-            ->keyBy('id');
-
-        $processed = collect();
-        $groups = collect();
-
-        foreach ($users as $user) {
-            if ($processed->contains($user->id)) {
-                continue;
-            }
-
-            $partner = null;
-            if ($user->sorg2 && $users->has($user->sorg2)) {
-                $partner = $users->get($user->sorg2);
-                $processed->push($partner->id);
-            }
-
-            $familyKey = $this->determineFamilyKey($user, $partner);
-            $userIds = [$user->id];
-            if ($partner) {
-                $userIds[] = $partner->id;
-            }
-
-            $familyName = $user->name.($user->trashed() ? ' (gelöscht)' : '');
-            if ($partner) {
-                $familyName .= ' / '.$partner->name.($partner->trashed() ? ' (gelöscht)' : '');
-            }
-
-            $groups->push([
-                'family_key' => $familyKey,
-                'user' => $user,
-                'partner' => $partner,
-                'user_ids' => $userIds,
-                'family_name' => $familyName,
-            ]);
-
-            $processed->push($user->id);
+        try {
+            $users = $query->permission('view Pflichtstunden')->orderBy('id')->get();
+        } catch (PermissionDoesNotExist) {
+            return collect();
         }
 
-        return $groups;
+        if ($users->isEmpty()) {
+            return collect();
+        }
+
+        return $this->unitService()
+            ->units($period ?? $this->resolvePeriod(null), $users)
+            ->map(function (PflichtstundenUnit $unit) {
+                $members = $unit->members->sortBy('id')->values();
+                $user = $members->first();
+
+                return [
+                    'family_key' => $this->familyKeyForUserIds($unit->userIds),
+                    'user' => $user,
+                    'partner' => $members->get(1),
+                    'members' => $members,
+                    'user_ids' => $unit->userIds,
+                    'family_name' => $members
+                        ->map(fn (User $member) => $member->name.($member->trashed() ? ' (gelöscht)' : ''))
+                        ->implode(' / '),
+                    'base_required_minutes' => $unit->requiredMinutes,
+                    'child_ids' => $unit->childIds,
+                ];
+            })
+            ->sortBy('family_key', SORT_NUMERIC)
+            ->values();
+    }
+
+    /**
+     * Sucht einen gespeicherten Eintrag (Regel/Konto) der Einheit: zuerst unter
+     * dem aktuellen Schlüssel, sonst unter dem Schlüssel eines Mitglieds (ältere
+     * Zusammensetzung der Familie, z. B. vor der Umstellung auf Familien).
+     *
+     * @param  Collection<string, mixed>  $byKey
+     * @param  array<string, mixed>  $group
+     */
+    private function lookupForGroup(Collection $byKey, array $group): mixed
+    {
+        if ($byKey->has($group['family_key'])) {
+            return $byKey->get($group['family_key']);
+        }
+
+        foreach ($group['user_ids'] as $userId) {
+            if ($byKey->has((string) $userId)) {
+                return $byKey->get((string) $userId);
+            }
+        }
+
+        return null;
     }
 
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function buildFamilySummaries(Carbon $periodStart, Carbon $periodEnd, bool $persistAccounts = true, bool $includeTrashed = false): Collection
+    /**
+     * Bei abgelaufenen Zeiträumen werden vorhandene Konten nur mit
+     * $overwriteClosedAccounts überschrieben (Jahresabschluss, Versiegeln vor
+     * dem endgültigen Löschen). Sonst würde bereits das Ansehen eines alten
+     * Zeitraums abgerechnete Salden neu berechnen – etwa nach der Umstellung
+     * auf das Familienmodell mit anderer Familienzusammensetzung.
+     */
+    public function buildFamilySummaries(Carbon $periodStart, Carbon $periodEnd, bool $persistAccounts = true, bool $includeTrashed = false, bool $overwriteClosedAccounts = false): Collection
     {
+        $protectExisting = ! $overwriteClosedAccounts && $periodEnd->isPast();
         $periodYear = $this->periodStartYear($periodStart);
-        $groups = $this->getFamilyGroups($includeTrashed);
+        $groups = $this->getFamilyGroups($includeTrashed, [$periodStart, $periodEnd]);
         $rules = PflichtstundenFamilyRule::query()
             ->where('period_year', $periodYear)
             ->get()
@@ -178,7 +235,7 @@ class PflichtstundenFamilyService
 
         $accountsToUpsert = [];
 
-        $summaries = $groups->map(function (array $group) use ($periodYear, $rules, $entriesByUser, $currentAccounts, $previousAccounts, &$accountsToUpsert) {
+        $summaries = $groups->map(function (array $group) use ($periodYear, $rules, $entriesByUser, $currentAccounts, $previousAccounts, $protectExisting, &$accountsToUpsert) {
             $familyEntries = collect();
             foreach ($group['user_ids'] as $userId) {
                 $familyEntries = $familyEntries->merge($entriesByUser->get($userId, collect()));
@@ -190,13 +247,13 @@ class PflichtstundenFamilyService
                 ->where('approved', true)
                 ->sum(fn (Pflichtstunde $entry) => $this->entryMinutes($entry));
 
-            $rule = $rules->get($group['family_key']);
+            $rule = $this->lookupForGroup($rules, $group);
             $mode = $rule?->mode ?? 'standard';
-            $requiredHours = $this->resolveRequiredHours($mode, $rule?->custom_required_hours);
+            $requiredMinutes = $this->resolveRequiredMinutesForGroup($mode, $rule?->custom_required_hours, $group);
+            $requiredHours = round($requiredMinutes / 60, 2);
             $hourlyRate = $this->resolveHourlyRate($mode);
-            $requiredMinutes = (int) round($requiredHours * 60);
 
-            $openingBalance = $this->resolveOpeningBalanceMinutes($group['family_key'], $currentAccounts, $previousAccounts);
+            $openingBalance = $this->resolveOpeningBalanceMinutes($group, $currentAccounts, $previousAccounts);
             $creditedMinutes = $openingBalance + $approvedMinutes;
             $closingBalance = $creditedMinutes - $requiredMinutes;
             $openMinutes = max(0, -$closingBalance);
@@ -216,26 +273,30 @@ class PflichtstundenFamilyService
                 }
             }
 
-            $accountsToUpsert[] = [
-                'family_key' => $group['family_key'],
-                'period_year' => $periodYear,
-                'opening_balance_minutes' => $openingBalance,
-                'earned_minutes' => $approvedMinutes,
-                'required_minutes' => $requiredMinutes,
-                'closing_balance_minutes' => $closingBalance,
-                'carried_to_next_minutes' => $carryoverMinutes,
-                'carryover_applied' => $this->settings->konto_uebertrag_aktiv,
-                'last_calculated_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            if (! $protectExisting || $this->lookupForGroup($currentAccounts, $group) === null) {
+                $accountsToUpsert[] = [
+                    'family_key' => $group['family_key'],
+                    'period_year' => $periodYear,
+                    'opening_balance_minutes' => $openingBalance,
+                    'earned_minutes' => $approvedMinutes,
+                    'required_minutes' => $requiredMinutes,
+                    'closing_balance_minutes' => $closingBalance,
+                    'carried_to_next_minutes' => $carryoverMinutes,
+                    'carryover_applied' => $this->settings->konto_uebertrag_aktiv,
+                    'last_calculated_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
 
             return [
                 'family_key' => $group['family_key'],
                 'family_name' => $group['family_name'],
                 'user' => $group['user'],
                 'partner' => $group['partner'],
+                'members' => $group['members'],
                 'user_ids' => $group['user_ids'],
+                'child_ids' => $group['child_ids'],
                 'rule_mode' => $mode,
                 'rule_reason' => $rule?->reason,
                 'custom_required_hours' => $rule?->custom_required_hours,
@@ -342,6 +403,33 @@ class PflichtstundenFamilyService
         };
     }
 
+    /**
+     * Soll-Minuten einer Einheit. Standard/ermäßigt richten sich nach der
+     * Berechnungsgrundlage (Familie/Kind, geteilte Kinder) aus den Settings,
+     * „individuell“ ist ein fester Wert für die Einheit.
+     *
+     * @param  array<string, mixed>  $group
+     */
+    public function resolveRequiredMinutesForGroup(string $mode, ?float $customRequiredHours, array $group): int
+    {
+        if ($mode === 'custom') {
+            return (int) round($this->resolveRequiredHours('custom', $customRequiredHours) * 60);
+        }
+
+        $baseRequired = (int) $group['base_required_minutes'];
+        if ($mode !== 'reduced') {
+            return $baseRequired;
+        }
+
+        $standardHours = (float) $this->settings->pflichtstunden_anzahl;
+        if ($standardHours <= 0) {
+            return (int) round($this->resolveRequiredHours('reduced') * 60);
+        }
+
+        // Ermäßigung skaliert das Basis-Soll (z. B. pro Kind) im Verhältnis ermäßigt/standard
+        return (int) round($baseRequired * $this->resolveRequiredHours('reduced') / $standardHours);
+    }
+
     public function resolveHourlyRate(string $mode): float
     {
         return $mode === 'reduced'
@@ -349,9 +437,12 @@ class PflichtstundenFamilyService
             : (float) $this->settings->pflichtstunden_betrag;
     }
 
-    private function resolveOpeningBalanceMinutes(string $familyKey, Collection $currentAccounts, Collection $previousAccounts): int
+    /**
+     * @param  array<string, mixed>  $group
+     */
+    private function resolveOpeningBalanceMinutes(array $group, Collection $currentAccounts, Collection $previousAccounts): int
     {
-        $existing = $currentAccounts->get($familyKey);
+        $existing = $this->lookupForGroup($currentAccounts, $group);
 
         if ($existing) {
             return (int) $existing->opening_balance_minutes;
@@ -361,7 +452,7 @@ class PflichtstundenFamilyService
             return 0;
         }
 
-        $previous = $previousAccounts->get($familyKey);
+        $previous = $this->lookupForGroup($previousAccounts, $group);
 
         if (! $previous) {
             return 0;
@@ -403,7 +494,7 @@ class PflichtstundenFamilyService
 
         for ($year = $firstYear; $year <= $lastYear; $year++) {
             [$periodStart, $periodEnd] = $this->resolvePeriod($year);
-            $this->buildFamilySummaries($periodStart, $periodEnd, true, true);
+            $this->buildFamilySummaries($periodStart, $periodEnd, true, true, true);
         }
     }
 

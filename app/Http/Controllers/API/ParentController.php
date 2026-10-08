@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Enums\GuardianRight;
+use App\Http\Resources\GuardianResource;
 use App\Http\Controllers\Controller;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\ChildMandate;
 use App\Model\ChildNotice;
 use App\Model\Schickzeiten;
+use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use App\Settings\CareSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -24,6 +29,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class ParentController extends Controller implements HasMiddleware
 {
+    public function __construct(private readonly FamilyResolver $resolver) {}
+
     public static function middleware(): array
     {
         return [
@@ -32,7 +39,30 @@ class ParentController extends Controller implements HasMiddleware
     }
 
     /**
-     * Get all children of the authenticated parent and their second guardian (Sorgeberechtigter2).
+     * Kinder des Users mit dem angegebenen Recht (Default: Verwalten).
+     */
+    private function childrenOf(User $user, array $with = [], ?GuardianRight $right = GuardianRight::Manage): EloquentCollection
+    {
+        return $this->resolver->childrenQuery($user, $right)->with($with)->get();
+    }
+
+    /**
+     * Kinder, deren Gesundheitsdaten der User sehen darf (Sorgerecht oder Verwaltung).
+     */
+    private function healthChildrenOf(User $user, array $with = []): EloquentCollection
+    {
+        return $this->childrenOf($user, $with, GuardianRight::Custody)
+            ->merge($this->childrenOf($user, $with, GuardianRight::Manage))
+            ->values();
+    }
+
+    private function mayManage(User $user, ?Child $child): bool
+    {
+        return $child !== null && $this->resolver->hasAccessToChild($user, $child, GuardianRight::Manage);
+    }
+
+    /**
+     * Get all children the authenticated user has a relation to (child-centric family model).
      *
      * Returns a list of all children associated with the authenticated user
      * and their second guardian (if available).
@@ -53,16 +83,17 @@ class ParentController extends Controller implements HasMiddleware
      * @responseField data.*.auto_checkIn boolean Whether auto check-in is enabled for the child.
      * @responseField data.*.is_in_care_module boolean Whether the child belongs to the Care module (group and class are in care settings).
      * @responseField count int The total count of children.
+     * @responseField data[].guardians array Bezugspersonen des Kindes (id, name, relation, relation_label, has_custody, receives_information, can_manage).
+     * @responseField data[].my_relation string|null Eigene Beziehungsart zum Kind (null bei Zugriff über verknüpftes Konto).
+     * @responseField data[].my_rights object Eigene Rechte: custody, information, manage, view_health.
      */
     public function getChildren(Request $request): JsonResponse
     {
         $user = $request->user();
 
         // Load relations for better performance
-        $user->load(['children_rel.group', 'children_rel.class', 'sorgeberechtigter2.children_rel.group', 'sorgeberechtigter2.children_rel.class']);
-
-        // Get all children (including those from sorgeberechtigter2)
-        $children = $user->children();
+        // Alle Kinder, zu denen der User eine Beziehung hat (FamilyResolver)
+        $children = $this->childrenOf($user, ['group', 'class', 'parents'], null);
 
         // If no children found
         if (is_null($children) || $children->isEmpty()) {
@@ -79,7 +110,7 @@ class ParentController extends Controller implements HasMiddleware
         $careClasses = $careSettings->class_list ?? [];
 
         // Map children data
-        $childrenData = $children->map(function ($child) use ($careGroups, $careClasses) {
+        $childrenData = $children->map(function ($child) use ($careGroups, $careClasses, $user) {
             // Check if child is in care module (both group and class must be in care settings)
             $isInCareModule = in_array($child->group_id, $careGroups) && in_array($child->class_id, $careClasses);
 
@@ -101,6 +132,15 @@ class ParentController extends Controller implements HasMiddleware
                 'notification' => $child->notification ?? false,
                 'auto_checkIn' => $child->auto_checkIn ?? false,
                 'is_in_care_module' => $isInCareModule,
+                // Kind-zentriertes Familienmodell (additiv, FAM-14)
+                'guardians' => GuardianResource::collection($child->parents)->resolve(),
+                'my_relation' => $child->parents->firstWhere('id', $user->id)?->pivot?->relation,
+                'my_rights' => [
+                    'custody' => $this->resolver->hasAccessToChild($user, $child, GuardianRight::Custody),
+                    'information' => $this->resolver->hasAccessToChild($user, $child, GuardianRight::Information),
+                    'manage' => $this->resolver->hasAccessToChild($user, $child, GuardianRight::Manage),
+                    'view_health' => $user->can('viewHealth', $child),
+                ],
             ];
         });
 
@@ -155,10 +195,8 @@ class ParentController extends Controller implements HasMiddleware
         $childIdFilter = $request->input('child_id');
         $includeAnswered = $request->boolean('include_answered', false);
 
-        // Load children with their relations
-        $user->load(['children_rel.group', 'children_rel.class', 'sorgeberechtigter2.children_rel.group', 'sorgeberechtigter2.children_rel.class']);
-
-        $children = $user->children();
+        // Kinder, die der User verwalten darf (Care-Daten)
+        $children = $this->childrenOf($user, ['group', 'class']);
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -285,10 +323,8 @@ class ParentController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
-        // Load children with their relations
-        $user->load(['children_rel.group', 'children_rel.class', 'sorgeberechtigter2.children_rel.group', 'sorgeberechtigter2.children_rel.class']);
-
-        $children = $user->children();
+        // Kinder, die der User verwalten darf (Care-Daten)
+        $children = $this->childrenOf($user, ['group', 'class']);
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -394,8 +430,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($checkIn->child)) {
+        if (! $this->mayManage($user, $checkIn->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -457,8 +492,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($checkIn->child)) {
+        if (! $this->mayManage($user, $checkIn->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -525,10 +559,8 @@ class ParentController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
-        // Load children with their relations
-        $user->load(['children_rel.group', 'children_rel.class', 'children_rel.schickzeiten', 'sorgeberechtigter2.children_rel.group', 'sorgeberechtigter2.children_rel.class', 'sorgeberechtigter2.children_rel.schickzeiten']);
-
-        $children = $user->children();
+        // Kinder, die der User verwalten darf (Care-Daten)
+        $children = $this->childrenOf($user, ['group', 'class', 'schickzeiten']);
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -614,21 +646,14 @@ class ParentController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
-        // Load children with their relations
-        $user->load([
-            'children_rel.krankmeldungen' => function ($query) {
-                $query->whereDate('ende', '>=', today())
-                    ->orderByDesc('created_at')
-                    ->with('disease:id,name');
-            },
-            'sorgeberechtigter2.children_rel.krankmeldungen' => function ($query) {
+        // Kinder, deren Gesundheitsdaten der User sehen darf
+        $children = $this->healthChildrenOf($user, [
+            'krankmeldungen' => function ($query) {
                 $query->whereDate('ende', '>=', today())
                     ->orderByDesc('created_at')
                     ->with('disease:id,name');
             },
         ]);
-
-        $children = $user->children();
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -715,23 +740,15 @@ class ParentController extends Controller implements HasMiddleware
         $limit = $request->input('limit', 50);
         $childIdFilter = $request->input('child_id');
 
-        // Load children with their relations
-        $user->load([
-            'children_rel.krankmeldungen' => function ($query) use ($limit) {
-                $query->whereDate('ende', '<', today())
-                    ->orderByDesc('ende')
-                    ->limit($limit)
-                    ->with('disease:id,name');
-            },
-            'sorgeberechtigter2.children_rel.krankmeldungen' => function ($query) use ($limit) {
+        // Kinder, deren Gesundheitsdaten der User sehen darf
+        $children = $this->healthChildrenOf($user, [
+            'krankmeldungen' => function ($query) use ($limit) {
                 $query->whereDate('ende', '<', today())
                     ->orderByDesc('ende')
                     ->limit($limit)
                     ->with('disease:id,name');
             },
         ]);
-
-        $children = $user->children();
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -822,10 +839,8 @@ class ParentController extends Controller implements HasMiddleware
 
         $childIdFilter = $request->input('child_id');
 
-        // Load children with their relations
-        $user->load(['children_rel.group', 'children_rel.class', 'sorgeberechtigter2.children_rel.group', 'sorgeberechtigter2.children_rel.class']);
-
-        $children = $user->children();
+        // Kinder, die der User verwalten darf (Care-Daten)
+        $children = $this->childrenOf($user, ['group', 'class']);
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -937,8 +952,7 @@ class ParentController extends Controller implements HasMiddleware
         $childId = $request->input('child_id');
 
         // Check if user owns this child
-        $children = $user->children();
-        $child = $children?->firstWhere('id', $childId);
+        $child = $this->childrenOf($user)->firstWhere('id', $childId);
 
         if (!$child) {
             return response()->json([
@@ -1006,8 +1020,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($notice->child)) {
+        if (! $this->mayManage($user, $notice->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1096,8 +1109,7 @@ class ParentController extends Controller implements HasMiddleware
         $childId = $request->input('child_id');
 
         // Check if user owns this child
-        $children = $user->children();
-        $child = $children?->firstWhere('id', $childId);
+        $child = $this->childrenOf($user)->firstWhere('id', $childId);
 
         if (!$child) {
             return response()->json([
@@ -1290,8 +1302,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($schickzeit->child)) {
+        if (! $this->mayManage($user, $schickzeit->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1381,8 +1392,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($schickzeit->child)) {
+        if (! $this->mayManage($user, $schickzeit->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1429,10 +1439,8 @@ class ParentController extends Controller implements HasMiddleware
 
         $childIdFilter = $request->input('child_id');
 
-        // Load children with their relations
-        $user->load(['children_rel.group', 'children_rel.class', 'sorgeberechtigter2.children_rel.group', 'sorgeberechtigter2.children_rel.class']);
-
-        $children = $user->children();
+        // Kinder, die der User verwalten darf (Care-Daten)
+        $children = $this->childrenOf($user, ['group', 'class']);
 
         if (is_null($children) || $children->isEmpty()) {
             return response()->json([
@@ -1543,8 +1551,7 @@ class ParentController extends Controller implements HasMiddleware
         $childId = $request->input('child_id');
 
         // Check if user owns this child
-        $children = $user->children();
-        $child = $children?->firstWhere('id', $childId);
+        $child = $this->childrenOf($user)->firstWhere('id', $childId);
 
         if (!$child) {
             return response()->json([
@@ -1616,8 +1623,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($mandate->child)) {
+        if (! $this->mayManage($user, $mandate->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1686,8 +1692,7 @@ class ParentController extends Controller implements HasMiddleware
         }
 
         // Check if user owns this child
-        $children = $user->children();
-        if (is_null($children) || !$children->contains($mandate->child)) {
+        if (! $this->mayManage($user, $mandate->child)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1736,8 +1741,7 @@ class ParentController extends Controller implements HasMiddleware
         ]);
 
         $user = $request->user();
-        $children = $user->children();
-        $childIds = $children ? $children->pluck('id')->toArray() : [];
+        $childIds = $this->childrenOf($user)->pluck('id')->toArray();
 
         $updated = 0;
         $skipped = 0;

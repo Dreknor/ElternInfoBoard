@@ -92,8 +92,9 @@ class VertretungsplanController extends Controller implements HasMiddleware
         $week = VertretungsplanWeek::where('week', Carbon::now()->startOfWeek()->format('Y-m-d'))->first(['type', 'week']);
 
         $absences = VertretungsplanAbsence::query()
-            ->where('start_date', '>=', Carbon::now()->startOfWeek())
-            ->where('end_date', '<=', Carbon::now()->endOfWeek())
+            // Überlappung mit der Woche (B-44) – mehrtägige Abwesenheiten fehlten sonst.
+            ->whereDate('start_date', '<=', Carbon::now()->endOfWeek())
+            ->whereDate('end_date', '>=', Carbon::now()->startOfWeek())
             ->get([
                 'name',
                 'start_date',

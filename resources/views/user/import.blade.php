@@ -8,6 +8,37 @@
             <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Benutzer importieren</h1>
         </div>
 
+        {{-- Kind-zentrierter Schüler-Import (empfohlen): eigene Vorschau → Bestätigung --}}
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-blue-50/50 dark:bg-blue-900/10">
+            <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-2">
+                <i class="fas fa-child text-primary"></i> Schüler-Import mit Schüler-ID (empfohlen)
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Eine Zeile pro Kind mit <strong>Schüler-ID</strong> aus der Schulverwaltung und bis zu drei Bezugspersonen.
+                Kinder werden über die Schüler-ID abgeglichen, jede Bezugsperson erhält ein eigenes Konto (Abgleich über die E-Mail-Adresse),
+                Eltern erhalten die Gruppen ihrer Kinder automatisch und Familien werden je Zeile gebildet.
+                Vor dem Speichern wird eine <strong>Vorschau</strong> angezeigt.
+            </p>
+            <form action="{{ url('/users/import') }}" method="post" enctype="multipart/form-data" class="space-y-3">
+                @csrf
+                <input type="hidden" name="type" value="schueler">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <input type="file" name="file" accept=".xls,.xlsx,.ods,.csv" required
+                           class="block w-full text-sm text-gray-700 dark:text-gray-200">
+                    <a href="{{ route('users.vorlage.schueler') }}" class="btn btn-outline-primary btn-sm whitespace-nowrap">
+                        <i class="fas fa-download mr-1"></i> Vorlage Schüler
+                    </a>
+                </div>
+                <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200">
+                    <input type="checkbox" name="abgaenger" value="1" class="mt-1">
+                    <span>Kinder mit Schüler-ID, die nicht in der Datei stehen, als <strong>Abgänger</strong> markieren (die Vorschau zeigt, wer betroffen wäre)</span>
+                </label>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye mr-1"></i> Vorschau anzeigen
+                </button>
+            </form>
+        </div>
+
         <div class="p-6" x-data="importWizard()" x-cloak>
 
             {{-- Flash-Meldungen --}}
@@ -122,7 +153,7 @@
                     <div x-show="importTyp === 'eltern'" class="mb-4 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 flex gap-3">
                         <i class="fas fa-exclamation-triangle text-yellow-600 mt-0.5 flex-shrink-0"></i>
                         <div class="text-sm text-yellow-800 dark:text-yellow-200">
-                            <strong>Wichtig:</strong> Alle nicht-geschützten Gruppenverknüpfungen werden vor dem Import geleert und vollständig neu aufgebaut. Dieser Vorgang kann nicht rückgängig gemacht werden.
+                            <strong>Wichtig:</strong> Alle <strong>manuellen</strong> Verknüpfungen nicht-geschützter Gruppen werden vor dem Import geleert und neu aufgebaut; aus Kindern abgeleitete Gruppen bleiben erhalten. Dieser Vorgang kann nicht rückgängig gemacht werden.
                         </div>
                     </div>
 

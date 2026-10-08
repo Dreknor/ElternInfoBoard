@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GuardianRight;
 use App\Exports\SchickzeitenExport;
 use App\Http\Requests\CreateChildRequest;
 use App\Http\Requests\SchickzeitRequest;
@@ -14,6 +15,7 @@ use App\Model\Schickzeiten;
 use App\Model\User;
 use App\Notifications\AttendanceQueryNotification;
 use App\Services\LatePickupService;
+use App\Services\Family\FamilyResolver;
 use App\Settings\CareSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
@@ -29,6 +31,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 
 class SchickzeitenController extends Controller implements HasMiddleware
 {
@@ -58,7 +62,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        $children = auth()->user()->children();
+        $children = auth()->user()->children(GuardianRight::Manage);
         $allowedClasses = $this->careSettings->class_list;
         $allowedGroups = $this->careSettings->groups_list;
 
@@ -95,7 +99,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
     public function anwesenheitTrue(ChildCheckIn $childCheckIn)
     {
-        if (! auth()->user()->children()->contains($childCheckIn->child)) {
+        if (auth()->user()->cannot('manage', $childCheckIn->child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -122,7 +126,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
     public function anwesenheitFalse(ChildCheckIn $childCheckIn)
     {
 
-        if (! auth()->user()->children()->contains($childCheckIn->child)) {
+        if (auth()->user()->cannot('manage', $childCheckIn->child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -548,7 +552,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
             $child = Child::find($request->input('child_id'));
         }
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -688,7 +692,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'type' => $request->type,
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
 
         } else {
@@ -776,7 +780,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->time_ab,
                 'time_spaet' => $time_spaet ?? null,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
 
         }
@@ -799,7 +803,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
                 'changedBy' => \auth()->user()->name,
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
             // Prüfe, ob für dieses Kind und Datum bereits eine Schickzeit existiert
             $exists = $child->schickzeiten()
@@ -813,7 +817,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->time_ab ?? null,
                 'time_spaet' => $request->time_spaet ?? null,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
                 'child_id' => $child->id,
             ]);
 
@@ -836,7 +840,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
      */
     public function edit(Request $request, $day, Child $child)
     {
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -893,9 +897,13 @@ class SchickzeitenController extends Controller implements HasMiddleware
      */
     public function destroy(Request $request, $day, $child)
     {
+        // Legacy-Schickzeiten (child_name) gehören der ganzen Familie
+        $familyUserIds = app(FamilyResolver::class)->familyUserIds($request->user());
+
         // Prüfe ob tagesaktuelle Zeiten für diesen Wochentag existieren
         if (! $request->has('delete_daily_times')) {
-            $dailyTimes = $request->user()->schickzeiten_own()
+            $dailyTimes = Schickzeiten::query()
+                ->whereIn('users_id', $familyUserIds)
                 ->whereNotNull('specific_date')
                 ->where('specific_date', '>=', Carbon::now()->toDateString())
                 ->where('child_name', '=', $child)
@@ -916,20 +924,19 @@ class SchickzeitenController extends Controller implements HasMiddleware
             }
         }
 
-        $schickzeit = $request->user()->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
-            'changedBy' => Auth::id(),
-            'deleted_at' => Carbon::now(),
-        ]);
-        if ($request->user()->sorgeberechtigter2 != null) {
-            $schickzeit = $request->user()->sorgeberechtigter2->schickzeiten_own()->where('weekday', '=', $day)->where('child_name', '=', $child)->update([
+        Schickzeiten::query()
+            ->whereIn('users_id', $familyUserIds)
+            ->where('weekday', '=', $day)
+            ->where('child_name', '=', $child)
+            ->update([
                 'changedBy' => Auth::id(),
                 'deleted_at' => Carbon::now(),
             ]);
-        }
 
         // Wenn gewünscht, auch tagesaktuelle Zeiten für diesen Wochentag löschen
         if ($request->input('delete_daily_times') === 'yes') {
-            $request->user()->schickzeiten_own()
+            Schickzeiten::query()
+                ->whereIn('users_id', $familyUserIds)
                 ->whereNotNull('specific_date')
                 ->where('specific_date', '>=', Carbon::now()->toDateString())
                 ->where('child_name', '=', $child)
@@ -943,23 +950,6 @@ class SchickzeitenController extends Controller implements HasMiddleware
                         'deleted_at' => Carbon::now(),
                     ]);
                 });
-
-            if ($request->user()->sorgeberechtigter2 != null) {
-                $request->user()->sorgeberechtigter2->schickzeiten_own()
-                    ->whereNotNull('specific_date')
-                    ->where('specific_date', '>=', Carbon::now()->toDateString())
-                    ->where('child_name', '=', $child)
-                    ->get()
-                    ->filter(function ($schickzeit) use ($day) {
-                        return $schickzeit->specific_date->dayOfWeek == $day;
-                    })
-                    ->each(function ($schickzeit) {
-                        $schickzeit->update([
-                            'changedBy' => Auth::id(),
-                            'deleted_at' => Carbon::now(),
-                        ]);
-                    });
-            }
         }
 
         return redirect()->back()->with([
@@ -1052,29 +1042,37 @@ class SchickzeitenController extends Controller implements HasMiddleware
             return;
         }
 
-        // Nur User mit Schickzeiten laden
-        $users = User::has('schickzeiten')->get();
+        // Care-Kinder mit hinterlegten Schickzeiten; Empfänger sind alle Bezugspersonen,
+        // die diese Kinder verwalten dürfen (FamilyResolver).
+        $resolver = app(FamilyResolver::class);
+        $careChildren = Child::query()
+            ->whereIn('group_id', $allowedGroups)
+            ->whereIn('class_id', $allowedClasses)
+            ->whereHas('schickzeiten')
+            ->with('schickzeiten')
+            ->get();
+
+        $recipients = [];
+        foreach ($careChildren as $child) {
+            foreach ($resolver->guardiansFor($child, GuardianRight::Manage) as $guardian) {
+                $recipients[$guardian->id]['user'] = $guardian;
+                $recipients[$guardian->id]['children'][$child->id] = $child;
+            }
+        }
 
         $sent = 0;
-        $skipped = 0;
-
-        foreach ($users as $user) {
-            // Kinder des Users filtern: nur Care-Kinder berücksichtigen
-            $careChildren = $user->children()->filter(function ($child) use ($allowedGroups, $allowedClasses) {
-                return in_array($child->group_id, $allowedGroups)
-                    && in_array($child->class_id, $allowedClasses);
-            });
-
-            if ($careChildren->isEmpty()) {
-                $skipped++;
+        foreach ($recipients as $recipient) {
+            if (! NotificationPreferences::allows($recipient['user'], NotificationCategory::HORT, 'mail')) {
                 continue;
             }
+            $children = collect($recipient['children'])->values();
+            $schickzeiten = $children->flatMap(fn (Child $child) => $child->schickzeiten)->values();
 
-            Mail::to($user->email)->queue(new SchickzeitenReminder($user->name, $user->schickzeiten, collect($careChildren)));
+            Mail::to($recipient['user']->email)->queue(new SchickzeitenReminder($recipient['user']->name, $schickzeiten, $children));
             $sent++;
         }
 
-        Log::debug("Sende Schickzeiten Reminder: {$sent} versendet, {$skipped} übersprungen (keine Care-Kinder).");
+        Log::debug("Sende Schickzeiten Reminder: {$sent} versendet.");
     }
 
     /**
@@ -1083,7 +1081,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
     public function deleteChild(Child $child)
     {
 
-        if (! auth()->user()->children()->contains($child)) {
+        if (auth()->user()->cannot('manage', $child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1109,7 +1107,10 @@ class SchickzeitenController extends Controller implements HasMiddleware
             ]);
         }
 
-        $parent->schickzeiten()->where('child_name', Str::replace('_', ' ', $child))->update([
+        Schickzeiten::query()
+            ->whereIn('users_id', app(FamilyResolver::class)->familyUserIds($parent))
+            ->where('child_name', Str::replace('_', ' ', $child))
+            ->update([
             'changedBy' => Auth::id(),
             'deleted_at' => Carbon::now(),
         ]);
@@ -1145,7 +1146,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'type' => $request->type,
                 'time' => $request->time,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
         } else {
             $child->schickzeiten()->create([
@@ -1154,7 +1155,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 'time_ab' => $request->ab,
                 'time_spaet' => $request->spaet,
                 'changedBy' => Auth::id(),
-                'users_id' => $child->parents()->first()->id,
+                'users_id' => $this->ownerIdFor($child),
             ]);
 
         }
@@ -1170,7 +1171,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
     public function destroySchickzeit(Schickzeiten $schickzeit, Request $request)
     {
-        if (! auth()->user()->children()->contains($schickzeit->child) && ! auth()->user()->can('edit schickzeiten')) {
+        if (! $schickzeit->child || auth()->user()->cannot('manage', $schickzeit->child)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Sie können nur Ihre eigenen Kinder bearbeiten.',
@@ -1179,19 +1180,26 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         // Wenn es eine regelmäßige Schickzeit ist (weekday gesetzt)
         if ($schickzeit->weekday) {
-            // Prüfe, ob auch tagesaktuelle Schickzeiten gelöscht werden sollen
-            $deleteDailyTimes = $request->input('delete_daily_times', false);
+            // Zukünftige tagesaktuelle Schickzeiten desselben Wochentags (datenbankunabhängig
+            // gefiltert; weekday: 1=Montag … 5=Freitag wie Carbon::dayOfWeek)
+            $dailyTimes = $schickzeit->child->schickzeiten()
+                ->whereNotNull('specific_date')
+                ->where('specific_date', '>=', Carbon::today())
+                ->get()
+                ->filter(fn (Schickzeiten $daily) => $daily->specific_date->dayOfWeek == $schickzeit->weekday);
 
-            if ($deleteDailyTimes) {
-                // Lösche alle zukünftigen tagesaktuellen Schickzeiten für diesen Wochentag
-                // weekday: 1=Montag, 2=Dienstag, ... 5=Freitag
-                // DAYOFWEEK: 1=Sonntag, 2=Montag, ... 7=Samstag
-                // Konvertierung: weekday + 1 = DAYOFWEEK (1->2, 2->3, ..., 5->6)
-                $schickzeit->child->schickzeiten()
-                    ->whereNotNull('specific_date')
-                    ->where('specific_date', '>=', Carbon::today())
-                    ->whereRaw('DAYOFWEEK(specific_date) = ?', [$schickzeit->weekday + 1])
-                    ->delete();
+            // Noch keine Entscheidung getroffen → Bestätigungsdialog anzeigen
+            if (! $request->has('delete_daily_times') && $dailyTimes->isNotEmpty()) {
+                return redirect()->back()->with([
+                    'type' => 'confirm_delete_schickzeit',
+                    'Meldung' => 'Es existieren '.$dailyTimes->count().' tagesaktuelle Schickzeit(en) für diesen Wochentag. Sollen diese auch gelöscht werden?',
+                    'confirm_delete_schickzeit_data' => ['schickzeit_id' => $schickzeit->id],
+                ]);
+            }
+
+            // „yes“ löscht auch die tagesaktuellen Zeiten, „no“ behält sie
+            if ($request->boolean('delete_daily_times')) {
+                $dailyTimes->each->delete();
             }
         }
 
@@ -1213,7 +1221,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $child = Child::find($childId);
 
-        if (! $child || (! auth()->user()->children()->contains($child) && ! auth()->user()->can('edit schickzeiten'))) {
+        if (! $child || auth()->user()->cannot('manage', $child)) {
             return response()->json(['error' => 'Nicht autorisiert'], 403);
         }
 
@@ -1237,7 +1245,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
     public function storeAbfrageAnwesenheit(Request $request)
     {
-        if (! auth()->user()->can('edit schickzeiten')) {
+        if (! auth()->user()->can('manage attendance queries')) {
             return redirect()->back()->with([
                 'type' => 'danger',
                 'Meldung' => 'Sie haben keine Berechtigung für diese Aktion.',
@@ -1261,7 +1269,9 @@ class SchickzeitenController extends Controller implements HasMiddleware
 
         $child = Child::find($request->child_id);
 
-        $child->load(['checkIns' => fn ($query) => $query->whereBetween('date', [$date_start->toDateString(), $date_end->toDateString()])]);
+        $child->load(['checkIns' => fn ($query) => $query
+            ->whereDate('date', '>=', $date_start->toDateString())
+            ->whereDate('date', '<=', $date_end->toDateString())]);
 
         $newCheckInsCreated = false;
 
@@ -1270,7 +1280,8 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 continue;
             }
 
-            $existingCheckIn = $child->checkIns->where('date', $date->toDateString())->first();
+            // 'date' ist als Carbon gecastet – ein where() gegen den Datums-String würde nie treffen
+            $existingCheckIn = $child->checkIns->first(fn (ChildCheckIn $checkIn) => $checkIn->date?->isSameDay($date));
 
             if ($existingCheckIn) {
                 // Bestehenden Eintrag: nur should_be aktualisieren, lock_at und check-in-Status nicht überschreiben
@@ -1431,7 +1442,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
         ]);
 
         $user = auth()->user();
-        $userChildIds = $user->children()?->pluck('id')->toArray() ?? [];
+        $userChildIds = $user->children(GuardianRight::Manage)->pluck('id')->toArray();
 
         $updated = 0;
         $skipped = 0;
@@ -1486,5 +1497,14 @@ class SchickzeitenController extends Controller implements HasMiddleware
             'type' => 'success',
             'Meldung' => $message,
         ]);
+    }
+
+    /**
+     * Besitzer-ID für neue Schickzeiten: erster Elternteil des Kindes, sonst der
+     * handelnde User (Kind ohne verknüpfte Eltern darf nicht zum Fehler führen).
+     */
+    private function ownerIdFor(Child $child): int
+    {
+        return $child->parents()->first()?->id ?? (int) Auth::id();
     }
 }

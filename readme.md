@@ -35,6 +35,7 @@ Zu den Kernfunktionen gehören:
 - 🧹 **Reinigungsdienste** – Zuweisung und Protokollierung
 - 📨 **Rückmeldungen** – digitale Einverständniserklärungen und Formulare
 - 🔑 **SSO via Keycloak / OIDC** – Single Sign-On für Eltern
+- 📱 **Eltern-App** – eigene App (React Native/Expo) über die App-API v1
 
 ---
 

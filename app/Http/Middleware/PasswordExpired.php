@@ -22,6 +22,11 @@ class PasswordExpired
             return $next($request);
         }
 
+        // SSO-Login (UCS/OIDC): Das Passwort wird im IdP verwaltet
+        if ($request->session()->has('ucs_sso_login')) {
+            return $next($request);
+        }
+
         if ($user->changePassword and ! $request->session()->has('ownID')) {
             return redirect()->route('password.expired');
         }

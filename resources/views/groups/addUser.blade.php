@@ -27,7 +27,7 @@
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">E-Mail</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Gruppen</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Verknüpft</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Familie</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700"></th>
                             </tr>
                         </thead>
@@ -50,9 +50,7 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-gray-600 text-sm">
-                                        @if(!is_null($user->sorgeberechtigter2))
-                                            {{$user->sorgeberechtigter2->name}}
-                                        @endif
+                                        {{ $user->family?->name }}
                                     </td>
                                     <td class="px-4 py-3">
                                         <form action="{{url('groups/'.$group->id.'/addUser')}}"

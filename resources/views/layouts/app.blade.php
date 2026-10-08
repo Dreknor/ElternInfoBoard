@@ -318,6 +318,20 @@
                                     @stack('nav-user')
                                 </div>
 
+                                {{-- UCS-Konto verknüpfen (nur wenn UCS aktiviert, aber kein ucs_uuid gesetzt) --}}
+                                @if(!empty($ucsLinkEnabled) && empty(auth()->user()?->ucs_uuid))
+                                <div class="border-t mt-1 pt-1" style="border-color: var(--color-card-border);">
+                                    <a href="{{ route('auth.ucs.redirect') }}"
+                                       class="flex items-center gap-3 px-4 py-2 text-sm transition-colors"
+                                       style="color: var(--color-primary);"
+                                       onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-navbar-user-btn-bg')"
+                                       onmouseout="this.style.backgroundColor=''">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <span>Mit Schul-Login verknüpfen</span>
+                                    </a>
+                                </div>
+                                @endif
+
                                 <div class="border-t mt-1 pt-1" style="border-color: var(--color-card-border);">
                                     <a href="#"
                                        onclick="event.preventDefault();document.getElementById('logout-form').submit();"

@@ -199,37 +199,85 @@
                             </div>
                         @endcan
 
-                        {{-- Verknüpfung (Sorgeberechtiger 2) --}}
+                        {{-- Familie (kind-zentriertes Familienmodell, ersetzt die sorg2-Verknüpfung) --}}
                         <div class="form-group mb-0">
-                            @if($user->sorg2 != "")
-                                <label class="label-control">Verknüpft mit</label>
-                                <div class="flex items-center gap-3 p-3 rounded-lg border"
+                            <label class="label-control">Familie</label>
+                            @if($user->family)
+                                <div class="p-3 rounded-lg border"
                                      style="background: var(--color-body-bg); border-color: var(--color-card-border);">
-                                    <i class="fas fa-link" style="color: var(--color-primary);"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <a href="{{ url('users/'.$user->sorg2) }}"
-                                           class="font-medium" style="color: var(--color-primary);">
-                                            {{ $user->sorgeberechtigter2?->name }}
-                                        </a>
+                                    <div class="flex items-center gap-3">
+                                        <i class="fas fa-house-user" style="color: var(--color-primary);"></i>
+                                        <div class="flex-1 min-w-0 font-medium">
+                                            @can('manage families')
+                                                <a href="{{ route('families.show', $user->family) }}" style="color: var(--color-primary);">{{ $user->family->name }}</a>
+                                            @else
+                                                {{ $user->family->name }}
+                                            @endcan
+                                            @if($user->family->is_locked)
+                                                <span class="badge badge-secondary">gesperrt</span>
+                                            @endif
+                                        </div>
+                                        @can('manage families')
+                                            <a href="{{ url('users/'.$user->id.'/remove/sorg2/0') }}"
+                                               class="btn btn-sm btn-outline-danger"
+                                               onclick="return confirm('{{ addslashes($user->name) }} aus der Familie lösen?')"
+                                               title="Aus Familie lösen">
+                                                <i class="fas fa-unlink"></i>
+                                                <span class="hidden sm:inline">Aus Familie lösen</span>
+                                            </a>
+                                        @endcan
                                     </div>
-                                    <a href="{{ url('users/'.$user->id.'/remove/sorg2/'.$user->sorg2) }}"
-                                       class="btn btn-sm btn-outline-danger"
-                                       title="Verknüpfung aufheben">
-                                        <i class="fas fa-unlink"></i>
-                                        <span class="hidden sm:inline">Verknüpfung aufheben</span>
-                                    </a>
+                                    @if($user->family->users->where('id', '!=', $user->id)->isNotEmpty())
+                                        <ul class="mt-2 mb-0 text-sm">
+                                            @foreach($user->family->users->where('id', '!=', $user->id) as $member)
+                                                <li><a href="{{ url('users/'.$member->id) }}" style="color: var(--color-primary);">{{ $member->name }}</a></li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
                                 </div>
+                            @elseif($user->sorgeberechtigter2)
+                                {{-- Noch nicht migrierte Altverknüpfung (sorg2) --}}
+                                <p class="text-sm mb-1" style="color: var(--color-text-muted);">
+                                    Noch keine Familie – bisher verknüpft mit
+                                    <a href="{{ url('users/'.$user->sorg2) }}" style="color: var(--color-primary);">{{ $user->sorgeberechtigter2->name }}</a>
+                                </p>
                             @else
-                                <label class="label-control" for="sorg2-search">Verknüpfen mit:</label>
-                                <input type="text" class="form-control mb-2" id="sorg2-search"
-                                       placeholder="Namen suchen…" autocomplete="off">
-                                <select class="custom-select" name="sorg2" id="sorg2">
+                                <p class="text-sm mb-1" style="color: var(--color-text-muted);">keiner Familie zugeordnet</p>
+                            @endif
+
+                            @can('manage families')
+                                @include('partials.select-search')
+                                <label class="label-control mt-2" for="sorg2">Mit Person zu einer Familie verknüpfen:</label>
+                                <select class="custom-select js-select-search" name="sorg2" id="sorg2">
                                     <option value="">– Keinen auswählen –</option>
                                     @foreach($users->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE) as $otherUser)
                                         <option value="{{ $otherUser->id }}">{{ $otherUser->name }}</option>
                                     @endforeach
                                 </select>
-                            @endif
+                                <small style="color: var(--color-text-muted);">Die gewählte Person wird dieser Familie hinzugefügt (bzw. umgekehrt).</small>
+                            @endcan
+                        </div>
+
+                        {{-- Kinder mit Beziehung und Rechten --}}
+                        <div class="form-group mb-0">
+                            <label class="label-control">Kinder</label>
+                            <ul class="mb-0 text-sm">
+                                @forelse($user->children_rel as $child)
+                                    <li>
+                                        <a href="{{ route('child.edit', $child) }}#bezugspersonen" style="color: var(--color-primary);">{{ $child->first_name }} {{ $child->last_name }}</a>
+                                        <small style="color: var(--color-text-muted);">
+                                            – {{ $child->pivot->relationType()->label() }}
+                                            ({{ collect(['S' => $child->pivot->has_custody, 'I' => $child->pivot->receives_information, 'V' => $child->pivot->can_manage])->filter()->keys()->implode('/') ?: 'keine Rechte' }},
+                                            {{ $child->pivot->sourceLabel() }})
+                                        </small>
+                                        @if($child->pivot->isPendingReview())
+                                            <span class="badge badge-warning">ungeprüft</span>
+                                        @endif
+                                    </li>
+                                @empty
+                                    <li style="color: var(--color-text-muted);">keine Kinder verknüpft</li>
+                                @endforelse
+                            </ul>
                         </div>
 
                     </div>
@@ -406,27 +454,6 @@ function confirmResendWelcome() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Namensliste beim Verknüpfen durchsuchbar machen
-    const sorg2Search = document.getElementById('sorg2-search');
-    const sorg2Select = document.getElementById('sorg2');
-    if (sorg2Search && sorg2Select) {
-        sorg2Search.addEventListener('input', function () {
-            const term = this.value.trim().toLowerCase();
-            let firstVisible = null;
-            Array.from(sorg2Select.options).forEach(function (option) {
-                if (!option.value) return; // "– Keinen auswählen –" immer sichtbar lassen
-                const matches = option.text.toLowerCase().includes(term);
-                option.hidden = !matches;
-                option.disabled = !matches;
-                if (matches && !firstVisible) firstVisible = option;
-            });
-            // Wenn die aktuelle Auswahl ausgeblendet wurde, zurück auf die leere Option springen
-            if (sorg2Select.selectedOptions[0]?.hidden) {
-                sorg2Select.value = '';
-            }
-        });
-    }
-
     let formChanged = false;
     const saveContainer  = document.getElementById('save-btn-container');
     const stickySaveBar  = document.getElementById('sticky-save-bar');
@@ -451,6 +478,8 @@ document.addEventListener('DOMContentLoaded', function () {
         el.addEventListener('input',  onFormChange);
         el.addEventListener('change', onFormChange);
     });
+    // Select2 meldet Änderungen nur als jQuery-Event
+    $('#sorg2').on('change', onFormChange);
 });
 </script>
 @endpush

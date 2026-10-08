@@ -106,8 +106,8 @@
                 Nutzer mit der Berechtigung <code>moderate messages</code> können Nachrichten in Gruppenkonversationen löschen,
                 gemeldete Nachrichten prüfen und Nutzer temporär stummschalten.
             </p>
-            <a href="{{ route('messenger.admin.reports') }}" class="btn btn-sm btn-outline-warning">
-                <i class="fas fa-flag mr-1"></i> Zum Moderationscenter
+            <a href="{{ route('moderation.index', ['tab' => 'nachrichten']) }}" class="btn btn-sm btn-outline-warning">
+                <i class="fas fa-flag mr-1"></i> Zur Moderation
             </a>
         </div>
 

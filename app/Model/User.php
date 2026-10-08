@@ -2,10 +2,14 @@
 
 namespace App\Model;
 
+use App\Enums\GuardianRight;
+use App\Services\Family\FamilyResolver;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -51,6 +55,8 @@ class User extends Authenticatable implements Auditable
     protected $fillable = [
         'name', 'email', 'publicMail', 'publicPhone', 'phone', 'sorg2', 'password', 'changePassword', 'benachrichtigung', 'lastEmail', 'sendCopy', 'track_login', 'uuid', 'releaseCalendar', 'calendar_prefix', 'changeSettings',
         'is_active', 'deactivated_at', 'messenger_discoverable',
+        'ucs_uuid', 'ucs_username', 'ucs_oidc_sub', 'ucs_school', 'ucs_synced_at', 'ucs_source',
+        'family_id',
     ];
 
     /**
@@ -79,6 +85,7 @@ class User extends Authenticatable implements Auditable
             'is_active' => 'boolean',        // TODO-2.5
             'deactivated_at' => 'datetime',  // TODO-2.5
             'messenger_discoverable' => 'boolean',
+            'ucs_synced_at' => 'datetime',
         ];
     }
 
@@ -104,26 +111,69 @@ class User extends Authenticatable implements Auditable
      */
     public function children_rel(): BelongsToMany
     {
-        return $this->belongsToMany(Child::class, 'child_user');
+        return $this->belongsToMany(Child::class, 'child_user')
+            ->using(ChildGuardian::class)
+            ->withPivot(ChildGuardian::PIVOT_COLUMNS)
+            ->withTimestamps();
+    }
 
+    /** @var list<int>|null */
+    protected ?array $familyUserIdsCache = null;
+
+    /**
+     * IDs aller Familienmitglieder inkl. self (FamilyResolver, pro Instanz gemerkt).
+     *
+     * @return list<int>
+     */
+    public function familyUserIds(): array
+    {
+        return $this->familyUserIdsCache ??= app(FamilyResolver::class)->familyUserIds($this);
+    }
+
+    public function isFamilyMember(self|int|null $other): bool
+    {
+        if ($other === null) {
+            return false;
+        }
+
+        return in_array($other instanceof self ? $other->id : (int) $other, $this->familyUserIds(), true);
+    }
+
+    public function forgetFamilyCache(): void
+    {
+        $this->familyUserIdsCache = null;
+        $this->familyRueckmeldungenCache = null;
     }
 
     /**
-     * @return mixed
+     * Familie / Haushalt (Abrechnungseinheit), max. eine pro Person.
      */
-    public function children()
+    public function family(): BelongsTo
     {
-        $children = $this->children_rel;
-        if (! is_null($this->sorg2)) {
-            $children2 = $this->sorgeberechtigter2?->children_rel;
-            if (! is_null($children2) and ! is_null($children)) {
-                return $children->merge($children2);
-            } elseif (is_null($children)) {
-                return $children2;
-            }
+        return $this->belongsTo(Family::class);
+    }
+
+    /**
+     * Alle Mitglieder der eigenen Familie (inkl. self); ohne Familie nur self.
+     */
+    public function familyMembers(): HasMany
+    {
+        if ($this->family_id === null) {
+            return $this->hasMany(self::class, 'id', 'id');
         }
 
-        return $children;
+        return $this->hasMany(self::class, 'family_id', 'family_id');
+    }
+
+    /**
+     * Kinder, auf die dieser User Zugriff hat (optional mit bestimmtem Recht).
+     * Welche Beziehungen zählen, entscheidet der FamilyResolver.
+     *
+     * @return EloquentCollection<int, Child>
+     */
+    public function children(?GuardianRight $right = null): EloquentCollection
+    {
+        return app(FamilyResolver::class)->childrenFor($this, $right);
     }
 
     /**
@@ -131,7 +181,9 @@ class User extends Authenticatable implements Auditable
      */
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(Group::class)->withTimestamps();
+        return $this->belongsToMany(Group::class)
+            ->withPivot(['is_auto_provisioned', 'provisioned_via_child_id', 'synced_at'])
+            ->withTimestamps();
     }
 
     public function ownGroups(): HasMany
@@ -192,21 +244,12 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(listen_termine::class, 'reserviert_fuer');
     }
 
+    /**
+     * Gebuchte Listentermine der ganzen Familie.
+     */
     public function getListenTermine()
     {
-        $eigeneEintragungen = $this->listen_termine;
-
-        if (! is_null($this->sorg2)) {
-            $sorgEintragung = $this->sorgeberechtigter2?->listen_termine;
-            if (! is_null($sorgEintragung) and ! is_null($eigeneEintragungen)) {
-                return $eigeneEintragungen->merge($sorgEintragung);
-            } elseif (is_null($eigeneEintragungen)) {
-                return $sorgEintragung;
-            }
-        }
-
-        // Merge collections and return single collection.
-        return $eigeneEintragungen;
+        return listen_termine::query()->whereIn('reserviert_fuer', $this->familyUserIds())->get();
     }
 
     // Sorgeberechtigter 2
@@ -229,23 +272,17 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(UserRueckmeldungen::class, 'users_id');
     }
 
+    /**
+     * Rückmeldungen der ganzen Familie (FamilyResolver).
+     */
     public function getRueckmeldung(): mixed
     {
-        $eigeneRueckmeldung = $this->userRueckmeldung;
-
-        if (! is_null($this->sorg2)) {
-            $sorgPartner = self::find($this->sorg2);
-            $sorgRueckmeldung = $sorgPartner?->userRueckmeldung;
-            if (! is_null($sorgRueckmeldung) and ! is_null($eigeneRueckmeldung)) {
-                return $eigeneRueckmeldung->merge($sorgRueckmeldung);
-            } elseif (is_null($eigeneRueckmeldung)) {
-                return $sorgRueckmeldung;
-            }
-        }
-
-        // Merge collections and return single collection.
-        return $eigeneRueckmeldung;
+        return $this->familyRueckmeldungenCache ??= UserRueckmeldungen::query()
+            ->whereIn('users_id', $this->familyUserIds())
+            ->get();
     }
+
+    protected ?Collection $familyRueckmeldungenCache = null;
 
     public function Reinigung(): HasMany
     {
@@ -285,7 +322,9 @@ class User extends Authenticatable implements Auditable
 
     public function schickzeiten(): HasMany
     {
-        return $this->hasMany(Schickzeiten::class, 'users_id')->orWhere('users_id', $this->sorg2);
+        // Eigene (erstellte) Schickzeiten. Sichtbarkeit für Familie/Kinder läuft
+        // über Kind bzw. FamilyResolver, nicht mehr über orWhere(sorg2).
+        return $this->hasMany(Schickzeiten::class, 'users_id');
     }
 
     public function schickzeiten_own(): HasMany
@@ -295,9 +334,13 @@ class User extends Authenticatable implements Auditable
 
     // Krankmeldungen
 
+    /**
+     * Selbst erstellte Krankmeldungen (Autor). Für die Anzeige aller sichtbaren
+     * Meldungen siehe Krankmeldungen::scopeVisibleTo().
+     */
     public function krankmeldungen(): HasMany
     {
-        return $this->hasMany(Krankmeldungen::class, 'users_id')->orWhere('users_id', $this->sorg2)->orderByDesc('created_at');
+        return $this->hasMany(Krankmeldungen::class, 'users_id')->orderByDesc('created_at');
     }
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\MorphMany
@@ -325,12 +368,11 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(Poll_Votes::class, 'author_id');
     }
 
+    /**
+     * Eigene Pflichtstunden. Familien-/Einheitssicht: PflichtstundenService.
+     */
     public function pflichtstunden(): HasMany
     {
-        if ($this->sorg2 != null) {
-            return $this->hasMany(Pflichtstunde::class, 'user_id')->orWhere('user_id', $this->sorg2);
-        }
-
         return $this->hasMany(Pflichtstunde::class, 'user_id');
     }
 

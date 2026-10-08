@@ -41,7 +41,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     use Reactable;
     use SoftDeletes;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'no_header'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
 
@@ -156,5 +156,24 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         return $this->reactions()
             ->where('responder_id', $user->id)
             ->where('responder_type', get_class($user))->first()?->name;
+    }
+
+    /**
+     * Verkleinerte Bildfassungen für die App (B-12): Listenvorschau und Detailansicht.
+     * Originale bleiben unverändert; ältere Bilder ohne Vorschau werden im Original geliefert.
+     */
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    {
+        if ($media && ! str_starts_with((string) $media->mime_type, 'image/')) {
+            return;
+        }
+
+        $this->addMediaConversion('thumb')
+            ->width(400)
+            ->performOnCollections('images', 'header');
+
+        $this->addMediaConversion('preview')
+            ->width(1200)
+            ->performOnCollections('images', 'header');
     }
 }

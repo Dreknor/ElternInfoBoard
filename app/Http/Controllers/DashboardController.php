@@ -6,8 +6,10 @@ use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Conversation;
 use App\Model\Losung;
+use App\Model\Module;
 use App\Model\Post;
 use App\Model\ReadReceipts;
+use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\UserRueckmeldungen;
@@ -100,23 +102,29 @@ class DashboardController extends Controller implements HasMiddleware
             }
         }
 
+        // Eigene Reinigungsdienste: eigenes Widget + Eintrag bei den nächsten Terminen
+        $reinigungen = Reinigung::upcomingForFamily(auth()->user(), Carbon::now()->addWeeks(4)->endOfWeek());
+        $termine = $termine
+            ->concat($reinigungen->map->toTermin())
+            ->sortBy('start')
+            ->take(5)
+            ->values();
+
         // Hole die heutige Losung (nur notwendige Felder)
         $losung = Losung::select(['date', 'Losungstext', 'Losungsvers', 'Lehrtext', 'Lehrtextvers'])
             ->whereDate('date', Carbon::today())
             ->first();
 
-        // Hole die Kinder des Benutzers – eigene + Kinder des Sorg2-Partners
+        // Kinder, die der Benutzer verwalten darf (FamilyResolver: legacy = eigene + sorg2-Partner,
+        // child_centric = direkte Beziehung mit Verwaltungsrecht)
         $currentUser = auth()->user();
-        $sorg2UserId = $currentUser->sorg2; // ID des verknüpften Sorgeberechtigten 2
 
-        $careChildrenQuery = Child::query()
+        // CheckIn-Status nur anzeigen, wenn das Care-Modul (Anwesenheitsliste) aktiv ist
+        $careModuleActive = (bool) (Module::where('setting', 'Anwesenheitsliste')->first()?->options['active'] ?? false);
+
+        $careChildrenQuery = app(\App\Services\Family\FamilyResolver::class)
+            ->childrenQuery($currentUser, \App\Enums\GuardianRight::Manage)
             ->select(['children.id', 'children.first_name', 'children.last_name', 'children.group_id', 'children.class_id'])
-            ->whereHas('parents', function ($query) use ($userId, $sorg2UserId) {
-                $query->where('users.id', $userId);
-                if ($sorg2UserId) {
-                    $query->orWhere('users.id', $sorg2UserId);
-                }
-            })
             ->with([
                 'group:id,name',
                 'checkIns' => function ($query) {
@@ -136,14 +144,17 @@ class DashboardController extends Controller implements HasMiddleware
             ])
             ->orderBy('first_name');
 
-        $careChildren = $careChildrenQuery->care()->get();
+        // clone: care() verändert den Builder, sonst würde der Fallback ebenfalls gefiltert
+        $careChildren = $careModuleActive ? (clone $careChildrenQuery)->care()->get() : collect();
 
-        if ($careChildren->isEmpty()) {
-            $careChildren = $careChildrenQuery->get()
-                ->filter(function (Child $child) {
-                    return $child->krankmeldungToday();
+        // Fallback: Kinder ohne Betreuungszuordnung, die heute krankgemeldet sind
+        if ($careModuleActive && $careChildren->isEmpty()) {
+            $careChildren = $careChildrenQuery
+                ->whereHas('krankmeldungen', function ($query) {
+                    $query->whereDate('start', '<=', Carbon::today())
+                        ->whereDate('ende', '>=', Carbon::today());
                 })
-                ->values();
+                ->get();
         }
 
         // Aktive meldepflichtige Erkrankungen abrufen
@@ -217,6 +228,7 @@ class DashboardController extends Controller implements HasMiddleware
         return view('dashboard.index', [
             'nachrichten' => $nachrichten,
             'termine' => $termine,
+            'reinigungen' => $reinigungen,
             'losung' => $losung,
             'datum' => Carbon::now(),
             'careChildren' => $careChildren,
@@ -285,8 +297,12 @@ class DashboardController extends Controller implements HasMiddleware
                     ->whereDoesntHave('receipts', function ($q) use ($userId) {
                         $q->where('user_id', $userId)->whereNotNull('confirmed_at');
                     })
-                    ->select(['id', 'header', 'read_receipt_deadline', 'archiv_ab'])
+                    ->select(['id', 'header', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'archiv_ab'])
                     ->get();
+
+                // Offen nur, wenn nicht schon durch Familie bzw. Bezugsperson des Kindes erledigt
+                $openReceiptIds = app(\App\Services\ReadReceiptStatusService::class)->openPostIds(auth()->user(), $readReceiptPosts);
+                $readReceiptPosts = $readReceiptPosts->whereIn('id', $openReceiptIds);
 
                 foreach ($readReceiptPosts as $post) {
                     $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;

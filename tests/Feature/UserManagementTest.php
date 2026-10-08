@@ -250,6 +250,35 @@ class UserManagementTest extends TestCase
 
     /**
      * @test
+     * Soft-gelöschte Posts behalten nach deleteUser() den Autor (Eloquent
+     * überspringt sie). Der User-Cleanup muss den User trotzdem endgültig
+     * löschen können, statt an posts_author_foreign zu scheitern.
+     */
+    public function test_cleanup_force_deletes_user_with_trashed_posts_and_group_membership(): void
+    {
+        $user = User::factory()->create();
+        $post = \App\Model\Post::factory()->create(['author' => $user->id]);
+        $post->delete();
+
+        /** @var UserService $service */
+        $service = app(UserService::class);
+        $this->assertSame('', $service->deleteUser($user));
+
+        // Nach dem Soft-Delete erneut zugeordnete Gruppe (z. B. durch Sync)
+        $group = Group::factory()->create();
+        DB::table('group_user')->insert(['group_id' => $group->id, 'user_id' => $user->id]);
+
+        User::onlyTrashed()->whereKey($user->id)->update(['deleted_at' => now()->subDays(401)]);
+
+        $this->artisan('users:cleanup', ['--purge-days' => 400])->assertSuccessful();
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        $this->assertDatabaseHas('posts', ['id' => $post->id, 'author' => null]);
+        $this->assertDatabaseMissing('group_user', ['user_id' => $user->id]);
+    }
+
+    /**
+     * @test
      * Sorg2-Verknüpfung löst vorherige bidirektional auf
      */
     public function test_sorg2_link_clears_old_partner(): void

@@ -46,7 +46,7 @@ class TerminController extends Controller implements HasMiddleware
             $termine = $user->termine;
         }
 
-        $termine->unique('id');
+        $termine = $termine->unique('id');
         $termine = $termine->sortBy('start');
 
         $data=[];

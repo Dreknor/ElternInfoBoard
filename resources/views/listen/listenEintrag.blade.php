@@ -51,7 +51,8 @@
 
             <!-- Entry Form -->
             @if($liste->make_new_entry or $liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
-                @if($liste->eintragungen->filter(function ($eintragung) {
+                @php $bookableChildren = app(\App\Services\App\ListenService::class)->bookableChildren(auth()->user(), $liste); @endphp
+                @if($liste->bookingPerChild() or $liste->eintragungen->filter(function ($eintragung) {
                     return $eintragung->user_id == auth()->id();
                 })->count() == null or $liste->multiple)
                     <div class="border-b border-gray-200 px-6 py-4">
@@ -62,6 +63,7 @@
                                    maxlength="100"
                                    class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                    placeholder="Eintrag hinzufügen...">
+                            @include('listen.partials.child_select')
                             <button type="submit"
                                     class="inline-flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-save"></i>
@@ -80,6 +82,9 @@
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
                                 <div class="flex-1">
                                     <p class="font-medium text-gray-800">{{ $eintrag->eintragung }}</p>
+                                    @if($eintrag->child && ($liste->visible_for_all or auth()->user()->can('edit terminliste') or app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), $eintrag->user_id ? (int) $eintrag->user_id : null, $eintrag->child_id)))
+                                        <p class="text-xs text-gray-500 mb-0"><i class="fas fa-child mr-1"></i>für {{ $eintrag->child->first_name }}</p>
+                                    @endif
                                 </div>
 
                                 <div class="flex items-center gap-3 ml-4">
@@ -100,6 +105,7 @@
                                         <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" style="display: inline;">
                                             @csrf
                                             @method('PUT')
+                                            @include('listen.partials.child_select')
                                             <button type="submit"
                                                     class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
                                                 <i class="fas fa-check"></i>
@@ -109,7 +115,7 @@
                                     @endif
                                 </div>
 
-                                @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste'))
+                                @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste') or ($eintrag->user_id && app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), (int) $eintrag->user_id, $eintrag->child_id)))
                                     <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" style="display: inline;" class="ml-2">
                                         @csrf
                                         @method('DELETE')

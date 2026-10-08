@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2",
         "ext-curl": "*",
+        "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "bkwld/cloner": "^3.14",
         "coliving/commentable": "^5.7",
@@ -26,7 +27,6 @@
         "laravel/ui": "^4.6",
         "livewire/livewire": "^3.6",
         "maatwebsite/excel": "^3.1",
-        "nativephp/mobile": "^3.2",
         "owen-it/laravel-auditing": "^14.0",
         "ryangjchandler/blade-cache-directive": "^1.1",
         "sentry/sentry-laravel": "^4.13",

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\UcsLoginController;
 use App\Http\Controllers\ActiveDiseaseController;
 use App\Http\Controllers\Anwesenheit\ChildNoticeController;
 use App\Http\Controllers\Arbeitsgemeinschaften\ArbeitsgemeinschaftController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\ICalController;
 use App\Http\Controllers\FamilyWeeklyController;
 use App\Http\Controllers\MessengerAdminController;
 use App\Http\Controllers\MessengerController;
+use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PostReportController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImportController;
@@ -42,6 +44,7 @@ use App\Http\Controllers\RueckmeldungenController;
 use App\Http\Controllers\SchickzeitenController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UcsLinkCandidateController;
 use App\Http\Controllers\SiteBlockController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\TerminController;
@@ -68,10 +71,31 @@ use Illuminate\Support\Facades\Route;
 Route::get('login/keycloak', [LoginController::class, 'redirectToKeycloak'])->name('login.keycloak');
 Route::get('login/keycloak/callback', [LoginController::class, 'handleKeycloakCallback']);
 
+// ── UCS@school OIDC-Login (Paket 06) ─────────────────────────────────────────
+Route::get('/auth/ucs/redirect', [UcsLoginController::class, 'redirect'])
+     ->name('auth.ucs.redirect');
+Route::get('/auth/ucs/callback', [UcsLoginController::class, 'callback'])
+     ->middleware('throttle:ucs-jit')
+     ->name('auth.ucs.callback');
+Route::get('/auth/ucs/pending', [UcsLoginController::class, 'pending'])
+     ->name('auth.ucs.pending');
+Route::post('/auth/ucs/logout', [UcsLoginController::class, 'logout'])
+     ->middleware('auth')
+     ->name('auth.ucs.logout');
+
 // POST-Login mit Rate-Limit (schützt vor Brute-Force und Magic-Link-Spam)
 Route::post('login', [LoginController::class, 'login'])->middleware('throttle:login')->name('login');
 
 Auth::routes(['register' => false]);
+
+// Eltern-App: Anmelde-Link aus der E-Mail öffnet die App (einmaliger Code, 15 min gültig).
+Route::get('app/anmelden/{code}', function (string $code) {
+    abort_unless(preg_match('/^[A-Za-z0-9]{48}$/', $code), 404);
+
+    return view('app.open', [
+        'appUrl' => config('services.app.scheme').'://auth?'.http_build_query(['code' => $code, 'type' => 'magic']),
+    ]);
+})->middleware('throttle:30,1')->name('app.login.open');
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
@@ -165,6 +189,7 @@ Route::middleware('auth')->group(function () {
         Route::post('child', [\App\Http\Controllers\ChildController::class, 'store'])->name('child.store');
         Route::get('child/{child}/edit', [\App\Http\Controllers\ChildController::class, 'edit'])->name('child.edit');
         Route::put('child/{child}', [\App\Http\Controllers\ChildController::class, 'update'])->name('child.update');
+        Route::put('child/{child}/guardian/{guardian}/phone', [\App\Http\Controllers\ChildController::class, 'updateGuardianPhone'])->name('child.guardian.phone');
         Route::get('child/create', [\App\Http\Controllers\ChildController::class, 'create'])->name('child.create');
         Route::get('child/create/fromSchickzeit/{schickzeiten}', [\App\Http\Controllers\ChildController::class, 'createFromSchickzeit'])->name('child.createFromSchickzeit');
         Route::delete('child/{child}/delete', [\App\Http\Controllers\ChildController::class, 'destroy'])->name('child.destroy');
@@ -307,9 +332,14 @@ Route::middleware('auth')->group(function () {
         // Beitrag melden (alle authentifizierten Nutzer)
         Route::post('post/{post}/report', [PostReportController::class, 'store'])->name('post.report');
 
+        // Moderation: gemeldete Beiträge und Messenger-Nachrichten an einer Stelle
+        Route::get('verwaltung/moderation', [ModerationController::class, 'index'])
+            ->middleware('permission:edit settings|moderate messages')
+            ->name('moderation.index');
+
         // Admin: Gemeldete Beiträge verwalten
         Route::middleware('permission:edit settings')->prefix('verwaltung/beitragsmeldungen')->group(function () {
-            Route::get('/', [PostReportController::class, 'index'])->name('post-reports.index');
+            Route::get('/', fn () => redirect()->route('moderation.index', ['tab' => ModerationController::TAB_POSTS]))->name('post-reports.index');
             Route::post('/{report}/resolve', [PostReportController::class, 'resolve'])->name('post-reports.resolve');
             Route::delete('/{report}/destroy-post', [PostReportController::class, 'destroyPost'])->name('post-reports.destroy-post');
         });
@@ -358,18 +388,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
         Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
-        // Reinigungsplan
-        Route::get('reinigung', [ReinigungController::class, 'index']);
+        // Reinigungsplan (nur bei aktivem Modul)
+        Route::middleware('module:Reinigung')->group(function () {
+            Route::get('reinigung', [ReinigungController::class, 'index']);
 
-        Route::middleware('permission:edit reinigung')->group(function () {
-            Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
-            Route::delete('reinigung/task/trash', [ReinigungsTaskController::class, 'destroy'])->name('reinigung.trash.task');
-            Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
-            Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
-            Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
-            Route::delete('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
-            Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
-            Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
+            Route::middleware('permission:edit reinigung')->group(function () {
+                Route::get('reinigung/{bereich}/export', [ReinigungController::class, 'export']);
+                Route::delete('reinigung/task/trash', [ReinigungsTaskController::class, 'destroy'])->name('reinigung.trash.task');
+                Route::post('reinigung/task/', [ReinigungsTaskController::class, 'store']);
+                Route::post('reinigung/{Bereich}', [ReinigungController::class, 'store']);
+                Route::get('reinigung/create/{Bereich}/{Datum}', [ReinigungController::class, 'create']);
+                Route::delete('reinigung/{Bereich}/{reinigung}/trash', [ReinigungController::class, 'destroy']);
+                Route::get('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreateStart']);
+                Route::post('reinigung/{Bereich}/auto', [ReinigungController::class, 'autoCreate']);
+            });
         });
 
         // Edit and create posts
@@ -397,6 +429,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/einstellungen', [BenutzerController::class, 'show'])->name('einstellungen');
         Route::put('/einstellungen', [BenutzerController::class, 'update']);
         Route::post('/einstellungen/token', [BenutzerController::class, 'createToken']);
+        Route::post('/einstellungen/kinder/{child}/meldung', [BenutzerController::class, 'reportGuardianLink'])->name('einstellungen.guardian.report');
+        // Eltern-App per QR-Code verbinden und anmelden
+        Route::post('/einstellungen/app-verbinden', [\App\Http\Controllers\User\AppConnectController::class, 'qr'])
+            ->middleware('throttle:10,1')
+            ->name('app.connect.qr');
         Route::delete('/einstellungen/token/{token}', [BenutzerController::class, 'deleteToken']);
 
         // Nutzer-Theme (Design)
@@ -426,6 +463,8 @@ Route::middleware('auth')->group(function () {
             Route::post('users/import', [ImportController::class, 'import'])->middleware(['permission:import user']);
             Route::post('users/import/headers', [ImportController::class, 'previewHeaders'])->middleware(['permission:import user'])->name('users.import.headers');
             Route::post('users/import/groups', [ImportController::class, 'previewGroups'])->middleware(['permission:import user'])->name('users.import.groups');
+            Route::post('users/import/schueler/bestaetigen', [ImportController::class, 'confirmSchuelerImport'])->middleware(['permission:import user'])->name('users.import.schueler.confirm');
+            Route::get('users/vorlage/schueler', [ImportController::class, 'downloadSchuelerVorlage'])->middleware(['permission:import user'])->name('users.vorlage.schueler');
             Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
             Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
 
@@ -452,6 +491,27 @@ Route::middleware('auth')->group(function () {
             // Route::get('users/{user}/delete', [UserController::class, 'destroy']);
             // Route::get('sendErinnerung', [RueckmeldungenController::class, 'sendErinnerung']);
             // Route::get('/daily', [NachrichtenController::class, 'emailDaily']);
+        });
+
+        // Familien & Bezugspersonen (kind-zentriertes Familienmodell, nur Verwaltung – E6)
+        Route::middleware('permission:manage families')->prefix('verwaltung')->group(function () {
+            Route::get('familien', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'index'])->name('families.index');
+            Route::post('familien', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'store'])->name('families.store');
+            Route::get('familien/pruefen', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'review'])->name('families.review');
+            Route::post('familien/automatik', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'rebuild'])->name('families.rebuild');
+            Route::post('familien/meldungen/{report}/erledigt', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'resolveReport'])->name('families.reports.resolve');
+            Route::get('familien/{family}', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'show'])->name('families.show');
+            Route::put('familien/{family}', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'update'])->name('families.update');
+            Route::post('familien/{family}/mitglieder', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'addMember'])->name('families.members.add');
+            Route::delete('familien/{family}/mitglieder/{user}', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'removeMember'])->name('families.members.remove');
+            Route::post('familien/{family}/zusammenfuehren', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'merge'])->name('families.merge');
+            Route::post('familien/{family}/trennen', [\App\Http\Controllers\Verwaltung\FamilyController::class, 'split'])->name('families.split');
+
+            Route::post('kinder/{child}/bezugspersonen', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'store'])->name('guardians.store');
+            Route::put('kinder/{child}/bezugspersonen/{user}', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'update'])->name('guardians.update');
+            Route::post('kinder/{child}/bezugspersonen/{user}/standardrechte', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'applyDefaults'])->name('guardians.defaults');
+            Route::post('kinder/{child}/bezugspersonen/{user}/geprueft', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'review'])->name('guardians.review');
+            Route::delete('kinder/{child}/bezugspersonen/{user}', [\App\Http\Controllers\Verwaltung\GuardianController::class, 'destroy'])->name('guardians.destroy');
         });
 
         // Gruppenverwaltung
@@ -488,8 +548,21 @@ Route::middleware('auth')->group(function () {
                 ->name('settings.custom-theme.update');
             Route::post('settings/custom-theme/reset', [\App\Http\Controllers\Settings\CustomThemeController::class, 'reset'])
                 ->name('settings.custom-theme.reset');
+            Route::post('settings/pflichtstunden/preview', [SettingsController::class, 'pflichtstundenPreview'])->name('settings.pflichtstunden.preview');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
+            Route::post('settings/ucs/test', [SettingsController::class, 'ucsTestConnection'])->name('settings.ucs.test');
+            Route::post('settings/ucs/sync', [SettingsController::class, 'ucsRunSync'])
+                ->name('settings.ucs.sync')
+                ->middleware('permission:manage ucs sync');
+
+            // UCS Link-Kandidaten (TODO-08)
+            Route::post('settings/ucs/link-candidates/{candidate}/confirm',
+                [UcsLinkCandidateController::class, 'confirm'])
+                ->name('settings.ucs.link.confirm');
+            Route::post('settings/ucs/link-candidates/{candidate}/reject',
+                [UcsLinkCandidateController::class, 'reject'])
+                ->name('settings.ucs.link.reject');
 
         });
 
@@ -585,9 +658,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/anwesenheit/{showAll?}', [\App\Http\Controllers\Anwesenheit\CareController::class, 'index'])->name('anwesenheit.index');
         Route::post('child/{child}/notice', [ChildNoticeController::class, 'noticeVerwaltung'])->name('child.notice.verwaltung');
 
-        Route::delete('abfrage/{date}/destroy', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyAbfrage'])->name('care.abfrage.destroy');
-        Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
-        Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
+        Route::middleware(['can:manage attendance queries'])->group(function () {
+            Route::delete('abfrage/{date}/destroy', [\App\Http\Controllers\Anwesenheit\CareController::class, 'destroyAbfrage'])->name('care.abfrage.destroy');
+            Route::post('abfrage/store', [\App\Http\Controllers\Anwesenheit\CareController::class, 'storeAbfrage'])->name('care.abfrage.store');
+            Route::post('care/abfrage/anwesenheit/store', [SchickzeitenController::class, 'storeAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.store');
+        });
         Route::post('care/abfrage/anwesenheit/download', [\App\Http\Controllers\Anwesenheit\CareController::class, 'downloadAbfrageAnwesenheit'])->name('care.abfrage.anwesenheit.download');
         Route::post('care/abfrage/comment/update', [SchickzeitenController::class, 'updateAnwesenheitComment'])->name('anwesenheit.comment.update');
         Route::post('care/abfrage/comment/remove', [SchickzeitenController::class, 'removeAnwesenheitComment'])->name('anwesenheit.comment.remove');
@@ -670,7 +745,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/attachment/{message}',                 [MessengerController::class, 'serveAttachment'])->name('messenger.attachment');
     });
     Route::middleware(['password_expired', 'permission:moderate messages'])->prefix('messenger/admin')->group(function () {
-        Route::get('/reports',                   [MessengerAdminController::class, 'reports'])->name('messenger.admin.reports');
+        Route::get('/reports',                   fn () => redirect()->route('moderation.index', ['tab' => ModerationController::TAB_MESSAGES]))->name('messenger.admin.reports');
         Route::post('/reports/{report}/resolve', [MessengerAdminController::class, 'resolveReport'])->name('messenger.admin.resolve');
         Route::post('/user/{user}/mute',         [MessengerAdminController::class, 'muteUser'])->name('messenger.admin.mute');
     });

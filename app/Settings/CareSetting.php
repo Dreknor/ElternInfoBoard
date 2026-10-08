@@ -42,6 +42,6 @@ class CareSetting extends Settings
 
     public static function group(): string
     {
-        return 'Care';
+        return 'care';
     }
 }

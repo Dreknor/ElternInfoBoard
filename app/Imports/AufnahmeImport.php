@@ -3,10 +3,13 @@
 namespace App\Imports;
 
 use App\Mail\NewUserPasswordMail;
+use App\Model\Family;
 use App\Model\Group;
 use App\Model\User;
 use App\Scopes\GetGroupsScope;
+use App\Services\Family\FamilyService;
 use App\Settings\EmailSetting;
+use App\Support\PasswordGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -90,8 +93,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'deleted_at' => null,
                     ]);
                 } else {
-                    // TODO-1.1: Sicheres Zufallspasswort generieren
-                    $password1 = Str::password(12, true, true, true, false);
+                    $password1 = PasswordGenerator::generate();
 
                     $user1 = User::create([
                         'email' => $row[$this->header['S1Email']],
@@ -139,8 +141,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
                         'deleted_at' => null,
                     ]);
                 } else {
-                    // TODO-1.1: Sicheres Zufallspasswort generieren
-                    $password2 = Str::password(12, true, true, true, false);
+                    $password2 = PasswordGenerator::generate();
 
                     $user2 = User::create([
                         'email' => $row[$this->header['S2Email']],
@@ -177,11 +178,8 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
             }
 
             if (isset($user2) and isset($user1) and $user2->id != $user1->id and isset($user2->email) and isset($user1->email)) {
-                $user2->sorg2 = $user1->id;
-                $user1->sorg2 = $user2->id;
-
-                $user2->save();
-                $user1->save();
+                // S1 + S2 bilden eine Familie (früher: sorg2)
+                app(FamilyService::class)->linkPair($user1->fresh(), $user2->fresh(), Family::SOURCE_IMPORT);
             }
         }
     }

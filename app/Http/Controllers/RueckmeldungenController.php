@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AbfrageExport;
+use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Http\Requests\createAbfrageRequest;
 use App\Http\Requests\createRueckmeldungRequest;
 use App\Http\Requests\createTerminlisteRueckmeldungRequest;
@@ -14,6 +15,8 @@ use App\Model\Notification;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use App\Services\Notifications\NotificationCategory;
+use App\Services\Notifications\NotificationPreferences;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -615,36 +618,37 @@ class RueckmeldungenController extends Controller
      */
     public function sendErinnerung()
     {
-        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now(), Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users', 'post.users.userRueckmeldung',  'post.users.sorgeberechtigter2'])->get();
+        $rueckmeldungen = Rueckmeldungen::whereBetween('ende', [Carbon::now(), Carbon::now()->addDays(3)])->where('pflicht', 1)->with(['post', 'post.users'])->get();
         foreach ($rueckmeldungen as $Rueckmeldung) {
             if ($Rueckmeldung->post->released == 1) {
-                $user = $Rueckmeldung->post->users;
-                $user = $user->unique('id');
+                // Offene Empfänger je Scope (Person, Familie, Kind – E2/E7)
+                $openRecipients = app(RueckmeldungStatusService::class)->openRecipients($Rueckmeldung->post);
 
-                foreach ($user as $User) {
-                    $RueckmeldungUser = $User->getRueckmeldung()->where('post_id', $Rueckmeldung->post->id)->first();
-                    if (is_null($RueckmeldungUser)) {
-                        try {
-                            $notify = new Notification(
-                                [
-                                    'users_id' => $User->id,
-                                    'type' => 'Erinnerung',
-                                    'text' => 'Rückmeldung für '.$Rueckmeldung->post->header.' fehlt',
-                                    'link' => url('post/'.$Rueckmeldung->post->id),
-                                ]
-                            );
-                            $notify->save();
-                        } catch (\Exception $e) {
-                            // do nothing
-                        }
+                foreach ($openRecipients as $open) {
+                    $User = $open['user'];
+                    try {
+                        // Glocke + App-/Browser-Push; Kindernamen nicht im Text (erscheint auf dem Sperrbildschirm)
+                        Notification::create([
+                            'user_id' => $User->id,
+                            'type' => 'Erinnerung',
+                            'title' => 'Rückmeldung fehlt',
+                            'message' => 'Rückmeldung für '.$Rueckmeldung->post->header.' fehlt.',
+                            'url' => url('post/'.$Rueckmeldung->post->id),
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::warning('Erinnerung (Rückmeldung) konnte nicht angelegt werden: '.$e->getMessage());
+                    }
 
-                        try {
-                            $email = $User->email;
-                            Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
+                    if (! $User->email || ! NotificationPreferences::allows($User, NotificationCategory::ERINNERUNGEN, 'mail')) {
+                        continue;
+                    }
 
-                        } catch (\Exception $e) {
-                            Log::info('Mail konnte nicht gesendet werden: '.$e->getMessage());
-                        }
+                    try {
+                        $email = $User->email;
+                        Mail::to($email)->send(new ErinnerungRuecklaufFehlt($User->email, $User->name, $Rueckmeldung->post->header, $Rueckmeldung->ende->endOfDay(), $Rueckmeldung->post->id));
+
+                    } catch (\Exception $e) {
+                        Log::info('Mail konnte nicht gesendet werden: '.$e->getMessage());
                     }
                 }
             }

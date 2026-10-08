@@ -43,4 +43,30 @@ return [
         'mail_domain' => env('KEYCLOAK_MAILDOMAIN', '*'),
     ],
 
+
+    /*
+     | Native Push für die Eltern-App – ohne kostenpflichtige Dienste:
+     | APNs direkt (Schlüssel aus dem Apple-Entwicklerkonto), FCM HTTP v1 (Firebase Spark, kostenlos).
+     | Ohne Konfiguration wird still nichts gesendet.
+     */
+    'apns' => [
+        'key_id' => env('APNS_KEY_ID'),
+        'team_id' => env('APNS_TEAM_ID'),
+        'key_path' => env('APNS_KEY_PATH'),          // Pfad zur .p8-Datei
+        'bundle_id' => env('APNS_BUNDLE_ID', 'de.eszr.elterninfo'),
+        'production' => env('APNS_PRODUCTION', true),
+    ],
+
+    'fcm' => [
+        'credentials' => env('FCM_CREDENTIALS'),     // Pfad zur Service-Account-JSON
+    ],
+
+    /*
+     | Eltern-App: Kennung für Deep Links (SSO, Magic Link) und Mindestversion.
+     */
+    'app' => [
+        'scheme' => env('APP_SCHEME', 'elterninfo'),
+        'min_version' => env('APP_MIN_VERSION', '0.1.0'),
+    ],
+
 ];

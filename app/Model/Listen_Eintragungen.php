@@ -13,11 +13,16 @@ class Listen_Eintragungen extends Model
 
     protected $table = 'listen_eintragungen';
 
-    protected $fillable = ['eintragung', 'listen_id', 'user_id', 'created_by'];
+    protected $fillable = ['eintragung', 'listen_id', 'user_id', 'child_id', 'created_by'];
 
     public function liste(): BelongsTo
     {
         return $this->belongsTo(Liste::class, 'listen_id');
+    }
+
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class, 'child_id')->withTrashed();
     }
 
     public function user(): BelongsTo

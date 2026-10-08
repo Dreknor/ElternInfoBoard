@@ -2,29 +2,49 @@
 
 namespace App\Model;
 
+use App\Observers\ChildObserver;
 use App\Settings\CareSetting;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([ChildObserver::class])]
 class Child extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
+    use SoftDeletes;
+
+    public const STATUS_APPLICANT = 'applicant';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_LEFT = 'left';
 
     protected $fillable = [
+        'external_id',
+        'status',
+        'entry_date',
+        'exit_date',
         'first_name',
         'last_name',
         'group_id',
         'class_id',
         'notification',
         'auto_checkIn',
+        'ucs_username',
+        'ucs_uuid',
+        'ucs_school',
+        'ucs_synced_at',
+        'ucs_source',
     ];
 
     protected function casts(): array
@@ -32,12 +52,46 @@ class Child extends Model implements HasMedia
         return [
             'notification' => 'boolean',
             'auto_checkIn' => 'boolean',
+            'ucs_synced_at' => 'datetime',
+            'entry_date' => 'date',
+            'exit_date' => 'date',
         ];
     }
 
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * Weitere Gruppen/Klassen (z. B. UCS-Kombiklassen) neben class_id/group_id.
+     */
+    public function additionalGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'child_group')
+            ->withoutGlobalScopes()
+            ->withPivot('source')
+            ->withTimestamps();
+    }
+
+    /**
+     * Alle Gruppen-IDs, aus denen sich Eltern-Mitgliedschaften ableiten
+     * (Klasse, Gruppe, weitere Gruppen, AG-Gruppen).
+     *
+     * @return list<int>
+     */
+    public function derivedGroupIds(): array
+    {
+        $ids = array_filter([$this->class_id, $this->group_id]);
+
+        $ids = array_merge($ids, \DB::table('child_group')->where('child_id', $this->id)->pluck('group_id')->all());
+
+        $agNames = $this->arbeitsgemeinschaften()->pluck('arbeitsgemeinschaften.name')->all();
+        if ($agNames !== []) {
+            $ids = array_merge($ids, Group::withoutGlobalScopes()->whereIn('name', $agNames)->pluck('id')->all());
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
     }
 
     public function mandates(): HasMany
@@ -50,9 +104,45 @@ class Child extends Model implements HasMedia
         return $this->belongsTo(Group::class);
     }
 
+    /**
+     * Bezugspersonen des Kindes inkl. Beziehungsart und Rechten (Pivot ChildGuardian).
+     */
     public function parents(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'child_user');
+        return $this->belongsToMany(User::class, 'child_user')
+            ->using(ChildGuardian::class)
+            ->withPivot(ChildGuardian::PIVOT_COLUMNS)
+            ->withTimestamps();
+    }
+
+    /**
+     * Sprechender Alias für parents() im kind-zentrierten Modell.
+     */
+    public function guardians(): BelongsToMany
+    {
+        return $this->parents();
+    }
+
+    // ── UCS-Scopes ────────────────────────────────────────────────────────────
+
+    /**
+     * Nur Kinder, die aus UCS@school stammen (ucs_source = 'kelvin').
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §4.2
+     */
+    public function scopeFromUcs($query)
+    {
+        return $query->where('ucs_source', 'kelvin');
+    }
+
+    /**
+     * Nur lokal angelegte Kinder (ucs_source = 'local').
+     *
+     * @see docs/ucs-kelvin-integration-konzept.md §4.2
+     */
+    public function scopeLocal($query)
+    {
+        return $query->where('ucs_source', 'local');
     }
 
     public function arbeitsgemeinschaften(): BelongsToMany
@@ -149,6 +239,7 @@ class Child extends Model implements HasMedia
                 ->first();
         });
 
+
         if (is_null($checkIn)) {
             return false;
 
@@ -190,7 +281,7 @@ class Child extends Model implements HasMedia
     {
         // Wenn die Beziehung bereits geladen ist, auf heute filtern
         if ($this->relationLoaded('schickzeiten')) {
-            return $this->schickzeiten->filter(function ($schickzeit) {
+            $todayTimes = $this->schickzeiten->filter(function ($schickzeit) {
                 // Wochentagsbasierte Einträge (specific_date = null): nur wenn weekday dem heutigen Tag entspricht
                 if (is_null($schickzeit->specific_date)) {
                     return $schickzeit->weekday == now()->dayOfWeek;
@@ -198,6 +289,8 @@ class Child extends Model implements HasMedia
                 // Datumsspezifische Einträge: nur wenn das Datum heute ist
                 return $schickzeit->specific_date->isToday();
             })->values();
+
+            return $this->preferDateSpecific($todayTimes);
         }
 
         // Fallback mit Cache für direkte Aufrufe
@@ -215,7 +308,17 @@ class Child extends Model implements HasMedia
                 ->get();
         });
 
-        return $schickzeiten;
+        return $this->preferDateSpecific($schickzeiten);
+    }
+
+    /**
+     * Ein tagesaktueller Eintrag ersetzt die wochentagsbasierten Einträge des Tages.
+     */
+    private function preferDateSpecific($schickzeiten)
+    {
+        $dateSpecific = $schickzeiten->filter(fn ($schickzeit) => ! is_null($schickzeit->specific_date));
+
+        return $dateSpecific->isNotEmpty() ? $dateSpecific->values() : $schickzeiten->values();
     }
 
     public function scopeCare($query)
