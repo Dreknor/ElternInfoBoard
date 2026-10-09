@@ -23,6 +23,7 @@ use App\Model\Pflichtstunde;
 use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
+use App\Repositories\WordpressRepository;
 use App\Services\PflichtstundenFamilyService;
 use App\Settings\GeneralSetting;
 use App\Settings\PflichtstundenSetting;
@@ -378,7 +379,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
         }
 
-        if ($request->wp_push) {
+        if ($request->wp_push and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($post);
         }
 
@@ -529,10 +530,6 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $posts->save();
 
-        if ($request->wp_push) {
-            PushPostToWordpress::dispatch($posts);
-        }
-
         // Gruppen
 
         $gruppen = $request->input('gruppen');
@@ -555,6 +552,11 @@ class NachrichtenController extends Controller implements HasMiddleware
                         ->withResponsiveImages()
                         ->toMediaCollection('images'));
             }
+        }
+
+        // Erst nach dem Speichern der Dateien übertragen, damit neue Bilder mitkommen
+        if ($request->wp_push and WordpressRepository::pushAllowedFor($user)) {
+            PushPostToWordpress::dispatch($posts);
         }
 
         if ($posts->released and $push == 1) {
