@@ -41,30 +41,7 @@
         </div>
 
         <div class="px-4 pb-4">
-            <div id="carousel_post_{{$nachricht->id}}" class="carousel slide mx-auto" data-ride="carousel">
-                <div class="carousel-inner rounded-lg overflow-hidden">
-                    @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
-                        <div class="carousel-item text-center @if($loop->first) active @endif">
-                            <a href="{{url('/image/'.$media->id)}}" target="_blank" class="block">
-                                <img class="mx-auto max-h-[600px] w-auto" loading="lazy" decoding="async" src="{{url('/image/'.$media->id)}}" alt="{{$media->name ?? 'Bild'}}">
-                            </a>
-                        </div>
-                    @endforeach
-
-                </div>
-
-                @if(count($nachricht->getMedia('images'))>1)
-                    <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="prev">
-                        <span class="carousel-control-prev-icon bg-blue-600 rounded-full p-2" aria-hidden="true"></span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                    <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="next">
-                        <span class="carousel-control-next-icon bg-blue-600 rounded-full p-2" aria-hidden="true"></span>
-                        <span class="sr-only">Next</span>
-                    </a>
-                @endif
-            </div>
-
+            <x-image-gallery :images="$nachricht->getMedia('images')->sortBy('name')"/>
         </div>
     </div>
 @else
