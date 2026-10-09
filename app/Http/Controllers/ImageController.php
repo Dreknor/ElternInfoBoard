@@ -29,9 +29,19 @@ class ImageController extends Controller implements HasMiddleware
             return $media_id;
         }
 
-        $response = new BinaryFileResponse($media_id->getPath());
+        // Optional verkleinerte Fassung (z. B. für Galerie-Kacheln); Fallback aufs Original.
+        $conversion = request()->query('conversion');
+        if (in_array($conversion, ['thumb', 'preview'], true) && $media_id->hasGeneratedConversion($conversion)) {
+            $path = $media_id->getPath($conversion);
+            $mimeType = mime_content_type($path) ?: $media_id->mime_type;
+        } else {
+            $path = $media_id->getPath();
+            $mimeType = $media_id->mime_type;
+        }
+
+        $response = new BinaryFileResponse($path);
         $response->headers->set('Content-Disposition', 'inline; filename="'.$media_id->file_name.'"');
-        $response->headers->set('Content-Type', $media_id->mime_type);
+        $response->headers->set('Content-Type', $mimeType);
 
         return $response;
     }
