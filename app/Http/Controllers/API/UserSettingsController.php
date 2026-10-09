@@ -11,10 +11,19 @@ use App\Services\UserAppSettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * App-spezifische Einstellungen des angemeldeten Users.
+ *
+ * @group Einstellungen
+ *
+ * @authenticated
+ */
 class UserSettingsController extends Controller
 {
     /**
-     * Display the authenticated user's settings.
+     * Einstellungen abrufen
+     *
+     * Liefert die gespeicherten App-Einstellungen. Ohne gespeicherte Einstellungen antwortet der Endpunkt mit 404 und `use_defaults: true`.
      *
      * @return JsonResponse
      */
@@ -45,7 +54,9 @@ class UserSettingsController extends Controller
     }
 
     /**
-     * Store or update the user's settings.
+     * Einstellungen speichern
+     *
+     * Legt die Einstellungen an oder ersetzt sie vollständig.
      *
      * @param StoreUserSettingsRequest $request
      * @return JsonResponse
@@ -72,7 +83,9 @@ class UserSettingsController extends Controller
     }
 
     /**
-     * Partially update the user's settings.
+     * Einzelne Einstellung ändern
+     *
+     * Setzt den Wert unter `path` (Punkt-Notation, z. B. `push.posts`). Fehlen Einstellungen, werden zuvor die Standardwerte angelegt.
      *
      * @param UpdateUserSettingsRequest $request
      * @return JsonResponse
@@ -113,7 +126,9 @@ class UserSettingsController extends Controller
     }
 
     /**
-     * Remove the user's settings (reset to defaults).
+     * Einstellungen zurücksetzen
+     *
+     * Löscht die gespeicherten Einstellungen; danach gelten die Standardwerte.
      *
      * @return JsonResponse
      */
@@ -139,7 +154,7 @@ class UserSettingsController extends Controller
     }
 
     /**
-     * Get the default settings.
+     * Standardeinstellungen abrufen
      *
      * @return JsonResponse
      */

@@ -25,6 +25,7 @@ Homestead.json
 /.idea/
 /.nova
 /.scribe/
+/public/docs/
 /storage/logs/
 
 /public/build
