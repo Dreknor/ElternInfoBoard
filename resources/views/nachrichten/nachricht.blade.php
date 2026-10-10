@@ -62,35 +62,8 @@
             @endif
 
             <div class="p-4">
-                <div id="carousel_post_{{$nachricht->id}}" class="carousel slide" data-ride="carousel">
-                    <div class="carousel-inner rounded-lg overflow-hidden">
-                        @foreach($nachricht->getMedia('images')->sortBy('name') as $media)
-                            <div class="carousel-item @if($loop->first) active @endif">
-                                <a href="{{url('/image/'.$media->id)}}" target="_blank" class="block">
-                                    <img class="d-block w-full h-auto mx-auto" loading="lazy" decoding="async" src="{{url('/image/'.$media->id)}}" alt="{{$media->name}}" style="max-height: 600px; object-fit: contain;">
-                                    @if($nachricht->rueckmeldung?->type == 'bild')
-                                        <p class="text-center text-sm text-gray-600 mt-2">{{$media->name}}</p>
-                                    @endif
-                                </a>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    @if(count($nachricht->getMedia('images'))>1)
-                        <a class="carousel-control-prev" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="prev">
-                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 shadow-lg" aria-hidden="true">
-                                <i class="fas fa-chevron-left text-white"></i>
-                            </span>
-                            <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#carousel_post_{{$nachricht->id}}" role="button" data-slide="next">
-                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 shadow-lg" aria-hidden="true">
-                                <i class="fas fa-chevron-right text-white"></i>
-                            </span>
-                            <span class="sr-only">Next</span>
-                        </a>
-                    @endif
-                </div>
+                <x-image-gallery :images="$nachricht->getMedia('images')->sortBy('name')"
+                                 :show-names="$nachricht->rueckmeldung?->type == 'bild'"/>
             </div>
         </div>
     @elseif($nachricht->no_header)

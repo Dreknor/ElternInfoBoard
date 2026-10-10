@@ -8,6 +8,13 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Persönlicher Wochenplan / Familien-Dashboard.
+ *
+ * @group Familie
+ *
+ * @authenticated
+ */
 class FamilyWeeklyController extends Controller
 {
     public function __construct(
@@ -15,7 +22,11 @@ class FamilyWeeklyController extends Controller
     ) {}
 
     /**
-     * GET /api/family/weekly?week=2026-W15
+     * Wochenplan der Familie
+     *
+     * Termine, Ferien, Stundenplan und Hinweise aller Kinder für eine Kalenderwoche.
+     *
+     * @queryParam week string ISO-Kalenderwoche, Standard ist die aktuelle Woche. Example: 2026-W15
      */
     public function index(Request $request): JsonResponse
     {
@@ -40,7 +51,10 @@ class FamilyWeeklyController extends Controller
     }
 
     /**
-     * GET /api/family/weekly/{child_id}?week=2026-W15
+     * Wochenplan eines Kindes
+     *
+     * @urlParam child_id integer required ID des Kindes. Example: 1
+     * @queryParam week string ISO-Kalenderwoche, Standard ist die aktuelle Woche. Example: 2026-W15
      */
     public function show(Request $request, int $childId): JsonResponse
     {

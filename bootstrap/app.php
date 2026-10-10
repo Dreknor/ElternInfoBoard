@@ -31,6 +31,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->throttleApi();
 
+        // Wartungsmodus-Bypass wird vom Online-Updater gesetzt und vor dem
+        // Entschlüsseln der Cookies geprüft – daher unverschlüsselt lassen.
+        $middleware->encryptCookies(except: ['laravel_maintenance']);
+
         $middleware->alias([
             'mark_passwordless_login' => \App\Http\Middleware\MarkPasswordlessLogin::class,
             'password_expired' => \App\Http\Middleware\PasswordExpired::class,

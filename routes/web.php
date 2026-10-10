@@ -52,6 +52,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRueckmeldungenController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\UpdaterController;
 use App\Http\Controllers\VertretungsplanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -139,6 +140,16 @@ Route::middleware('auth')->group(function () {
         Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');
         Route::delete('settings/file/{file}/destroy', [FileController::class, 'destroy'])->middleware('can:scan files');
         Route::delete('settings/post/{post}/destroy', [NachrichtenController::class, 'deleteTrashed'])->middleware('can:scan files');
+
+        // Online-Updater
+        Route::middleware('permission:manage updates')->prefix('settings/updater')->name('updater.')->group(function () {
+            Route::get('/', [UpdaterController::class, 'index'])->name('index');
+            Route::get('status', [UpdaterController::class, 'status'])->name('status');
+            Route::post('check', [UpdaterController::class, 'check'])->name('check');
+            Route::post('start', [UpdaterController::class, 'start'])->name('start');
+            Route::post('cancel', [UpdaterController::class, 'cancel'])->name('cancel');
+            Route::post('up', [UpdaterController::class, 'up'])->name('up');
+        });
 
         // Routen für die Verwaltung der Rückmeldungen
         Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);

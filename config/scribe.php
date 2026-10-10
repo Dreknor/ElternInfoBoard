@@ -35,6 +35,7 @@ return [
             // Exclude these routes even if they matched the rules above.
             'exclude' => [
                 'api/vertretungen*', 'api/news*', 'api/week*', 'api/absences*', 'api/home*',
+                'api/stundenplan/import', 'api/stundenplan/status',
             ],
         ],
     ],
@@ -166,7 +167,18 @@ return [
         // By default, Scribe will sort groups alphabetically, and endpoints in the order their routes are defined.
         // You can override this by listing the groups, subgroups and endpoints here in the order you want them.
         // See https://scribe.knuckles.wtf/blog/laravel-v4#easier-sorting and https://scribe.knuckles.wtf/laravel/reference/config#order for details
-        'order' => [],
+        'order' => [
+            'App: Anmeldung',
+            'App: Profil',
+            'App: Start',
+            'App: Benachrichtigungen',
+            'App: Nachrichten',
+            'App: Termine',
+            'App: Listen',
+            'App: Familie',
+            'App: Seiten & Elternrat',
+            'App: Messenger',
+        ],
     ],
 
     // Custom logo path. This will be used as the value of the src attribute for the <img> tag,
@@ -217,7 +229,7 @@ return [
             Strategies\Headers\GetFromHeaderAttribute::class,
             Strategies\Headers\GetFromHeaderTag::class,
             [
-                'override',
+                'static_data',
                 [
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',

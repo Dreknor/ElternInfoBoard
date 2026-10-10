@@ -2,282 +2,353 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\WordpressPushException;
 use App\Model\Module;
 use App\Model\Post;
-use CURLFile;
-use Illuminate\Support\Facades\Log;
+use App\Services\Wordpress\GutenbergConverter;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+/**
+ * Überträgt Nachrichten als Beiträge auf die WordPress-Homepage (REST-API).
+ *
+ * Ablauf:
+ *  1. Neuer Beitrag wird zunächst als Entwurf angelegt (damit Bilder ihm zugeordnet werden
+ *     können und nie ein halbfertiger Beitrag öffentlich sichtbar ist bzw. Benachrichtigungen auslöst).
+ *  2. Beitragsbild und Bilder werden hochgeladen – bereits übertragene Medien werden
+ *     wiederverwendet, damit die Mediathek bei jeder Änderung nicht erneut gefüllt wird.
+ *  3. Der Inhalt wird als Gutenberg-Blöcke (Text, Galerie, Downloads) gespeichert und
+ *     der Beitrag im finalen Status veröffentlicht.
+ *
+ * Fehler werfen eine WordpressPushException, damit der Job erneut versucht wird.
+ */
 class WordpressRepository
 {
-    private string $url;
+    private GutenbergConverter $converter;
 
-    private string $user;
-
-    private string $password;
-
-    public function __construct()
+    public function __construct(?GutenbergConverter $converter = null)
     {
-        $this->url = config('wordpress.wp_url');
-        $this->user = config('wordpress.wp_username');
-        $this->password = config('wordpress.wp_password');
-    }
-
-    public function remote_post($slug, $title, $content, $status, $post_id = null, $media_id = null)
-    {
-
-        // the standard end point for posts in an initialised Curl
-        $process = curl_init('https://'.$this->url.'/wp-json/wp/v2/posts/'.$post_id);
-
-        // create an array of data to use, this is basic - see other examples for more complex inserts
-        $data = [
-            'slug' => $slug,
-            'title' => $title,
-            'content' => $content,
-            'status' => ($status == 1) ? 'publish' : 'draft',
-            'featured_media' => ($media_id != null) ? $media_id : null,
-        ];
-        $data_string = json_encode($data);
-
-        // create the options starting with basic authentication
-        curl_setopt($process, CURLOPT_USERPWD, $this->user.':'.$this->password);
-        curl_setopt($process, CURLOPT_TIMEOUT, 30);
-        curl_setopt($process, CURLOPT_POST, 1);
-        // make sure we are POSTing
-        curl_setopt($process, CURLOPT_CUSTOMREQUEST, ($post_id != null) ? 'PUT' : 'POST');
-        // this is the data to insert to create the post
-        curl_setopt($process, CURLOPT_POSTFIELDS, $data_string);
-        // allow us to use the returned data from the request
-        curl_setopt($process, CURLOPT_RETURNTRANSFER, true);
-        // we are sending json
-        curl_setopt($process, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Content-Length: '.strlen($data_string)]
-        );
-
-        // process the request
-        $return = curl_exec($process);
-
-        // cURL-Fehlerbehandlung: Netzwerk-/Verbindungsfehler abfangen
-        if ($return === false) {
-            $error = curl_error($process);
-            $errno = curl_errno($process);
-            curl_close($process);
-            Log::error('WordPress-Push fehlgeschlagen (remote_post)', [
-                'errno' => $errno,
-                'error' => $error,
-                'post_id' => $post_id,
-            ]);
-
-            return null;
-        }
-
-        $httpCode = curl_getinfo($process, CURLINFO_HTTP_CODE);
-        curl_close($process);
-
-        if ($httpCode >= 400) {
-            Log::error('WordPress-Push: HTTP-Fehlerstatus (remote_post)', [
-                'http_code' => $httpCode,
-                'post_id' => $post_id,
-                'response' => is_string($return) ? Str::limit($return, 500) : null,
-            ]);
-
-            return null;
-        }
-
-        return $return;
-    }
-
-    public function should_post($post)
-    {
-        $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')->options['active'];
-
-        if ($wp_push_is_enabled == 1 and auth()->user()->can('push to wordpress')) {
-            $this->pushPost($post);
-        }
+        $this->converter = $converter ?? new GutenbergConverter;
     }
 
     /**
-     * Pusht einen Post zu WordPress
+     * Basis-URL der WordPress-Seite (mit Schema, ohne abschließenden Slash).
+     */
+    public static function siteUrl(): ?string
+    {
+        $url = trim((string) config('wordpress.wp_url'));
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (! preg_match('~^https?://~i', $url)) {
+            $url = 'https://'.$url;
+        }
+
+        return rtrim($url, '/');
+    }
+
+    /**
+     * Ist das Modul aktiv und darf der angemeldete Benutzer nach WordPress übertragen?
+     */
+    public static function pushAllowedFor($user): bool
+    {
+        if (! $user || ! $user->can('push to wordpress')) {
+            return false;
+        }
+
+        return (bool) (Module::firstWhere('setting', 'Push to WordPress')?->options['active'] ?? false);
+    }
+
+    public function isConfigured(): bool
+    {
+        return self::siteUrl() !== null
+            && filled(config('wordpress.wp_username'))
+            && filled(config('wordpress.wp_password'));
+    }
+
+    /**
+     * Pusht einen Post zu WordPress (anlegen oder aktualisieren).
+     *
+     * @throws WordpressPushException
      */
     public function pushPost(Post $post): void
     {
-        // Erstelle zunächst den Post ohne Bilder (oder aktualisiere ihn)
-        $wp_call = $this->remote_post(Str::slug($post->header), $post->header, $post->news, $post->released, $post->published_wp_id);
-
-        // Abbruch, wenn der Aufruf fehlgeschlagen ist (Fehler bereits geloggt)
-        if ($wp_call === null) {
-            return;
+        if (! $this->isConfigured()) {
+            throw new WordpressPushException('WordPress-Push ist nicht konfiguriert (WP_URL, WP_USER_NAME, WP_PASSWORD).');
         }
 
-        $return = json_decode($wp_call);
+        $wpPostId = $post->published_wp_id ?: $this->createDraft($post);
 
-        // Antwort validieren, bevor auf Eigenschaften zugegriffen wird
-        if (! is_object($return)) {
-            Log::error('WordPress-Push: Unerwartete Antwort beim Erstellen/Aktualisieren des Posts', [
-                'post_id' => $post->id,
-                'response' => is_string($wp_call) ? Str::limit($wp_call, 500) : null,
-            ]);
+        $images = $this->images($post);
+        $header = $post->getMedia('header')->first(fn (Media $media) => $this->isImage($media));
 
-            return;
+        // Ohne eigenes Header-Bild wird das erste Bild zum Beitragsbild und nicht zusätzlich in der Galerie gezeigt
+        if (! $header && $images->isNotEmpty()) {
+            $header = $images->shift();
         }
 
-        // Nur die ID setzen, wenn es ein neuer Post ist
-        if ($post->published_wp_id == null) {
-            if (! isset($return->id)) {
-                Log::error('WordPress-Push: Keine Post-ID in der Antwort erhalten', [
-                    'post_id' => $post->id,
-                ]);
+        $featured = $header ? $this->ensureMedia($post, $header, $wpPostId) : null;
 
-                return;
-            }
+        $gallery = $images
+            ->map(fn (Media $media) => $this->ensureMedia($post, $media, $wpPostId))
+            ->filter()
+            ->map(fn (array $wpMedia) => $this->imageData($wpMedia))
+            ->values()
+            ->all();
 
-            $post->update([
-                'published_wp_id' => $return->id,
-            ]);
-        }
-
-        $media_id = null;
-        $firstImageUsedAsHeader = false;
-
-        // Header-Bild hochladen
-        if (count($post->getMedia('header')) > 0) {
-            $result = $this->push_image($post, $post->getMedia('header')->first());
-            if ($result) {
-                $media_id = json_decode($result)->id;
-            }
-        } else {
-            // Wenn kein Header-Bild vorhanden ist, verwende das erste angehängte Bild
-            $allImages = $post->getMedia('images');
-            if ($allImages->isEmpty()) {
-                $allImages = $post->getMedia('files')->filter(function ($file) {
-                    return Str::contains($file->mime_type, 'image');
-                });
-            }
-
-            if ($allImages->isNotEmpty()) {
-                $result = $this->push_image($post, $allImages->first());
-                if ($result) {
-                    $media_id = json_decode($result)->id;
-                    $firstImageUsedAsHeader = true;
+        $files = [];
+        if (config('wordpress.push_files')) {
+            foreach ($this->attachments($post) as $media) {
+                $wpMedia = $this->ensureMedia($post, $media, $wpPostId);
+                if ($wpMedia) {
+                    $files[] = $this->converter->fileBlock($wpMedia['id'], $wpMedia['source_url'], $media->name ?: $media->file_name);
                 }
             }
         }
 
-        // Alle Bilder aus der 'images' Collection hochladen und in den Content einbinden
-        $content = $this->embedImagesInContent($post, $firstImageUsedAsHeader);
+        $content = $this->converter->joinBlocks([
+            $this->converter->convert($post->news),
+            $this->converter->galleryBlock($gallery),
+            ...$files,
+        ]);
 
-        // Post mit Bildern aktualisieren
-        $wp_call = $this->remote_post(Str::slug($post->header), $post->header, $content, $post->released, $post->published_wp_id, $media_id);
-    }
+        $data = [
+            'title' => $post->header,
+            'content' => $content,
+            'excerpt' => $this->converter->excerpt($post->news),
+            'status' => $post->released ? 'publish' : 'draft',
+            // 0 entfernt ein zuvor gesetztes Beitragsbild
+            'featured_media' => $featured['id'] ?? 0,
+        ];
 
-    public function push_image(Post $post, Media $image)
-    {
-        if ($post->published_wp_id != null and Str::contains($image->mime_type, 'image')) {
-
-            $url = 'https://'.$this->url.'/wp-json/wp/v2/media/';
-            $ch = curl_init($url);
-
-            curl_setopt($ch, CURLOPT_USERPWD, $this->user.':'.$this->password);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, [
-                'file' => new CURLFILE($image->getPath()),
-                'post' => $post->published_wp_id,
-            ]);
-
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Disposition: form-data; filename='.$image->file_name,
-            ]);
-            $result = curl_exec($ch);
-
-            if ($result === false) {
-                Log::error('WordPress-Push: Bild-Upload fehlgeschlagen', [
-                    'errno' => curl_errno($ch),
-                    'error' => curl_error($ch),
-                    'post_id' => $post->published_wp_id,
-                    'media' => $image->file_name,
-                ]);
-                curl_close($ch);
-
-                return null;
-            }
-
-            curl_close($ch);
-
-            return $result;
+        if (! empty(config('wordpress.categories'))) {
+            $data['categories'] = config('wordpress.categories');
         }
 
-        return null;
+        $response = $this->client()->post('posts/'.$wpPostId, $data);
+
+        // Beitrag wurde in WordPress endgültig gelöscht: neu anlegen
+        if ($response->status() === 404 && $post->published_wp_id) {
+            $response = $this->client()->post('posts', $data + ['slug' => $this->slug($post)]);
+
+            if ($response->successful()) {
+                $this->rememberWordpressId($post, (int) $response->json('id'));
+            }
+        }
+
+        $this->ensureSuccessful($response, 'Beitrag speichern', $post);
     }
 
     /**
-     * Lädt alle Bilder eines Posts zu WordPress hoch und bindet sie in den Content ein
+     * Legt einen leeren Entwurf an und merkt sich dessen ID.
      */
-    private function embedImagesInContent(Post $post, bool $skipFirstImage = false): string
+    private function createDraft(Post $post): int
     {
-        $content = $post->news;
+        $response = $this->client()->post('posts', [
+            'title' => $post->header,
+            'slug' => $this->slug($post),
+            'status' => 'draft',
+        ]);
 
-        // Alle Bilder aus der 'images' Collection hochladen
-        $images = $post->getMedia('images');
+        $this->ensureSuccessful($response, 'Entwurf anlegen', $post);
 
-        // Auch Bilder aus der 'files' Collection berücksichtigen (falls sie Bilder sind)
-        $files = $post->getMedia('files')->filter(function ($file) {
-            return Str::contains($file->mime_type, 'image');
-        });
+        $id = (int) $response->json('id');
 
-        // Kombiniere beide Collections
-        $allImages = $images->merge($files);
-
-        // Wenn das erste Bild als Header verwendet wurde, überspringe es
-        if ($skipFirstImage && $allImages->isNotEmpty()) {
-            $allImages = $allImages->slice(1);
+        if ($id <= 0) {
+            throw new WordpressPushException("WordPress hat beim Anlegen von Nachricht {$post->id} keine Beitrags-ID geliefert.");
         }
 
-        if (count($allImages) > 0) {
-            $uploadedImages = [];
+        $this->rememberWordpressId($post, $id);
 
-            foreach ($allImages as $image) {
-                if ($post->published_wp_id != null) {
-                    $result = $this->push_image($post, $image);
-                    if ($result) {
-                        $imageData = json_decode($result);
-                        if (isset($imageData->source_url)) {
-                            $uploadedImages[] = [
-                                'url' => $imageData->source_url,
-                                'alt' => $image->name ?? '',
-                                'caption' => $image->custom_properties['caption'] ?? '',
-                            ];
-                        }
-                    }
-                }
+        return $id;
+    }
+
+    private function rememberWordpressId(Post $post, int $id): void
+    {
+        // Ohne Events speichern, damit der Observer keinen weiteren Push auslöst
+        $post->published_wp_id = $id;
+        $post->saveQuietly(['timestamps' => false]);
+
+        Post::bumpCacheVersion();
+    }
+
+    /**
+     * Liefert das WordPress-Medium zu einer Datei. Bereits hochgeladene Dateien werden
+     * wiederverwendet; fehlen sie in WordPress (gelöscht), werden sie neu hochgeladen.
+     *
+     * @return array<string, mixed>|null Medien-Objekt der REST-API
+     */
+    private function ensureMedia(Post $post, Media $media, int $wpPostId): ?array
+    {
+        $known = $media->getCustomProperty('wordpress');
+
+        if (is_array($known) && ($known['site'] ?? null) === self::siteUrl() && ! empty($known['id'])) {
+            $response = $this->client()->get('media/'.$known['id'], ['context' => 'edit']);
+
+            if ($response->successful()) {
+                return $response->json();
             }
 
-            // Bilder in den Content einfügen
-            if (count($uploadedImages) > 0) {
-                $imageHtml = "\n\n<!-- wp:gallery -->\n<figure class=\"wp-block-gallery\">\n";
-
-                foreach ($uploadedImages as $imgData) {
-                    $caption = ! empty($imgData['caption']) ? '<figcaption>'.htmlspecialchars($imgData['caption']).'</figcaption>' : '';
-                    $imageHtml .= sprintf(
-                        '<figure class="wp-block-image"><img src="%s" alt="%s" />%s</figure>'."\n",
-                        htmlspecialchars($imgData['url']),
-                        htmlspecialchars($imgData['alt']),
-                        $caption
-                    );
-                }
-
-                $imageHtml .= "</figure>\n<!-- /wp:gallery -->\n";
-
-                // Bilder am Ende des Contents hinzufügen
-                $content .= $imageHtml;
+            if (! in_array($response->status(), [404, 410], true)) {
+                $this->ensureSuccessful($response, 'Medium abrufen', $post);
             }
         }
 
-        return $content;
+        return $this->uploadMedia($post, $media, $wpPostId);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function uploadMedia(Post $post, Media $media, int $wpPostId): ?array
+    {
+        [$disk, $path] = $this->sourceFile($media);
+
+        if (! Storage::disk($disk)->exists($path)) {
+            report(new WordpressPushException("Datei für Medium {$media->id} fehlt ({$path}) und wird nicht übertragen."));
+
+            return null;
+        }
+
+        $mimeType = Storage::disk($disk)->mimeType($path) ?: $media->mime_type;
+        $extension = pathinfo($path, PATHINFO_EXTENSION) ?: pathinfo($media->file_name, PATHINFO_EXTENSION);
+        $fileName = (Str::slug($media->name ?: pathinfo($media->file_name, PATHINFO_FILENAME), '-', 'de') ?: 'datei-'.$media->id)
+            .'.'.strtolower($extension);
+
+        $query = http_build_query(array_filter([
+            'post' => $wpPostId,
+            'title' => $this->isImage($media) ? $post->header : ($media->name ?: $media->file_name),
+            'alt_text' => $this->isImage($media) ? $this->altText($post, $media) : null,
+            'caption' => (string) $media->getCustomProperty('caption', ''),
+        ], fn ($value) => $value !== null && $value !== ''));
+
+        $response = $this->client()
+            ->withHeaders(['Content-Disposition' => 'attachment; filename="'.$fileName.'"'])
+            ->withBody(Storage::disk($disk)->get($path), $mimeType)
+            ->post('media?'.$query);
+
+        $this->ensureSuccessful($response, "Medium {$media->file_name} hochladen", $post);
+
+        $wpMedia = $response->json();
+
+        $media->setCustomProperty('wordpress', [
+            'site' => self::siteUrl(),
+            'id' => (int) $wpMedia['id'],
+        ]);
+        $media->save();
+
+        return $wpMedia;
+    }
+
+    /**
+     * Für Bilder wird die verkleinerte Fassung (1200 px, korrekt gedreht) hochgeladen,
+     * sofern vorhanden – Handyfotos im Original sind oft mehrere MB groß.
+     *
+     * @return array{0: string, 1: string} Disk und Pfad
+     */
+    private function sourceFile(Media $media): array
+    {
+        if ($this->isImage($media) && $media->hasGeneratedConversion('preview')) {
+            return [$media->conversions_disk ?: $media->disk, $media->getPathRelativeToRoot('preview')];
+        }
+
+        return [$media->disk, $media->getPathRelativeToRoot()];
+    }
+
+    /**
+     * Bereitet ein WordPress-Medium für den Bild-Block auf.
+     *
+     * @param  array<string, mixed>  $wpMedia
+     * @return array{id:int, url:string, full:string, size:string, alt:string, caption:string}
+     */
+    private function imageData(array $wpMedia): array
+    {
+        $large = data_get($wpMedia, 'media_details.sizes.large.source_url');
+
+        return [
+            'id' => (int) $wpMedia['id'],
+            'url' => $large ?: $wpMedia['source_url'],
+            'full' => $wpMedia['source_url'],
+            'size' => $large ? 'large' : 'full',
+            'alt' => (string) ($wpMedia['alt_text'] ?? ''),
+            'caption' => trim(strip_tags((string) (data_get($wpMedia, 'caption.raw') ?? data_get($wpMedia, 'caption.rendered') ?? ''))),
+        ];
+    }
+
+    private function altText(Post $post, Media $media): string
+    {
+        $caption = trim((string) $media->getCustomProperty('caption', ''));
+
+        return $caption !== '' ? $caption : 'Bild zu: '.$post->header;
+    }
+
+    /**
+     * Alle Bilder des Posts (Bilder-Sammlung und Bilder unter den Dateien) in Reihenfolge.
+     *
+     * @return Collection<int, Media>
+     */
+    private function images(Post $post): Collection
+    {
+        return $post->getMedia('images')
+            ->merge($post->getMedia('files'))
+            ->filter(fn (Media $media) => $this->isImage($media))
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Media>
+     */
+    private function attachments(Post $post): Collection
+    {
+        return $post->getMedia('files')
+            ->reject(fn (Media $media) => $this->isImage($media))
+            ->values();
+    }
+
+    private function isImage(Media $media): bool
+    {
+        return Str::startsWith((string) $media->mime_type, 'image/');
+    }
+
+    private function slug(Post $post): string
+    {
+        return Str::slug($post->header, '-', 'de');
+    }
+
+    private function client(): PendingRequest
+    {
+        return Http::baseUrl(self::siteUrl().'/wp-json/wp/v2/')
+            ->withBasicAuth((string) config('wordpress.wp_username'), (string) config('wordpress.wp_password'))
+            ->acceptJson()
+            ->asJson()
+            ->connectTimeout(15)
+            ->timeout((int) config('wordpress.timeout', 60));
+    }
+
+    /**
+     * @throws WordpressPushException
+     */
+    private function ensureSuccessful(Response $response, string $action, Post $post): void
+    {
+        if ($response->successful() && is_array($response->json())) {
+            return;
+        }
+
+        $message = $response->json('message') ?: Str::limit(strip_tags($response->body()), 300);
+
+        throw new WordpressPushException(sprintf(
+            'WordPress-Push von Nachricht %d fehlgeschlagen (%s): HTTP %d – %s',
+            $post->id,
+            $action,
+            $response->status(),
+            $message
+        ));
     }
 }

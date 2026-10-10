@@ -54,6 +54,19 @@
                             <span class="leading-tight">{{ $navTab['label'] }}</span>
                         </button>
                     @endforeach
+
+                    @if(config('updater.enabled') && auth()->user()->can('manage updates'))
+                        @php($updatesAvailable = app(\App\Services\Updater\UpdateService::class)->lastCheck()['behind'] ?? 0)
+                        <a href="{{ route('updater.index') }}"
+                           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                           style="color: var(--color-text-primary);">
+                            <i class="fas fa-cloud-download-alt w-4 text-center text-sm flex-shrink-0" style="color: var(--color-primary);"></i>
+                            <span class="leading-tight flex-1">Online-Update</span>
+                            @if($updatesAvailable > 0)
+                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full text-white" style="background-color: var(--color-primary);">{{ $updatesAvailable }}</span>
+                            @endif
+                        </a>
+                    @endif
                 </div>
             </nav>
 

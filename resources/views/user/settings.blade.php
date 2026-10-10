@@ -332,6 +332,25 @@
                             </p>
                         </div>
 
+                        {{-- Browser-Push auf diesem Gerät (Status & Aktivierung per Klick, nötig für iOS) --}}
+                        <div class="mb-7 rounded-lg border px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3" style="border-color: var(--color-card-border);">
+                            <div class="flex-1">
+                                <span class="block text-sm font-semibold" style="color: var(--color-text-primary);">
+                                    <i class="fas fa-desktop mr-1"></i>
+                                    Browser-Push auf diesem Gerät
+                                </span>
+                                <span class="block text-xs mt-0.5" style="color: var(--color-text-secondary);" data-push-status></span>
+                            </div>
+                            <button type="button" data-push-enable data-push-state="default"
+                                    class="hidden px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all disabled:opacity-60">
+                                <i class="fas fa-bell mr-1"></i>
+                                Push aktivieren
+                            </button>
+                            <span data-push-state="granted" class="hidden text-sm font-semibold text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i>Aktiv
+                            </span>
+                        </div>
+
                         <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">

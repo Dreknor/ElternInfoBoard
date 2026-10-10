@@ -18,7 +18,7 @@ Diese Anleitung gibt dir einen schnellen Überblick über die wichtigsten Funkti
 ## Erste Schritte nach dem Login
 
 1. Unter **Einstellungen** Name, E-Mail und – falls gewünscht – öffentliche Kontaktdaten prüfen.
-2. **Push-Benachrichtigungen** im Browser erlauben, wenn der Hinweis erscheint, damit du dringende Nachrichten sofort bekommst.
+2. **Push-Benachrichtigungen** aktivieren: *Einstellungen → Benachrichtigungen →* „Push aktivieren“, damit du dringende Nachrichten sofort bekommst. Auf dem iPhone muss das ElternInfoBoard dafür zuerst über „Teilen“ → „Zum Home-Bildschirm“ installiert werden.
 3. Verbindliche **Rückmeldungen** und unbestätigte **Lesebestätigungen** findest du jederzeit auf dem Dashboard.
 
 > **Tipp:** Über das **?**-Symbol bekommst du auf jeder Seite passende Hilfe-Themen angezeigt.
