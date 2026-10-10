@@ -132,6 +132,28 @@ Für den produktiven Betrieb wird Supervisor empfohlen.
 
 ---
 
+## Online-Update
+
+Unter **Einstellungen → Online-Update** (Recht `manage updates`, Administrator-Rolle) lassen sich neue
+Versionen aus dem Git-Repository prüfen und einspielen. Ausgeführt wird das Update vom Scheduler
+(CronJob aus Schritt 5) – also mit dem Benutzer, dem die Dateien gehören, nicht vom Webserver.
+
+Ablauf (entspricht `deploy.sh`): Datenbanksicherung → Wartungsmodus → `git pull --ff-only` →
+`composer install` → Assets bauen → Migrationen → Caches leeren → Queue-Neustart → online.
+`composer` und `npm` laufen nur, wenn sich die zugehörigen Dateien geändert haben. Schlägt ein
+Schritt fehl, bleibt die Anwendung im Wartungsmodus; der auslösende Admin sieht die Seite weiterhin.
+
+```bash
+php artisan updater:check   # nach Updates suchen
+php artisan updater:run     # Update direkt ausführen (--full: alle Schritte erzwingen)
+```
+
+Konfiguration über `.env` (siehe `config/updater.php`), u. a. `UPDATER_BRANCH`, Pfade zu
+`php`/`composer`/`npm`/`mysqldump` sowie `UPDATER_BACKUP`. Sicherungen und Protokolle liegen in
+`storage/app/updater`.
+
+---
+
 ## Entwicklungsumgebung starten
 
 Alle Prozesse (Server, Queue, Logs, Vite) lassen sich mit einem Befehl starten:
