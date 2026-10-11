@@ -60,7 +60,7 @@ class MessengerController extends LegacyMessengerController
         return response()->json(['data' => ['unread' => MessengerUnread::total($request->user()->id)]]);
     }
 
-    /** Nachrichten (neueste zuerst, Cursor) – markiert die Unterhaltung als gelesen. */
+    /** Nachrichten (neueste zuerst, Cursor) – markiert die Unterhaltung als gelesen, außer bei read-only-Aufruf (MCP-Server). */
     public function messages(Request $request, Conversation $conversation): JsonResponse
     {
         Gate::authorize('view', $conversation);
@@ -71,7 +71,9 @@ class MessengerController extends LegacyMessengerController
             ->orderByDesc('created_at')->orderByDesc('id')
             ->cursorPaginate(40);
 
-        $conversation->users()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+        if (! $request->attributes->get('read_only')) {
+            $conversation->users()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+        }
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Message $m) => $this->formatMessage($m, $user->id))->all(),

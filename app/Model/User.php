@@ -103,7 +103,7 @@ class User extends Authenticatable implements Auditable
 
     public function files(): Collection
     {
-        return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
+        return $this->groups()->with('media')->get()->pluck('media')->flatten()->unique('file_name')->sortBy('file_name')->values();
     }
 
     /**
