@@ -19,7 +19,7 @@ class CommentController extends Controller
      *
      * This method returns all comments for a specific post.
      *
-     * @group Comments
+     * @group Kommentare
      *
      * @urlParam post required The ID of the post. Example: 1
      *
@@ -73,7 +73,7 @@ class CommentController extends Controller
      *
      * This method creates a new comment for a specific post.
      *
-     * @group Comments
+     * @group Kommentare
      *
      * @urlParam post required The ID of the post. Example: 1
      *
@@ -137,7 +137,7 @@ class CommentController extends Controller
      *
      * This method deletes a comment. Only the comment author or users with 'delete posts' permission can delete comments.
      *
-     * @group Comments
+     * @group Kommentare
      *
      * @urlParam comment required The ID of the comment. Example: 1
      *

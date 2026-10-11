@@ -30,7 +30,7 @@ class FilesController extends Controller implements HasMiddleware
      * Returns a paginated list of files with metadata including file name,
      * size, MIME type, and download URL.
      *
-     * @group Files
+     * @group Dateien
      *
      * @queryParam page integer Page number for pagination. Default: 1. Example: 1
      * @queryParam per_page integer Number of items per page (max 100). Default: 15. Example: 20
@@ -94,7 +94,7 @@ class FilesController extends Controller implements HasMiddleware
      *
      * Returns detailed information about a specific file if the user has access to it.
      *
-     * @group Files
+     * @group Dateien
      *
      * @urlParam uuid string required The UUID of the file. Example: 9a0e5c7f-1234-5678-9abc-def012345678
      *
@@ -147,7 +147,7 @@ class FilesController extends Controller implements HasMiddleware
      *
      * Returns a list of all unique MIME types for filtering purposes.
      *
-     * @group Files
+     * @group Dateien
      *
      * @responseField mime_types array Array of unique MIME types with their counts.
      *
@@ -176,7 +176,7 @@ class FilesController extends Controller implements HasMiddleware
      *
      * Returns statistics about the user's accessible files.
      *
-     * @group Files
+     * @group Dateien
      *
      * @responseField total_files integer Total number of files.
      * @responseField total_size integer Total size in bytes.

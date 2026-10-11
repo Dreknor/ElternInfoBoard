@@ -24,12 +24,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * @group App: Familie
+ * @group Familie
  */
 class ParentController extends ApiController
 {
     /**
-     * Kind krankmelden – B-40 (nur eigene Kinder, Datum `Y-m-d`, idempotent).
+     * Kind krankmelden (nur eigene Kinder, Datum `Y-m-d`, idempotent).
      *
      * @bodyParam child_id int required
      * @bodyParam start date required Example: 2026-09-25
@@ -73,7 +73,7 @@ class ParentController extends ApiController
     }
 
     /**
-     * Einstellungen je Kind ändern – B-42 (Benachrichtigung bei Check-in/-out).
+     * Einstellungen je Kind ändern (Benachrichtigung bei Check-in/-out).
      *
      * @bodyParam notification boolean required
      */
@@ -87,7 +87,7 @@ class ParentController extends ApiController
     }
 
     /**
-     * Stundenplan eines Kindes für eine Woche – B-43.
+     * Stundenplan eines Kindes für eine Woche.
      *
      * @queryParam week string ISO-Woche `YYYY-Www`. Example: 2026-W40
      */
@@ -120,7 +120,7 @@ class ParentController extends ApiController
     }
 
     /**
-     * Arbeitsgemeinschaften, für die die eigenen Kinder in Frage kommen – B-45.
+     * Arbeitsgemeinschaften, für die die eigenen Kinder in Frage kommen.
      */
     public function ags(Request $request): JsonResponse
     {
@@ -208,7 +208,7 @@ class ParentController extends ApiController
     }
 
     /**
-     * Reinigungsplan der Familie – B-51.
+     * Reinigungsplan der Familie.
      */
     public function reinigung(Request $request): JsonResponse
     {

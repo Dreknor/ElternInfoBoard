@@ -204,12 +204,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function bootRoute()
     {
+        // Scribe setzt das Kennzeichen nur für seine Beispielaufrufe (config/scribe*.php),
+        // sonst bestünde die API-Doku aus „429 Too Many Attempts“.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('global', function (Request $request) {
-            return Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
         });
 
         // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).

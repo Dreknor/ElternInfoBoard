@@ -16,12 +16,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * @group App: Start
+ * @group Start
  */
 class DashboardController extends ApiController
 {
     /**
-     * Startseite in einer Anfrage – B-03.
+     * Startseite in einer Anfrage.
      *
      * Offene Aufgaben, Kinder heute, nächste Termine, neueste Beiträge, Losung, Erkrankungen.
      * `care_active` gibt an, ob das Care-Modul (Anwesenheitsliste) aktiv ist; nur dann enthält
@@ -93,7 +93,7 @@ class DashboardController extends ApiController
     }
 
     /**
-     * Offene Aufgaben der Familie – B-25.
+     * Offene Aufgaben der Familie.
      */
     public function todo(Request $request, TodoService $todos): JsonResponse
     {

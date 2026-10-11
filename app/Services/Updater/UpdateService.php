@@ -56,7 +56,7 @@ class UpdateService
     /** Dateien, deren Änderung die API-Dokumentation (Scribe) betrifft */
     private const API_DOC_PATHS = [
         'routes/api.php', 'routes/api_v1.php', 'app/Http/Controllers/API/',
-        'app/Http/Requests/', 'app/Http/Resources/', 'config/scribe.php', 'composer.lock',
+        'app/Http/Requests/', 'app/Http/Resources/', 'config/scribe.php', 'config/scribe_basis.php', 'composer.lock',
     ];
 
     /** @var resource|null */
@@ -723,7 +723,9 @@ class UpdateService
         }
 
         try {
+            // App-API v1 (/docs) und Basis-API (/docs/basis) werden getrennt dokumentiert.
             $this->artisan(['scribe:generate']);
+            $this->artisan(['scribe:generate', '--config=scribe_basis']);
         } catch (Throwable $e) {
             return $this->warn('API-Dokumentation konnte nicht erzeugt werden: '.$e->getMessage());
         }
