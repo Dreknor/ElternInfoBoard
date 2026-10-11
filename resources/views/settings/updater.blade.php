@@ -107,6 +107,9 @@
                             @if($check['assets'])
                                 <li><i class="fas fa-paint-brush w-4 mr-1 opacity-70"></i> Frontend-Assets werden neu gebaut</li>
                             @endif
+                            @if($check['api_docs'] ?? false)
+                                <li><i class="fas fa-book w-4 mr-1 opacity-70"></i> API-Dokumentation wird neu erzeugt</li>
+                            @endif
                             @if($check['ahead'])
                                 <li class="text-red-600"><i class="fas fa-code-branch w-4 mr-1"></i> {{ $check['ahead'] }} lokale(r) Commit(s) – kein Fast-Forward möglich</li>
                             @endif

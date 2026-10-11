@@ -11,7 +11,7 @@ use Throwable;
 /**
  * Online-Updater: prüft das Git-Repository auf neue Commits und führt die
  * Schritte aus deploy.sh aus (Sicherung, Wartungsmodus, git pull, composer,
- * npm, Migrationen, Caches, Queue-Neustart).
+ * npm, Migrationen, Caches, Queue-Neustart, API-Dokumentation).
  *
  * Status, Protokolle und Sicherungen liegen als Dateien unter
  * storage/app/updater, damit sie auch während Migrationen lesbar bleiben.
@@ -44,12 +44,19 @@ class UpdateService
         'cache' => 'Caches leeren',
         'queue' => 'Queue-Worker neu starten',
         'up' => 'Wartungsmodus beenden',
+        'docs' => 'API-Dokumentation erzeugen',
     ];
 
     /** Dateien, deren Änderung einen Asset-Build erfordert */
     private const ASSET_PATHS = [
         'resources/', 'package.json', 'package-lock.json',
         'vite.config.js', 'tailwind.config.js', 'postcss.config.js',
+    ];
+
+    /** Dateien, deren Änderung die API-Dokumentation (Scribe) betrifft */
+    private const API_DOC_PATHS = [
+        'routes/api.php', 'routes/api_v1.php', 'app/Http/Controllers/API/',
+        'app/Http/Requests/', 'app/Http/Resources/', 'config/scribe.php', 'composer.lock',
     ];
 
     /** @var resource|null */
@@ -249,6 +256,7 @@ class UpdateService
             'migrations' => 0,
             'dependencies' => false,
             'assets' => false,
+            'api_docs' => false,
             'fetch_error' => null,
             'error' => null,
         ];
@@ -278,6 +286,7 @@ class UpdateService
                 $result['migrations'] = count(array_filter($changed, fn ($file) => str_starts_with($file, 'database/migrations/') || str_starts_with($file, 'database/settings/')));
                 $result['dependencies'] = $this->needsComposer($changed);
                 $result['assets'] = $this->needsAssets($changed);
+                $result['api_docs'] = $this->needsApiDocs($changed);
             }
         } catch (Throwable $e) {
             $result['error'] = $e->getMessage();
@@ -336,15 +345,27 @@ class UpdateService
 
     private function needsAssets(array $changed): bool
     {
+        return $this->touchesPaths($changed, self::ASSET_PATHS)
+            || ! is_file(public_path('build/manifest.json'));
+    }
+
+    private function needsApiDocs(array $changed): bool
+    {
+        return config('updater.api_docs')
+            && ($this->touchesPaths($changed, self::API_DOC_PATHS) || ! is_file(public_path('docs/index.html')));
+    }
+
+    private function touchesPaths(array $changed, array $paths): bool
+    {
         foreach ($changed as $file) {
-            foreach (self::ASSET_PATHS as $path) {
+            foreach ($paths as $path) {
                 if (str_ends_with($path, '/') ? str_starts_with($file, $path) : $file === $path) {
                     return true;
                 }
             }
         }
 
-        return ! is_file(public_path('build/manifest.json'));
+        return false;
     }
 
     // ── Ausführung ───────────────────────────────────────────────────────
@@ -424,6 +445,7 @@ class UpdateService
                     'cache' => $this->stepCache(),
                     'queue' => $this->artisanStep(['queue:restart']),
                     'up' => $this->stepUp(),
+                    'docs' => $this->stepDocs(),
                 };
 
                 $this->finishStep($key, $result);
@@ -683,6 +705,28 @@ class UpdateService
     {
         $this->artisan(['up']);
         $this->state['maintenance'] = false;
+
+        return $this->done();
+    }
+
+    /**
+     * Läuft erst nach dem Wartungsmodus, weil Scribe Beispielantworten per
+     * Anfrage an die Anwendung erzeugt. Fehler brechen das Update nicht ab.
+     */
+    private function stepDocs(): array
+    {
+        if (! config('updater.api_docs')) {
+            return $this->skip('Deaktiviert (UPDATER_API_DOCS=false).');
+        }
+        if (! $this->ctx['full'] && ! $this->needsApiDocs($this->ctx['changed'])) {
+            return $this->skip('Keine Änderungen an der API.');
+        }
+
+        try {
+            $this->artisan(['scribe:generate']);
+        } catch (Throwable $e) {
+            return $this->warn('API-Dokumentation konnte nicht erzeugt werden: '.$e->getMessage());
+        }
 
         return $this->done();
     }
