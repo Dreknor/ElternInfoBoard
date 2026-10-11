@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Model\PersonalAccessToken;
+use App\Services\IntegrationTokens;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -60,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Integrations-Tokens laufen nach eigener Laufzeit ab (auch unbegrenzt), nicht nach `sanctum.expiration`.
+        Sanctum::authenticateAccessTokensUsing(function ($token, bool $isValid) {
+            if (! IntegrationTokens::isIntegration($token)) {
+                return $isValid;
+            }
+
+            return $token->tokenable !== null && (! $token->expires_at || $token->expires_at->isFuture());
+        });
 
         Paginator::useTailwind();
 

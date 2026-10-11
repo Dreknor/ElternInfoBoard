@@ -11,6 +11,7 @@ use App\Services\App\Family;
 use App\Services\App\MessengerUnread;
 use App\Services\App\Modules;
 use App\Services\App\TodoService;
+use App\Services\IntegrationTokens;
 use App\Services\Notifications\NotificationPreferences;
 use App\Services\ThemeService;
 use App\Settings\GeneralSetting;
@@ -135,6 +136,8 @@ class MeController extends Controller
             'last_used_at' => $t->last_used_at?->toIso8601String(),
             'created_at' => $t->created_at?->toIso8601String(),
             'current' => $t->id === $current,
+            'integration' => IntegrationTokens::isIntegration($t),
+            'expires_at' => $t->expires_at?->toIso8601String(),
         ])]);
     }
 
