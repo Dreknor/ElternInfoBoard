@@ -16,9 +16,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Infoseiten der Schule (B-72) und Elternrat (B-73).
+ * Infoseiten der Schule und Elternrat.
  *
- * @group App: Seiten & Elternrat
+ * @group Seiten & Elternrat
  */
 class CommunityController extends ApiController
 {
@@ -134,6 +134,7 @@ class CommunityController extends ApiController
         ]]);
     }
 
+    /** Thema kommentieren. */
     public function commentDiscussion(Request $request, Discussion $discussion): JsonResponse
     {
         abort_unless($request->user()->can('view elternrat'), 403);

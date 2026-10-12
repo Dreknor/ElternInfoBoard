@@ -67,7 +67,7 @@ class ParentController extends Controller implements HasMiddleware
      * Returns a list of all children associated with the authenticated user
      * and their second guardian (if available).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data array The list of children.
@@ -157,7 +157,7 @@ class ParentController extends Controller implements HasMiddleware
      * Returns future check-ins where parents need to confirm or decline attendance.
      * Only returns check-ins where should_be is null (not yet answered).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @queryParam child_id int Filter by specific child ID. Example: 5
      * @queryParam include_answered bool Include already answered queries (default: false). Example: true
@@ -300,7 +300,7 @@ class ParentController extends Controller implements HasMiddleware
      *
      * Returns the check-in status for today and upcoming days for children in the Care module.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data array The list of children with their check-in status.
@@ -408,7 +408,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Confirm that a child should be present (Anwesenheit bestätigen).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam checkInId int required The ID of the check-in record. Example: 1
      *
@@ -470,7 +470,7 @@ class ParentController extends Controller implements HasMiddleware
      * Declining (should_be = false) is allowed even after lock_at has passed,
      * as long as the date is today or in the future and the child is not already checked in.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam checkInId int required The ID of the check-in record. Example: 1
      *
@@ -540,7 +540,7 @@ class ParentController extends Controller implements HasMiddleware
      *
      * Returns the scheduled sending times for children in the Care module.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data array The list of children with their Schickzeiten.
@@ -628,7 +628,7 @@ class ParentController extends Controller implements HasMiddleware
      *
      * Returns all active and future sick reports for children.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data array The list of children with active sick reports.
@@ -700,7 +700,7 @@ class ParentController extends Controller implements HasMiddleware
      *
      * Returns all past sick reports for children (ended before today).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @queryParam limit int The maximum number of records to return per child. Defaults to 50. Example: 20
      * @queryParam child_id int Filter by specific child ID. Example: 5
@@ -810,7 +810,7 @@ class ParentController extends Controller implements HasMiddleware
      *
      * Returns all current and future absence notices for children in the Care module.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @queryParam child_id int Filter by specific child ID. Example: 5
      *
@@ -920,7 +920,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Create a new ChildNotice (Abwesenheitsmeldung) for a child.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @bodyParam child_id int required The ID of the child. Example: 5
      * @bodyParam date string required The date of the absence (YYYY-MM-DD). Example: 2026-03-01
@@ -999,7 +999,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Delete a ChildNotice (Abwesenheitsmeldung).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam noticeId int required The ID of the notice. Example: 1
      *
@@ -1039,7 +1039,7 @@ class ParentController extends Controller implements HasMiddleware
      * Create a new Schickzeit (sending time) for a child.
      * Can be for a specific date or a recurring weekday.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @bodyParam child_id int optional The ID of the child. Example: 5
      * @bodyParam weekday string optional The day of the week (Montag, Dienstag, Mittwoch, Donnerstag, Freitag). Required if specific_date is not set. Example: Montag
@@ -1275,7 +1275,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Update an existing Schickzeit (sending time) for a child.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam schickzeitId int required The ID of the Schickzeit. Example: 1
      *
@@ -1371,7 +1371,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Delete a Schickzeit (sending time).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam schickzeitId int required The ID of the Schickzeit. Example: 1
      *
@@ -1410,7 +1410,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Get all ChildMandates (Abholberechtigungen) for the authenticated parent's children.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @queryParam child_id int Filter by specific child ID. Example: 5
      *
@@ -1519,7 +1519,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Create a new ChildMandate (Abholberechtigung) for a child.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @bodyParam child_id int required The ID of the child. Example: 5
      * @bodyParam mandate_name string required The name of the authorized person. Example: Max Mustermann
@@ -1598,7 +1598,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Update an existing ChildMandate (Abholberechtigung).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam mandateId int required The ID of the mandate. Example: 1
      *
@@ -1671,7 +1671,7 @@ class ParentController extends Controller implements HasMiddleware
     /**
      * Delete a ChildMandate (Abholberechtigung).
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @urlParam mandateId int required The ID of the mandate. Example: 1
      *
@@ -1713,7 +1713,7 @@ class ParentController extends Controller implements HasMiddleware
      * Ermöglicht das gleichzeitige Beantworten mehrerer Anwesenheitsabfragen.
      * Optional kann für jeden Tag mit Anmeldung direkt eine Schickzeit hinterlegt werden.
      *
-     * @group Parent
+     * @group Kinder & Anwesenheit
      *
      * @bodyParam responses array required Array von Antworten.
      * @bodyParam responses.*.check_in_id int required Die ID des ChildCheckIn.

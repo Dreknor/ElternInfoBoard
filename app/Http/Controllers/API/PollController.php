@@ -19,7 +19,7 @@ class PollController extends Controller
      *
      * This method returns poll details including options and voting results.
      *
-     * @group Polls
+     * @group Umfragen
      *
      * @urlParam post required The ID of the post. Example: 1
      *
@@ -93,7 +93,7 @@ class PollController extends Controller
      *
      * This method allows a user to vote on a poll by selecting one or more options.
      *
-     * @group Polls
+     * @group Umfragen
      *
      * @urlParam post required The ID of the post. Example: 1
      *

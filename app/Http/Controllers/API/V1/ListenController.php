@@ -12,14 +12,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @group App: Listen
+ * @group Listen
  */
 class ListenController extends ApiController
 {
     public function __construct(private readonly ListenService $service) {}
 
     /**
-     * Offene Listen mit eigenen Buchungen und freien Plätzen – B-32.
+     * Offene Listen mit eigenen Buchungen und freien Plätzen.
      */
     public function index(Request $request): JsonResponse
     {
@@ -59,7 +59,9 @@ class ListenController extends ApiController
     }
 
     /**
-     * Liste mit Terminen bzw. Einträgen. `mine` = Buchung der Familie; Namen anderer nur bei „für alle sichtbar“.
+     * Liste mit Terminen bzw. Einträgen.
+     *
+     * `mine` = Buchung der Familie; Namen anderer nur bei „für alle sichtbar“.
      */
     public function show(Request $request, Liste $liste): JsonResponse
     {
@@ -117,7 +119,7 @@ class ListenController extends ApiController
     }
 
     /**
-     * Termin buchen (atomar, 409 bei Konflikt) – B-31.
+     * Termin buchen (atomar, 409 bei Konflikt).
      *
      * @bodyParam child_id integer Kind der Buchung; Pflicht bei `booking_scope = child` und mehreren Kindern.
      */
@@ -155,6 +157,7 @@ class ListenController extends ApiController
         return response()->json(['data' => ['id' => $eintrag->id], 'message' => 'Eingetragen.'], 201);
     }
 
+    /** Vorhandenen Eintrag übernehmen. */
     public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag): JsonResponse
     {
         $request->validate(['child_id' => 'nullable|integer']);
@@ -163,6 +166,7 @@ class ListenController extends ApiController
         return response()->json(['message' => 'Eingetragen.'], 201);
     }
 
+    /** Eigenen Eintrag zurückgeben. */
     public function cancelEintrag(Request $request, Listen_Eintragungen $eintrag): JsonResponse
     {
         $this->service->cancelEintrag($request->user(), $eintrag);

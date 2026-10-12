@@ -16,10 +16,10 @@ use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Messenger der App – vollständig (B-60): neue Direktchats, Anhänge, Bearbeiten, Löschen, Melden, Stummschalten.
+ * Messenger der App: neue Direktchats, Anhänge, Bearbeiten, Löschen, Melden, Stummschalten.
  * Benachrichtigungslogik stammt aus dem bestehenden API-Controller.
  *
- * @group App: Messenger
+ * @group Messenger
  */
 class MessengerController extends LegacyMessengerController
 {
@@ -55,12 +55,17 @@ class MessengerController extends LegacyMessengerController
         return response()->json(['data' => $conversations, 'meta' => ['unread' => array_sum($unread)]]);
     }
 
+    /** Gesamtzahl ungelesener Nachrichten. */
     public function unreadCount(Request $request): JsonResponse
     {
         return response()->json(['data' => ['unread' => MessengerUnread::total($request->user()->id)]]);
     }
 
-    /** Nachrichten (neueste zuerst, Cursor) – markiert die Unterhaltung als gelesen. */
+    /**
+     * Nachrichten einer Unterhaltung (neueste zuerst, Cursor).
+     *
+     * Markiert die Unterhaltung als gelesen.
+     */
     public function messages(Request $request, Conversation $conversation): JsonResponse
     {
         Gate::authorize('view', $conversation);
@@ -71,7 +76,9 @@ class MessengerController extends LegacyMessengerController
             ->orderByDesc('created_at')->orderByDesc('id')
             ->cursorPaginate(40);
 
-        $conversation->users()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+        if (! $request->attributes->get('read_only')) {
+            $conversation->users()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+        }
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Message $m) => $this->formatMessage($m, $user->id))->all(),
@@ -122,6 +129,7 @@ class MessengerController extends LegacyMessengerController
         return response()->json(['data' => $this->formatMessage($message, $request->user()->id)], 201);
     }
 
+    /** Eigene Nachricht bearbeiten (bis 15 Minuten nach dem Senden). */
     public function update(Request $request, Message $message): JsonResponse
     {
         abort_unless($message->isEditableBy($request->user()), 403, 'Nachrichten können nur 15 Minuten lang bearbeitet werden.');
@@ -131,6 +139,7 @@ class MessengerController extends LegacyMessengerController
         return response()->json(['data' => $this->formatMessage($message->fresh(['sender', 'replyTo.sender', 'media']), $request->user()->id)]);
     }
 
+    /** Eigene Nachricht löschen. */
     public function destroy(Request $request, Message $message): JsonResponse
     {
         abort_unless($message->isDeletableBy($request->user()), 403);

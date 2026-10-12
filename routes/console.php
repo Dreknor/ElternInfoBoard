@@ -160,6 +160,21 @@ try {
     // Silently catch exceptions during migration/setup
 }
 
+// Online-Updater: über die Oberfläche angeforderte Updates ausführen (auch im
+// Wartungsmodus, damit ein fehlgeschlagenes Update erneut gestartet werden kann)
+if (config('updater.enabled')) {
+    Schedule::command('updater:run --if-requested')
+        ->everyMinute()
+        ->when(fn () => app(\App\Services\Updater\UpdateService::class)->isRequested())
+        ->evenInMaintenanceMode()
+        ->withoutOverlapping(60)
+        ->runInBackground();
+
+    if (config('updater.check_cron')) {
+        Schedule::command('updater:check')->cron(config('updater.check_cron'));
+    }
+}
+
 // Wenn die Queue nicht über Supervisor läuft, dann wird sie hier gestartet
 // Default ist die Queue über Supervisor zu starten
 if (config('queue.use_cronjob')) {

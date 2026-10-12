@@ -734,7 +734,8 @@
                             <div class="p-4">
                                 <p class="text-sm mb-3" style="color: var(--color-text-secondary);">
                                     <i class="fas fa-shield-alt text-orange-600 mr-1"></i>
-                                    Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
+                                    Integrations-Tokens erlauben externen Anwendungen (z.&nbsp;B. Home Assistant) den Zugriff auf Ihre Daten.
+                                    Sie dürfen nur lesen und zusätzlich nur das, was Sie unten freigeben. Anmeldungen der ElternInfo-App erscheinen hier ebenfalls.
                                 </p>
 
                                 @if(auth()->user()->tokens->count() > 0)
@@ -743,15 +744,36 @@
                                             <thead class="border-b" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
                                                 <tr>
                                                     <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Name</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Rechte</th>
                                                     <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Erstellt am</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Gültig bis</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Zuletzt genutzt</th>
                                                     <th class="px-3 py-2 text-right text-xs font-semibold" style="color: var(--color-text-secondary);">Aktionen</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach(auth()->user()->tokens as $token)
+                                                    @php $isIntegration = \App\Services\IntegrationTokens::isIntegration($token); @endphp
                                                     <tr class="border-b hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors" style="border-color: var(--color-card-border);">
                                                         <td class="px-3 py-2" style="color: var(--color-text-primary);">{{$token->name}}</td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">
+                                                            @if($isIntegration)
+                                                                {{ collect(\App\Services\IntegrationTokens::scopes($token))->map(fn ($s) => \App\Services\IntegrationTokens::SCOPES[$s])->prepend('Lesen')->implode(', ') }}
+                                                            @else
+                                                                Vollzugriff (App)
+                                                            @endif
+                                                        </td>
                                                         <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">{{$token->created_at->format('d.m.Y')}}</td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">
+                                                            @if($isIntegration)
+                                                                {{ $token->expires_at?->format('d.m.Y') ?? 'unbegrenzt' }}
+                                                            @elseif(config('sanctum.expiration'))
+                                                                {{ $token->created_at->copy()->addMinutes(config('sanctum.expiration'))->format('d.m.Y') }}
+                                                            @else
+                                                                unbegrenzt
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">{{ $token->last_used_at?->format('d.m.Y H:i') ?? '–' }}</td>
                                                         <td class="px-3 py-2 text-right">
                                                             <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post" class="inline">
                                                                 @csrf
@@ -774,14 +796,32 @@
                                 @endif
 
                                 <h6 class="text-sm font-semibold mb-2 flex items-center gap-1.5" style="color: var(--color-text-primary);">
-                                    <i class="fas fa-plus-circle text-orange-600"></i>Neues Token erstellen
+                                    <i class="fas fa-plus-circle text-orange-600"></i>Neues Integrations-Token erstellen
                                 </h6>
-                                <form action="{{url('/einstellungen/token')}}" method="post" class="flex gap-2">
+                                <form action="{{url('/einstellungen/token')}}" method="post" class="space-y-3">
                                     @csrf
-                                    <input type="text"
-                                           class="flex-1 px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
-                                           name="name" placeholder="Token-Name" required>
-                                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors flex-shrink-0">
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <input type="text"
+                                               class="flex-1 px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                                               name="name" placeholder="Name, z. B. Home Assistant" required>
+                                        <select name="lifetime"
+                                                class="px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                                                style="background-color: var(--color-input-bg); color: var(--color-text-primary);">
+                                            @foreach(\App\Services\IntegrationTokens::LIFETIMES as $value => $label)
+                                                <option value="{{ $value }}" @selected($value === '365')>Gültig: {{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm" style="color: var(--color-text-primary);">
+                                        <span style="color: var(--color-text-secondary);">Zusätzlich erlauben:</span>
+                                        @foreach(\App\Services\IntegrationTokens::SCOPES as $value => $label)
+                                            <label class="inline-flex items-center gap-1.5">
+                                                <input type="checkbox" name="scopes[]" value="{{ $value }}" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                                {{ $label }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus"></i>Erstellen
                                     </button>
                                 </form>

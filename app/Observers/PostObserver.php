@@ -3,8 +3,8 @@
 namespace App\Observers;
 
 use App\Jobs\PushPostToWordpress;
-use App\Model\Module;
 use App\Model\Post;
+use App\Repositories\WordpressRepository;
 use Illuminate\Support\Facades\Log;
 
 class PostObserver
@@ -27,9 +27,10 @@ class PostObserver
      */
     public function updated(Post $post): void
     {
-        $wp_push_is_enabled = Module::firstWhere('setting', 'Push to WordPress')?->options['active'] ?? false;
-
-        if ($wp_push_is_enabled == 1 and $post->published_wp_id != null and auth()->user()?->can('push to wordpress')) {
+        // Bereits veröffentlichte Beiträge auf der Homepage aktuell halten (z. B. bei Freigabe oder Textänderung)
+        if ($post->published_wp_id != null
+            and $post->wasChanged(['header', 'news', 'released'])
+            and WordpressRepository::pushAllowedFor(auth()->user())) {
             PushPostToWordpress::dispatch($post);
         }
 

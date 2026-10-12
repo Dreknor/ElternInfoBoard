@@ -6,6 +6,7 @@ use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
 use App\Model\UserAppSettings;
+use App\Services\IntegrationTokens;
 use App\Services\Notifications\NotificationPreferences;
 use App\Settings\GeneralSetting;
 use App\Themes\ThemeRegistry;
@@ -128,8 +129,12 @@ class BenutzerController extends Controller implements HasMiddleware
      */
     public function createToken(CreateTokenRequest $request)
     {
-        $user = auth()->user();
-        $token = $user->createToken($request->name);
+        $token = IntegrationTokens::create(
+            auth()->user(),
+            $request->name,
+            $request->input('scopes', []),
+            $request->lifetime
+        );
 
         return redirect(url('einstellungen'))->with([
             'token' => $token->plainTextToken,

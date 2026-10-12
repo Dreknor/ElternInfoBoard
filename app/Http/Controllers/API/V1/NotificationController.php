@@ -7,12 +7,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * @group App: Benachrichtigungen
+ * @group Benachrichtigungen
  */
 class NotificationController extends ApiController
 {
     /**
-     * Benachrichtigungen (neueste zuerst, paginiert) mit Ziel für die App – B-05.
+     * Benachrichtigungen (neueste zuerst, paginiert) mit Ziel für die App.
      *
      * @queryParam unread boolean Nur ungelesene. Example: 1
      */
@@ -50,6 +50,7 @@ class NotificationController extends ApiController
         return response()->json(['message' => 'Gelesen.']);
     }
 
+    /** Alle Benachrichtigungen als gelesen markieren. */
     public function readAll(Request $request): JsonResponse
     {
         $request->user()->notifications()->where('read', false)->update(['read' => true]);
