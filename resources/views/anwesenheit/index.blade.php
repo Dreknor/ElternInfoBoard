@@ -61,12 +61,12 @@
                     @endif
                 @endif
             </div>
+        </div>
     </div>
 
     <!-- Modal -->
     <div class="modal fade" id="childModal" tabindex="-1" role="dialog" aria-labelledby="childModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document"
-             style="max-width: min(75vw, 900px); width: min(75vw, 900px); margin: 1.5rem auto; padding: 0;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="childModalLabel">Übersicht</h5>
@@ -76,32 +76,32 @@
                 </div>
                 <div class="modal-tabs-wrapper">
                     <ul class="nav nav-pills nav-fill modal-tabs" id="myTab" role="tablist">
-                        <li class="nav-item bg-gradient-directional-blue-grey-light">
-                            <a class="nav-link text-dark active" id="anwesenheit-tab" data-toggle="tab" href="#Anwesenheit" role="tab" aria-controls="Anwesenheit" aria-selected="true">
-                                <i class="fas fa-child mr-1"></i> Anwesenheit
+                        <li class="nav-item">
+                            <a class="nav-link active" id="anwesenheit-tab" data-toggle="tab" href="#Anwesenheit" role="tab" aria-controls="Anwesenheit" aria-selected="true" title="Anwesenheit, Schickzeit und Notiz für heute">
+                                <i class="fas fa-child"></i><span>Heute</span>
                             </a>
                         </li>
-                        <li class="nav-item bg-gradient-directional-blue-grey-light">
-                            <a class="nav-link text-dark" id="abfrage-tab" data-toggle="tab" href="#Abfrage" role="tab" aria-controls="Abfrage" aria-selected="false">
-                                <i class="fas fa-calendar-alt mr-1"></i> Ferien
+                        <li class="nav-item">
+                            <a class="nav-link" id="abfrage-tab" data-toggle="tab" href="#Abfrage" role="tab" aria-controls="Abfrage" aria-selected="false" title="Angemeldete Tage aus der Anwesenheitsabfrage">
+                                <i class="fas fa-calendar-alt"></i><span>Abfrage</span>
                             </a>
                         </li>
-                        <li class="nav-item bg-gradient-directional-blue-grey-light">
-                            <a class="nav-link text-dark" id="regelmaessig-tab" data-toggle="tab" href="#Regelmaessig" role="tab" aria-controls="Regelmaessig" aria-selected="false">
-                                <i class="fas fa-clock mr-1"></i> Schickzeiten
+                        <li class="nav-item">
+                            <a class="nav-link" id="regelmaessig-tab" data-toggle="tab" href="#Regelmaessig" role="tab" aria-controls="Regelmaessig" aria-selected="false" title="Regelmäßige Schickzeiten">
+                                <i class="fas fa-clock"></i><span>Schickzeiten</span>
                             </a>
                         </li>
                         @if($careSettings->show_mandates)
-                        <li class="nav-item bg-gradient-directional-grey-blue">
-                            <a class="nav-link text-dark" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false">
-                                <i class="fas fa-user-check mr-1"></i> Vollmacht
+                        <li class="nav-item">
+                            <a class="nav-link" id="vollmacht-tab" data-toggle="tab" href="#vollmacht" role="tab" aria-controls="vollmacht" aria-selected="false" title="Abholvollmachten">
+                                <i class="fas fa-user-check"></i><span>Vollmachten</span>
                             </a>
                         </li>
                         @endif
                         @if($careSettings->show_parents)
-                        <li class="nav-item bg-gradient-directional-blue-grey-light">
-                            <a class="nav-link text-dark" id="eltern-tab" data-toggle="tab" href="#Eltern" role="tab" aria-controls="Eltern" aria-selected="false">
-                                <i class="fas fa-users mr-1"></i> Eltern
+                        <li class="nav-item">
+                            <a class="nav-link" id="eltern-tab" data-toggle="tab" href="#Eltern" role="tab" aria-controls="Eltern" aria-selected="false" title="Erziehungsberechtigte">
+                                <i class="fas fa-users"></i><span>Eltern</span>
                             </a>
                         </li>
                         @endif
@@ -225,6 +225,7 @@
                                     <tr>
                                         <th>Datum</th>
                                         <th>angemeldet?</th>
+                                        <th class="text-right">ändern</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -264,9 +265,10 @@
                         </div>
                     </div>
                     @endif
-
-        </div>
-    </div>
+                </div><!-- /.tab-content -->
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /#childModal -->
 @endsection
 @push('js')
     <script>
@@ -531,16 +533,33 @@
         let currentCheckinChildId = null;
         const checkinsApiUrlTemplate = `{{ route('checkins.api',['child' => 'childID']) }}`;
 
+        function renderCheckinRow(row, checkin) {
+            const shouldBeLabel = checkin.should_be === true ? 'Ja' : (checkin.should_be === false ? 'Nein' : 'Offen');
+            const shouldBeClass = checkin.should_be === true ? 'text-success font-weight-bold' : (checkin.should_be === false ? 'text-danger' : 'text-muted');
+            const date = new Date(checkin.date).toLocaleDateString('de-DE', {weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric'});
+            row.dataset.checkinId = checkin.id;
+            row.innerHTML = `
+                <td>${date}</td>
+                <td class="${shouldBeClass}">${shouldBeLabel}</td>
+                <td class="text-right"><button type="button" class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id}, this)" title="Anmeldung ändern"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
+            `;
+        }
+
         function reloadCheckinsTable() {
             if (!currentCheckinChildId) return;
             const tableBody = document.querySelector('#Abfrage table tbody');
             if (!tableBody) return;
 
-            const url = checkinsApiUrlTemplate.replace('childID', currentCheckinChildId);
+            const childId = currentCheckinChildId;
+            const url = checkinsApiUrlTemplate.replace('childID', childId);
 
-            fetch(url)
+            // no-store: Antwort darf weder aus HTTP- noch aus Browser-Cache kommen
+            fetch(url, {cache: 'no-store', headers: {'Accept': 'application/json'}})
                 .then(response => response.json())
                 .then(data => {
+                    // Inzwischen wurde ein anderes Kind geöffnet – veraltete Antwort verwerfen
+                    if (childId !== currentCheckinChildId) return;
+
                     tableBody.innerHTML = '';
                     const checkins = data.data;
                     if (!checkins || checkins.length === 0) {
@@ -552,14 +571,7 @@
 
                     checkins.forEach(checkin => {
                         const row = document.createElement('tr');
-                        row.dataset.checkinId = checkin.id;
-                        const shouldBeLabel = checkin.should_be === true ? 'Ja' : (checkin.should_be === false ? 'Nein' : 'Offen');
-                        const shouldBeClass = checkin.should_be === true ? 'text-success font-weight-bold' : (checkin.should_be === false ? 'text-danger' : 'text-muted');
-                        row.innerHTML = `
-                            <td>${new Date(checkin.date).toLocaleDateString('de-DE')}</td>
-                            <td class="${shouldBeClass}">${shouldBeLabel}</td>
-                            <td><button class="btn btn-sm btn-primary toggle-should-be" onclick="toogle_should_be(${checkin.id}, this)"><i class="fa fa-refresh" aria-hidden="true"></i></button></td>
-                        `;
+                        renderCheckinRow(row, checkin);
                         tableBody.appendChild(row);
                     });
                 })
@@ -595,16 +607,28 @@
                 data: {
                     _token: '{{ csrf_token() }}'
                 }
-            }).done(function () {
-                // Tabelle neu laden um Duplikate und falsche Sortierung zu vermeiden
-                reloadCheckinsTable();
-            }).fail(function () {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i>';
+            }).done(function (response) {
+                if (!response || !response.success) {
+                    resetToggleButton(btn);
+                    alert(response && response.message ? response.message : 'Fehler beim Aktualisieren.');
+                    return;
                 }
+                // Zeile sofort mit dem neuen Stand aus der Antwort aktualisieren
+                const row = btn ? btn.closest('tr') : null;
+                if (row && response.data) {
+                    renderCheckinRow(row, response.data);
+                }
+            }).fail(function () {
+                resetToggleButton(btn);
                 alert('Fehler beim Aktualisieren.');
             });
+        }
+
+        function resetToggleButton(btn) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i>';
+            }
         }
 
     </script>

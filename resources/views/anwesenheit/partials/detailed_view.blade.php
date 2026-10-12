@@ -543,10 +543,12 @@
             const items = Array.from(ul.querySelectorAll('li.child-item'));
             if (!items.length) return;
             if (active) {
+                // Sortierschlüssel einmal pro Kind berechnen statt JSON.parse in jedem Vergleich
+                const minutes = new Map(items.map(function (li) {
+                    return [li, getEarliestMinutes(JSON.parse(li.dataset.child))];
+                }));
                 items.sort(function (a, b) {
-                    const da = JSON.parse(a.dataset.child);
-                    const db = JSON.parse(b.dataset.child);
-                    return getEarliestMinutes(da) - getEarliestMinutes(db);
+                    return minutes.get(a) - minutes.get(b);
                 });
             } else {
                 items.sort(function (a, b) {
