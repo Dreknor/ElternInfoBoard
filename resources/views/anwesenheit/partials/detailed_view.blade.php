@@ -472,39 +472,44 @@
 
     // --- Kindersuche mit Hervorhebung ---
     const childSearchInput = document.getElementById('child-name-search');
-    if (childSearchInput) {
-        function applyChildSearchHighlight() {
-            const query = childSearchInput.value.trim().toLowerCase();
-            const matches = [];
 
-            document.querySelectorAll('.child-item').forEach(function (item) {
-                const name = (item.querySelector('.name')?.textContent || item.textContent || '').trim().toLowerCase();
-                const hasMatch = query !== '' && name.includes(query);
+    function applyChildSearchHighlight(scrollToMatch) {
+        if (!childSearchInput) return;
+        const query = childSearchInput.value.trim().toLowerCase();
+        const matches = [];
 
-                item.classList.toggle('child-search-match', hasMatch);
-                if (hasMatch) {
-                    matches.push(item);
-                }
-            });
+        document.querySelectorAll('.child-item').forEach(function (item) {
+            const name = (item.querySelector('.name')?.textContent || item.textContent || '').trim().toLowerCase();
+            const hasMatch = query !== '' && name.includes(query);
 
-            if (query && matches.length) {
-                matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            item.classList.toggle('child-search-match', hasMatch);
+            if (hasMatch) {
+                matches.push(item);
             }
-        }
+        });
 
-        childSearchInput.addEventListener('input', applyChildSearchHighlight);
-        applyChildSearchHighlight();
+        if (scrollToMatch && query && matches.length) {
+            matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    if (childSearchInput) {
+        childSearchInput.addEventListener('input', function () { applyChildSearchHighlight(true); });
+        applyChildSearchHighlight(true);
     }
 
     // --- Schickzeit-Sortierung ---
     const SORT_KEY = 'detailedView_sortBySchickzeit';
 
-    // Originalreihenfolge einmalig beim Laden speichern
-    document.querySelectorAll('.group-col ul.list-group').forEach(function (ul) {
-        Array.from(ul.querySelectorAll('li.child-item')).forEach(function (li, idx) {
-            li.dataset.originalIndex = idx;
+    // Originalreihenfolge speichern (beim Laden und nach jedem Austausch der Liste)
+    function rememberOriginalOrder() {
+        document.querySelectorAll('.group-col ul.list-group').forEach(function (ul) {
+            Array.from(ul.querySelectorAll('li.child-item')).forEach(function (li, idx) {
+                li.dataset.originalIndex = idx;
+            });
         });
-    });
+    }
+    rememberOriginalOrder();
 
     function getSchickzeitSort() {
         return localStorage.getItem(SORT_KEY) === 'true';
@@ -567,5 +572,13 @@
     applyState();
     applySortState();
     applyAbsentStrikethroughState();
+
+    // Nach An-/Abmelden ohne Reload: Ansichtseinstellungen auf die neue Liste anwenden
+    document.addEventListener('anwesenheit:list-updated', function () {
+        rememberOriginalOrder();
+        applyState();
+        applySortState();
+        applyChildSearchHighlight(false);
+    });
 })();
 </script>

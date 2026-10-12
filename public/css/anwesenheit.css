@@ -264,6 +264,12 @@ body {
     overscroll-behavior: contain;
 }
 
+/* Eintrag wird nach An-/Abmelden im Hintergrund aktualisiert */
+.child-item-updating {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 #childName {
     font-size: 1.25rem;
     font-weight: 600;
