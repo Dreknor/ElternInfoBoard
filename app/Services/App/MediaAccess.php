@@ -21,6 +21,17 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class MediaAccess
 {
+    /**
+     * Download-Adresse einer Mediendatei. Ältere Einträge (vor der Spalte `uuid`) haben keine UUID –
+     * dann über die ID (gleiche Zugriffsprüfung), statt dass `route()` die ganze Antwort abbricht.
+     */
+    public static function downloadUrl(Media $media): string
+    {
+        return filled($media->uuid)
+            ? route('api.files.download', ['media_uuid' => $media->uuid])
+            : url('api/image/'.$media->id);
+    }
+
     public static function canView(User $user, Media $media): bool
     {
         if ($user->can('upload files')) {

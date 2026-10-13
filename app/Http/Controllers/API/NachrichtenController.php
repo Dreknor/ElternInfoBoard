@@ -248,7 +248,7 @@ class NachrichtenController extends Controller
                         'mime_type' => $media->mime_type,
                         'size' => $media->size,
                         'order' => $media->order_column,
-                        'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
+                        'url' => \App\Services\App\MediaAccess::downloadUrl($media),
                         'url_by_id' => url('/api/image/' . $media->id),
                     ];
                 })->values()->all();
@@ -639,7 +639,7 @@ class NachrichtenController extends Controller
                     'mime_type' => $media->mime_type,
                     'size' => $media->size,
                     'order' => $media->order_column,
-                    'url' => route('api.files.download', ['media_uuid' => $media->uuid]),
+                    'url' => \App\Services\App\MediaAccess::downloadUrl($media),
                     'url_by_id' => url('/api/image/' . $media->id),
                 ];
             })->values()->all();

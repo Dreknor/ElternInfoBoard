@@ -32,7 +32,7 @@ class FileResource extends JsonResource
             'human_readable_size' => $this->formatBytes($this->size),
             'extension' => $this->extension ?? pathinfo($this->file_name, PATHINFO_EXTENSION),
             'collection_name' => $this->collection_name,
-            'url' => route('api.files.download', ['media_uuid' => $this->uuid]),
+            'url' => \App\Services\App\MediaAccess::downloadUrl($this->resource),
             'preview_url' => $this->hasGeneratedConversion('thumb')
                 ? $this->getUrl('thumb')
                 : null,

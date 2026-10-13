@@ -45,7 +45,7 @@ class CommunityController extends ApiController
                     'name' => $m->name ?: $m->file_name,
                     'mime_type' => $m->mime_type,
                     'size' => $m->size,
-                    'url' => route('api.files.download', ['media_uuid' => $m->uuid]),
+                    'url' => \App\Services\App\MediaAccess::downloadUrl($m),
                 ];
 
                 return [

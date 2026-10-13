@@ -134,7 +134,7 @@ class FilesController extends Controller implements HasMiddleware
                 'mime_type' => $file->mime_type,
                 'size' => $file->size,
                 'human_readable_size' => $this->formatBytes($file->size),
-                'url' => route('api.files.download', ['media_uuid' => $file->uuid]),
+                'url' => \App\Services\App\MediaAccess::downloadUrl($file),
                 'created_at' => $file->created_at?->toISOString(),
                 'updated_at' => $file->updated_at?->toISOString(),
                 'custom_properties' => $file->custom_properties ?? [],
