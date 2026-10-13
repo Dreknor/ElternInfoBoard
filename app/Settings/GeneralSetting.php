@@ -19,6 +19,16 @@ class GeneralSetting extends Settings
     public bool $allow_user_theme = true;
 
     /**
+     * Darstellung des Seitenmenüs (siehe config/navigation.php).
+     * 'classic' – flache Liste aller Einträge (bisheriges Verhalten)
+     * 'compact' – gruppiertes, einklappbares Menü mit Filterfeld
+     */
+    public string $nav_style = 'classic';
+
+    /** Dürfen Nutzer die Menü-Darstellung selbst wählen? */
+    public bool $allow_user_nav_style = true;
+
+    /**
      * Steuert das globale Last-Login-Tracking.
      * 'user'   – Nutzer entscheidet selbst (bisheriges Verhalten)
      * 'always' – immer aufzeichnen, unabhängig von der Nutzereinstellung

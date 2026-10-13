@@ -451,6 +451,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/einstellungen/theme', [\App\Http\Controllers\User\UserThemeController::class, 'update'])
             ->name('user.theme.update');
 
+        // Nutzer-Menüdarstellung (klassisch/kompakt)
+        Route::put('/einstellungen/navigation', [\App\Http\Controllers\User\UserNavigationController::class, 'update'])
+            ->name('user.navigation.update');
+
         // Downloads
         Route::get('/files', [FileController::class, 'index']);
         Route::post('/files', [FileController::class, 'store'])->middleware(['permission:upload files']);

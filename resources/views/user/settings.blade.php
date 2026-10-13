@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('title') - Einstellungen @endsection
 
+@php
+    $allowUserTheme = ($generalSettings->allow_user_theme ?? true) && isset($themes);
+    $showDesignTab  = $allowUserTheme || ($allowUserNavStyle ?? false);
+@endphp
+
 @section('content')
 
 <div class="container-fluid px-4 py-3"
@@ -831,17 +836,63 @@
                 </div>
 
                 {{-- TAB: Design --}}
-                @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
+                @if($showDesignTab)
                 <div x-show="activeTab === 'design'" x-cloak class="p-8">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="flex items-center justify-center w-10 h-10 rounded-xl" style="background-color: var(--color-widget-primary-bg);">
                             <i class="fas fa-palette" style="color: var(--color-primary);"></i>
                         </div>
                         <div>
-                            <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Design-Theme</h2>
+                            <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Design &amp; Menü</h2>
                             <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Ihr persönliches Erscheinungsbild</p>
                         </div>
                     </div>
+
+                    @if($allowUserNavStyle ?? false)
+                    <div class="mb-8 pb-8 border-b" style="border-color: var(--color-card-border);">
+                        <h3 class="text-sm font-bold mb-1" style="color: var(--color-text-primary);">Menü-Darstellung</h3>
+                        <p class="text-sm mb-4" style="color: var(--color-text-secondary);">
+                            Das kompakte Menü fasst die Einträge in einklappbaren Gruppen zusammen und bietet ein Suchfeld – so müssen Sie weniger scrollen.
+                        </p>
+                        <form action="{{ route('user.navigation.update') }}" method="post" id="navStyleForm">
+                            @csrf
+                            @method('PUT')
+                            @php
+                                $navOptions = [
+                                    ''        => ['icon' => 'fas fa-cog',       'label' => 'System-Standard', 'hint' => 'Aktuell: '.\Illuminate\Support\Str::before($navStyles[$defaultNavStyle] ?? $defaultNavStyle, ' (')],
+                                    'classic' => ['icon' => 'fas fa-list',      'label' => 'Klassisch',       'hint' => 'Alle Einträge untereinander'],
+                                    'compact' => ['icon' => 'fas fa-layer-group','label' => 'Kompakt',        'hint' => 'Gruppiert & einklappbar'],
+                                ];
+                            @endphp
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                                @foreach($navOptions as $value => $option)
+                                    @continue($value !== '' && ! array_key_exists($value, $navStyles))
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="nav_style" value="{{ $value }}" class="sr-only peer" @checked($userNavStyle === $value)>
+                                        <div class="flex items-center gap-3 border-2 rounded-xl p-3 transition-all duration-200 peer-checked:border-[var(--color-primary)] peer-checked:bg-[var(--color-widget-primary-bg)] peer-focus-visible:ring-2"
+                                             style="border-color: var(--color-card-border);">
+                                            <i class="{{ $option['icon'] }} text-lg w-6 text-center" style="color: var(--color-primary);"></i>
+                                            <div class="min-w-0">
+                                                <span class="text-sm font-semibold block" style="color: var(--color-text-primary);">{{ $option['label'] }}</span>
+                                                <span class="text-xs block" style="color: var(--color-text-secondary);">{{ $option['hint'] }}</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-lg transition-colors"
+                                    style="background-color: var(--color-primary)"
+                                    onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                    onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
+                                <i class="fas fa-save"></i>Menü-Darstellung speichern
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
+                    @if($allowUserTheme)
+                    <h3 class="text-sm font-bold mb-1" style="color: var(--color-text-primary);">Design-Theme</h3>
                     <p class="text-sm mb-5" style="color: var(--color-text-secondary);">
                         Wählen Sie ein Design für Ihre persönliche Ansicht. Das Standard-Design wird vom Administrator festgelegt.
                     </p>
@@ -895,6 +946,7 @@
                             <i class="fas fa-save"></i>Theme speichern
                         </button>
                     </form>
+                    @endif
                 </div>
                 @endif
 
@@ -1018,8 +1070,8 @@ function settingsPage() {
             { id: 'erweitert',          icon: 'fas fa-sliders-h',   label: 'Erweiterte Einstell.' },
             { id: 'kinder',             icon: 'fas fa-child',       label: 'Kinder & Gruppen' },
             { id: 'integrationen',      icon: 'fas fa-plug',        label: 'Integrationen' },
-            @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
-            { id: 'design',             icon: 'fas fa-palette',     label: 'Design-Theme' },
+            @if($showDesignTab)
+            { id: 'design',             icon: 'fas fa-palette',     label: 'Design & Menü' },
             @endif
         ],
         init() {
