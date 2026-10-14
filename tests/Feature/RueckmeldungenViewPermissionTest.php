@@ -34,7 +34,7 @@ class RueckmeldungenViewPermissionTest extends TestCase
         $this->group = Group::factory()->create();
 
         $author = User::factory()->create(['password_changed_at' => now()]);
-        $post = Post::factory()->create(['author' => $author->id, 'released' => 1]);
+        $post = Post::factory()->create(['author' => $author->id, 'released' => 1, 'external' => 0]);
         $post->groups()->attach($this->group);
 
         $this->abfrage = Rueckmeldungen::factory()->create([
