@@ -4,7 +4,11 @@
 @endsection
 
 @section('content')
-    <a href="{{url('rueckmeldungen')}}" class="btn btn-round btn-primary">zurück</a>
+    @can('manage rueckmeldungen')
+        <a href="{{url('rueckmeldungen')}}" class="btn btn-round btn-primary">zurück</a>
+    @else
+        <a href="{{url('post/'.$rueckmeldung->post_id)}}" class="btn btn-round btn-primary">zurück</a>
+    @endcan
     <div class="container-fluid">
         <div class="card">
             <div class="card-header border-bottom">

@@ -2,6 +2,8 @@
 
 Mit der Berechtigung **„manage rueckmeldungen"** kannst du Rückmeldungen zu Beiträgen erstellen, auswerten und herunterladen.
 
+Wer nur die Antworten sehen soll (z. B. der Elternbeirat), braucht **„view rueckmeldungen"**. Damit lassen sich bei allen Beiträgen, die man sehen kann, die Auswertung, die Detailansicht und der Download aufrufen. Die Gesamtübersicht aller Rückmeldungen und das Bearbeiten von Antworten bleiben „manage rueckmeldungen" vorbehalten.
+
 ## Rückmeldung erstellen
 
 Rückmeldungen werden **am Beitrag** erstellt – nicht im Verwaltungs-Index:

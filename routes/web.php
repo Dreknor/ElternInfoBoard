@@ -152,12 +152,13 @@ Route::middleware('auth')->group(function () {
         });
 
         // Routen für die Verwaltung der Rückmeldungen
+        // Berechtigung wird im Controller geprüft (manage, Autor oder view rueckmeldungen)
         Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
+        Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
+        Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
 
         Route::middleware('permission:manage rueckmeldungen')->group(function () {
             Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
-            Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
-            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
         });
 
         // Vertretungsplan

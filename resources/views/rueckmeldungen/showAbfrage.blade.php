@@ -4,7 +4,11 @@
 @endsection
 
 @section('content')
-    <a href="{{url('rueckmeldungen')}}" class="btn btn-round btn-primary">zurück</a>
+    @can('manage rueckmeldungen')
+        <a href="{{url('rueckmeldungen')}}" class="btn btn-round btn-primary">zurück</a>
+    @else
+        <a href="{{url('post/'.$rueckmeldung->post_id)}}" class="btn btn-round btn-primary">zurück</a>
+    @endcan
 
     <div class="container-fluid">
         <div class="card">
@@ -15,14 +19,16 @@
                             Rückmeldungen
                         </h5>
                     </div>
-                    <div class="col-auto pull-right">
-                        <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/new')}}" class="btn btn-outline-info">
-                            <i class="fa fa-plus-circle"></i>
-                            <div class="d-none d-md-inline">
-                                neue Rückmeldung anlegen
-                            </div>
-                        </a>
-                    </div>
+                    @can('manage rueckmeldungen')
+                        <div class="col-auto pull-right">
+                            <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/new')}}" class="btn btn-outline-info">
+                                <i class="fa fa-plus-circle"></i>
+                                <div class="d-none d-md-inline">
+                                    neue Rückmeldung anlegen
+                                </div>
+                            </a>
+                        </div>
+                    @endcan
                 </div>
             </div>
             <div class="card-body">
@@ -52,9 +58,11 @@
                         @foreach($rueckmeldung->userRueckmeldungen as $userRueckmeldung)
                             <tr>
                                 <td class="text-center">
-                                    <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/edit/'.$userRueckmeldung->id)}}">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
+                                    @can('manage rueckmeldungen')
+                                        <a href="{{url('userrueckmeldung/'.$rueckmeldung->id.'/edit/'.$userRueckmeldung->id)}}">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    @endcan
                                 </td>
                                 <td data-sort="{{trim($userRueckmeldung->user->familie_name)}}">
                                     {{trim($userRueckmeldung->user->familie_name)}}, {{$userRueckmeldung->user->vorname}}

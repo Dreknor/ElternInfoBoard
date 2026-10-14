@@ -157,6 +157,30 @@ class RueckmeldungenController extends Controller
     }
 
     /**
+     * Darf der Nutzer die Antworten zu dieser Rückmeldung einsehen und herunterladen?
+     * „manage rueckmeldungen" und der Autor immer, „view rueckmeldungen" nur für Beiträge, die der Nutzer sehen darf.
+     */
+    private function canViewAnswers(Rueckmeldungen $rueckmeldung): bool
+    {
+        $user = auth()->user();
+        $post = $rueckmeldung->post;
+
+        if ($user->can('manage rueckmeldungen')) {
+            return true;
+        }
+
+        if (is_null($post)) {
+            return false;
+        }
+
+        if ((int) $post->author === $user->id) {
+            return true;
+        }
+
+        return $user->can('view rueckmeldungen') && $user->can('view', $post);
+    }
+
+    /**
      * Show all Rueckmeldungen
      */
     public function index()
@@ -184,7 +208,7 @@ class RueckmeldungenController extends Controller
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
-        if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
+        if (! $this->canViewAnswers($rueckmeldung)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -220,7 +244,7 @@ class RueckmeldungenController extends Controller
      */
     public function download(Rueckmeldungen $rueckmeldung, $user_id)
     {
-        if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
+        if (! $this->canViewAnswers($rueckmeldung)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -240,7 +264,7 @@ class RueckmeldungenController extends Controller
      */
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
-        if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author != auth()->id()) {
+        if (! $this->canViewAnswers($rueckmeldung)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt für den Download der Rückmeldungen ',
