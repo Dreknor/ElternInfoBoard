@@ -2,6 +2,10 @@
 @section('title') - Termine @endsection
 
 @section('content')
+    @php
+        $preview ??= false;
+        $canManage = ! $preview && (auth()->id() == $liste->besitzer or auth()->user()->can('edit terminliste'));
+    @endphp
     <div class="w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
         <!-- Back Button -->
         <div class="flex items-center gap-2">
@@ -10,10 +14,21 @@
                 <i class="fas fa-arrow-left"></i>
                 Zurück zur Übersicht
             </a>
+            @if($canManage)
+                <a href="{{ route('listen.preview', $liste->id) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-medium rounded-lg transition-colors duration-200">
+                    <i class="fas fa-eye"></i>
+                    Vorschau
+                </a>
+            @endif
         </div>
 
+        @if($preview)
+            @include('listen.partials.preview_banner')
+        @endif
+
         <!-- Main Card -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden" @if($preview) inert @endif>
             <!-- Header -->
             <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 border-b border-teal-700 @if($liste->active == 0) from-cyan-500 to-cyan-600 border-cyan-700 @endif">
                 <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
@@ -27,7 +42,7 @@
                         @endif
                     </h2>
 
-                    @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
+                    @if($canManage)
                         <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
                             <button class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200"
                                     data-toggle="modal" data-target="#createEintragungModal">
@@ -102,7 +117,7 @@
                                 <i class="fas fa-exclamation-triangle mt-1 text-amber-500"></i>
                                 <div>
                                     <p class="font-semibold">Alle angelegten Termine liegen bereits in der Vergangenheit.</p>
-                                    @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
+                                    @if($canManage)
                                         <p class="text-sm text-amber-800">Mit „Alle“ kannst du sie trotzdem einblenden.</p>
                                     @else
                                         <p class="text-sm text-amber-800">Aktuell sind daher keine buchbaren Termine mehr vorhanden.</p>

@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -180,6 +181,26 @@ class ListenController extends Controller
             ]);
         }
 
+        return $this->renderListe($terminListe);
+    }
+
+    /**
+     * Vorschau: zeigt die Liste so, wie Eltern sie nach der Veröffentlichung sehen
+     * (ohne Verwaltungsfunktionen, ohne Interaktion).
+     *
+     * @return View
+     *
+     * @throws AuthorizationException
+     */
+    public function preview(Liste $terminListe)
+    {
+        Gate::authorize('editListe', $terminListe);
+
+        return $this->renderListe($terminListe, true);
+    }
+
+    private function renderListe(Liste $terminListe, bool $preview = false): View
+    {
         if ($terminListe->type == 'termin') {
             $terminListe->load('termine');
             $terminListe->termine->sortBy('termin');
@@ -189,6 +210,7 @@ class ListenController extends Controller
             return view('listen.terminListen.terminAuswahl', [
                 'liste' => $terminListe,
                 'allTermineInPast' => $allTermineInPast,
+                'preview' => $preview,
             ]);
         }
 
@@ -196,6 +218,7 @@ class ListenController extends Controller
 
         return view('listen.listenEintrag', [
             'liste' => $terminListe,
+            'preview' => $preview,
         ]);
     }
 

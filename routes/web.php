@@ -382,6 +382,7 @@ Route::middleware('auth')->group(function () {
         Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport'])->name('listen.ical.export');
+        Route::get('listen/{terminListe}/vorschau', [ListenController::class, 'preview'])->name('listen.preview');
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
 
         // TerminListe
@@ -397,6 +398,7 @@ Route::middleware('auth')->group(function () {
         // EintragListe
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
+        Route::post('listen/eintragungen/{listen_eintragung}/copy', [ListenEintragungenController::class, 'copy'])->name('listen.eintragungen.copy');
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
         Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
