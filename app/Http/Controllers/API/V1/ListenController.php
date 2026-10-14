@@ -62,6 +62,7 @@ class ListenController extends ApiController
      * Liste mit Terminen bzw. Einträgen.
      *
      * `mine` = Buchung der Familie; Namen anderer nur bei „für alle sichtbar“.
+     * Einträge enthalten `note`: Freitext der Person, die den Eintrag übernommen hat (z. B. Kuchensorte).
      */
     public function show(Request $request, Liste $liste): JsonResponse
     {
@@ -105,6 +106,7 @@ class ListenController extends ApiController
                 ->map(fn (Listen_Eintragungen $e) => [
                     'id' => $e->id,
                     'text' => $e->eintragung,
+                    'note' => $e->bemerkung,
                     'status' => $e->user_id === null ? 'free' : ($isMine((int) $e->user_id, $e->child_id) ? 'mine' : 'taken'),
                     'booked_by' => ($showNames || $isMine((int) $e->user_id, $e->child_id)) && $e->user_id ? $e->user?->name : null,
                     'child' => $childInfo($e->child, $showNames || $isMine((int) $e->user_id, $e->child_id)),
@@ -157,11 +159,16 @@ class ListenController extends ApiController
         return response()->json(['data' => ['id' => $eintrag->id], 'message' => 'Eingetragen.'], 201);
     }
 
-    /** Vorhandenen Eintrag übernehmen. */
+    /**
+     * Vorhandenen Eintrag übernehmen.
+     *
+     * @bodyParam child_id integer Kind des Eintrags; Pflicht bei `booking_scope = child` und mehreren Kindern.
+     * @bodyParam note string Optionaler Freitext zum Eintrag, z. B. die Kuchensorte (max. 255 Zeichen).
+     */
     public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag): JsonResponse
     {
-        $request->validate(['child_id' => 'nullable|integer']);
-        $this->service->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null);
+        $request->validate(['child_id' => 'nullable|integer', 'note' => 'nullable|string|max:255']);
+        $this->service->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null, $request->input('note'));
 
         return response()->json(['message' => 'Eingetragen.'], 201);
     }

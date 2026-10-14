@@ -64,7 +64,8 @@ class ListenEintragungenController extends Controller
         if ($listen_eintragung->user_id == null) {
             // „einmal“ je Kind bzw. je Familie, atomar (gleiche Regeln wie die App-API)
             try {
-                $this->listen->reserveEintrag($request->user(), $listen_eintragung, $request->integer('child_id') ?: null);
+                $request->validate(['bemerkung' => ['nullable', 'string', 'max:255']]);
+                $this->listen->reserveEintrag($request->user(), $listen_eintragung, $request->integer('child_id') ?: null, $request->input('bemerkung'));
             } catch (HttpException $e) {
                 return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
             }
@@ -98,6 +99,7 @@ class ListenEintragungenController extends Controller
         if (! is_null($listen_eintragung->user_id) and $this->listen->mayCancel(auth()->user(), (int) $listen_eintragung->user_id, $listen_eintragung->child_id)) {
             $listen_eintragung->user_id = null;
             $listen_eintragung->child_id = null;
+            $listen_eintragung->bemerkung = null;
 
             try {
                 $listen_eintragung->saveOrFail();
@@ -156,6 +158,7 @@ class ListenEintragungenController extends Controller
             try {
                 $listen_eintragung->user_id = null;
                 $listen_eintragung->child_id = null;
+                $listen_eintragung->bemerkung = null;
                 $listen_eintragung->saveOrFail();
             } catch (Throwable $e) {
                 Log::error($e->getMessage());

@@ -174,7 +174,7 @@ class UserService
         // Inhalte anderer bleiben erhalten, nur der Bezug wird entfernt
         DB::table('posts')->where('author', $id)->update(['author' => null]);
         DB::table('polls')->where('author_id', $id)->update(['author_id' => null]);
-        DB::table('listen_eintragungen')->where('user_id', $id)->update(['user_id' => null]);
+        DB::table('listen_eintragungen')->where('user_id', $id)->update(['user_id' => null, 'bemerkung' => null]);
         // Termin freigeben statt löschen – listen_termine kaskadiert auf pflichtstunden
         DB::table('listen_termine')->where('reserviert_fuer', $id)->update(['reserviert_fuer' => null]);
 
@@ -401,7 +401,7 @@ class UserService
                 $user->schickzeiten()->where('users_id', $user->id)->forceDelete();
 
                 Listen_Eintragungen::where('created_by', $user->id)->delete();
-                Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null]);
+                Listen_Eintragungen::where('user_id', $user->id)->update(['user_id' => null, 'bemerkung' => null]);
                 Discussion::where('owner', $user->id)->update(['owner' => null]);
                 listen_termine::where('reserviert_fuer', $user->id)->delete();
                 Poll::where('author_id', $user->id)->update(['author_id' => null]);

@@ -82,6 +82,9 @@
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
                                 <div class="flex-1">
                                     <p class="font-medium text-gray-800">{{ $eintrag->eintragung }}</p>
+                                    @if($eintrag->bemerkung)
+                                        <p class="text-sm text-gray-600 mb-0"><i class="fas fa-comment-dots mr-1"></i>{{ $eintrag->bemerkung }}</p>
+                                    @endif
                                     @if($eintrag->child && ($liste->visible_for_all or auth()->user()->can('edit terminliste') or app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), $eintrag->user_id ? (int) $eintrag->user_id : null, $eintrag->child_id)))
                                         <p class="text-xs text-gray-500 mb-0"><i class="fas fa-child mr-1"></i>für {{ $eintrag->child->first_name }}</p>
                                     @endif
@@ -102,9 +105,15 @@
                                             @endif
                                         </div>
                                     @else
-                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" style="display: inline;">
+                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" class="flex flex-wrap items-center justify-end gap-2">
                                             @csrf
                                             @method('PUT')
+                                            <input type="text"
+                                                   name="bemerkung"
+                                                   maxlength="255"
+                                                   class="w-40 sm:w-56 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none text-sm"
+                                                   placeholder="Bemerkung (optional)"
+                                                   aria-label="Bemerkung zu {{ $eintrag->eintragung }}">
                                             @include('listen.partials.child_select')
                                             <button type="submit"
                                                     class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">

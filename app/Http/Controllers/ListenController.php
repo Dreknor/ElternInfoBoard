@@ -319,6 +319,8 @@ class ListenController extends Controller
             $neuerEintrag = $eintragung->replicate();
             $neuerEintrag->listen_id = $kopie->id;
             $neuerEintrag->user_id = null;
+            $neuerEintrag->child_id = null;
+            $neuerEintrag->bemerkung = null;
             $neuerEintrag->created_by = auth()->id();
             $neuerEintrag->save();
         }

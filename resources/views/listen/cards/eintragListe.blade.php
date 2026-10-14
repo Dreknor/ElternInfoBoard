@@ -151,7 +151,7 @@
                                     </span>
                                 @endif
                             </p>
-                            <p class="text-sm" style="color: var(--color-text-secondary);">{{ $eintragung->eintragung }}</p>
+                            <p class="text-sm" style="color: var(--color-text-secondary);">{{ $eintragung->eintragung }}@if($eintragung->bemerkung) – {{ $eintragung->bemerkung }}@endif</p>
                         </div>
                         <form action="{{ url('eintragungen/absagen/' . $eintragung->id) }}" method="post" class="ml-2">
                             @csrf

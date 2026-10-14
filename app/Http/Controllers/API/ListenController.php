@@ -32,13 +32,17 @@ class ListenController extends Controller implements HasMiddleware
      *
      * @urlParam eintrag required ID des Eintrags
      *
+     * @bodyParam bemerkung string Optionaler Freitext zum Eintrag, z. B. die Kuchensorte (max. 255 Zeichen).
+     *
      * @param  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag)
     {
+        $request->validate(['bemerkung' => 'nullable|string|max:255']);
+
         try {
-            app(ListenService::class)->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null);
+            app(ListenService::class)->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null, $request->input('bemerkung'));
         } catch (HttpException $e) {
             return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }

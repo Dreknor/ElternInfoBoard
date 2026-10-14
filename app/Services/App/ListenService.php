@@ -220,17 +220,19 @@ class ListenService
         });
     }
 
-    public function reserveEintrag(User $user, Listen_Eintragungen $eintrag, ?int $childId = null): void
+    /** Vorgegebenen Eintrag übernehmen; $bemerkung ist der optionale Freitext (z. B. Kuchensorte). */
+    public function reserveEintrag(User $user, Listen_Eintragungen $eintrag, ?int $childId = null, ?string $bemerkung = null): void
     {
+        $bemerkung = trim((string) $bemerkung) !== '' ? mb_substr(trim($bemerkung), 0, 255) : null;
         $liste = $eintrag->liste;
         $this->requireOpen($user, $liste, 'eintrag');
         $child = $this->resolveChild($user, $liste, $childId);
 
-        $this->lockedForBooking($liste, function () use ($user, $liste, $child, $eintrag) {
+        $this->lockedForBooking($liste, function () use ($user, $liste, $child, $eintrag, $bemerkung) {
             $this->assertLimit($user, $liste, $child, 'eintrag');
             $updated = Listen_Eintragungen::where('id', $eintrag->id)
                 ->whereNull('user_id')
-                ->update(['user_id' => $user->id, 'child_id' => $child?->id, 'updated_at' => now()]);
+                ->update(['user_id' => $user->id, 'child_id' => $child?->id, 'bemerkung' => $bemerkung, 'updated_at' => now()]);
             if ($updated === 0) {
                 throw new HttpException(409, 'Dieser Eintrag wurde gerade von jemand anderem übernommen.');
             }
@@ -269,7 +271,7 @@ class ListenService
         if (in_array((int) $eintrag->created_by, Family::userIds($user), true)) {
             $eintrag->delete();
         } else {
-            $eintrag->update(['user_id' => null, 'child_id' => null]);
+            $eintrag->update(['user_id' => null, 'child_id' => null, 'bemerkung' => null]);
         }
     }
 }
