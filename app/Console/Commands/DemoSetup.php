@@ -227,6 +227,7 @@ class DemoSetup extends Command
             'edit GTA', 'schoolyear.change', 'delete logs', 'see logs',
             'view external offer', 'view sites', 'create sites',
             'manage pflichtstunden', 'manage elternrat events', 'manage elternrat tasks',
+            'view stundenplan', 'view GTA', 'view Pflichtstunden', 'use messenger',
         ];
 
         foreach ($permissions as $perm) {
@@ -245,6 +246,12 @@ class DemoSetup extends Command
             'Elternrat' => [
                 'view elternrat', 'view groups', 'manage elternrat events', 'manage elternrat tasks',
             ],
+            // Eltern: Module, die Familien im ElternInfoBoard und in der Eltern-App sehen
+            'Eltern' => [
+                'view krankmeldung', 'view schickzeiten', 'view vertretungsplan', 'view stundenplan',
+                'view external offer', 'view sites', 'view GTA', 'view Pflichtstunden',
+                'view reinigung', 'use messenger',
+            ],
             'Sekretariat' => [
                 'view krankmeldung', 'edit schickzeiten', 'view schickzeiten',
                 'download schickzeiten', 'view groups', 'view rueckmeldungen',
@@ -254,8 +261,9 @@ class DemoSetup extends Command
 
         foreach ($roles as $roleName => $rolePerms) {
             $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
-            $permObjects = Permission::whereIn('name', $rolePerms)->get();
-            $role->syncPermissions($permObjects);
+            $permObjects = Permission::where('guard_name', 'web')->whereIn('name', $rolePerms)->get();
+            // „Eltern“ legt bereits der RolesPermissionsDistributionSeeder an – nur ergänzen, nicht ersetzen
+            $roleName === 'Eltern' ? $role->givePermissionTo($permObjects) : $role->syncPermissions($permObjects);
         }
     }
 
@@ -311,37 +319,37 @@ class DemoSetup extends Command
             'elternrat' => [
                 'name' => 'Sandra Müller (Elternratsvorsitzende)',
                 'email' => 'elternrat@ev-schulzentrum-demo.de',
-                'roles' => ['Elternrat'],
+                'roles' => ['Elternrat', 'Eltern'],
             ],
             'mueller' => [
                 'name' => 'Familie Müller',
                 'email' => 'mueller@ev-schulzentrum-demo.de',
-                'roles' => [],
+                'roles' => ['Eltern'],
             ],
             'schulz' => [
                 'name' => 'Familie Schulz',
                 'email' => 'schulz@ev-schulzentrum-demo.de',
-                'roles' => [],
+                'roles' => ['Eltern'],
             ],
             'fischer' => [
                 'name' => 'Familie Fischer',
                 'email' => 'fischer@ev-schulzentrum-demo.de',
-                'roles' => [],
+                'roles' => ['Eltern'],
             ],
             'koch' => [
                 'name' => 'Familie Koch',
                 'email' => 'koch@ev-schulzentrum-demo.de',
-                'roles' => [],
+                'roles' => ['Eltern'],
             ],
             'bauer' => [
                 'name' => 'Familie Bauer',
                 'email' => 'bauer@ev-schulzentrum-demo.de',
-                'roles' => [],
+                'roles' => ['Eltern'],
             ],
             'wagner' => [
                 'name' => 'Familie Wagner',
                 'email' => 'wagner@ev-schulzentrum-demo.de',
-                'roles' => [],
+                'roles' => ['Eltern'],
             ],
         ];
 
