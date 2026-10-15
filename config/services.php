@@ -53,7 +53,7 @@ return [
         'key_id' => env('APNS_KEY_ID'),
         'team_id' => env('APNS_TEAM_ID'),
         'key_path' => env('APNS_KEY_PATH'),          // Pfad zur .p8-Datei
-        'bundle_id' => env('APNS_BUNDLE_ID', 'de.eszr.elterninfo'),
+        'bundle_id' => env('APNS_BUNDLE_ID', 'de.elterninfoapp.eltern'),
         'production' => env('APNS_PRODUCTION', true),
     ],
 
