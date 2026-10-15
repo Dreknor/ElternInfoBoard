@@ -327,6 +327,10 @@ class SettingsController extends Controller implements HasMiddleware
                     'protected_roles' => 'sometimes|array',
                     'protected_roles.*' => 'string|exists:roles,name',
                     'public_termine_enabled' => 'sometimes|boolean',
+                    'public_termine_location_name' => 'nullable|string|max:255',
+                    'public_termine_location_street' => 'nullable|string|max:255',
+                    'public_termine_location_postal_code' => 'nullable|string|max:20',
+                    'public_termine_location_city' => 'nullable|string|max:255',
                 ]);
 
                 $settings = new GeneralSetting;
@@ -362,6 +366,10 @@ class SettingsController extends Controller implements HasMiddleware
                     $settings->login_tracking_mode = $validated['login_tracking_mode'];
                     $settings->protected_roles = $validated['protected_roles'] ?? [];
                     $settings->public_termine_enabled = $request->boolean('public_termine_enabled');
+                    $settings->public_termine_location_name = $validated['public_termine_location_name'] ?? null;
+                    $settings->public_termine_location_street = $validated['public_termine_location_street'] ?? null;
+                    $settings->public_termine_location_postal_code = $validated['public_termine_location_postal_code'] ?? null;
+                    $settings->public_termine_location_city = $validated['public_termine_location_city'] ?? null;
                     $settings->save();
 
                     break;

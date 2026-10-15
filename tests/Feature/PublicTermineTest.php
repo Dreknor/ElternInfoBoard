@@ -63,6 +63,52 @@ class PublicTermineTest extends TestCase
     }
 
     #[Test]
+    public function html_seite_enthaelt_schema_org_events_als_json_ld(): void
+    {
+        $this->setPublicEnabled(true);
+        $settings = app(GeneralSetting::class);
+        $settings->public_termine_location_name = 'Grundschule Musterstadt';
+        $settings->public_termine_location_street = 'Schulweg 1';
+        $settings->public_termine_location_postal_code = '01234';
+        $settings->public_termine_location_city = 'Musterstadt';
+        $settings->save();
+
+        $termin = Termin::create(['terminname' => 'Tag der offenen Tür <b>', 'start' => now()->addDays(2)->setTime(10, 0), 'ende' => now()->addDays(2)->setTime(12, 0), 'public' => true]);
+        $ganztags = Termin::create(['terminname' => 'Projekttag', 'start' => now()->addDays(5)->startOfDay(), 'ende' => now()->addDays(5)->endOfDay(), 'fullDay' => true, 'public' => true]);
+
+        $html = $this->get('termine/oeffentlich')->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m));
+        $this->assertStringNotContainsString('<b>', $m[1], 'JSON-LD muss HTML-Tags escapen');
+        $jsonLd = json_decode($m[1], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('https://schema.org', $jsonLd['@context']);
+        $this->assertCount(2, $jsonLd['@graph']);
+
+        $event = $jsonLd['@graph'][0];
+        $this->assertSame('Event', $event['@type']);
+        $this->assertSame('Tag der offenen Tür <b>', $event['name']);
+        $this->assertSame($termin->start->timezone('Europe/Berlin')->toIso8601String(), $event['startDate']);
+        $this->assertStringEndsWith('#termin-'.$termin->id, $event['url']);
+        $this->assertSame('https://schema.org/EventScheduled', $event['eventStatus']);
+        $this->assertSame('Grundschule Musterstadt', $event['location']['name']);
+        $this->assertSame([
+            '@type' => 'PostalAddress',
+            'streetAddress' => 'Schulweg 1',
+            'postalCode' => '01234',
+            'addressLocality' => 'Musterstadt',
+            'addressCountry' => 'DE',
+        ], $event['location']['address']);
+
+        // Ganztägige Termine nur mit Datum
+        $this->assertSame($ganztags->start->toDateString(), $jsonLd['@graph'][1]['startDate']);
+
+        // Semantisches HTML mit maschinenlesbaren Zeitangaben und Ankern
+        $this->assertStringContainsString('id="termin-'.$termin->id.'"', $html);
+        $this->assertStringContainsString('<time datetime="'.$event['startDate'].'"', $html);
+    }
+
+    #[Test]
     public function html_seite_und_ics_sind_bei_deaktivierter_einstellung_nicht_erreichbar(): void
     {
         $this->setPublicEnabled(false);

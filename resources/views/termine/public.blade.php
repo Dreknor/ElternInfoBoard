@@ -10,8 +10,17 @@
             : url('storage/img/' . $settings->logo);
         $webcalUrl = preg_replace('#^https?://#', 'webcal://', $icsUrl);
     @endphp
-    <title>Termine – {{ $appName }}</title>
-    <link rel="alternate" type="text/calendar" title="Termine – {{ $appName }}" href="{{ $icsUrl }}">
+    <title>Öffentliche Termine – {{ $appName }}</title>
+    <meta name="description" content="Aktuelle öffentliche Termine und Veranstaltungen von {{ $appName }} – auch als Kalender zum Abonnieren.">
+    <link rel="canonical" href="{{ $pageUrl }}">
+    <link rel="alternate" type="text/calendar" title="Öffentliche Termine – {{ $appName }}" href="{{ $icsUrl }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Öffentliche Termine – {{ $appName }}">
+    <meta property="og:url" content="{{ $pageUrl }}">
+    <meta property="og:image" content="{{ $logoUrl }}">
+    <meta property="og:locale" content="de_DE">
+    {{-- schema.org/Event – wird von Suchmaschinen (Google) als Veranstaltung ausgewertet --}}
+    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_PRETTY_PRINT) !!}</script>
     <link href="{{ asset('/css/all.css') }}?v=1" rel="stylesheet">
     <x-theme-vars />
     <style>
@@ -41,17 +50,20 @@
                color: var(--pt-primary-dark); background: var(--pt-surface); }
         .btn--primary { background: var(--pt-primary); color: #fff; }
         h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .05em; color: var(--pt-muted); margin: 24px 0 8px; }
-        ul.termine { list-style: none; margin: 0; padding: 0; background: var(--pt-surface);
+        ol.termine { list-style: none; margin: 0; padding: 0; background: var(--pt-surface);
                      border: 1px solid var(--pt-border); border-radius: 12px; overflow: hidden; }
-        ul.termine li { display: flex; gap: 14px; padding: 12px 14px; border-top: 1px solid var(--pt-border); }
-        ul.termine li:first-child { border-top: 0; }
+        ol.termine > li { border-top: 1px solid var(--pt-border); }
+        ol.termine > li:first-child { border-top: 0; }
+        ol.termine > li:target { background: color-mix(in srgb, var(--pt-primary) 6%, var(--pt-surface)); }
+        article.termin { display: flex; gap: 14px; padding: 12px 14px; }
         .date { flex: 0 0 52px; text-align: center; border-radius: 10px; padding: 4px 0;
                 background: color-mix(in srgb, var(--pt-primary) 10%, var(--pt-surface)); color: var(--pt-primary-dark); }
         .date .d { display: block; font-size: 20px; font-weight: 700; line-height: 1.1; }
         .date .w { display: block; font-size: 12px; text-transform: uppercase; }
         .info { min-width: 0; }
-        .info strong { display: block; overflow-wrap: anywhere; }
-        .info span { font-size: 14px; color: var(--pt-muted); }
+        .info h3 { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+        .info p { margin: 0; font-size: 14px; color: var(--pt-muted); }
+        .ort { margin: -8px 0 16px; font-size: 14px; color: var(--pt-muted); }
         .empty { background: var(--pt-surface); border: 1px solid var(--pt-border); border-radius: 12px; padding: 24px;
                  text-align: center; color: var(--pt-muted); }
         footer { text-align: center; font-size: 12px; color: var(--pt-muted); padding: 24px 16px; }
@@ -69,43 +81,65 @@
 </header>
 
 <main class="wrap">
-    <div class="actions">
-        <a class="btn btn--primary" href="{{ $webcalUrl }}"><i class="fas fa-calendar-plus"></i> Kalender abonnieren</a>
-        <a class="btn" href="{{ $icsUrl }}"><i class="fas fa-download"></i> Kalender-Datei (.ics)</a>
-    </div>
+    @if($settings->public_termine_location_name || $settings->public_termine_location_city)
+        <p class="ort">
+            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+            {{ collect([
+                $settings->public_termine_location_name,
+                $settings->public_termine_location_street,
+                trim($settings->public_termine_location_postal_code.' '.$settings->public_termine_location_city),
+            ])->filter()->implode(', ') }}
+        </p>
+    @endif
+
+    <nav class="actions" aria-label="Kalender">
+        <a class="btn btn--primary" href="{{ $webcalUrl }}"><i class="fas fa-calendar-plus" aria-hidden="true"></i> Kalender abonnieren</a>
+        <a class="btn" href="{{ $icsUrl }}" type="text/calendar" download><i class="fas fa-download" aria-hidden="true"></i> Kalender-Datei (.ics)</a>
+    </nav>
 
     @forelse($termineNachMonat as $monat => $termine)
-        <h2>{{ $monat }}</h2>
-        <ul class="termine">
-            @foreach($termine as $termin)
-                @php
-                    $start = $termin->start->timezone('Europe/Berlin')->locale('de');
-                    $ende = $termin->ende->timezone('Europe/Berlin')->locale('de');
-                    $mehrtaegig = ! $start->isSameDay($ende);
-                @endphp
-                <li>
-                    <div class="date" aria-hidden="true">
-                        <span class="d">{{ $start->format('d') }}</span>
-                        <span class="w">{{ $start->isoFormat('dd') }}</span>
-                    </div>
-                    <div class="info">
-                        <strong>{{ $termin->terminname }}</strong>
-                        <span>
-                            @if($termin->fullDay)
-                                {{ $start->isoFormat('dddd, D. MMMM YYYY') }}@if($mehrtaegig) – {{ $ende->isoFormat('dddd, D. MMMM YYYY') }}@endif
-                                · ganztägig
-                            @elseif($mehrtaegig)
-                                {{ $start->isoFormat('dd, D. MMMM YYYY, HH:mm') }} Uhr – {{ $ende->isoFormat('dd, D. MMMM YYYY, HH:mm') }} Uhr
-                            @else
-                                {{ $start->isoFormat('dddd, D. MMMM YYYY') }} · {{ $start->format('H:i') }}–{{ $ende->format('H:i') }} Uhr
-                            @endif
-                        </span>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
+        @php $monatId = 'monat-'.$termine->first()->start->timezone('Europe/Berlin')->format('Y-m'); @endphp
+        <section aria-labelledby="{{ $monatId }}">
+            <h2 id="{{ $monatId }}">{{ $monat }}</h2>
+            <ol class="termine">
+                @foreach($termine as $termin)
+                    @php
+                        $start = $termin->start->timezone('Europe/Berlin')->locale('de');
+                        $ende = $termin->ende->timezone('Europe/Berlin')->locale('de');
+                        $mehrtaegig = ! $start->isSameDay($ende);
+                        // Maschinenlesbare Zeitangaben: ganztägig nur Datum, sonst ISO 8601 mit Offset
+                        $startIso = $termin->fullDay ? $start->toDateString() : $start->toIso8601String();
+                        $endeIso = $termin->fullDay ? $ende->toDateString() : $ende->toIso8601String();
+                    @endphp
+                    <li id="termin-{{ $termin->id }}">
+                        <article class="termin" aria-labelledby="termin-{{ $termin->id }}-titel"
+                                 data-start="{{ $startIso }}" data-end="{{ $endeIso }}"
+                                 data-all-day="{{ $termin->fullDay ? 'true' : 'false' }}">
+                            <div class="date" aria-hidden="true">
+                                <span class="d">{{ $start->format('d') }}</span>
+                                <span class="w">{{ $start->isoFormat('dd') }}</span>
+                            </div>
+                            <div class="info">
+                                <h3 id="termin-{{ $termin->id }}-titel">{{ $termin->terminname }}</h3>
+                                <p>
+                                    @if($termin->fullDay)
+                                        <time datetime="{{ $startIso }}">{{ $start->isoFormat('dddd, D. MMMM YYYY') }}</time>@if($mehrtaegig) – <time datetime="{{ $endeIso }}">{{ $ende->isoFormat('dddd, D. MMMM YYYY') }}</time>@endif
+                                        · ganztägig
+                                    @elseif($mehrtaegig)
+                                        <time datetime="{{ $startIso }}">{{ $start->isoFormat('dd, D. MMMM YYYY, HH:mm') }} Uhr</time> –
+                                        <time datetime="{{ $endeIso }}">{{ $ende->isoFormat('dd, D. MMMM YYYY, HH:mm') }} Uhr</time>
+                                    @else
+                                        <time datetime="{{ $startIso }}">{{ $start->isoFormat('dddd, D. MMMM YYYY') }} · {{ $start->format('H:i') }}</time>–<time datetime="{{ $endeIso }}">{{ $ende->format('H:i') }}</time> Uhr
+                                    @endif
+                                </p>
+                            </div>
+                        </article>
+                    </li>
+                @endforeach
+            </ol>
+        </section>
     @empty
-        <div class="empty">Derzeit sind keine öffentlichen Termine geplant.</div>
+        <p class="empty">Derzeit sind keine öffentlichen Termine geplant.</p>
     @endforelse
 </main>
 

@@ -50,6 +50,18 @@ class GeneralSetting extends Settings
      */
     public bool $public_termine_enabled = true;
 
+    /**
+     * Veranstaltungsort öffentlicher Termine für die strukturierten Daten (schema.org/Event).
+     * Google zeigt Termine nur mit vollständiger Adresse als Veranstaltung an.
+     */
+    public ?string $public_termine_location_name = null;
+
+    public ?string $public_termine_location_street = null;
+
+    public ?string $public_termine_location_postal_code = null;
+
+    public ?string $public_termine_location_city = null;
+
     public static function group(): string
     {
         return 'general';
