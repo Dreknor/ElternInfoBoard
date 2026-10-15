@@ -78,7 +78,18 @@
         „Mehr → Einstellungen → Meine Daten“, welche Daten gespeichert sind, und können dort unter „Angemeldete Geräte“ Geräte abmelden. Sie haben außerdem das
         Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren.</p>
 
-    <h2>9. Kontakt</h2>
+    <h2 id="loeschen">9. Konto und Daten löschen</h2>
+    <p>Ihr Konto im ElternInfoBoard legt Ihre Schule an und löscht es auch. So beantragen Sie die Löschung:</p>
+    <ol>
+        <li>Wenden Sie sich an das Sekretariat bzw. die Verwaltung des ElternInfoBoards Ihrer Schule (z. B. über „Kontakt zur Schule“ in der App)
+            und bitten Sie um Löschung Ihres Kontos.</li>
+        <li>Die Schule löscht Ihr Konto mit Profil, Geräten (Push-Token) und Ihren Eingaben, soweit sie nicht aufbewahrt werden müssen
+            (z. B. Krankmeldungen innerhalb der schulrechtlichen Fristen). Gelöschte Konten werden nach der Frist der Schule endgültig entfernt.</li>
+        <li>Auf Ihrem Gerät löschen Sie alle Daten der App sofort, indem Sie sich abmelden oder die App deinstallieren.</li>
+    </ol>
+    <p>Einzelne Geräte melden Sie in der App unter „Mehr → Einstellungen → Angemeldete Geräte“ ab.</p>
+
+    <h2>10. Kontakt</h2>
     @if($contact)
         <address>{{ $contact }}</address>
     @else
