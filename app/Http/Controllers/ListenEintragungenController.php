@@ -10,6 +10,7 @@ use App\Services\App\ListenService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -49,6 +50,35 @@ class ListenEintragungenController extends Controller
         return redirect()->back()->with([
             'type' => 'success',
             'Meldung' => 'Eintrag erfolgreich',
+        ]);
+    }
+
+    /**
+     * Kopiert einen nicht reservierten Eintrag (nur Listen-Ersteller bzw. Verwaltung).
+     *
+     * @return RedirectResponse
+     */
+    public function copy(Listen_Eintragungen $listen_eintragung)
+    {
+        Gate::authorize('editListe', $listen_eintragung->liste);
+
+        if ($listen_eintragung->user_id != null) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Reservierte Einträge können nicht kopiert werden',
+            ]);
+        }
+
+        $new = $listen_eintragung->replicate();
+        $new->user_id = null;
+        $new->child_id = null;
+        $new->bemerkung = null;
+        $new->created_by = auth()->id();
+        $new->save();
+
+        return redirect()->back()->with([
+            'type' => 'success',
+            'Meldung' => 'Eintrag kopiert',
         ]);
     }
 
