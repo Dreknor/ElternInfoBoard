@@ -106,6 +106,8 @@ Route::get('app/datenschutz', fn () => view('app.datenschutz', [
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
+// Öffentliche Termine als HTML-Seite (muss vor Route::resource('termine') stehen)
+Route::get('termine/oeffentlich', [ICalController::class, 'publicHtml'])->middleware('throttle:60,1')->name('termine.public');
 
 // API-Dokumentation nur für Admins zugänglich (enthält alle Endpunkte, Auth-Details etc.)
 Route::middleware(['auth', 'permission:edit settings'])->group(function () {

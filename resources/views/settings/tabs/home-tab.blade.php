@@ -99,6 +99,28 @@
                     </div>
                 </div>
             </div>
+            <div class="form-row mt-1 p-2 border">
+                <div class="col-md-6 col-sm-12">
+                    <input type="hidden" name="public_termine_enabled" value="0">
+                    <label class="flex items-center gap-2 cursor-pointer mb-0">
+                        <input type="checkbox" name="public_termine_enabled" value="1"
+                               class="w-4 h-4 cursor-pointer" style="accent-color: var(--color-primary);"
+                               @checked($settings->public_termine_enabled ?? true)>
+                        <span class="select-none">Öffentliche Termine erlauben</span>
+                    </label>
+                </div>
+                <div class="col-md-6 col-sm-12 m-auto">
+                    <div class="small">
+                        Wenn aktiv, können Termine als „öffentlich“ markiert werden. Öffentliche Termine sind ohne
+                        Anmeldung abrufbar:
+                        <ul class="mt-1 mb-0 pl-4">
+                            <li>als Seite: <a href="{{ url('termine/oeffentlich') }}" target="_blank" rel="noopener">{{ url('termine/oeffentlich') }}</a></li>
+                            <li>als Kalender-Datei: <a href="{{ url('ical/publicEvents') }}">{{ url('ical/publicEvents') }}</a></li>
+                        </ul>
+                        Ist die Option deaktiviert, wird die Auswahl beim Anlegen ausgeblendet und beide Adressen sind nicht erreichbar.
+                    </div>
+                </div>
+            </div>
             <div class="form-row">
                 <button type="submit" class="btn btn-success btn-block">
                     Einstellungen speichern

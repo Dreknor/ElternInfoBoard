@@ -326,6 +326,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'login_tracking_mode' => 'required|in:user,always,never',
                     'protected_roles' => 'sometimes|array',
                     'protected_roles.*' => 'string|exists:roles,name',
+                    'public_termine_enabled' => 'sometimes|boolean',
                 ]);
 
                 $settings = new GeneralSetting;
@@ -360,6 +361,7 @@ class SettingsController extends Controller implements HasMiddleware
                 }
                     $settings->login_tracking_mode = $validated['login_tracking_mode'];
                     $settings->protected_roles = $validated['protected_roles'] ?? [];
+                    $settings->public_termine_enabled = $request->boolean('public_termine_enabled');
                     $settings->save();
 
                     break;

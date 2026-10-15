@@ -44,6 +44,12 @@ class GeneralSetting extends Settings
      */
     public array $protected_roles = [];
 
+    /**
+     * Dürfen Termine als „öffentlich“ markiert und ohne Anmeldung veröffentlicht werden
+     * (ICS-Feed und HTML-Seite)? Bei false wird die Option beim Anlegen ausgeblendet.
+     */
+    public bool $public_termine_enabled = true;
+
     public static function group(): string
     {
         return 'general';

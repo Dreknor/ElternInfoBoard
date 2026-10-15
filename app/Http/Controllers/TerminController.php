@@ -8,6 +8,7 @@ use App\Model\Post;
 use App\Model\Reinigung;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -32,6 +33,14 @@ class TerminController extends Controller implements HasMiddleware
         return [
             'password_expired',
         ];
+    }
+
+    /**
+     * Dürfen Termine laut Einstellung veröffentlicht werden?
+     */
+    private function publicAllowed(): bool
+    {
+        return app(GeneralSetting::class)->public_termine_enabled;
     }
 
     /**
@@ -114,7 +123,7 @@ class TerminController extends Controller implements HasMiddleware
                     'start' => $start,
                     'ende' => $ende,
                     'fullDay' => $request->fullDay,
-                    'public' => $request->public,
+                    'public' => $this->publicAllowed() && $request->boolean('public'),
                 ]
             );
         } catch (\Exception $e) {
@@ -248,7 +257,7 @@ class TerminController extends Controller implements HasMiddleware
                 'start' => $start,
                 'ende' => $ende,
                 'fullDay' => $request->fullDay,
-                'public' => $request->public,
+                'public' => $this->publicAllowed() && $request->boolean('public'),
             ]);
             $termin->save();
 

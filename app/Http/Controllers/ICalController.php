@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Model\listen_termine;
 use App\Model\Termin;
 use App\Model\User;
+use App\Settings\GeneralSetting;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
 use Spatie\IcalendarGenerator\Components\Calendar;
 use Spatie\IcalendarGenerator\Components\Event;
@@ -113,8 +115,30 @@ class ICalController extends Controller
     /**
      * @return Response
      */
+    /**
+     * Öffentliche Termine als HTML-Seite (ohne Anmeldung).
+     */
+    public function publicHtml(): View
+    {
+        abort_unless(app(GeneralSetting::class)->public_termine_enabled, 404);
+
+        $termine = Termin::query()
+            ->where('public', 1)
+            ->where('ende', '>=', Carbon::today())
+            ->orderBy('start')
+            ->get()
+            ->groupBy(fn (Termin $termin) => $termin->start->locale('de')->isoFormat('MMMM YYYY'));
+
+        return view('termine.public', [
+            'termineNachMonat' => $termine,
+            'icsUrl' => url('ical/publicEvents'),
+        ]);
+    }
+
     public function publicICal()
     {
+        abort_unless(app(GeneralSetting::class)->public_termine_enabled, 404);
+
         $Termine = Termin::where('public', 1)->get();
         $Termine = $Termine->unique('id');
         $Termine = $Termine->sortBy('start');

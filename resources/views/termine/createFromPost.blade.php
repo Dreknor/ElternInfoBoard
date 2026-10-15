@@ -47,6 +47,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @if($settings->public_termine_enabled ?? true)
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="form-group">
@@ -58,6 +59,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                 </div>
                             </div>
 
