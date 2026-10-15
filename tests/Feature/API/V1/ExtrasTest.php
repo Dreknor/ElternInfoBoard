@@ -82,6 +82,17 @@ class ExtrasTest extends AppApiTestCase
     }
 
     /** @test */
+    public function app_privacy_policy_is_public(): void
+    {
+        config(['services.app.privacy_publisher' => 'Ev. Schulzentrum\nMusterstraße 1']);
+
+        $this->get('/app/datenschutz')->assertOk()
+            ->assertSee('Datenschutzerklärung der ElternInfo-App')
+            ->assertSee("Ev. Schulzentrum\nMusterstraße 1", false)
+            ->assertSee('Firebase Cloud Messaging');
+    }
+
+    /** @test */
     public function media_without_uuid_does_not_break_file_and_post_lists(): void
     {
         Storage::fake('local');

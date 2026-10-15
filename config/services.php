@@ -67,6 +67,10 @@ return [
     'app' => [
         'scheme' => env('APP_SCHEME', 'elterninfo'),
         'min_version' => env('APP_MIN_VERSION', '0.1.0'),
+        // Datenschutzerklärung der App (/app/datenschutz, Pflicht-URL im Play Store / App Store).
+        // Mehrzeilig mit \n, z. B. "Ev. Schulzentrum …\nMusterstraße 1\n01445 Radebeul\ndatenschutz@…"
+        'privacy_publisher' => env('APP_PRIVACY_PUBLISHER'),
+        'privacy_contact' => env('APP_PRIVACY_CONTACT'),
     ],
 
 ];
