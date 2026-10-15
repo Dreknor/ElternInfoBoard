@@ -55,13 +55,10 @@
 </footer>
 
 <style>
+    /* Normale Fußzeile am Seitenende – nicht sticky, sonst überdeckt sie beim Scrollen die Übersicht */
     .anwesenheit-footer {
-        position: sticky;
-        bottom: 0;
-        /* Kein backdrop-filter: auf iPads ruckelt Scrollen sonst spürbar */
         background: #f8f9fa;
         border-top: 1px solid rgba(0, 0, 0, 0.08);
-        z-index: 10;
     }
 </style>
 
