@@ -270,7 +270,7 @@ class DemoSetup extends Command
                 'name' => $name,
                 'password' => Hash::make($password),
                 'changePassword' => false,
-                'benachrichtigung' => 1,
+                'benachrichtigung' => 'daily',
                 'email_verified_at' => now(),
             ]
         );
@@ -352,7 +352,7 @@ class DemoSetup extends Command
                     'name' => $data['name'],
                     'password' => $demoPassword,
                     'changePassword' => false,
-                    'benachrichtigung' => 1,
+                    'benachrichtigung' => 'daily',
                     'email_verified_at' => now(),
                 ]
             );
