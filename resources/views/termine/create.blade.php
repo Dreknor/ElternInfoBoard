@@ -77,7 +77,7 @@
                                     </span>
                                 </div>
                                 <div class="card-body">
-                                    @include('include.formGroups')
+                                    @include('include.formGroups', ['withPersons' => true])
                                 </div>
                             </div>
                         </div>

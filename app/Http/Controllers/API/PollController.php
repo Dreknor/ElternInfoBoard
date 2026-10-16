@@ -42,7 +42,7 @@ class PollController extends Controller
         }
 
         // Check if user has access to this post
-        if (!$post->users->contains($user) && !$user->can('view all')) {
+        if (!$post->hasRecipient($user) && !$user->can('view all')) {
             return response()->json(['error' => 'User not allowed to view this poll'], 403);
         }
 
@@ -119,7 +119,7 @@ class PollController extends Controller
         }
 
         // Check if user has access to this post
-        if (!$post->users->contains($user) && !$user->can('view all')) {
+        if (!$post->hasRecipient($user) && !$user->can('view all')) {
             return response()->json(['error' => 'User not allowed to vote on this poll'], 403);
         }
 

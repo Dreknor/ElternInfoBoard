@@ -8,6 +8,7 @@ use App\Model\Post;
 use App\Model\Reinigung;
 use App\Model\Termin;
 use App\Repositories\GroupsRepository;
+use App\Services\IndividualRecipients;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -43,7 +44,7 @@ class TerminController extends Controller implements HasMiddleware
     {
         if (auth()->user()->can('view all')) {
             $termine = Termin::query()
-                ->with('groups')
+                ->with(['groups', 'recipientUsers'])
                 ->where(function ($query) {
                     $query->where('start', '>=', Carbon::today())
                         ->orWhere('ende', '>=', Carbon::today());
@@ -52,14 +53,12 @@ class TerminController extends Controller implements HasMiddleware
                 ->get();
         } else {
             $termine = Termin::query()
-                ->with('groups')
+                ->with(['groups', 'recipientUsers'])
                 ->where(function ($query) {
                     $query->where('start', '>=', Carbon::today())
                         ->orWhere('ende', '>=', Carbon::today());
                 })
-                ->whereHas('groups', function ($query) {
-                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-                })
+                ->forRecipient(auth()->user())
                 ->orderBy('start')
                 ->get();
         }
@@ -130,6 +129,7 @@ class TerminController extends Controller implements HasMiddleware
         try {
             $gruppen = $this->grousRepository->getGroups($request->input('gruppen'));
             $termine->groups()->sync($gruppen);
+            IndividualRecipients::sync($termine, $request);
 
         } catch (\Exception $e) {
 
@@ -256,10 +256,9 @@ class TerminController extends Controller implements HasMiddleware
             $gruppen = $this->grousRepository->getGroups($gruppen);
 
             $termin->groups()->attach($gruppen);
+            IndividualRecipients::sync($termin, $request);
 
-            $users = $termin->users;
-
-            $users->unique('id');
+            $users = $termin->recipients();
 
             $termin->notify(
                 users: $users,
@@ -295,6 +294,7 @@ class TerminController extends Controller implements HasMiddleware
         Gate::authorize('delete', $termine);
 
         $termine->groups()->detach();
+        $termine->recipientUsers()->detach();
         $termine->delete();
 
         Cache::forget('termine'.auth()->id());

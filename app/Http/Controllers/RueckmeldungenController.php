@@ -359,7 +359,7 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
-        $users = $rueckmeldung->post->users;
+        $users = $rueckmeldung->post->recipients();
 
         return view('rueckmeldungen.createUserRueckmeldungAbfrage', [
             'rueckmeldung' => $rueckmeldung,

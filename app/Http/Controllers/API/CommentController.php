@@ -42,7 +42,7 @@ class CommentController extends Controller
         }
 
         // Check if user has access to this post
-        if (!$post->users->contains($user) && !$user->can('view all')) {
+        if (!$post->hasRecipient($user) && !$user->can('view all')) {
             return response()->json(['error' => 'User not allowed to view comments for this post'], 403);
         }
 
@@ -99,7 +99,7 @@ class CommentController extends Controller
         }
 
         // Check if user has access to this post
-        if (!$post->users->contains($user) && !$user->can('view all')) {
+        if (!$post->hasRecipient($user) && !$user->can('view all')) {
             return response()->json(['error' => 'User not allowed to comment on this post'], 403);
         }
 

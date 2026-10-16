@@ -93,7 +93,7 @@
                                     </span>
                                 </div>
                                 <div class="card-body">
-                                    @include('include.formGroups',['groups'=>$gruppen,'selectedGroups'=>$termin->groups])
+                                    @include('include.formGroups', ['groups' => $gruppen, 'selectedGroups' => $termin->groups, 'withPersons' => true])
                                 </div>
                             </div>
                         </div>

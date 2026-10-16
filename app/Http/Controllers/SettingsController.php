@@ -326,6 +326,7 @@ class SettingsController extends Controller implements HasMiddleware
                     'login_tracking_mode' => 'required|in:user,always,never',
                     'protected_roles' => 'sometimes|array',
                     'protected_roles.*' => 'string|exists:roles,name',
+                    'allow_individual_recipients' => 'nullable|boolean',
                 ]);
 
                 $settings = new GeneralSetting;
@@ -360,6 +361,7 @@ class SettingsController extends Controller implements HasMiddleware
                 }
                     $settings->login_tracking_mode = $validated['login_tracking_mode'];
                     $settings->protected_roles = $validated['protected_roles'] ?? [];
+                    $settings->allow_individual_recipients = $request->boolean('allow_individual_recipients');
                     $settings->save();
 
                     break;

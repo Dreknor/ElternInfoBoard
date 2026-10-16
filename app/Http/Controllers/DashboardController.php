@@ -17,7 +17,6 @@ use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller implements HasMiddleware
 {
@@ -60,46 +59,28 @@ class DashboardController extends Controller implements HasMiddleware
                 ->get();
 
         } else {
-            // Cache user groups einmalig
-            $userGroupIds = Cache::remember("user_groups_{$userId}", 300, function () use ($userId) {
-                // Lade nur IDs, nicht die kompletten Group-Models
-                return \DB::table('group_user')
-                    ->where('user_id', $userId)
-                    ->pluck('group_id')
-                    ->toArray();
-            });
+            // Über Gruppen oder als direkt freigegebene Person (EXISTS, keine Duplikate)
+            $nachrichten = Post::query()
+                ->select(['posts.id', 'posts.header', 'posts.news', 'posts.created_at'])
+                ->where('posts.released', 1)
+                ->where(function ($query) {
+                    $query->whereNull('posts.archiv_ab')
+                        ->orWhere('posts.archiv_ab', '>', Carbon::now());
+                })
+                ->forRecipient($userId)
+                ->without(['rueckmeldung']) // Deaktiviere automatisches Laden
+                ->withExists('rueckmeldung') // Prüfe nur Existenz
+                ->orderBy('posts.created_at', 'desc')
+                ->take(5)
+                ->get();
 
-            // Wenn User keine Gruppen hat, leere Collections zurückgeben
-            if (empty($userGroupIds)) {
-                $nachrichten = collect();
-                $termine = collect();
-            } else {
-                $nachrichten = Post::query()
-                    ->select(['posts.id', 'posts.header', 'posts.news', 'posts.created_at'])
-                    ->where('posts.released', 1)
-                    ->where(function ($query) {
-                        $query->whereNull('posts.archiv_ab')
-                            ->orWhere('posts.archiv_ab', '>', Carbon::now());
-                    })
-                    ->join('group_post', 'posts.id', '=', 'group_post.post_id')
-                    ->whereIn('group_post.group_id', $userGroupIds)
-                    ->without(['rueckmeldung']) // Deaktiviere automatisches Laden
-                    ->withExists('rueckmeldung') // Prüfe nur Existenz
-                    ->orderBy('posts.created_at', 'desc')
-                    ->distinct()
-                    ->take(5)
-                    ->get();
-
-                $termine = Termin::query()
-                    ->select(['termine.id', 'termine.terminname', 'termine.start', 'termine.ende', 'termine.fullDay'])
-                    ->where('termine.start', '>=', Carbon::today())
-                    ->join('group_termine', 'termine.id', '=', 'group_termine.termin_id')
-                    ->whereIn('group_termine.group_id', $userGroupIds)
-                    ->orderBy('termine.start')
-                    ->distinct()
-                    ->take(5)
-                    ->get();
-            }
+            $termine = Termin::query()
+                ->select(['termine.id', 'termine.terminname', 'termine.start', 'termine.ende', 'termine.fullDay'])
+                ->where('termine.start', '>=', Carbon::today())
+                ->forRecipient($userId)
+                ->orderBy('termine.start')
+                ->take(5)
+                ->get();
         }
 
         // Eigene Reinigungsdienste: eigenes Widget + Eintrag bei den nächsten Terminen
@@ -249,72 +230,65 @@ class DashboardController extends Controller implements HasMiddleware
         return Cache::remember("pending_feedback_{$userId}", 120, function () use ($userId) {
             $pending = collect();
 
-            // A) Pflicht-Rückmeldungen ohne Antwort
-            $userGroupIds = DB::table('group_user')
-                ->where('user_id', $userId)
-                ->pluck('group_id')
-                ->toArray();
+            // A) Pflicht-Rückmeldungen ohne Antwort (über Gruppen oder direkte Freigabe)
+            $pflichtRueckmeldungen = Rueckmeldungen::where('pflicht', true)
+                ->whereNotNull('ende')
+                ->whereDate('ende', '>=', now()->startOfDay())
+                ->whereHas('post', function ($q) use ($userId) {
+                    $q->where('released', 1)
+                        ->where(function ($q2) {
+                            $q2->whereNull('archiv_ab')
+                                ->orWhere('archiv_ab', '>', now()->subDays(7));
+                        })
+                        ->forRecipient($userId);
+                })
+                ->with('post:id,header,archiv_ab')
+                ->get();
 
-            if (!empty($userGroupIds)) {
-                $pflichtRueckmeldungen = Rueckmeldungen::where('pflicht', true)
-                    ->whereNotNull('ende')
-                    ->whereDate('ende', '>=', now()->startOfDay())
-                    ->whereHas('post', function ($q) use ($userGroupIds) {
-                        $q->where('released', 1)
-                            ->where(function ($q2) {
-                                $q2->whereNull('archiv_ab')
-                                    ->orWhere('archiv_ab', '>', now()->subDays(7));
-                            })
-                            ->whereHas('groups', fn ($q3) => $q3->whereIn('groups.id', $userGroupIds));
-                    })
-                    ->with('post:id,header,archiv_ab')
-                    ->get();
+            foreach ($pflichtRueckmeldungen as $rm) {
+                $hasResponded = UserRueckmeldungen::where('post_id', $rm->post_id)
+                    ->where('users_id', $userId)
+                    ->exists();
 
-                foreach ($pflichtRueckmeldungen as $rm) {
-                    $hasResponded = UserRueckmeldungen::where('post_id', $rm->post_id)
-                        ->where('users_id', $userId)
-                        ->exists();
-
-                    if (!$hasResponded && $rm->post) {
-                        $pending->push([
-                            'post_id' => $rm->post_id,
-                            'header' => $rm->post->header,
-                            'deadline' => $rm->ende,
-                            'is_overdue' => $rm->ende->isPast(),
-                            'type' => 'rueckmeldung',
-                        ]);
-                    }
+                if (!$hasResponded && $rm->post) {
+                    $pending->push([
+                        'post_id' => $rm->post_id,
+                        'header' => $rm->post->header,
+                        'deadline' => $rm->ende,
+                        'is_overdue' => $rm->ende->isPast(),
+                        'type' => 'rueckmeldung',
+                    ]);
                 }
+            }
 
-                // B) Unbestätigte Lesebestätigungen
-                $readReceiptPosts = Post::where('read_receipt', true)
-                    ->where('released', 1)
-                    ->where(function ($q) {
-                        $q->whereNull('archiv_ab')
-                            ->orWhere('archiv_ab', '>', now()->subDays(7));
-                    })
-                    ->whereHas('groups', fn ($q) => $q->whereIn('groups.id', $userGroupIds))
-                    ->whereDoesntHave('receipts', function ($q) use ($userId) {
-                        $q->where('user_id', $userId)->whereNotNull('confirmed_at');
-                    })
-                    ->select(['id', 'header', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'archiv_ab'])
-                    ->get();
+            // B) Unbestätigte Lesebestätigungen
+            $readReceiptPosts = Post::where('read_receipt', true)
+                ->where('released', 1)
+                ->where(function ($q) {
+                    $q->whereNull('archiv_ab')
+                        ->orWhere('archiv_ab', '>', now()->subDays(7));
+                })
+                ->forRecipient($userId)
+                ->whereDoesntHave('receipts', function ($q) use ($userId) {
+                    $q->where('user_id', $userId)->whereNotNull('confirmed_at');
+                })
+                ->select(['id', 'header', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'archiv_ab'])
+                ->get();
 
-                // Offen nur, wenn nicht schon durch Familie bzw. Bezugsperson des Kindes erledigt
-                $openReceiptIds = app(\App\Services\ReadReceiptStatusService::class)->openPostIds(auth()->user(), $readReceiptPosts);
-                $readReceiptPosts = $readReceiptPosts->whereIn('id', $openReceiptIds);
+            // Offen nur, wenn nicht schon durch Familie bzw. Bezugsperson des Kindes erledigt
+            $openReceiptIds = app(\App\Services\ReadReceiptStatusService::class)->openPostIds(auth()->user(), $readReceiptPosts);
+            $readReceiptPosts = $readReceiptPosts->whereIn('id', $openReceiptIds);
 
-                foreach ($readReceiptPosts as $post) {
-                    $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;
-                    if ($deadline) {
-                        $pending->push([
-                            'post_id' => $post->id,
-                            'header' => $post->header,
-                            'deadline' => $deadline,
-                            'is_overdue' => $deadline->isPast(),
-                            'type' => 'lesebestaetigung',
-                        ]);
-                    }
+            foreach ($readReceiptPosts as $post) {
+                $deadline = $post->read_receipt_deadline ?? $post->archiv_ab;
+                if ($deadline) {
+                    $pending->push([
+                        'post_id' => $post->id,
+                        'header' => $post->header,
+                        'deadline' => $deadline,
+                        'is_overdue' => $deadline->isPast(),
+                        'type' => 'lesebestaetigung',
+                    ]);
                 }
             }
 
@@ -339,13 +313,13 @@ class DashboardController extends Controller implements HasMiddleware
                         ->orWhere('archiv_ab', '>', now()->subDays(7));
                 })
                 ->whereHas('rueckmeldung', fn ($q) => $q->where('pflicht', true))
-                ->with(['rueckmeldung', 'userRueckmeldung', 'users'])
+                ->with(['rueckmeldung', 'userRueckmeldung', 'users', 'recipientUsers'])
                 ->take(5)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             return $posts->map(function ($post) {
-                $total = $post->users->unique('id')->count();
+                $total = $post->recipients()->count();
                 $responded = $post->userRueckmeldung->unique('users_id')->count();
                 $deadline = $post->rueckmeldung?->ende;
                 $overdue = 0;

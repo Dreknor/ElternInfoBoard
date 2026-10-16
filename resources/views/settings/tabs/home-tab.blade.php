@@ -99,6 +99,23 @@
                     </div>
                 </div>
             </div>
+            <div class="form-row mt-1 p-2 border">
+                <div class="col-md-6 col-sm-12">
+                    <label class="flex items-center gap-2 cursor-pointer mb-0">
+                        <input type="checkbox" name="allow_individual_recipients" value="1"
+                               class="w-4 h-4 cursor-pointer" style="accent-color: var(--color-primary);"
+                               @checked($settings->allow_individual_recipients ?? false)>
+                        <span class="label-control mb-0 select-none">Freigabe an einzelne Personen</span>
+                    </label>
+                </div>
+                <div class="col-md-6 col-sm-12 m-auto">
+                    <div class="small">
+                        Beim Erstellen von Nachrichten und Terminen können zusätzlich zu Gruppen
+                        einzelne Personen ausgewählt werden – auch ohne Gruppenzugehörigkeit.
+                        Beim Deaktivieren bleiben bestehende Freigaben erhalten.
+                    </div>
+                </div>
+            </div>
             <div class="form-row">
                 <button type="submit" class="btn btn-success btn-block">
                     Einstellungen speichern

@@ -1,5 +1,11 @@
 <div class="form-group mb-0">
-    <p class="label-control mb-2">Für welche Gruppen?</p>
+    <p class="label-control mb-2">
+        @if(($withPersons ?? false) && \App\Services\IndividualRecipients::enabled())
+            Für wen? <span class="font-normal text-xs" style="color: var(--color-text-muted);">Gruppen und/oder einzelne Personen</span>
+        @else
+            Für welche Gruppen?
+        @endif
+    </p>
 
     {{-- "Alle Gruppen" Checkbox --}}
     <label class="flex items-center gap-3 cursor-pointer mb-3 p-2 rounded-lg border"
@@ -50,4 +56,8 @@
             </label>
         @endforeach
     </div>
+
+    @if(($withPersons ?? false) && \App\Services\IndividualRecipients::enabled())
+        @include('include.formRecipients')
+    @endif
 </div>

@@ -161,8 +161,8 @@ class NachrichtenController extends Controller
 
         } else {
 
-            $nachrichten = $user->postsNotArchived()
-                ->distinct()
+            $nachrichten = $user->visiblePosts()
+                ->where('archiv_ab', '>', now())
                 ->where('released', 1)
                 ->orderByDesc('sticky')
                 ->orderByDesc('updated_at')
@@ -582,7 +582,7 @@ class NachrichtenController extends Controller
 
         // Check if user has access to this post
         if (! $user->hasPermissionTo('view all', 'web')) {
-            if (! $post->users->contains($user)) {
+            if (! $post->hasRecipient($user)) {
                 return response()->json([
                     'success' => false,
                     'error' => 'User not allowed',

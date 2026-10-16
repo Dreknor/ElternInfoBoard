@@ -13,6 +13,7 @@ use DevDojo\LaravelReactions\Traits\Reactable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -43,7 +44,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
 
     protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
 
-    protected array $cloneable_relations = ['groups', 'rueckmeldung'];
+    protected array $cloneable_relations = ['groups', 'recipientUsers', 'rueckmeldung'];
 
     protected $with = ['rueckmeldung'];
 
@@ -96,9 +97,67 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         return $this->hasMany(UserRueckmeldungen::class);
     }
 
+    /**
+     * Empfänger über die Gruppen. Für alle Empfänger (inkl. direkt
+     * freigegebener Personen) recipients() bzw. hasRecipient() verwenden.
+     */
     public function users(): HasManyDeep
     {
         return $this->hasManyDeep(User::class, ['group_post', Group::class, 'group_user']);
+    }
+
+    /**
+     * Direkt (ohne Gruppe) freigegebene Personen.
+     */
+    public function recipientUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'post_user')->withTimestamps();
+    }
+
+    /**
+     * Alle Empfänger: Mitglieder der Gruppen und direkt freigegebene Personen, ohne Duplikate.
+     */
+    public function recipients(): EloquentCollection
+    {
+        return $this->users->concat($this->recipientUsers)->unique('id')->values();
+    }
+
+    public function hasRecipient(User $user): bool
+    {
+        return self::query()->whereKey($this->id)->forRecipient($user)->exists();
+    }
+
+    /**
+     * Schränkt eine Abfrage auf Beiträge ein, die der Nutzer über eine Gruppe
+     * oder als direkt freigegebene Person erhält. Funktioniert auch auf
+     * Query-Buildern, die nicht vom Post-Model stammen (Tabelle `posts`).
+     */
+    public static function constrainToRecipient($query, User|int $user): void
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        $query->where(function ($q) use ($userId) {
+            $q->whereExists(function ($sub) use ($userId) {
+                $sub->selectRaw(1)
+                    ->from('group_post')
+                    ->join('group_user', 'group_post.group_id', '=', 'group_user.group_id')
+                    ->whereColumn('group_post.post_id', 'posts.id')
+                    ->where('group_user.user_id', $userId);
+            })->orWhereExists(function ($sub) use ($userId) {
+                $sub->selectRaw(1)
+                    ->from('post_user')
+                    ->whereColumn('post_user.post_id', 'posts.id')
+                    ->where('post_user.user_id', $userId);
+            });
+        });
+    }
+
+    #[Scope]
+    protected function forRecipient(Builder $query, User|int $user): Builder
+    {
+        self::constrainToRecipient($query, $user);
+
+        return $query;
     }
 
     public function poll(): HasOne

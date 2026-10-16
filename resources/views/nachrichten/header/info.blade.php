@@ -37,6 +37,14 @@
                 {{ $group->name }}
             </span>
         @endforeach
+        {{-- Direkt freigegebene Personen nur für Autor und Redaktion anzeigen --}}
+        @if(auth()->id() == $nachricht->author || auth()->user()->can('edit posts'))
+            @foreach($nachricht->recipientUsers as $person)
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-xs rounded-full" title="Direkt freigegeben">
+                    <i class="fas fa-user text-[10px]"></i> {{ $person->name }}
+                </span>
+            @endforeach
+        @endif
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-4 mt-3 text-sm text-gray-600">

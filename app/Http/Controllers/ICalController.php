@@ -27,7 +27,7 @@ class ICalController extends Controller
             $prefix = ($user->calendar_prefix != null) ? '('.$user->calendar_prefix.') ' : '';
 
             if ($user->releaseCalendar) {
-                $Termine = $user->termine;
+                $Termine = $user->visibleTermine()->get();
 
                 // Termine aus Listen holen
                 // Listentermine der ganzen Familie (FamilyResolver)
