@@ -650,7 +650,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
 
             // Neue Listen
-            $listen = $user->listen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get();
+            $listen = $user->visibleListen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get();
             $listen = $listen->unique();
             // neue Termine
             $termine = $user->visibleTermine()->where('termine.created_at', '>', $user->lastEmail)->get();

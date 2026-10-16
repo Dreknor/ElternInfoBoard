@@ -29,12 +29,7 @@ class ListenController extends ApiController
         $listen = Liste::query()
             ->where('active', true)
             ->whereDate('ende', '>=', today())
-            ->whereExists(function ($q) use ($user) {
-                $q->selectRaw(1)->from('group_listen')
-                    ->join('group_user', 'group_listen.group_id', '=', 'group_user.group_id')
-                    ->whereColumn('group_listen.liste_id', 'listen.id')
-                    ->where('group_user.user_id', $user->id);
-            })
+            ->forRecipient($user)
             ->orderBy('ende')
             ->get();
 

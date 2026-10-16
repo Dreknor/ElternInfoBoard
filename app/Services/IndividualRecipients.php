@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 /**
- * Direkte Freigabe von Beiträgen und Terminen an einzelne Personen
+ * Direkte Freigabe von Beiträgen, Terminen und Listen an einzelne Personen
  * (Formularfeld `personen[]`, nur wenn general.allow_individual_recipients aktiv ist).
  */
 class IndividualRecipients
@@ -22,12 +22,14 @@ class IndividualRecipients
 
     /**
      * Validierungsregeln für Gruppen und Personen: mindestens eines von beiden ist Pflicht.
+     *
+     * @param  array  $groupRules  Bisherige Regeln für `gruppen`, wenn die Funktion deaktiviert ist
      */
-    public static function rules(): array
+    public static function rules(array $groupRules = ['required']): array
     {
         if (! self::enabled()) {
             return [
-                'gruppen' => ['required'],
+                'gruppen' => $groupRules,
             ];
         }
 
@@ -53,7 +55,7 @@ class IndividualRecipients
      * Übernimmt die ausgewählten Personen. Ist die Funktion deaktiviert, bleiben
      * bestehende Freigaben unverändert (das Formular zeigt die Auswahl dann nicht an).
      *
-     * @param  Model  $model  Post oder Termin (Relation recipientUsers)
+     * @param  Model  $model  Post, Termin oder Liste (Relation recipientUsers)
      */
     public static function sync(Model $model, Request $request): void
     {

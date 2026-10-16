@@ -143,7 +143,7 @@ class ListenController extends Controller implements HasMiddleware
                     'creates_pflichtstunden',
                 ]);
         } else {
-            $listen = $user->listen()
+            $listen = $user->visibleListen()
                 ->whereDate('ende', '>=', now())
                 ->where('listen.active', 1)
                 ->get([

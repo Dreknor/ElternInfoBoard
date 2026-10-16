@@ -29,11 +29,8 @@ class ListenService
             return true;
         }
 
-        return DB::table('group_listen')
-            ->join('group_user', 'group_listen.group_id', '=', 'group_user.group_id')
-            ->where('group_listen.liste_id', $liste->id)
-            ->where('group_user.user_id', $user->id)
-            ->exists();
+        // Über eine Gruppe oder als direkt freigegebene Person
+        return $liste->hasRecipient($user);
     }
 
     public function requireOpen(User $user, Liste $liste, string $type): void

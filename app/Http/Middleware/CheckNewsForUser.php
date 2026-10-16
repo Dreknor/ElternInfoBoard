@@ -61,7 +61,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $listen = auth()->user()->listen()->whereDate('listen.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
+                $listen = auth()->user()->visibleListen()->whereDate('listen.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
                 $listen = $listen->unique('id');
 
                 foreach ($listen as $liste) {

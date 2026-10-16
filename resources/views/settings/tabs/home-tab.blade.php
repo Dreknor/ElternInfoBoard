@@ -158,7 +158,7 @@
                 </div>
                 <div class="col-md-6 col-sm-12 m-auto">
                     <div class="small">
-                        Beim Erstellen von Nachrichten und Terminen können zusätzlich zu Gruppen
+                        Beim Erstellen von Nachrichten, Terminen und Listen können zusätzlich zu Gruppen
                         einzelne Personen ausgewählt werden – auch ohne Gruppenzugehörigkeit.
                         Beim Deaktivieren bleiben bestehende Freigaben erhalten.
                     </div>

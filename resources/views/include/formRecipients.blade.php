@@ -1,13 +1,15 @@
 {{--
     Auswahl einzelner Personen (zusätzlich zu Gruppen), nur wenn
     general.allow_individual_recipients aktiv ist. Sendet personen[] mit.
-    Vorbelegung: old('personen') → $termin → $post.
+    Vorbelegung: old('personen') → $liste → $termin → $post.
 --}}
 @php
     $recipientOptions = \App\Services\IndividualRecipients::selectableUsers();
 
     if (is_array(old('personen'))) {
         $recipientSelected = collect(old('personen'))->map(fn ($id) => (int) $id);
+    } elseif (isset($liste) && $liste instanceof \App\Model\Liste && $liste->exists) {
+        $recipientSelected = $liste->recipientUsers->pluck('id');
     } elseif (isset($termin) && $termin->exists) {
         $recipientSelected = $termin->recipientUsers->pluck('id');
     } elseif (isset($post) && $post->exists) {

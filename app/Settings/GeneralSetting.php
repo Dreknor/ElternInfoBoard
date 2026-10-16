@@ -45,7 +45,7 @@ class GeneralSetting extends Settings
     public array $protected_roles = [];
 
     /**
-     * Dürfen Beiträge und Termine zusätzlich zu Gruppen auch direkt an
+     * Dürfen Beiträge, Termine und Listen zusätzlich zu Gruppen auch direkt an
      * einzelne Personen freigegeben werden? Bestehende Freigaben bleiben
      * beim Deaktivieren erhalten, nur die Auswahl im Formular entfällt.
      */

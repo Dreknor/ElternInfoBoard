@@ -237,6 +237,14 @@ class User extends Authenticatable implements Auditable
     }
 
     /**
+     * Listen, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleListen(): Builder
+    {
+        return Liste::query()->forRecipient($this);
+    }
+
+    /**
      * Eigene Posts
      */
     public function own_posts(): HasMany

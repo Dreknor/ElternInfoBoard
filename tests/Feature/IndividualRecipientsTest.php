@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Model\Group;
+use App\Model\Liste;
 use App\Model\Post;
 use App\Model\Termin;
 use App\Model\User;
+use App\Services\App\ListenService;
 use App\Services\App\PostQuery;
 use App\Services\App\TerminQuery;
 use App\Settings\GeneralSetting;
@@ -35,10 +37,11 @@ class IndividualRecipientsTest extends TestCase
         $this->app[PermissionRegistrar::class]->forgetCachedPermissions();
         Permission::firstOrCreate(['name' => 'create posts', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'release posts', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'create terminliste', 'guard_name' => 'web']);
 
         $this->group = Group::factory()->create();
         $this->author = User::factory()->create(['password_changed_at' => now()]);
-        $this->author->givePermissionTo(['create posts', 'release posts']);
+        $this->author->givePermissionTo(['create posts', 'release posts', 'create terminliste']);
     }
 
     private function enable(bool $enabled = true): void
@@ -165,5 +168,66 @@ class IndividualRecipientsTest extends TestCase
         $this->assertSame(['termin-'.$termin->id], collect(TerminQuery::between($person, $from, $to, false))->pluck('id')->all());
         $this->assertSame([], TerminQuery::between($other, $from, $to, false));
         $this->assertSame([$termin->id], $person->visibleTermine()->pluck('id')->all());
+    }
+
+    private function listePayload(array $overrides = []): array
+    {
+        return array_merge([
+            'listenname' => 'Elterngespräche',
+            'type' => 'termin',
+            'visible_for_all' => 0,
+            'multiple' => 0,
+            'active' => 0,
+            'ende' => Carbon::now()->addWeeks(2)->format('Y-m-d'),
+        ], $overrides);
+    }
+
+    #[Test]
+    public function directly_assigned_person_without_group_can_access_liste(): void
+    {
+        $person = $this->parent();
+        $other = $this->parent();
+
+        $liste = Liste::create($this->listePayload([
+            'besitzer' => $this->author->id,
+            'active' => 1,
+            'ende' => now()->addWeek(),
+        ]));
+        $liste->recipientUsers()->attach($person);
+
+        $service = app(ListenService::class);
+        $this->assertTrue($service->canAccess($person, $liste));
+        $this->assertFalse($service->canAccess($other, $liste));
+        $this->assertSame([$liste->id], $person->visibleListen()->pluck('id')->all());
+
+        $this->actingAs($person)->get('/listen/'.$liste->id)->assertOk();
+        $this->actingAs($other)->get('/listen/'.$liste->id)->assertRedirect();
+    }
+
+    #[Test]
+    public function liste_can_be_created_for_persons_only_when_enabled(): void
+    {
+        $this->enable();
+        $person = $this->parent();
+
+        $this->actingAs($this->author)
+            ->post('/listen', $this->listePayload(['personen' => [$person->id]]))
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('Meldung');
+
+        $liste = Liste::query()->where('listenname', 'Elterngespräche')->firstOrFail();
+        $this->assertSame([$person->id], $liste->recipientUsers()->pluck('users.id')->all());
+    }
+
+    #[Test]
+    public function liste_without_groups_is_rejected_when_disabled(): void
+    {
+        $person = $this->parent();
+
+        $this->actingAs($this->author)
+            ->post('/listen', $this->listePayload(['personen' => [$person->id]]))
+            ->assertSessionHas('Meldung', 'Es muss mindestens eine Gruppe ausgewählt werden.');
+
+        $this->assertDatabaseMissing('listen', ['listenname' => 'Elterngespräche']);
     }
 }
