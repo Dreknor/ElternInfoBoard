@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Model\Group;
 use App\Model\Liste;
+use App\Model\Module;
 use App\Model\Post;
 use App\Model\Termin;
 use App\Model\User;
@@ -170,6 +171,14 @@ class IndividualRecipientsTest extends TestCase
         $this->assertSame([$termin->id], $person->visibleTermine()->pluck('id')->all());
     }
 
+    /** Module, die das Formular „Nachricht anlegen“ voraussetzt. */
+    private function createPostFormModules(): void
+    {
+        foreach (['externe Angebote', 'Push to WordPress'] as $setting) {
+            Module::create(['setting' => $setting, 'category' => 'module', 'description' => $setting, 'options' => ['active' => 0]]);
+        }
+    }
+
     private function listePayload(array $overrides = []): array
     {
         return array_merge([
@@ -229,5 +238,34 @@ class IndividualRecipientsTest extends TestCase
             ->assertSessionHas('Meldung', 'Es muss mindestens eine Gruppe ausgewählt werden.');
 
         $this->assertDatabaseMissing('listen', ['listenname' => 'Elterngespräche']);
+    }
+
+    #[Test]
+    public function forms_render_group_chips_and_person_search_when_enabled(): void
+    {
+        $this->enable();
+        $this->group->update(['name' => 'Klasse 4b']);
+        $person = $this->parent();
+        $this->createPostFormModules();
+
+        foreach (['/posts/create', '/listen/create'] as $url) {
+            $this->actingAs($this->author)->get($url)
+                ->assertOk()
+                ->assertSee('Klasse 4b')
+                ->assertSee('name="gruppen[]" value="'.$this->group->id.'"', false)
+                ->assertSee('Person suchen')
+                ->assertSee($person->name);
+        }
+    }
+
+    #[Test]
+    public function forms_hide_person_search_when_disabled(): void
+    {
+        $this->createPostFormModules();
+
+        $this->actingAs($this->author)->get('/posts/create')
+            ->assertOk()
+            ->assertSee('Für welche Gruppen?')
+            ->assertDontSee('Person suchen');
     }
 }
