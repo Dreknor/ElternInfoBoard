@@ -64,7 +64,7 @@ class FamilyWeeklyService
                 'week_start' => $weekStart,
                 'week_end'   => $weekEnd,
                 'week_label' => 'KW ' . $weekStart->isoWeek() . ': ' .
-                                $weekStart->format('d.') . '–' . $weekEnd->format('d. F Y'),
+                                $weekStart->format('d.') . '–' . $weekEnd->translatedFormat('d. F Y'),
             ];
         });
     }
@@ -278,7 +278,7 @@ class FamilyWeeklyService
             'week_start' => $weekStart,
             'week_end'   => $weekEnd,
             'week_label' => 'KW ' . $weekStart->isoWeek() . ': ' .
-                            $weekStart->format('d.') . '–' . $weekEnd->format('d. F Y'),
+                            $weekStart->format('d.') . '–' . $weekEnd->translatedFormat('d. F Y'),
         ];
     }
 }
