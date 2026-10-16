@@ -9,6 +9,7 @@ use App\Http\View\Composers\LoginComposer;
 use App\Http\View\Composers\LosungComposer;
 use App\Http\View\Composers\ModulesComposer;
 use App\Http\View\Composers\NachrichtenComposer;
+use App\Http\View\Composers\NavigationComposer;
 use App\Http\View\Composers\NotificationComposer;
 use App\Http\View\Composers\ReinigungComposer;
 use App\Http\View\Composers\TermineComposer;
@@ -40,6 +41,11 @@ class ComposerServiceProvider extends ServiceProvider
         View::composer(
             'layouts.app',
             NotificationComposer::class
+        );
+
+        View::composer(
+            ['layouts.app', 'layouts.elements.sidebar-compact'],
+            NavigationComposer::class
         );
 
         View::composer(

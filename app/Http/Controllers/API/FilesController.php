@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FileCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -28,7 +30,7 @@ class FilesController extends Controller implements HasMiddleware
      * Returns a paginated list of files with metadata including file name,
      * size, MIME type, and download URL.
      *
-     * @group Files
+     * @group Dateien
      *
      * @queryParam page integer Page number for pagination. Default: 1. Example: 1
      * @queryParam per_page integer Number of items per page (max 100). Default: 15. Example: 20
@@ -51,31 +53,40 @@ class FilesController extends Controller implements HasMiddleware
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $data = $request->validate([
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1',
+            'search' => 'nullable|string|max:200',
+            'sort' => 'nullable|in:name,size,created_at',
+            'order' => 'nullable|in:asc,desc',
+            'mime_type' => 'nullable|string|max:200',
+        ]);
 
+        $files = $request->user()->files();
 
-        $user = auth()->user();
-        $files = $user->files();
+        if (! empty($data['search'])) {
+            $search = mb_strtolower($data['search']);
+            $files = $files->filter(fn ($file) => str_contains(mb_strtolower($file->name.' '.$file->file_name), $search));
+        }
+        if (! empty($data['mime_type'])) {
+            $files = $files->where('mime_type', $data['mime_type']);
+        }
 
-        // Format response
-        $formattedFiles = $files->map(function ($file) {
-            return [
-                'id' => $file->id,
-                'uuid' => $file->uuid,
-                'name' => $file->name,
-                'file_name' => $file->file_name,
-                'mime_type' => $file->mime_type,
-                'size' => $file->size,
-                'human_readable_size' => $this->formatBytes($file->size),
-                'created_at' => $file->created_at?->toISOString(),
-                'updated_at' => $file->updated_at?->toISOString(),
-            ];
-        });
+        $sort = $data['sort'] ?? 'created_at';
+        $files = $files->sortBy(fn ($file) => $sort === 'name' ? mb_strtolower((string) $file->name) : $file->{$sort}, SORT_REGULAR, ($data['order'] ?? 'desc') === 'desc')->values();
 
-        return response()->json([
-            'data' => $formattedFiles,
-        ], 200);
+        $perPage = min((int) ($data['per_page'] ?? 15), 100);
+        $page = (int) ($data['page'] ?? 1);
+
+        return (new FileCollection(new LengthAwarePaginator(
+            $files->forPage($page, $perPage)->values(),
+            $files->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url()]
+        )))->response()->setStatusCode(200);
     }
 
     /**
@@ -83,7 +94,7 @@ class FilesController extends Controller implements HasMiddleware
      *
      * Returns detailed information about a specific file if the user has access to it.
      *
-     * @group Files
+     * @group Dateien
      *
      * @urlParam uuid string required The UUID of the file. Example: 9a0e5c7f-1234-5678-9abc-def012345678
      *
@@ -123,7 +134,7 @@ class FilesController extends Controller implements HasMiddleware
                 'mime_type' => $file->mime_type,
                 'size' => $file->size,
                 'human_readable_size' => $this->formatBytes($file->size),
-                'url' => route('api.files.download', ['media_uuid' => $file->uuid]),
+                'url' => \App\Services\App\MediaAccess::downloadUrl($file),
                 'created_at' => $file->created_at?->toISOString(),
                 'updated_at' => $file->updated_at?->toISOString(),
                 'custom_properties' => $file->custom_properties ?? [],
@@ -136,7 +147,7 @@ class FilesController extends Controller implements HasMiddleware
      *
      * Returns a list of all unique MIME types for filtering purposes.
      *
-     * @group Files
+     * @group Dateien
      *
      * @responseField mime_types array Array of unique MIME types with their counts.
      *
@@ -165,7 +176,7 @@ class FilesController extends Controller implements HasMiddleware
      *
      * Returns statistics about the user's accessible files.
      *
-     * @group Files
+     * @group Dateien
      *
      * @responseField total_files integer Total number of files.
      * @responseField total_size integer Total size in bytes.
@@ -203,7 +214,7 @@ class FilesController extends Controller implements HasMiddleware
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
 
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+        for ($i = 0; $bytes >= 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
 

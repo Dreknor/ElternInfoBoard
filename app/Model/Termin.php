@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Traits\NotificationTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -86,8 +87,59 @@ class Termin extends Model implements Auditable
         return Link::create($terminname, $this->start, $this->ende, $this->fullDay);
     }
 
+    /**
+     * Empfänger über die Gruppen. Für alle Empfänger (inkl. direkt
+     * freigegebener Personen) recipients() verwenden.
+     */
     public function users(): HasManyDeep
     {
         return $this->hasManyDeep(User::class, ['group_termine', Group::class, 'group_user']);
+    }
+
+    /**
+     * Direkt (ohne Gruppe) freigegebene Personen.
+     */
+    public function recipientUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'termin_user')->withTimestamps();
+    }
+
+    /**
+     * Alle Empfänger: Mitglieder der Gruppen und direkt freigegebene Personen, ohne Duplikate.
+     */
+    public function recipients(): EloquentCollection
+    {
+        return $this->users->concat($this->recipientUsers)->unique('id')->values();
+    }
+
+    /**
+     * Schränkt eine Abfrage auf Termine ein, die der Nutzer über eine Gruppe
+     * oder als direkt freigegebene Person erhält (Tabelle `termine`).
+     */
+    public static function constrainToRecipient($query, User|int $user): void
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        $query->where(function ($q) use ($userId) {
+            $q->whereExists(function ($sub) use ($userId) {
+                $sub->selectRaw(1)
+                    ->from('group_termine')
+                    ->join('group_user', 'group_termine.group_id', '=', 'group_user.group_id')
+                    ->whereColumn('group_termine.termin_id', 'termine.id')
+                    ->where('group_user.user_id', $userId);
+            })->orWhereExists(function ($sub) use ($userId) {
+                $sub->selectRaw(1)
+                    ->from('termin_user')
+                    ->whereColumn('termin_user.termin_id', 'termine.id')
+                    ->where('termin_user.user_id', $userId);
+            });
+        });
+    }
+
+    public function scopeForRecipient(Builder $query, User|int $user): Builder
+    {
+        self::constrainToRecipient($query, $user);
+
+        return $query;
     }
 }

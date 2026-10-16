@@ -19,7 +19,7 @@ use Laravel\Socialite\Facades\Socialite;
  * Anmeldung der Eltern-App: Passwort, SSO (Keycloak mit PKCE), Anmelde-Link per E-Mail.
  * SSO und Anmelde-Link liefern einen einmaligen Code, den die App gegen ein Token tauscht.
  *
- * @group App: Anmeldung
+ * @group Anmeldung
  */
 class AuthController extends Controller
 {

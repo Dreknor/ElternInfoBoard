@@ -22,7 +22,7 @@ class TermineComposer
 
             // Termine holen
             if (! auth()->user()->can('edit termin') and ! auth()->user()->can('view all')) {
-                $Termine = auth()->user()->termine;
+                $Termine = auth()->user()->visibleTermine()->get();
             } else {
                 $Termine = Termin::all();
                 $Termine = $Termine->unique('id');

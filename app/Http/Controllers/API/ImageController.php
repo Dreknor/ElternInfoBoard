@@ -24,7 +24,7 @@ class ImageController extends Controller implements HasMiddleware
      *
      * Get file by uuid
      *
-     * @group Files
+     * @group Dateien
      *
      * @urlParam uuid required The uuid of the file
      *
@@ -44,7 +44,7 @@ class ImageController extends Controller implements HasMiddleware
      *
      * Get file by id
      *
-     * @group Files
+     * @group Dateien
      *
      * @urlParam media_id required The id of the file
      *
@@ -60,7 +60,7 @@ class ImageController extends Controller implements HasMiddleware
     }
 
     /**
-     * Zugriff prüfen (B-07) und – falls angefragt und vorhanden – eine verkleinerte Fassung liefern (B-12).
+     * Zugriff prüfen und – falls angefragt und vorhanden – eine verkleinerte Fassung liefern.
      */
     private function serve(Request $request, Media $media): BinaryFileResponse
     {

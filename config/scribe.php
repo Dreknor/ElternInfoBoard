@@ -3,11 +3,14 @@
 use Knuckles\Scribe\Extracting\Strategies;
 
 return [
+    // Zwei getrennte Dokumentationen: diese Datei für die App-API v1 (/docs),
+    // config/scribe_basis.php für die unversionierte Basis-API (/docs/basis).
+
     // The HTML <title> for the generated documentation. If this is empty, Scribe will infer it from config('app.name').
-    'title' => null,
+    'title' => env('APP_NAME', 'Elterninfo').' – App-API v1',
 
     // A short description of your API. Will be included in the docs webpage, Postman collection and OpenAPI spec.
-    'description' => 'Diese Dokumentation enthält alle Informationen, die Sie benötigen, um mit unserer API zu arbeiten.',
+    'description' => 'Schnittstelle der Eltern-App unter `/api/v1`.',
 
     // The base URL displayed in the docs. If this is empty, Scribe will use the value of config('app.url') at generation time.
     // If you're using `laravel` type, you can set this to a dynamic string, like '{{ config("app.tenant_url") }}' to get a dynamic base URL.
@@ -18,7 +21,7 @@ return [
             // Routes that match these conditions will be included in the docs
             'match' => [
                 // Match only routes whose paths match this pattern (use * as a wildcard to match any characters). Example: 'users/*'.
-                'prefixes' => ['api/*'],
+                'prefixes' => ['api/v1/*'],
 
                 // Match only routes whose domains match this pattern (use * as a wildcard to match any characters). Example: 'api.*'.
                 'domains' => ['*'],
@@ -34,8 +37,8 @@ return [
 
             // Exclude these routes even if they matched the rules above.
             'exclude' => [
-                'api/vertretungen*', 'api/news*', 'api/week*', 'api/absences*', 'api/home*',
-                'api/stundenplan/import', 'api/stundenplan/status',
+                // MCP-Server (routes/ai.php), kein REST-Endpunkt
+                'api/v1/mcp',
             ],
         ],
     ],
@@ -123,7 +126,13 @@ return [
     ],
 
     // Text to place in the "Introduction" section, right after the `description`. Markdown and HTML are supported.
-    'intro_text' => null,
+    'intro_text' => <<<'MD'
+Alle Antworten haben das Format `{ "data": …, "meta": … }` bzw. `{ "message": … }` bei Fehlern.
+Schreibende Aufrufe lassen sich mit dem Header `Idempotency-Key` gefahrlos wiederholen, GET-Antworten tragen ein `ETag`.
+
+Einige Funktionen (z. B. Anwesenheit, Schickzeiten, Pflichtstunden, App-Einstellungen) stehen noch nicht in v1 zur Verfügung,
+sondern nur in der **[Basis-API ohne Versionsnummer](/docs/basis/)**.
+MD,
 
     // Example requests for each endpoint will be shown in each of these languages.
     // Supported options are: bash, javascript, php, python
@@ -168,16 +177,16 @@ return [
         // You can override this by listing the groups, subgroups and endpoints here in the order you want them.
         // See https://scribe.knuckles.wtf/blog/laravel-v4#easier-sorting and https://scribe.knuckles.wtf/laravel/reference/config#order for details
         'order' => [
-            'App: Anmeldung',
-            'App: Profil',
-            'App: Start',
-            'App: Benachrichtigungen',
-            'App: Nachrichten',
-            'App: Termine',
-            'App: Listen',
-            'App: Familie',
-            'App: Seiten & Elternrat',
-            'App: Messenger',
+            'Anmeldung',
+            'Profil',
+            'Start',
+            'Benachrichtigungen',
+            'Nachrichten' => ['Beiträge', 'Rückmeldungen & Abfragen', 'Umfragen', 'Kommentare'],
+            'Termine',
+            'Listen',
+            'Familie',
+            'Seiten & Elternrat',
+            'Messenger',
         ],
     ],
 
@@ -195,7 +204,7 @@ return [
     // Available tokens are `{date:<format>}` and `{git:<format>}`.
     // The format you pass to `date` will be passed to PHP's `date()` function.
     // The format you pass to `git` can be either "short" or "long".
-    'last_updated' => 'Last updated: {date:F j, Y}',
+    'last_updated' => 'Stand: {date:d.m.Y}',
 
     'examples' => [
         // Set this to any number (eg. 1234) to generate the same example values for parameters on each run,
@@ -250,7 +259,9 @@ return [
             Strategies\Responses\UseResponseFileTag::class,
             [
                 Strategies\Responses\ResponseCalls::class,
-                ['only' => ['GET *']],
+                // Beispielaufrufe nur mit Token (SCRIBE_AUTH_KEY, am besten ein Testkonto – die Antworten landen öffentlich in der Doku),
+                // sonst stünde überall „401 Nicht authentifiziert“. Das Kennzeichen hebt das Rate-Limit auf (sonst „429 Too Many Attempts“).
+                ['only' => ['GET *'], 'except' => env('SCRIBE_AUTH_KEY') ? [] : ['*'], 'config' => ['app.generating_api_docs' => true]],
             ],
         ],
         'responseFields' => [

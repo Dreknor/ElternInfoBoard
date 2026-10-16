@@ -368,7 +368,7 @@
     @endif
 @endforeach
 
-@if(auth()->user()->can('edit posts') or auth()->id() == $nachricht->author)
+@if(auth()->user()->can('edit posts') or auth()->user()->can('view rueckmeldungen') or auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
     <!-- Admin Statistics -->
     <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mt-6">
         <!-- Header -->
@@ -381,7 +381,7 @@
                     <h6 class="text-white font-semibold mb-0">Auswertung</h6>
                 </div>
                 <div class="flex items-center gap-2">
-                    @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $nachricht->author)
+                    @if(auth()->user()->can('manage rueckmeldungen') or auth()->user()->can('view rueckmeldungen') or auth()->id() == $nachricht->author)
                         <a href="{{url('rueckmeldungen/'.$nachricht->rueckmeldung->id.'/show')}}"
                            class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white font-medium rounded-lg transition-colors duration-200"
                            title="Anzeigen">
@@ -392,7 +392,7 @@
                            title="Download">
                             <i class="fa fa-download"></i>
                         </a>
-                    @endcan
+                    @endif
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\IndividualRecipients;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateListenRequest extends FormRequest
@@ -58,15 +59,17 @@ class UpdateListenRequest extends FormRequest
                 'nullable',
                 'boolean',
             ],
-            'gruppen' => [
-                'array',
-                'min:1',
-            ],
+            ...IndividualRecipients::rules(['array', 'min:1']),
             'comment' => [
                 'sometimes',
                 'nullable',
                 'string',
             ],
         ];
+    }
+
+    public function messages(): array
+    {
+        return IndividualRecipients::messages();
     }
 }

@@ -19,6 +19,16 @@ class GeneralSetting extends Settings
     public bool $allow_user_theme = true;
 
     /**
+     * Darstellung des Seitenmenüs (siehe config/navigation.php).
+     * 'classic' – flache Liste aller Einträge (bisheriges Verhalten)
+     * 'compact' – gruppiertes, einklappbares Menü mit Filterfeld
+     */
+    public string $nav_style = 'classic';
+
+    /** Dürfen Nutzer die Menü-Darstellung selbst wählen? */
+    public bool $allow_user_nav_style = true;
+
+    /**
      * Steuert das globale Last-Login-Tracking.
      * 'user'   – Nutzer entscheidet selbst (bisheriges Verhalten)
      * 'always' – immer aufzeichnen, unabhängig von der Nutzereinstellung
@@ -33,6 +43,31 @@ class GeneralSetting extends Settings
      * @var array<int, string>
      */
     public array $protected_roles = [];
+
+    /**
+     * Dürfen Beiträge, Termine und Listen zusätzlich zu Gruppen auch direkt an
+     * einzelne Personen freigegeben werden? Bestehende Freigaben bleiben
+     * beim Deaktivieren erhalten, nur die Auswahl im Formular entfällt.
+     */
+    public bool $allow_individual_recipients = false;
+
+    /**
+     * Dürfen Termine als „öffentlich“ markiert und ohne Anmeldung veröffentlicht werden
+     * (ICS-Feed und HTML-Seite)? Bei false wird die Option beim Anlegen ausgeblendet.
+     */
+    public bool $public_termine_enabled = true;
+
+    /**
+     * Veranstaltungsort öffentlicher Termine für die strukturierten Daten (schema.org/Event).
+     * Google zeigt Termine nur mit vollständiger Adresse als Veranstaltung an.
+     */
+    public ?string $public_termine_location_name = null;
+
+    public ?string $public_termine_location_street = null;
+
+    public ?string $public_termine_location_postal_code = null;
+
+    public ?string $public_termine_location_city = null;
 
     public static function group(): string
     {

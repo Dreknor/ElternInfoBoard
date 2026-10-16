@@ -28,7 +28,7 @@ class CareController extends Controller implements HasMiddleware
      *
      * Returns a list of all children who are currently checked in and not checked out today.
      *
-     * @group Care
+     * @group Betreuung
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data array The list of currently present children.
@@ -113,7 +113,7 @@ class CareController extends Controller implements HasMiddleware
      *
      * Returns a list of all children who have an active sick report (Krankmeldung) today.
      *
-     * @group Care
+     * @group Betreuung
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data array The list of children currently reported sick.
@@ -209,7 +209,7 @@ class CareController extends Controller implements HasMiddleware
      *
      * Returns both present children and sick children in a single response.
      *
-     * @group Care
+     * @group Betreuung
      *
      * @responseField success boolean Whether the request was successful.
      * @responseField data object The Care overview data.

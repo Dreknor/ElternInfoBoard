@@ -166,6 +166,9 @@
 
 
     <!-- Sidebar Navigation -->
+    @if(($navStyle ?? 'classic') === 'compact')
+        @include('layouts.elements.sidebar-compact')
+    @else
     {{-- Desktop: 70px Logo-Header + ~60px Footer = 130px abziehen; Mobile: Logo-Header ausgeblendet, nur ~60px Footer --}}
     <div class="sidebar-wrapper overflow-y-auto sidebar-nav-scroll" id="sidebar">
         <ul class="nav flex-column px-2 py-3 space-y-1">
@@ -185,6 +188,7 @@
             @stack('adm-nav')
         </ul>
     </div>
+    @endif
 
     <!-- User Info Footer in Sidebar -->
 

@@ -37,7 +37,7 @@
             @if($eintrag->reserviert_fuer != null)
                 <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     <i class="fas fa-user mr-1"></i>
-                    @if(auth()->user()->isFamilyMember($eintrag->reserviert_fuer) or $liste->visible_for_all or auth()->user()->can('edit terminliste') or ($eintrag->child_id && \App\Services\App\Family::ownsChild(auth()->user(), $eintrag->child_id)))
+                    @if($liste->visible_for_all or (! ($preview ?? false) and (auth()->user()->isFamilyMember($eintrag->reserviert_fuer) or auth()->user()->can('edit terminliste') or ($eintrag->child_id && \App\Services\App\Family::ownsChild(auth()->user(), $eintrag->child_id)))))
                         {{ $eintrag->eingetragenePerson->name }}
                         @if($eintrag->child)
                             · für {{ $eintrag->child->first_name }}
@@ -56,7 +56,7 @@
 
     <!-- Action Buttons -->
     <div class="flex flex-wrap gap-2">
-        @if(auth()->user()->id != $liste->besitzer and !auth()->user()->can('edit terminliste'))
+        @if(! ($canManage ?? (auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))))
             @if($eintrag->reserviert_fuer == null)
                 <form method="post" action="{{ url("listen/termine/" . $eintrag->id) }}" style="display: inline;">
                     @csrf

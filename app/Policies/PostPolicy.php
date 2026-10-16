@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Model\Post;
 use App\Model\User;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Zugriff auf Beiträge (B-13) – eine EXISTS-Abfrage statt `$post->users` (lädt alle Gruppenmitglieder).
@@ -24,11 +23,8 @@ class PostPolicy
             return true;
         }
 
-        return DB::table('group_post')
-            ->join('group_user', 'group_post.group_id', '=', 'group_user.group_id')
-            ->where('group_post.post_id', $post->id)
-            ->where('group_user.user_id', $user->id)
-            ->exists();
+        // Über eine Gruppe oder als direkt freigegebene Person
+        return $post->hasRecipient($user);
     }
 
     public function react(User $user, Post $post): bool

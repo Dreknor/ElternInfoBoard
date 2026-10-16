@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\IndividualRecipients;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,9 +32,7 @@ class createNachrichtRequest extends FormRequest
             'news' => [
                 Rule::requiredIf(request()->type != 'image'),
             ],
-            'gruppen' => [
-                'required',
-            ],
+            ...IndividualRecipients::rules(),
             'archiv_ab' => [
                 'required', 'date',
             ],
@@ -66,5 +65,10 @@ class createNachrichtRequest extends FormRequest
             ],
 
         ];
+    }
+
+    public function messages(): array
+    {
+        return IndividualRecipients::messages();
     }
 }

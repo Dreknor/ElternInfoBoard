@@ -182,7 +182,7 @@ class RueckmeldungStatusService
     public function summary(Post $post): array
     {
         $scope = $this->effectiveScope($post->rueckmeldung);
-        $recipients = $post->users->unique('id')->values();
+        $recipients = $post->recipients();
         $answers = UserRueckmeldungen::query()->where('post_id', $post->id)->get(['users_id', 'child_id']);
 
         $expected = 0;
@@ -239,7 +239,7 @@ class RueckmeldungStatusService
     public function openRecipients(Post $post): Collection
     {
         $scope = $this->effectiveScope($post->rueckmeldung);
-        $recipients = $post->users->unique('id')->values();
+        $recipients = $post->recipients();
         $answers = UserRueckmeldungen::query()->where('post_id', $post->id)->get(['users_id', 'child_id']);
         $open = collect();
 
