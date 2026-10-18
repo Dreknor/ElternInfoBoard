@@ -56,7 +56,8 @@ class InquiryController extends ApiController
      *
      * Feldtypen: consent (Werte granted|denied, `consent_text` vollständig anzeigen), yes_no (yes|no),
      * checkbox (Array der Optionen), radio, select, text (`format`: email|phone|postal_code|number),
-     * textarea, date (YYYY-MM-DD), file (Upload beim Absenden), info (nur Überschrift/Hinweis).
+     * textarea, date (YYYY-MM-DD), file (Upload beim Absenden), info (nur Überschrift/Hinweis),
+     * child (Auswahl eines eigenen Kindes: `options` mit Kind-ID als `value`; gespeichert als {id, name}).
      */
     public function show(Request $request, InquiryAssignment $assignment): JsonResponse
     {
@@ -69,6 +70,7 @@ class InquiryController extends ApiController
             ? InquiryDraft::where('assignment_id', $assignment->id)->where('user_id', $user->id)->first()
             : null;
         $current = $assignment->currentResponse;
+        $children = $this->responses->childOptions($version->fields, $user);
 
         return response()->json(['data' => $this->summary($request, $assignment) + [
             'intro' => $assignment->inquiry->intro,
@@ -77,7 +79,7 @@ class InquiryController extends ApiController
             'responsible_office' => $version->responsible_office,
             'retention_note' => $version->retention_note,
             'retention_days' => $assignment->inquiry->retention_days,
-            'fields' => array_map(fn (array $f) => $this->presentField($f), $version->fields),
+            'fields' => array_map(fn (array $f) => $this->presentField($f, $children), $version->fields),
             'draft' => $draft ? ['answers' => $draft->answers, 'updated_at' => $draft->updated_at->toIso8601String()] : null,
             'response' => $current && $state['can_view_answers'] ? $this->presentResponse($assignment, $current) : null,
             'versions' => $state['can_view_answers'] ? $assignment->responses->map(fn (InquiryResponse $r) => [
@@ -216,7 +218,8 @@ class InquiryController extends ApiController
         ];
     }
 
-    private function presentField(array $field): array
+    /** @param  array<int, string>  $children  wählbare eigene Kinder (id => Name) */
+    private function presentField(array $field, array $children = []): array
     {
         return array_filter([
             'key' => $field['key'],
@@ -227,6 +230,7 @@ class InquiryController extends ApiController
             'options' => match ($field['type']) {
                 'yes_no' => [['value' => FieldSchema::YES, 'label' => 'Ja'], ['value' => FieldSchema::NO, 'label' => 'Nein']],
                 'consent' => [['value' => FieldSchema::GRANTED, 'label' => 'Ich willige ein'], ['value' => FieldSchema::DENIED, 'label' => 'Ich willige nicht ein']],
+                'child' => array_map(fn ($id, $name) => ['value' => (string) $id, 'label' => $name], array_keys($children), $children),
                 default => isset($field['options']) ? array_map(fn ($o) => ['value' => $o, 'label' => $o], $field['options']) : null,
             },
             'min_length' => $field['min_length'] ?? null,

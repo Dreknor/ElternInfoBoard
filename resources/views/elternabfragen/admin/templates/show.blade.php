@@ -19,6 +19,7 @@
                     <x-elternabfragen.badge :color="$status->color()">{{ $status->label() }}</x-elternabfragen.badge>
                     @if($version->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensible Inhalte</x-elternabfragen.badge> @endif
                     @if($template->isArchived()) <x-elternabfragen.badge color="slate">archiviert</x-elternabfragen.badge> @endif
+                    <a href="{{ route('elternabfragen.admin.templates.preview', $version) }}" class="ml-auto px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-sm"><i class="fas fa-eye" aria-hidden="true"></i> Elternvorschau</a>
                 </div>
                 @if($version->review_note)
                     <p class="mb-4 p-3 rounded-lg bg-gray-50 text-sm"><strong>Prüfvermerk:</strong> {{ $version->review_note }}</p>

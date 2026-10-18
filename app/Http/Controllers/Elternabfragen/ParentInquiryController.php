@@ -81,6 +81,7 @@ class ParentInquiryController extends Controller
             'answers' => $state['can_view_answers'] ? $this->responses->prefill($assignment, $user) : [],
             'hasDraft' => $assignment->drafts()->where('user_id', $user->id)->exists(),
             'siblings' => $siblings,
+            'childOptions' => $this->responses->childOptions($assignment->inquiry->templateVersion->fields, $user),
             'schema' => $this->schema,
             'editing' => ($state['can_submit'] || ($state['can_correct'] && $request->boolean('korrigieren'))),
             'preview' => false,

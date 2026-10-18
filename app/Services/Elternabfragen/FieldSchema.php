@@ -138,8 +138,9 @@ class FieldSchema
      * Validierungsregeln für Antworten (Schlüssel `answers.<key>`).
      *
      * @param  array<string, mixed>  $existing  bisherige Antwort (bei Korrekturen bleiben Dateien erhalten)
+     * @param  array<int, string>  $children  wählbare eigene Kinder (id => Name) für Felder vom Typ „child“
      */
-    public function rules(array $fields, bool $submit, int $uploadMaxKb, array $existing = []): array
+    public function rules(array $fields, bool $submit, int $uploadMaxKb, array $existing = [], array $children = []): array
     {
         $rules = ['answers' => ['nullable', 'array']];
 
@@ -182,6 +183,11 @@ class FieldSchema
                     $required && empty($existing[$field['key']]) ? 'required' : 'nullable',
                     'file', 'mimes:'.implode(',', self::UPLOAD_MIMES), 'max:'.$uploadMaxKb,
                 ],
+                InquiryFieldType::Child => [$presence, function ($attribute, $value, $fail) use ($field, $children) {
+                    if (! array_key_exists((int) self::childId($value), $children)) {
+                        $fail($field['error_message'] ?: 'Bitte wählen Sie eines Ihrer Kinder aus.');
+                    }
+                }],
                 InquiryFieldType::Info => [],
             };
 
@@ -213,6 +219,7 @@ class FieldSchema
                 InquiryFieldType::Consent, InquiryFieldType::YesNo => "Bitte treffen Sie eine Entscheidung zu „{$label}“.",
                 InquiryFieldType::File => "Bitte laden Sie eine Datei für „{$label}“ hoch.",
                 InquiryFieldType::Checkbox, InquiryFieldType::Radio, InquiryFieldType::Select => "Bitte wählen Sie bei „{$label}“ aus.",
+                InquiryFieldType::Child => "Bitte wählen Sie bei „{$label}“ ein Kind aus.",
                 default => "Bitte füllen Sie „{$label}“ aus.",
             };
             foreach (['min', 'max', 'email', 'regex', 'numeric', 'date_format', 'in', 'mimes', 'array', 'string'] as $rule) {
@@ -225,10 +232,12 @@ class FieldSchema
 
     /**
      * Nur bekannte Felder übernehmen und Werte normalisieren (ohne Dateien).
+     * Ausgewählte Kinder werden mit Namen gespeichert, damit die Antwort auch später lesbar bleibt.
      *
+     * @param  array<int, string>  $children  wählbare eigene Kinder (id => Name)
      * @return array<string, mixed>
      */
-    public function sanitize(array $fields, array $input): array
+    public function sanitize(array $fields, array $input, array $children = []): array
     {
         $answers = [];
         foreach ($fields as $field) {
@@ -240,6 +249,9 @@ class FieldSchema
 
             $answers[$field['key']] = match ($type) {
                 InquiryFieldType::Checkbox => array_values(array_intersect($field['options'] ?? [], array_map('strval', (array) $value))),
+                InquiryFieldType::Child => array_key_exists($id = (int) self::childId($value), $children)
+                    ? ['id' => $id, 'name' => $children[$id]]
+                    : null,
                 default => is_scalar($value) ? (trim((string) $value) === '' ? null : trim((string) $value)) : null,
             };
         }
@@ -283,6 +295,7 @@ class FieldSchema
             InquiryFieldType::Checkbox => implode(', ', (array) $value),
             InquiryFieldType::Date => rescue(fn () => \Carbon\Carbon::createFromFormat('Y-m-d', (string) $value)->format('d.m.Y'), (string) $value, false),
             InquiryFieldType::File => is_array($value) ? ($value['name'] ?? 'Datei') : 'Datei',
+            InquiryFieldType::Child => is_array($value) ? (string) ($value['name'] ?? 'Kind #'.($value['id'] ?? '?')) : 'Kind #'.$value,
             default => (string) $value,
         };
     }
@@ -305,6 +318,16 @@ class FieldSchema
         ksort($answers);
 
         return hash('sha256', json_encode($answers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
+     * Kind-ID aus einer Eingabe: ID direkt oder gespeicherter Wert {id, name} (z. B. aus einem Entwurf).
+     */
+    public static function childId(mixed $value): ?string
+    {
+        $id = is_array($value) ? ($value['id'] ?? null) : $value;
+
+        return is_scalar($id) && ctype_digit((string) $id) ? (string) $id : null;
     }
 
     private function formatRule(?string $format): ?string

@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers\Elternabfragen;
 
+use App\Enums\InquiryAssignmentStatus;
 use App\Enums\InquiryFieldType;
 use App\Http\Controllers\Controller;
+use App\Model\Child;
+use App\Model\Inquiry;
+use App\Model\InquiryAssignment;
 use App\Model\InquiryEvent;
 use App\Model\InquiryTemplate;
 use App\Model\InquiryTemplateVersion;
 use App\Services\Elternabfragen\FieldSchema;
+use App\Services\Elternabfragen\TemplateImporter;
 use App\Services\Elternabfragen\TemplateService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,6 +24,9 @@ use Illuminate\View\View;
  */
 class TemplateController extends Controller
 {
+    /** Beispielkinder für Felder vom Typ „child“ in der Vorschau. */
+    public const PREVIEW_CHILDREN = [1 => 'Max Mustermann', 2 => 'Erika Mustermann'];
+
     public function __construct(private readonly TemplateService $templates) {}
 
     public function index(Request $request): View
@@ -121,6 +130,94 @@ class TemplateController extends Controller
 
         return redirect()->route('elternabfragen.admin.templates.index')
             ->with(['type' => 'success', 'Meldung' => 'Vorlage archiviert. Laufende Abfragen bleiben unverändert.']);
+    }
+
+    /**
+     * Excel-/CSV-Liste einlesen: Spaltenköpfe werden zu Feldern für den Formular-Editor.
+     */
+    public function import(Request $request, TemplateImporter $importer): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt,ods|max:5120',
+        ], [
+            'file.required' => 'Bitte wählen Sie eine Excel- oder CSV-Datei aus.',
+            'file.mimes' => 'Erlaubt sind Excel- (XLSX, XLS), ODS- und CSV-Dateien.',
+            'file.max' => 'Die Datei darf höchstens 5 MB groß sein.',
+        ]);
+
+        return response()->json($importer->import($request->file('file')));
+    }
+
+    /**
+     * Elternansicht einer gespeicherten Vorlagenversion.
+     */
+    public function preview(InquiryTemplateVersion $version, FieldSchema $schema): View
+    {
+        return $this->previewView($version, $schema, route('elternabfragen.admin.templates.show', $version), 'Zurück zur Vorlage');
+    }
+
+    /**
+     * Elternansicht des ungespeicherten Formular-Editors (öffnet in neuem Tab, speichert nichts).
+     */
+    public function previewDraft(Request $request, FieldSchema $schema): View
+    {
+        $data = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'purpose' => 'nullable|string|max:5000',
+            'parent_info' => 'nullable|string|max:10000',
+            'responsible_office' => 'nullable|string|max:255',
+            'default_deadline_days' => 'nullable|integer|min:1|max:365',
+            'retention_days' => 'nullable|integer|min:1|max:3650',
+            'retention_note' => 'nullable|string|max:2000',
+            'fields_json' => 'required|json',
+        ]);
+
+        $version = new InquiryTemplateVersion([
+            'title' => ($data['title'] ?? null) ?: 'Neue Vorlage',
+            'purpose' => ($data['purpose'] ?? null) ?: '(Zweck noch nicht angegeben)',
+            'parent_info' => $data['parent_info'] ?? null,
+            'responsible_office' => $data['responsible_office'] ?? null,
+            'default_deadline_days' => $data['default_deadline_days'] ?? 14,
+            'retention_days' => $data['retention_days'] ?? null,
+            'retention_note' => $data['retention_note'] ?? null,
+            'fields' => $schema->normalizeDefinition(json_decode($data['fields_json'], true) ?: []),
+        ]);
+
+        return $this->previewView($version, $schema, null, null);
+    }
+
+    private function previewView(InquiryTemplateVersion $version, FieldSchema $schema, ?string $back, ?string $backLabel): View
+    {
+        $inquiry = new Inquiry([
+            'title' => $version->title,
+            'deadline_at' => now()->addDays((int) ($version->default_deadline_days ?: 14))->endOfDay(),
+            'retention_days' => $version->retention_days,
+        ]);
+        $inquiry->setRelation('templateVersion', $version);
+
+        $assignment = new InquiryAssignment(['status' => InquiryAssignmentStatus::Open]);
+        $assignment->setRelation('inquiry', $inquiry);
+        $assignment->setRelation('child', new Child(['first_name' => 'Max', 'last_name' => 'Mustermann']));
+
+        return view('elternabfragen.parent.show', [
+            'assignment' => $assignment,
+            'inquiry' => $inquiry,
+            'version' => $version,
+            'fields' => $version->fields ?? [],
+            'state' => [
+                'can_view_answers' => true, 'can_submit' => true, 'can_correct' => false, 'reason' => null,
+                'deadline' => $inquiry->deadline_at, 'correction_until' => null,
+            ],
+            'answers' => [],
+            'hasDraft' => false,
+            'siblings' => collect(),
+            'childOptions' => self::PREVIEW_CHILDREN,
+            'schema' => $schema,
+            'editing' => true,
+            'preview' => true,
+            'previewBack' => $back,
+            'previewBackLabel' => $backLabel,
+        ]);
     }
 
     private function form(InquiryTemplateVersion $version): View

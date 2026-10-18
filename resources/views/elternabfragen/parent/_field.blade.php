@@ -1,4 +1,4 @@
-{{-- Ein Formularfeld der Elternansicht. Erwartet: $field, $value, $existingFile (bei Korrektur) --}}
+{{-- Ein Formularfeld der Elternansicht. Erwartet: $field, $value, $existingFile (bei Korrektur), $childOptions (id => Name) --}}
 @php
     $type = $field['type'];
     $key = $field['key'];
@@ -21,7 +21,7 @@
     </div>
 @else
 <div class="bg-white rounded-xl border border-gray-200 p-4" data-field data-type="{{ $type }}" data-label="{{ $field['label'] }}">
-    @if(in_array($type, ['yes_no', 'consent', 'radio', 'checkbox'], true))
+    @if(in_array($type, ['yes_no', 'consent', 'radio', 'checkbox', 'child'], true))
         <fieldset @if($describedBy) aria-describedby="{{ $describedBy }}" @endif>
             <legend class="font-medium text-gray-800 mb-1">
                 {{ $field['label'] }}
@@ -40,10 +40,18 @@
                 $choices = match ($type) {
                     'yes_no' => ['yes' => 'Ja', 'no' => 'Nein'],
                     'consent' => ['granted' => 'Ich willige ein', 'denied' => 'Ich willige nicht ein'],
+                    'child' => $childOptions ?? [],
                     default => array_combine($field['options'], $field['options']),
                 };
-                $selected = $type === 'checkbox' ? (array) ($value ?? []) : $value;
+                $selected = match ($type) {
+                    'checkbox' => (array) ($value ?? []),
+                    'child' => \App\Services\Elternabfragen\FieldSchema::childId($value),
+                    default => $value,
+                };
             @endphp
+            @if($type === 'child' && $choices === [])
+                <p class="text-sm text-gray-600">Für Ihr Konto sind keine Kinder hinterlegt, für die Sie sorgeberechtigt sind.</p>
+            @endif
             <div class="space-y-2">
                 @foreach($choices as $choiceValue => $choiceLabel)
                     <label class="flex items-start gap-3 rounded-lg border border-gray-200 px-3 py-3 cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">

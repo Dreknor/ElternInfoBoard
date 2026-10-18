@@ -82,8 +82,18 @@
                         @endforeach
                     </select>
                     <button type="button" x-on:click="add()" class="px-3 py-2 rounded-lg bg-gray-800 text-white text-sm"><i class="fas fa-plus" aria-hidden="true"></i> Feld hinzufügen</button>
+                    <input type="file" x-ref="importFile" class="hidden" accept=".xlsx,.xls,.ods,.csv" x-on:change="importList($event)" aria-label="Excel-Liste auswählen">
+                    <button type="button" x-on:click="$refs.importFile.click()" :disabled="importing" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 text-sm">
+                        <i class="fas" :class="importing ? 'fa-spinner fa-spin' : 'fa-file-excel'" aria-hidden="true"></i> Aus Excel-Liste übernehmen
+                    </button>
                 </div>
             </div>
+
+            <p class="text-xs text-gray-500 mb-3">
+                Excel-Liste: Jede Spaltenüberschrift der ersten Zeile wird zu einem Feld. Stehen darunter schon Werte (z. B. eine bisher ausgefüllte Liste),
+                wird daraus der Feldtyp abgeleitet (Ja/Nein, Datum, Auswahl). Spalten wie Name, Vorname oder Klasse entfallen – die Zuordnung zum Kind erfolgt automatisch.
+            </p>
+            <div x-show="importMessage" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="importError ? 'bg-red-50 text-red-900' : 'bg-green-50 text-green-900'" role="status" x-text="importMessage"></div>
 
             <template x-if="fields.length === 0">
                 <p class="text-sm text-gray-500 text-center py-6">Noch keine Felder. Wählen Sie einen Feldtyp und fügen Sie das erste Feld hinzu.</p>
@@ -145,6 +155,9 @@
                                     </select>
                                 </div>
                             </template>
+                            <template x-if="field.type === 'child'">
+                                <p class="md:col-span-2 text-xs text-gray-500">Eltern wählen eines der Kinder aus, für die sie sorgeberechtigt sind. Gespeichert wird der Name des Kindes.</p>
+                            </template>
                             <template x-if="field.type !== 'info'">
                                 <div>
                                     <label class="{{ $label }}" :for="'error_' + field._id">Eigene Fehlermeldung</label>
@@ -166,6 +179,7 @@
         <div class="flex flex-wrap gap-3">
             <button type="submit" class="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">Entwurf speichern</button>
             <button type="submit" name="submit_review" value="1" class="px-5 py-2.5 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700">Speichern und zur Prüfung einreichen</button>
+            <button type="submit" formaction="{{ route('elternabfragen.admin.templates.preview-draft') }}" formtarget="_blank" formnovalidate class="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700"><i class="fas fa-eye" aria-hidden="true"></i> Vorschau (ohne Speichern)</button>
             <a href="{{ $isNew ? route('elternabfragen.admin.templates.index') : route('elternabfragen.admin.templates.show', $version) }}" class="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700">Abbrechen</a>
         </div>
     </form>
@@ -184,9 +198,36 @@
         return {
             types: @js($fieldTypes),
             newType: 'yes_no',
+            importing: false,
+            importMessage: '',
+            importError: false,
             fields: (initial || []).map(prepare),
             add() { this.fields.push(prepare({ type: this.newType, required: this.newType !== 'info' })); },
             remove(i) { if (confirm('Feld entfernen?')) this.fields.splice(i, 1); },
+            async importList(event) {
+                const file = event.target.files[0];
+                event.target.value = '';
+                if (!file) return;
+                const body = new FormData();
+                body.append('file', file);
+                body.append('_token', @js(csrf_token()));
+                this.importing = true;
+                this.importMessage = '';
+                try {
+                    const res = await fetch(@js(route('elternabfragen.admin.templates.import')), { method: 'POST', body, headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || 'Die Datei konnte nicht gelesen werden.');
+                    data.fields.forEach(f => this.fields.push(prepare(f)));
+                    this.importError = false;
+                    this.importMessage = data.fields.length + ' Feld(er) übernommen. Bitte Feldtypen, Pflichtangaben und Optionen prüfen.'
+                        + (data.skipped.length ? ' Nicht übernommen (Zuordnung zum Kind erfolgt automatisch): ' + data.skipped.join(', ') + '.' : '');
+                } catch (e) {
+                    this.importError = true;
+                    this.importMessage = e.message;
+                } finally {
+                    this.importing = false;
+                }
+            },
             move(i, d) { const f = this.fields.splice(i, 1)[0]; this.fields.splice(i + d, 0, f); },
             sync() {
                 this.$refs.json.value = JSON.stringify(this.fields.map(f => ({

@@ -183,6 +183,7 @@ class InquiryController extends Controller
             'answers' => [],
             'hasDraft' => false,
             'siblings' => collect(),
+            'childOptions' => TemplateController::PREVIEW_CHILDREN,
             'schema' => $schema,
             'editing' => true,
             'preview' => true,

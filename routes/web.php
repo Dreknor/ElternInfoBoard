@@ -816,6 +816,7 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
         Route::middleware('permission:manage elternabfragen')->group(function () use ($templates) {
             Route::get('vorlagen/neu', [$templates, 'create'])->name('templates.create');
             Route::post('vorlagen', [$templates, 'store'])->name('templates.store');
+            Route::post('vorlagen/import', [$templates, 'import'])->name('templates.import');
             Route::get('vorlagen/versionen/{version}/bearbeiten', [$templates, 'edit'])->name('templates.edit');
             Route::put('vorlagen/versionen/{version}', [$templates, 'update'])->name('templates.update');
             Route::post('vorlagen/versionen/{version}/einreichen', [$templates, 'submit'])->name('templates.submit');
@@ -823,6 +824,8 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
             Route::post('vorlagen/{template}/archivieren', [$templates, 'archive'])->name('templates.archive');
         });
         Route::get('vorlagen/versionen/{version}', [$templates, 'show'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.show');
+        Route::get('vorlagen/versionen/{version}/vorschau', [$templates, 'preview'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.preview');
+        Route::match(['post', 'put'], 'vorlagen/vorschau', [$templates, 'previewDraft'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.preview-draft');
         Route::middleware('permission:approve elternabfragen')->group(function () use ($templates) {
             Route::post('vorlagen/versionen/{version}/freigeben', [$templates, 'approve'])->name('templates.approve');
             Route::post('vorlagen/versionen/{version}/zurueckgeben', [$templates, 'reject'])->name('templates.reject');

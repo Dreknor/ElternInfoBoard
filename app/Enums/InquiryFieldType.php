@@ -29,6 +29,9 @@ enum InquiryFieldType: string
 
     case File = 'file';
 
+    /** Auswahl eines eigenen Kindes (Kinder, für die das antwortende Konto sorgeberechtigt ist). */
+    case Child = 'child';
+
     /** Zwischenüberschrift/Hinweis ohne Eingabe – gliedert das Formular in kurze Abschnitte. */
     case Info = 'info';
 
@@ -44,6 +47,7 @@ enum InquiryFieldType: string
             self::Textarea => 'Text (mehrzeilig)',
             self::Date => 'Datum',
             self::File => 'Datei-Upload',
+            self::Child => 'Auswahl eines eigenen Kindes',
             self::Info => 'Abschnitt / Hinweis',
         };
     }

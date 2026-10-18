@@ -2,14 +2,17 @@
 
 namespace App\Services\Elternabfragen;
 
+use App\Enums\GuardianRight;
 use App\Enums\InquiryAssignmentStatus;
 use App\Enums\InquiryFieldType;
 use App\Enums\InquiryReviewStatus;
+use App\Model\Child;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryDraft;
 use App\Model\InquiryEvent;
 use App\Model\InquiryResponse;
 use App\Model\User;
+use App\Services\Family\FamilyResolver;
 use App\Settings\ElternabfragenSetting;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -32,11 +35,31 @@ class ResponseService
         private readonly InquiryAccess $access,
         private readonly DeliveryService $delivery,
         private readonly ElternabfragenSetting $settings,
+        private readonly FamilyResolver $family,
     ) {}
 
     public function fields(InquiryAssignment $assignment): array
     {
         return $assignment->inquiry->templateVersion->fields ?? [];
+    }
+
+    /**
+     * Wählbare Kinder für Felder vom Typ „child“: alle aktiven Kinder, für die das Konto
+     * sorgeberechtigt ist (id => Name). Ohne solche Felder keine Abfrage.
+     *
+     * @return array<int, string>
+     */
+    public function childOptions(array $fields, User $user): array
+    {
+        if (! collect($fields)->contains(fn ($f) => ($f['type'] ?? null) === InquiryFieldType::Child->value)) {
+            return [];
+        }
+
+        return $this->family->childrenFor($user, GuardianRight::Custody)
+            ->filter(fn ($child) => $child->status === null || $child->status === Child::STATUS_ACTIVE)
+            ->sortBy(fn ($child) => $child->first_name.' '.$child->last_name)
+            ->mapWithKeys(fn ($child) => [$child->id => trim($child->first_name.' '.$child->last_name)])
+            ->all();
     }
 
     /**
@@ -50,12 +73,13 @@ class ResponseService
         }
 
         $fields = $this->fields($assignment);
-        Validator::make(['answers' => $input], $this->schema->rules($fields, false, $this->settings->upload_max_kb), $this->schema->messages($fields))
+        $children = $this->childOptions($fields, $user);
+        Validator::make(['answers' => $input], $this->schema->rules($fields, false, $this->settings->upload_max_kb, [], $children), $this->schema->messages($fields))
             ->validate();
 
         $draft = InquiryDraft::updateOrCreate(
             ['assignment_id' => $assignment->id, 'user_id' => $user->id],
-            ['answers' => $this->schema->sanitize($fields, $input)],
+            ['answers' => $this->schema->sanitize($fields, $input, $children)],
         );
 
         if (! $assignment->isAnswered()) {
@@ -93,14 +117,15 @@ class ResponseService
         $fields = $this->fields($assignment);
         $previous = $assignment->currentResponse;
         $existing = $previous?->answers ?? [];
+        $children = $this->childOptions($fields, $user);
 
         Validator::make(
             ['answers' => $files + $input],
-            $this->schema->rules($fields, true, $this->settings->upload_max_kb, $existing),
+            $this->schema->rules($fields, true, $this->settings->upload_max_kb, $existing, $children),
             $this->schema->messages($fields),
         )->validate();
 
-        $response = DB::transaction(function () use ($assignment, $user, $input, $files, $meta, $correctionReason, $fields) {
+        $response = DB::transaction(function () use ($assignment, $user, $input, $files, $meta, $correctionReason, $fields, $children) {
             /** @var InquiryAssignment $locked */
             $locked = InquiryAssignment::query()->whereKey($assignment->id)->lockForUpdate()->first();
             $locked->setRelation('inquiry', $assignment->inquiry);
@@ -115,7 +140,7 @@ class ResponseService
             }
 
             $previous = $locked->current_response_id ? InquiryResponse::find($locked->current_response_id) : null;
-            $answers = $this->schema->sanitize($fields, $input);
+            $answers = $this->schema->sanitize($fields, $input, $children);
             $answers += $this->storeFiles($locked, $fields, $files, $previous?->answers ?? []);
 
             $inquiry = $assignment->inquiry;

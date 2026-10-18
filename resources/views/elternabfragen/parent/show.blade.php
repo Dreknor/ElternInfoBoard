@@ -12,7 +12,12 @@
     @if($preview)
         <div class="mb-4 p-3 rounded-lg bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm" role="status">
             <i class="fas fa-eye" aria-hidden="true"></i> <strong>Vorschau aus Sicht der Eltern.</strong> Eingaben werden nicht gespeichert.
-            <a href="{{ route('elternabfragen.admin.inquiries.show', $inquiry) }}" class="underline ml-1">Zurück zur Abfrage</a>
+            @php($backUrl = $previewBack ?? ($inquiry->exists ? route('elternabfragen.admin.inquiries.show', $inquiry) : null))
+            @if($backUrl)
+                <a href="{{ $backUrl }}" class="underline ml-1">{{ $previewBackLabel ?? 'Zurück zur Abfrage' }}</a>
+            @else
+                Ungespeicherter Stand des Editors – schließen Sie diesen Tab, um weiterzuarbeiten.
+            @endif
         </div>
     @else
         <a href="{{ route('elternabfragen.index') }}" class="text-sm text-blue-700 hover:underline"><i class="fas fa-arrow-left" aria-hidden="true"></i> Alle Abfragen</a>
@@ -106,6 +111,7 @@
                         'field' => $field,
                         'value' => old('answers.'.$field['key'], $answers[$field['key']] ?? null),
                         'existingFile' => $field['type'] === 'file' && is_array($existing[$field['key']] ?? null) ? $existing[$field['key']] : null,
+                        'childOptions' => $childOptions ?? [],
                     ])
                 @endforeach
 
@@ -243,7 +249,7 @@
             },
             valueOf(el) {
                 const type = el.dataset.type;
-                if (['yes_no', 'consent', 'radio', 'checkbox'].includes(type)) {
+                if (['yes_no', 'consent', 'radio', 'checkbox', 'child'].includes(type)) {
                     const checked = Array.from(el.querySelectorAll('input:checked')).map(i => i.dataset.choice);
                     return checked.length ? checked.join(', ') : '–';
                 }

@@ -41,10 +41,17 @@ Ablauf von Exporten, Löschfristen. `--dry-run` zeigt fällige Löschungen.
 ### 2.1 Felder
 
 Typen (`InquiryFieldType`): Einwilligung, Zustimmung/Ablehnung, Mehrfachauswahl, Auswahl
-einer Option, Dropdown, Text, Textarea, Datum, Datei sowie **(O)** „Abschnitt/Hinweis"
+einer Option, Dropdown, Text, Textarea, Datum, Datei, Auswahl eines eigenen Kindes
+(sorgeberechtigte Kinder des antwortenden Kontos; gespeichert als `{id, name}`, damit die
+Antwort nach Löschung/Umbenennung lesbar bleibt) sowie **(O)** „Abschnitt/Hinweis"
 zur Gliederung in kurze Abschnitte. Je Feld: Pflicht, Format (E-Mail, Telefon, PLZ, Zahl),
 Mindest-/Höchstlänge (bei Mehrfachauswahl: Anzahl), eigene Fehlermeldung.
 Feldschlüssel bleiben über Versionen stabil, damit Exporte vergleichbar sind.
+
+Excel-Import (`TemplateImporter`): Spaltenköpfe der ersten Zeile werden zu Feldern; vorhandene
+Werte bestimmen den Typ (Ja/Nein, Datum, ≤ 10 wiederkehrende Werte → Auswahl, lange Texte →
+Textarea). Spalten zur Identifikation des Kindes (Name, Vorname, Klasse …) entfallen.
+Elternvorschau für gespeicherte Vorlagenversionen und für den ungespeicherten Editor-Stand.
 
 Einwilligungen: Werte `granted`/`denied`. „Pflicht" bedeutet *Entscheidung erforderlich* –
 die Einwilligung selbst bleibt freiwillig **(O)**. Der vollständige Text liegt in der

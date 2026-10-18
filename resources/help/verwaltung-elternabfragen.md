@@ -26,7 +26,11 @@ Das Modul muss unter **Einstellungen › Module** aktiviert werden.
 
 **Vorlagen › Neue Vorlage**. Eine Vorlage enthält Titel, Kategorie, **Zweck** (Pflicht – wofür die Angaben gebraucht werden), Elterninformation, zuständige Stelle, Standardfrist, Aufbewahrungsfrist und die Formularfelder.
 
-**Feldtypen:** Zustimmung/Ablehnung, Einwilligung (mit vollständigem Text), Mehrfachauswahl, Auswahl einer Option, Dropdown, Text ein-/mehrzeilig, Datum, Datei-Upload sowie **Abschnitt/Hinweis** zur Gliederung. Jedes Feld kann Pflichtfeld sein und eine Formatprüfung (E-Mail, Telefon, PLZ, Zahl), Mindest-/Höchstlänge und eine eigene, verständliche Fehlermeldung bekommen.
+**Feldtypen:** Zustimmung/Ablehnung, Einwilligung (mit vollständigem Text), Mehrfachauswahl, Auswahl einer Option, Dropdown, Text ein-/mehrzeilig, Datum, Datei-Upload, **Auswahl eines eigenen Kindes** (Eltern wählen eines der Kinder, für die sie sorgeberechtigt sind; gespeichert wird der Name) sowie **Abschnitt/Hinweis** zur Gliederung. Jedes Feld kann Pflichtfeld sein und eine Formatprüfung (E-Mail, Telefon, PLZ, Zahl), Mindest-/Höchstlänge und eine eigene, verständliche Fehlermeldung bekommen.
+
+**Aus Excel-Liste übernehmen:** Im Formular-Editor eine Excel-, ODS- oder CSV-Datei wählen. Jede Spaltenüberschrift der ersten Zeile wird zu einem Feld. Stehen darunter bereits Werte (z. B. eine bisher auf Papier geführte Liste), wird der Feldtyp abgeleitet: Ja/Nein, Datum, wenige wiederkehrende Werte als Auswahl, lange Texte als mehrzeiliges Textfeld. Spalten wie Name, Vorname oder Klasse werden nicht übernommen – die Zuordnung zum Kind erfolgt automatisch. Übernommene Felder bitte prüfen und anpassen.
+
+**Vorschau:** „Vorschau (ohne Speichern)“ im Editor öffnet den aktuellen Stand in einem neuen Tab aus Sicht der Eltern. Gespeicherte Vorlagenversionen haben auf ihrer Detailseite den Button „Elternvorschau“.
 
 > Nur erheben, was für den Zweck nötig ist (Datenminimierung).
 
