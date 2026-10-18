@@ -63,6 +63,7 @@ return [
 
         'Krankmeldung' => 'organisation',
         'Listen' => 'organisation',
+        'Elternabfragen' => 'organisation',
         'Arbeitsgemeinschaften' => 'organisation',
 
         'Archiv' => 'informationen',
@@ -92,6 +93,7 @@ return [
 
         'Pflichtstunden' => 'adm-organisation',
         'Arbeitsgemeinschaften' => 'adm-organisation',
+        'Elternabfragen' => 'adm-organisation',
 
         'Modules' => 'adm-system',
         'Settings' => 'adm-system',

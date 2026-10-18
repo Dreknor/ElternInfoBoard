@@ -6,11 +6,13 @@ use App\Enums\GuardianRight;
 use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Http\Resources\V1\ChildResource;
 use App\Model\ChildCheckIn;
+use App\Model\InquiryAssignment;
+use App\Services\Elternabfragen\InquiryAccess;
 use App\Model\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Offene Aufgaben der Familie (B-25): Lesebestätigungen, Pflicht-Rückmeldungen, Anwesenheitsabfragen.
+ * Offene Aufgaben der Familie (B-25): Lesebestätigungen, Pflicht-Rückmeldungen, Anwesenheitsabfragen, Elternabfragen.
  * Grundlage für Start-Badge, „Zu erledigen“ und Erinnerungen.
  */
 class TodoService
@@ -86,6 +88,25 @@ class TodoService
                     'target' => ['type' => 'child', 'id' => (int) $childId],
                 ];
             }
+        }
+
+        // Elternabfragen: offen je Kind, nur für Sorgeberechtigte (abgabeberechtigt)
+        if (Modules::isActiveFor($user, 'Elternabfragen')) {
+            $access = app(InquiryAccess::class);
+            $access->assignmentsQuery($user)
+                ->with(['inquiry', 'child'])
+                ->whereNull('current_response_id')
+                ->get()
+                ->filter(fn (InquiryAssignment $a) => $access->state($user, $a)['can_submit'])
+                ->each(function (InquiryAssignment $a) use (&$todos) {
+                    $todos[] = [
+                        'type' => 'inquiry',
+                        'title' => $a->inquiry->title,
+                        'subtitle' => 'Elternabfrage für '.($a->child?->first_name ?? 'Ihr Kind'),
+                        'deadline' => $a->effectiveDeadline()->toDateString(),
+                        'target' => ['type' => 'inquiry', 'id' => $a->id],
+                    ];
+                });
         }
 
         usort($todos, fn ($a, $b) => strcmp($a['deadline'] ?? '9999', $b['deadline'] ?? '9999'));

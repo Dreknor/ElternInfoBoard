@@ -780,6 +780,103 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Elternabfragen (docs/elternabfragen-konzept.md)
+|--------------------------------------------------------------------------
+| Eltern: /elternabfragen · Verwaltung: /verwaltung/elternabfragen
+| Berechtigungen am Kind prüft InquiryAccess bei jedem Zugriff.
+*/
+Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(function () {
+    $parent = \App\Http\Controllers\Elternabfragen\ParentInquiryController::class;
+    Route::prefix('elternabfragen')->name('elternabfragen.')->group(function () use ($parent) {
+        Route::get('/', [$parent, 'index'])->name('index');
+        Route::get('abfrage/{inquiry}', [$parent, 'open'])->whereNumber('inquiry')->name('open');
+        Route::get('{assignment}', [$parent, 'show'])->whereNumber('assignment')->name('show');
+        Route::post('{assignment}/entwurf', [$parent, 'saveDraft'])->whereNumber('assignment')->name('draft');
+        Route::delete('{assignment}/entwurf', [$parent, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
+        Route::post('{assignment}/absenden', [$parent, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::get('{assignment}/bestaetigung.pdf', [$parent, 'pdf'])->whereNumber('assignment')->name('pdf');
+        Route::get('{assignment}/datei/{field}', [$parent, 'file'])->whereNumber('assignment')->name('file');
+    });
+
+    Route::prefix('verwaltung/elternabfragen')->name('elternabfragen.admin.')->group(function () {
+        $admin = \App\Http\Controllers\Elternabfragen\AdminController::class;
+        $templates = \App\Http\Controllers\Elternabfragen\TemplateController::class;
+        $inquiries = \App\Http\Controllers\Elternabfragen\InquiryController::class;
+        $cases = \App\Http\Controllers\Elternabfragen\AssignmentController::class;
+        $exports = \App\Http\Controllers\Elternabfragen\ExportController::class;
+
+        Route::get('/', [$admin, 'index'])->name('index');
+        Route::get('freigaben', [$admin, 'approvals'])->middleware('permission:approve elternabfragen')->name('approvals');
+        Route::get('antworten', [$admin, 'staff'])->middleware('permission:read elternabfragen|view elternabfragen answers')->name('staff');
+        Route::get('einstellungen', [$admin, 'settings'])->middleware('permission:approve elternabfragen|edit settings')->name('settings');
+        Route::put('einstellungen', [$admin, 'updateSettings'])->middleware('permission:approve elternabfragen|edit settings')->name('settings.update');
+
+        // Vorlagen (Prozess A)
+        Route::get('vorlagen', [$templates, 'index'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.index');
+        Route::middleware('permission:manage elternabfragen')->group(function () use ($templates) {
+            Route::get('vorlagen/neu', [$templates, 'create'])->name('templates.create');
+            Route::post('vorlagen', [$templates, 'store'])->name('templates.store');
+            Route::get('vorlagen/versionen/{version}/bearbeiten', [$templates, 'edit'])->name('templates.edit');
+            Route::put('vorlagen/versionen/{version}', [$templates, 'update'])->name('templates.update');
+            Route::post('vorlagen/versionen/{version}/einreichen', [$templates, 'submit'])->name('templates.submit');
+            Route::post('vorlagen/{template}/neue-version', [$templates, 'newVersion'])->name('templates.new-version');
+            Route::post('vorlagen/{template}/archivieren', [$templates, 'archive'])->name('templates.archive');
+        });
+        Route::get('vorlagen/versionen/{version}', [$templates, 'show'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.show');
+        Route::middleware('permission:approve elternabfragen')->group(function () use ($templates) {
+            Route::post('vorlagen/versionen/{version}/freigeben', [$templates, 'approve'])->name('templates.approve');
+            Route::post('vorlagen/versionen/{version}/zurueckgeben', [$templates, 'reject'])->name('templates.reject');
+        });
+
+        // Abfragen (Prozess B) und Rücklauf (Prozess D)
+        Route::middleware('permission:manage elternabfragen')->group(function () use ($inquiries) {
+            Route::get('abfragen/neu', [$inquiries, 'create'])->name('inquiries.create');
+            Route::post('abfragen', [$inquiries, 'store'])->name('inquiries.store');
+            Route::get('abfragen/{inquiry}/bearbeiten', [$inquiries, 'edit'])->name('inquiries.edit');
+            Route::put('abfragen/{inquiry}', [$inquiries, 'update'])->name('inquiries.update');
+            Route::post('abfragen/{inquiry}/einreichen', [$inquiries, 'submit'])->name('inquiries.submit');
+            Route::post('abfragen/{inquiry}/abgleichen', [$inquiries, 'sync'])->name('inquiries.sync');
+            Route::post('abfragen/{inquiry}/frist', [$inquiries, 'deadline'])->name('inquiries.deadline');
+            Route::put('abfragen/{inquiry}/einstellungen', [$inquiries, 'settings'])->name('inquiries.settings');
+            Route::post('abfragen/{inquiry}/abschliessen', [$inquiries, 'close'])->name('inquiries.close');
+            Route::post('abfragen/{inquiry}/duplizieren', [$inquiries, 'duplicate'])->name('inquiries.duplicate');
+            Route::delete('abfragen/{inquiry}', [$inquiries, 'destroy'])->name('inquiries.destroy');
+        });
+        Route::middleware('permission:approve elternabfragen')->group(function () use ($inquiries) {
+            Route::post('abfragen/{inquiry}/freigeben', [$inquiries, 'approve'])->name('inquiries.approve');
+            Route::post('abfragen/{inquiry}/zurueckgeben', [$inquiries, 'reject'])->name('inquiries.reject');
+        });
+        Route::get('abfragen/{inquiry}', [$inquiries, 'show'])->name('inquiries.show');
+        Route::get('abfragen/{inquiry}/vorschau', [$inquiries, 'preview'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('inquiries.preview');
+
+        // Einzelfälle
+        Route::middleware('permission:manage elternabfragen')->group(function () use ($cases) {
+            Route::post('abfragen/{inquiry}/erinnern', [$cases, 'remind'])->name('assignments.remind');
+            Route::post('faelle/{assignment}/nachfrist', [$cases, 'extend'])->name('assignments.extend');
+            Route::post('faelle/{assignment}/problem', [$cases, 'problem'])->name('assignments.problem');
+            Route::post('faelle/{assignment}/problem-geloest', [$cases, 'resolve'])->name('assignments.resolve');
+            Route::post('faelle/{assignment}/notiz', [$cases, 'note'])->name('assignments.note');
+            Route::post('faelle/{assignment}/korrektur', [$cases, 'unlockCorrection'])->name('assignments.correction');
+        });
+        Route::get('faelle/{assignment}', [$cases, 'show'])->name('assignments.show');
+        Route::middleware('permission:view elternabfragen answers')->group(function () use ($cases) {
+            Route::post('antworten/{response}/pruefung', [$cases, 'review'])->name('responses.review');
+        });
+        Route::get('antworten/{response}/datei/{field}', [$cases, 'file'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.file');
+        Route::get('antworten/{response}', [$cases, 'response'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.show');
+
+        // Export (Prozess E)
+        Route::middleware('permission:export elternabfragen')->group(function () use ($exports) {
+            Route::get('abfragen/{inquiry}/export', [$exports, 'create'])->name('exports.create');
+            Route::post('abfragen/{inquiry}/export/vorschau', [$exports, 'preview'])->name('exports.preview');
+            Route::post('abfragen/{inquiry}/export', [$exports, 'store'])->name('exports.store');
+            Route::get('exporte/{export}', [$exports, 'download'])->name('exports.download');
+        });
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
 | Support-Widget (FreeScout-Anbindung)
 |--------------------------------------------------------------------------
 | Nur für eingeloggte, aktive Nutzer – mit Rate-Limit gegen Spam.
