@@ -135,12 +135,11 @@
                 </div>
             </div>
 
-            @stack('bottom-nav')
-
-            <!-- Hilfe-Button (Mobile) -->
-            @auth
-                <x-help-button variant="mobile" />
-            @endauth
+            {{-- Höchstens drei Modul-Kurzlinks (CSS), damit „Menü“ immer erreichbar bleibt.
+                 Hilfe ist mobil über den Header erreichbar. --}}
+            <div class="mobile-bottom-nav-modules">
+                @stack('bottom-nav')
+            </div>
 
             <!-- Menu Toggle Icon -->
             <div class="mobile-bottom-nav_item flex-1" id="toogleSidebarButton">
@@ -224,7 +223,7 @@
                                 <img src="{{url('storage/img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
                             @endif
                         </div>
-                        <span class="text-base font-bold" style="color: var(--color-navbar-text, #1f2937)">{{$settings->app_name}}</span>
+                        <span class="hidden sm:inline text-base font-bold" style="color: var(--color-navbar-text, #1f2937)">{{$settings->app_name}}</span>
                     </a>
                 </div>
 

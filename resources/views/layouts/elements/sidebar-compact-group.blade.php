@@ -1,4 +1,4 @@
-{{-- Einklappbare Gruppe im kompakten Seitenmenü. Erwartet: $group, $admin --}}
+{{-- Abschnitt (einklappbar) im kompakten Seitenmenü. Erwartet: $group, $admin --}}
 @php
     $groupLabel = $admin ? $group['label'].' Verwaltung' : $group['label'];
     $groupNames = collect($group['items'])->pluck('name')->values()->all();
@@ -8,22 +8,19 @@
     <button type="button"
             class="sidebar-compact-group-toggle @if($group['active']) sidebar-compact-group-toggle--active @endif"
             @click="toggle(@js($group['key']))"
-            :aria-expanded="isOpen(@js($group['key'])).toString()"
-            aria-expanded="{{ $group['active'] ? 'true' : 'false' }}"
+            :aria-expanded="isOpen(@js($group['key']), @js($group['active'])).toString()"
+            aria-expanded="true"
             aria-controls="{{ $panelId }}">
-        <i class="{{ $group['icon'] }} sidebar-compact-icon" aria-hidden="true"
-           @if($admin) style="color: var(--color-sidebar-admin-icon, inherit)" @endif></i>
-        <span class="sidebar-compact-label">{{ $group['label'] }}</span>
+        <span class="sidebar-compact-group-label">{{ $group['label'] }}</span>
         @if($group['unread'] > 0)
             <span class="sidebar-compact-badge" style="background-color: var(--color-badge-bg);"
-                  x-show="!isOpen(@js($group['key']))">{{ $group['unread'] }}</span>
+                  x-show="!isOpen(@js($group['key']), @js($group['active']))" x-cloak>{{ $group['unread'] }}</span>
         @endif
         <i class="fas fa-chevron-down sidebar-compact-chevron" aria-hidden="true"
-           :class="{ 'rotate-180': isOpen(@js($group['key'])) }"></i>
+           :class="{ 'is-collapsed':!isOpen(@js($group['key']), @js($group['active'])) }"></i>
     </button>
     <ul id="{{ $panelId }}" class="sidebar-compact-panel"
-        x-show="isOpen(@js($group['key']))"
-        @unless($group['active']) style="display: none;" @endunless>
+        x-show="isOpen(@js($group['key']), @js($group['active']))">
         @foreach($group['items'] as $item)
             @include('layouts.elements.sidebar-compact-item', ['item' => $item, 'groupLabel' => $groupLabel, 'admin' => $admin])
         @endforeach

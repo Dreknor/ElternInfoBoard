@@ -2,10 +2,25 @@
     Kompaktes Seitenmenü (GeneralSetting::$nav_style / Nutzereinstellung 'nav_style' = 'compact').
     Gruppen und Zuordnung: config/navigation.php, Aufbau: App\Services\NavigationService.
     $navigation wird vom NavigationComposer bereitgestellt.
+
+    Aufbau:
+    - Bereichsumschalter „Übersicht“ / „Verwaltung“ (nur mit Verwaltungsrechten), damit
+      Eltern- und Verwaltungsfunktionen nicht in einer langen Liste vermischt werden.
+    - Gruppen als Abschnitte mit Überschrift, standardmäßig aufgeklappt; zugeklappte
+      Abschnitte werden pro Browser gemerkt.
+    - Filter durchsucht beide Bereiche (Tastenkürzel „/“).
 --}}
 @php
-    $navGroupsOpen = collect($navigation['groups'])->merge($navigation['admin'])
-        ->where('active', true)->pluck('key')->values()->all();
+    $hasAdminNav = count($navigation['admin']) || count($navigation['admin_top']);
+
+    $mainActive = collect($navigation['top'])->contains('active', true)
+        || collect($navigation['groups'])->contains('active', true)
+        || in_array(request()->path(), ['dashboard', '/'], true);
+    $adminActive = collect($navigation['admin_top'])->contains('active', true)
+        || collect($navigation['admin'])->contains('active', true);
+    $navArea = $adminActive ? 'admin' : ($mainActive ? 'main' : null);
+
+    $mainUnread = collect($navigation['top'])->sum('unread') + collect($navigation['groups'])->sum('unread');
 
     // Alle Einträge als [Name, Gruppe] für die Trefferprüfung des Filters
     $navEntries = collect([['Dashboard', 'Startseite Home']])
@@ -14,36 +29,58 @@
         ->merge(collect($navigation['admin_top'])->map(fn ($i) => [$i['name'], 'Verwaltung']))
         ->merge(collect($navigation['admin'])->flatMap(fn ($g) => collect($g['items'])->map(fn ($i) => [$i['name'], $g['label'].' Verwaltung'])))
         ->values()->all();
+
+    $adminNames = collect($navigation['admin_top'])->pluck('name')
+        ->merge(collect($navigation['admin'])->flatMap(fn ($g) => collect($g['items'])->pluck('name')))
+        ->values()->all();
 @endphp
 
 <script>
-    window.compactNav = window.compactNav || function (activeGroups, entries) {
-        const storageKey = 'nav-compact-open';
+    window.compactNav = window.compactNav || function (entries, activeArea, hasAdmin) {
+        const collapsedKey = 'nav-compact-collapsed';
+        const areaKey = 'nav-compact-area';
         const normalize = (value) => (value || '').toString().toLowerCase()
             .normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const read = (key, fallback) => {
+            try {
+                const value = JSON.parse(localStorage.getItem(key) || 'null');
+                return value ?? fallback;
+            } catch (e) {
+                return fallback;
+            }
+        };
+        const write = (key, value) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {}
+        };
 
-        let stored = [];
-        try {
-            stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            if (!Array.isArray(stored)) stored = [];
-        } catch (e) {
-            stored = [];
-        }
+        const storedArea = read(areaKey, 'main');
+        const collapsed = read(collapsedKey, []);
 
         return {
             q: '',
-            open: Array.from(new Set([...stored, ...activeGroups])),
-            isOpen(key) {
-                return this.q !== '' || this.open.includes(key);
+            area: hasAdmin ? (activeArea || (storedArea === 'admin' ? 'admin' : 'main')) : 'main',
+            collapsed: Array.isArray(collapsed) ? collapsed : [],
+            init() {
+                this.$watch('area', (value) => write(areaKey, value));
+            },
+            setArea(value) {
+                this.area = value;
+                this.$nextTick(() => this.$root.scrollTo({ top: 0 }));
+            },
+            areaVisible(value) {
+                return this.q !== '' || this.area === value;
+            },
+            isOpen(key, active) {
+                return this.q !== '' || active || !this.collapsed.includes(key);
             },
             toggle(key) {
                 if (this.q !== '') return;
-                this.open = this.open.includes(key)
-                    ? this.open.filter((k) => k !== key)
-                    : [...this.open, key];
-                try {
-                    localStorage.setItem(storageKey, JSON.stringify(this.open));
-                } catch (e) {}
+                this.collapsed = this.collapsed.includes(key)
+                    ? this.collapsed.filter((k) => k !== key)
+                    : [...this.collapsed, key];
+                write(collapsedKey, this.collapsed);
             },
             match(name, groupLabel) {
                 if (this.q === '') return true;
@@ -56,6 +93,15 @@
             hasResults() {
                 return entries.some(([name, groupLabel]) => this.match(name, groupLabel));
             },
+            focusFilter(event) {
+                const target = event.target;
+                if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
+                event.preventDefault();
+                if (window.innerWidth < 992) {
+                    document.documentElement.classList.add('nav-open');
+                }
+                this.$refs.filter.focus();
+            },
             openFirstMatch() {
                 const first = Array.from(this.$root.querySelectorAll('[data-nav-item]'))
                     .find((el) => el.offsetParent !== null);
@@ -66,23 +112,56 @@
 </script>
 
 <div class="sidebar-wrapper overflow-y-auto sidebar-nav-scroll sidebar-compact" id="sidebar"
-     x-data="compactNav(@js($navGroupsOpen), @js($navEntries))">
+     x-data="compactNav(@js($navEntries), @js($navArea), @js((bool) $hasAdminNav))"
+     @keydown.slash.window="focusFilter($event)">
 
-    {{-- Filter --}}
-    <div class="sidebar-compact-filter px-2 pt-3 pb-2">
-        <label for="sidebarFilter" class="sr-only">Menü durchsuchen</label>
-        <div class="relative">
-            <i class="fas fa-filter sidebar-compact-filter-icon" aria-hidden="true"></i>
-            <input type="search" id="sidebarFilter" x-model="q" autocomplete="off"
-                   placeholder="Menü durchsuchen…"
-                   @keydown.escape.prevent="q = ''"
+    <div class="sidebar-compact-head">
+        {{-- Bereichsumschalter --}}
+        @if($hasAdminNav)
+            <div class="sidebar-compact-switch" role="tablist" aria-label="Menübereich">
+                <button type="button" role="tab" id="nav-tab-main" aria-controls="nav-area-main"
+                        class="sidebar-compact-switch-btn"
+                        :class="{ 'is-active': area === 'main' }"
+                        :aria-selected="(area === 'main').toString()"
+                        aria-selected="{{ $navArea !== 'admin' ? 'true' : 'false' }}"
+                        @click="setArea('main')">
+                    <i class="fas fa-home" aria-hidden="true"></i>
+                    <span>Übersicht</span>
+                    @if($mainUnread > 0)
+                        <span class="sidebar-compact-dot" x-show="area !== 'main'" style="background-color: var(--color-badge-bg);"
+                              title="{{ $mainUnread }} ungelesen"></span>
+                    @endif
+                </button>
+                <button type="button" role="tab" id="nav-tab-admin" aria-controls="nav-area-admin"
+                        class="sidebar-compact-switch-btn"
+                        :class="{ 'is-active': area === 'admin' }"
+                        :aria-selected="(area === 'admin').toString()"
+                        aria-selected="{{ $navArea === 'admin' ? 'true' : 'false' }}"
+                        @click="setArea('admin')">
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                    <span>Verwaltung</span>
+                </button>
+            </div>
+        @endif
+
+        {{-- Filter --}}
+        <div class="sidebar-compact-filter">
+            <label for="sidebarFilter" class="sr-only">Menü durchsuchen</label>
+            <i class="fas fa-search sidebar-compact-filter-icon" aria-hidden="true"></i>
+            <input type="search" id="sidebarFilter" x-model="q" x-ref="filter" autocomplete="off"
+                   placeholder="Menü durchsuchen"
+                   @keydown.escape.prevent="q = ''; $el.blur()"
                    @keydown.enter.prevent="openFirstMatch()"
                    class="sidebar-compact-filter-input">
+            <kbd class="sidebar-compact-kbd" x-show="q === ''" aria-hidden="true">/</kbd>
         </div>
     </div>
 
-    <ul class="nav flex-column px-2 pb-3 sidebar-compact-list">
-        {{-- Dashboard --}}
+    {{-- Bereich: Übersicht --}}
+    <ul class="nav flex-column sidebar-compact-list" id="nav-area-main"
+        @if($hasAdminNav) role="tabpanel" aria-labelledby="nav-tab-main" @endif
+        x-show="areaVisible('main')"
+        @if($navArea === 'admin') style="display: none;" @endif>
         @php $dashboardActive = in_array(request()->path(), ['dashboard', '/'], true); @endphp
         <li class="nav-item" x-show="match('Dashboard', 'Startseite Home')">
             <a href="{{ url('/dashboard') }}" data-nav-item
@@ -100,23 +179,16 @@
         @foreach($navigation['groups'] as $group)
             @include('layouts.elements.sidebar-compact-group', ['group' => $group, 'admin' => false])
         @endforeach
+    </ul>
 
-        @if(count($navigation['admin']) || count($navigation['admin_top']))
-            @php
-                $adminNames = collect($navigation['admin_top'])->pluck('name')
-                    ->merge(collect($navigation['admin'])->flatMap(fn ($g) => collect($g['items'])->pluck('name')))
-                    ->values()->all();
-            @endphp
-            <li class="sidebar-compact-section" x-show="groupVisible(@js($adminNames), 'Verwaltung')">
-                <div class="flex items-center gap-2">
-                    <div class="flex-1 border-t" style="border-color: var(--color-sidebar-admin-border, rgba(255,255,255,0.15))"></div>
-                    <span class="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 px-1"
-                          style="color: var(--color-sidebar-admin-label, rgba(255,255,255,0.4))">
-                        <i class="fas fa-shield-alt text-[9px]" aria-hidden="true"></i>
-                        Verwaltung
-                    </span>
-                    <div class="flex-1 border-t" style="border-color: var(--color-sidebar-admin-border, rgba(255,255,255,0.15))"></div>
-                </div>
+    {{-- Bereich: Verwaltung --}}
+    @if($hasAdminNav)
+        <ul class="nav flex-column sidebar-compact-list" id="nav-area-admin"
+            role="tabpanel" aria-labelledby="nav-tab-admin"
+            x-show="areaVisible('admin')"
+            @if($navArea !== 'admin') style="display: none;" @endif>
+            <li class="sidebar-compact-area-title" x-show="q !== '' && groupVisible(@js($adminNames), 'Verwaltung')" x-cloak>
+                <i class="fas fa-shield-alt" aria-hidden="true"></i> Verwaltung
             </li>
 
             @foreach($navigation['admin_top'] as $item)
@@ -126,10 +198,11 @@
             @foreach($navigation['admin'] as $group)
                 @include('layouts.elements.sidebar-compact-group', ['group' => $group, 'admin' => true])
             @endforeach
-        @endif
+        </ul>
+    @endif
 
-        <li x-show="q !== '' && !hasResults()" x-cloak class="px-3 py-4 text-center text-sm sidebar-compact-empty">
-            Kein Menüpunkt gefunden.
-        </li>
-    </ul>
+    <p x-show="q !== '' && !hasResults()" x-cloak class="sidebar-compact-empty">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        Kein Menüpunkt zu „<span x-text="q"></span>“ gefunden.
+    </p>
 </div>
