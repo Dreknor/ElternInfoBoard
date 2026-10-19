@@ -55,6 +55,8 @@ class ListenPreviewTest extends TestCase
         $this->actingAs($this->owner)->get(route('listen.preview', $liste->id))
             ->assertOk()
             ->assertSee('Vorschau beenden')
+            ->assertSee('So sehen Eltern diese Liste, sobald sie veröffentlicht ist.')
+            ->assertDontSee('@if', false)
             ->assertSee('Kuchen')
             ->assertSee('Reservieren')
             ->assertSee('vergeben')

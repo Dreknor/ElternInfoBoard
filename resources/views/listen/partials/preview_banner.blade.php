@@ -5,7 +5,8 @@
         <div>
             <p class="font-semibold mb-0">Vorschau</p>
             <p class="text-sm text-amber-800 mb-0">
-                So sehen Eltern diese Liste@if($liste->active == 0), sobald sie veröffentlicht ist@endif. Schaltflächen sind in der Vorschau deaktiviert.
+                {{ $liste->active == 0 ? 'So sehen Eltern diese Liste, sobald sie veröffentlicht ist.' : 'So sehen Eltern diese Liste.' }}
+                Schaltflächen sind in der Vorschau deaktiviert.
             </p>
         </div>
     </div>
