@@ -54,7 +54,7 @@
     <header class="mb-4">
         <h1 class="text-2xl font-bold text-gray-800 break-words">{{ $inquiry->title }}</h1>
         <div class="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600">
-            <x-elternabfragen.badge :color="$assignment->status->color()">{{ $assignment->status->label() }}</x-elternabfragen.badge>
+            <x-elternabfragen.badge :color="$assignment->displayColor()">{{ $assignment->displayLabel() }}</x-elternabfragen.badge>
             <span><i class="far fa-clock" aria-hidden="true"></i> Rückgabe bis {{ $state['deadline']->format('d.m.Y, H:i') }} Uhr</span>
         </div>
     </header>

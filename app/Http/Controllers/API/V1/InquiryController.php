@@ -237,7 +237,7 @@ class InquiryController extends ApiController
                 'full_name' => $assignment->childName(),
             ],
             'status' => $assignment->status->value,
-            'status_label' => $assignment->status->label(),
+            'status_label' => $assignment->displayLabel(),
             'inquiry_status' => $inquiry->status->value,
             'deadline' => $state['deadline']->toIso8601String(),
             'extended' => $assignment->extended_until !== null,

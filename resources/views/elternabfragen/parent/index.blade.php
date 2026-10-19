@@ -28,7 +28,7 @@
                             @endif
                         </p>
                     </div>
-                    <x-elternabfragen.badge :color="$assignment->status->color()">{{ $assignment->status->label() }}</x-elternabfragen.badge>
+                    <x-elternabfragen.badge :color="$assignment->displayColor()">{{ $assignment->displayLabel() }}</x-elternabfragen.badge>
                 </div>
                 @if($state['can_confirm'])
                     <p class="text-sm text-blue-800 mt-2"><i class="fas fa-user-check" aria-hidden="true"></i> Bereits beantwortet – bitte prüfen und bestätigen Sie die Angaben.</p>
@@ -61,7 +61,7 @@
                                     @endif
                                 </span>
                             </span>
-                            <x-elternabfragen.badge :color="$assignment->status->color()">{{ $assignment->status->label() }}</x-elternabfragen.badge>
+                            <x-elternabfragen.badge :color="$assignment->displayColor()">{{ $assignment->displayLabel() }}</x-elternabfragen.badge>
                         </a>
                     </li>
                 @endforeach

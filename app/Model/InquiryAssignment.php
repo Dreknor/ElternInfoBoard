@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use App\Enums\InquiryAssignmentStatus;
+use App\Enums\InquiryStatus;
 use App\Services\Elternabfragen\GuardianConfirmation;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
@@ -128,6 +129,34 @@ class InquiryAssignment extends Model
     {
         $this->status = $this->recomputeStatus();
         $this->save();
+    }
+
+    /**
+     * Status für die Elternansicht: Nach Abschluss der Abfrage (Fristende oder
+     * vorzeitig beendet) ist ein unbeantworteter Auftrag nicht mehr "offen".
+     */
+    public function displayLabel(): string
+    {
+        if ($this->inquiry?->status === InquiryStatus::Closed) {
+            if (! $this->isAnswered()) {
+                return 'Beendet – nicht beantwortet';
+            }
+            if ($this->status === InquiryAssignmentStatus::AwaitingConfirmation) {
+                return 'Beendet – Bestätigung unvollständig';
+            }
+        }
+
+        return $this->status->label();
+    }
+
+    public function displayColor(): string
+    {
+        if ($this->inquiry?->status === InquiryStatus::Closed
+            && (! $this->isAnswered() || $this->status === InquiryAssignmentStatus::AwaitingConfirmation)) {
+            return 'gray';
+        }
+
+        return $this->status->color();
     }
 
     public function childName(): string
