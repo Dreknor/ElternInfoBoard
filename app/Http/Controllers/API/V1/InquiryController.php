@@ -57,6 +57,8 @@ class InquiryController extends ApiController
 
     /**
      * Abfrage mit Feldern, Entwurf bzw. gültiger Antwort und Versionsverlauf.
+     * Ohne Entwurf und Antwort enthält `prefill` die übernommenen Angaben der Vorabfrage
+     * (z. B. Vorjahr) – Einwilligungen und Dateien sind nicht enthalten.
      *
      * Feldtypen: consent (Werte granted|denied, `consent_text` vollständig anzeigen), yes_no (yes|no),
      * checkbox (Array der Optionen), radio, select, text (`format`: email|phone|postal_code|number),
@@ -75,6 +77,7 @@ class InquiryController extends ApiController
             : null;
         $current = $assignment->currentResponse;
         $children = $this->responses->childOptions($version->fields, $user);
+        $prefill = ! $draft && ! $current && $state['can_view_answers'] ? $this->responses->prefillFromPrevious($assignment, $user) : [];
 
         return response()->json(['data' => $this->summary($request, $assignment) + [
             'intro' => $assignment->inquiry->intro,
@@ -91,6 +94,10 @@ class InquiryController extends ApiController
             ], $this->confirmation->overview($assignment)) : [],
             'fields' => array_map(fn (array $f) => $this->presentField($f, $children), $version->fields),
             'draft' => $draft ? ['answers' => $draft->answers, 'updated_at' => $draft->updated_at->toIso8601String()] : null,
+            'prefill' => $prefill !== [] ? [
+                'from_inquiry' => ['id' => $assignment->inquiry->previous_inquiry_id, 'title' => $assignment->inquiry->previousInquiry?->title],
+                'answers' => $prefill,
+            ] : null,
             'response' => $current && $state['can_view_answers'] ? $this->presentResponse($assignment, $current) : null,
             'versions' => $state['can_view_answers'] ? $assignment->responses->map(fn (InquiryResponse $r) => [
                 'version' => $r->version,

@@ -10,6 +10,7 @@ use App\Model\Group;
 use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryDelivery;
+use App\Model\InquiryResponse;
 use App\Model\InquiryTemplateVersion;
 use App\Model\User;
 use App\Services\Elternabfragen\FieldSchema;
@@ -119,10 +120,10 @@ class InquiryController extends Controller
         $user = $request->user();
         abort_unless($user->canAny(AdminController::ADMIN_PERMISSIONS) && ! $this->onlyStaff($user), 403);
 
-        $inquiry->load(['templateVersion.template', 'responsible:id,name', 'creator:id,name', 'approver:id,name']);
+        $inquiry->load(['templateVersion.template', 'responsible:id,name', 'creator:id,name', 'approver:id,name', 'previousInquiry:id,title']);
 
         $assignments = $inquiry->assignments()
-            ->with(['child:id,first_name,last_name', 'group:id,name', 'recipients.user:id,name,email', 'currentResponse:id,version,review_status,submitted_at,user_id', 'currentResponse.user:id,name'])
+            ->with(['child:id,first_name,last_name', 'group:id,name', 'recipients.user:id,name,email', 'currentResponse:id,version,review_status,submitted_at,user_id,baseline_changes', 'currentResponse.user:id,name'])
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
             ->when($request->integer('klasse'), fn ($q, $groupId) => $q->where('group_id', $groupId))
             ->when($request->query('frist') === 'nachfrist', fn ($q) => $q->whereNotNull('extended_until'))
@@ -157,8 +158,53 @@ class InquiryController extends Controller
             'events' => $inquiry->events()->with('user:id,name')->whereNull('assignment_id')->limit(50)->get(),
             'users' => User::permission(['manage elternabfragen', 'approve elternabfragen'])->orderBy('name')->get(['id', 'name']),
             'statusOptions' => InquiryAssignmentStatus::options(),
+            'changeCounts' => $inquiry->previous_inquiry_id ? $this->changeCounts($inquiry) : null,
             'pendingApprovals' => AdminController::pendingApprovalCount(),
         ]);
+    }
+
+    /**
+     * Änderungen gegenüber der Vorabfrage je Kind (Sekretariat): nur gültige Antworten,
+     * standardmäßig nur Kinder mit geänderten Angaben.
+     */
+    public function changes(Request $request, Inquiry $inquiry, FieldSchema $schema): View
+    {
+        abort_unless($inquiry->previous_inquiry_id || $inquiry->responses()->whereNotNull('baseline_changes')->exists(), 404);
+        $inquiry->load(['templateVersion', 'previousInquiry:id,title,deadline_at']);
+        $all = $request->query('anzeigen') === 'alle';
+
+        $responses = InquiryResponse::query()
+            ->where('inquiry_id', $inquiry->id)
+            ->where('is_current', true)
+            ->with(['child:id,first_name,last_name', 'user:id,name', 'assignment.group:id,name'])
+            ->get()
+            ->filter(fn (InquiryResponse $r) => $all || $r->baselineChanges() !== [])
+            ->sortBy(fn (InquiryResponse $r) => [$r->assignment?->group?->name ?? 'zzz', $r->child?->last_name ?? '', $r->child?->first_name ?? ''])
+            ->values();
+
+        return view('elternabfragen.admin.inquiries.changes', [
+            'inquiry' => $inquiry,
+            'responses' => $responses,
+            'fields' => collect($inquiry->templateVersion->fields)->filter(fn ($f) => isset($f['key']))->keyBy('key'),
+            'schema' => $schema,
+            'counts' => $this->changeCounts($inquiry),
+            'all' => $all,
+            'pendingApprovals' => AdminController::pendingApprovalCount(),
+        ]);
+    }
+
+    /**
+     * @return array{changed: int, unchanged: int, without_baseline: int}
+     */
+    private function changeCounts(Inquiry $inquiry): array
+    {
+        $changes = InquiryResponse::where('inquiry_id', $inquiry->id)->where('is_current', true)->get(['id', 'baseline_changes']);
+
+        return [
+            'changed' => $changes->filter(fn (InquiryResponse $r) => $r->baselineChanges() !== [])->count(),
+            'unchanged' => $changes->filter(fn (InquiryResponse $r) => $r->hasBaseline() && $r->baselineChanges() === [])->count(),
+            'without_baseline' => $changes->reject(fn (InquiryResponse $r) => $r->hasBaseline())->count(),
+        ];
     }
 
     /**
@@ -267,6 +313,7 @@ class InquiryController extends Controller
                 ->when($inquiry->templateVersion && ! $inquiry->templateVersion->status->isEditable(), fn ($c) => $c->push($inquiry->templateVersion)->unique('id')),
             'groups' => Group::withoutGlobalScopes()->whereNull('owner_id')->where('active', true)->orderBy('name')->get(['id', 'name']),
             'users' => User::permission(['manage elternabfragen', 'approve elternabfragen'])->orderBy('name')->get(['id', 'name']),
+            'previousInquiries' => $this->inquiries->previousCandidates($inquiry),
             'pendingApprovals' => AdminController::pendingApprovalCount(),
         ]);
     }
@@ -275,6 +322,7 @@ class InquiryController extends Controller
     {
         $data = $request->validate([
             'template_version_id' => 'required|exists:inquiry_template_versions,id',
+            'previous_inquiry_id' => 'nullable|integer',
             'title' => 'required|string|max:255',
             'intro' => 'nullable|string|max:10000',
             'starts_at' => 'required|date',

@@ -29,11 +29,11 @@ Ablauf von Exporten, Löschfristen. `--dry-run` zeigt fällige Löschungen.
 |---|---|
 | `inquiry_templates` | Identität einer Vorlage (Titel, Kategorie, Archiv) |
 | `inquiry_template_versions` | Versionierte Inhalte: Zweck, Elterninformation, zuständige Stelle, Zielgruppenhinweis, Standardfrist, Aufbewahrung, sensibel, Felder (JSON), Prüfvermerke. Nach Freigabe unveränderlich (Model-Guard) |
-| `inquiries` | Abfrage: Vorlagenversion, Titel, Einführung, Start, Frist, Zielgruppe, verantwortliche Person, Kanäle, Erinnerungen, Mitarbeitersicht, Korrekturfenster, Aufbewahrung, Freigabe, erwartete Anzahl, Abschluss/Löschung. Inhalte nach Freigabe gesperrt (Model-Guard) |
+| `inquiries` | Abfrage: Vorlagenversion, Titel, Einführung, Start, Frist, Zielgruppe, verantwortliche Person, Kanäle, Erinnerungen, Mitarbeitersicht, Korrekturfenster, Aufbewahrung, Freigabe, erwartete Anzahl, Abschluss/Löschung, optional Vorabfrage (`previous_inquiry_id`). Inhalte nach Freigabe gesperrt (Model-Guard) |
 | `inquiry_assignments` | Auftrag je Kind: Status, Klasse zum Startzeitpunkt, gültige Antwort, Nachfrist, Korrekturfreigabe, Problem, Bearbeitungshinweis, Erinnerungszähler |
 | `inquiry_recipients` | berechtigte Konten je Auftrag inkl. Zustellstatus |
 | `inquiry_drafts` | Entwurf je Konto (gilt nicht als Rückmeldung) |
-| `inquiry_responses` | unveränderliche Antwortversionen (Kap. 7.2) |
+| `inquiry_responses` | unveränderliche Antwortversionen (Kap. 7.2), ggf. mit Änderungen gegenüber der Vorabfrage (`baseline_changes`) |
 | `inquiry_deliveries` | Protokoll jeder Benachrichtigung/Erinnerung (Zeit, Kanal, Empfänger, Ergebnis, manuell/automatisch) |
 | `inquiry_events` | Prozessprotokoll (Freigaben, Fristen, Nachfristen, Korrekturfreigaben, Prüfungen, Exporte, Löschung) |
 | `inquiry_exports` | Exportprotokoll mit Ablaufdatum |
@@ -122,6 +122,23 @@ Eltern korrigieren selbst innerhalb des Zeitfensters (Standard 7 Tage ab Erstein
 danach nur nach Freigabe durch das Sekretariat. Klärungen werden als Prüfstatus
 „Klärung nötig" bzw. Bearbeitungshinweis dokumentiert.
 
+### 6.1 Wiederkehrende Abfragen (z. B. neues Schuljahr)
+
+Eine Abfrage kann eine **Vorabfrage** derselben Vorlage haben (gestartet oder abgeschlossen,
+Antworten noch nicht gelöscht). „Als neue Abfrage kopieren" setzt sie automatisch, im
+Formular ist sie wählbar. Ohne Entwurf und ohne Antwort sehen Eltern die gültige Antwort
+der Vorabfrage für dasselbe Kind vorausgefüllt – nur Felder mit gleichem Schlüssel und Typ
+und noch gültigen Optionen. **Einwilligungen** werden nicht übernommen (aktiv neu erteilen),
+**Dateien** ebenfalls nicht.
+
+Beim Absenden hält jede Antwortversion fest, welche Angaben sich gegenüber der Vorabfrage
+geändert haben (alter und neuer Wert, `baseline_changes`); leer heißt „unverändert", `null`
+„keine Vorjahresangaben". Die Angaben bleiben so auch nach Löschung der Vorabfrage
+nachvollziehbar und unterliegen der Aufbewahrungsfrist der neuen Abfrage. Das Sekretariat
+(`view elternabfragen answers`) sieht im Rücklauf eine Zählung und unter
+„Änderungen anzeigen" die Liste je Kind; der Export bietet die Spalte
+„Änderungen zur Vorabfrage" (nur Feldnamen).
+
 ## 7. Rollen
 
 | Recht | Rolle im Konzept |
@@ -161,7 +178,7 @@ Präfix `/api/v1/elternabfragen` (hinter `module:Elternabfragen`):
 | Methode | Pfad | Zweck |
 |---|---|---|
 | GET | `/` (`?filter=open`) | Aufträge zu den eigenen Kindern |
-| GET | `/{id}` | Details: Zweck, Felder, Entwurf, gültige Antwort, Versionen, Rechte |
+| GET | `/{id}` | Details: Zweck, Felder, Entwurf, gültige Antwort, Versionen, Rechte, `prefill` aus der Vorabfrage |
 | PUT | `/{id}/draft` | Entwurf speichern |
 | DELETE | `/{id}/draft` | Entwurf verwerfen |
 | POST | `/{id}/submit` | absenden/korrigieren (JSON oder multipart) |

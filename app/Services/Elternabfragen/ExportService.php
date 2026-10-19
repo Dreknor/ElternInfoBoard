@@ -35,6 +35,7 @@ class ExportService
         '_submitted_at' => 'Zeitpunkt',
         '_version' => 'Antwortversion',
         '_review' => 'Prüfstatus',
+        '_changes' => 'Änderungen zur Vorabfrage',
     ];
 
     public function __construct(
@@ -46,6 +47,9 @@ class ExportService
     public function availableColumns(Inquiry $inquiry): array
     {
         $columns = self::META_COLUMNS;
+        if (! $inquiry->previous_inquiry_id) {
+            unset($columns['_changes']);
+        }
         foreach ($inquiry->templateVersion->inputFields() as $field) {
             $columns[$field['key']] = $field['label'];
         }
@@ -180,6 +184,9 @@ class ExportService
             '_submitted_at' => $response?->submitted_at?->format('d.m.Y H:i'),
             '_version' => $response?->version,
             '_review' => $response?->review_status->label(),
+            '_changes' => $response?->hasBaseline()
+                ? (collect(array_keys($response->baselineChanges()))->map(fn ($key) => $fields->get($key)['label'] ?? $key)->implode(', ') ?: 'unverändert')
+                : null,
             default => $response && $fields->has($column)
                 ? $this->neutralizeFormula($this->schema->display($fields->get($column), $response->answers[$column] ?? null))
                 : null,

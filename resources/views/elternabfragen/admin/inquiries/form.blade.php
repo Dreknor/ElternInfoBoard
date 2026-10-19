@@ -28,20 +28,41 @@
         </div>
     @else
     <form method="POST" action="{{ $isNew ? route('elternabfragen.admin.inquiries.store') : route('elternabfragen.admin.inquiries.update', $inquiry) }}"
-          x-data="{ target: @js(old('target_type', $inquiry->target_type)) }">
+          x-data="{
+              target: @js(old('target_type', $inquiry->target_type)),
+              version: @js((string) old('template_version_id', $inquiry->template_version_id ?? $versions->first()?->id)),
+              templateOf: @js($versions->mapWithKeys(fn ($v) => [$v->id => $v->template_id])),
+          }">
         @csrf
         @unless($isNew) @method('PUT') @endunless
 
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 grid gap-4 md:grid-cols-2">
             <div class="md:col-span-2">
                 <label for="template_version_id" class="{{ $label }}">Vorlage (freigegebene Version) *</label>
-                <select id="template_version_id" name="template_version_id" required class="{{ $input }}">
+                <select id="template_version_id" name="template_version_id" required class="{{ $input }}" x-model="version">
                     @foreach($versions as $version)
                         <option value="{{ $version->id }}" @selected((int) old('template_version_id', $inquiry->template_version_id) === $version->id)>
                             {{ $version->label() }}{{ $version->template?->category ? ' · '.$version->template->category : '' }}
                         </option>
                     @endforeach
                 </select>
+            </div>
+            <div class="md:col-span-2">
+                <label for="previous_inquiry_id" class="{{ $label }}">Angaben vorbefüllen aus (z. B. Vorjahr)</label>
+                <select id="previous_inquiry_id" name="previous_inquiry_id" class="{{ $input }}" aria-describedby="previous_inquiry_hint">
+                    <option value="">– keine Vorbefüllung –</option>
+                    @foreach($previousInquiries as $previous)
+                        <option value="{{ $previous->id }}" @selected((int) old('previous_inquiry_id', $inquiry->previous_inquiry_id) === $previous->id)
+                                :disabled="templateOf[version] !== {{ (int) $previous->templateVersion?->template_id }}">
+                            {{ $previous->title }} · Frist {{ $previous->deadline_at->format('d.m.Y') }}
+                        </option>
+                    @endforeach
+                </select>
+                <p id="previous_inquiry_hint" class="text-xs text-gray-500 mt-1">
+                    Eltern sehen die Angaben ihres Kindes aus dieser Abfrage vorausgefüllt (ohne Einwilligungen und Dateien).
+                    Änderungen gegenüber der Vorabfrage werden im Rücklauf aufgelistet. Wählbar sind nur Abfragen derselben Vorlage, deren Antworten noch nicht gelöscht sind.
+                </p>
+                @error('previous_inquiry_id')<p class="text-sm text-red-700 mt-1">{{ $message }}</p>@enderror
             </div>
             <div class="md:col-span-2">
                 <label for="title" class="{{ $label }}">Titel *</label>

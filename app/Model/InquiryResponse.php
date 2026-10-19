@@ -20,7 +20,7 @@ class InquiryResponse extends Model
 
     protected $fillable = [
         'assignment_id', 'inquiry_id', 'child_id', 'user_id', 'template_version_id', 'version', 'answers',
-        'form_hash', 'answer_hash', 'previous_response_id', 'correction_reason', 'is_current', 'channel',
+        'form_hash', 'answer_hash', 'previous_response_id', 'baseline_response_id', 'baseline_changes', 'correction_reason', 'is_current', 'channel',
         'ip_anonymized', 'user_agent', 'submitted_at', 'review_status', 'reviewed_by', 'reviewed_at', 'review_note',
     ];
 
@@ -28,6 +28,7 @@ class InquiryResponse extends Model
     {
         return [
             'answers' => 'json:unicode',
+            'baseline_changes' => 'json:unicode',
             'is_current' => 'boolean',
             'submitted_at' => 'datetime',
             'review_status' => InquiryReviewStatus::class,
@@ -83,5 +84,17 @@ class InquiryResponse extends Model
     public function previous(): BelongsTo
     {
         return $this->belongsTo(self::class, 'previous_response_id');
+    }
+
+    /** Mit Angaben einer Vorabfrage verglichen (auch wenn diese inzwischen gelöscht ist). */
+    public function hasBaseline(): bool
+    {
+        return $this->baseline_changes !== null;
+    }
+
+    /** @return array<string, array{old: mixed, new: mixed}> */
+    public function baselineChanges(): array
+    {
+        return $this->baseline_changes ?? [];
     }
 }

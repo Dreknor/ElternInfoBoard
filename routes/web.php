@@ -851,6 +851,7 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
             Route::post('abfragen/{inquiry}/zurueckgeben', [$inquiries, 'reject'])->name('inquiries.reject');
         });
         Route::get('abfragen/{inquiry}', [$inquiries, 'show'])->name('inquiries.show');
+        Route::get('abfragen/{inquiry}/aenderungen', [$inquiries, 'changes'])->middleware('permission:view elternabfragen answers')->name('inquiries.changes');
         Route::get('abfragen/{inquiry}/vorschau', [$inquiries, 'preview'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('inquiries.preview');
 
         // Einzelfälle

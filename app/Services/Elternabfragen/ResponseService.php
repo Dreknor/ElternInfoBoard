@@ -36,6 +36,7 @@ class ResponseService
         private readonly DeliveryService $delivery,
         private readonly ElternabfragenSetting $settings,
         private readonly FamilyResolver $family,
+        private readonly PreviousAnswers $previousAnswers,
     ) {}
 
     public function fields(InquiryAssignment $assignment): array
@@ -144,6 +145,7 @@ class ResponseService
             $answers += $this->storeFiles($locked, $fields, $files, $previous?->answers ?? []);
 
             $inquiry = $assignment->inquiry;
+            $baseline = $this->previousAnswers->baseline($locked);
             $response = InquiryResponse::create([
                 'assignment_id' => $locked->id,
                 'inquiry_id' => $inquiry->id,
@@ -155,6 +157,8 @@ class ResponseService
                 'form_hash' => $this->schema->formHash($inquiry->template_version_id, $inquiry->title, $inquiry->intro, $fields),
                 'answer_hash' => $this->schema->answerHash($answers),
                 'previous_response_id' => $previous?->id,
+                'baseline_response_id' => $baseline?->id,
+                'baseline_changes' => $baseline ? $this->previousAnswers->changes($fields, $baseline, $answers) : null,
                 'correction_reason' => $previous ? (Str::limit(trim((string) $correctionReason), 1000, '') ?: null) : null,
                 'is_current' => true,
                 'channel' => in_array($meta['channel'] ?? null, ['web', 'app'], true) ? $meta['channel'] : 'web',
@@ -197,13 +201,28 @@ class ResponseService
     }
 
     /**
-     * Antworten für die Anzeige: Entwurf des Nutzers vor aktueller Antwort.
+     * Antworten für die Anzeige: Entwurf des Nutzers vor aktueller Antwort vor Angaben der Vorabfrage.
      */
     public function prefill(InquiryAssignment $assignment, User $user): array
     {
         $draft = InquiryDraft::where('assignment_id', $assignment->id)->where('user_id', $user->id)->first();
 
-        return $draft?->answers ?? $assignment->currentResponse?->answers ?? [];
+        return $draft?->answers ?? $assignment->currentResponse?->answers ?? $this->prefillFromPrevious($assignment, $user);
+    }
+
+    /**
+     * Vorbefüllung aus der Vorabfrage (nur solange noch keine Antwort vorliegt).
+     *
+     * @return array<string, mixed>
+     */
+    public function prefillFromPrevious(InquiryAssignment $assignment, User $user): array
+    {
+        if ($assignment->isAnswered()) {
+            return [];
+        }
+        $fields = $this->fields($assignment);
+
+        return $this->previousAnswers->prefill($assignment, $fields, $this->childOptions($fields, $user));
     }
 
     public function filePath(InquiryResponse $response, string $key): ?array

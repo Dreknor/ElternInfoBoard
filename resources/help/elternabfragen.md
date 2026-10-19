@@ -37,6 +37,8 @@ Die Rechte pflegt die Schulverwaltung. Stimmt etwas nicht, melde es bitte unter 
 4. **Weiter zur Zusammenfassung**: Du siehst alle Angaben noch einmal auf einen Blick.
 5. Bestätige die Richtigkeit und tippe auf **Verbindlich absenden**.
 
+Fragt die Schule dieselben Angaben erneut ab (z. B. zum neuen Schuljahr), sind deine **Angaben vom letzten Mal schon eingetragen**. Prüfe sie und ändere, was nicht mehr stimmt. Einwilligungen und Dateien musst du neu angeben.
+
 Danach erscheinen eine **Eingangsbestätigung** mit Zeitpunkt und deine eingereichte Zusammenfassung. Eine **PDF-Bestätigung** kannst du jederzeit herunterladen; zusätzlich bekommst du eine Bestätigung per E-Mail.
 
 ## Einwilligungen

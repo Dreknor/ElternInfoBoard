@@ -19,6 +19,22 @@
         @if($response->correction_reason)<p class="text-sm text-gray-600 mb-2">Korrekturgrund: {{ $response->correction_reason }}</p>@endif
         @if($response->review_note)<p class="text-sm bg-amber-50 p-2 rounded mb-2">Prüfvermerk: {{ $response->review_note }} ({{ $response->reviewer?->name }}, {{ $response->reviewed_at?->format('d.m.Y') }})</p>@endif
 
+        {{-- Nur Sekretariat: alte Werte stammen aus der Vorabfrage --}}
+        @if($canReview && $response->baselineChanges() !== [])
+            @php $byKey = collect($fields)->filter(fn ($f) => isset($f['key']))->keyBy('key'); @endphp
+            <div class="mb-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
+                <p class="font-semibold text-amber-900 mb-1"><i class="fas fa-history" aria-hidden="true"></i> Geändert gegenüber der Vorabfrage</p>
+                <ul class="space-y-0.5">
+                    @foreach($response->baselineChanges() as $key => $change)
+                        @php $field = $byKey->get($key, ['key' => $key, 'type' => 'text', 'label' => $key]); @endphp
+                        <li>{{ $field['label'] }}: <span class="text-gray-500 line-through">{{ $schema->display($field, $change['old']) }}</span> → <strong>{{ $schema->display($field, $change['new']) }}</strong></li>
+                    @endforeach
+                </ul>
+            </div>
+        @elseif($canReview && $response->hasBaseline())
+            <p class="mb-3 text-sm text-gray-500"><i class="fas fa-equals" aria-hidden="true"></i> Angaben unverändert aus der Vorabfrage übernommen.</p>
+        @endif
+
         @include('elternabfragen.parent._answers', [
             'fields' => $fields,
             'answers' => $response->answers,

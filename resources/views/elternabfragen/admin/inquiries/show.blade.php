@@ -79,6 +79,23 @@
                 </div>
             @endif
 
+            {{-- Änderungen gegenüber der Vorabfrage --}}
+            @if($changeCounts && $inquiry->isReleased() && ! $inquiry->purged_at)
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-amber-900">
+                        <i class="fas fa-history" aria-hidden="true"></i>
+                        Vorbefüllt aus „{{ $inquiry->previousInquiry?->title ?? 'gelöschte Abfrage' }}“:
+                        <strong>{{ $changeCounts['changed'] }}</strong> {{ $changeCounts['changed'] === 1 ? 'Kind' : 'Kinder' }} mit geänderten Angaben,
+                        {{ $changeCounts['unchanged'] }} unverändert, {{ $changeCounts['without_baseline'] }} ohne Vorjahresangaben.
+                    </p>
+                    @can('view elternabfragen answers')
+                        <a href="{{ route('elternabfragen.admin.inquiries.changes', $inquiry) }}" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white whitespace-nowrap">
+                            <i class="fas fa-list" aria-hidden="true"></i> Änderungen anzeigen
+                        </a>
+                    @endcan
+                </div>
+            @endif
+
             {{-- Vorschau vor dem Start --}}
             @if($preview)
                 <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
@@ -213,6 +230,9 @@
                                                 <x-elternabfragen.badge :color="$assignment->status->color()">{{ $assignment->status->label() }}</x-elternabfragen.badge>
                                                 @if($assignment->currentResponse)
                                                     <span class="block text-xs text-gray-500">{{ $assignment->currentResponse->submitted_at->format('d.m. H:i') }} · v{{ $assignment->currentResponse->version }} · {{ $assignment->currentResponse->review_status->label() }}</span>
+                                                    @if($assignment->currentResponse->baselineChanges() !== [])
+                                                        <span class="block text-xs text-amber-700"><i class="fas fa-history" aria-hidden="true"></i> {{ count($assignment->currentResponse->baselineChanges()) }} Änderung(en) zur Vorabfrage</span>
+                                                    @endif
                                                 @endif
                                             </td>
                                             <td class="px-3 py-2 text-xs">
@@ -252,6 +272,11 @@
             <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm space-y-2">
                 <h2 class="font-semibold text-gray-800">Eckdaten</h2>
                 <p><span class="text-gray-500">Vorlage:</span> <a href="{{ route('elternabfragen.admin.templates.show', $inquiry->templateVersion) }}" class="text-blue-700 hover:underline">{{ $inquiry->templateVersion->label() }}</a></p>
+                @if($inquiry->previous_inquiry_id)
+                    <p><span class="text-gray-500">Vorbefüllt aus:</span>
+                        @if($inquiry->previousInquiry)<a href="{{ route('elternabfragen.admin.inquiries.show', $inquiry->previousInquiry) }}" class="text-blue-700 hover:underline">{{ $inquiry->previousInquiry->title }}</a>@else – @endif
+                    </p>
+                @endif
                 <p><span class="text-gray-500">Zielgruppe:</span> {{ $inquiry->targetLabel() }}</p>
                 <p><span class="text-gray-500">Start:</span> {{ $inquiry->starts_at->format('d.m.Y H:i') }}</p>
                 <p><span class="text-gray-500">Frist:</span> {{ $inquiry->deadline_at->format('d.m.Y H:i') }}</p>

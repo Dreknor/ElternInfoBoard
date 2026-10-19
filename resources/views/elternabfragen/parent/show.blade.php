@@ -119,6 +119,12 @@
                 <div class="mb-4 p-3 rounded-lg bg-blue-50 text-blue-900 text-sm">
                     <i class="fas fa-save" aria-hidden="true"></i> Ihr gespeicherter Entwurf wurde geladen. Ein Entwurf gilt noch nicht als Rückmeldung.
                 </div>
+            @elseif($prefilledFrom ?? null)
+                <div class="mb-4 p-3 rounded-lg bg-blue-50 border-l-4 border-blue-500 text-blue-900 text-sm" role="status">
+                    <i class="fas fa-history" aria-hidden="true"></i>
+                    <strong>Angaben aus „{{ $prefilledFrom->title }}“ übernommen.</strong>
+                    Bitte prüfen Sie alles und ändern Sie, was nicht mehr stimmt. Einwilligungen und Dateien müssen neu angegeben werden.
+                </div>
             @endif
 
             <div x-show="step === 'form'" class="space-y-4">
@@ -300,11 +306,11 @@
                 }
                 this.summary = Array.from(form.querySelectorAll('[data-field]'))
                     .filter(el => el.dataset.type !== 'info')
-                    .map(el => ({ label: el.dataset.label, value: this.valueOf(el) }));
+                    .map(el => ({ label: el.dataset.label, value: this.displayValue(el) }));
                 this.step = 'summary';
                 this.$nextTick(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); this.$refs.summaryHeading.focus(); });
             },
-            valueOf(el) {
+            displayValue(el) {
                 const type = el.dataset.type;
                 if (['yes_no', 'consent', 'radio', 'checkbox', 'child'].includes(type)) {
                     const checked = Array.from(el.querySelectorAll('input:checked')).map(i => i.dataset.choice);

@@ -26,10 +26,10 @@ class Inquiry extends Model
     public const TARGET_GROUPS = 'groups';
 
     /** Inhalte, die nach der Freigabe gesperrt sind. */
-    public const LOCKED_AFTER_APPROVAL = ['template_version_id', 'title', 'intro', 'target_type', 'target_group_ids'];
+    public const LOCKED_AFTER_APPROVAL = ['template_version_id', 'previous_inquiry_id', 'title', 'intro', 'target_type', 'target_group_ids'];
 
     protected $fillable = [
-        'template_version_id', 'title', 'intro', 'status', 'starts_at', 'deadline_at', 'target_type',
+        'template_version_id', 'previous_inquiry_id', 'title', 'intro', 'status', 'starts_at', 'deadline_at', 'target_type',
         'target_group_ids', 'responsible_user_id', 'created_by', 'notify_mail', 'notify_push',
         'auto_reminders', 'staff_visible', 'correction_window_days', 'retention_days', 'review_note',
         'submitted_at', 'approved_by', 'approved_at', 'expected_children', 'expected_accounts',
@@ -71,6 +71,12 @@ class Inquiry extends Model
     public function templateVersion(): BelongsTo
     {
         return $this->belongsTo(InquiryTemplateVersion::class, 'template_version_id');
+    }
+
+    /** Vorabfrage, deren Angaben vorbefüllt und mit den neuen Antworten verglichen werden. */
+    public function previousInquiry(): BelongsTo
+    {
+        return $this->belongsTo(Inquiry::class, 'previous_inquiry_id');
     }
 
     public function assignments(): HasMany

@@ -14,6 +14,7 @@ use App\Model\InquiryTemplateVersion;
 use App\Model\User;
 use App\Settings\ElternabfragenSetting;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -38,6 +39,8 @@ class InquiryService
             throw ValidationException::withMessages(['template_version_id' => 'Abfragen können nur aus freigegebenen Vorlagen erstellt werden.']);
         }
 
+        $this->assertPreviousInquiry($data['previous_inquiry_id'] ?? null, $version);
+
         $inquiry = Inquiry::create($this->attributes($data) + [
             'template_version_id' => $version->id,
             'status' => InquiryStatus::Draft,
@@ -53,6 +56,7 @@ class InquiryService
     public function update(Inquiry $inquiry, array $data): Inquiry
     {
         $inquiry->assertStatus(InquiryStatus::Draft);
+        $this->assertPreviousInquiry($data['previous_inquiry_id'] ?? null, $inquiry->templateVersion, $inquiry->id);
         $inquiry->update($this->attributes($data));
 
         return $inquiry;
@@ -201,6 +205,8 @@ class InquiryService
             'auto_reminders', 'staff_visible', 'correction_window_days', 'retention_days',
         ]))->all() + [
             'template_version_id' => $approved->status === InquiryTemplateStatus::Approved ? $approved->id : $version->id,
+            // Angaben dieser Abfrage vorbefüllen und Änderungen ausweisen
+            'previous_inquiry_id' => $inquiry->purged_at ? null : $inquiry->id,
             'status' => InquiryStatus::Draft,
             'created_by' => $user->id,
             'starts_at' => now()->addDay()->startOfHour(),
@@ -312,6 +318,7 @@ class InquiryService
         return [
             'title' => $data['title'],
             'intro' => $data['intro'] ?? null,
+            'previous_inquiry_id' => $data['previous_inquiry_id'] ?? null,
             'starts_at' => $data['starts_at'],
             'deadline_at' => $data['deadline_at'],
             'target_type' => $targetType,
@@ -323,5 +330,40 @@ class InquiryService
             'staff_visible' => (bool) ($data['staff_visible'] ?? false),
             'correction_window_days' => (int) ($data['correction_window_days'] ?? $this->settings->correction_window_days),
         ];
+    }
+
+    /**
+     * Vorabfragen für die Vorbefüllung: gestartete oder abgeschlossene Abfragen derselben
+     * Vorlage, deren Antworten noch nicht gelöscht sind.
+     */
+    public function previousCandidates(?Inquiry $except = null): Collection
+    {
+        return Inquiry::query()
+            ->with('templateVersion:id,template_id')
+            ->whereIn('status', [InquiryStatus::Running->value, InquiryStatus::Closed->value])
+            ->whereNull('purged_at')
+            ->when($except?->exists, fn ($q) => $q->whereKeyNot($except->id))
+            ->orderByDesc('deadline_at')
+            ->get();
+    }
+
+    private function assertPreviousInquiry(mixed $previousId, ?InquiryTemplateVersion $version, ?int $selfId = null): void
+    {
+        if (! $previousId) {
+            return;
+        }
+
+        $previous = Inquiry::with('templateVersion:id,template_id')->find($previousId);
+        $message = match (true) {
+            ! $previous, (int) $previousId === $selfId => 'Die gewählte Vorabfrage gibt es nicht.',
+            $previous->purged_at !== null => 'Die Antworten der gewählten Vorabfrage wurden bereits gelöscht.',
+            ! in_array($previous->status, [InquiryStatus::Running, InquiryStatus::Closed], true) => 'Als Vorabfrage eignen sich nur gestartete oder abgeschlossene Abfragen.',
+            $previous->templateVersion?->template_id !== $version?->template_id => 'Vorbefüllen ist nur aus einer Abfrage derselben Vorlage möglich.',
+            default => null,
+        };
+
+        if ($message) {
+            throw ValidationException::withMessages(['previous_inquiry_id' => $message]);
+        }
     }
 }

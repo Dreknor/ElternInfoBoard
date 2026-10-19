@@ -74,6 +74,8 @@ class ParentInquiryController extends Controller
             ->where('inquiry_id', $assignment->inquiry_id)
             ->with('child')
             ->get();
+        $hasDraft = $assignment->drafts()->where('user_id', $user->id)->exists();
+        $answers = $state['can_view_answers'] ? $this->responses->prefill($assignment, $user) : [];
 
         return view('elternabfragen.parent.show', [
             'assignment' => $assignment,
@@ -81,8 +83,11 @@ class ParentInquiryController extends Controller
             'version' => $assignment->inquiry->templateVersion,
             'fields' => $assignment->inquiry->templateVersion->fields,
             'state' => $state,
-            'answers' => $state['can_view_answers'] ? $this->responses->prefill($assignment, $user) : [],
-            'hasDraft' => $assignment->drafts()->where('user_id', $user->id)->exists(),
+            'answers' => $answers,
+            'hasDraft' => $hasDraft,
+            // Hinweis auf übernommene Angaben der Vorabfrage
+            'prefilledFrom' => ! $hasDraft && ! $assignment->isAnswered() && $answers !== []
+                ? $assignment->inquiry->previousInquiry : null,
             'siblings' => $siblings,
             'childOptions' => $this->responses->childOptions($assignment->inquiry->templateVersion->fields, $user),
             'schema' => $this->schema,
