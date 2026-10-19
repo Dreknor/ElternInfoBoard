@@ -128,6 +128,12 @@ class Inquiry extends Model
         return $this->status->isReleased();
     }
 
+    /** Vor Ablauf der Frist (oder vor dem Start) beendet. */
+    public function closedEarly(): bool
+    {
+        return $this->closed_at !== null && $this->closed_at->lessThan($this->deadline_at);
+    }
+
     public function deadlinePassed(?CarbonInterface $now = null): bool
     {
         return ($now ?? now())->greaterThan($this->deadline_at);

@@ -147,6 +147,8 @@ jeder Download werden protokolliert. **(O)** Formeln aus Freitext werden neutral
 ## 9. Aufbewahrung und Löschung (Kap. 7.4)
 
 Aufbewahrungsfrist je Vorlage (sonst Standard) wird bei Anlage in die Abfrage kopiert.
+Geplante und laufende Abfragen können jederzeit (auch vor Fristende) mit optionaler
+Begründung beendet werden; das Protokoll vermerkt „vorzeitig“ bzw. „vor dem Start“.
 Laufende Abfragen werden 30 Tage nach Fristende automatisch abgeschlossen **(O)**, damit
 die Frist zuverlässig beginnt. Danach löscht `elternabfragen:process`: Antworten,
 Uploads, Entwürfe, Empfänger, Zustellprotokoll, fallbezogene Ereignisse, Exportdateien.

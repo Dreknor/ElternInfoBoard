@@ -51,6 +51,6 @@ Bei Einwilligungen (z. B. Fotos auf der Website) wird der **vollständige Einwil
 
 ## Fristen und Erinnerungen
 
-Bis zur **Rückgabefrist** ist das Absenden möglich. Fehlt deine Antwort, erinnert dich das System – frühestens zwei Tage nach der Benachrichtigung und höchstens einmal am Tag. Nach dem Absenden bekommst du keine Erinnerungen mehr. Ist die Frist abgelaufen, wende dich an das Sekretariat; es kann eine **Nachfrist** setzen.
+Bis zur **Rückgabefrist** ist das Absenden möglich. Fehlt deine Antwort, erinnert dich das System – frühestens zwei Tage nach der Benachrichtigung und höchstens einmal am Tag. Nach dem Absenden bekommst du keine Erinnerungen mehr. Ist die Frist abgelaufen, wende dich an das Sekretariat; es kann eine **Nachfrist** setzen. Die Schule kann eine Abfrage auch vor Ablauf der Frist **vorzeitig beenden**; danach sind keine Abgaben mehr möglich.
 
 Ob du Push-Mitteilungen zu Elternabfragen erhältst, stellst du unter **Einstellungen › Benachrichtigungen** ein.

@@ -171,11 +171,21 @@ class InquiryService
         }
     }
 
+    /**
+     * Abfrage beenden – auch vorzeitig vor Fristende oder als geplante Abfrage vor dem Start.
+     * Danach sind keine Abgaben, Korrekturen, Bestätigungen und Erinnerungen mehr möglich.
+     */
     public function close(Inquiry $inquiry, ?string $note = null): void
     {
-        $inquiry->assertStatus(InquiryStatus::Running);
-        $inquiry->update(['status' => InquiryStatus::Closed, 'closed_at' => now()]);
-        InquiryEvent::log('inquiry.closed', ['inquiry_id' => $inquiry->id], $note);
+        $inquiry->assertStatus(InquiryStatus::Scheduled, InquiryStatus::Running);
+
+        $now = now();
+        $wasScheduled = $inquiry->status === InquiryStatus::Scheduled;
+        $inquiry->update(['status' => InquiryStatus::Closed, 'closed_at' => $now]);
+        InquiryEvent::log('inquiry.closed', ['inquiry_id' => $inquiry->id], $note, array_filter([
+            'early' => $now->lessThan($inquiry->deadline_at),
+            'before_start' => $wasScheduled,
+        ]));
     }
 
     /**

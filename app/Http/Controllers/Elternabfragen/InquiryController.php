@@ -231,9 +231,13 @@ class InquiryController extends Controller
 
     public function close(Request $request, Inquiry $inquiry): RedirectResponse
     {
-        $this->inquiries->close($inquiry, $request->input('note'));
+        $data = $request->validate(['note' => 'nullable|string|max:1000']);
+        $wasScheduled = $inquiry->status === InquiryStatus::Scheduled;
+        $this->inquiries->close($inquiry, $data['note'] ?? null);
 
-        return back()->with(['type' => 'success', 'Meldung' => 'Abfrage abgeschlossen. Es sind keine Abgaben und Erinnerungen mehr möglich.']);
+        return back()->with(['type' => 'success', 'Meldung' => $wasScheduled
+            ? 'Abfrage beendet. Sie wird nicht mehr gestartet.'
+            : 'Abfrage beendet. Es sind keine Abgaben und Erinnerungen mehr möglich.']);
     }
 
     public function duplicate(Request $request, Inquiry $inquiry): RedirectResponse

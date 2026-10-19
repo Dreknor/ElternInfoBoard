@@ -3,10 +3,13 @@
 namespace Tests\Feature\Elternabfragen;
 
 use App\Enums\InquiryReviewStatus;
+use App\Enums\InquiryStatus;
 use App\Mail\ElternabfrageMail;
 use App\Model\InquiryDelivery;
 use App\Model\InquiryExport;
 use App\Model\InquiryResponse;
+use App\Services\Elternabfragen\InquiryAccess;
+use App\Services\Elternabfragen\InquiryService;
 use App\Services\Elternabfragen\ReminderService;
 use App\Services\Elternabfragen\ResponseService;
 use App\Services\Elternabfragen\RetentionService;
@@ -154,6 +157,44 @@ class RuecklaufExportApiTest extends ElternabfragenTestCase
         $this->assertSame(0, $inquiry->assignments()->count());
         $this->assertNotNull($inquiry->fresh()->purged_at);
         $this->assertDatabaseHas('inquiry_events', ['inquiry_id' => $inquiry->id, 'action' => 'inquiry.purged']);
+    }
+
+    #[Test]
+    public function abfrage_kann_vorzeitig_beendet_werden(): void
+    {
+        $inquiry = $this->runningInquiry();
+        $assignment = $this->assignmentFor($inquiry);
+
+        $this->actingAs($this->sekretariat)
+            ->post(route('elternabfragen.admin.inquiries.close', $inquiry), ['note' => 'Ausflug abgesagt'])
+            ->assertSessionHasNoErrors();
+
+        $inquiry->refresh();
+        $this->assertSame(InquiryStatus::Closed, $inquiry->status);
+        $this->assertTrue($inquiry->closedEarly());
+        $this->assertDatabaseHas('inquiry_events', ['inquiry_id' => $inquiry->id, 'action' => 'inquiry.closed', 'note' => 'Ausflug abgesagt']);
+
+        $state = app(InquiryAccess::class)->state($this->mutter, $assignment->fresh());
+        $this->assertFalse($state['can_submit']);
+        $this->assertSame('Die Abfrage wurde vorzeitig beendet.', $state['reason']);
+        $this->assertCount(0, collect(app(TodoService::class)->forUser($this->mutter))->where('type', 'inquiry'));
+        $this->assertSame(0, app(ReminderService::class)->runAutomatic());
+    }
+
+    #[Test]
+    public function geplante_abfrage_kann_vor_dem_start_beendet_werden(): void
+    {
+        $inquiry = $this->runningInquiry(['starts_at' => now()->addDays(2)]);
+        $this->assertSame(InquiryStatus::Scheduled, $inquiry->status);
+
+        $this->actingAs($this->sekretariat)
+            ->post(route('elternabfragen.admin.inquiries.close', $inquiry))
+            ->assertSessionHasNoErrors();
+
+        $this->travel(3)->days();
+        app(InquiryService::class)->runSchedule();
+        $this->assertSame(InquiryStatus::Closed, $inquiry->fresh()->status);
+        $this->assertSame(0, $inquiry->assignments()->count());
     }
 
     #[Test]

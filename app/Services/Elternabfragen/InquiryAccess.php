@@ -77,7 +77,7 @@ class InquiryAccess
         if (! $custody) {
             $reason = 'Antworten können nur sorgeberechtigte Personen abgeben.';
         } elseif (! $inquiry->isRunning()) {
-            $reason = 'Die Abfrage ist abgeschlossen.';
+            $reason = $inquiry->closedEarly() ? 'Die Abfrage wurde vorzeitig beendet.' : 'Die Abfrage ist abgeschlossen.';
         } elseif (! $assignment->isAnswered()) {
             $canSubmit = $now->lessThanOrEqualTo($deadline);
             $reason = $canSubmit ? null : 'Die Rückgabefrist ist abgelaufen. Bitte wenden Sie sich an das Sekretariat.';

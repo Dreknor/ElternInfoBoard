@@ -37,9 +37,9 @@
                 <form method="POST" action="{{ route('elternabfragen.admin.inquiries.sync', $inquiry) }}">@csrf
                     <button class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-sm" title="Neu hinzugekommene Kinder der Zielgruppe ergänzen"><i class="fas fa-sync" aria-hidden="true"></i> Zielgruppe abgleichen</button>
                 </form>
-                <form method="POST" action="{{ route('elternabfragen.admin.inquiries.close', $inquiry) }}" onsubmit="return confirm('Abfrage abschließen? Danach sind keine Abgaben, Korrekturen und Erinnerungen mehr möglich.')">@csrf
-                    <button class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-sm"><i class="fas fa-lock" aria-hidden="true"></i> Abschließen</button>
-                </form>
+            @endif
+            @if(in_array($status, ['scheduled', 'running'], true))
+                <a href="#beenden" class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-sm"><i class="fas fa-lock" aria-hidden="true"></i> {{ $inquiry->deadlinePassed() ? 'Abschließen' : 'Vorzeitig beenden' }}</a>
             @endif
             @if(in_array($status, ['scheduled', 'running', 'closed'], true))
                 <form method="POST" action="{{ route('elternabfragen.admin.inquiries.duplicate', $inquiry) }}">@csrf
@@ -263,7 +263,7 @@
                 <p><span class="text-gray-500">Aufbewahrung:</span> {{ $inquiry->retention_days ? $inquiry->retention_days.' Tage nach Abschluss' : 'unbefristet' }}</p>
                 @if($inquiry->approved_at)<p><span class="text-gray-500">Freigegeben:</span> {{ $inquiry->approved_at->format('d.m.Y H:i') }} von {{ $inquiry->approver?->name }}</p>@endif
                 @if($inquiry->expected_children !== null)<p><span class="text-gray-500">Erwartet:</span> {{ $inquiry->expected_children }} Kinder / {{ $inquiry->expected_accounts }} Konten</p>@endif
-                @if($inquiry->closed_at)<p><span class="text-gray-500">Abgeschlossen:</span> {{ $inquiry->closed_at->format('d.m.Y H:i') }}</p>@endif
+                @if($inquiry->closed_at)<p><span class="text-gray-500">Abgeschlossen:</span> {{ $inquiry->closed_at->format('d.m.Y H:i') }}@if($inquiry->closedEarly()) <span class="text-amber-700">(vorzeitig)</span>@endif</p>@endif
             </section>
 
             @can('manage elternabfragen')
@@ -291,6 +291,22 @@
                             <label class="flex items-center gap-2"><input type="checkbox" name="auto_reminders" value="1" @checked($inquiry->auto_reminders)> Automatische Erinnerungen</label>
                             <label class="flex items-center gap-2"><input type="checkbox" name="staff_visible" value="1" @checked($inquiry->staff_visible)> Für Mitarbeitende lesbar</label>
                             <button class="w-full px-3 py-2 rounded-lg border border-gray-300">Speichern</button>
+                        </form>
+                    </section>
+                    <section id="beenden" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm scroll-mt-4">
+                        <h2 class="font-semibold text-gray-800 mb-2">{{ $inquiry->deadlinePassed() ? 'Abfrage abschließen' : 'Abfrage vorzeitig beenden' }}</h2>
+                        <p class="text-gray-600 mb-2">
+                            @if($status === 'scheduled')
+                                Die Abfrage wird nicht gestartet, Eltern werden nicht benachrichtigt.
+                            @else
+                                Danach sind keine Abgaben, Korrekturen, Bestätigungen und Erinnerungen mehr möglich. Bisherige Antworten bleiben erhalten.
+                            @endif
+                        </p>
+                        <form method="POST" action="{{ route('elternabfragen.admin.inquiries.close', $inquiry) }}" class="space-y-2"
+                              onsubmit="return confirm('Abfrage jetzt beenden? Das kann nicht rückgängig gemacht werden.')">
+                            @csrf
+                            <input name="note" maxlength="1000" class="{{ $input }}" placeholder="Begründung (optional, wird protokolliert)">
+                            <button class="w-full px-3 py-2 rounded-lg border border-red-300 text-red-700"><i class="fas fa-lock" aria-hidden="true"></i> Jetzt beenden</button>
                         </form>
                     </section>
                 @endif
