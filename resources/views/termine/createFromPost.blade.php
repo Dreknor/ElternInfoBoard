@@ -47,6 +47,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @if($settings->public_termine_enabled ?? true)
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="form-group">
@@ -58,6 +59,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -65,7 +67,7 @@
                         <div class="col-l-6 col-md-12 col-sm-12">
                             <div class="card">
                                 <div class="card-body">
-                                    @include('include.formGroups')
+                                    @include('include.formGroups', ['withPersons' => true])
                                 </div>
                             </div>
                         </div>

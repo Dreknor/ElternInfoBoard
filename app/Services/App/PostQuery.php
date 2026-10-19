@@ -7,7 +7,7 @@ use App\Model\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Sichtbare Beiträge als eine Abfrage (EXISTS über Gruppen) – Grundlage für Liste, Aufgaben und Dashboard.
+ * Sichtbare Beiträge als eine Abfrage (EXISTS über Gruppen und direkte Freigaben) – Grundlage für Liste, Aufgaben und Dashboard.
  */
 class PostQuery
 {
@@ -23,13 +23,8 @@ class PostQuery
             $q->where('author', $user->id)
                 ->orWhere(function ($q) use ($user) {
                     $q->where('released', 1)->where(function ($q) use ($user) {
-                        $q->where('external', true)->orWhereExists(function ($sub) use ($user) {
-                            $sub->selectRaw(1)
-                                ->from('group_post')
-                                ->join('group_user', 'group_post.group_id', '=', 'group_user.group_id')
-                                ->whereColumn('group_post.post_id', 'posts.id')
-                                ->where('group_user.user_id', $user->id);
-                        });
+                        $q->where('external', true)
+                            ->orWhere(fn ($q) => Post::constrainToRecipient($q, $user));
                     });
                 });
         });

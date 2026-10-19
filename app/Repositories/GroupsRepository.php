@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class GroupsRepository
 {
-    public function getGroups(array $gruppen): Collection
+    public function getGroups(?array $gruppen): Collection
     {
         if (empty($gruppen)) {
             return new Collection;

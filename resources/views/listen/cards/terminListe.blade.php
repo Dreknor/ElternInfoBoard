@@ -66,6 +66,14 @@
                                 <i class="fas fa-pencil-alt w-4" style="color: var(--color-card-a-header-bg);"></i>
                                 <span>Bearbeiten</span>
                             </a>
+                            <a href="{{ route('listen.preview', $liste->id) }}"
+                               class="flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-150"
+                               style="color: var(--color-text-primary);"
+                               onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-body-bg')"
+                               onmouseout="this.style.background=''">
+                                <i class="fas fa-eye w-4" style="color: var(--color-card-a-header-bg);"></i>
+                                <span>Vorschau</span>
+                            </a>
                             <a href="{{ url("listen/$liste->id/ical/export") }}"
                                class="flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-150"
                                style="color: var(--color-text-primary);"

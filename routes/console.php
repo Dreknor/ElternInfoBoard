@@ -85,6 +85,9 @@ try {
 
         }
 
+        // Elternabfragen: geplante Starts, Erinnerungen, Export- und Löschfristen
+        Schedule::command('elternabfragen:process')->everyFifteenMinutes()->withoutOverlapping();
+
         // Elternrat Event Erinnerungen - stündlich prüfen
         Schedule::call('App\Http\Controllers\ElternratEventController@sendReminders')->hourly();
 

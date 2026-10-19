@@ -26,6 +26,7 @@ class ListenExport implements FromCollection, WithHeadings
                     'Name' => $eintrag->user?->name,
                     'Email' => $eintrag->user?->email,
                     'Eintrag' => $eintrag->eintragung,
+                    'Bemerkung' => $eintrag->bemerkung,
                 ];
             });
         } else {
@@ -51,6 +52,7 @@ class ListenExport implements FromCollection, WithHeadings
                 'Name',
                 'Email',
                 'Eintrag',
+                'Bemerkung',
             ];
         } else {
             return [

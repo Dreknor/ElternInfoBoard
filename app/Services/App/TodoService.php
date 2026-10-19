@@ -3,14 +3,17 @@
 namespace App\Services\App;
 
 use App\Enums\GuardianRight;
+use App\Enums\InquiryAssignmentStatus;
 use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Http\Resources\V1\ChildResource;
 use App\Model\ChildCheckIn;
+use App\Model\InquiryAssignment;
+use App\Services\Elternabfragen\InquiryAccess;
 use App\Model\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Offene Aufgaben der Familie (B-25): Lesebestätigungen, Pflicht-Rückmeldungen, Anwesenheitsabfragen.
+ * Offene Aufgaben der Familie (B-25): Lesebestätigungen, Pflicht-Rückmeldungen, Anwesenheitsabfragen, Elternabfragen.
  * Grundlage für Start-Badge, „Zu erledigen“ und Erinnerungen.
  */
 class TodoService
@@ -86,6 +89,27 @@ class TodoService
                     'target' => ['type' => 'child', 'id' => (int) $childId],
                 ];
             }
+        }
+
+        // Elternabfragen: offen je Kind, nur für Sorgeberechtigte (abgabeberechtigt)
+        if (Modules::isActiveFor($user, 'Elternabfragen')) {
+            $access = app(InquiryAccess::class);
+            $access->assignmentsQuery($user)
+                ->with(['inquiry', 'child'])
+                ->where(fn ($q) => $q->whereNull('current_response_id')->orWhere('status', InquiryAssignmentStatus::AwaitingConfirmation->value))
+                ->get()
+                ->map(fn (InquiryAssignment $a) => [$a, $access->state($user, $a)])
+                ->filter(fn (array $item) => $item[1]['can_submit'] || $item[1]['can_confirm'])
+                ->each(function (array $item) use (&$todos) {
+                    [$a, $state] = $item;
+                    $todos[] = [
+                        'type' => 'inquiry',
+                        'title' => $a->inquiry->title,
+                        'subtitle' => ($state['can_confirm'] ? 'Bitte bestätigen: Elternabfrage für ' : 'Elternabfrage für ').($a->child?->first_name ?? 'Ihr Kind'),
+                        'deadline' => $a->effectiveDeadline()->toDateString(),
+                        'target' => ['type' => 'inquiry', 'id' => $a->id],
+                    ];
+                });
         }
 
         usort($todos, fn ($a, $b) => strcmp($a['deadline'] ?? '9999', $b['deadline'] ?? '9999'));

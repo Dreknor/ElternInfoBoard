@@ -1,5 +1,5 @@
 @php
-    $canSubmitReadReceipt = !auth()->user()->can('view all') && $post->users->contains(auth()->user());
+    $canSubmitReadReceipt = !auth()->user()->can('view all') && $post->hasRecipient(auth()->user());
 
     // Wann gilt die Lesebestätigung als erledigt? Familie (Standard), Person oder je Kind
     $readReceiptStatus = app(\App\Services\ReadReceiptStatusService::class);
@@ -78,7 +78,7 @@
 @if(auth()->user()->can('manage rueckmeldungen') or auth()->id() == $post->author)
     @php
         // Build buckets - Filter unique users to avoid duplicates from multiple groups
-        $allUsers = $post->users->filter(fn($u) => !is_null($u))->unique('id');
+        $allUsers = $post->recipients()->filter(fn($u) => !is_null($u));
         $receipts = $post->receipts->keyBy('user_id');
         $readReceiptStatus ??= app(\App\Services\ReadReceiptStatusService::class);
         $confirmedReceipts = $receipts->whereNotNull('confirmed_at');

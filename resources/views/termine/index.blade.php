@@ -157,6 +157,18 @@
                                                             </p>
                                                         </div>
 
+                                                        @if($termin->exists && $termin->recipientUsers->isNotEmpty() && auth()->user()->can('edit termin'))
+                                                            <div class="col-md-6 mb-2">
+                                                                <p class="mb-0" style="color: var(--color-text-secondary);">
+                                                                    <i class="fas fa-user" style="color: var(--color-widget-accent-from);"></i>
+                                                                    <strong>Personen:</strong>
+                                                                    @foreach($termin->recipientUsers as $person)
+                                                                        <span class="badge badge-secondary">{{ $person->name }}</span>
+                                                                    @endforeach
+                                                                </p>
+                                                            </div>
+                                                        @endif
+
                                                         @if($termin->groups && count($termin->groups) > 0 && auth()->user()->can('edit termin'))
                                                             <div class="col-md-6 mb-2">
                                                                 <p class="mb-0" style="color: var(--color-text-secondary);">

@@ -29,7 +29,7 @@ class FilesControllerTest extends TestCase
     /** @test */
     public function it_requires_authentication_to_access_files()
     {
-        $this->withoutMiddleware(['auth:sanctum']);
+        app('auth')->forgetGuards();
 
         $response = $this->getJson('/api/files');
 

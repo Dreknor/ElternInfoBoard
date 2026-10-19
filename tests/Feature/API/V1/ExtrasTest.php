@@ -82,6 +82,40 @@ class ExtrasTest extends AppApiTestCase
     }
 
     /** @test */
+    public function app_privacy_policy_is_public(): void
+    {
+        config(['services.app.privacy_publisher' => 'Ev. Schulzentrum\nMusterstraße 1']);
+
+        $this->get('/app/datenschutz')->assertOk()
+            ->assertSee('Datenschutzerklärung der ElternInfo-App')
+            ->assertSee("Ev. Schulzentrum\nMusterstraße 1", false)
+            ->assertSee('Firebase Cloud Messaging');
+    }
+
+    /** @test */
+    public function media_without_uuid_does_not_break_file_and_post_lists(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+        $group = $this->group();
+        $user = $this->parentIn($group);
+        $post = $this->postIn($group);
+        $media = $post->addMedia(UploadedFile::fake()->create('alt.pdf', 10, 'application/pdf'))->toMediaCollection('files');
+        // Datei aus der Zeit vor der Spalte `uuid`
+        DB::table('media')->where('id', $media->id)->update(['uuid' => null]);
+        Sanctum::actingAs($user);
+
+        $fallback = url('api/image/'.$media->id);
+        $this->assertSame($fallback, \App\Services\App\MediaAccess::downloadUrl($media->fresh()));
+        $this->assertStringContainsString(json_encode($fallback), $this->getJson("/api/v1/posts/{$post->id}")->assertOk()->getContent());
+        $this->get("/api/image/{$media->id}")->assertOk();
+
+        // Migration trägt die UUID nach
+        (require database_path('migrations/2026_10_13_000001_backfill_media_uuids.php'))->up();
+        $this->assertNotEmpty($media->fresh()->uuid);
+    }
+
+    /** @test */
     public function media_of_foreign_posts_cannot_be_downloaded_by_id_or_uuid(): void
     {
         Storage::fake('local');

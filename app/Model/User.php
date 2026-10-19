@@ -6,6 +6,7 @@ use App\Enums\GuardianRight;
 use App\Services\Family\FamilyResolver;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -103,7 +104,7 @@ class User extends Authenticatable implements Auditable
 
     public function files(): Collection
     {
-        return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
+        return $this->groups()->with('media')->get()->pluck('media')->flatten()->unique('file_name')->sortBy('file_name')->values();
     }
 
     /**
@@ -216,6 +217,31 @@ class User extends Authenticatable implements Auditable
     {
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])
             ->where('archiv_ab', '>', now());
+    }
+
+    /**
+     * Beiträge, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält
+     * (ohne Prüfung von Freigabe/Archiv, ohne Duplikate).
+     */
+    public function visiblePosts(): Builder
+    {
+        return Post::query()->forRecipient($this);
+    }
+
+    /**
+     * Termine, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleTermine(): Builder
+    {
+        return Termin::query()->forRecipient($this);
+    }
+
+    /**
+     * Listen, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleListen(): Builder
+    {
+        return Liste::query()->forRecipient($this);
     }
 
     /**

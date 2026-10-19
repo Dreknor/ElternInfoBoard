@@ -13,7 +13,7 @@ class Listen_Eintragungen extends Model
 
     protected $table = 'listen_eintragungen';
 
-    protected $fillable = ['eintragung', 'listen_id', 'user_id', 'child_id', 'created_by'];
+    protected $fillable = ['eintragung', 'bemerkung', 'listen_id', 'user_id', 'child_id', 'created_by'];
 
     public function liste(): BelongsTo
     {

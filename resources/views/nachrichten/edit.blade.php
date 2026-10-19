@@ -156,7 +156,7 @@
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                @include('include.formGroups')
+                                @include('include.formGroups', ['withPersons' => true])
                             </div>
                         </div>
                     </div>

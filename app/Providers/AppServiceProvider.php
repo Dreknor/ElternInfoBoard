@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Model\PersonalAccessToken;
+use App\Services\IntegrationTokens;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -60,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Integrations-Tokens laufen nach eigener Laufzeit ab (auch unbegrenzt), nicht nach `sanctum.expiration`.
+        Sanctum::authenticateAccessTokensUsing(function ($token, bool $isValid) {
+            if (! IntegrationTokens::isIntegration($token)) {
+                return $isValid;
+            }
+
+            return $token->tokenable !== null && (! $token->expires_at || $token->expires_at->isFuture());
+        });
 
         Paginator::useTailwind();
 
@@ -194,12 +204,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function bootRoute()
     {
+        // Scribe setzt das Kennzeichen nur für seine Beispielaufrufe (config/scribe*.php),
+        // sonst bestünde die API-Doku aus „429 Too Many Attempts“.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('global', function (Request $request) {
-            return Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
         });
 
         // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).

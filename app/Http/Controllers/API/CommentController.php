@@ -19,7 +19,7 @@ class CommentController extends Controller
      *
      * This method returns all comments for a specific post.
      *
-     * @group Comments
+     * @group Kommentare
      *
      * @urlParam post required The ID of the post. Example: 1
      *
@@ -42,7 +42,7 @@ class CommentController extends Controller
         }
 
         // Check if user has access to this post
-        if (!$post->users->contains($user) && !$user->can('view all')) {
+        if (!$post->hasRecipient($user) && !$user->can('view all')) {
             return response()->json(['error' => 'User not allowed to view comments for this post'], 403);
         }
 
@@ -73,7 +73,7 @@ class CommentController extends Controller
      *
      * This method creates a new comment for a specific post.
      *
-     * @group Comments
+     * @group Kommentare
      *
      * @urlParam post required The ID of the post. Example: 1
      *
@@ -99,7 +99,7 @@ class CommentController extends Controller
         }
 
         // Check if user has access to this post
-        if (!$post->users->contains($user) && !$user->can('view all')) {
+        if (!$post->hasRecipient($user) && !$user->can('view all')) {
             return response()->json(['error' => 'User not allowed to comment on this post'], 403);
         }
 
@@ -137,7 +137,7 @@ class CommentController extends Controller
      *
      * This method deletes a comment. Only the comment author or users with 'delete posts' permission can delete comments.
      *
-     * @group Comments
+     * @group Kommentare
      *
      * @urlParam comment required The ID of the comment. Example: 1
      *

@@ -17,12 +17,14 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @group App: Nachrichten
+ * @group Nachrichten
+ *
+ * @subgroup Beiträge
  */
 class PostController extends ApiController
 {
     /**
-     * Beiträge (paginiert, schlank) – B-10, B-16.
+     * Beiträge (paginiert, schlank).
      *
      * @queryParam filter string `todo` = nur Beiträge mit offener Aufgabe. Example: todo
      * @queryParam archived boolean Archivierte Beiträge. Example: 1
@@ -86,7 +88,7 @@ class PostController extends ApiController
     }
 
     /**
-     * Lesebestätigung (B-13).
+     * Lesebestätigung.
      */
     public function read(Request $request, Post $post): JsonResponse
     {
@@ -123,7 +125,7 @@ class PostController extends ApiController
     }
 
     /**
-     * Eigene Reaktion entfernen (B-13).
+     * Eigene Reaktion entfernen.
      */
     public function unreact(Request $request, Post $post): JsonResponse
     {
@@ -138,7 +140,7 @@ class PostController extends ApiController
     }
 
     /**
-     * Beitrag melden (B-15).
+     * Beitrag melden.
      *
      * @bodyParam reason string required
      */

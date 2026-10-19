@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('title') - Einstellungen @endsection
 
+@php
+    $allowUserTheme = ($generalSettings->allow_user_theme ?? true) && isset($themes);
+    $showDesignTab  = $allowUserTheme || ($allowUserNavStyle ?? false);
+@endphp
+
 @section('content')
 
 <div class="container-fluid px-4 py-3"
@@ -734,7 +739,8 @@
                             <div class="p-4">
                                 <p class="text-sm mb-3" style="color: var(--color-text-secondary);">
                                     <i class="fas fa-shield-alt text-orange-600 mr-1"></i>
-                                    Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
+                                    Integrations-Tokens erlauben externen Anwendungen (z.&nbsp;B. Home Assistant) den Zugriff auf Ihre Daten.
+                                    Sie dürfen nur lesen und zusätzlich nur das, was Sie unten freigeben. Anmeldungen der ElternInfo-App erscheinen hier ebenfalls.
                                 </p>
 
                                 @if(auth()->user()->tokens->count() > 0)
@@ -743,15 +749,36 @@
                                             <thead class="border-b" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
                                                 <tr>
                                                     <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Name</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Rechte</th>
                                                     <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Erstellt am</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Gültig bis</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Zuletzt genutzt</th>
                                                     <th class="px-3 py-2 text-right text-xs font-semibold" style="color: var(--color-text-secondary);">Aktionen</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach(auth()->user()->tokens as $token)
+                                                    @php $isIntegration = \App\Services\IntegrationTokens::isIntegration($token); @endphp
                                                     <tr class="border-b hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors" style="border-color: var(--color-card-border);">
                                                         <td class="px-3 py-2" style="color: var(--color-text-primary);">{{$token->name}}</td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">
+                                                            @if($isIntegration)
+                                                                {{ collect(\App\Services\IntegrationTokens::scopes($token))->map(fn ($s) => \App\Services\IntegrationTokens::SCOPES[$s])->prepend('Lesen')->implode(', ') }}
+                                                            @else
+                                                                Vollzugriff (App)
+                                                            @endif
+                                                        </td>
                                                         <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">{{$token->created_at->format('d.m.Y')}}</td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">
+                                                            @if($isIntegration)
+                                                                {{ $token->expires_at?->format('d.m.Y') ?? 'unbegrenzt' }}
+                                                            @elseif(config('sanctum.expiration'))
+                                                                {{ $token->created_at->copy()->addMinutes(config('sanctum.expiration'))->format('d.m.Y') }}
+                                                            @else
+                                                                unbegrenzt
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">{{ $token->last_used_at?->format('d.m.Y H:i') ?? '–' }}</td>
                                                         <td class="px-3 py-2 text-right">
                                                             <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post" class="inline">
                                                                 @csrf
@@ -774,14 +801,32 @@
                                 @endif
 
                                 <h6 class="text-sm font-semibold mb-2 flex items-center gap-1.5" style="color: var(--color-text-primary);">
-                                    <i class="fas fa-plus-circle text-orange-600"></i>Neues Token erstellen
+                                    <i class="fas fa-plus-circle text-orange-600"></i>Neues Integrations-Token erstellen
                                 </h6>
-                                <form action="{{url('/einstellungen/token')}}" method="post" class="flex gap-2">
+                                <form action="{{url('/einstellungen/token')}}" method="post" class="space-y-3">
                                     @csrf
-                                    <input type="text"
-                                           class="flex-1 px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
-                                           name="name" placeholder="Token-Name" required>
-                                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors flex-shrink-0">
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <input type="text"
+                                               class="flex-1 px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                                               name="name" placeholder="Name, z. B. Home Assistant" required>
+                                        <select name="lifetime"
+                                                class="px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                                                style="background-color: var(--color-input-bg); color: var(--color-text-primary);">
+                                            @foreach(\App\Services\IntegrationTokens::LIFETIMES as $value => $label)
+                                                <option value="{{ $value }}" @selected($value === '365')>Gültig: {{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm" style="color: var(--color-text-primary);">
+                                        <span style="color: var(--color-text-secondary);">Zusätzlich erlauben:</span>
+                                        @foreach(\App\Services\IntegrationTokens::SCOPES as $value => $label)
+                                            <label class="inline-flex items-center gap-1.5">
+                                                <input type="checkbox" name="scopes[]" value="{{ $value }}" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                                {{ $label }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus"></i>Erstellen
                                     </button>
                                 </form>
@@ -791,17 +836,63 @@
                 </div>
 
                 {{-- TAB: Design --}}
-                @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
+                @if($showDesignTab)
                 <div x-show="activeTab === 'design'" x-cloak class="p-8">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="flex items-center justify-center w-10 h-10 rounded-xl" style="background-color: var(--color-widget-primary-bg);">
                             <i class="fas fa-palette" style="color: var(--color-primary);"></i>
                         </div>
                         <div>
-                            <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Design-Theme</h2>
+                            <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Design &amp; Menü</h2>
                             <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Ihr persönliches Erscheinungsbild</p>
                         </div>
                     </div>
+
+                    @if($allowUserNavStyle ?? false)
+                    <div class="mb-8 pb-8 border-b" style="border-color: var(--color-card-border);">
+                        <h3 class="text-sm font-bold mb-1" style="color: var(--color-text-primary);">Menü-Darstellung</h3>
+                        <p class="text-sm mb-4" style="color: var(--color-text-secondary);">
+                            Das kompakte Menü fasst die Einträge in einklappbaren Gruppen zusammen und bietet ein Suchfeld – so müssen Sie weniger scrollen.
+                        </p>
+                        <form action="{{ route('user.navigation.update') }}" method="post" id="navStyleForm">
+                            @csrf
+                            @method('PUT')
+                            @php
+                                $navOptions = [
+                                    ''        => ['icon' => 'fas fa-cog',       'label' => 'System-Standard', 'hint' => 'Aktuell: '.\Illuminate\Support\Str::before($navStyles[$defaultNavStyle] ?? $defaultNavStyle, ' (')],
+                                    'classic' => ['icon' => 'fas fa-list',      'label' => 'Klassisch',       'hint' => 'Alle Einträge untereinander'],
+                                    'compact' => ['icon' => 'fas fa-layer-group','label' => 'Kompakt',        'hint' => 'Gruppiert & einklappbar'],
+                                ];
+                            @endphp
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                                @foreach($navOptions as $value => $option)
+                                    @continue($value !== '' && ! array_key_exists($value, $navStyles))
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="nav_style" value="{{ $value }}" class="sr-only peer" @checked($userNavStyle === $value)>
+                                        <div class="flex items-center gap-3 border-2 rounded-xl p-3 transition-all duration-200 peer-checked:border-[var(--color-primary)] peer-checked:bg-[var(--color-widget-primary-bg)] peer-focus-visible:ring-2"
+                                             style="border-color: var(--color-card-border);">
+                                            <i class="{{ $option['icon'] }} text-lg w-6 text-center" style="color: var(--color-primary);"></i>
+                                            <div class="min-w-0">
+                                                <span class="text-sm font-semibold block" style="color: var(--color-text-primary);">{{ $option['label'] }}</span>
+                                                <span class="text-xs block" style="color: var(--color-text-secondary);">{{ $option['hint'] }}</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-lg transition-colors"
+                                    style="background-color: var(--color-primary)"
+                                    onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                    onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
+                                <i class="fas fa-save"></i>Menü-Darstellung speichern
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
+                    @if($allowUserTheme)
+                    <h3 class="text-sm font-bold mb-1" style="color: var(--color-text-primary);">Design-Theme</h3>
                     <p class="text-sm mb-5" style="color: var(--color-text-secondary);">
                         Wählen Sie ein Design für Ihre persönliche Ansicht. Das Standard-Design wird vom Administrator festgelegt.
                     </p>
@@ -855,6 +946,7 @@
                             <i class="fas fa-save"></i>Theme speichern
                         </button>
                     </form>
+                    @endif
                 </div>
                 @endif
 
@@ -978,8 +1070,8 @@ function settingsPage() {
             { id: 'erweitert',          icon: 'fas fa-sliders-h',   label: 'Erweiterte Einstell.' },
             { id: 'kinder',             icon: 'fas fa-child',       label: 'Kinder & Gruppen' },
             { id: 'integrationen',      icon: 'fas fa-plug',        label: 'Integrationen' },
-            @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
-            { id: 'design',             icon: 'fas fa-palette',     label: 'Design-Theme' },
+            @if($showDesignTab)
+            { id: 'design',             icon: 'fas fa-palette',     label: 'Design & Menü' },
             @endif
         ],
         init() {

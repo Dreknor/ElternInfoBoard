@@ -42,7 +42,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $termine = auth()->user()->termine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at)->get();
+                $termine = auth()->user()->visibleTermine()->whereDate('termine.created_at', '>=', auth()->user()->last_online_at)->get();
                 $termine = $termine->unique('id');
                 foreach ($termine as $termin) {
                     $news[] = [
@@ -51,7 +51,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $posts = auth()->user()->posts()->whereDate('posts.created_at', '>=', auth()->user()->last_online_at)->get();
+                $posts = auth()->user()->visiblePosts()->whereDate('posts.created_at', '>=', auth()->user()->last_online_at)->get();
                 $posts = $posts->unique('id');
 
                 foreach ($posts as $post) {
@@ -61,7 +61,7 @@ class CheckNewsForUser
                     ];
                 }
 
-                $listen = auth()->user()->listen()->whereDate('listen.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
+                $listen = auth()->user()->visibleListen()->whereDate('listen.created_at', '>=', auth()->user()->last_online_at->startofDay())->get();
                 $listen = $listen->unique('id');
 
                 foreach ($listen as $liste) {

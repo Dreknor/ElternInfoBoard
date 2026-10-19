@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\IndividualRecipients;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateTerminRequest extends FormRequest
@@ -36,9 +37,7 @@ class CreateTerminRequest extends FormRequest
                 'date',
                 'after:start',
             ],
-            'gruppen' => [
-                'required',
-            ],
+            ...IndividualRecipients::rules(),
             'public' => [
                 'nullable',
                 'integer',
@@ -54,5 +53,10 @@ class CreateTerminRequest extends FormRequest
             ],
 
         ];
+    }
+
+    public function messages(): array
+    {
+        return IndividualRecipients::messages();
     }
 }

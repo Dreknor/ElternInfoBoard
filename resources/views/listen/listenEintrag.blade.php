@@ -2,6 +2,10 @@
 @section('title') - Liste Details @endsection
 
 @section('content')
+    @php
+        $preview ??= false;
+        $canManage = ! $preview && (auth()->id() == $liste->besitzer or auth()->user()->can('edit terminliste'));
+    @endphp
     <div class="w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
         <!-- Back Button -->
         <div class="flex items-center gap-2">
@@ -10,10 +14,21 @@
                 <i class="fas fa-arrow-left"></i>
                 Zurück zur Übersicht
             </a>
+            @if($canManage)
+                <a href="{{ route('listen.preview', $liste->id) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-medium rounded-lg transition-colors duration-200">
+                    <i class="fas fa-eye"></i>
+                    Vorschau
+                </a>
+            @endif
         </div>
 
+        @if($preview)
+            @include('listen.partials.preview_banner')
+        @endif
+
         <!-- Main Card -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden" @if($preview) inert @endif>
             <!-- Header -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 border-b border-blue-800 @if($liste->active == 0) from-cyan-500 to-cyan-600 border-cyan-700 @endif">
                 <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
@@ -28,7 +43,7 @@
                         @endif
                     </h2>
 
-                    @if(auth()->user()->id == $liste->besitzer or auth()->user()->can('edit terminliste'))
+                    @if($canManage)
                         <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
                             <a href="{{ route('listen.export-excel.termine', ['id' => $liste->id]) }}"
                                class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-blue-600 font-medium rounded-lg transition-colors duration-200">
@@ -50,9 +65,9 @@
             </div>
 
             <!-- Entry Form -->
-            @if($liste->make_new_entry or $liste->besitzer == auth()->user()->id or auth()->user()->can('edit terminliste'))
+            @if($liste->make_new_entry or $canManage)
                 @php $bookableChildren = app(\App\Services\App\ListenService::class)->bookableChildren(auth()->user(), $liste); @endphp
-                @if($liste->bookingPerChild() or $liste->eintragungen->filter(function ($eintragung) {
+                @if($preview or $liste->bookingPerChild() or $liste->eintragungen->filter(function ($eintragung) {
                     return $eintragung->user_id == auth()->id();
                 })->count() == null or $liste->multiple)
                     <div class="border-b border-gray-200 px-6 py-4">
@@ -82,7 +97,10 @@
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
                                 <div class="flex-1">
                                     <p class="font-medium text-gray-800">{{ $eintrag->eintragung }}</p>
-                                    @if($eintrag->child && ($liste->visible_for_all or auth()->user()->can('edit terminliste') or app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), $eintrag->user_id ? (int) $eintrag->user_id : null, $eintrag->child_id)))
+                                    @if($eintrag->bemerkung)
+                                        <p class="text-sm text-gray-600 mb-0"><i class="fas fa-comment-dots mr-1"></i>{{ $eintrag->bemerkung }}</p>
+                                    @endif
+                                    @if($eintrag->child && ($liste->visible_for_all or (! $preview and (auth()->user()->can('edit terminliste') or app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), $eintrag->user_id ? (int) $eintrag->user_id : null, $eintrag->child_id)))))
                                         <p class="text-xs text-gray-500 mb-0"><i class="fas fa-child mr-1"></i>für {{ $eintrag->child->first_name }}</p>
                                     @endif
                                 </div>
@@ -90,7 +108,7 @@
                                 <div class="flex items-center gap-3 ml-4">
                                     @if($eintrag->user_id != null)
                                         <div class="text-right">
-                                            @if($liste->visible_for_all or auth()->user()->can('edit terminliste') or $eintrag->user_id == auth()->id())
+                                            @if($liste->visible_for_all or (! $preview and (auth()->user()->can('edit terminliste') or $eintrag->user_id == auth()->id())))
                                                 <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                                                     <i class="fas fa-user mr-1"></i>
                                                     {{ $eintrag->user->name }}
@@ -102,9 +120,15 @@
                                             @endif
                                         </div>
                                     @else
-                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" style="display: inline;">
+                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" class="flex flex-wrap items-center justify-end gap-2">
                                             @csrf
                                             @method('PUT')
+                                            <input type="text"
+                                                   name="bemerkung"
+                                                   maxlength="255"
+                                                   class="w-40 sm:w-56 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none text-sm"
+                                                   placeholder="Bemerkung (optional)"
+                                                   aria-label="Bemerkung zu {{ $eintrag->eintragung }}">
                                             @include('listen.partials.child_select')
                                             <button type="submit"
                                                     class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
@@ -115,7 +139,18 @@
                                     @endif
                                 </div>
 
-                                @if($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste') or ($eintrag->user_id && app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), (int) $eintrag->user_id, $eintrag->child_id)))
+                                @if($eintrag->user_id == null and $canManage)
+                                    <form method="post" action="{{ route('listen.eintragungen.copy', $eintrag->id) }}" style="display: inline;" class="ml-2">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                                                title="Kopieren">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                @if(! $preview and ($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste') or ($eintrag->user_id && app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), (int) $eintrag->user_id, $eintrag->child_id))))
                                     <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" style="display: inline;" class="ml-2">
                                         @csrf
                                         @method('DELETE')
