@@ -30,6 +30,7 @@ class InquiryService
     public function __construct(
         private readonly TargetResolver $targets,
         private readonly ElternabfragenSetting $settings,
+        private readonly PreviousAnswers $previousAnswers,
     ) {}
 
     public function create(array $data, User $user): Inquiry
@@ -173,6 +174,33 @@ class InquiryService
             $inquiry->save();
             InquiryEvent::log('inquiry.settings_changed', ['inquiry_id' => $inquiry->id], null, $changes);
         }
+    }
+
+    /**
+     * Vorabfrage nachträglich setzen oder entfernen (auch bei laufenden oder abgeschlossenen
+     * Abfragen). Bereits abgegebene Antworten werden neu verglichen; die Vorbefüllung gilt
+     * für alle, die noch nicht geantwortet haben.
+     */
+    public function setPreviousInquiry(Inquiry $inquiry, ?int $previousId): int
+    {
+        $inquiry->assertStatus(InquiryStatus::Draft, InquiryStatus::PendingApproval, InquiryStatus::Scheduled, InquiryStatus::Running, InquiryStatus::Closed);
+        if ($inquiry->purged_at) {
+            throw ValidationException::withMessages(['previous_inquiry_id' => 'Die Antworten dieser Abfrage wurden bereits gelöscht.']);
+        }
+        $this->assertPreviousInquiry($previousId, $inquiry->templateVersion, $inquiry->id);
+
+        $before = $inquiry->previous_inquiry_id;
+        $inquiry->update(['previous_inquiry_id' => $previousId ?: null]);
+        $compared = $this->previousAnswers->recompute($inquiry);
+
+        if ($before !== $inquiry->previous_inquiry_id) {
+            InquiryEvent::log('inquiry.previous_set', ['inquiry_id' => $inquiry->id], null, [
+                'previous_inquiry_id' => $inquiry->previous_inquiry_id,
+                'compared_responses' => $compared,
+            ]);
+        }
+
+        return $compared;
     }
 
     /**

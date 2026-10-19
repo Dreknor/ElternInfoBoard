@@ -26,7 +26,7 @@ class Inquiry extends Model
     public const TARGET_GROUPS = 'groups';
 
     /** Inhalte, die nach der Freigabe gesperrt sind. */
-    public const LOCKED_AFTER_APPROVAL = ['template_version_id', 'previous_inquiry_id', 'title', 'intro', 'target_type', 'target_group_ids'];
+    public const LOCKED_AFTER_APPROVAL = ['template_version_id', 'title', 'intro', 'target_type', 'target_group_ids'];
 
     protected $fillable = [
         'template_version_id', 'previous_inquiry_id', 'title', 'intro', 'status', 'starts_at', 'deadline_at', 'target_type',

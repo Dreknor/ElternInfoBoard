@@ -130,4 +130,52 @@ class VorbefuellungAusVorabfrageTest extends ElternabfragenTestCase
             'correction_window_days' => 7,
         ], $this->sekretariat);
     }
+
+    #[Test]
+    public function vorabfrage_kann_bei_laufender_abfrage_nachtraeglich_gesetzt_werden(): void
+    {
+        $vorjahr = $this->runningInquiry();
+        $this->actingAs($this->mutter)
+            ->post(route('elternabfragen.submit', $this->assignmentFor($vorjahr)), ['answers' => $this->validAnswers(), 'confirm' => 1]);
+
+        // Neue Abfrage derselben Vorlage, ohne Verknüpfung angelegt und bereits beantwortet
+        $service = app(InquiryService::class);
+        $this->actingAs($this->sekretariat);
+        $neu = $service->create([
+            'template_version_id' => $vorjahr->template_version_id,
+            'title' => 'Fahrraderlaubnis 2027',
+            'starts_at' => now()->subMinute(),
+            'deadline_at' => now()->addDays(14),
+            'target_type' => Inquiry::TARGET_GROUPS,
+            'target_group_ids' => [$this->klasse->id],
+            'notify_mail' => true,
+            'correction_window_days' => 7,
+        ], $this->sekretariat);
+        $service->submit($neu);
+        $this->actingAs($this->schulleitung);
+        $service->approve($neu, $this->schulleitung);
+        $this->actingAs($this->vater)->post(route('elternabfragen.submit', $this->assignmentFor($neu)), [
+            'answers' => ['fahrrad' => 'no', 'foto' => 'denied', 'telefon' => '0351 123456', 'hinweis' => 'Keine'],
+            'confirm' => 1,
+        ]);
+        $this->assertFalse($this->assignmentFor($neu)->currentResponse->hasBaseline());
+
+        $this->actingAs($this->sekretariat)->get(route('elternabfragen.admin.inquiries.show', $neu))
+            ->assertOk()->assertSee('Vorabfrage (z. B. Vorjahr)')->assertSee('Fahrraderlaubnis 2026');
+        $this->put(route('elternabfragen.admin.inquiries.previous', $neu), ['previous_inquiry_id' => $vorjahr->id])
+            ->assertRedirect()->assertSessionHas('Meldung', 'Vorabfrage gesetzt. 1 bereits abgegebene Antwort wurde mit der Vorabfrage verglichen.');
+
+        $response = $this->assignmentFor($neu)->currentResponse;
+        $this->assertSame(['fahrrad'], array_keys($response->baselineChanges()));
+        $this->assertSame('0351 123456', $response->answers['telefon']);
+        $this->get(route('elternabfragen.admin.inquiries.changes', $neu))->assertOk()->assertSee('Darf Ihr Kind mit dem Fahrrad kommen?');
+
+        // Entfernen setzt den Vergleich zurück
+        $this->put(route('elternabfragen.admin.inquiries.previous', $neu), ['previous_inquiry_id' => ''])->assertRedirect();
+        $this->assertNull($neu->fresh()->previous_inquiry_id);
+        $this->assertFalse($this->assignmentFor($neu)->currentResponse->hasBaseline());
+
+        // Nur mit Verwaltungsrecht
+        $this->actingAs($this->vater)->put(route('elternabfragen.admin.inquiries.previous', $neu), ['previous_inquiry_id' => $vorjahr->id])->assertForbidden();
+    }
 }

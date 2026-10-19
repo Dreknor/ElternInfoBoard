@@ -292,6 +292,26 @@
             </section>
 
             @can('manage elternabfragen')
+                @if(in_array($status, ['scheduled', 'running', 'closed'], true) && ! $inquiry->purged_at)
+                    <section id="vorabfrage" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm scroll-mt-4">
+                        <h2 class="font-semibold text-gray-800 mb-2">Vorabfrage (z. B. Vorjahr)</h2>
+                        <form method="POST" action="{{ route('elternabfragen.admin.inquiries.previous', $inquiry) }}" class="space-y-2">
+                            @csrf @method('PUT')
+                            <select name="previous_inquiry_id" class="{{ $input }}" aria-label="Vorabfrage" aria-describedby="vorabfrage_hint">
+                                <option value="">– keine –</option>
+                                @foreach($previousInquiries as $previous)
+                                    <option value="{{ $previous->id }}" @selected($inquiry->previous_inquiry_id === $previous->id)>{{ $previous->title }} · Frist {{ $previous->deadline_at->format('d.m.Y') }}</option>
+                                @endforeach
+                            </select>
+                            @error('previous_inquiry_id')<p class="text-red-700">{{ $message }}</p>@enderror
+                            <p id="vorabfrage_hint" class="text-xs text-gray-500">
+                                Wer noch nicht geantwortet hat, sieht die Angaben daraus vorausgefüllt. Bereits abgegebene Antworten werden sofort verglichen.
+                                @if($previousInquiries->isEmpty()) Es gibt keine andere Abfrage derselben Vorlage mit noch vorhandenen Antworten. @endif
+                            </p>
+                            <button class="w-full px-3 py-2 rounded-lg border border-gray-300">Speichern und vergleichen</button>
+                        </form>
+                    </section>
+                @endif
                 @if(in_array($status, ['scheduled', 'running'], true))
                     <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm">
                         <h2 class="font-semibold text-gray-800 mb-2">Frist ändern</h2>

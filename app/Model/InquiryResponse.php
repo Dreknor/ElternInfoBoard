@@ -16,7 +16,8 @@ use LogicException;
  */
 class InquiryResponse extends Model
 {
-    private const MUTABLE = ['is_current', 'review_status', 'reviewed_by', 'reviewed_at', 'review_note', 'updated_at'];
+    /** Antwortinhalte bleiben unveränderlich; der Vergleich mit der Vorabfrage ist abgeleitet und darf neu berechnet werden. */
+    private const MUTABLE = ['is_current', 'review_status', 'reviewed_by', 'reviewed_at', 'review_note', 'baseline_response_id', 'baseline_changes', 'updated_at'];
 
     protected $fillable = [
         'assignment_id', 'inquiry_id', 'child_id', 'user_id', 'template_version_id', 'version', 'answers',

@@ -126,14 +126,18 @@ danach nur nach Freigabe durch das Sekretariat. Klärungen werden als Prüfstatu
 
 Eine Abfrage kann eine **Vorabfrage** derselben Vorlage haben (gestartet oder abgeschlossen,
 Antworten noch nicht gelöscht). „Als neue Abfrage kopieren" setzt sie automatisch, im
-Formular ist sie wählbar. Ohne Entwurf und ohne Antwort sehen Eltern die gültige Antwort
+Formular ist sie wählbar. Auch bei geplanten, laufenden oder abgeschlossenen Abfragen kann
+das Sekretariat sie nachträglich setzen oder entfernen (Abschnitt „Vorabfrage"); bereits
+abgegebene Antworten werden dann sofort neu verglichen (Protokoll `inquiry.previous_set`).
+Ohne Entwurf und ohne Antwort sehen Eltern die gültige Antwort
 der Vorabfrage für dasselbe Kind vorausgefüllt – nur Felder mit gleichem Schlüssel und Typ
 und noch gültigen Optionen. **Einwilligungen** werden nicht übernommen (aktiv neu erteilen),
 **Dateien** ebenfalls nicht.
 
 Beim Absenden hält jede Antwortversion fest, welche Angaben sich gegenüber der Vorabfrage
 geändert haben (alter und neuer Wert, `baseline_changes`); leer heißt „unverändert", `null`
-„keine Vorjahresangaben". Die Angaben bleiben so auch nach Löschung der Vorabfrage
+„keine Vorjahresangaben". Der Vergleich ist abgeleitet und darf neu berechnet werden; die Antwortinhalte selbst
+bleiben unveränderlich. Die Angaben bleiben so auch nach Löschung der Vorabfrage
 nachvollziehbar und unterliegen der Aufbewahrungsfrist der neuen Abfrage. Das Sekretariat
 (`view elternabfragen answers`) sieht im Rücklauf eine Zählung und unter
 „Änderungen anzeigen" die Liste je Kind; der Export bietet die Spalte

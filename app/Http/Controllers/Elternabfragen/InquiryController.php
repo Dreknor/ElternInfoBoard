@@ -159,6 +159,9 @@ class InquiryController extends Controller
             'users' => User::permission(['manage elternabfragen', 'approve elternabfragen'])->orderBy('name')->get(['id', 'name']),
             'statusOptions' => InquiryAssignmentStatus::options(),
             'changeCounts' => $inquiry->previous_inquiry_id ? $this->changeCounts($inquiry) : null,
+            'previousInquiries' => $user->can('manage elternabfragen') && ! $inquiry->purged_at
+                ? $this->inquiries->previousCandidates($inquiry)->filter(fn (Inquiry $i) => $i->templateVersion?->template_id === $inquiry->templateVersion->template_id)
+                : collect(),
             'pendingApprovals' => AdminController::pendingApprovalCount(),
         ]);
     }
@@ -255,6 +258,16 @@ class InquiryController extends Controller
         $this->inquiries->changeDeadline($inquiry, Carbon::parse($data['deadline_at']), $data['reason']);
 
         return back()->with(['type' => 'success', 'Meldung' => 'Frist geändert und protokolliert.']);
+    }
+
+    public function previous(Request $request, Inquiry $inquiry): RedirectResponse
+    {
+        $data = $request->validate(['previous_inquiry_id' => 'nullable|integer']);
+        $compared = $this->inquiries->setPreviousInquiry($inquiry, $data['previous_inquiry_id'] ?? null);
+
+        return back()->with(['type' => 'success', 'Meldung' => $inquiry->previous_inquiry_id
+            ? 'Vorabfrage gesetzt. '.$compared.' bereits abgegebene '.($compared === 1 ? 'Antwort wurde' : 'Antworten wurden').' mit der Vorabfrage verglichen.'
+            : 'Vorabfrage entfernt.']);
     }
 
     public function settings(Request $request, Inquiry $inquiry): RedirectResponse

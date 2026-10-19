@@ -3,6 +3,7 @@
 namespace App\Services\Elternabfragen;
 
 use App\Enums\InquiryFieldType;
+use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryResponse;
 
@@ -29,6 +30,36 @@ class PreviousAnswers
             ->where('is_current', true)
             ->with(['templateVersion', 'inquiry:id,title,deadline_at'])
             ->first();
+    }
+
+    /**
+     * Vergleich aller bereits abgegebenen Antwortversionen neu berechnen, z. B. nachdem die
+     * Vorabfrage nachträglich gesetzt oder entfernt wurde.
+     *
+     * @return int Anzahl Antwortversionen mit Angaben aus der Vorabfrage
+     */
+    public function recompute(Inquiry $inquiry): int
+    {
+        $baselines = $inquiry->previous_inquiry_id
+            ? InquiryResponse::query()
+                ->where('inquiry_id', $inquiry->previous_inquiry_id)
+                ->where('is_current', true)
+                ->with('templateVersion')
+                ->get()
+                ->keyBy('child_id')
+            : collect();
+
+        $compared = 0;
+        InquiryResponse::where('inquiry_id', $inquiry->id)->with('templateVersion')->each(function (InquiryResponse $response) use ($baselines, &$compared) {
+            $baseline = $baselines->get($response->child_id);
+            $response->forceFill([
+                'baseline_response_id' => $baseline?->id,
+                'baseline_changes' => $baseline ? $this->changes($response->templateVersion?->fields ?? [], $baseline, $response->answers ?? []) : null,
+            ])->save();
+            $compared += $baseline ? 1 : 0;
+        });
+
+        return $compared;
     }
 
     /**
