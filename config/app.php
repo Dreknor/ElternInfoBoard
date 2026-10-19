@@ -13,7 +13,6 @@ return [
     'directories_elternrat' => explode(',', env('ELTERNRAT_DIRS', 'Allgemein,Protokolle')),
 
     'logo' => env('APP_LOGO', 'logo.png'),
-
     'favicon' => env('APP_FAVICON', 'favicon.ico'),
 
     'logo_small' => env('APP_LOGO_SMALL', 'app_logo.png'),
