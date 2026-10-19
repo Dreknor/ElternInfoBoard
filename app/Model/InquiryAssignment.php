@@ -3,13 +3,15 @@
 namespace App\Model;
 
 use App\Enums\InquiryAssignmentStatus;
+use App\Services\Elternabfragen\GuardianConfirmation;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Abfrage-Auftrag je Kind. Eine gültige Antwort eines Sorgeberechtigten genügt;
+ * Abfrage-Auftrag je Kind. Eine gültige Antwort eines Sorgeberechtigten genügt –
+ * es sei denn, die Vorlage verlangt die Bestätigung aller Sorgeberechtigten.
  * Empfänger (InquiryRecipient) sind die zum Startzeitpunkt berechtigten Konten.
  */
 class InquiryAssignment extends Model
@@ -94,11 +96,23 @@ class InquiryAssignment extends Model
     }
 
     /**
-     * Status aus den Daten ableiten (nach Abgabe, Entwurf oder Klärung eines Problems).
+     * Antwort liegt vor und alle erforderlichen Bestätigungen sind erteilt.
+     */
+    public function isComplete(): bool
+    {
+        return $this->isAnswered() && $this->status !== InquiryAssignmentStatus::AwaitingConfirmation;
+    }
+
+    /**
+     * Status aus den Daten ableiten (nach Abgabe, Bestätigung, Entwurf oder Klärung eines Problems).
      */
     public function recomputeStatus(): InquiryAssignmentStatus
     {
         if ($this->current_response_id !== null) {
+            if (app(GuardianConfirmation::class)->isPending($this)) {
+                return InquiryAssignmentStatus::AwaitingConfirmation;
+            }
+
             $version = (int) InquiryResponse::whereKey($this->current_response_id)->value('version');
 
             return $version > 1 ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted;

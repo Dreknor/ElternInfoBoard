@@ -177,7 +177,7 @@ class InquiryController extends Controller
             'version' => $inquiry->templateVersion,
             'fields' => $inquiry->templateVersion->fields,
             'state' => [
-                'can_view_answers' => true, 'can_submit' => true, 'can_correct' => false, 'reason' => null,
+                'can_view_answers' => true, 'can_submit' => true, 'can_correct' => false, 'can_confirm' => false, 'awaiting_confirmation' => false, 'reason' => null,
                 'deadline' => $inquiry->deadline_at, 'correction_until' => null,
             ],
             'answers' => [],

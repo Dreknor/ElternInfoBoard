@@ -30,6 +30,9 @@
                     </div>
                     <x-elternabfragen.badge :color="$assignment->status->color()">{{ $assignment->status->label() }}</x-elternabfragen.badge>
                 </div>
+                @if($state['can_confirm'])
+                    <p class="text-sm text-blue-800 mt-2"><i class="fas fa-user-check" aria-hidden="true"></i> Bereits beantwortet – bitte prüfen und bestätigen Sie die Angaben.</p>
+                @endif
                 @unless($state['can_view_answers'])
                     <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle" aria-hidden="true"></i> Nur zur Information – beantworten können sorgeberechtigte Personen.</p>
                 @endunless

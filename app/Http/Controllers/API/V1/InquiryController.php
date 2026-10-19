@@ -7,6 +7,7 @@ use App\Model\InquiryAssignment;
 use App\Model\InquiryDraft;
 use App\Model\InquiryResponse;
 use App\Services\Elternabfragen\FieldSchema;
+use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
 use App\Services\Elternabfragen\ResponseService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -27,12 +28,15 @@ class InquiryController extends ApiController
         private readonly InquiryAccess $access,
         private readonly ResponseService $responses,
         private readonly FieldSchema $schema,
+        private readonly GuardianConfirmation $confirmation,
     ) {}
 
     /**
      * Alle Abfragen zu den eigenen Kindern.
      *
-     * `status`: open | in_progress | submitted | corrected | problem.
+     * `status`: open | in_progress | submitted | corrected | awaiting_confirmation | problem.
+     * `can_confirm`: die Antwort liegt vor und muss vom Nutzer noch bestätigt werden (Vorlagen mit
+     * `requires_all_guardians`).
      * `can_submit`/`can_correct` steuern die Buttons; `reason` erklärt, warum nicht.
      *
      * @queryParam filter string `open` = nur offene, die der Nutzer abgeben darf. Example: open
@@ -44,7 +48,7 @@ class InquiryController extends ApiController
             ->with(['inquiry', 'child', 'currentResponse'])
             ->get()
             ->map(fn (InquiryAssignment $a) => $this->summary($request, $a))
-            ->when($request->query('filter') === 'open', fn ($c) => $c->filter(fn ($i) => $i['can_submit']))
+            ->when($request->query('filter') === 'open', fn ($c) => $c->filter(fn ($i) => $i['can_submit'] || $i['can_confirm']))
             ->sortBy('deadline')
             ->values();
 
@@ -79,6 +83,12 @@ class InquiryController extends ApiController
             'responsible_office' => $version->responsible_office,
             'retention_note' => $version->retention_note,
             'retention_days' => $assignment->inquiry->retention_days,
+            'requires_all_guardians' => (bool) $version->requires_all_guardians,
+            'confirmations' => $state['can_view_answers'] ? array_map(fn (array $row) => [
+                'name' => $row['name'],
+                'state' => $row['state'],
+                'at' => $row['at']?->toIso8601String(),
+            ], $this->confirmation->overview($assignment)) : [],
             'fields' => array_map(fn (array $f) => $this->presentField($f, $children), $version->fields),
             'draft' => $draft ? ['answers' => $draft->answers, 'updated_at' => $draft->updated_at->toIso8601String()] : null,
             'response' => $current && $state['can_view_answers'] ? $this->presentResponse($assignment, $current) : null,
@@ -160,6 +170,28 @@ class InquiryController extends ApiController
     }
 
     /**
+     * Gültige Antwort als weitere sorgeberechtigte Person bestätigen (nur bei `can_confirm`).
+     * 409, wenn die Antwort inzwischen korrigiert wurde oder keine Bestätigung aussteht.
+     *
+     * @bodyParam confirm boolean required Angaben geprüft und einverstanden. Example: true
+     */
+    public function confirm(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate(['confirm' => 'accepted'], [
+            'confirm.accepted' => 'Bitte bestätigen Sie, dass Sie die Angaben geprüft haben und mit ihnen einverstanden sind.',
+        ]);
+
+        $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+        $assignment->refresh()->load(['inquiry', 'child']);
+
+        return response()->json([
+            'message' => 'Vielen Dank! Ihre Bestätigung wurde gespeichert.',
+            'data' => $this->summary($request, $assignment),
+        ]);
+    }
+
+    /**
      * PDF-Bestätigung der gültigen Antwort.
      */
     public function pdf(Request $request, InquiryAssignment $assignment): Response
@@ -213,6 +245,8 @@ class InquiryController extends ApiController
             'can_view_answers' => $state['can_view_answers'],
             'can_submit' => $state['can_submit'],
             'can_correct' => $state['can_correct'],
+            'can_confirm' => $state['can_confirm'],
+            'awaiting_confirmation' => $state['awaiting_confirmation'],
             'correction_until' => $state['correction_until']?->toIso8601String(),
             'reason' => $state['reason'],
         ];

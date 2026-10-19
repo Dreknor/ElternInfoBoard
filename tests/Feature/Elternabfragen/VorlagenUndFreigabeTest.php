@@ -238,4 +238,24 @@ class VorlagenUndFreigabeTest extends ElternabfragenTestCase
 
         $this->assertSame(InquiryStatus::Running, $inquiry->fresh()->status);
     }
+
+    #[Test]
+    public function eingereichte_vorlage_zeigt_pruefbereich_oben(): void
+    {
+        $templates = app(TemplateService::class);
+        $this->actingAs($this->sekretariat);
+        $version = $templates->create(['title' => 'Ausflug', 'purpose' => 'Planung', 'fields' => $this->fields()], $this->sekretariat);
+        $templates->submit($version);
+
+        $this->actingAs($this->schulleitung)->get(route('elternabfragen.admin.templates.show', $version))
+            ->assertOk()
+            ->assertSee('id="pruefung"', false)
+            ->assertSee(route('elternabfragen.admin.templates.approve', $version), false);
+
+        $this->sekretariat->givePermissionTo('approve elternabfragen');
+        $this->actingAs($this->sekretariat->fresh())->get(route('elternabfragen.admin.templates.show', $version))
+            ->assertOk()
+            ->assertSee('Vier-Augen-Prinzip')
+            ->assertDontSee(route('elternabfragen.admin.templates.approve', $version), false);
+    }
 }

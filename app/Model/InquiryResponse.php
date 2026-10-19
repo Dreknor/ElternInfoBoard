@@ -5,6 +5,7 @@ namespace App\Model;
 use App\Enums\InquiryReviewStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
 /**
@@ -71,6 +72,12 @@ class InquiryResponse extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /** Bestätigungen dieser Version durch weitere Sorgeberechtigte. */
+    public function confirmations(): HasMany
+    {
+        return $this->hasMany(InquiryConfirmation::class, 'response_id')->orderBy('confirmed_at');
     }
 
     public function previous(): BelongsTo

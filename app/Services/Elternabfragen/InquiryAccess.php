@@ -18,7 +18,10 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class InquiryAccess
 {
-    public function __construct(private readonly FamilyResolver $family) {}
+    public function __construct(
+        private readonly FamilyResolver $family,
+        private readonly GuardianConfirmation $confirmation,
+    ) {}
 
     /**
      * Aufträge, die der Nutzer sehen darf (gestartete bzw. abgeschlossene, nicht gelöschte Abfragen).
@@ -52,7 +55,10 @@ class InquiryAccess
     /**
      * Abgabestatus aus Sicht des Nutzers.
      *
-     * @return array{can_view_answers: bool, can_submit: bool, can_correct: bool, reason: ?string, deadline: \Carbon\CarbonInterface, correction_until: ?\Carbon\CarbonInterface}
+     * `awaiting_confirmation`: die Antwort liegt vor, aber noch nicht alle Sorgeberechtigten haben bestätigt;
+     * `can_confirm`: der Nutzer selbst muss (und darf) die gültige Antwort noch bestätigen.
+     *
+     * @return array{can_view_answers: bool, can_submit: bool, can_correct: bool, can_confirm: bool, awaiting_confirmation: bool, reason: ?string, deadline: \Carbon\CarbonInterface, correction_until: ?\Carbon\CarbonInterface}
      */
     public function state(User $user, InquiryAssignment $assignment): array
     {
@@ -65,6 +71,8 @@ class InquiryAccess
         $reason = null;
         $canSubmit = false;
         $canCorrect = false;
+        $awaiting = $assignment->isAnswered() && $this->confirmation->isPending($assignment);
+        $canConfirm = $custody && $awaiting && $this->confirmation->canConfirm($user, $assignment);
 
         if (! $custody) {
             $reason = 'Antworten können nur sorgeberechtigte Personen abgeben.';
@@ -74,7 +82,9 @@ class InquiryAccess
             $canSubmit = $now->lessThanOrEqualTo($deadline);
             $reason = $canSubmit ? null : 'Die Rückgabefrist ist abgelaufen. Bitte wenden Sie sich an das Sekretariat.';
         } else {
-            $canCorrect = $correctionUntil !== null && $now->lessThanOrEqualTo($correctionUntil);
+            // Solange noch Bestätigungen fehlen, dürfen Sorgeberechtigte bis zur Frist korrigieren
+            $canCorrect = ($correctionUntil !== null && $now->lessThanOrEqualTo($correctionUntil))
+                || ($awaiting && $now->lessThanOrEqualTo($deadline));
             $reason = $canCorrect ? null : 'Eine Korrektur ist nur noch über das Sekretariat möglich.';
         }
 
@@ -82,6 +92,8 @@ class InquiryAccess
             'can_view_answers' => $custody,
             'can_submit' => $canSubmit,
             'can_correct' => $canCorrect,
+            'can_confirm' => $canConfirm,
+            'awaiting_confirmation' => $awaiting,
             'reason' => $reason,
             'deadline' => $deadline,
             'correction_until' => $assignment->isAnswered() ? $correctionUntil : null,

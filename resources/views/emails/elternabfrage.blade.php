@@ -14,6 +14,15 @@
         sind am <strong>{{ $submittedAt }}</strong> eingegangen (Antwortversion {{ $version }}).
     </p>
     <p>Die eingereichte Zusammenfassung und eine PDF-Bestätigung finden Sie jederzeit im {{ $boardName }}.</p>
+@elseif($kind === \App\Mail\ElternabfrageMail::KIND_CONFIRMATION_REQUEST)
+    <div style="background-color: #dbeafe; border-left: 4px solid #2563eb; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
+        <strong style="color: #1e3a8a;">Ihre Bestätigung wird benötigt</strong>
+    </div>
+    <p>
+        für die Abfrage <strong>„{{ $inquiryTitle }}“</strong> zu <strong>{{ $childName }}</strong> wurden Angaben eingereicht.
+        Diese Abfrage muss von allen sorgeberechtigten Personen bestätigt werden.
+    </p>
+    <p>Bitte prüfen Sie die Angaben im {{ $boardName }} und bestätigen Sie sie. Sind sie nicht richtig, können Sie sie dort korrigieren.</p>
 @elseif($kind === \App\Mail\ElternabfrageMail::KIND_REMINDER)
     <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
         <strong style="color: #92400e;">Ihre Rückmeldung fehlt noch</strong>
@@ -39,7 +48,11 @@
 <p style="margin-top: 24px;">
     <a href="{{ $url }}"
        style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-        {{ $kind === \App\Mail\ElternabfrageMail::KIND_CONFIRMATION ? 'Eingereichte Angaben ansehen' : 'Zur Abfrage' }}
+        {{ match ($kind) {
+            \App\Mail\ElternabfrageMail::KIND_CONFIRMATION => 'Eingereichte Angaben ansehen',
+            \App\Mail\ElternabfrageMail::KIND_CONFIRMATION_REQUEST => 'Angaben prüfen und bestätigen',
+            default => 'Zur Abfrage',
+        } }}
     </a>
 </p>
 

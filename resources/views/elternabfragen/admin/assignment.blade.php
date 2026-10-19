@@ -46,6 +46,12 @@
                             <x-elternabfragen.badge :color="$response->review_status->color()">{{ $response->review_status->label() }}</x-elternabfragen.badge>
                             <span class="block text-gray-600">{{ $response->submitted_at->format('d.m.Y H:i') }} · {{ $response->user?->name ?? 'unbekannt' }} · {{ $response->channel === 'app' ? 'App' : 'Web' }}</span>
                             @if($response->correction_reason)<span class="block text-gray-500">Korrekturgrund: {{ $response->correction_reason }}</span>@endif
+                            @foreach($response->confirmations as $confirmation)
+                                <span class="block text-green-800"><i class="fas fa-user-check" aria-hidden="true"></i> Bestätigt von {{ $confirmation->user?->name ?? 'unbekannt' }} am {{ $confirmation->confirmed_at->format('d.m.Y H:i') }} · {{ $confirmation->channel === 'app' ? 'App' : 'Web' }}</span>
+                            @endforeach
+                            @if($response->is_current && $pendingConfirmations->isNotEmpty())
+                                <span class="block text-amber-800"><i class="far fa-clock" aria-hidden="true"></i> Bestätigung ausstehend: {{ $pendingConfirmations->pluck('name')->implode(', ') }}</span>
+                            @endif
                         </div>
                         @if($canSeeAnswers)
                             <a href="{{ route('elternabfragen.admin.responses.show', $response) }}" class="px-3 py-1.5 rounded-lg border border-gray-300">Antwort ansehen</a>

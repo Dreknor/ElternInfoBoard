@@ -3,6 +3,7 @@
 namespace App\Services\App;
 
 use App\Enums\GuardianRight;
+use App\Enums\InquiryAssignmentStatus;
 use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use App\Http\Resources\V1\ChildResource;
 use App\Model\ChildCheckIn;
@@ -95,14 +96,16 @@ class TodoService
             $access = app(InquiryAccess::class);
             $access->assignmentsQuery($user)
                 ->with(['inquiry', 'child'])
-                ->whereNull('current_response_id')
+                ->where(fn ($q) => $q->whereNull('current_response_id')->orWhere('status', InquiryAssignmentStatus::AwaitingConfirmation->value))
                 ->get()
-                ->filter(fn (InquiryAssignment $a) => $access->state($user, $a)['can_submit'])
-                ->each(function (InquiryAssignment $a) use (&$todos) {
+                ->map(fn (InquiryAssignment $a) => [$a, $access->state($user, $a)])
+                ->filter(fn (array $item) => $item[1]['can_submit'] || $item[1]['can_confirm'])
+                ->each(function (array $item) use (&$todos) {
+                    [$a, $state] = $item;
                     $todos[] = [
                         'type' => 'inquiry',
                         'title' => $a->inquiry->title,
-                        'subtitle' => 'Elternabfrage für '.($a->child?->first_name ?? 'Ihr Kind'),
+                        'subtitle' => ($state['can_confirm'] ? 'Bitte bestätigen: Elternabfrage für ' : 'Elternabfrage für ').($a->child?->first_name ?? 'Ihr Kind'),
                         'deadline' => $a->effectiveDeadline()->toDateString(),
                         'target' => ['type' => 'inquiry', 'id' => $a->id],
                     ];

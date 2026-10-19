@@ -88,9 +88,9 @@ abstract class ElternabfragenTestCase extends TestCase
         return $version->fresh();
     }
 
-    protected function runningInquiry(array $overrides = []): Inquiry
+    protected function runningInquiry(array $overrides = [], array $templateOverrides = []): Inquiry
     {
-        $version = $this->approvedVersion();
+        $version = $this->approvedVersion($templateOverrides);
         $service = app(InquiryService::class);
 
         $this->actingAs($this->sekretariat);

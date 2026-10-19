@@ -176,6 +176,7 @@ class TemplateController extends Controller
             'default_deadline_days' => $days('default_deadline_days', 365) ?? 14,
             'retention_days' => $days('retention_days', 3650),
             'retention_note' => $text('retention_note', 2000) ?: null,
+            'requires_all_guardians' => $request->boolean('requires_all_guardians'),
             'fields' => $normalized,
         ]);
 
@@ -201,7 +202,7 @@ class TemplateController extends Controller
             'version' => $version,
             'fields' => $version->fields ?? [],
             'state' => [
-                'can_view_answers' => true, 'can_submit' => true, 'can_correct' => false, 'reason' => null,
+                'can_view_answers' => true, 'can_submit' => true, 'can_correct' => false, 'can_confirm' => false, 'awaiting_confirmation' => false, 'reason' => null,
                 'deadline' => $inquiry->deadline_at, 'correction_until' => null,
             ],
             'answers' => [],
@@ -241,6 +242,7 @@ class TemplateController extends Controller
             'retention_days' => 'nullable|integer|min:1|max:3650',
             'retention_note' => 'nullable|string|max:2000',
             'is_sensitive' => 'nullable|boolean',
+            'requires_all_guardians' => 'nullable|boolean',
             'fields_json' => 'required|json',
         ], [
             'purpose.required' => 'Bitte beschreiben Sie den Zweck: Wofür werden die Angaben benötigt und wie werden sie verwendet?',
@@ -248,6 +250,7 @@ class TemplateController extends Controller
 
         $data['fields'] = json_decode($data['fields_json'], true) ?: [];
         $data['is_sensitive'] = $request->boolean('is_sensitive');
+        $data['requires_all_guardians'] = $request->boolean('requires_all_guardians');
 
         return $data;
     }

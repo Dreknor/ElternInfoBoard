@@ -74,6 +74,12 @@ Sorgeberechtigten genügt je Kind (wie E2/E7); weitere Sorgeberechtigte werden �
 Abgaben informiert **(O)** (getrennte Haushalte). Gleichzeitige Abgaben werden per
 Zeilensperre serialisiert; eine zweite Abgabe gilt als Korrektur oder wird mit 409 abgelehnt.
 
+**Gemeinsame Erklärung (Vorlagenoption `requires_all_guardians`):** Alle weiteren Konten mit
+aktuell gültigem Sorgerecht bestätigen die gültige Antwortversion (`inquiry_confirmations`,
+je Version; `GuardianConfirmation`). Bis dahin Status „Bestätigung ausstehend“; Erinnerungen
+gehen nur an die Fehlenden. Wer nicht einverstanden ist, darf bis zur Frist korrigieren –
+jede neue Version erfordert erneut alle Bestätigungen.
+
 Empfänger werden beim **Start** ermittelt. Kinder ohne sorgeberechtigtes Konto erhalten
 sofort den Status „Technisches Problem" **(O)**.
 

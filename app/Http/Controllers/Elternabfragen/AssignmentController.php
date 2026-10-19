@@ -9,6 +9,7 @@ use App\Model\InquiryAssignment;
 use App\Model\InquiryResponse;
 use App\Services\Elternabfragen\AssignmentAdminService;
 use App\Services\Elternabfragen\FieldSchema;
+use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\ReminderService;
 use App\Services\Elternabfragen\ResponseService;
 use Carbon\Carbon;
@@ -53,13 +54,14 @@ class AssignmentController extends Controller
         $assignment->load([
             'inquiry.templateVersion', 'child', 'group', 'recipients.user:id,name,email',
             'responses.user:id,name', 'responses.reviewer:id,name', 'deliveries.user:id,name', 'events.user:id,name',
-            'drafts.user:id,name',
+            'drafts.user:id,name', 'responses.confirmations.user:id,name',
         ]);
 
         return view('elternabfragen.admin.assignment', [
             'assignment' => $assignment,
             'inquiry' => $assignment->inquiry,
             'canSeeAnswers' => $user->can('view elternabfragen answers'),
+            'pendingConfirmations' => app(GuardianConfirmation::class)->pendingUsers($assignment),
             'pendingApprovals' => AdminController::pendingApprovalCount(),
         ]);
     }

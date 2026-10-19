@@ -20,6 +20,9 @@ enum InquiryAssignmentStatus: string
     /** Eine neue Antwortversion wurde abgegeben. */
     case Corrected = 'corrected';
 
+    /** Antwort liegt vor, aber noch nicht alle Sorgeberechtigten haben sie bestätigt. */
+    case AwaitingConfirmation = 'awaiting_confirmation';
+
     /** Zustellung oder Bearbeitung war nicht möglich. */
     case Problem = 'problem';
 
@@ -30,6 +33,7 @@ enum InquiryAssignmentStatus: string
             self::InProgress => 'In Bearbeitung',
             self::Submitted => 'Eingereicht',
             self::Corrected => 'Korrektur eingereicht',
+            self::AwaitingConfirmation => 'Bestätigung ausstehend',
             self::Problem => 'Technisches Problem',
         };
     }
@@ -41,6 +45,7 @@ enum InquiryAssignmentStatus: string
             self::InProgress => 'amber',
             self::Submitted => 'green',
             self::Corrected => 'teal',
+            self::AwaitingConfirmation => 'blue',
             self::Problem => 'red',
         };
     }

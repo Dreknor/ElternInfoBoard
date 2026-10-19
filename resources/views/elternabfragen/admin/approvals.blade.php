@@ -19,7 +19,7 @@
                                 @if($version->is_sensitive) · <span class="text-red-700">sensibel – Zusatzprüfung</span> @endif
                             </div>
                         </div>
-                        <a href="{{ route('elternabfragen.admin.templates.show', $version) }}" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm">Prüfen</a>
+                        <a href="{{ route('elternabfragen.admin.templates.show', $version) }}#pruefung" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm">Prüfen</a>
                     </li>
                 @empty
                     <li class="px-4 py-6 text-center text-gray-500 text-sm">Keine Vorlagen zur Prüfung.</li>
@@ -39,7 +39,7 @@
                                 · von {{ $inquiry->creator?->name ?? '–' }}
                             </div>
                         </div>
-                        <a href="{{ route('elternabfragen.admin.inquiries.show', $inquiry) }}" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm">Prüfen</a>
+                        <a href="{{ route('elternabfragen.admin.inquiries.show', $inquiry) }}#pruefung" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm">Prüfen</a>
                     </li>
                 @empty
                     <li class="px-4 py-6 text-center text-gray-500 text-sm">Keine Abfragen zur Freigabe.</li>

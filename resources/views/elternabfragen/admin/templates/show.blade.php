@@ -14,10 +14,46 @@
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
+            {{-- Prüfung und Freigabe --}}
+            @if($status->value === 'in_review')
+                @can('approve elternabfragen')
+                    <section id="pruefung" class="bg-white rounded-xl shadow-sm border-2 border-amber-300 p-5 scroll-mt-4">
+                        <h2 class="font-semibold text-gray-800 mb-2">Prüfung und Freigabe</h2>
+                        @if($fourEyesBlocked)
+                            <p class="text-sm text-amber-800">
+                                Vier-Augen-Prinzip: Sie haben diese Version erstellt, daher muss eine andere Person mit Freigaberecht sie prüfen.
+                                @can('edit settings')
+                                    Das Vier-Augen-Prinzip lässt sich in den <a href="{{ route('elternabfragen.admin.settings') }}" class="underline">Einstellungen</a> abschalten.
+                                @endcan
+                            </p>
+                        @else
+                            <form method="POST" action="{{ route('elternabfragen.admin.templates.approve', $version) }}" class="space-y-3">
+                                @csrf
+                                <p class="text-sm text-gray-700">
+                                    Zweck, Pflichtfelder, Antwortoptionen und Verständlichkeit prüfen – am besten in der
+                                    <a href="{{ route('elternabfragen.admin.templates.preview', $version) }}" target="_blank" class="text-blue-700 underline">Elternvorschau</a>.
+                                </p>
+                                @if($version->is_sensitive)
+                                    <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="privacy_checked" value="1" class="mt-1" required> Datenschutzrechtliche bzw. schulinterne Zusatzprüfung ist erfolgt.</label>
+                                @endif
+                                <textarea name="note" rows="2" class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Prüfvermerk (optional)"></textarea>
+                                <button class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold">Freigeben</button>
+                            </form>
+                            <form method="POST" action="{{ route('elternabfragen.admin.templates.reject', $version) }}" class="mt-4 space-y-2 border-t pt-3">
+                                @csrf
+                                <textarea name="note" rows="2" required class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Was soll überarbeitet werden?"></textarea>
+                                <button class="px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm">Zur Überarbeitung zurückgeben</button>
+                            </form>
+                        @endif
+                    </section>
+                @endcan
+            @endif
+
             <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                 <div class="flex flex-wrap items-center gap-2 mb-4">
                     <x-elternabfragen.badge :color="$status->color()">{{ $status->label() }}</x-elternabfragen.badge>
                     @if($version->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensible Inhalte</x-elternabfragen.badge> @endif
+                    @if($version->requires_all_guardians) <x-elternabfragen.badge color="blue" icon="fas fa-user-friends">Bestätigung aller Sorgeberechtigten</x-elternabfragen.badge> @endif
                     @if($template->isArchived()) <x-elternabfragen.badge color="slate">archiviert</x-elternabfragen.badge> @endif
                     <a href="{{ route('elternabfragen.admin.templates.preview', $version) }}" class="ml-auto px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-sm"><i class="fas fa-eye" aria-hidden="true"></i> Elternvorschau</a>
                 </div>
@@ -83,24 +119,7 @@
 
                 @if($status->value === 'in_review')
                     @can('approve elternabfragen')
-                        @if($fourEyesBlocked)
-                            <p class="text-sm text-amber-800 bg-amber-50 p-3 rounded-lg">Vier-Augen-Prinzip: Diese Version muss von einer anderen Person freigegeben werden.</p>
-                        @else
-                            <form method="POST" action="{{ route('elternabfragen.admin.templates.approve', $version) }}" class="space-y-2 border-t pt-3">
-                                @csrf
-                                <p class="text-sm text-gray-700">Pflichtfelder, Antwortoptionen und Verständlichkeit geprüft?</p>
-                                @if($version->is_sensitive)
-                                    <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="privacy_checked" value="1" class="mt-1" required> Datenschutzrechtliche bzw. schulinterne Zusatzprüfung ist erfolgt.</label>
-                                @endif
-                                <textarea name="note" rows="2" class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Prüfvermerk (optional)"></textarea>
-                                <button class="w-full px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold">Freigeben</button>
-                            </form>
-                            <form method="POST" action="{{ route('elternabfragen.admin.templates.reject', $version) }}" class="space-y-2 border-t pt-3">
-                                @csrf
-                                <textarea name="note" rows="2" required class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Was soll überarbeitet werden?"></textarea>
-                                <button class="w-full px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm">Zur Überarbeitung zurückgeben</button>
-                            </form>
-                        @endif
+                        <a href="#pruefung" class="block text-center px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold">Zur Prüfung</a>
                     @endcan
                 @endif
             </section>

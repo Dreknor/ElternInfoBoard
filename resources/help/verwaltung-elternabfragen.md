@@ -34,6 +34,8 @@ Das Modul muss unter **Einstellungen › Module** aktiviert werden.
 
 > Nur erheben, was für den Zweck nötig ist (Datenminimierung).
 
+**Alle Sorgeberechtigten müssen bestätigen:** Für Erklärungen, die beide Elternteile gemeinsam abgeben müssen. Ein Elternteil füllt aus, alle weiteren Sorgeberechtigten (aktuelles Sorgerecht zum Kind) bestätigen genau diese Antwortversion. Erst dann gilt der Fall als erledigt; eine Korrektur setzt die Bestätigungen zurück. Erinnerungen gehen in diesem Zustand nur an die noch fehlenden Personen.
+
 Mit **Zur Prüfung einreichen** geht die Vorlage an die Schulleitung. Kennzeichne Vorlagen mit Gesundheitsdaten oder Einwilligungen als **sensibel** – dann ist eine datenschutzrechtliche Zusatzprüfung Pflicht.
 
 Freigegebene Vorlagen sind **unveränderlich**. Änderungen: **Neue Version anlegen** – laufende Abfragen behalten ihre Version.
@@ -71,6 +73,7 @@ Die Übersicht zeigt je Kind Klasse, **Status**, berechtigte Konten, letzte Bena
 | In Bearbeitung | Entwurf begonnen, nicht abgesendet |
 | Eingereicht | vollständige Antwort liegt vor |
 | Korrektur eingereicht | neue Antwortversion abgegeben |
+| Bestätigung ausstehend | Antwort liegt vor, aber noch nicht alle Sorgeberechtigten haben bestätigt (nur bei entsprechender Vorlage) |
 | Technisches Problem | Zustellung oder Bearbeitung nicht möglich (z. B. kein Konto, keine E-Mail) |
 
 Bei Zustellproblemen erhält die verantwortliche Person eine Mitteilung.

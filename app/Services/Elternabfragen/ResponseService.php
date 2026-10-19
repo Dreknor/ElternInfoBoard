@@ -158,7 +158,7 @@ class ResponseService
                 'correction_reason' => $previous ? (Str::limit(trim((string) $correctionReason), 1000, '') ?: null) : null,
                 'is_current' => true,
                 'channel' => in_array($meta['channel'] ?? null, ['web', 'app'], true) ? $meta['channel'] : 'web',
-                'ip_anonymized' => $this->anonymizeIp($meta['ip'] ?? null),
+                'ip_anonymized' => self::anonymizeIp($meta['ip'] ?? null),
                 'user_agent' => isset($meta['user_agent']) ? Str::limit((string) $meta['user_agent'], 250, '') : null,
                 'submitted_at' => now(),
                 'review_status' => InquiryReviewStatus::Pending,
@@ -173,6 +173,8 @@ class ResponseService
                 'has_problem' => false,
                 'status' => $previous ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted,
             ])->save();
+            // Ggf. „Bestätigung ausstehend“, wenn weitere Sorgeberechtigte bestätigen müssen
+            $locked->refreshStatus();
 
             InquiryDraft::where('assignment_id', $locked->id)->where('user_id', $user->id)->delete();
 
@@ -248,7 +250,7 @@ class ResponseService
     }
 
     /** Technische Nachweisdaten im zulässigen Umfang: letzte Stelle der IP wird entfernt. */
-    private function anonymizeIp(?string $ip): ?string
+    public static function anonymizeIp(?string $ip): ?string
     {
         if (! $ip || ! filter_var($ip, FILTER_VALIDATE_IP)) {
             return null;

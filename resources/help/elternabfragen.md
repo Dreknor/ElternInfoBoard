@@ -14,6 +14,12 @@ Jede Abfrage ist **eindeutig einem Kind** zugeordnet – oben auf der Seite steh
 
 Eine gültige Antwort **eines sorgeberechtigten Elternteils** genügt. Hat der andere Elternteil bereits geantwortet, siehst du das in der Übersicht und bekommst eine Mitteilung.
 
+### Gemeinsame Erklärung: alle Sorgeberechtigten bestätigen
+
+Manche Abfragen müssen von **allen Sorgeberechtigten** getragen werden – das steht dann im Hinweis „Gemeinsame Erklärung“. Ein Elternteil füllt aus, alle weiteren Sorgeberechtigten bekommen eine Mitteilung **„Bitte bestätigen“**. Sie prüfen die Angaben und tippen auf **Angaben bestätigen**. Erst wenn alle bestätigt haben, ist die Abfrage erledigt (Status bis dahin: „Bestätigung ausstehend“).
+
+Bist du mit den Angaben nicht einverstanden, kannst du sie bis zur Frist **korrigieren** statt zu bestätigen. Nach jeder Korrektur müssen die anderen Sorgeberechtigten die neue Fassung erneut bestätigen.
+
 ## Wer darf ausfüllen?
 
 | Beziehung zum Kind | Abfrage sehen | Antworten sehen | Ausfüllen & korrigieren |

@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Benachrichtigung, Erinnerung und Eingangsbestätigung einer Elternabfrage.
+ * Benachrichtigung, Erinnerung, Eingangsbestätigung und Bitte um Bestätigung einer Elternabfrage.
  * Enthält bewusst keine Antwortinhalte (Datenminimierung) – nur Link zur Abfrage.
  */
 class ElternabfrageMail extends Mailable
@@ -20,6 +20,9 @@ class ElternabfrageMail extends Mailable
     public const KIND_REMINDER = 'reminder';
 
     public const KIND_CONFIRMATION = 'confirmation';
+
+    /** Weitere sorgeberechtigte Person soll die eingereichte Antwort bestätigen. */
+    public const KIND_CONFIRMATION_REQUEST = 'confirmation_request';
 
     public string $boardName;
 
@@ -42,6 +45,7 @@ class ElternabfrageMail extends Mailable
         $subject = match ($this->kind) {
             self::KIND_REMINDER => 'Erinnerung: '.$this->inquiryTitle,
             self::KIND_CONFIRMATION => 'Eingangsbestätigung: '.$this->inquiryTitle,
+            self::KIND_CONFIRMATION_REQUEST => 'Bitte bestätigen: '.$this->inquiryTitle,
             default => 'Neue Elternabfrage: '.$this->inquiryTitle,
         };
 

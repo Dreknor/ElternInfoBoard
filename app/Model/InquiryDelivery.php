@@ -22,6 +22,9 @@ class InquiryDelivery extends Model
 
     public const KIND_PROBLEM_NOTICE = 'problem_notice';
 
+    /** Bitte an weitere Sorgeberechtigte, die eingereichte Antwort zu bestätigen. */
+    public const KIND_CONFIRMATION_REQUEST = 'confirmation_request';
+
     public const REMINDER_KINDS = [self::KIND_REMINDER_BEFORE, self::KIND_REMINDER_AFTER, self::KIND_REMINDER_MANUAL];
 
     public const CHANNEL_MAIL = 'mail';
@@ -61,6 +64,7 @@ class InquiryDelivery extends Model
             self::KIND_REMINDER_MANUAL => 'Erinnerung',
             self::KIND_CONFIRMATION => 'Eingangsbestätigung',
             self::KIND_PROBLEM_NOTICE => 'Hinweis Zustellproblem',
+            self::KIND_CONFIRMATION_REQUEST => 'Bitte um Bestätigung',
             default => $this->kind,
         };
     }

@@ -8,6 +8,7 @@ use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryResponse;
 use App\Services\Elternabfragen\FieldSchema;
+use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
 use App\Services\Elternabfragen\ResponseService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -27,6 +28,7 @@ class ParentInquiryController extends Controller
         private readonly InquiryAccess $access,
         private readonly ResponseService $responses,
         private readonly FieldSchema $schema,
+        private readonly GuardianConfirmation $confirmation,
     ) {}
 
     public function index(Request $request): View
@@ -40,7 +42,8 @@ class ParentInquiryController extends Controller
 
         $states = $assignments->mapWithKeys(fn (InquiryAssignment $a) => [$a->id => $this->access->state($user, $a)]);
 
-        [$open, $done] = $assignments->partition(fn (InquiryAssignment $a) => ! $a->isAnswered() && $a->inquiry->isRunning());
+        // Offen: noch nicht beantwortet oder vom Nutzer noch zu bestätigen
+        [$open, $done] = $assignments->partition(fn (InquiryAssignment $a) => (! $a->isAnswered() && $a->inquiry->isRunning()) || $states[$a->id]['can_confirm']);
 
         return view('elternabfragen.parent.index', compact('open', 'done', 'states'));
     }
@@ -85,7 +88,24 @@ class ParentInquiryController extends Controller
             'schema' => $this->schema,
             'editing' => ($state['can_submit'] || ($state['can_correct'] && $request->boolean('korrigieren'))),
             'preview' => false,
+            'confirmations' => $state['can_view_answers'] ? $this->confirmation->overview($assignment) : [],
         ]);
+    }
+
+    /**
+     * Gültige Antwort als weitere sorgeberechtigte Person bestätigen.
+     */
+    public function confirm(Request $request, InquiryAssignment $assignment): RedirectResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate(['confirm' => 'accepted'], [
+            'confirm.accepted' => 'Bitte bestätigen Sie, dass Sie die Angaben geprüft haben und mit ihnen einverstanden sind.',
+        ]);
+
+        $this->confirmation->confirm($assignment, $request->user(), ['channel' => 'web', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+
+        return redirect()->route('elternabfragen.show', $assignment)
+            ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Bestätigung wurde gespeichert.']);
     }
 
     public function saveDraft(Request $request, InquiryAssignment $assignment): RedirectResponse

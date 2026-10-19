@@ -68,6 +68,12 @@
             <p class="font-semibold text-gray-800">Wofür werden die Angaben benötigt?</p>
             <p class="whitespace-pre-line">{{ $version->purpose }}</p>
         </div>
+        @if($version->requires_all_guardians)
+            <p class="p-3 rounded-lg bg-blue-50 text-blue-900">
+                <i class="fas fa-user-friends" aria-hidden="true"></i>
+                <strong>Gemeinsame Erklärung:</strong> Eine sorgeberechtigte Person füllt die Abfrage aus, alle weiteren Sorgeberechtigten bestätigen die Angaben anschließend.
+            </p>
+        @endif
         @if($version->parent_info)
             <details>
                 <summary class="cursor-pointer font-semibold text-gray-800">Weitere Hinweise</summary>
@@ -106,6 +112,7 @@
             @if($isCorrection)
                 <div class="mb-4 p-3 rounded-lg bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm">
                     Sie korrigieren die eingereichte Antwort (Version {{ $current->version }}). Die bisherige Version bleibt nachvollziehbar gespeichert.
+                    @if($version->requires_all_guardians) Nach der Korrektur müssen die weiteren Sorgeberechtigten die neuen Angaben erneut bestätigen. @endif
                     @if($state['correction_until']) Korrektur möglich bis {{ $state['correction_until']->format('d.m.Y, H:i') }} Uhr. @endif
                 </div>
             @elseif($hasDraft)
@@ -181,6 +188,46 @@
             </form>
         @endif
     @elseif($current && $state['can_view_answers'])
+        @if(! empty($confirmations))
+            {{-- Bestätigung durch alle Sorgeberechtigten --}}
+            <section class="rounded-xl border p-4 mb-4 {{ ($state['can_confirm'] ?? false) ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200' }}" aria-labelledby="bestaetigung">
+                <h2 id="bestaetigung" class="text-lg font-semibold text-gray-800">
+                    @if($state['can_confirm'] ?? false)
+                        <i class="fas fa-user-check text-blue-700" aria-hidden="true"></i> Ihre Bestätigung wird benötigt
+                    @else
+                        Bestätigung durch alle Sorgeberechtigten
+                    @endif
+                </h2>
+                <ul class="mt-2 text-sm space-y-1">
+                    @foreach($confirmations as $row)
+                        <li class="flex flex-wrap items-center gap-2">
+                            @if($row['state'] === 'pending')
+                                <i class="far fa-clock text-amber-600" aria-hidden="true"></i> {{ $row['name'] }} <span class="text-gray-500">– Bestätigung ausstehend</span>
+                            @else
+                                <i class="fas fa-check-circle text-green-600" aria-hidden="true"></i> {{ $row['name'] }}
+                                <span class="text-gray-500">– {{ $row['state'] === 'submitted' ? 'eingereicht' : 'bestätigt' }} am {{ $row['at']?->format('d.m.Y, H:i') }} Uhr</span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+                @if($state['can_confirm'] ?? false)
+                    <form method="POST" action="{{ route('elternabfragen.confirm', $assignment) }}" class="mt-4 space-y-3">
+                        @csrf
+                        <p class="text-sm text-gray-700">Bitte prüfen Sie die unten aufgeführten Angaben. Sind sie nicht richtig, können Sie sie stattdessen korrigieren – dann müssen die anderen Sorgeberechtigten erneut bestätigen.</p>
+                        <label class="flex items-start gap-3">
+                            <input type="checkbox" name="confirm" value="1" class="mt-1 h-5 w-5" required>
+                            <span class="text-gray-800">Ich habe die Angaben geprüft und bin mit ihnen einverstanden.</span>
+                        </label>
+                        <button class="w-full sm:w-auto px-5 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700">
+                            <i class="fas fa-check" aria-hidden="true"></i> Angaben bestätigen
+                        </button>
+                    </form>
+                @elseif($state['awaiting_confirmation'] ?? false)
+                    <p class="text-sm text-gray-600 mt-2">Die Abfrage ist erst abgeschlossen, wenn alle Sorgeberechtigten bestätigt haben. Sie wurden darüber benachrichtigt.</p>
+                @endif
+            </section>
+        @endif
+
         <section class="bg-white rounded-xl border border-gray-200 p-4 mb-4" aria-labelledby="eingereicht">
             <h2 id="eingereicht" class="text-lg font-semibold text-gray-800">Eingereichte Angaben</h2>
             <p class="text-sm text-gray-600 mb-2">

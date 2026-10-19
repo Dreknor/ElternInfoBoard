@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::put('{assignment}/draft', [InquiryController::class, 'saveDraft'])->whereNumber('assignment')->name('draft');
         Route::delete('{assignment}/draft', [InquiryController::class, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
         Route::post('{assignment}/submit', [InquiryController::class, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::post('{assignment}/confirm', [InquiryController::class, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
         Route::get('{assignment}/pdf', [InquiryController::class, 'pdf'])->whereNumber('assignment')->name('pdf');
         Route::get('{assignment}/files/{field}', [InquiryController::class, 'file'])->whereNumber('assignment')->name('file');
     });

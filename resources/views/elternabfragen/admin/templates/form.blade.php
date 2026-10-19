@@ -83,6 +83,11 @@
                 <input type="checkbox" name="is_sensitive" value="1" class="mt-1 h-4 w-4" @checked(old('is_sensitive', $version->is_sensitive))>
                 <span class="text-sm text-gray-700"><strong>Sensible Inhalte</strong> (z. B. Gesundheitsdaten, Einwilligungen in Foto-/Videoaufnahmen) – vor der Freigabe ist eine datenschutzrechtliche Zusatzprüfung zu bestätigen.</span>
             </label>
+            <label class="md:col-span-2 flex items-start gap-3">
+                <input type="checkbox" name="requires_all_guardians" value="1" class="mt-1 h-4 w-4" @checked(old('requires_all_guardians', $version->requires_all_guardians))>
+                <span class="text-sm text-gray-700"><strong>Alle Sorgeberechtigten müssen bestätigen</strong> (z. B. bei Erklärungen, die beide Elternteile gemeinsam abgeben müssen) –
+                    eine Person füllt aus, alle weiteren Sorgeberechtigten bestätigen die Angaben. Erst dann gilt die Abfrage für das Kind als erledigt.</span>
+            </label>
         </section>
 
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">

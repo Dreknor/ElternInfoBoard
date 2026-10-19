@@ -794,6 +794,7 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
         Route::post('{assignment}/entwurf', [$parent, 'saveDraft'])->whereNumber('assignment')->name('draft');
         Route::delete('{assignment}/entwurf', [$parent, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
         Route::post('{assignment}/absenden', [$parent, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::post('{assignment}/bestaetigen', [$parent, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
         Route::get('{assignment}/bestaetigung.pdf', [$parent, 'pdf'])->whereNumber('assignment')->name('pdf');
         Route::get('{assignment}/datei/{field}', [$parent, 'file'])->whereNumber('assignment')->name('file');
     });

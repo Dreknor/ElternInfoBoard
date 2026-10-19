@@ -102,7 +102,7 @@
             {{-- Freigabe --}}
             @if($status === 'pending_approval')
                 @can('approve elternabfragen')
-                    <section class="bg-white rounded-xl shadow-sm border-2 border-amber-300 p-5">
+                    <section id="pruefung" class="bg-white rounded-xl shadow-sm border-2 border-amber-300 p-5 scroll-mt-4">
                         <h2 class="font-semibold text-gray-800 mb-2">Verbindliche Freigabe</h2>
                         @if($fourEyesBlocked)
                             <p class="text-sm text-amber-800">Vier-Augen-Prinzip: Diese Abfrage muss von einer anderen Person freigegeben werden.</p>
@@ -203,7 +203,7 @@
                                         @endphp
                                         <tr class="{{ $assignment->has_problem ? 'bg-red-50' : '' }}">
                                             <td class="px-3 py-2">
-                                                @if(! $assignment->isAnswered())
+                                                @if(! $assignment->isComplete())
                                                     <input type="checkbox" name="assignment_ids[]" value="{{ $assignment->id }}" x-model="selected" aria-label="{{ $assignment->childName() }} auswählen" @disabled($blocked !== null) title="{{ $blocked }}">
                                                 @endif
                                             </td>

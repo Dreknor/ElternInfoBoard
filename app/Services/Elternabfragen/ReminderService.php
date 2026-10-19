@@ -35,7 +35,7 @@ class ReminderService
         if ($inquiry->status !== InquiryStatus::Running) {
             return 'Abfrage läuft nicht.';
         }
-        if ($assignment->isAnswered()) {
+        if ($assignment->isComplete()) {
             return 'Bereits eingereicht.';
         }
         if ($now->greaterThan($assignment->effectiveDeadline())) {
@@ -65,7 +65,9 @@ class ReminderService
      */
     public function remindManually(Inquiry $inquiry, ?array $assignmentIds, int $actorId): array
     {
-        $query = $inquiry->assignments()->with('inquiry')->whereNull('current_response_id');
+        $query = $inquiry->assignments()->with('inquiry')->where(fn ($q) => $q
+            ->whereNull('current_response_id')
+            ->orWhere('status', InquiryAssignmentStatus::AwaitingConfirmation->value));
         if ($assignmentIds !== null) {
             $query->whereIn('id', $assignmentIds);
         }
@@ -87,9 +89,9 @@ class ReminderService
             ->where('auto_reminders', true)
             ->get()
             ->each(function (Inquiry $inquiry) use ($now, $daysBefore, &$sent) {
+                // offen oder beantwortet, aber noch nicht von allen Sorgeberechtigten bestätigt
                 $open = $inquiry->assignments()->with('inquiry')
-                    ->whereNull('current_response_id')
-                    ->whereIn('status', [InquiryAssignmentStatus::Open->value, InquiryAssignmentStatus::InProgress->value, InquiryAssignmentStatus::Problem->value])
+                    ->whereIn('status', [InquiryAssignmentStatus::Open->value, InquiryAssignmentStatus::InProgress->value, InquiryAssignmentStatus::Problem->value, InquiryAssignmentStatus::AwaitingConfirmation->value])
                     ->get();
 
                 // vor Fristende: einmalig im Zeitfenster X Tage vor der (ursprünglichen) Frist

@@ -41,6 +41,10 @@ class DeliveryService
     public function remind(InquiryAssignment $assignment, string $kind, string $trigger, ?int $actorId): bool
     {
         if ($assignment->isAnswered()) {
+            // Beantwortet, aber noch nicht von allen bestätigt: nur die Fehlenden erinnern
+            app(GuardianConfirmation::class)->pendingUsers($assignment)
+                ->each(fn (User $user) => $this->requestConfirmation($assignment, $user, $trigger, $actorId));
+
             return true;
         }
 
@@ -84,6 +88,15 @@ class DeliveryService
             }
         }
 
+        $confirmation = app(GuardianConfirmation::class);
+        if ($confirmation->required($assignment)) {
+            // Weitere Sorgeberechtigte müssen genau diese Version bestätigen
+            $confirmation->pendingUsers($assignment)
+                ->each(fn (User $user) => $this->requestConfirmation($assignment, $user, 'auto', null, $submitter));
+
+            return;
+        }
+
         $assignment->recipients()->with('user')->get()
             ->filter(fn (InquiryRecipient $r) => $r->user && $r->user_id !== $response->user_id)
             ->each(fn (InquiryRecipient $r) => Notification::create([
@@ -95,6 +108,59 @@ class DeliveryService
                 'url' => $url,
                 'icon' => self::ICON,
             ]));
+    }
+
+    /**
+     * Bitte an eine weitere sorgeberechtigte Person, die eingereichte Antwort zu bestätigen
+     * (nach dem Einreichen und als Erinnerung).
+     */
+    public function requestConfirmation(InquiryAssignment $assignment, User $user, string $trigger, ?int $actorId, ?User $submitter = null): bool
+    {
+        $inquiry = $assignment->inquiry;
+        $url = url('elternabfragen/'.$assignment->id);
+        $kind = InquiryDelivery::KIND_CONFIRMATION_REQUEST;
+
+        Notification::create([
+            'type' => self::NOTIFICATION_TYPE,
+            'user_id' => $user->id,
+            'title' => 'Bitte bestätigen: Elternabfrage',
+            'message' => '„'.$inquiry->title.'“ für '.($assignment->child?->first_name ?? 'Ihr Kind').' wurde'
+                .($submitter ? ' von '.$submitter->name : '').' beantwortet. Bitte prüfen und bestätigen Sie die Angaben.',
+            'url' => $url,
+            'icon' => self::ICON,
+            'important' => true,
+        ]);
+        $this->log($assignment, $user->id, $kind, InquiryDelivery::CHANNEL_BELL, $trigger, $actorId, true);
+
+        if (! $inquiry->notify_mail || blank($user->email)) {
+            return true;
+        }
+
+        return $this->sendMail($assignment, $user, $kind, $trigger, $actorId, new ElternabfrageMail(
+            kind: ElternabfrageMail::KIND_CONFIRMATION_REQUEST,
+            userName: $user->name,
+            inquiryTitle: $inquiry->title,
+            childName: $assignment->childName(),
+            deadline: $assignment->effectiveDeadline()->format('d.m.Y H:i'),
+            url: $url,
+        )) === null;
+    }
+
+    /**
+     * Alle Sorgeberechtigten haben bestätigt: Hinweis an alle Beteiligten.
+     */
+    public function confirmationsComplete(InquiryAssignment $assignment): void
+    {
+        $inquiry = $assignment->inquiry;
+
+        app(GuardianConfirmation::class)->guardians($assignment)->each(fn (User $user) => Notification::create([
+            'type' => self::NOTIFICATION_TYPE,
+            'user_id' => $user->id,
+            'title' => 'Abfrage vollständig bestätigt',
+            'message' => '„'.$inquiry->title.'“ für '.($assignment->child?->first_name ?? 'Ihr Kind').' wurde von allen Sorgeberechtigten bestätigt.',
+            'url' => url('elternabfragen/'.$assignment->id),
+            'icon' => self::ICON,
+        ]));
     }
 
     /**
