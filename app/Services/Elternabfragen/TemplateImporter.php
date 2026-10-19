@@ -3,6 +3,7 @@
 namespace App\Services\Elternabfragen;
 
 use App\Enums\InquiryFieldType;
+use App\Support\UploadedSpreadsheet;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -33,7 +34,7 @@ class TemplateImporter
      */
     public function import(UploadedFile $file): array
     {
-        $sheets = Excel::toArray(new class {}, $file);
+        $sheets = UploadedSpreadsheet::with($file, fn (string $path) => Excel::toArray(new class {}, $path));
         $rows = array_values(array_filter($sheets[0] ?? [], fn ($row) => array_filter((array) $row, fn ($v) => trim((string) $v) !== '') !== []));
 
         return $this->fromRows($rows);

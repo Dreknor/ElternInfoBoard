@@ -10,6 +10,7 @@ use App\Imports\SchuelerImportRows;
 use App\Imports\UsersImport;
 use App\Imports\VereinImport;
 use App\Services\Import\SchuelerImportService;
+use App\Support\UploadedSpreadsheet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\ElternImportVorlage;
@@ -446,7 +447,7 @@ class ImportController extends Controller implements HasMiddleware
                 $user->removeRole($role);
             }
 
-            Excel::import(new VereinImport($group), $request->file('file'));
+            UploadedSpreadsheet::with($request->file('file'), fn (string $path) => Excel::import(new VereinImport($group), $path));
             $Meldung = 'Mitglieder wurden importiert';
 
             return redirect()->to(url('users'))->with([

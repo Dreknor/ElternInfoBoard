@@ -149,4 +149,41 @@ class KindauswahlImportVorschauTest extends ElternabfragenTestCase
 
         $this->assertSame($count, InquiryTemplateVersion::count());
     }
+
+    #[Test]
+    public function vorschau_zeigt_fehler_statt_zurueckzuleiten(): void
+    {
+        $this->actingAs($this->sekretariat)->post(route('elternabfragen.admin.templates.preview-draft'), [
+            'title' => 'Unfertig',
+            'default_deadline_days' => 'abc',
+            'fields_json' => json_encode([
+                ['type' => 'radio', 'label' => 'Nur eine Option', 'options' => ['A']],
+                ['type' => 'text', 'label' => 'Bemerkung'],
+            ]),
+        ])->assertOk()
+            ->assertSee('Unfertig')
+            ->assertSee('Bemerkung')
+            ->assertSee('mindestens zwei Antwortoptionen');
+    }
+
+    #[Test]
+    public function editor_behaelt_felder_nach_fehler_und_verwirft_lokalen_stand_nach_speichern(): void
+    {
+        $this->actingAs($this->sekretariat);
+        $form = route('elternabfragen.admin.templates.create');
+
+        $this->from($form)->post(route('elternabfragen.admin.templates.store'), [
+            'title' => 'Fehler', 'purpose' => 'Test', 'default_deadline_days' => 10, 'draft_key' => 'elternabfragen.vorlage.neu',
+            'fields_json' => json_encode([['type' => 'radio', 'label' => 'Feld mit Fehler', 'options' => ['A']]]),
+        ])->assertRedirect($form)->assertSessionHasErrors('fields.0');
+
+        $this->get($form)->assertOk()
+            ->assertSee('Feld mit Fehler')
+            ->assertSee('Bitte die markierten Felder korrigieren');
+
+        $this->post(route('elternabfragen.admin.templates.store'), [
+            'title' => 'Ok', 'purpose' => 'Test', 'default_deadline_days' => 10, 'draft_key' => 'elternabfragen.vorlage.neu',
+            'fields_json' => json_encode([['type' => 'yes_no', 'label' => 'Frage']]),
+        ])->assertSessionHas('templateDraftSaved', 'elternabfragen.vorlage.neu');
+    }
 }

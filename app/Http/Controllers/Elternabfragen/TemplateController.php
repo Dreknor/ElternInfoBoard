@@ -17,6 +17,7 @@ use App\Services\Elternabfragen\TemplateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -161,32 +162,27 @@ class TemplateController extends Controller
      */
     public function previewDraft(Request $request, FieldSchema $schema): View
     {
-        $data = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'purpose' => 'nullable|string|max:5000',
-            'parent_info' => 'nullable|string|max:10000',
-            'responsible_office' => 'nullable|string|max:255',
-            'default_deadline_days' => 'nullable|integer|min:1|max:365',
-            'retention_days' => 'nullable|integer|min:1|max:3650',
-            'retention_note' => 'nullable|string|max:2000',
-            'fields_json' => 'required|json',
-        ]);
+        // Die Vorschau leitet bei Fehlern nicht zurück (neuer Tab), sondern zeigt Hinweise an.
+        $text = fn (string $key, int $max) => is_string($request->input($key)) ? Str::limit(trim($request->input($key)), $max, '') : null;
+        $days = fn (string $key, int $max) => filter_var($request->input($key), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => $max]]) ?: null;
+        $fields = json_decode((string) $request->input('fields_json'), true);
+        [$normalized, $errors] = $schema->normalizeLenient(is_array($fields) ? $fields : []);
 
         $version = new InquiryTemplateVersion([
-            'title' => ($data['title'] ?? null) ?: 'Neue Vorlage',
-            'purpose' => ($data['purpose'] ?? null) ?: '(Zweck noch nicht angegeben)',
-            'parent_info' => $data['parent_info'] ?? null,
-            'responsible_office' => $data['responsible_office'] ?? null,
-            'default_deadline_days' => $data['default_deadline_days'] ?? 14,
-            'retention_days' => $data['retention_days'] ?? null,
-            'retention_note' => $data['retention_note'] ?? null,
-            'fields' => $schema->normalizeDefinition(json_decode($data['fields_json'], true) ?: []),
+            'title' => $text('title', 255) ?: 'Neue Vorlage',
+            'purpose' => $text('purpose', 5000) ?: '(Zweck noch nicht angegeben)',
+            'parent_info' => $text('parent_info', 10000) ?: null,
+            'responsible_office' => $text('responsible_office', 255) ?: null,
+            'default_deadline_days' => $days('default_deadline_days', 365) ?? 14,
+            'retention_days' => $days('retention_days', 3650),
+            'retention_note' => $text('retention_note', 2000) ?: null,
+            'fields' => $normalized,
         ]);
 
-        return $this->previewView($version, $schema, null, null);
+        return $this->previewView($version, $schema, null, null, array_values($errors));
     }
 
-    private function previewView(InquiryTemplateVersion $version, FieldSchema $schema, ?string $back, ?string $backLabel): View
+    private function previewView(InquiryTemplateVersion $version, FieldSchema $schema, ?string $back, ?string $backLabel, array $warnings = []): View
     {
         $inquiry = new Inquiry([
             'title' => $version->title,
@@ -217,6 +213,7 @@ class TemplateController extends Controller
             'preview' => true,
             'previewBack' => $back,
             'previewBackLabel' => $backLabel,
+            'previewWarnings' => $warnings,
         ]);
     }
 
@@ -262,6 +259,11 @@ class TemplateController extends Controller
             $message = 'Vorlage gespeichert und zur Prüfung eingereicht.';
         }
 
-        return redirect()->route('elternabfragen.admin.templates.show', $version)->with(['type' => 'success', 'Meldung' => $message]);
+        return redirect()->route('elternabfragen.admin.templates.show', $version)->with([
+            'type' => 'success',
+            'Meldung' => $message,
+            // Lokal zwischengespeicherten Editor-Stand verwerfen (siehe templates/form)
+            'templateDraftSaved' => $request->input('draft_key'),
+        ]);
     }
 }

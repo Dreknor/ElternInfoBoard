@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ImportLosungenRequest;
 use App\Imports\LosungenImport;
 use App\Model\Losung;
+use App\Support\UploadedSpreadsheet;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
@@ -42,7 +43,7 @@ class LosungController extends Controller
             ]);
         }
 
-        Excel::import(new LosungenImport, $request->file('files'));
+        UploadedSpreadsheet::with($request->file('files'), fn (string $path) => Excel::import(new LosungenImport, $path));
 
         return redirect(url('/'))->with([
             'type' => 'success',

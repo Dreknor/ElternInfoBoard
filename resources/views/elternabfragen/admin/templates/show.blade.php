@@ -133,3 +133,11 @@
     </div>
 </div>
 @endsection
+
+@if(session('templateDraftSaved'))
+    @push('js')
+    <script>
+        try { localStorage.removeItem(@js(session('templateDraftSaved'))); } catch (e) {}
+    </script>
+    @endpush
+@endif

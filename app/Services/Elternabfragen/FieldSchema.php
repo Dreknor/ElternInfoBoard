@@ -43,6 +43,24 @@ class FieldSchema
      */
     public function normalizeDefinition(array $fields): array
     {
+        [$normalized, $errors] = $this->normalizeLenient($fields);
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Wie normalizeDefinition(), wirft aber keine Ausnahme: liefert die
+     * normalisierten Felder und die Fehlermeldungen (z. B. für die Vorschau).
+     *
+     * @param  array<int, array<string, mixed>>  $fields
+     * @return array{0: array<int, array<string, mixed>>, 1: array<string, string>}
+     */
+    public function normalizeLenient(array $fields): array
+    {
         $errors = [];
         $normalized = [];
         $keys = [];
@@ -127,11 +145,7 @@ class FieldSchema
             $errors['fields'] = 'Die Vorlage benötigt mindestens ein Eingabefeld.';
         }
 
-        if ($errors !== []) {
-            throw ValidationException::withMessages($errors);
-        }
-
-        return $normalized;
+        return [$normalized, $errors];
     }
 
     /**

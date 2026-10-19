@@ -617,10 +617,22 @@
                 $('#searchForm').addClass('w-75').removeClass('w-auto');
             });
 
-            $('button[type=submit]').click(function () {
-                if (this.form) {
-                    this.form.submit();
-                    this.disabled = true;
+            // Doppeltes Absenden verhindern, ohne die normale Übermittlung zu umgehen:
+            // form.submit() würde submit-Handler (z. B. Alpine), HTML5-Prüfung, den Wert des
+            // geklickten Buttons sowie formaction/formtarget überspringen. Die Buttons werden
+            // erst nach dem Zusammenstellen der Formulardaten deaktiviert.
+            $(document).on('submit', 'form', function (e) {
+                const submitter = e.originalEvent ? e.originalEvent.submitter : null;
+                if (e.isDefaultPrevented() || this.target === '_blank' || (submitter && submitter.formTarget === '_blank')) {
+                    return;
+                }
+                const buttons = $(this).find('button[type=submit]');
+                setTimeout(function () { buttons.prop('disabled', true); }, 0);
+            });
+            // Nach „Zurück“ aus dem Browser-Cache wieder bedienbar machen
+            window.addEventListener('pageshow', function (e) {
+                if (e.persisted) {
+                    $('button[type=submit]').prop('disabled', false);
                 }
             });
 

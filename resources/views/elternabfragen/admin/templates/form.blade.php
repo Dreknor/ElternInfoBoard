@@ -5,6 +5,7 @@
 @section('content')
 @php
     $isNew = ! $version->exists;
+    $draftKey = 'elternabfragen.vorlage.'.($isNew ? 'neu' : $version->id);
     $fieldsJson = old('fields_json', json_encode($version->fields ?? [], JSON_UNESCAPED_UNICODE));
     $label = 'block text-sm font-medium text-gray-700 mb-1';
     $input = 'block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -22,10 +23,22 @@
     @endif
 
     <form method="POST" action="{{ $isNew ? route('elternabfragen.admin.templates.store') : route('elternabfragen.admin.templates.update', $version) }}"
-          x-data="templateBuilder(@js(json_decode($fieldsJson, true) ?: []))" x-on:submit="sync()">
+          x-data="templateBuilder(@js(json_decode($fieldsJson, true) ?: []), {
+              draftKey: @js($draftKey),
+              serverUpdatedAt: @js($version->updated_at ? $version->updated_at->getTimestampMs() : 0),
+              hasOldInput: @js(old('fields_json') !== null),
+              errors: @js($errors->getMessages()),
+          })"
+          x-on:submit="sync()" x-on:input.debounce.500ms="saveDraft()" x-on:change="saveDraft()">
         @csrf
         @unless($isNew) @method('PUT') @endunless
         <input type="hidden" name="fields_json" x-ref="json" value="{{ $fieldsJson }}">
+        <input type="hidden" name="draft_key" value="{{ $draftKey }}">
+
+        <div x-show="restoredAt" x-cloak class="mb-4 p-4 rounded-lg bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm flex flex-wrap items-center justify-between gap-2" role="status">
+            <span><i class="fas fa-history" aria-hidden="true"></i> Ungespeicherter Bearbeitungsstand vom <strong x-text="restoredAt"></strong> wurde wiederhergestellt.</span>
+            <button type="button" x-on:click="discardDraft()" class="px-3 py-1.5 rounded-lg border border-amber-400 bg-white text-amber-900">Verwerfen und gespeicherten Stand laden</button>
+        </div>
 
         <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 grid gap-4 md:grid-cols-2">
             <h2 class="md:col-span-2 font-semibold text-gray-800">Grunddaten</h2>
@@ -93,6 +106,15 @@
                 Excel-Liste: Jede Spaltenüberschrift der ersten Zeile wird zu einem Feld. Stehen darunter schon Werte (z. B. eine bisher ausgefüllte Liste),
                 wird daraus der Feldtyp abgeleitet (Ja/Nein, Datum, Auswahl). Spalten wie Name, Vorname oder Klasse entfallen – die Zuordnung zum Kind erfolgt automatisch.
             </p>
+            @php($fieldErrors = collect($errors->getMessages())->filter(fn ($messages, $key) => $key === 'fields' || str_starts_with($key, 'fields.'))->flatten())
+            @if($fieldErrors->isNotEmpty())
+                <div class="mb-4 p-3 rounded-lg bg-red-50 border-l-4 border-red-500 text-red-900 text-sm" role="alert">
+                    <strong>Bitte die markierten Felder korrigieren:</strong>
+                    <ul class="list-disc ml-5 mt-1">
+                        @foreach($fieldErrors as $message)<li>{{ $message }}</li>@endforeach
+                    </ul>
+                </div>
+            @endif
             <div x-show="importMessage" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="importError ? 'bg-red-50 text-red-900' : 'bg-green-50 text-green-900'" role="status" x-text="importMessage"></div>
 
             <template x-if="fields.length === 0">
@@ -101,7 +123,8 @@
 
             <div class="space-y-4">
                 <template x-for="(field, index) in fields" :key="field._id">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="border rounded-lg p-4 bg-gray-50" :class="fieldError(index) ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-200'" :id="'field_' + field._id">
+                        <p x-show="fieldError(index)" x-cloak class="mb-3 text-sm text-red-700" role="alert"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> <span x-text="fieldError(index)"></span></p>
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <span class="text-xs font-semibold uppercase tracking-wide text-gray-600" x-text="(index + 1) + '. ' + types[field.type]"></span>
                             <div class="flex gap-1">
@@ -174,6 +197,15 @@
                     </div>
                 </template>
             </div>
+
+            <div x-show="fields.length > 0" x-cloak class="flex flex-wrap items-center justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
+                <select x-model="newType" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" aria-label="Feldtyp für neues Feld am Ende">
+                    @foreach($fieldTypes as $value => $typeLabel)
+                        <option value="{{ $value }}">{{ $typeLabel }}</option>
+                    @endforeach
+                </select>
+                <button type="button" x-on:click="add()" class="px-3 py-2 rounded-lg bg-gray-800 text-white text-sm"><i class="fas fa-plus" aria-hidden="true"></i> Feld hinzufügen</button>
+            </div>
         </section>
 
         <div class="flex flex-wrap gap-3">
@@ -188,7 +220,7 @@
 
 @push('js')
 <script>
-    function templateBuilder(initial) {
+    function templateBuilder(initial, options) {
         let seq = 0;
         const prepare = (f) => Object.assign({
             key: '', type: 'text', label: '', help: '', required: false, options: [], min_length: '', max_length: '',
@@ -202,8 +234,26 @@
             importMessage: '',
             importError: false,
             fields: (initial || []).map(prepare),
-            add() { this.fields.push(prepare({ type: this.newType, required: this.newType !== 'info' })); },
-            remove(i) { if (confirm('Feld entfernen?')) this.fields.splice(i, 1); },
+            errors: options.errors || {},
+            restoredAt: '',
+            init() {
+                this.restoreDraft();
+                // Verstecktes Feld stets aktuell halten – auch falls das Formular ohne submit-Event abgeschickt wird
+                this.$refs.json.value = JSON.stringify(this.serialize());
+                this.$watch('fields', () => this.sync());
+                const first = this.fields.find((f, i) => this.fieldError(i));
+                if (first) this.$nextTick(() => document.getElementById('field_' + first._id)?.scrollIntoView({ block: 'center' }));
+            },
+            fieldError(i) { return (this.errors['fields.' + i] || [])[0] || ''; },
+            add() {
+                const field = prepare({ type: this.newType, required: this.newType !== 'info' });
+                this.fields.push(field);
+                this.$nextTick(() => {
+                    document.getElementById('field_' + field._id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('label_' + field._id)?.focus({ preventScroll: true });
+                });
+            },
+            remove(i) { if (confirm('Feld entfernen?')) { this.fields.splice(i, 1); this.errors = {}; } },
             async importList(event) {
                 const file = event.target.files[0];
                 event.target.value = '';
@@ -228,14 +278,48 @@
                     this.importing = false;
                 }
             },
-            move(i, d) { const f = this.fields.splice(i, 1)[0]; this.fields.splice(i + d, 0, f); },
-            sync() {
-                this.$refs.json.value = JSON.stringify(this.fields.map(f => ({
+            move(i, d) { const f = this.fields.splice(i, 1)[0]; this.fields.splice(i + d, 0, f); this.errors = {}; },
+            serialize() {
+                return this.fields.map(f => ({
                     key: f.key, type: f.type, label: f.label, help: f.help, required: !!f.required,
                     options: f.optionsText.split('\n').map(o => o.trim()).filter(Boolean),
                     min_length: f.min_length || null, max_length: f.max_length || null,
                     format: f.format || null, error_message: f.error_message, consent_text: f.consent_text,
-                })));
+                }));
+            },
+            sync() {
+                this.$refs.json.value = JSON.stringify(this.serialize());
+                this.saveDraft();
+            },
+            // Bearbeitungsstand lokal im Browser sichern, damit bei Fehlern (z. B. abgelaufene Sitzung) nichts verloren geht.
+            // Nach erfolgreichem Speichern wird er auf der Vorlagenseite verworfen.
+            saveDraft() {
+                const inputs = {};
+                this.$root.querySelectorAll('input[name], textarea[name], select[name]').forEach(el => {
+                    if (['_token', '_method', 'fields_json', 'draft_key', 'submit_review'].includes(el.name)) return;
+                    inputs[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+                });
+                try {
+                    localStorage.setItem(options.draftKey, JSON.stringify({ savedAt: Date.now(), inputs, fields: this.serialize() }));
+                } catch (e) {}
+            },
+            restoreDraft() {
+                let draft = null;
+                try { draft = JSON.parse(localStorage.getItem(options.draftKey) || 'null'); } catch (e) {}
+                // Abgesendete Eingaben (nach Validierungsfehler) haben Vorrang; Stände älter als der gespeicherte werden ignoriert.
+                if (!draft || options.hasOldInput || draft.savedAt <= options.serverUpdatedAt) return;
+                if (JSON.stringify(draft.fields) === JSON.stringify(this.serialize())) return;
+                this.fields = (draft.fields || []).map(prepare);
+                Object.entries(draft.inputs || {}).forEach(([name, value]) => {
+                    const el = this.$root.querySelector('[name="' + CSS.escape(name) + '"]');
+                    if (!el) return;
+                    if (el.type === 'checkbox') el.checked = !!value; else el.value = value;
+                });
+                this.restoredAt = new Date(draft.savedAt).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+            },
+            discardDraft() {
+                try { localStorage.removeItem(options.draftKey); } catch (e) {}
+                window.location.reload();
             },
         };
     }

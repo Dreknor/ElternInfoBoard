@@ -19,6 +19,16 @@
                 Ungespeicherter Stand des Editors – schließen Sie diesen Tab, um weiterzuarbeiten.
             @endif
         </div>
+        @if(! empty($previewWarnings))
+            <div class="mb-4 p-3 rounded-lg bg-red-50 border-l-4 border-red-500 text-red-900 text-sm" role="alert">
+                <strong>Die Vorlage kann so noch nicht gespeichert werden:</strong>
+                <ul class="list-disc ml-5 mt-1">
+                    @foreach($previewWarnings as $warning)
+                        <li>{{ $warning }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     @else
         <a href="{{ route('elternabfragen.index') }}" class="text-sm text-blue-700 hover:underline"><i class="fas fa-arrow-left" aria-hidden="true"></i> Alle Abfragen</a>
     @endif
