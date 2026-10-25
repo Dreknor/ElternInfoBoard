@@ -14,13 +14,6 @@
                 <i class="fas fa-arrow-left"></i>
                 Zurück zur Übersicht
             </a>
-            @if($canManage)
-                <a href="{{ route('listen.preview', $liste->id) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-medium rounded-lg transition-colors duration-200">
-                    <i class="fas fa-eye"></i>
-                    Vorschau
-                </a>
-            @endif
         </div>
 
         @if($preview)
@@ -53,6 +46,11 @@
                                class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-teal-600 font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-print"></i>
                                 <span>Druck</span>
+                            </a>
+                            <a href="{{ route('listen.preview', $liste->id) }}"
+                               class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-amber-700 font-medium rounded-lg transition-colors duration-200">
+                                <i class="fas fa-eye"></i>
+                                <span>Vorschau</span>
                             </a>
 
                             {{-- iCal-Download-Dropdown --}}
