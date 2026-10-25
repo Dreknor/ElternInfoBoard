@@ -83,7 +83,7 @@ class VereinImport implements ToCollection, WithHeadingRow
                     ]);
                 }
 
-                // TODO-1.2: Willkommens-E-Mail für neue Benutzer versenden
+                // Willkommens-E-Mail für neue Benutzer versenden
                 if ($user1->wasRecentlyCreated) {
                     try {
                         $emailSettings = app(EmailSetting::class);
@@ -94,7 +94,7 @@ class VereinImport implements ToCollection, WithHeadingRow
                 }
 
                 $user1->assignRole('Vereinsmitglied');
-                // TODO-1.12: syncWithoutDetaching statt attach() um Duplikate zu vermeiden
+                // syncWithoutDetaching, damit keine doppelten Gruppenzuordnungen entstehen
                 $user1->groups()->syncWithoutDetaching([$this->Gruppe->id]);
 
             }

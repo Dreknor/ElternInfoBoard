@@ -83,8 +83,8 @@ class User extends Authenticatable implements Auditable
             'last_online_at' => 'datetime',
             'track_login' => 'boolean',
             'changeSettings' => 'boolean',
-            'is_active' => 'boolean',        // TODO-2.5
-            'deactivated_at' => 'datetime',  // TODO-2.5
+            'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
             'messenger_discoverable' => 'boolean',
             'ucs_synced_at' => 'datetime',
         ];

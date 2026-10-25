@@ -4,7 +4,7 @@ Stand: 28.09.2026 · optional, standardmäßig aus (`UCS_ENABLED=false`)
 
 Die Integration übernimmt Eltern, Kinder und Klassen aus UCS@school (Kelvin REST API)
 und erlaubt den Login über den Schul-IdP (Keycloak/OIDC). Ohne Aktivierung ändert sich
-am Verhalten nichts. Die Arbeitspakete stehen in `docs/todos/01–12`; der Code verweist
+am Verhalten nichts. Der Code verweist
 mit `§` auf die Abschnitte dieses Dokuments.
 
 ---

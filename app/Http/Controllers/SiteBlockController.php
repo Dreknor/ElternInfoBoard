@@ -112,7 +112,6 @@ class SiteBlockController extends Controller implements HasMiddleware
         return redirect()->back()->with('success', 'Bilder wurde hinzugefügt');
     }
 
-    // TODO: Add this method to the SiteBlockController
     public function blockPostionUp(SiteBlock $block)
     {
         Cache::delete('site'.$block->site_id);
