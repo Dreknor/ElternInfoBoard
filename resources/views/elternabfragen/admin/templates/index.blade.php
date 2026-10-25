@@ -2,63 +2,65 @@
 
 @section('title', '| Elternabfragen · Vorlagen')
 
+@can('manage elternabfragen')
+    @section('ea-actions')
+        <a href="{{ route('elternabfragen.admin.templates.create') }}" class="ea-btn ea-btn-light">
+            <i class="fas fa-plus" aria-hidden="true"></i> Neue Vorlage
+        </a>
+    @endsection
+@endcan
+
 @section('content')
 <div class="container-fluid px-4 py-6">
-    @include('elternabfragen.admin._nav', ['title' => 'Vorlagen', 'subtitle' => 'Geprüfte, versionierte Vorlagen für wiederkehrende Abfragen'])
+    @include('elternabfragen.admin._nav', ['title' => 'Vorlagen', 'subtitle' => 'Geprüfte, versionierte Vorlagen für wiederkehrende Abfragen', 'icon' => 'fas fa-layer-group'])
 
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div class="flex gap-2 text-sm">
-            <a href="{{ route('elternabfragen.admin.templates.index') }}" class="px-3 py-1.5 rounded-lg {{ $archive ? 'bg-white border' : 'bg-blue-600 text-white' }}">Aktiv</a>
-            <a href="{{ route('elternabfragen.admin.templates.index', ['archiv' => 1]) }}" class="px-3 py-1.5 rounded-lg {{ $archive ? 'bg-blue-600 text-white' : 'bg-white border' }}">Archiv</a>
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+        <a href="{{ route('elternabfragen.admin.templates.index') }}" class="ea-chip {{ $archive ? '' : 'ea-chip-active' }}" @unless($archive) aria-current="page" @endunless><i class="fas fa-folder-open" aria-hidden="true"></i> Aktiv</a>
+        <a href="{{ route('elternabfragen.admin.templates.index', ['archiv' => 1]) }}" class="ea-chip {{ $archive ? 'ea-chip-active' : '' }}" @if($archive) aria-current="page" @endif><i class="fas fa-archive" aria-hidden="true"></i> Archiv</a>
+    </div>
+
+    @if($templates->isEmpty())
+        <div class="ea-card">
+            <div class="ea-empty">
+                <div class="ea-empty-icon"><i class="fas fa-layer-group" aria-hidden="true"></i></div>
+                <p class="font-semibold ea-text mb-1">Keine Vorlagen vorhanden.</p>
+                <p class="text-sm mb-0">Eine Vorlage beschreibt Zweck und Formularfelder einer wiederkehrenden Abfrage.</p>
+            </div>
         </div>
-        @can('manage elternabfragen')
-            <a href="{{ route('elternabfragen.admin.templates.create') }}" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
-                <i class="fas fa-plus" aria-hidden="true"></i> Neue Vorlage
-            </a>
-        @endcan
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-        <table class="min-w-full text-sm">
-            <thead class="bg-gray-50 text-left text-gray-600">
-                <tr>
-                    <th class="px-4 py-3">Vorlage</th>
-                    <th class="px-4 py-3">Kategorie</th>
-                    <th class="px-4 py-3">Freigegeben</th>
-                    <th class="px-4 py-3">Bearbeitung</th>
-                    <th class="px-4 py-3"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                @forelse($templates as $template)
-                    @php $latest = $template->latestVersion; $approved = $template->approvedVersion; @endphp
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3">
-                            <a href="{{ route('elternabfragen.admin.templates.show', $latest) }}" class="font-semibold text-blue-700 hover:underline">{{ $template->title }}</a>
-                            @if($latest?->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensibel</x-elternabfragen.badge> @endif
-                        </td>
-                        <td class="px-4 py-3">{{ $template->category ?? '–' }}</td>
-                        <td class="px-4 py-3">{{ $approved ? 'Version '.$approved->version : '–' }}</td>
-                        <td class="px-4 py-3">
-                            @if($latest && $latest->id !== $approved?->id)
-                                <x-elternabfragen.badge :color="$latest->status->color()">v{{ $latest->version }}: {{ $latest->status->label() }}</x-elternabfragen.badge>
-                            @else
-                                <span class="text-gray-400">–</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-right whitespace-nowrap">
-                            @if($approved && ! $archive)
-                                @can('manage elternabfragen')
-                                    <a href="{{ route('elternabfragen.admin.inquiries.create', ['vorlage' => $approved->id]) }}" class="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700">Abfrage erstellen</a>
-                                @endcan
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Keine Vorlagen vorhanden.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+    @else
+        <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            @foreach($templates as $template)
+                @php $latest = $template->latestVersion; $approved = $template->approvedVersion; @endphp
+                <article class="ea-card p-5 flex flex-col gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="ea-card-icon"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
+                        <div class="min-w-0 flex-1">
+                            <a href="{{ route('elternabfragen.admin.templates.show', $latest) }}" class="font-semibold ea-text hover:underline break-words">{{ $template->title }}</a>
+                            <p class="text-xs ea-muted mb-0 mt-0.5">{{ $template->category ?? 'ohne Kategorie' }}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        @if($approved)
+                            <x-elternabfragen.badge color="green" icon="fas fa-check">Version {{ $approved->version }} freigegeben</x-elternabfragen.badge>
+                        @else
+                            <x-elternabfragen.badge color="gray">noch nicht freigegeben</x-elternabfragen.badge>
+                        @endif
+                        @if($latest && $latest->id !== $approved?->id)
+                            <x-elternabfragen.badge :color="$latest->status->color()" dot>v{{ $latest->version }}: {{ $latest->status->label() }}</x-elternabfragen.badge>
+                        @endif
+                        @if($latest?->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensibel</x-elternabfragen.badge> @endif
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-auto pt-3" style="border-top: 1px solid var(--color-card-border)">
+                        <a href="{{ route('elternabfragen.admin.templates.show', $latest) }}" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-eye" aria-hidden="true"></i> Ansehen</a>
+                        @if($approved && ! $archive)
+                            @can('manage elternabfragen')
+                                <a href="{{ route('elternabfragen.admin.inquiries.create', ['vorlage' => $approved->id]) }}" class="ea-btn ea-btn-success ea-btn-sm ml-auto"><i class="fas fa-paper-plane" aria-hidden="true"></i> Abfrage erstellen</a>
+                            @endcan
+                        @endif
+                    </div>
+                </article>
+            @endforeach
+        </div>
+    @endif
 </div>
 @endsection

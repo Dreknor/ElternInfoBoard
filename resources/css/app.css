@@ -1724,3 +1724,300 @@ html.dark {
   --color-warning-btn-bg:         #b45309;
   --color-warning-btn-hover:      #92400e;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ELTERNABFRAGEN – Modul-Bausteine (ea-*)
+   Theme-fähig über CSS-Variablen, funktionieren im Hell- und Dunkelmodus.
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Kopfbereich mit Verlauf in der Primärfarbe */
+  .ea-hero {
+    @apply relative overflow-hidden rounded-2xl px-5 py-5 sm:px-7 sm:py-6 text-white shadow-lg;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  }
+  .ea-hero::before,
+  .ea-hero::after {
+    content: '';
+    @apply absolute rounded-full pointer-events-none;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .ea-hero::before { width: 16rem; height: 16rem; right: -5rem; top: -8rem; }
+  .ea-hero::after  { width: 10rem; height: 10rem; right: 6rem; bottom: -6rem; }
+  .ea-hero > * { @apply relative; }
+  .ea-hero-icon {
+    @apply flex items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 text-xl;
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+  .ea-hero-title { @apply text-xl sm:text-2xl font-bold leading-tight mb-0 break-words; color: #fff; }
+  .ea-hero-sub { @apply text-sm mt-1 mb-0; color: rgba(255, 255, 255, 0.82); }
+  .ea-hero-meta {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+  }
+  .ea-hero .ea-btn-secondary { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.35); color: #fff; }
+  .ea-hero .ea-btn-secondary:hover { background: rgba(255, 255, 255, 0.24); }
+  .ea-hero .ea-btn-light { @apply bg-white shadow; color: var(--color-primary-dark); }
+  .ea-hero .ea-btn-light:hover { @apply bg-white; filter: brightness(0.96); }
+
+  /* Reiter als Segment-Leiste */
+  .ea-tabs {
+    @apply flex gap-1 p-1 mt-4 rounded-xl overflow-x-auto;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    scrollbar-width: none;
+  }
+  .ea-tab {
+    @apply inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors;
+    color: var(--color-text-secondary);
+  }
+  .ea-tab:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); text-decoration: none; }
+  .ea-tab-active,
+  .ea-tab-active:hover { @apply shadow-sm; background-color: var(--color-primary); color: #fff; }
+  .ea-tab-count {
+    @apply inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-amber-500 rounded-full;
+  }
+
+  /* Karten */
+  .ea-card {
+    @apply rounded-2xl shadow-sm;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+  }
+  .ea-card-header {
+    @apply flex items-center gap-3 px-5 py-4;
+    border-bottom: 1px solid var(--color-card-border);
+  }
+  .ea-card-icon {
+    @apply flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 text-sm;
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+  }
+  .ea-card-title { @apply text-base font-semibold mb-0 min-w-0; color: var(--color-text-primary); }
+  .ea-card-sub { @apply text-xs mb-0; color: var(--color-text-secondary); }
+  .ea-card-body { @apply p-5; }
+  .ea-card-footer {
+    @apply px-5 py-4 rounded-b-2xl;
+    background-color: var(--color-surface-subtle);
+    border-top: 1px solid var(--color-card-border);
+  }
+  a.ea-card { @apply transition; }
+  a.ea-card:hover { @apply shadow-md -translate-y-0.5; border-color: var(--color-primary); text-decoration: none; }
+  .ea-card-accent { border-left: 4px solid var(--color-primary); }
+
+  .ea-section-title {
+    @apply flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-3;
+    color: var(--color-text-secondary);
+  }
+
+  /* Text */
+  .ea-text { color: var(--color-text-primary); }
+  .ea-muted { color: var(--color-text-secondary); }
+  .ea-link { @apply font-medium; color: var(--color-primary); }
+  .ea-link:hover { @apply underline; color: var(--color-primary-dark); }
+  .ea-subtle { background-color: var(--color-surface-subtle); }
+  .ea-divide > * + * { border-top: 1px solid var(--color-card-border); }
+  .ea-border { border-color: var(--color-card-border); }
+
+  /* Formulare */
+  .ea-label { @apply block text-sm font-medium mb-1.5; color: var(--color-text-primary); }
+  .ea-input {
+    @apply block w-full rounded-lg px-3 py-2.5 text-sm transition;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-input-border);
+    color: var(--color-text-primary);
+  }
+  .ea-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+  .ea-input-invalid { border-color: #ef4444 !important; }
+  .ea-hint { @apply text-xs mt-1.5 mb-0; color: var(--color-text-secondary); }
+  .ea-check { @apply h-4 w-4 rounded flex-shrink-0; accent-color: var(--color-primary); }
+  .ea-toggle-row {
+    @apply flex items-start gap-3 p-3 rounded-xl cursor-pointer transition;
+    border: 1px solid var(--color-card-border);
+  }
+  .ea-toggle-row:hover { background-color: var(--color-surface-subtle); }
+  .ea-toggle-row:has(:checked) {
+    border-color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 7%, transparent);
+  }
+
+  /* Auswahlkacheln in der Elternansicht */
+  .ea-choice {
+    @apply flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer transition;
+    border: 1.5px solid var(--color-card-border);
+    background-color: var(--color-card-bg);
+  }
+  .ea-choice:hover { border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-card-border)); }
+  .ea-choice:has(:checked) {
+    border-color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+  .ea-choice:has(:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  .ea-choice input { @apply mt-0.5 h-5 w-5 flex-shrink-0; accent-color: var(--color-primary); }
+
+  /* Schaltflächen */
+  .ea-btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition whitespace-nowrap;
+    border: 1px solid transparent;
+  }
+  .ea-btn:hover { text-decoration: none; }
+  .ea-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  .ea-btn:disabled,
+  .ea-btn[disabled] { @apply opacity-50 cursor-not-allowed; }
+  .ea-btn-sm { @apply px-3 py-1.5 text-xs; }
+  .ea-btn-lg { @apply px-6 py-3 text-base; }
+  .ea-btn-primary { @apply shadow-sm; background-color: var(--color-primary); color: #fff; }
+  .ea-btn-primary:hover { background-color: var(--color-primary-dark); color: #fff; }
+  .ea-btn-success { @apply bg-emerald-600 text-white shadow-sm; }
+  .ea-btn-success:hover { @apply bg-emerald-700 text-white; }
+  .ea-btn-warning { @apply bg-amber-500 text-white shadow-sm; }
+  .ea-btn-warning:hover { @apply bg-amber-600 text-white; }
+  .ea-btn-secondary {
+    background-color: var(--color-card-bg);
+    border-color: var(--color-input-border);
+    color: var(--color-text-primary);
+  }
+  .ea-btn-secondary:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
+  .ea-btn-danger { @apply bg-transparent text-red-600 border-red-300; }
+  .ea-btn-danger:hover { @apply bg-red-50 text-red-700; }
+  .ea-btn-ghost { @apply bg-transparent; color: var(--color-text-secondary); }
+  .ea-btn-ghost:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
+  .ea-icon-btn {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm transition;
+    border: 1px solid var(--color-card-border);
+    background-color: var(--color-card-bg);
+    color: var(--color-text-secondary);
+  }
+  .ea-icon-btn:hover:not(:disabled) { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
+  .ea-icon-btn:disabled { @apply opacity-40 cursor-not-allowed; }
+
+  /* Kennzahlen */
+  .ea-stat {
+    @apply flex items-center gap-3 p-4 rounded-2xl transition;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+  }
+  a.ea-stat:hover { @apply shadow-md; border-color: var(--color-primary); text-decoration: none; }
+  .ea-stat-active { box-shadow: 0 0 0 2px var(--color-primary); border-color: var(--color-primary); }
+  .ea-stat-icon { @apply flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0; }
+  .ea-stat-value { @apply text-2xl font-bold leading-none; color: var(--color-text-primary); }
+  .ea-stat-label { @apply text-xs mt-1; color: var(--color-text-secondary); }
+
+  /* Hinweisboxen */
+  .ea-alert { @apply flex items-start gap-3 p-4 rounded-xl text-sm; border: 1px solid; }
+  .ea-alert > i:first-child { @apply mt-0.5 flex-shrink-0; }
+  .ea-alert-info    { @apply bg-blue-50 border-blue-200 text-blue-900; }
+  .ea-alert-success { @apply bg-emerald-50 border-emerald-200 text-emerald-900; }
+  .ea-alert-warning { @apply bg-amber-50 border-amber-200 text-amber-900; }
+  .ea-alert-danger  { @apply bg-red-50 border-red-200 text-red-900; }
+  .ea-alert-neutral { background-color: var(--color-surface-subtle); border-color: var(--color-card-border); color: var(--color-text-primary); }
+
+  /* Tabellen */
+  .ea-table { @apply min-w-full text-sm; }
+  .ea-table thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap;
+    background-color: var(--color-surface-subtle);
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-card-border);
+  }
+  .ea-table tbody td { @apply px-4 py-3 align-top; color: var(--color-text-primary); }
+  .ea-table tbody tr + tr td { border-top: 1px solid var(--color-card-border); }
+  .ea-table tbody tr:hover td { background-color: var(--color-surface-subtle); }
+
+  /* Fortschritt */
+  .ea-progress { @apply h-2 w-full rounded-full overflow-hidden; background-color: color-mix(in srgb, var(--color-text-secondary) 18%, transparent); }
+  .ea-progress-bar { @apply h-full rounded-full bg-emerald-500 transition-all; }
+
+  /* Schrittanzeige */
+  .ea-steps { @apply flex items-start w-full; counter-reset: ea-step; }
+  .ea-step { @apply relative flex-1 flex flex-col items-center text-center min-w-0; }
+  .ea-step + .ea-step::before {
+    content: '';
+    @apply absolute top-4 h-0.5 rounded;
+    left: calc(-50% + 1.25rem);
+    right: calc(50% + 1.25rem);
+    background-color: var(--color-card-border);
+  }
+  .ea-step-dot {
+    @apply relative z-10 flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition;
+    background-color: var(--color-card-bg);
+    border: 2px solid var(--color-card-border);
+    color: var(--color-text-secondary);
+  }
+  .ea-step-label { @apply mt-2 text-xs font-medium leading-tight px-1; color: var(--color-text-secondary); }
+  .ea-step-done .ea-step-dot { @apply bg-emerald-500 border-emerald-500 text-white; }
+  .ea-step-done.ea-step::before { @apply bg-emerald-500; }
+  .ea-step-current .ea-step-dot {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+  .ea-step-current .ea-step-label { @apply font-semibold; color: var(--color-text-primary); }
+  .ea-step-current.ea-step::before { background-color: var(--color-primary); }
+
+  /* Zeitstrahl (Protokoll) */
+  .ea-timeline { @apply relative space-y-4 pl-6; }
+  .ea-timeline::before {
+    content: '';
+    @apply absolute left-2 top-1 bottom-1 w-0.5 rounded;
+    background-color: var(--color-card-border);
+  }
+  .ea-timeline-item { @apply relative text-sm; }
+  .ea-timeline-item::before {
+    content: '';
+    @apply absolute -left-[1.15rem] top-1.5 w-2.5 h-2.5 rounded-full;
+    background-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-card-bg);
+  }
+
+  /* Definitionslisten (Eckdaten) */
+  .ea-facts > div { @apply flex items-start justify-between gap-4 py-2.5 text-sm; }
+  .ea-facts > div + div { border-top: 1px dashed var(--color-card-border); }
+  .ea-facts dt { @apply flex items-center gap-2 min-w-0; color: var(--color-text-secondary); }
+  .ea-facts dt i { @apply w-4 text-center; }
+  .ea-facts dd { @apply text-right font-medium mb-0 flex-shrink-0 max-w-[60%]; overflow-wrap: anywhere; color: var(--color-text-primary); }
+
+  /* Chips (Kinderwechsel, Filter) */
+  .ea-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition;
+    border: 1px solid var(--color-card-border);
+    background-color: var(--color-card-bg);
+    color: var(--color-text-primary);
+  }
+  .ea-chip:hover { border-color: var(--color-primary); text-decoration: none; color: var(--color-text-primary); }
+  .ea-chip-active,
+  .ea-chip-active:hover { background-color: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+  /* Klickbare Listenzeile */
+  .ea-row-link { @apply transition-colors; }
+  .ea-row-link:hover { background-color: var(--color-surface-subtle); text-decoration: none; }
+
+  /* Leerer Zustand */
+  .ea-empty { @apply flex flex-col items-center justify-center text-center px-6 py-10; color: var(--color-text-secondary); }
+  .ea-empty-icon {
+    @apply flex items-center justify-center w-14 h-14 rounded-2xl mb-3 text-2xl;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+
+  /* Avatar mit Initialen */
+  .ea-avatar {
+    @apply flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold flex-shrink-0;
+    background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary);
+  }
+}
+
+/* Dunkelmodus: farbige Flächen abdunkeln */
+html.dark .ea-alert-info    { background-color: rgba(30, 64, 175, 0.18);  border-color: rgba(96, 165, 250, 0.35); color: #bfdbfe; }
+html.dark .ea-alert-success { background-color: rgba(6, 95, 70, 0.22);    border-color: rgba(52, 211, 153, 0.35); color: #a7f3d0; }
+html.dark .ea-alert-warning { background-color: rgba(146, 64, 14, 0.22);  border-color: rgba(251, 191, 36, 0.35); color: #fde68a; }
+html.dark .ea-alert-danger  { background-color: rgba(153, 27, 27, 0.22);  border-color: rgba(248, 113, 113, 0.35); color: #fecaca; }
+html.dark .ea-btn-danger:hover { background-color: rgba(153, 27, 27, 0.2); color: #fca5a5; }

@@ -1,17 +1,16 @@
 {{-- Lesbare Zusammenfassung einer Antwortversion. Erwartet: $fields, $answers, $schema, optional $fileRoute (Closure key => url) --}}
-<dl class="divide-y divide-gray-100">
+<dl class="ea-divide mb-0">
     @foreach($fields as $field)
         @continue($field['type'] === 'info')
+        @php $value = $answers[$field['key']] ?? null; @endphp
         <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-            <dt class="text-sm font-medium text-gray-600">{{ $field['label'] }}</dt>
-            <dd class="text-sm text-gray-900 sm:col-span-2 mt-1 sm:mt-0 break-words whitespace-pre-line">
-                @php $value = $answers[$field['key']] ?? null; @endphp
-                @if($field['type'] === 'file' && is_array($value) && isset($fileRoute))
-                    <a href="{{ $fileRoute($field['key']) }}" class="text-blue-700 underline"><i class="fas fa-paperclip" aria-hidden="true"></i> {{ $value['name'] ?? 'Datei' }}</a>
-                @else
-                    {{ $schema->display($field, $value) }}
-                @endif
-            </dd>
+            <dt class="text-sm font-medium ea-muted">{{ $field['label'] }}</dt>
+            @if($field['type'] === 'file' && is_array($value) && isset($fileRoute))
+                <dd class="text-sm ea-text sm:col-span-2 mt-1 sm:mt-0 mb-0 break-words"><a href="{{ $fileRoute($field['key']) }}" class="ea-link"><i class="fas fa-paperclip" aria-hidden="true"></i> {{ $value['name'] ?? 'Datei' }}</a></dd>
+            @else
+                {{-- whitespace-pre-line: Inhalt ohne umgebende Leerzeichen ausgeben --}}
+                <dd class="text-sm font-medium ea-text sm:col-span-2 mt-1 sm:mt-0 mb-0 break-words whitespace-pre-line">{{ $schema->display($field, $value) }}</dd>
+            @endif
         </div>
     @endforeach
 </dl>

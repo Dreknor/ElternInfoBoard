@@ -10,7 +10,9 @@ Mit **Elternabfragen** ersetzt die Schule Papierformulare – zum Beispiel Stamm
 
 ## Eine Abfrage gilt für ein Kind
 
-Jede Abfrage ist **eindeutig einem Kind** zugeordnet – oben auf der Seite steht groß, für welches Kind du gerade ausfüllst. Hast du mehrere betroffene Kinder, wechselst du über die Namen unter „Abfrage für" zwischen ihnen und füllst die Abfrage für jedes Kind aus.
+Jede Abfrage ist **eindeutig einem Kind** zugeordnet – oben auf der Seite steht groß, für welches Kind du gerade ausfüllst („Abfrage für …"). Hast du mehrere betroffene Kinder, wechselst du über **Kind wechseln** zwischen ihnen und füllst die Abfrage für jedes Kind aus. Ein Häkchen am Namen zeigt, für welche Kinder du schon fertig bist.
+
+In der Übersicht sind offene Abfragen farbig markiert: **orange**, wenn die Frist in weniger als drei Tagen endet, **rot**, wenn sie abgelaufen ist.
 
 Eine gültige Antwort **eines sorgeberechtigten Elternteils** genügt. Hat der andere Elternteil bereits geantwortet, siehst du das in der Übersicht und bekommst eine Mitteilung.
 
@@ -30,6 +32,8 @@ Bist du mit den Angaben nicht einverstanden, kannst du sie bis zur Frist **korri
 Die Rechte pflegt die Schulverwaltung. Stimmt etwas nicht, melde es bitte unter **Einstellungen › Familie**.
 
 ## So füllst du aus
+
+Oben im Formular zeigt eine **Schrittanzeige**, wo du gerade bist: **1 Ausfüllen → 2 Prüfen & bestätigen → 3 Eingereicht**.
 
 1. Lies oben **„Wofür werden die Angaben benötigt?"** – jede Abfrage erklärt ihren Zweck. Unter „Datenschutz und Aufbewahrung" steht, wie lange die Angaben gespeichert werden.
 2. Felder mit **\*** sind Pflichtfelder. Fehler werden direkt am Feld angezeigt.
