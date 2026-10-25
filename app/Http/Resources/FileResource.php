@@ -34,7 +34,7 @@ class FileResource extends JsonResource
             'collection_name' => $this->collection_name,
             'url' => \App\Services\App\MediaAccess::downloadUrl($this->resource),
             'preview_url' => $this->hasGeneratedConversion('thumb')
-                ? $this->getUrl('thumb')
+                ? \App\Services\App\MediaAccess::downloadUrl($this->resource).'?size=thumb'
                 : null,
             'custom_properties' => $this->custom_properties ?? [],
             'created_at' => $this->created_at?->toISOString(),

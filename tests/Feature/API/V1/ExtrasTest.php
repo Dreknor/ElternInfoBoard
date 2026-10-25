@@ -97,6 +97,7 @@ class ExtrasTest extends AppApiTestCase
     {
         Storage::fake('local');
         Storage::fake('public');
+        Storage::fake('media');
         $group = $this->group();
         $user = $this->parentIn($group);
         $post = $this->postIn($group);
@@ -120,6 +121,7 @@ class ExtrasTest extends AppApiTestCase
     {
         Storage::fake('local');
         Storage::fake('public');
+        Storage::fake('media');
         $foreignPost = $this->postIn($this->group('Andere'));
         $media = $foreignPost->addMedia(UploadedFile::fake()->create('elternbrief.pdf', 10, 'application/pdf'))
             ->toMediaCollection('files');

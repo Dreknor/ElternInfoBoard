@@ -5,8 +5,11 @@ return [
     /*
      * The disk on which to store added files and derived images by default. Choose
      * one or more of the disks you've configured in config/filesystems.php.
+     *
+     * Nicht `public` verwenden: Dateien dort sind ohne Anmeldung unter /storage/… abrufbar.
+     * Bestehende Dateien zieht `php artisan media:make-private` um.
      */
-    'disk_name' => env('MEDIA_DISK', 'public'),
+    'disk_name' => env('MEDIA_DISK', 'media'),
 
     /*
      * The maximum file size of an item in bytes.

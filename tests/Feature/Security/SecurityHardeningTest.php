@@ -114,6 +114,7 @@ class SecurityHardeningTest extends TestCase
     public function image_upload_to_a_post_needs_an_open_image_feedback_on_a_visible_post(): void
     {
         Storage::fake('public');
+        Storage::fake('media');
         Mail::fake();
         $group = Group::factory()->create();
         $author = $this->parent();
@@ -156,6 +157,7 @@ class SecurityHardeningTest extends TestCase
     public function media_library_refuses_blocked_files_on_every_upload_path(): void
     {
         Storage::fake('public');
+        Storage::fake('media');
         $post = $this->postFor($this->parent());
 
         $this->expectException(\Illuminate\Validation\ValidationException::class);
