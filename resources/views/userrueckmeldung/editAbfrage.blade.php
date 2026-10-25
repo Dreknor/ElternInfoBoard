@@ -54,7 +54,7 @@
                                          @if($option->required == true) required @endif
                                         class="form-control rueckmeldung">
                                         @if(!is_null($userRueckmeldung->answers->where('option_id', $option->id)->first()))
-                                            {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
+                                            @safeHtml($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer)
                                         @endif
                                     </textarea>
                                 </label>

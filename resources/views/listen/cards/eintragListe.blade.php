@@ -119,7 +119,7 @@
         <!-- Details Section (Collapsible) -->
         <div x-show="showInfo" x-transition class="mt-3 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);" x-cloak>
             @if($liste->comment)
-                <p class="text-xs mb-2 leading-relaxed" style="color: var(--color-card-b-header-text); opacity: 0.8;">{!! $liste->comment !!}</p>
+                <p class="text-xs mb-2 leading-relaxed" style="color: var(--color-card-b-header-text); opacity: 0.8;">@safeHtml($liste->comment)</p>
             @endif
             @if($liste->groups->count() > 0)
                 <div class="flex flex-wrap gap-1">

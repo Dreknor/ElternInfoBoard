@@ -12,7 +12,7 @@
         Folgende Nachricht wurde angefügt:
     </p>
     <p>
-        {!! $text !!}
+        @safeHtml($text)
     </p>
 @endif
 <p>

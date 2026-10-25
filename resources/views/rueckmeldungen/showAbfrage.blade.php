@@ -86,7 +86,7 @@
                                                     @break
                                                 @case('textbox')
                                                     @if($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer != "")
-                                                        {!! $userRueckmeldung->answers->where('option_id', $option->id)->first()->answer !!}
+                                                        @safeHtml($userRueckmeldung->answers->where('option_id', $option->id)->first()->answer)
                                                     @else
                                                         <i class="fa fa-slash"></i>
                                                     @endif

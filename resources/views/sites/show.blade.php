@@ -64,7 +64,7 @@
                         @switch(class_basename($block->block))
                             @case('SiteBlockText')
                                 <div class="prose max-w-none text-gray-700">
-                                    {!!  $block->block->content !!}
+                                    @safeHtml($block->block->content)
                                 </div>
                                 @break
 

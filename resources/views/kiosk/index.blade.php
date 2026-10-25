@@ -59,7 +59,7 @@
                                     </div>
                                     <div class="card-body">
                                         <p>
-                                            {!! $nachricht->news !!}
+                                            @safeHtml($nachricht->news)
                                         </p>
                                     </div>
                                     <div class="footer">

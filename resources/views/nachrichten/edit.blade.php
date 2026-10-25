@@ -92,7 +92,7 @@
                         <div class="form-group">
                             <label>Nachrichtentext</label>
                             <textarea class="form-control border-input" name="news">
-                                {!! $post->news !!}
+                                {{ $post->news }}
                             </textarea>
                         </div>
                     </div>

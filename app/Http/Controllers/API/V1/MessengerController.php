@@ -8,6 +8,7 @@ use App\Model\Message;
 use App\Model\MessageReport;
 use App\Model\User;
 use App\Services\App\MessengerUnread;
+use App\Support\UploadGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -241,10 +242,10 @@ class MessengerController extends LegacyMessengerController
         $media = $message->getFirstMedia('message-attachments');
         abort_unless($media && file_exists($media->getPath()), 404);
 
-        return response()->file($media->getPath(), [
+        return UploadGuard::harden(response()->file($media->getPath(), [
             'Content-Type' => $media->mime_type,
             'Cache-Control' => 'private, max-age=86400',
-        ]);
+        ]), $media);
     }
 
     protected function formatMessage(Message $message, int $currentUserId): array

@@ -54,6 +54,12 @@ class AppServiceProvider extends ServiceProvider
         // in Umgebungen, in denen PHP keine ausführbaren Speicherbereiche allokieren darf.
         ini_set('pcre.jit', '0');
 
+        // Keine ausführbaren bzw. im Browser aktiven Dateien in der (öffentlich gespeicherten) Medienbibliothek
+        \Spatie\MediaLibrary\MediaCollections\Models\Media::creating(fn ($media) => \App\Support\UploadGuard::assertAllowed($media));
+
+        // Editor-HTML bereinigt ausgeben: @safeHtml($post->news) statt {!! $post->news !!}
+        \Illuminate\Support\Facades\Blade::directive('safeHtml', fn (string $expression) => "<?php echo \\App\\Support\\SafeHtml::clean({$expression}); ?>");
+
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
@@ -63,7 +69,12 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
         // Integrations-Tokens laufen nach eigener Laufzeit ab (auch unbegrenzt), nicht nach `sanctum.expiration`.
+        // Deaktivierte Konten verlieren den Zugriff über alle Tokens (App, Integration, MCP) – wie im Web.
         Sanctum::authenticateAccessTokensUsing(function ($token, bool $isValid) {
+            if ($token->tokenable?->is_active === false) {
+                return false;
+            }
+
             if (! IntegrationTokens::isIntegration($token)) {
                 return $isValid;
             }

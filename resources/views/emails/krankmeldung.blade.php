@@ -9,7 +9,7 @@
 <p>Zeitraum:  {{$krankVon}} - {{$krankBis}}</p>
 <p>Erkrankung: {{$disease}}</p>
 <p>Nachricht:<br>
-{!! $bemerkung !!}
+@safeHtml($bemerkung)
 </p>
 <p>Krankmeldung gesendet von {{$name}}</p>
 </body>

@@ -85,6 +85,8 @@ class TerminController extends Controller implements HasMiddleware
 
     public function edit(Termin $termine)
     {
+        // Gleiche Berechtigung wie update() – vorher konnte jedes Konto jeden Termin samt Empfängern einsehen
+        abort_unless(auth()->user()->can('edit termin'), 403, 'Berechtigung fehlt');
 
         $groups = Cache::remember('groups', now()->addDay(), function () {
             return Group::active()->get();

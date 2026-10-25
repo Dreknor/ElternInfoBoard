@@ -50,7 +50,7 @@
                                 @endif
                             </td>
                             <td>
-                                {!! $userRueckmeldung->text !!}
+                                @safeHtml($userRueckmeldung->text)
                             </td>
                         </tr>
                     @endforeach

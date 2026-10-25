@@ -175,7 +175,7 @@
             </div>
 
             <p style="margin-bottom: 20px;">
-                {!! $welcomeText !!}
+                @safeHtml($welcomeText)
             </p>
 
             <div class="credentials-box">

@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="card-body">
-            {!! $mail->text !!}
+            @safeHtml($mail->text)
         </div>
         <div class="card-footer">
             @if($mail->getMedia('files')->count() >0 )
