@@ -19,6 +19,8 @@ Verbindlicher Ablauf (Konzept Kap. 1/4):
 | D Rücklauf überwachen und erinnern | `InquiryController@show`, `ReminderService`, `DeliveryService` |
 | E Antwort prüfen und exportieren | `AssignmentAdminService`, `ExportService` |
 
+![Ablauf der Elternabfragen](elternabfragen-ablauf.png)
+
 Zeitgesteuert: `php artisan elternabfragen:process` (alle 15 Minuten im Scheduler) –
 geplante Abfragen starten, automatische Erinnerungen, automatischer Abschluss,
 Ablauf von Exporten, Löschfristen. `--dry-run` zeigt fällige Löschungen.

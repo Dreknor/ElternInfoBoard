@@ -7,56 +7,66 @@
     @include('elternabfragen.admin._nav', [
         'title' => trim(($response->child?->first_name ?? '').' '.($response->child?->last_name ?? '')),
         'subtitle' => $response->inquiry->title.' · Version '.$response->version,
+        'icon' => 'fas fa-file-alt',
     ])
 
-    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-        <div class="flex flex-wrap items-center gap-2 text-sm mb-3">
-            @if($response->is_current) <x-elternabfragen.badge color="green">aktuell gültige Version</x-elternabfragen.badge>
+    <section class="ea-card mb-6">
+        <div class="ea-card-header flex-wrap">
+            @if($response->is_current) <x-elternabfragen.badge color="green" icon="fas fa-check">aktuell gültige Version</x-elternabfragen.badge>
             @else <x-elternabfragen.badge color="slate">ersetzte Version</x-elternabfragen.badge> @endif
-            <x-elternabfragen.badge :color="$response->review_status->color()">{{ $response->review_status->label() }}</x-elternabfragen.badge>
-            <span class="text-gray-600">{{ $response->submitted_at->format('d.m.Y H:i') }} · {{ $response->user?->name ?? 'unbekannt' }} · {{ $response->assignment?->group?->name }}</span>
+            <x-elternabfragen.badge :color="$response->review_status->color()" dot>{{ $response->review_status->label() }}</x-elternabfragen.badge>
+            <span class="text-sm ea-muted">{{ $response->submitted_at->format('d.m.Y H:i') }} · {{ $response->user?->name ?? 'unbekannt' }} · {{ $response->assignment?->group?->name }}</span>
         </div>
-        @if($response->correction_reason)<p class="text-sm text-gray-600 mb-2">Korrekturgrund: {{ $response->correction_reason }}</p>@endif
-        @if($response->review_note)<p class="text-sm bg-amber-50 p-2 rounded mb-2">Prüfvermerk: {{ $response->review_note }} ({{ $response->reviewer?->name }}, {{ $response->reviewed_at?->format('d.m.Y') }})</p>@endif
+        <div class="ea-card-body">
+            @if($response->correction_reason)<p class="text-sm ea-muted mb-3"><i class="fas fa-redo" aria-hidden="true"></i> Korrekturgrund: {{ $response->correction_reason }}</p>@endif
+            @if($response->review_note)
+                <div class="ea-alert ea-alert-warning mb-3"><i class="fas fa-comment-dots" aria-hidden="true"></i><p class="mb-0">Prüfvermerk: {{ $response->review_note }} ({{ $response->reviewer?->name }}, {{ $response->reviewed_at?->format('d.m.Y') }})</p></div>
+            @endif
 
-        {{-- Nur Sekretariat: alte Werte stammen aus der Vorabfrage --}}
-        @if($canReview && $response->baselineChanges() !== [])
-            @php $byKey = collect($fields)->filter(fn ($f) => isset($f['key']))->keyBy('key'); @endphp
-            <div class="mb-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
-                <p class="font-semibold text-amber-900 mb-1"><i class="fas fa-history" aria-hidden="true"></i> Geändert gegenüber der Vorabfrage</p>
-                <ul class="space-y-0.5">
-                    @foreach($response->baselineChanges() as $key => $change)
-                        @php $field = $byKey->get($key, ['key' => $key, 'type' => 'text', 'label' => $key]); @endphp
-                        <li>{{ $field['label'] }}: <span class="text-gray-500 line-through">{{ $schema->display($field, $change['old']) }}</span> → <strong>{{ $schema->display($field, $change['new']) }}</strong></li>
-                    @endforeach
-                </ul>
-            </div>
-        @elseif($canReview && $response->hasBaseline())
-            <p class="mb-3 text-sm text-gray-500"><i class="fas fa-equals" aria-hidden="true"></i> Angaben unverändert aus der Vorabfrage übernommen.</p>
-        @endif
+            {{-- Nur Sekretariat: alte Werte stammen aus der Vorabfrage --}}
+            @if($canReview && $response->baselineChanges() !== [])
+                @php $byKey = collect($fields)->filter(fn ($f) => isset($f['key']))->keyBy('key'); @endphp
+                <div class="ea-alert ea-alert-warning mb-4"><i class="fas fa-history" aria-hidden="true"></i>
+                    <div>
+                        <p class="font-semibold mb-1">Geändert gegenüber der Vorabfrage</p>
+                        <ul class="space-y-0.5 mb-0">
+                            @foreach($response->baselineChanges() as $key => $change)
+                                @php $field = $byKey->get($key, ['key' => $key, 'type' => 'text', 'label' => $key]); @endphp
+                                <li>{{ $field['label'] }}: <span class="opacity-70 line-through">{{ $schema->display($field, $change['old']) }}</span> → <strong>{{ $schema->display($field, $change['new']) }}</strong></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @elseif($canReview && $response->hasBaseline())
+                <p class="mb-4 text-sm text-emerald-700 dark:text-emerald-400"><i class="fas fa-equals" aria-hidden="true"></i> Angaben unverändert aus der Vorabfrage übernommen.</p>
+            @endif
 
-        @include('elternabfragen.parent._answers', [
-            'fields' => $fields,
-            'answers' => $response->answers,
-            'fileRoute' => fn ($key) => route('elternabfragen.admin.responses.file', [$response, $key]),
-        ])
-
-        <p class="text-xs text-gray-500 mt-4 font-mono break-all">Formular-Hash {{ $response->form_hash }} · Antwort-Hash {{ $response->answer_hash }}</p>
+            @include('elternabfragen.parent._answers', [
+                'fields' => $fields,
+                'answers' => $response->answers,
+                'fileRoute' => fn ($key) => route('elternabfragen.admin.responses.file', [$response, $key]),
+            ])
+        </div>
+        <div class="ea-card-footer">
+            <p class="text-xs ea-muted mb-0 font-mono break-all"><i class="fas fa-fingerprint" aria-hidden="true"></i> Formular-Hash {{ $response->form_hash }} · Antwort-Hash {{ $response->answer_hash }}</p>
+        </div>
     </section>
 
     @if($canReview)
-        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <h2 class="font-semibold text-gray-800 mb-2">Prüfung</h2>
-            <p class="text-sm text-gray-600 mb-3">Nur geprüfte Antworten sind für Mitarbeitende sichtbar (sofern die Abfrage dafür freigegeben ist).</p>
-            <form method="POST" action="{{ route('elternabfragen.admin.responses.review', $response) }}" class="space-y-3">
+        <section class="ea-card">
+            <div class="ea-card-header">
+                <div class="ea-card-icon"><i class="fas fa-clipboard-check" aria-hidden="true"></i></div>
+                <div><h2 class="ea-card-title">Prüfung</h2><p class="ea-card-sub">Nur geprüfte Antworten sind für Mitarbeitende sichtbar (sofern die Abfrage dafür freigegeben ist).</p></div>
+            </div>
+            <form method="POST" action="{{ route('elternabfragen.admin.responses.review', $response) }}" class="ea-card-body space-y-4">
                 @csrf
-                <div class="flex flex-wrap gap-4 text-sm">
+                <div class="grid gap-3 sm:grid-cols-3">
                     @foreach(\App\Enums\InquiryReviewStatus::cases() as $case)
-                        <label class="flex items-center gap-2"><input type="radio" name="review_status" value="{{ $case->value }}" @checked($response->review_status === $case)> {{ $case->label() }}</label>
+                        <label class="ea-choice"><input type="radio" name="review_status" value="{{ $case->value }}" @checked($response->review_status === $case)> <span class="font-medium ea-text">{{ $case->label() }}</span></label>
                     @endforeach
                 </div>
-                <textarea name="review_note" rows="2" class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Vermerk (bei Klärungsbedarf Pflicht)">{{ $response->review_note }}</textarea>
-                <button class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold">Speichern</button>
+                <textarea name="review_note" rows="2" class="ea-input" placeholder="Vermerk (bei Klärungsbedarf Pflicht)">{{ $response->review_note }}</textarea>
+                <button class="ea-btn ea-btn-primary"><i class="fas fa-save" aria-hidden="true"></i> Speichern</button>
             </form>
         </section>
     @endif

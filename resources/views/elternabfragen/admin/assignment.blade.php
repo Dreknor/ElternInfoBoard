@@ -3,79 +3,106 @@
 @section('title', '| Elternabfragen · '.$assignment->childName())
 
 @section('content')
-@php $input = 'block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm'; @endphp
+@php $defaultDate = now()->addWeek()->setTime(23, 59)->format('Y-m-d\TH:i'); @endphp
 <div class="container-fluid px-4 py-6 max-w-6xl">
-    @include('elternabfragen.admin._nav', ['title' => $assignment->childName(), 'subtitle' => $inquiry->title.' · '.($assignment->group?->name ?? 'ohne Klasse')])
+    @include('elternabfragen.admin._nav', [
+        'title' => $assignment->childName(),
+        'subtitle' => $inquiry->title.' · '.($assignment->group?->name ?? 'ohne Klasse'),
+        'icon' => 'fas fa-child',
+        'back' => ['url' => route('elternabfragen.admin.inquiries.show', $inquiry), 'label' => 'Zum Rücklauf'],
+    ])
 
-    <a href="{{ route('elternabfragen.admin.inquiries.show', $inquiry) }}" class="text-sm text-blue-700 hover:underline"><i class="fas fa-arrow-left" aria-hidden="true"></i> Zum Rücklauf</a>
-
-    <div class="grid gap-6 lg:grid-cols-3 mt-4">
-        <div class="lg:col-span-2 space-y-6">
-            <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm space-y-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <x-elternabfragen.badge :color="$assignment->status->color()">{{ $assignment->status->label() }}</x-elternabfragen.badge>
-                    <span>Frist: {{ $assignment->effectiveDeadline()->format('d.m.Y H:i') }}{{ $assignment->extended_until ? ' (Nachfrist)' : '' }}</span>
-                    @if($assignment->correction_until)<span>· Korrektur freigegeben bis {{ $assignment->correction_until->format('d.m.Y H:i') }}</span>@endif
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 space-y-6 min-w-0">
+            <section class="ea-card">
+                <div class="ea-card-header flex-wrap">
+                    <x-elternabfragen.badge :color="$assignment->status->color()" dot class="text-sm">{{ $assignment->status->label() }}</x-elternabfragen.badge>
+                    <span class="text-sm ea-muted"><i class="far fa-clock" aria-hidden="true"></i> Frist: {{ $assignment->effectiveDeadline()->format('d.m.Y H:i') }}{{ $assignment->extended_until ? ' (Nachfrist)' : '' }}</span>
+                    @if($assignment->correction_until)<span class="text-sm ea-muted">· Korrektur freigegeben bis {{ $assignment->correction_until->format('d.m.Y H:i') }}</span>@endif
                 </div>
-                @if($assignment->has_problem)<p class="p-2 rounded bg-red-50 text-red-800"><strong>Technisches Problem:</strong> {{ $assignment->problem_note }}</p>@endif
-                @if($assignment->note)<p class="p-2 rounded bg-gray-50"><strong>Bearbeitungshinweis:</strong> {{ $assignment->note }}</p>@endif
-                <div>
-                    <p class="text-gray-500">Berechtigte Konten (Sorgerecht zum Startzeitpunkt)</p>
-                    <ul>
-                        @forelse($assignment->recipients as $recipient)
-                            <li>{{ $recipient->user?->name }} · {{ $recipient->user?->email ?: 'keine E-Mail' }}
-                                @if($recipient->delivery_failed_at)<span class="text-red-700">– nicht zustellbar: {{ $recipient->delivery_error }}</span>@endif
-                            </li>
-                        @empty
-                            <li class="text-red-700">Keine berechtigten Konten.</li>
-                        @endforelse
-                    </ul>
+                <div class="ea-card-body space-y-4 text-sm">
+                    @if($assignment->has_problem)
+                        <div class="ea-alert ea-alert-danger"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i><p class="mb-0"><strong>Technisches Problem:</strong> {{ $assignment->problem_note }}</p></div>
+                    @endif
+                    @if($assignment->note)
+                        <div class="ea-alert ea-alert-neutral"><i class="fas fa-sticky-note" aria-hidden="true"></i><p class="mb-0"><strong>Bearbeitungshinweis:</strong> {{ $assignment->note }}</p></div>
+                    @endif
+                    <div>
+                        <p class="ea-section-title"><i class="fas fa-user-friends" aria-hidden="true"></i> Berechtigte Konten (Sorgerecht zum Startzeitpunkt)</p>
+                        <ul class="grid gap-2 sm:grid-cols-2 mb-0">
+                            @forelse($assignment->recipients as $recipient)
+                                <li class="flex items-center gap-3 p-3 rounded-xl ea-subtle">
+                                    <span class="ea-avatar !w-9 !h-9 !text-xs">{{ mb_strtoupper(mb_substr($recipient->user?->name ?? '?', 0, 1)) }}</span>
+                                    <span class="min-w-0">
+                                        <span class="block font-medium ea-text truncate">{{ $recipient->user?->name }}</span>
+                                        <span class="block text-xs ea-muted truncate">{{ $recipient->user?->email ?: 'keine E-Mail' }}</span>
+                                        @if($recipient->delivery_failed_at)<span class="block text-xs text-red-600">– nicht zustellbar: {{ $recipient->delivery_error }}</span>@endif
+                                    </span>
+                                </li>
+                            @empty
+                                <li class="text-red-600">Keine berechtigten Konten.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                    @if($assignment->drafts->isNotEmpty())
+                        <p class="ea-muted mb-0"><i class="fas fa-pen" aria-hidden="true"></i> Entwurf begonnen von: {{ $assignment->drafts->pluck('user.name')->filter()->implode(', ') }}</p>
+                    @endif
                 </div>
-                @if($assignment->drafts->isNotEmpty())
-                    <p class="text-gray-600">Entwurf begonnen von: {{ $assignment->drafts->pluck('user.name')->filter()->implode(', ') }}</p>
-                @endif
             </section>
 
-            <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 class="font-semibold text-gray-800 mb-3">Antwortversionen</h2>
-                @forelse($assignment->responses as $response)
-                    <div class="border rounded-lg p-3 mb-2 text-sm flex flex-wrap items-center justify-between gap-2 {{ $response->is_current ? 'border-green-300' : '' }}">
-                        <div>
-                            <strong>Version {{ $response->version }}</strong>
-                            @if($response->is_current) <x-elternabfragen.badge color="green">gültig</x-elternabfragen.badge> @endif
-                            <x-elternabfragen.badge :color="$response->review_status->color()">{{ $response->review_status->label() }}</x-elternabfragen.badge>
-                            <span class="block text-gray-600">{{ $response->submitted_at->format('d.m.Y H:i') }} · {{ $response->user?->name ?? 'unbekannt' }} · {{ $response->channel === 'app' ? 'App' : 'Web' }}</span>
-                            @if($response->correction_reason)<span class="block text-gray-500">Korrekturgrund: {{ $response->correction_reason }}</span>@endif
-                            @foreach($response->confirmations as $confirmation)
-                                <span class="block text-green-800"><i class="fas fa-user-check" aria-hidden="true"></i> Bestätigt von {{ $confirmation->user?->name ?? 'unbekannt' }} am {{ $confirmation->confirmed_at->format('d.m.Y H:i') }} · {{ $confirmation->channel === 'app' ? 'App' : 'Web' }}</span>
-                            @endforeach
-                            @if($response->is_current && $pendingConfirmations->isNotEmpty())
-                                <span class="block text-amber-800"><i class="far fa-clock" aria-hidden="true"></i> Bestätigung ausstehend: {{ $pendingConfirmations->pluck('name')->implode(', ') }}</span>
+            <section class="ea-card">
+                <div class="ea-card-header">
+                    <div class="ea-card-icon"><i class="fas fa-code-branch" aria-hidden="true"></i></div>
+                    <h2 class="ea-card-title">Antwortversionen</h2>
+                </div>
+                <div class="ea-card-body space-y-3">
+                    @forelse($assignment->responses as $response)
+                        <div class="rounded-xl p-4 text-sm flex flex-wrap items-start justify-between gap-3" style="border: 1px solid {{ $response->is_current ? '#34d399' : 'var(--color-card-border)' }}">
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <strong class="ea-text">Version {{ $response->version }}</strong>
+                                    @if($response->is_current) <x-elternabfragen.badge color="green">gültig</x-elternabfragen.badge> @endif
+                                    <x-elternabfragen.badge :color="$response->review_status->color()">{{ $response->review_status->label() }}</x-elternabfragen.badge>
+                                </div>
+                                <span class="block ea-muted">{{ $response->submitted_at->format('d.m.Y H:i') }} · {{ $response->user?->name ?? 'unbekannt' }} · {{ $response->channel === 'app' ? 'App' : 'Web' }}</span>
+                                @if($response->correction_reason)<span class="block ea-muted">Korrekturgrund: {{ $response->correction_reason }}</span>@endif
+                                @foreach($response->confirmations as $confirmation)
+                                    <span class="block text-emerald-700 dark:text-emerald-400"><i class="fas fa-user-check" aria-hidden="true"></i> Bestätigt von {{ $confirmation->user?->name ?? 'unbekannt' }} am {{ $confirmation->confirmed_at->format('d.m.Y H:i') }} · {{ $confirmation->channel === 'app' ? 'App' : 'Web' }}</span>
+                                @endforeach
+                                @if($response->is_current && $pendingConfirmations->isNotEmpty())
+                                    <span class="block text-amber-700 dark:text-amber-400"><i class="far fa-clock" aria-hidden="true"></i> Bestätigung ausstehend: {{ $pendingConfirmations->pluck('name')->implode(', ') }}</span>
+                                @endif
+                            </div>
+                            @if($canSeeAnswers)
+                                <a href="{{ route('elternabfragen.admin.responses.show', $response) }}" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-eye" aria-hidden="true"></i> Antwort ansehen</a>
                             @endif
                         </div>
-                        @if($canSeeAnswers)
-                            <a href="{{ route('elternabfragen.admin.responses.show', $response) }}" class="px-3 py-1.5 rounded-lg border border-gray-300">Antwort ansehen</a>
-                        @endif
-                    </div>
-                @empty
-                    <p class="text-sm text-gray-500">Noch keine Antwort eingereicht.</p>
-                @endforelse
-                @unless($canSeeAnswers)
-                    <p class="text-xs text-gray-500 mt-2">Antwortinhalte sind nur mit dem Recht „Antwortinhalte einsehen“ sichtbar.</p>
-                @endunless
+                    @empty
+                        <p class="text-sm ea-muted mb-0">Noch keine Antwort eingereicht.</p>
+                    @endforelse
+                    @unless($canSeeAnswers)
+                        <p class="ea-hint"><i class="fas fa-lock" aria-hidden="true"></i> Antwortinhalte sind nur mit dem Recht „Antwortinhalte einsehen“ sichtbar.</p>
+                    @endunless
+                </div>
             </section>
 
-            <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 class="font-semibold text-gray-800 mb-3">Zustellungen und Erinnerungen</h2>
-                <ul class="text-sm divide-y divide-gray-100">
+            <section class="ea-card">
+                <div class="ea-card-header">
+                    <div class="ea-card-icon"><i class="fas fa-bell" aria-hidden="true"></i></div>
+                    <h2 class="ea-card-title">Zustellungen und Erinnerungen</h2>
+                </div>
+                <ul class="ea-divide mb-0 text-sm">
                     @forelse($assignment->deliveries as $delivery)
-                        <li class="py-1.5 {{ $delivery->success ? '' : 'text-red-700' }}">
-                            {{ $delivery->sent_at->format('d.m.Y H:i') }} · {{ $delivery->kindLabel() }} · {{ $delivery->channelLabel() }} · {{ $delivery->user?->name }}
-                            {{ $delivery->trigger === 'manual' ? '(manuell)' : '' }}
-                            @if(! $delivery->success) – {{ $delivery->error }} @endif
+                        <li class="px-5 py-3 flex items-start gap-3 {{ $delivery->success ? 'ea-text' : 'text-red-600' }}">
+                            <i class="{{ $delivery->success ? 'fas fa-check-circle text-emerald-500' : 'fas fa-times-circle' }} mt-0.5" aria-hidden="true"></i>
+                            <span>
+                                {{ $delivery->sent_at->format('d.m.Y H:i') }} · {{ $delivery->kindLabel() }} · {{ $delivery->channelLabel() }} · {{ $delivery->user?->name }}
+                                {{ $delivery->trigger === 'manual' ? '(manuell)' : '' }}
+                                @if(! $delivery->success) – {{ $delivery->error }} @endif
+                            </span>
                         </li>
                     @empty
-                        <li class="text-gray-500">–</li>
+                        <li class="px-5 py-3 ea-muted">–</li>
                     @endforelse
                 </ul>
             </section>
@@ -84,60 +111,55 @@
         <aside class="space-y-6">
             @can('manage elternabfragen')
                 @if($inquiry->isRunning())
-                    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm space-y-4">
-                        <h2 class="font-semibold text-gray-800">Bearbeiten</h2>
-                        @unless($assignment->isAnswered())
-                            <form method="POST" action="{{ route('elternabfragen.admin.assignments.remind', $inquiry) }}">@csrf
-                                <input type="hidden" name="scope" value="selected"><input type="hidden" name="assignment_ids[]" value="{{ $assignment->id }}">
-                                <button class="w-full px-3 py-2 rounded-lg bg-blue-600 text-white"><i class="fas fa-bell" aria-hidden="true"></i> Erinnern</button>
-                            </form>
-                            <form method="POST" action="{{ route('elternabfragen.admin.assignments.extend', $assignment) }}" class="space-y-2">@csrf
-                                <label class="block text-gray-600">Individuelle Nachfrist</label>
-                                <input type="datetime-local" name="extended_until" required class="{{ $input }}" value="{{ now()->addWeek()->setTime(23, 59)->format('Y-m-d\TH:i') }}">
-                                <input name="reason" required class="{{ $input }}" placeholder="Grund / Rückfrage (Pflicht)">
-                                <button class="w-full px-3 py-2 rounded-lg border border-gray-300">Nachfrist setzen</button>
-                            </form>
-                        @else
-                            <form method="POST" action="{{ route('elternabfragen.admin.assignments.correction', $assignment) }}" class="space-y-2">@csrf
-                                <label class="block text-gray-600">Korrektur durch Eltern freigeben bis</label>
-                                <input type="datetime-local" name="correction_until" required class="{{ $input }}" value="{{ now()->addWeek()->setTime(23, 59)->format('Y-m-d\TH:i') }}">
-                                <input name="reason" required class="{{ $input }}" placeholder="Grund (Pflicht)">
-                                <button class="w-full px-3 py-2 rounded-lg border border-gray-300">Korrektur freigeben</button>
-                            </form>
-                        @endunless
-                        @if($assignment->has_problem)
-                            <form method="POST" action="{{ route('elternabfragen.admin.assignments.resolve', $assignment) }}" class="space-y-2">@csrf
-                                <input name="note" class="{{ $input }}" placeholder="Lösung (optional)">
-                                <button class="w-full px-3 py-2 rounded-lg border border-gray-300">Problem gelöst</button>
-                            </form>
-                        @else
-                            <form method="POST" action="{{ route('elternabfragen.admin.assignments.problem', $assignment) }}" class="space-y-2">@csrf
-                                <input name="note" required class="{{ $input }}" placeholder="z. B. E-Mail-Adresse ungültig">
-                                <button class="w-full px-3 py-2 rounded-lg border border-red-300 text-red-700">Technisches Problem melden</button>
-                            </form>
-                        @endif
+                    <section class="ea-card">
+                        <div class="ea-card-header">
+                            <div class="ea-card-icon"><i class="fas fa-tools" aria-hidden="true"></i></div>
+                            <h2 class="ea-card-title">Bearbeiten</h2>
+                        </div>
+                        <div class="ea-card-body space-y-5 text-sm">
+                            @unless($assignment->isAnswered())
+                                <form method="POST" action="{{ route('elternabfragen.admin.assignments.remind', $inquiry) }}">@csrf
+                                    <input type="hidden" name="scope" value="selected"><input type="hidden" name="assignment_ids[]" value="{{ $assignment->id }}">
+                                    <button class="ea-btn ea-btn-primary w-full"><i class="fas fa-bell" aria-hidden="true"></i> Erinnern</button>
+                                </form>
+                                <form method="POST" action="{{ route('elternabfragen.admin.assignments.extend', $assignment) }}" class="space-y-2">@csrf
+                                    <label class="ea-label" for="a_extend">Individuelle Nachfrist</label>
+                                    <input id="a_extend" type="datetime-local" name="extended_until" required class="ea-input" value="{{ $defaultDate }}">
+                                    <input name="reason" required class="ea-input" placeholder="Grund / Rückfrage (Pflicht)">
+                                    <button class="ea-btn ea-btn-secondary w-full"><i class="far fa-calendar-plus" aria-hidden="true"></i> Nachfrist setzen</button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('elternabfragen.admin.assignments.correction', $assignment) }}" class="space-y-2">@csrf
+                                    <label class="ea-label" for="a_correction">Korrektur durch Eltern freigeben bis</label>
+                                    <input id="a_correction" type="datetime-local" name="correction_until" required class="ea-input" value="{{ $defaultDate }}">
+                                    <input name="reason" required class="ea-input" placeholder="Grund (Pflicht)">
+                                    <button class="ea-btn ea-btn-secondary w-full"><i class="fas fa-unlock" aria-hidden="true"></i> Korrektur freigeben</button>
+                                </form>
+                            @endunless
+                            @if($assignment->has_problem)
+                                <form method="POST" action="{{ route('elternabfragen.admin.assignments.resolve', $assignment) }}" class="space-y-2 pt-4" style="border-top: 1px solid var(--color-card-border)">@csrf
+                                    <input name="note" class="ea-input" placeholder="Lösung (optional)">
+                                    <button class="ea-btn ea-btn-success w-full"><i class="fas fa-check" aria-hidden="true"></i> Problem gelöst</button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('elternabfragen.admin.assignments.problem', $assignment) }}" class="space-y-2 pt-4" style="border-top: 1px solid var(--color-card-border)">@csrf
+                                    <input name="note" required class="ea-input" placeholder="z. B. E-Mail-Adresse ungültig">
+                                    <button class="ea-btn ea-btn-danger w-full"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Technisches Problem melden</button>
+                                </form>
+                            @endif
+                        </div>
                     </section>
                 @endif
-                <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-sm">
-                    <form method="POST" action="{{ route('elternabfragen.admin.assignments.note', $assignment) }}" class="space-y-2">@csrf
-                        <label class="block font-semibold text-gray-800">Bearbeitungshinweis</label>
-                        <textarea name="note" rows="3" required class="{{ $input }}" placeholder="z. B. Klärung widersprüchlicher Angaben mit beiden Elternteilen">{{ $assignment->note }}</textarea>
-                        <button class="w-full px-3 py-2 rounded-lg border border-gray-300">Speichern</button>
+                <section class="ea-card">
+                    <form method="POST" action="{{ route('elternabfragen.admin.assignments.note', $assignment) }}" class="ea-card-body space-y-2 text-sm">@csrf
+                        <label class="ea-label" for="a_note"><i class="fas fa-sticky-note ea-muted mr-1" aria-hidden="true"></i> Bearbeitungshinweis</label>
+                        <textarea id="a_note" name="note" rows="3" required class="ea-input" placeholder="z. B. Klärung widersprüchlicher Angaben mit beiden Elternteilen">{{ $assignment->note }}</textarea>
+                        <button class="ea-btn ea-btn-secondary w-full">Speichern</button>
                     </form>
                 </section>
             @endcan
 
-            <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 class="font-semibold text-gray-800 mb-2">Protokoll</h2>
-                <ul class="text-xs text-gray-600 space-y-2">
-                    @forelse($assignment->events as $event)
-                        <li><span class="text-gray-800">{{ $event->actionLabel() }}</span> · {{ $event->created_at->format('d.m.Y H:i') }} · {{ $event->user?->name ?? 'System' }}
-                            @if($event->note)<span class="block italic">{{ $event->note }}</span>@endif</li>
-                    @empty
-                        <li>–</li>
-                    @endforelse
-                </ul>
-            </section>
+            @include('elternabfragen.admin._protocol', ['events' => $assignment->events])
         </aside>
     </div>
 </div>

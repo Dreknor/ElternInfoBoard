@@ -1,4 +1,4 @@
-{{-- Kopf und Reiter der Verwaltung „Elternabfragen“ --}}
+{{-- Kopf und Reiter der Verwaltung „Elternabfragen“. Optional: $title, $subtitle, $icon, $back (['url' => …, 'label' => …]) --}}
 @php
     $user = auth()->user();
     $tabs = array_filter([
@@ -16,20 +16,31 @@
     $current = request()->route()?->getName();
 @endphp
 <div class="mb-6">
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <i class="fas fa-clipboard-check text-blue-600" aria-hidden="true"></i>
-                {{ $title ?? 'Elternabfragen' }}
-            </h1>
-            @isset($subtitle)
-                <p class="text-sm text-gray-600 mt-1">{{ $subtitle }}</p>
-            @endisset
+    @isset($back)
+        <a href="{{ $back['url'] }}" class="inline-flex items-center gap-2 mb-3 text-sm ea-link">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ $back['label'] }}
+        </a>
+    @endisset
+    <div class="ea-hero">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+                <div class="ea-hero-icon"><i class="{{ $icon ?? 'fas fa-clipboard-check' }}" aria-hidden="true"></i></div>
+                <div class="min-w-0">
+                    <p class="text-xs font-semibold uppercase tracking-wider mb-0.5" style="color: rgba(255,255,255,.7)">Elternabfragen</p>
+                    <h1 class="ea-hero-title">{{ $title ?? 'Elternabfragen' }}</h1>
+                    @isset($subtitle)
+                        <p class="ea-hero-sub">{{ $subtitle }}</p>
+                    @endisset
+                </div>
+            </div>
+            @hasSection('ea-actions')
+                {{-- Aktionen über @section('ea-actions') vor @section('content') --}}
+                <div class="flex flex-wrap items-center gap-2">@yield('ea-actions')</div>
+            @endif
         </div>
-        {{ $actions ?? '' }}
     </div>
     @if(count($tabs) > 1)
-        <nav class="flex flex-wrap gap-1 border-b border-gray-200" aria-label="Bereiche">
+        <nav class="ea-tabs" aria-label="Bereiche">
             @foreach($tabs as $route => $tab)
                 @php
                     $prefixes = match ($route) {
@@ -40,12 +51,10 @@
                     };
                     $active = \Illuminate\Support\Str::startsWith((string) $current, $prefixes);
                 @endphp
-                <a href="{{ route($route) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 -mb-px border-b-2 text-sm font-medium
-                          {{ $active ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                <a href="{{ route($route) }}" class="ea-tab {{ $active ? 'ea-tab-active' : '' }}" @if($active) aria-current="page" @endif>
                     <i class="{{ $tab['icon'] }}" aria-hidden="true"></i> {{ $tab['label'] }}
                     @if(($tab['count'] ?? 0) > 0)
-                        <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-amber-500 rounded-full">{{ $tab['count'] }}</span>
+                        <span class="ea-tab-count">{{ $tab['count'] }}</span>
                     @endif
                 </a>
             @endforeach

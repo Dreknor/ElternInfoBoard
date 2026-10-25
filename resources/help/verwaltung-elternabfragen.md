@@ -10,6 +10,22 @@ Das Modul ersetzt wiederkehrende Papierabfragen. Der verbindliche Ablauf:
 
 Zu finden unter **Verwaltung › Elternabfragen**.
 
+## Ablauf auf einen Blick
+
+| Schritt | Wer | Was passiert | Status |
+|---|---|---|---|
+| 1. Vorlage anlegen | Sekretariat | Zweck, Hinweise, Fristen und Formularfelder festlegen (auch aus einer Excel-Liste) | Vorlage: Entwurf |
+| 2. Vorlage prüfen | Schulleitung | Elternvorschau prüfen, freigeben oder zurückgeben | Vorlage: In Prüfung → Freigegeben |
+| 3. Abfrage vorbereiten | Sekretariat | Vorlage wählen, Titel, Zeitraum, Zielgruppe, Kanäle, ggf. Vorabfrage | Abfrage: Entwurf |
+| 4. Abfrage freigeben | Schulleitung | Zielgruppe, Frist und Kanäle bestätigen | Wartet auf Freigabe → Freigegeben (geplant) |
+| 5. Start | System | Aufträge je Kind, Benachrichtigung per E-Mail/Push | Läuft |
+| 6. Ausfüllen | Eltern | ausfüllen, Zusammenfassung prüfen, verbindlich absenden | je Kind: Offen → Eingereicht |
+| 7. Rücklauf | Sekretariat | Erinnern, Nachfristen, Probleme klären, Antworten prüfen | – |
+| 8. Abschluss & Export | Sekretariat | beenden (oder automatisch 30 Tage nach Frist), Export erstellen | Abgeschlossen |
+| 9. Löschung | System | nach Ablauf der Aufbewahrungsfrist | Antworten gelöscht |
+
+Auf der Seite einer Abfrage zeigt die **Ablaufleiste** oben (Entwurf → Freigabe → Geplant → Läuft → Abgeschlossen), wo die Abfrage gerade steht. Daneben liegen alle Aktionen, die im aktuellen Schritt möglich sind.
+
 ## Rechte
 
 | Recht | Wofür |
@@ -61,9 +77,20 @@ Eine gestartete Abfrage kann **inhaltlich nicht mehr geändert** werden. Möglic
 - Einstellungen (Kanäle, Erinnerungen, Zuständigkeit, Mitarbeitersicht)
 - **Zielgruppe abgleichen**: neu hinzugekommene Kinder werden ergänzt und benachrichtigt
 - **Als neue Abfrage kopieren**, wenn sich der Inhalt ändern muss
-- **Abschließen** – danach keine Abgaben und Erinnerungen mehr (automatisch 30 Tage nach Fristende)
+- **Abschließen** bzw. **Vorzeitig beenden** (mit optionaler Begründung) – danach keine Abgaben, Korrekturen, Bestätigungen und Erinnerungen mehr; bisherige Antworten bleiben erhalten. Laufende Abfragen werden automatisch 30 Tage nach Fristende abgeschlossen. Eine geplante Abfrage, die vor dem Start beendet wird, wird gar nicht versendet.
+- **Vorabfrage setzen** (Abschnitt „Vorabfrage (z. B. Vorjahr)“) – siehe unten
+
+### Wiederkehrende Abfragen (z. B. neues Schuljahr)
+
+Fragt ihr dieselben Angaben jedes Jahr ab, verknüpfe die neue Abfrage mit der **Vorabfrage** (gleiche Vorlage, Antworten noch nicht gelöscht):
+
+- Beim Anlegen unter „Angaben vorbefüllen aus“ oder nachträglich im Abschnitt **Vorabfrage** der Abfrage. **Als neue Abfrage kopieren** setzt sie automatisch.
+- Eltern, die noch nicht geantwortet haben, sehen ihre Angaben vom letzten Mal **vorausgefüllt** – ohne Einwilligungen und Dateien, die neu angegeben werden müssen.
+- Im Rücklauf zeigt ein Hinweis, wie viele Kinder **geänderte Angaben** haben. Unter **Änderungen anzeigen** steht je Kind „bisher“ und „neu“ gegenüber (Recht „Antwortinhalte einsehen“). Im Export gibt es dazu die Spalte „Änderungen zur Vorabfrage“.
 
 ## 3. Rücklauf
+
+Oben siehst du den **Rücklauf in Prozent** (Kreisdiagramm) und je Status eine **Kachel mit der Anzahl**. Ein Klick auf eine Kachel filtert die Liste auf diesen Status, ein Klick auf den Rücklauf zeigt wieder alle Fälle.
 
 Die Übersicht zeigt je Kind Klasse, **Status**, berechtigte Konten, letzte Benachrichtigung/Erinnerung und Hinweise – **ohne Antwortinhalte**. Filter: Status, Klasse, Nachfrist, Suche nach Kind oder Elternkonto.
 
@@ -92,7 +119,7 @@ Bei Zustellproblemen erhält die verantwortliche Person eine Mitteilung.
 
 ## 4. Export
 
-**Export** in der Abfrage: Ebene (gesamte Abfrage oder Klasse), Felder, Format (Excel oder CSV) und **Ziel** wählen. Die **Vorschau** zeigt Anzahl der Datensätze, Felder, Antwortversion, fehlende oder auffällige Angaben, Ziel und verantwortliche Person. Jeder Export und jeder Download wird protokolliert; die Datei wird nach Ablauf (Standard 7 Tage) gelöscht. Die Übertragung in die Schulverwaltung erfolgt manuell.
+Der Export läuft in drei Schritten: **Auswahl → Vorschau prüfen → Datei erstellen**. **Export** in der Abfrage: Ebene (gesamte Abfrage oder Klasse), Felder, Format (Excel oder CSV) und **Ziel** wählen. Die **Vorschau** zeigt Anzahl der Datensätze, Felder, Antwortversion, fehlende oder auffällige Angaben, Ziel und verantwortliche Person. Jeder Export und jeder Download wird protokolliert; die Datei wird nach Ablauf (Standard 7 Tage) gelöscht. Die Übertragung in die Schulverwaltung erfolgt manuell.
 
 ## Aufbewahrung
 
