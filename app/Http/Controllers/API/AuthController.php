@@ -85,7 +85,8 @@ class AuthController extends Controller implements HasMiddleware
             ]);
         }
 
-        if (! Hash::check($request->password, $user->password)) {
+        // Deaktivierte Konten erhalten kein Token (wie die Web-Anmeldung und /api/v1/token)
+        if (! Hash::check($request->password, $user->password) || $user->is_active === false) {
             Log::warning('Login failed: Invalid password', [
                 'email' => $email,
                 'user_id' => $user->id

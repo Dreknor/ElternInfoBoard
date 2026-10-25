@@ -4,6 +4,6 @@
     <title>Rückmeldung</title>
 </head>
 <body>
-{!! $text !!}
+@safeHtml($text)
 </body>
 </html>

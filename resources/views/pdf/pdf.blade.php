@@ -20,7 +20,7 @@
         {{$nachricht->header}}
     </h4>
     <p>
-        {!! $nachricht->news !!}
+        @safeHtml($nachricht->news)
     </p>
     <br><br>
 @endforeach

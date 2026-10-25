@@ -58,7 +58,7 @@
                 </div>
 
                 @if($liste->comment)
-                    <p class="text-blue-100">{!! $liste->comment !!}</p>
+                    <p class="text-blue-100">@safeHtml($liste->comment)</p>
                 @endif
             </div>
 

@@ -272,6 +272,11 @@
 @endsection
 @push('js')
     <script>
+        // Von Eltern gepflegte Angaben (Vollmachten, Namen, Telefon) nie ungeprüft als HTML einsetzen
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+        }
+
         function toDateWithOutTimeZone(date) {
             let tempTime = date.split(":");
             let dt = new Date();
@@ -442,8 +447,8 @@
                         childData.mandates.forEach(function(m) {
                             const li = document.createElement('li');
                             li.className = 'list-group-item';
-                            const desc = m.mandate_description ? '<br>' + m.mandate_description : '';
-                            li.innerHTML = '<div><b>' + (m.mandate_name || '') + '</b>' + desc + '</div>';
+                            const desc = m.mandate_description ? '<br>' + escapeHtml(m.mandate_description) : '';
+                            li.innerHTML = '<div><b>' + escapeHtml(m.mandate_name) + '</b>' + desc + '</div>';
                             vollmachtList.appendChild(li);
                         });
                     } else {
@@ -463,16 +468,16 @@
                             const li = document.createElement('li');
                             li.className = 'list-group-item';
                             const emailLink = p.email
-                                ? ` &nbsp;<a href="mailto:${p.email}" class="text-muted small"><i class="fas fa-envelope mr-1"></i>${p.email}</a>`
+                                ? ` &nbsp;<a href="mailto:${escapeHtml(p.email)}" class="text-muted small"><i class="fas fa-envelope mr-1"></i>${escapeHtml(p.email)}</a>`
                                 : '';
                             let phoneLinks = '';
                             if (p.phone) {
-                                phoneLinks += ` &nbsp;<a href="tel:${p.phone}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${p.phone}</a>`;
+                                phoneLinks += ` &nbsp;<a href="tel:${escapeHtml(p.phone)}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${escapeHtml(p.phone)}</a>`;
                             }
                             if (p.publicPhone && p.publicPhone !== p.phone) {
-                                phoneLinks += ` &nbsp;<a href="tel:${p.publicPhone}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${p.publicPhone}</a>`;
+                                phoneLinks += ` &nbsp;<a href="tel:${escapeHtml(p.publicPhone)}" class="text-muted small"><i class="fas fa-phone mr-1"></i>${escapeHtml(p.publicPhone)}</a>`;
                             }
-                            li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + (p.name || '') + '</b>' + emailLink + phoneLinks;
+                            li.innerHTML = '<i class="fas fa-user mr-2"></i><b>' + escapeHtml(p.name) + '</b>' + emailLink + phoneLinks;
                             elternContainer.appendChild(li);
                         });
                     } else {

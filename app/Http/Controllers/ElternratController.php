@@ -165,6 +165,8 @@ class ElternratController extends Controller implements HasMiddleware
      */
     public function edit(Discussion $discussion)
     {
+        $this->authorizeDiscussion($discussion);
+
         return view('elternrat.editDiscussion', [
             'beitrag' => $discussion,
         ]);
@@ -177,6 +179,8 @@ class ElternratController extends Controller implements HasMiddleware
      */
     public function update(createDiscussionRequest $request, Discussion $discussion)
     {
+        $this->authorizeDiscussion($discussion);
+
         $discussion->update($request->validated());
 
         return redirect()->to(url('elternrat'))->with([
@@ -192,7 +196,12 @@ class ElternratController extends Controller implements HasMiddleware
      */
     public function deleteFile(Request $request, Media $file)
     {
-        if ($request->user()->can('delete elternrat file')) {
+        // Nur Dateien des Elternrats (vorher jede beliebige Mediendatei der Instanz)
+        $elternrat = Group::where('name', 'Elternrat')->first();
+        $isElternratFile = ($elternrat && $file->model_type === Group::class && (int) $file->model_id === $elternrat->id)
+            || $file->model_type === Discussion::class;
+
+        if ($isElternratFile && $request->user()->can('delete elternrat file')) {
             $file->delete();
 
             return response()->json([
@@ -266,6 +275,10 @@ class ElternratController extends Controller implements HasMiddleware
      */
     public function deleteComment(Comment $comment)
     {
+        // Nur Kommentare zu Elternrats-Beiträgen, nur eigene oder mit Löschrecht (vorher jeder Kommentar, auch zu Nachrichten)
+        abort_unless($comment->commentable_type === Discussion::class, 404);
+        abort_unless((int) $comment->creator_id === auth()->id() || auth()->user()->can('delete elternrat file'), 403);
+
         $comment->delete();
 
         return response('Gelöscht');
@@ -306,5 +319,11 @@ class ElternratController extends Controller implements HasMiddleware
             'type' => 'success',
             'meldung' => 'Benachrichtigungen deaktiviert',
         ]);
+    }
+
+    /** Beiträge bearbeiten nur Verfasser bzw. Personen mit Löschrecht im Elternrat. */
+    private function authorizeDiscussion(Discussion $discussion): void
+    {
+        abort_unless((int) $discussion->owner === auth()->id() || auth()->user()->can('delete elternrat file'), 403, 'Berechtigung fehlt');
     }
 }

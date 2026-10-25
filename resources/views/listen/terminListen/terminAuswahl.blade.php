@@ -102,7 +102,7 @@
                 </div>
 
                 @if($liste->comment)
-                    <p class="text-teal-100">{!! $liste->comment !!}</p>
+                    <p class="text-teal-100">@safeHtml($liste->comment)</p>
                 @endif
             </div>
 

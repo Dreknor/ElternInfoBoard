@@ -140,7 +140,7 @@
             @if(count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0)
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-2 prose max-w-none leading-relaxed" style="color: var(--color-text-primary);">
-                        {!! $nachricht->news !!}
+                        @safeHtml($nachricht->news)
                     </div>
                     <div class="md:col-span-1 space-y-4">
                         @if(count($nachricht->getMedia('images'))>0)
@@ -154,7 +154,7 @@
                 </div>
             @else
                 <div class="prose max-w-none leading-relaxed" style="color: var(--color-text-primary);">
-                    {!! $nachricht->news !!}
+                    @safeHtml($nachricht->news)
                 </div>
             @endif
         </div>

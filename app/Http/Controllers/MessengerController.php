@@ -10,6 +10,7 @@ use App\Model\Notification;
 use App\Model\User;
 use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
+use App\Support\UploadGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -438,15 +439,10 @@ class MessengerController extends Controller
             abort(404, 'Datei nicht gefunden.');
         }
 
-        $isImage      = str_starts_with($media->mime_type, 'image/');
-        $disposition  = $isImage ? 'inline' : 'attachment';
-
         $response = new BinaryFileResponse($filePath);
         $response->headers->set('Content-Type', $media->mime_type);
-        $response->headers->set(
-            'Content-Disposition',
-            $disposition . '; filename="' . $media->file_name . '"'
-        );
+        // Rasterbilder inline, alles andere (auch SVG) als Download, ohne Skriptausführung
+        UploadGuard::harden($response, $media);
         // Caching verhindern (Inhalte sind nutzerspezifisch)
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
         $response->headers->set('Pragma', 'no-cache');

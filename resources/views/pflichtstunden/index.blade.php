@@ -325,7 +325,7 @@
             </div>
 
             <div class="p-4 prose max-w-none">
-                {!! $pflichtstunden_settings->pflichtstunden_text !!}
+                @safeHtml($pflichtstunden_settings->pflichtstunden_text)
             </div>
 
             <div class="p-4">

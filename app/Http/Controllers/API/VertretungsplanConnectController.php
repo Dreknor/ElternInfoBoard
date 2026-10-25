@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ApiDeleteVertretungsNewsRequest;
 use App\Http\Requests\ApiDeleteVertretungsRequest;
+use App\Http\Requests\ApiDeleteVertretungsWeekRequest;
 use App\Http\Requests\ApiImportVertretungsNewsRequest;
 use App\Http\Requests\ApiImportVertretungsRequest;
 use App\Http\Requests\ApiImportVertretungsWeekRequest;
@@ -15,7 +16,6 @@ use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
 use App\Model\VertretungsplanWeek;
 use App\Http\Requests\ApiUpdateAbsenceRequest;
-use Illuminate\Http\Request;
 
 class VertretungsplanConnectController extends Controller
 {
@@ -185,7 +185,8 @@ class VertretungsplanConnectController extends Controller
         ]);
     }
 
-    public function deleteWeek(Request $request, $id)
+    // API-Key-Prüfung über die FormRequests – vorher ohne jede Authentifizierung erreichbar
+    public function deleteWeek(ApiDeleteVertretungsWeekRequest $request, $id)
     {
         $week = VertretungsplanWeek::find($id);
 
@@ -202,16 +203,9 @@ class VertretungsplanConnectController extends Controller
         ]);
     }
 
-    public function storeAbsence(Request $request)
+    public function storeAbsence(ApiUpdateAbsenceRequest $request)
     {
-
-        $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date',
-            'name' => 'required|string',
-            'reason' => 'nullable|string',
-            'id' => 'required|integer',
-        ]);
+        $request->validate(['id' => 'required|integer']);
 
         $absence = new VertretungsplanAbsence([
             'start_date' => $request->get('start_date'),
@@ -249,7 +243,7 @@ class VertretungsplanConnectController extends Controller
         ]);
     }
 
-    public function deleteAbsence(Request $request, $id)
+    public function deleteAbsence(ApiDeleteVertretungsRequest $request, $id)
     {
         $absence = VertretungsplanAbsence::where('absence_id', $id)->first();
 

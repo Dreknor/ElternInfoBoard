@@ -178,6 +178,7 @@ Route::middleware('auth')->group(function () {
         Route::get('stundenplan/lehrer/{teacher}', [\App\Http\Controllers\StundenplanController::class, 'lehrerAnsicht'])->middleware('can:view stundenplan teacher')->name('stundenplan.lehrer');
         Route::get('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'showImport'])->middleware('permission:edit settings')->name('stundenplan.import');
         Route::post('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'processImport'])->middleware('permission:edit settings')->name('stundenplan.import.process');
+        Route::get('stundenplan/import/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'status'])->middleware('permission:edit settings')->name('stundenplan.import.status');
 
 
         Route::middleware('permission:edit Pflichtstunden')->group(function () {

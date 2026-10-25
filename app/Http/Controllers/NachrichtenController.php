@@ -767,6 +767,9 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function touch(Post $posts)
     {
+        // Vorher ohne Prüfung: jedes Konto konnte fremde (auch nicht sichtbare) Beiträge als eigene Kopie anlegen
+        abort_unless(auth()->user()->can('edit posts') || (int) $posts->author === auth()->id(), 403, 'Berechtigung fehlt');
+
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
             $newPost = $posts->replicate([
                 'id',
@@ -972,6 +975,9 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function storeComment(Post $posts, CommentPostRequest $request)
     {
+        // Nur Empfänger eines Beitrags mit freigegebenen Kommentaren (wie die App-API)
+        abort_unless($request->user()->can('comment', $posts), 403, 'Kommentare sind für diesen Beitrag nicht möglich.');
+
         $posts->comment([
             'body' => $request->comment, ],
             auth()->user()

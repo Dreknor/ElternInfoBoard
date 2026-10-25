@@ -7,6 +7,7 @@ use App\Mail\newFilesAddToPost;
 use App\Model\Group;
 use App\Model\Post;
 use App\Repositories\GroupsRepository;
+use App\Services\App\FeedbackService;
 use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
@@ -21,6 +22,7 @@ use Illuminate\View\View;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class FileController extends Controller implements HasMiddleware
 {
@@ -152,13 +154,25 @@ class FileController extends Controller implements HasMiddleware
      * @throws FileDoesNotExist
      * @throws FileIsTooBig
      */
-    public function saveFileRueckmeldung(Request $request, Post $posts)
+    public function saveFileRueckmeldung(Request $request, Post $posts, FeedbackService $feedback)
     {
+        // Nur Empfänger eines Beitrags mit offener Bild-Rückmeldung, nur Bilder (wie die App-API).
+        // Vorher konnte jedes Konto beliebige Dateien (auch HTML/SVG) an jeden Beitrag hängen.
+        try {
+            $feedback->requireFeedback($request->user(), $posts, 'bild');
+        } catch (HttpException $e) {
+            return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+        }
+        $request->validate([
+            'name' => ['nullable', 'string', 'max:191'],
+            'files' => ['required', 'image', 'max:10240'],
+        ]);
+
         if ($request->hasFile('files')) {
-            $posts->addAllMediaFromRequest()
-                ->each(fn ($fileAdder) => $fileAdder
-                    ->usingName($request->name)
-                    ->toMediaCollection('images'));
+            $posts->addMediaFromRequest('files')
+                ->usingName((string) $request->input('name', $request->user()->name))
+                ->withCustomProperties(['uploaded_by' => $request->user()->id])
+                ->toMediaCollection('images');
 
             @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header, $posts->id));
         } else {

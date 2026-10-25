@@ -149,7 +149,7 @@
 
                             <!-- Post Content -->
                             <div class="p-6 prose max-w-none">
-                                {!! $beitrag->text !!}
+                                @safeHtml($beitrag->text)
                             </div>
 
                             <!-- Comments Section (Collapsible) -->

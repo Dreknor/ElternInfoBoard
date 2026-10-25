@@ -31,7 +31,7 @@
                 </div>
                 <div class="px-6 py-5">
                     <div class="prose prose-sm max-w-none leading-relaxed changelog-content" style="color: var(--color-text-secondary);">
-                        {!! $changelog->text !!}
+                        @safeHtml($changelog->text)
                     </div>
                 </div>
                 <div class="px-6 py-3 border-t border-amber-200 dark:border-amber-800" style="background-color: rgba(254,243,199,0.15);">

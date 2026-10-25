@@ -26,7 +26,7 @@
                     @endif
                 </h2>
                 @if($liste->comment)
-                    <p class="text-blue-100 text-sm mt-2">{!! $liste->comment !!}</p>
+                    <p class="text-blue-100 text-sm mt-2">@safeHtml($liste->comment)</p>
                 @endif
             </div>
 
