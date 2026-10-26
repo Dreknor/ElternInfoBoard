@@ -108,9 +108,9 @@ class StundenplanDataProvider
     /**
      * Stundenplan-Klassen (Kurzformen) eines Kindes.
      *
-     * Ein Kind hat keine direkte Zuordnung zu einer Stundenplan-Klasse. Zugeordnet
-     * wird über den Namen seiner Gruppen (Klasse, Gruppe, weitere Gruppen wie
-     * UCS-Kombiklassen): Gruppenname = Kurzform bzw. Name der Stundenplan-Klasse.
+     * Eine von den Eltern gewählte Klasse (`children.stundenplan_klasse`) hat
+     * Vorrang. Sonst wird über den Namen der Gruppen des Kindes zugeordnet
+     * (Klasse, Gruppe, weitere Gruppen wie UCS-Kombiklassen): Gruppenname = Kurzform bzw. Name der Stundenplan-Klasse.
      * Passt kein Name exakt, wird ohne Groß-/Kleinschreibung, Leerzeichen und ein
      * vorangestelltes „Klasse“ verglichen („Klasse 3a“ ↔ „3a“).
      *
@@ -124,19 +124,23 @@ class StundenplanDataProvider
             return [];
         }
 
+        $result = [];
+        if ($child->stundenplan_klasse && in_array($child->stundenplan_klasse, array_column($klassen, 'Kurzform'), true)) {
+            $result[] = $child->stundenplan_klasse;
+        }
+
         $groupIds = array_values(array_unique(array_filter(array_merge(
             [$child->class_id, $child->group_id],
             $child->additionalGroups()->pluck('groups.id')->all(),
         ))));
         if ($groupIds === []) {
-            return [];
+            return $result;
         }
 
         $names = Group::withoutGlobalScopes()->whereIn('id', $groupIds)->pluck('name', 'id');
         // Reihenfolge beibehalten: Klasse vor Gruppe vor weiteren Gruppen
         $names = array_values(array_filter(array_map(fn ($id) => $names[$id] ?? null, $groupIds)));
 
-        $result = [];
         foreach ($names as $name) {
             $exact = null;
             $loose = null;
@@ -156,6 +160,23 @@ class StundenplanDataProvider
         }
 
         return array_values(array_unique($result));
+    }
+
+    /**
+     * Alle Klassen des aktiven Stundenplans (für die Auswahl in der App).
+     *
+     * @return list<array{kurzform: string, name: string|null}>
+     */
+    public function klassen(?array $data = null): array
+    {
+        $data ??= $this->getStundenplanData();
+
+        return collect($data['Klassen'] ?? [])
+            ->map(fn ($k) => ['kurzform' => (string) $k['Kurzform'], 'name' => $k['Name'] ?? null])
+            ->unique('kurzform')
+            ->sortBy('kurzform', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
     }
 
     private static function normalize(string $value): string

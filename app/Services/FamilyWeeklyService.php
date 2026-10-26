@@ -48,7 +48,9 @@ class FamilyWeeklyService
         // was beim FileCache-Serialize zu Problemen führt (insb. mit Sanctum-Mock-Tokens in Tests).
         $children->each(fn (Child $child) => $child->setRelations([]));
 
-        $cacheKey = "family_weekly_{$user->id}_{$weekStart->format('Y-W')}";
+        // Gewählte Stundenplan-Klassen im Schlüssel: eine Änderung in der App wirkt sofort.
+        $klassen = md5($children->map(fn (Child $c) => $c->id.':'.$c->stundenplan_klasse)->implode(','));
+        $cacheKey = "family_weekly_{$user->id}_{$weekStart->format('Y-W')}_{$klassen}";
 
         return Cache::remember($cacheKey, 300, function () use ($children, $weekStart, $weekEnd) {
             $holidays       = Holiday::betweenDates($weekStart, $weekEnd)->get();

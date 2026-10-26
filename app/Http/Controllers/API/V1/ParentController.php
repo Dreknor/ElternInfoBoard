@@ -16,12 +16,14 @@ use App\Model\VertretungsplanWeek;
 use App\Services\App\Family;
 use App\Services\App\KrankmeldungService;
 use App\Services\FamilyWeeklyService;
+use App\Services\StundenplanDataProvider;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @group Familie
@@ -91,7 +93,7 @@ class ParentController extends ApiController
      *
      * @queryParam week string ISO-Woche `YYYY-Www`. Example: 2026-W40
      */
-    public function stundenplan(Request $request, Child $child, FamilyWeeklyService $weekly): JsonResponse
+    public function stundenplan(Request $request, Child $child, FamilyWeeklyService $weekly, StundenplanDataProvider $provider): JsonResponse
     {
         $user = $request->user();
         abort_unless(Family::ownsChild($user, $child), 403);
@@ -105,8 +107,13 @@ class ParentController extends ApiController
         $data = $weekly->getWeeklyData($user, $weekStart);
         $entry = $data['children']->first(fn ($c) => $c['child']->id === $child->id);
 
+        $klasse = $entry['klasse'] ?? null;
+
         return response()->json(['data' => [
-            'klasse' => $entry['klasse'] ?? null,
+            'klasse' => $klasse,
+            // false: Klasse nicht im Stundenplan gefunden – die App bietet die Auswahl an.
+            'klasse_gefunden' => $klasse !== null && in_array($klasse, array_column($provider->klassen(), 'kurzform'), true),
+            'klasse_auswahl' => $child->stundenplan_klasse,
             'week_start' => $data['week_start']->toDateString(),
             'days' => collect($entry['days'] ?? [])->map(fn ($d, $day) => [
                 'day' => $day,
@@ -117,6 +124,35 @@ class ParentController extends ApiController
                 'vertretungen' => $d['vertretungen']->values(),
             ])->values(),
         ]]);
+    }
+
+    /**
+     * Klassen des aktiven Stundenplans (Auswahl, wenn die Klasse eines Kindes
+     * nicht über seine Gruppen gefunden wird).
+     */
+    public function stundenplanKlassen(StundenplanDataProvider $provider): JsonResponse
+    {
+        return response()->json(['data' => $provider->klassen()]);
+    }
+
+    /**
+     * Stundenplan-Klasse eines Kindes festlegen; `null` hebt die Auswahl auf
+     * (dann gilt wieder die Zuordnung über die Gruppen).
+     *
+     * @bodyParam klasse string Kurzform aus `parent/stundenplan/klassen`. Example: 1Frue
+     */
+    public function updateStundenplanKlasse(Request $request, Child $child, StundenplanDataProvider $provider): JsonResponse
+    {
+        abort_unless(Family::mayManage($request->user(), $child), 403, 'Sie sind für dieses Kind nicht berechtigt.');
+        $data = $request->validate(['klasse' => ['present', 'nullable', 'string', 'max:50']]);
+        $klasse = $data['klasse'];
+        if ($klasse !== null && ! in_array($klasse, array_column($provider->klassen(), 'kurzform'), true)) {
+            throw ValidationException::withMessages(['klasse' => 'Diese Klasse gibt es im Stundenplan nicht.']);
+        }
+
+        $child->update(['stundenplan_klasse' => $klasse]);
+
+        return response()->json(['data' => ['klasse_auswahl' => $klasse], 'message' => 'Klasse gespeichert.']);
     }
 
     /**

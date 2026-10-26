@@ -89,4 +89,75 @@ class StundenplanTest extends AppApiTestCase
 
         $this->assertSame([], $this->lessonsMonday($child));
     }
+
+    #[Test]
+    public function klassenliste_fuer_die_auswahl(): void
+    {
+        Sanctum::actingAs($this->parentIn($this->group('Hort')));
+
+        $this->getJson('/api/v1/parent/stundenplan/klassen')
+            ->assertOk()
+            ->assertJsonPath('data.*.kurzform', ['1Frue', '3a']);
+    }
+
+    #[Test]
+    public function ohne_treffer_meldet_die_api_klasse_nicht_gefunden(): void
+    {
+        $group = $this->group('Klassenstufe 1');
+        $child = $this->childOf($user = $this->parentIn($group), $group);
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/parent/children/{$child->id}/stundenplan")
+            ->assertOk()
+            ->assertJsonPath('data.klasse_gefunden', false)
+            ->assertJsonPath('data.klasse_auswahl', null);
+    }
+
+    #[Test]
+    public function gewaehlte_klasse_wird_gespeichert_und_genutzt(): void
+    {
+        $group = $this->group('Klassenstufe 1');
+        $child = $this->childOf($user = $this->parentIn($group), $group);
+        Sanctum::actingAs($user);
+        // Wochendaten zuerst ohne Auswahl laden (Cache darf die Auswahl nicht verdecken)
+        $this->getJson("/api/v1/parent/children/{$child->id}/stundenplan")->assertJsonPath('data.days.0.lessons', []);
+
+        $this->putJson("/api/v1/parent/children/{$child->id}/stundenplan-klasse", ['klasse' => '1Frue'])
+            ->assertOk()
+            ->assertJsonPath('data.klasse_auswahl', '1Frue');
+
+        $response = $this->getJson("/api/v1/parent/children/{$child->id}/stundenplan")
+            ->assertOk()
+            ->assertJsonPath('data.klasse', '1Frue')
+            ->assertJsonPath('data.klasse_gefunden', true)
+            ->assertJsonPath('data.klasse_auswahl', '1Frue');
+        $this->assertSame(['SU'], array_column($response->json('data.days.0.lessons'), 'fach'));
+
+        $this->putJson("/api/v1/parent/children/{$child->id}/stundenplan-klasse", ['klasse' => null])->assertOk();
+        $this->assertNull($child->fresh()->stundenplan_klasse);
+    }
+
+    #[Test]
+    public function unbekannte_klasse_wird_abgelehnt(): void
+    {
+        $group = $this->group('Klassenstufe 1');
+        $child = $this->childOf($user = $this->parentIn($group), $group);
+        Sanctum::actingAs($user);
+
+        $this->putJson("/api/v1/parent/children/{$child->id}/stundenplan-klasse", ['klasse' => '9z'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('klasse');
+    }
+
+    #[Test]
+    public function fremdes_kind_darf_nicht_geaendert_werden(): void
+    {
+        $group = $this->group('Klassenstufe 1');
+        $child = $this->childOf($this->parentIn($group), $group);
+        Sanctum::actingAs($this->parentIn($group));
+
+        $this->putJson("/api/v1/parent/children/{$child->id}/stundenplan-klasse", ['klasse' => '1Frue'])
+            ->assertForbidden();
+        $this->assertNull($child->fresh()->stundenplan_klasse);
+    }
 }
