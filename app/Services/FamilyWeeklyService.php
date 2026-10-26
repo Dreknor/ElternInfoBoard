@@ -79,7 +79,7 @@ class FamilyWeeklyService
         ?array $stundenplanData,
         Collection $holidays,
     ): array {
-        $klasseKurzform = $this->getKlasseKurzform($child);
+        $klasseKurzform = $this->getKlasseKurzform($child, $stundenplanData);
 
         $days = [];
         for ($i = 0; $i < 5; $i++) {
@@ -114,9 +114,16 @@ class FamilyWeeklyService
 
     /**
      * Ermittelt die Klassen-Kurzform (für Stundenplan-Lookup).
+     *
+     * Bevorzugt die Klasse, die im Stundenplan tatsächlich vorkommt; sonst der
+     * Gruppenname (Vertretungen können auch ohne importierten Stundenplan existieren).
      */
-    private function getKlasseKurzform(Child $child): ?string
+    private function getKlasseKurzform(Child $child, ?array $stundenplanData): ?string
     {
+        if ($stundenplanData && ($kurzform = $this->stundenplanProvider->klassenForChild($child, $stundenplanData)[0] ?? null)) {
+            return $kurzform;
+        }
+
         $groupId = $child->class_id ?? $child->group_id;
         if (! $groupId) {
             return null;

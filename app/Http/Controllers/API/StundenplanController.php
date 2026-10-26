@@ -1013,23 +1013,14 @@ class StundenplanController extends Controller
      */
     private function getAllowedClassesForParent($user)
     {
-        $allowedClasses = [];
+        $provider = app(StundenplanDataProvider::class);
+        $data = $provider->getStundenplanData();
 
-        // Get all children of the parent
-        $children = $user->childRelations()->with('child.groups')->get();
-
-        foreach ($children as $childRelation) {
-            if ($childRelation->child && $childRelation->child->groups) {
-                foreach ($childRelation->child->groups as $group) {
-                    // Use group shortname as class identifier
-                    if ($group->shortname) {
-                        $allowedClasses[] = $group->shortname;
-                    }
-                }
-            }
-        }
-
-        return array_unique($allowedClasses);
+        return $user->children()
+            ->flatMap(fn ($child) => $provider->klassenForChild($child, $data))
+            ->unique()
+            ->values()
+            ->all();
     }
 }
 
