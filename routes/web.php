@@ -583,7 +583,7 @@ Route::middleware('auth')->group(function () {
                 ->name('settings.ucs.sync')
                 ->middleware('permission:manage ucs sync');
 
-            // UCS Link-Kandidaten (TODO-08)
+            // UCS Link-Kandidaten
             Route::post('settings/ucs/link-candidates/{candidate}/confirm',
                 [UcsLinkCandidateController::class, 'confirm'])
                 ->name('settings.ucs.link.confirm');

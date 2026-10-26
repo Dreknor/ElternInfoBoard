@@ -1,5 +1,5 @@
 {{--
-    Partial: Offene UCS-Link-Kandidaten (Admin-UI, TODO-08)
+    Partial: Offene UCS-Link-Kandidaten (Admin-UI)
     Wird im UCS-Settings-Tab unterhalb des Formulars eingebunden.
 
     Zeigt alle Kandidaten, bei denen confirmed_at IS NULL (d.h. weder bestätigt noch verworfen).
