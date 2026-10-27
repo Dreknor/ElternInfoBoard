@@ -406,7 +406,11 @@ class ImportController extends Controller implements HasMiddleware
 
     public function importVereinForm()
     {
-        return view('user.importVerein');
+        $group = Group::withoutGlobalScopes()->where('name', VereinImportService::GROUP_NAME)->orderBy('id')->first();
+
+        return view('user.importVerein', [
+            'memberCount' => $group?->users()->count() ?? 0,
+        ]);
     }
 
     // ─── Vorlagen-Downloads ───────────────────────────────────────────────────
