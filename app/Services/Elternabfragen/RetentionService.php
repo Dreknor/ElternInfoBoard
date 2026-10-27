@@ -14,6 +14,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Kap. 7.4: Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten,
@@ -102,7 +103,22 @@ class RetentionService
         return $inquiry->templateVersion?->record_relevant ? $this->filing->pendingCount($inquiry) : 0;
     }
 
-    public function purge(Inquiry $inquiry): void
+    /**
+     * Antworten vorzeitig bzw. bei unbefristeter Aufbewahrung manuell löschen.
+     * Aktenrelevante Antworten müssen vorher für die Schülerakte gedruckt sein.
+     */
+    public function purgeManually(Inquiry $inquiry, string $reason): void
+    {
+        $inquiry->assertStatus(InquiryStatus::Closed);
+        abort_if($inquiry->purged_at !== null, 409, 'Die Antworten wurden bereits gelöscht.');
+        if (($unfiled = $this->unfiledCount($inquiry)) > 0) {
+            throw ValidationException::withMessages(['purge_reason' => $unfiled.' Antwort(en) wurden noch nicht für die Schülerakte gedruckt.']);
+        }
+
+        $this->purge($inquiry, $reason);
+    }
+
+    public function purge(Inquiry $inquiry, ?string $note = null): void
     {
         $statistics = $inquiry->assignments()
             ->select('status', DB::raw('count(*) as total'))
@@ -128,7 +144,7 @@ class RetentionService
         Storage::disk(ResponseService::DISK)->deleteDirectory('elternabfragen/'.$inquiry->id);
 
         $inquiry->update(['purged_at' => now(), 'staff_visible' => false]);
-        InquiryEvent::log('inquiry.purged', ['inquiry_id' => $inquiry->id], null, ['statistics' => $statistics]);
+        InquiryEvent::log('inquiry.purged', ['inquiry_id' => $inquiry->id], $note, array_filter(['statistics' => $statistics, 'manual' => $note !== null]));
     }
 
     public function run(?CarbonInterface $now = null): int

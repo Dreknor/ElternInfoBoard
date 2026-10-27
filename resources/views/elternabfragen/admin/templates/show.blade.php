@@ -101,7 +101,7 @@
                             ['fas fa-building', 'Zuständige Stelle', $version->responsible_office ?? '–'],
                             ['fas fa-users', 'Zielgruppe', $version->target_hint ?? '–'],
                             ['far fa-calendar-alt', 'Standardfrist', $version->default_deadline_days.' Tage'],
-                            ['fas fa-archive', 'Aufbewahrung', $version->retention_days ? $version->retention_days.' Tage nach Abschluss' : 'Standard'],
+                            ['fas fa-archive', 'Aufbewahrung', $version->retentionLabel()],
                         ] as [$icon, $term, $value])
                             <div class="rounded-xl p-3 ea-subtle">
                                 <dt class="text-xs ea-muted"><i class="{{ $icon }} mr-1" aria-hidden="true"></i> {{ $term }}</dt>

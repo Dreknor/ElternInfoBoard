@@ -110,6 +110,8 @@
                     @if($version->retention_note)<p class="whitespace-pre-line mb-0">{{ $version->retention_note }}</p>@endif
                     @if($inquiry->retention_days)
                         <p class="mb-0">Die Angaben werden {{ $inquiry->retention_days }} Tage nach Abschluss der Abfrage gelöscht, soweit keine gesetzliche Aufbewahrungspflicht besteht.</p>
+                    @elseif($inquiry->exists)
+                        <p class="mb-0">Die Angaben werden aufbewahrt, solange sie für den genannten Zweck benötigt werden, und danach von der Schule gelöscht.</p>
                     @endif
                 </div>
             </details>

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Schema;
  *  - Vorlagen können als „aktenrelevant“ gekennzeichnet werden (Ausdruck zur Schülerakte).
  *  - Je Auftrag wird vermerkt, welche Antwortversion für die Akte gedruckt wurde.
  *  - Einzelne Aufträge können neu gestartet werden, auch nach Abschluss der Abfrage.
+ *  - Vorlagen können unbefristete Aufbewahrung vorsehen (z. B. Einwilligungen für die
+ *    gesamte Schulzeit); gelöscht wird dann manuell durch die Verwaltung.
  */
 return new class extends Migration
 {
@@ -17,6 +19,7 @@ return new class extends Migration
     {
         Schema::table('inquiry_template_versions', function (Blueprint $table) {
             $table->boolean('record_relevant')->default(false)->after('requires_all_guardians');
+            $table->boolean('retention_unlimited')->default(false)->after('retention_days');
         });
 
         Schema::table('inquiry_assignments', function (Blueprint $table) {
@@ -35,7 +38,7 @@ return new class extends Migration
         });
 
         Schema::table('inquiry_template_versions', function (Blueprint $table) {
-            $table->dropColumn('record_relevant');
+            $table->dropColumn(['record_relevant', 'retention_unlimited']);
         });
     }
 };

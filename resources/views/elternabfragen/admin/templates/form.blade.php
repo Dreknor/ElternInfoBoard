@@ -88,6 +88,10 @@
                 <div>
                     <label for="retention_days" class="ea-label">Aufbewahrungsfrist nach Abschluss (Tage)</label>
                     <input type="number" id="retention_days" name="retention_days" min="1" max="3650" value="{{ old('retention_days', $version->retention_days) }}" class="ea-input" placeholder="leer = Standard aus den Regeln">
+                    <label class="flex items-start gap-2 mt-2 text-sm ea-text">
+                        <input type="checkbox" name="retention_unlimited" value="1" class="ea-check mt-0.5" @checked(old('retention_unlimited', $version->retention_unlimited))>
+                        <span>Unbefristet aufbewahren – z. B. für Einwilligungen, die für die gesamte Schulzeit gelten. Keine automatische Löschung; die Verwaltung löscht die Antworten, wenn sie nicht mehr benötigt werden.</span>
+                    </label>
                 </div>
                 <div class="md:col-span-2">
                     <label for="retention_note" class="ea-label">Hinweise zu Aufbewahrung und Löschung</label>

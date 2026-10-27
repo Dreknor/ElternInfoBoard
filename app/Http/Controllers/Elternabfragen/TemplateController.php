@@ -174,7 +174,8 @@ class TemplateController extends Controller
             'parent_info' => $text('parent_info', 10000) ?: null,
             'responsible_office' => $text('responsible_office', 255) ?: null,
             'default_deadline_days' => $days('default_deadline_days', 365) ?? 14,
-            'retention_days' => $days('retention_days', 3650),
+            'retention_days' => $request->boolean('retention_unlimited') ? null : $days('retention_days', 3650),
+            'retention_unlimited' => $request->boolean('retention_unlimited'),
             'retention_note' => $text('retention_note', 2000) ?: null,
             'requires_all_guardians' => $request->boolean('requires_all_guardians'),
             'fields' => $normalized,
@@ -240,6 +241,7 @@ class TemplateController extends Controller
             'target_hint' => 'nullable|string|max:255',
             'default_deadline_days' => 'required|integer|min:1|max:365',
             'retention_days' => 'nullable|integer|min:1|max:3650',
+            'retention_unlimited' => 'nullable|boolean',
             'retention_note' => 'nullable|string|max:2000',
             'is_sensitive' => 'nullable|boolean',
             'requires_all_guardians' => 'nullable|boolean',
@@ -253,6 +255,7 @@ class TemplateController extends Controller
         $data['is_sensitive'] = $request->boolean('is_sensitive');
         $data['requires_all_guardians'] = $request->boolean('requires_all_guardians');
         $data['record_relevant'] = $request->boolean('record_relevant');
+        $data['retention_unlimited'] = $request->boolean('retention_unlimited');
 
         return $data;
     }

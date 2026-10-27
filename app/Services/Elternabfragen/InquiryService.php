@@ -46,7 +46,8 @@ class InquiryService
             'template_version_id' => $version->id,
             'status' => InquiryStatus::Draft,
             'created_by' => $user->id,
-            'retention_days' => $version->retention_days ?? $this->settings->default_retention_days,
+            // null = unbefristet: keine automatische Löschung, nur manuell durch die Verwaltung
+            'retention_days' => $version->retention_unlimited ? null : ($version->retention_days ?? $this->settings->default_retention_days),
         ]);
 
         InquiryEvent::log('inquiry.created', ['inquiry_id' => $inquiry->id], null, ['template_version' => $version->label()]);

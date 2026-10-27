@@ -846,6 +846,7 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
             Route::put('abfragen/{inquiry}/einstellungen', [$inquiries, 'settings'])->name('inquiries.settings');
             Route::put('abfragen/{inquiry}/vorabfrage', [$inquiries, 'previous'])->name('inquiries.previous');
             Route::post('abfragen/{inquiry}/abschliessen', [$inquiries, 'close'])->name('inquiries.close');
+            Route::post('abfragen/{inquiry}/antworten-loeschen', [$inquiries, 'purge'])->name('inquiries.purge');
             Route::post('abfragen/{inquiry}/duplizieren', [$inquiries, 'duplicate'])->name('inquiries.duplicate');
             Route::delete('abfragen/{inquiry}', [$inquiries, 'destroy'])->name('inquiries.destroy');
         });

@@ -412,7 +412,7 @@
                     <div><dt><i class="fas fa-bell" aria-hidden="true"></i> Autom. Erinnerungen</dt><dd>{{ $inquiry->auto_reminders ? 'ja' : 'nein' }}</dd></div>
                     <div><dt><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> Für Mitarbeitende lesbar</dt><dd>{{ $inquiry->staff_visible ? 'ja (nur geprüfte Antworten)' : 'nein' }}</dd></div>
                     <div><dt><i class="fas fa-pen" aria-hidden="true"></i> Selbstkorrektur</dt><dd>{{ $inquiry->correction_window_days }} Tage</dd></div>
-                    <div><dt><i class="fas fa-archive" aria-hidden="true"></i> Aufbewahrung</dt><dd>{{ $inquiry->retention_days ? $inquiry->retention_days.' Tage nach Abschluss' : 'unbefristet' }}@if($purgeDate && ! $inquiry->purged_at)<span class="block text-xs ea-muted">Löschung ab {{ $purgeDate->format('d.m.Y') }}</span>@endif</dd></div>
+                    <div><dt><i class="fas fa-archive" aria-hidden="true"></i> Aufbewahrung</dt><dd>{{ $inquiry->retention_days ? $inquiry->retention_days.' Tage nach Abschluss' : 'unbefristet (manuelle Löschung)' }}@if($purgeDate && ! $inquiry->purged_at)<span class="block text-xs ea-muted">Löschung ab {{ $purgeDate->format('d.m.Y') }}</span>@endif</dd></div>
                     @if($inquiry->templateVersion->record_relevant)<div><dt><i class="fas fa-folder-open" aria-hidden="true"></i> Schülerakte</dt><dd>aktenrelevant</dd></div>@endif
                     @if($inquiry->approved_at)<div><dt><i class="fas fa-user-check" aria-hidden="true"></i> Freigegeben</dt><dd>{{ $inquiry->approved_at->format('d.m.Y H:i') }} von {{ $inquiry->approver?->name }}</dd></div>@endif
                     @if($inquiry->expected_children !== null)<div><dt><i class="fas fa-calculator" aria-hidden="true"></i> Erwartet</dt><dd>{{ $inquiry->expected_children }} Kinder / {{ $inquiry->expected_accounts }} Konten</dd></div>@endif
@@ -529,6 +529,34 @@
                                 <input name="note" maxlength="1000" class="ea-input" placeholder="Begründung (optional, wird protokolliert)">
                                 <button class="ea-btn ea-btn-danger w-full"><i class="fas fa-lock" aria-hidden="true"></i> Jetzt beenden</button>
                             </form>
+                        </div>
+                    </section>
+                @endif
+            @endcan
+
+            @can('manage elternabfragen')
+                @if($status === 'closed' && ! $inquiry->purged_at)
+                    <section class="ea-card">
+                        <div class="ea-card-header">
+                            <div class="ea-card-icon !bg-red-100 !text-red-600 dark:!bg-red-900/40"><i class="fas fa-trash-alt" aria-hidden="true"></i></div>
+                            <h2 class="ea-card-title">Antworten löschen</h2>
+                        </div>
+                        <div class="ea-card-body space-y-3 text-sm">
+                            <p class="ea-muted mb-0">
+                                @if($inquiry->retention_days) Ohne Zutun werden die Antworten @if($purgeDate) ab {{ $purgeDate->format('d.m.Y') }} @endif automatisch gelöscht. Hier lassen sie sich vorher löschen, z. B. nach einem Widerruf.
+                                @else Die Aufbewahrung ist unbefristet. Löschen Sie die Antworten, sobald sie nicht mehr benötigt werden, z. B. am Ende der Schulzeit. @endif
+                                Erhalten bleiben die Abfrage und eine anonyme Statistik.
+                            </p>
+                            @if($inquiry->templateVersion->record_relevant && $unfiledCount > 0)
+                                <p class="text-amber-700 dark:text-amber-400 mb-0"><i class="fas fa-folder-open" aria-hidden="true"></i> Erst möglich, wenn alle vollständigen Antworten für die Schülerakte gedruckt sind.</p>
+                            @else
+                                <form method="POST" action="{{ route('elternabfragen.admin.inquiries.purge', $inquiry) }}" class="space-y-3"
+                                      onsubmit="return confirm('Alle Antworten dieser Abfrage endgültig löschen? Das kann nicht rückgängig gemacht werden.')">
+                                    @csrf
+                                    <input name="purge_reason" required maxlength="1000" class="ea-input" placeholder="Grund (wird protokolliert)">
+                                    <button class="ea-btn ea-btn-danger w-full"><i class="fas fa-trash-alt" aria-hidden="true"></i> Antworten endgültig löschen</button>
+                                </form>
+                            @endif
                         </div>
                     </section>
                 @endif

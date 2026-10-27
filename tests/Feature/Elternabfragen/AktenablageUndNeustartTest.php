@@ -197,4 +197,64 @@ class AktenablageUndNeustartTest extends ElternabfragenTestCase
             'restart_until' => now()->addDay()->format('Y-m-d H:i'), 'reason' => 'Test',
         ])->assertForbidden();
     }
+
+    #[Test]
+    public function unbefristete_aufbewahrung_und_manuelle_loeschung(): void
+    {
+        $inquiry = $this->runningInquiry([], ['retention_unlimited' => true, 'retention_days' => 30]);
+        $this->assertNull($inquiry->retention_days);
+        $this->assertTrue($inquiry->templateVersion->retention_unlimited);
+        $this->submitAsMother($this->assignmentFor($inquiry));
+        $this->actingAs($this->sekretariat)->post(route('elternabfragen.admin.inquiries.close', $inquiry));
+
+        $this->travel(5)->years();
+        $this->assertSame(0, app(RetentionService::class)->run());
+        $this->actingAs($this->sekretariat)->get(route('elternabfragen.admin.inquiries.show', $inquiry))
+            ->assertOk()->assertSee('unbefristet (manuelle Löschung)')->assertSee('Antworten endgültig löschen');
+
+        $this->post(route('elternabfragen.admin.inquiries.purge', $inquiry), [])->assertSessionHasErrors('purge_reason');
+        $this->post(route('elternabfragen.admin.inquiries.purge', $inquiry), ['purge_reason' => 'Schulzeit beendet'])
+            ->assertSessionHasNoErrors()->assertSessionHas('type', 'success');
+        $this->assertNotNull($inquiry->fresh()->purged_at);
+        $this->assertSame(0, InquiryResponse::count());
+        $this->assertDatabaseHas('inquiry_events', ['inquiry_id' => $inquiry->id, 'action' => 'inquiry.purged', 'note' => 'Schulzeit beendet']);
+    }
+
+    #[Test]
+    public function manuelle_loeschung_erst_nach_druck_aktenrelevanter_antworten(): void
+    {
+        $inquiry = $this->runningInquiry([], ['record_relevant' => true]);
+        $assignment = $this->assignmentFor($inquiry);
+        $this->submitAsMother($assignment);
+        $this->actingAs($this->sekretariat)->post(route('elternabfragen.admin.inquiries.close', $inquiry));
+
+        $this->post(route('elternabfragen.admin.inquiries.purge', $inquiry), ['purge_reason' => 'Widerruf'])->assertSessionHasErrors('purge_reason');
+        $this->assertNull($inquiry->fresh()->purged_at);
+
+        $this->get(route('elternabfragen.admin.records.assignment', $assignment))->assertOk();
+        $this->post(route('elternabfragen.admin.inquiries.purge', $inquiry), ['purge_reason' => 'Widerruf'])->assertSessionHasNoErrors();
+        $this->assertNotNull($inquiry->fresh()->purged_at);
+
+        // Laufende Abfragen lassen sich nicht manuell löschen
+        $running = $this->runningInquiry();
+        $this->actingAs($this->sekretariat)->post(route('elternabfragen.admin.inquiries.purge', $running), ['purge_reason' => 'x'])->assertStatus(409);
+    }
+
+    #[Test]
+    public function vorlage_mit_unbefristeter_aufbewahrung_ueber_die_oberflaeche(): void
+    {
+        $this->actingAs($this->sekretariat)->post(route('elternabfragen.admin.templates.store'), [
+            'title' => 'Fotoeinwilligung',
+            'purpose' => 'Fotos für die gesamte Schulzeit.',
+            'default_deadline_days' => 14,
+            'retention_days' => 90,
+            'retention_unlimited' => 1,
+            'fields_json' => json_encode($this->fields()),
+        ])->assertRedirect();
+
+        $version = InquiryTemplateVersion::firstOrFail();
+        $this->assertTrue($version->retention_unlimited);
+        $this->assertNull($version->retention_days);
+        $this->get(route('elternabfragen.admin.templates.show', $version))->assertOk()->assertSee('unbefristet (manuelle Löschung)');
+    }
 }

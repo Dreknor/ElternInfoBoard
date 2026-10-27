@@ -303,6 +303,14 @@ class InquiryController extends Controller
             : 'Abfrage beendet. Es sind keine Abgaben und Erinnerungen mehr möglich.']);
     }
 
+    public function purge(Request $request, Inquiry $inquiry, RetentionService $retention): RedirectResponse
+    {
+        $data = $request->validate(['purge_reason' => 'required|string|max:1000']);
+        $retention->purgeManually($inquiry, $data['purge_reason']);
+
+        return back()->with(['type' => 'success', 'Meldung' => 'Antworten, Uploads und personenbezogene Protokolldaten wurden gelöscht.']);
+    }
+
     public function duplicate(Request $request, Inquiry $inquiry): RedirectResponse
     {
         $copy = $this->inquiries->duplicate($inquiry, $request->user());

@@ -187,6 +187,10 @@ jeder Download werden protokolliert. **(O)** Formeln aus Freitext werden neutral
 ## 9. Aufbewahrung und Löschung (Kap. 7.4)
 
 Aufbewahrungsfrist je Vorlage (sonst Standard) wird bei Anlage in die Abfrage kopiert.
+Vorlagen mit `retention_unlimited` erzeugen Abfragen ohne Frist (`retention_days = null`);
+abgeschlossene Abfragen kann die Verwaltung jederzeit manuell löschen
+(`RetentionService::purgeManually()`, Grund wird protokolliert, aktenrelevante Antworten
+müssen vorher gedruckt sein).
 Geplante und laufende Abfragen können jederzeit (auch vor Fristende) mit optionaler
 Begründung beendet werden; das Protokoll vermerkt „vorzeitig“ bzw. „vor dem Start“.
 Laufende Abfragen werden 30 Tage nach Fristende automatisch abgeschlossen **(O)**, damit
