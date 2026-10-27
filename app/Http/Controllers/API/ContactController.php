@@ -107,10 +107,14 @@ class ContactController extends Controller implements HasMiddleware
             'attachments' => count($attachmentsData),
         ]);
 
+        // Die App sendet Klartext, die Mail-Vorlage erwartet HTML wie aus dem Web-Editor –
+        // ohne Umwandlung gehen Zeilenumbrüche und Absätze verloren.
+        $text = nl2br(e($request->input('text')), false);
+
         try {
             // Synchron, weil hochgeladene Anhänge nur während der Anfrage existieren.
             Mail::to($email)->send(new SendFeedback(
-                $request->input('text'),
+                $text,
                 $request->input('betreff'),
                 ['attachments' => $attachmentsData],
                 $user?->name,
