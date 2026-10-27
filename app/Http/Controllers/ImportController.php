@@ -8,9 +8,9 @@ use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\SchuelerImportRows;
 use App\Imports\UsersImport;
-use App\Imports\VereinImport;
+use App\Imports\VereinImportRows;
 use App\Services\Import\SchuelerImportService;
-use App\Support\UploadedSpreadsheet;
+use App\Services\Import\VereinImportService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\ElternImportVorlage;
@@ -18,7 +18,6 @@ use App\Exports\MitarbeiterImportVorlage;
 use App\Exports\VereinImportVorlage;
 use App\Mail\ImportCredentialsMail;
 use App\Model\Group;
-use App\Model\group_user;
 use App\Scopes\GetGroupsScope;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Foundation\Application;
@@ -31,7 +30,6 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 
 class ImportController extends Controller implements HasMiddleware
@@ -292,33 +290,44 @@ class ImportController extends Controller implements HasMiddleware
         //   wird die PDF dem eingeloggten (importierenden) Benutzer zum Download angeboten
         //   UND zusätzlich per E-Mail an dessen Adresse verschickt.
         if (! $sendEmail && count($newUsers) > 0) {
-            $pdf = Pdf::loadView('pdf.import-credentials', [
-                'users'      => $newUsers,
-                'importType' => $importTypeLabel,
-            ]);
-            $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
-            $pdfContent = $pdf->output();
-
-            $currentUser = $request->user();
-            if ($currentUser && $currentUser->email) {
-                try {
-                    Mail::to($currentUser->email)->queue(
-                        new ImportCredentialsMail($pdfContent, $filename, $importTypeLabel, count($newUsers))
-                    );
-                } catch (\Exception $mailException) {
-                    \Log::error('Fehler beim Versenden der Zugangsdaten-PDF an ' . $currentUser->email . ': ' . $mailException->getMessage());
-                }
-            }
-
-            return response($pdfContent, 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ]);
+            return $this->credentialsPdfResponse($request, $newUsers, $importTypeLabel);
         }
 
         return redirect()->to(url('users'))->with([
             'type'    => 'success',
             'Meldung' => $Meldung . (! $sendEmail ? ' – keine neuen Benutzer angelegt.' : ''),
+        ]);
+    }
+
+    /**
+     * PDF mit den Zugangsdaten neuer Benutzer zum Download anbieten und zusätzlich
+     * per E-Mail an den importierenden Benutzer schicken (PDF-Modus der Importe).
+     *
+     * @param  array<int, array{name: string, email: string, password: string}>  $newUsers
+     */
+    private function credentialsPdfResponse(Request $request, array $newUsers, string $importTypeLabel): \Symfony\Component\HttpFoundation\Response
+    {
+        $pdf = Pdf::loadView('pdf.import-credentials', [
+            'users'      => $newUsers,
+            'importType' => $importTypeLabel,
+        ]);
+        $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
+        $pdfContent = $pdf->output();
+
+        $currentUser = $request->user();
+        if ($currentUser && $currentUser->email) {
+            try {
+                Mail::to($currentUser->email)->queue(
+                    new ImportCredentialsMail($pdfContent, $filename, $importTypeLabel, count($newUsers))
+                );
+            } catch (\Exception $mailException) {
+                \Log::error('Fehler beim Versenden der Zugangsdaten-PDF an ' . $currentUser->email . ': ' . $mailException->getMessage());
+            }
+        }
+
+        return response($pdfContent, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 
@@ -424,41 +433,72 @@ class ImportController extends Controller implements HasMiddleware
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Schritt 1 des Vereins-Imports: Datei ablegen und Probelauf anzeigen.
+     */
     public function importVerein(Request $request)
     {
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+        $data = $request->validate([
+            'file'       => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+            'send_email' => ['nullable', 'in:1,0'],
         ]);
 
-        if ($request->hasFile('file')) {
+        $path = $request->file('file')->store('imports');
+        $options = [
+            'removeMissing' => $request->boolean('abgleich'),
+            'sendEmail'     => ($data['send_email'] ?? '1') === '1',
+        ];
 
-            $group = Group::firstOrCreate(['name' => 'Vereinsmitglied'], [
-                'protected' => 1,
-                'bereich' => 'Verein',
-            ]);
+        $report = app(VereinImportService::class)->run($this->vereinRows($path), dryRun: true, removeMissing: $options['removeMissing']);
 
-            group_user::where('group_id', $group->id)->delete();
+        return view('user.importVereinPreview', [
+            'report'  => $report,
+            'token'   => basename($path),
+            'options' => $options,
+        ]);
+    }
 
-            $role = Role::firstOrCreate(['name' => 'Vereinsmitglied'], [
-                'guard_name' => 'web',
-            ]);
+    /**
+     * Schritt 2: Vereins-Import nach Bestätigung ausführen.
+     */
+    public function confirmVereinImport(Request $request)
+    {
+        $data = $request->validate([
+            'token'      => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+$/'],
+            'send_email' => ['nullable', 'in:1,0'],
+        ]);
+        $path = 'imports/'.$data['token'];
 
-            foreach ($role->users as $user) {
-                $user->removeRole($role);
-            }
-
-            UploadedSpreadsheet::with($request->file('file'), fn (string $path) => Excel::import(new VereinImport($group), $path));
-            $Meldung = 'Mitglieder wurden importiert';
-
-            return redirect()->to(url('users'))->with([
-                'type' => 'success',
-                'Meldung' => $Meldung,
-            ]);
-        } else {
-            return redirect()->back()->with([
-                'type' => 'danger',
-                'Meldung' => 'Keine Datei ausgewählt',
-            ]);
+        if (! Storage::exists($path)) {
+            return redirect()->to(url('users/importVerein'))->with(['type' => 'danger', 'Meldung' => 'Importdatei nicht mehr vorhanden – bitte erneut hochladen.']);
         }
+
+        $options = [
+            'removeMissing' => $request->boolean('abgleich'),
+            'sendEmail'     => ($data['send_email'] ?? '1') === '1',
+        ];
+
+        try {
+            $report = app(VereinImportService::class)->run($this->vereinRows($path), dryRun: false, removeMissing: $options['removeMissing'], sendEmail: $options['sendEmail']);
+        } finally {
+            Storage::delete($path);
+        }
+
+        if (! $options['sendEmail'] && $report->newUsers !== []) {
+            return $this->credentialsPdfResponse($request, $report->newUsers, 'Vereins-Import');
+        }
+
+        return view('user.importVereinPreview', [
+            'report'  => $report,
+            'token'   => null,
+            'options' => $options,
+        ]);
+    }
+
+    private function vereinRows(string $path): array
+    {
+        $sheets = Excel::toArray(new VereinImportRows, Storage::path($path));
+
+        return $sheets[0] ?? [];
     }
 }
