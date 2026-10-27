@@ -13,7 +13,7 @@
         [
             'key' => 'linked', 'open' => true,
             'title' => $report->dryRun ? 'Bestehende Konten in den Verein aufnehmen' : 'Bestehende Konten in den Verein aufgenommen',
-            'hint' => 'Über die E-Mail-Adresse erkannt – nur Gruppe und Rolle „Vereinsmitglied“ kommen hinzu.'.($options['notify'] ? ' Die Konten werden per E-Mail benachrichtigt.' : ''),
+            'hint' => 'Über die E-Mail-Adresse erkannt – nur Gruppe und Rolle „Vereinsmitglied“ kommen hinzu.'.($options['notify'] ? ' Die Konten erhalten eine Benachrichtigung in der Anwendung.' : ''),
             'icon' => 'fa-link', 'tone' => 'green',
         ],
         [
@@ -25,7 +25,7 @@
         [
             'key' => 'removed', 'open' => true,
             'title' => $report->dryRun ? 'Aus dem Verein entfernen' : 'Aus dem Verein entfernt',
-            'hint' => 'Nicht mehr in der Datei. Gruppe und Rolle „Vereinsmitglied“ werden entfernt, das Konto bleibt bestehen. Abgewählte Personen bleiben Mitglied.'.($options['notify'] ? ' Die Konten werden per E-Mail benachrichtigt.' : ''),
+            'hint' => 'Nicht mehr in der Datei. Gruppe und Rolle „Vereinsmitglied“ werden entfernt, das Konto bleibt bestehen. Abgewählte Personen bleiben Mitglied.'.($options['notify'] ? ' Die Konten erhalten eine Benachrichtigung in der Anwendung.' : ''),
             'icon' => 'fa-user-minus', 'tone' => 'red',
         ],
     ];

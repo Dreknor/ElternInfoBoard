@@ -116,9 +116,9 @@
                               :class="notify ? 'translate-x-5' : ''"></span>
                     </span>
                     <span>
-                        <span class="block text-sm font-medium text-gray-900 dark:text-gray-100">Bestehende Konten per E-Mail benachrichtigen</span>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-gray-100">Bestehende Konten in der Anwendung benachrichtigen</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            Wer neu in den Verein aufgenommen oder daraus entfernt wird, erhält eine kurze E-Mail.
+                            Wer neu in den Verein aufgenommen oder daraus entfernt wird, erhält eine Benachrichtigung in der Anwendung (Glocke bzw. Push).
                             Die Texte lassen sich unter Einstellungen › E-Mail anpassen.
                         </span>
                     </span>

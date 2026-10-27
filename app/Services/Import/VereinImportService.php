@@ -3,8 +3,8 @@
 namespace App\Services\Import;
 
 use App\Mail\NewUserPasswordMail;
-use App\Mail\VereinMembershipChangedMail;
 use App\Model\Group;
+use App\Model\Notification;
 use App\Model\User;
 use App\Settings\EmailSetting;
 use App\Support\PasswordGenerator;
@@ -42,6 +42,8 @@ class VereinImportService
     public const GROUP_NAME = 'Vereinsmitglied';
 
     public const ROLE_NAME = 'Vereinsmitglied';
+
+    public const NOTIFICATION_ICON = 'fas fa-users';
 
     /**
      * Hinweis für die Zugangsdaten-Mail bzw. das Zugangsdaten-PDF neuer
@@ -237,38 +239,37 @@ class VereinImportService
         if ($notify) {
             $settings = app(EmailSetting::class);
             $added = array_filter($apply, fn (User $user) => ! isset($currentMembers[$user->id]));
-            $report->notifiedAdded = $this->notify($added, VereinMembershipChangedMail::ADDED, $settings->verein_added_text);
-            $report->notifiedRemoved = $this->notify($toRemove, VereinMembershipChangedMail::REMOVED, $settings->verein_removed_text);
+            $report->notifiedAdded = $this->notify($added, 'Willkommen im Vereinsbereich', $settings->verein_added_text);
+            $report->notifiedRemoved = $this->notify($toRemove, 'Änderung Ihrer Vereinsmitgliedschaft', $settings->verein_removed_text);
         }
 
         return $report;
     }
 
     /**
-     * Bestehende Konten über die geänderte Vereinszugehörigkeit informieren.
+     * Bestehende Konten per Benachrichtigung in der Anwendung (Glocke, Push nach
+     * Nutzereinstellung) über die geänderte Vereinszugehörigkeit informieren.
      *
      * @param  array<int, User>  $users
      */
-    private function notify(array $users, string $change, ?string $text): int
+    private function notify(array $users, string $title, ?string $text): int
     {
         if (blank($text)) {
             return 0;
         }
 
-        $sent = 0;
         foreach ($users as $user) {
-            if (! filter_var((string) $user->email, FILTER_VALIDATE_EMAIL)) {
-                continue;
-            }
-            try {
-                Mail::to($user->email)->queue(new VereinMembershipChangedMail($user, $change, trim($text)));
-                $sent++;
-            } catch (\Throwable $e) {
-                Log::error('Vereins-Import: Benachrichtigung an '.$user->email.' fehlgeschlagen: '.$e->getMessage());
-            }
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => 'Verein',
+                'title' => $title,
+                'message' => Str::limit(trim($text), 250),
+                'icon' => self::NOTIFICATION_ICON,
+                'url' => url('/'),
+            ]);
         }
 
-        return $sent;
+        return count($users);
     }
 
     /**

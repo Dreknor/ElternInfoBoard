@@ -26,10 +26,10 @@ class EmailSetting extends Settings
     /** Vereins-Import: Hinweis in der Zugangsdaten-Mail neuer Vereinskonten */
     public ?string $verein_access_notice = null;
 
-    /** Vereins-Import: Benachrichtigung bestehender Konten bei Aufnahme in den Verein */
+    /** Vereins-Import: Benachrichtigung in der Anwendung bei Aufnahme bestehender Konten in den Verein */
     public ?string $verein_added_text = null;
 
-    /** Vereins-Import: Benachrichtigung bei Entfernung aus dem Verein */
+    /** Vereins-Import: Benachrichtigung in der Anwendung bei Entfernung aus dem Verein */
     public ?string $verein_removed_text = null;
 
     public bool $log_sent_emails = false;

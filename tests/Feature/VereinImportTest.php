@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Mail\NewUserPasswordMail;
-use App\Mail\VereinMembershipChangedMail;
 use App\Settings\EmailSetting;
 use App\Model\Group;
+use App\Model\Notification;
 use App\Model\User;
 use App\Services\Import\VereinImportService;
 use Illuminate\Http\UploadedFile;
@@ -323,7 +323,7 @@ class VereinImportTest extends TestCase
     }
 
     /** @test */
-    public function bestehende_konten_werden_ueber_aufnahme_und_entfernung_benachrichtigt(): void
+    public function bestehende_konten_werden_in_der_anwendung_ueber_aufnahme_und_entfernung_benachrichtigt(): void
     {
         $neu = $this->user('Anna Beispiel', 'anna@example.com');
         $bleibt = $this->user('Bleibt Mitglied', 'bleibt@example.com');
@@ -339,22 +339,23 @@ class VereinImportTest extends TestCase
             $this->row('Ganz Neu', 'ganzneu@example.com'),
         ]);
 
-        Mail::assertQueued(VereinMembershipChangedMail::class, 2);
-        Mail::assertQueued(VereinMembershipChangedMail::class, fn ($mail) => $mail->hasTo('anna@example.com')
-            && $mail->change === VereinMembershipChangedMail::ADDED
-            && str_contains($mail->render(), 'Mitgliederversammlung'));
-        Mail::assertQueued(VereinMembershipChangedMail::class, fn ($mail) => $mail->hasTo('weg@example.com')
-            && $mail->change === VereinMembershipChangedMail::REMOVED);
-        Mail::assertNotQueued(VereinMembershipChangedMail::class, fn ($mail) => $mail->hasTo('bleibt@example.com') || $mail->hasTo('ganzneu@example.com'));
+        $this->assertSame(['Willkommen im Vereinsbereich'], Notification::where('user_id', $neu->id)->pluck('title')->all());
+        $this->assertStringContainsString('Mitgliederversammlung', Notification::where('user_id', $neu->id)->value('message'));
+        $this->assertSame(['Änderung Ihrer Vereinsmitgliedschaft'], Notification::where('user_id', $weg->id)->pluck('title')->all());
+        $this->assertSame(0, Notification::where('user_id', $bleibt->id)->count());
+        $this->assertSame(0, Notification::whereHas('user', fn ($q) => $q->where('email', 'ganzneu@example.com'))->count());
+        $this->assertSame(2, Notification::where('type', 'Verein')->count());
+        // Keine E-Mail an bestehende Konten
+        Mail::assertNotQueued(NewUserPasswordMail::class, fn ($mail) => in_array($mail->user->email, ['anna@example.com', 'weg@example.com'], true));
         $this->assertSame([1, 1], [$report->notifiedAdded, $report->notifiedRemoved]);
     }
 
     /** @test */
-    public function ohne_benachrichtigung_oder_text_wird_keine_mail_versendet(): void
+    public function ohne_benachrichtigung_oder_text_entsteht_keine_benachrichtigung(): void
     {
         $this->user('Anna Beispiel', 'anna@example.com');
         app(VereinImportService::class)->run([$this->row('Anna Beispiel', 'anna@example.com')], dryRun: false, notify: false);
-        Mail::assertNotQueued(VereinMembershipChangedMail::class);
+        $this->assertSame(0, Notification::count());
 
         $settings = app(EmailSetting::class);
         $settings->verein_added_text = '';
@@ -363,7 +364,7 @@ class VereinImportTest extends TestCase
 
         $this->user('Bernd Kurz', 'bernd@example.com');
         $this->import([$this->row('Anna Beispiel', 'anna@example.com'), $this->row('Bernd Kurz', 'bernd@example.com'), $this->row('Neu', 'neu@example.com')]);
-        Mail::assertNotQueued(VereinMembershipChangedMail::class);
+        $this->assertSame(0, Notification::count());
         Mail::assertQueued(NewUserPasswordMail::class, fn ($mail) => $mail->notice === null && ! str_contains($mail->render(), 'Wozu dieser Zugang'));
     }
 
