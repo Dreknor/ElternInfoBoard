@@ -42,6 +42,9 @@ class VereinImportService
 
     public const ROLE_NAME = 'Vereinsmitglied';
 
+    /** Hinweis in der Zugangsdaten-Mail bzw. im Zugangsdaten-PDF neuer Vereinskonten */
+    public const ACCESS_NOTICE = 'Dieser Zugang wird Ihnen als Vereinsmitglied zur Verfügung gestellt, um Sie über Aktuelles aus dem Schulzentrum zu informieren und Ihnen Einladungen zur Mitgliederversammlung zu senden.';
+
     /**
      * @param  iterable<array<string, mixed>>  $rows  Zeilen mit Überschriften als Schlüssel
      * @param  list<string>|null  $selection  Schlüssel der zu übernehmenden Änderungen (null = alle)
@@ -206,7 +209,7 @@ class VereinImportService
 
                 if ($sendEmail) {
                     try {
-                        Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $welcomeText));
+                        Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $welcomeText, self::ACCESS_NOTICE));
                     } catch (\Throwable $e) {
                         Log::error('Vereins-Import: Willkommens-Mail an '.$user->email.' fehlgeschlagen: '.$e->getMessage());
                     }

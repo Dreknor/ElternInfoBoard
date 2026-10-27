@@ -324,11 +324,12 @@ class ImportController extends Controller implements HasMiddleware
      * @param  array<int, array{name: string, email: string, password: string}>  $newUsers
      * @return array{0: string, 1: string} PDF-Inhalt und Dateiname
      */
-    private function credentialsPdf(Request $request, array $newUsers, string $importTypeLabel): array
+    private function credentialsPdf(Request $request, array $newUsers, string $importTypeLabel, ?string $notice = null): array
     {
         $pdf = Pdf::loadView('pdf.import-credentials', [
             'users'      => $newUsers,
             'importType' => $importTypeLabel,
+            'notice'     => $notice,
         ]);
         $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
         $pdfContent = $pdf->output();
@@ -529,7 +530,7 @@ class ImportController extends Controller implements HasMiddleware
 
         $stored = ['evaluation' => $report->evaluationRows()];
         if (! $options['sendEmail'] && $report->newUsers !== []) {
-            [$pdfContent, $filename] = $this->credentialsPdf($request, $report->newUsers, 'Vereins-Import');
+            [$pdfContent, $filename] = $this->credentialsPdf($request, $report->newUsers, 'Vereins-Import', VereinImportService::ACCESS_NOTICE);
             $stored['pdf'] = base64_encode($pdfContent);
             $stored['pdfName'] = $filename;
         }

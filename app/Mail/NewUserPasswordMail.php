@@ -19,16 +19,20 @@ class NewUserPasswordMail extends Mailable
 
     public string $welcomeText;
 
+    /** Optionaler Hinweis, wozu der Zugang bereitgestellt wird (z. B. für Vereinsmitglieder). */
+    public ?string $notice;
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(User $user, string $password, string $welcomeText)
+    public function __construct(User $user, string $password, ?string $welcomeText, ?string $notice = null)
     {
         $this->user = $user;
         $this->password = $password;
-        $this->welcomeText = $welcomeText;
+        $this->welcomeText = (string) $welcomeText;
+        $this->notice = $notice;
     }
 
     /**

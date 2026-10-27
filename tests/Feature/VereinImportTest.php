@@ -197,7 +197,13 @@ class VereinImportTest extends TestCase
         $this->assertTrue($this->isMember($user));
         $this->assertSame(['Vereinsmitglied'], $user->getRoleNames()->all());
         $this->assertSame([$this->verein->id], $user->groups()->pluck('groups.id')->all());
-        Mail::assertQueued(NewUserPasswordMail::class, 1);
+        Mail::assertQueued(NewUserPasswordMail::class, function (NewUserPasswordMail $mail) {
+            $html = $mail->render();
+
+            return $mail->notice === VereinImportService::ACCESS_NOTICE
+                && str_contains($html, 'Einladungen zur Mitgliederversammlung')
+                && str_contains($html, 'Aktuelles aus dem Schulzentrum');
+        });
     }
 
     /** @test */
