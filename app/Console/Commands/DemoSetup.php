@@ -44,10 +44,12 @@ use App\Settings\PflichtstundenSetting;
 use App\Settings\SchickzeitenSetting;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class DemoSetup extends Command
 {
@@ -214,6 +216,8 @@ class DemoSetup extends Command
     // =========================================================================
     private function createPermissionsAndRoles(): void
     {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         $permissions = [
             'edit permission', 'edit user', 'create posts', 'view all', 'edit posts',
             'upload files', 'import user', 'release posts', 'use scriptTag', 'view elternrat',
@@ -261,10 +265,14 @@ class DemoSetup extends Command
 
         foreach ($roles as $roleName => $rolePerms) {
             $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
-            $permObjects = Permission::where('guard_name', 'web')->whereIn('name', $rolePerms)->get();
+            $permObjects = $roleName === 'Administrator'
+                ? Permission::where('guard_name', 'web')->get()
+                : Permission::where('guard_name', 'web')->whereIn('name', $rolePerms)->get();
             // „Eltern“ legt bereits der RolesPermissionsDistributionSeeder an – nur ergänzen, nicht ersetzen
             $roleName === 'Eltern' ? $role->givePermissionTo($permObjects) : $role->syncPermissions($permObjects);
         }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     // =========================================================================
@@ -672,12 +680,14 @@ class DemoSetup extends Command
     // =========================================================================
     private function activateModules(): void
     {
-        Module::all()->each(function (Module $module) {
+        Module::where('category', 'module')->get()->each(function (Module $module) {
             $options = $module->options ?? [];
             $options['active'] = '1';
             $module->options = $options;
             $module->save();
         });
+
+        Cache::forget('modules');
     }
 
     // =========================================================================
@@ -1932,5 +1942,4 @@ class DemoSetup extends Command
         }
     }
 }
-
 
