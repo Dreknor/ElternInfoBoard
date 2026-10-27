@@ -15,52 +15,73 @@ final class VereinImportReport
     /** Bestehende Mitglieder, bei denen alles bereits stimmt */
     public int $unchanged = 0;
 
-    /** Nicht mehr in der Datei, aber behalten (Abgleich ausgeschaltet) */
+    /** Bisherige Mitglieder, die nicht in der Datei stehen und Mitglied bleiben */
     public int $kept = 0;
 
-    /** @var list<array{name: string, email: string}> bestehende Konten, die neu Vereinsmitglied werden */
+    /** Anzahl der Mitglieder nach dem Import */
+    public int $membersAfter = 0;
+
+    /** Versandte Benachrichtigungen an bestehende Konten (Aufnahme / Entfernung) */
+    public int $notifiedAdded = 0;
+
+    public int $notifiedRemoved = 0;
+
+    /** @var list<array{name: string, email: string, key: string, row: ?int}> bestehende Konten, die neu Vereinsmitglied werden */
     public array $linked = [];
 
-    /** @var list<array{name: string, email: string}> bestehende Mitglieder, denen Gruppe oder Rolle fehlte */
+    /** @var list<array{name: string, email: string, key: string, row: ?int}> bestehende Mitglieder, denen Gruppe oder Rolle fehlte */
     public array $completed = [];
 
-    /** @var list<array{name: string, email: string}> neu anzulegende Konten */
+    /** @var list<array{name: string, email: string, key: string, row: ?int}> neu anzulegende Konten */
     public array $created = [];
 
-    /** @var list<array{name: string, email: string}> Mitglieder, die aus Gruppe und Rolle entfernt werden */
+    /** @var list<array{name: string, email: string, key: string, row: ?int}> Mitglieder, die aus Gruppe und Rolle entfernt werden */
     public array $removed = [];
 
-    /** @var list<array{row: int, person: string, message: string}> Klärungsfälle (keine Änderung) */
-    public array $review = [];
+    /**
+     * Klärungsfälle mit Entscheidungsmöglichkeiten (nur in der Vorschau).
+     *
+     * @var list<array{row: int, name: string, rawEmail: string, message: string, options: list<array{value: string, label: string}>}>
+     */
+    public array $cases = [];
+
+    /** @var list<array{row: int, name: string, action: string}> bei der Bestätigung entschiedene Klärungsfälle */
+    public array $resolved = [];
+
+    /** @var list<array{row: int, person: string, message: string}> Hinweise ohne Entscheidungsbedarf */
+    public array $notes = [];
+
+    /** @var list<array{row: int, name: string, email: string, reason: string}> Personen aus der Datei ohne Zuordnung */
+    public array $unassigned = [];
+
+    /** @var list<array{name: string, email: string, reason: string}> Mitglieder, die über das System kaum erreichbar sind */
+    public array $unreachable = [];
 
     /** @var list<array{name: string, email: string, password: string}> Zugangsdaten (nur PDF-Modus) */
     public array $newUsers = [];
 
     public function __construct(public readonly bool $dryRun) {}
 
-    public function review(int $row, string $person, string $message): void
+    public function note(int $row, string $person, string $message): void
     {
-        $this->review[] = ['row' => $row, 'person' => $person, 'message' => $message];
+        $this->notes[] = ['row' => $row, 'person' => $person, 'message' => $message];
     }
 
-    /** Anzahl der Mitglieder nach dem Import */
-    public function membersAfter(): int
+    /**
+     * Zeilen für den Export „nicht zugeordnet / nicht erreichbar“.
+     *
+     * @return list<array{0: string, 1: ?int, 2: string, 3: string, 4: string}>
+     */
+    public function evaluationRows(): array
     {
-        return $this->unchanged + count($this->completed) + count($this->linked) + count($this->created) + $this->kept;
-    }
+        $rows = [];
+        foreach ($this->unassigned as $entry) {
+            $rows[] = ['Nicht zugeordnet', $entry['row'] ?: null, $entry['name'], $entry['email'], $entry['reason']];
+        }
+        foreach ($this->unreachable as $entry) {
+            $rows[] = ['Nicht erreichbar', null, $entry['name'], $entry['email'], $entry['reason']];
+        }
 
-    public function summary(): array
-    {
-        return array_filter([
-            'Zeilen' => $this->rows,
-            'Bestehenden Konten zugeordnet' => $this->matchedRows,
-            'Bereits Mitglied, unverändert' => $this->unchanged,
-            'Bestehende Konten neu im Verein' => count($this->linked),
-            'Gruppe/Rolle ergänzt' => count($this->completed),
-            'Konten neu' => count($this->created),
-            'Aus dem Verein entfernt' => count($this->removed),
-            'Nicht in der Datei, behalten' => $this->kept,
-            'Klärungsfälle' => count($this->review),
-        ], fn ($value, $label) => $value > 0 || in_array($label, ['Zeilen', 'Konten neu', 'Klärungsfälle'], true), ARRAY_FILTER_USE_BOTH);
+        return $rows;
     }
 }

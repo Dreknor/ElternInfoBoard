@@ -117,6 +117,32 @@
             </div>
         </div>
         <div class="form-row mt-1 p-2 border">
+            <div class="col-12">
+                <strong>Texte für den Vereinsmitglieder-Import</strong>
+                <div class="small mb-2">
+                    <i class="fas fa-info-circle text-info"></i> Leer gelassene Felder werden nicht verwendet: kein Hinweis in der Zugangsdaten-Mail bzw. keine Benachrichtigung. Die Benachrichtigungen erscheinen in der Anwendung (Glocke bzw. Push) und dürfen höchstens 255 Zeichen lang sein.
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="label-control w-100">
+                    Hinweis in der Zugangsdaten-Mail neuer Vereinskonten („Wozu dieser Zugang?“)
+                    <textarea class="form-control" name="verein_access_notice" rows="3">{{ $mailSettings->verein_access_notice }}</textarea>
+                </label>
+            </div>
+            <div class="col-12">
+                <label class="label-control w-100">
+                    Benachrichtigung in der Anwendung bei Aufnahme bestehender Konten in den Verein
+                    <textarea class="form-control" name="verein_added_text" rows="3" maxlength="255">{{ $mailSettings->verein_added_text }}</textarea>
+                </label>
+            </div>
+            <div class="col-12">
+                <label class="label-control w-100">
+                    Benachrichtigung in der Anwendung bei Entfernung aus dem Verein
+                    <textarea class="form-control" name="verein_removed_text" rows="3" maxlength="255">{{ $mailSettings->verein_removed_text }}</textarea>
+                </label>
+            </div>
+        </div>
+        <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100 ">
                     Bezeichnung Standard-Kontakt (Kontaktformular)
