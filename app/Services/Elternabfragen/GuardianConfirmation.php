@@ -75,7 +75,7 @@ class GuardianConfirmation
 
     public function canConfirm(User $user, InquiryAssignment $assignment): bool
     {
-        return $assignment->inquiry?->isRunning()
+        return $assignment->acceptsAnswers()
             && $this->pendingUsers($assignment)->contains('id', $user->id);
     }
 

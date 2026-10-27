@@ -52,6 +52,8 @@ Das Modul muss unter **Einstellungen › Module** aktiviert werden.
 
 **Alle Sorgeberechtigten müssen bestätigen:** Für Erklärungen, die beide Elternteile gemeinsam abgeben müssen. Ein Elternteil füllt aus, alle weiteren Sorgeberechtigten (aktuelles Sorgerecht zum Kind) bestätigen genau diese Antwortversion. Erst dann gilt der Fall als erledigt; eine Korrektur setzt die Bestätigungen zurück. Erinnerungen gehen in diesem Zustand nur an die noch fehlenden Personen.
 
+**Aktenrelevant:** Für Erklärungen, die zusätzlich ausgedruckt in die Schülerakte gehören, z. B. Foto-Einwilligungen, Abholberechtigungen oder Wahlentscheidungen. Solange vollständige Antworten noch nicht für die Akte gedruckt sind, zeigt die Abfrage einen Hinweis, und die Antworten werden nach Ablauf der Aufbewahrungsfrist nicht automatisch gelöscht.
+
 Mit **Zur Prüfung einreichen** geht die Vorlage an die Schulleitung. Kennzeichne Vorlagen mit Gesundheitsdaten oder Einwilligungen als **sensibel** – dann ist eine datenschutzrechtliche Zusatzprüfung Pflicht.
 
 Freigegebene Vorlagen sind **unveränderlich**. Änderungen: **Neue Version anlegen** – laufende Abfragen behalten ihre Version.
@@ -116,6 +118,12 @@ Bei Zustellproblemen erhält die verantwortliche Person eine Mitteilung.
 - **Bearbeitungshinweis** – z. B. zur Klärung widersprüchlicher Angaben
 - **Korrektur freigeben**, wenn das Zeitfenster der Eltern abgelaufen ist
 - Antwortversionen ansehen und **prüfen** (Geprüft / Klärung nötig) – nur mit Recht „Antwortinhalte einsehen"
+- **PDF für die Akte** – ein Blatt mit der gültigen Antwort, Einwilligungstexten, Bestätigungen und Prüfsummen
+- **Für diese Familie neu starten** – z. B. nach einer Änderung des Sorgerechts oder für Nachzügler. Die bisherige Antwort bleibt als Version erhalten, gilt aber nicht mehr. Die Sorgeberechtigten werden nach aktuellem Stand ermittelt und benachrichtigt und können bis zur gesetzten Frist antworten – auch wenn die Abfrage bereits abgeschlossen ist. Die letzte Antwort ist im Formular vorbefüllt.
+
+## Schülerakte
+
+**PDF für die Schülerakte** in der Abfrage erstellt ein Blatt je Kind mit vollständiger Antwort, wahlweise für eine Klasse und nur für noch nicht gedruckte Antworten. Jedes Blatt hat ein Feld für den Ablagevermerk. Beim Erstellen wird je Kind vermerkt, welche Antwortversion gedruckt wurde. Nach einer Korrektur oder einem Neustart muss erneut gedruckt werden. Antworten, bei denen noch Bestätigungen fehlen, gelten nicht als gedruckt.
 
 ## 4. Export
 
@@ -123,4 +131,4 @@ Der Export läuft in drei Schritten: **Auswahl → Vorschau prüfen → Datei er
 
 ## Aufbewahrung
 
-Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten, Uploads, Exportdateien und personenbezogene Protokolldaten automatisch gelöscht. Erhalten bleiben die Abfrage selbst und eine anonyme Statistik.
+Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten, Uploads, Exportdateien und personenbezogene Protokolldaten automatisch gelöscht. Erhalten bleiben die Abfrage selbst und eine anonyme Statistik. Für Einwilligungen, die die gesamte Schulzeit gelten, kann die Vorlage **unbefristet aufbewahren** vorsehen. Dann wird nichts automatisch gelöscht; abgeschlossene Abfragen lassen sich unter **Antworten löschen** manuell löschen (mit Grund, protokolliert), sobald sie nicht mehr benötigt werden – das geht auch vor Ablauf einer Frist, z. B. nach einem Widerruf. Wurde ein Fall nach Abschluss neu gestartet, beginnt die Frist erst mit dem Ende seiner individuellen Frist. Bei **aktenrelevanten** Abfragen wird die Löschung zurückgehalten, bis alle vollständigen Antworten für die Schülerakte gedruckt sind.

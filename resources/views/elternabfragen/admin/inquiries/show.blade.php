@@ -79,6 +79,11 @@
                         <a href="{{ route('elternabfragen.admin.exports.create', $inquiry) }}" class="ea-btn ea-btn-primary ea-btn-sm"><i class="fas fa-file-export" aria-hidden="true"></i> Export</a>
                     @endif
                 @endcan
+                @can('view elternabfragen answers')
+                    @if($inquiry->isReleased() && ! $inquiry->purged_at)
+                        <a href="#akte" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-folder-open" aria-hidden="true"></i> PDF für die Schülerakte</a>
+                    @endif
+                @endcan
             </div>
         </div>
         <ol class="ea-steps" aria-label="Ablauf der Abfrage">
@@ -98,6 +103,15 @@
 
     @if($inquiry->review_note)
         <div class="ea-alert ea-alert-neutral mb-5"><i class="fas fa-comment-dots" aria-hidden="true"></i><p class="mb-0"><strong>Prüfvermerk:</strong> {{ $inquiry->review_note }}</p></div>
+    @endif
+    @if($inquiry->templateVersion->record_relevant && $unfiledCount > 0)
+        <div class="ea-alert ea-alert-warning mb-5"><i class="fas fa-folder-open" aria-hidden="true"></i>
+            <p class="mb-0"><strong>Aktenrelevant:</strong> {{ $unfiledCount }} vollständige {{ $unfiledCount === 1 ? 'Antwort wurde' : 'Antworten wurden' }} noch nicht für die Schülerakte gedruckt.
+                @if($purgeDate && $purgeDate->isPast()) Die Aufbewahrungsfrist ist abgelaufen – die Löschung wird zurückgehalten, bis alle Antworten gedruckt sind.
+                @else Solange werden die Antworten nicht automatisch gelöscht. @endif
+                @can('view elternabfragen answers') <a href="{{ route('elternabfragen.admin.records.inquiry', [$inquiry, 'nur_neue' => 1]) }}" class="ea-link font-semibold">Noch nicht gedruckte jetzt als PDF erstellen</a> @endcan
+            </p>
+        </div>
     @endif
     @if($inquiry->purged_at)
         <div class="ea-alert ea-alert-neutral mb-5"><i class="fas fa-trash-restore" aria-hidden="true"></i><p class="mb-0">Antworten wurden am {{ $inquiry->purged_at->format('d.m.Y') }} nach Ablauf der Aufbewahrungsfrist gelöscht.</p></div>
@@ -355,7 +369,10 @@
                                                 @else <span class="ea-muted">–</span> @endif
                                             </td>
                                             <td class="text-xs max-w-xs">
-                                                @if($assignment->extended_until)<span class="block"><i class="far fa-calendar-plus" aria-hidden="true"></i> Nachfrist bis {{ $assignment->extended_until->format('d.m.Y') }}</span>@endif
+                                                @if($assignment->reopened_at)<span class="block"><i class="fas fa-redo" aria-hidden="true"></i> Neu gestartet am {{ $assignment->reopened_at->format('d.m.Y') }}</span>@endif
+                                                @if($assignment->extended_until)<span class="block"><i class="far fa-calendar-plus" aria-hidden="true"></i> {{ $assignment->reopened_at ? 'Frist' : 'Nachfrist' }} bis {{ $assignment->extended_until->format('d.m.Y') }}</span>@endif
+                                                @if($assignment->isFiled())<span class="block text-emerald-700 dark:text-emerald-400"><i class="fas fa-folder" aria-hidden="true"></i> Akte: gedruckt {{ $assignment->filed_at->format('d.m.Y') }}</span>
+                                                @elseif($inquiry->templateVersion->record_relevant && $assignment->isComplete())<span class="block text-amber-600"><i class="fas fa-folder-open" aria-hidden="true"></i> Akte: noch nicht gedruckt</span>@endif
                                                 @if($assignment->has_problem)<span class="block text-red-600">{{ \Illuminate\Support\Str::limit($assignment->problem_note, 80) }}</span>@endif
                                                 @if($assignment->note)<span class="block ea-muted">{{ \Illuminate\Support\Str::limit($assignment->note, 80) }}</span>@endif
                                             </td>
@@ -395,12 +412,39 @@
                     <div><dt><i class="fas fa-bell" aria-hidden="true"></i> Autom. Erinnerungen</dt><dd>{{ $inquiry->auto_reminders ? 'ja' : 'nein' }}</dd></div>
                     <div><dt><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> Für Mitarbeitende lesbar</dt><dd>{{ $inquiry->staff_visible ? 'ja (nur geprüfte Antworten)' : 'nein' }}</dd></div>
                     <div><dt><i class="fas fa-pen" aria-hidden="true"></i> Selbstkorrektur</dt><dd>{{ $inquiry->correction_window_days }} Tage</dd></div>
-                    <div><dt><i class="fas fa-archive" aria-hidden="true"></i> Aufbewahrung</dt><dd>{{ $inquiry->retention_days ? $inquiry->retention_days.' Tage nach Abschluss' : 'unbefristet' }}</dd></div>
+                    <div><dt><i class="fas fa-archive" aria-hidden="true"></i> Aufbewahrung</dt><dd>{{ $inquiry->retention_days ? $inquiry->retention_days.' Tage nach Abschluss' : 'unbefristet (manuelle Löschung)' }}@if($purgeDate && ! $inquiry->purged_at)<span class="block text-xs ea-muted">Löschung ab {{ $purgeDate->format('d.m.Y') }}</span>@endif</dd></div>
+                    @if($inquiry->templateVersion->record_relevant)<div><dt><i class="fas fa-folder-open" aria-hidden="true"></i> Schülerakte</dt><dd>aktenrelevant</dd></div>@endif
                     @if($inquiry->approved_at)<div><dt><i class="fas fa-user-check" aria-hidden="true"></i> Freigegeben</dt><dd>{{ $inquiry->approved_at->format('d.m.Y H:i') }} von {{ $inquiry->approver?->name }}</dd></div>@endif
                     @if($inquiry->expected_children !== null)<div><dt><i class="fas fa-calculator" aria-hidden="true"></i> Erwartet</dt><dd>{{ $inquiry->expected_children }} Kinder / {{ $inquiry->expected_accounts }} Konten</dd></div>@endif
                     @if($inquiry->closed_at)<div><dt><i class="fas fa-lock" aria-hidden="true"></i> Abgeschlossen</dt><dd>{{ $inquiry->closed_at->format('d.m.Y H:i') }}@if($inquiry->closedEarly()) <span class="text-amber-600">(vorzeitig)</span>@endif</dd></div>@endif
                 </dl>
             </section>
+
+            @can('view elternabfragen answers')
+                @if($inquiry->isReleased() && ! $inquiry->purged_at)
+                    <section id="akte" class="ea-card scroll-mt-4">
+                        <div class="ea-card-header">
+                            <div class="ea-card-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></div>
+                            <div class="flex-1">
+                                <h2 class="ea-card-title">PDF für die Schülerakte</h2>
+                                <p class="ea-card-sub">Ein Blatt je Kind mit vollständiger Antwort</p>
+                            </div>
+                        </div>
+                        <form method="GET" action="{{ route('elternabfragen.admin.records.inquiry', $inquiry) }}" class="ea-card-body space-y-3 text-sm">
+                            <div>
+                                <label for="r_klasse" class="ea-label">Klasse</label>
+                                <select id="r_klasse" name="klasse" class="ea-input">
+                                    <option value="">alle Klassen</option>
+                                    @foreach($groups as $group)<option value="{{ $group->id }}">{{ $group->name }}</option>@endforeach
+                                </select>
+                            </div>
+                            <label class="flex items-center gap-2 ea-text"><input type="checkbox" class="ea-check" name="nur_neue" value="1" @checked($unfiledCount > 0)> Nur noch nicht gedruckte Antworten</label>
+                            <button class="ea-btn ea-btn-secondary w-full"><i class="fas fa-file-pdf" aria-hidden="true"></i> PDF erstellen</button>
+                            <p class="ea-hint mb-0">Das Erstellen wird je Kind als „gedruckt“ vermerkt. Einzelne Blätter gibt es in den Details eines Falls.</p>
+                        </form>
+                    </section>
+                @endif
+            @endcan
 
             @can('manage elternabfragen')
                 @if(in_array($status, ['scheduled', 'running', 'closed'], true) && ! $inquiry->purged_at)
@@ -485,6 +529,34 @@
                                 <input name="note" maxlength="1000" class="ea-input" placeholder="Begründung (optional, wird protokolliert)">
                                 <button class="ea-btn ea-btn-danger w-full"><i class="fas fa-lock" aria-hidden="true"></i> Jetzt beenden</button>
                             </form>
+                        </div>
+                    </section>
+                @endif
+            @endcan
+
+            @can('manage elternabfragen')
+                @if($status === 'closed' && ! $inquiry->purged_at)
+                    <section class="ea-card">
+                        <div class="ea-card-header">
+                            <div class="ea-card-icon !bg-red-100 !text-red-600 dark:!bg-red-900/40"><i class="fas fa-trash-alt" aria-hidden="true"></i></div>
+                            <h2 class="ea-card-title">Antworten löschen</h2>
+                        </div>
+                        <div class="ea-card-body space-y-3 text-sm">
+                            <p class="ea-muted mb-0">
+                                @if($inquiry->retention_days) Ohne Zutun werden die Antworten @if($purgeDate) ab {{ $purgeDate->format('d.m.Y') }} @endif automatisch gelöscht. Hier lassen sie sich vorher löschen, z. B. nach einem Widerruf.
+                                @else Die Aufbewahrung ist unbefristet. Löschen Sie die Antworten, sobald sie nicht mehr benötigt werden, z. B. am Ende der Schulzeit. @endif
+                                Erhalten bleiben die Abfrage und eine anonyme Statistik.
+                            </p>
+                            @if($inquiry->templateVersion->record_relevant && $unfiledCount > 0)
+                                <p class="text-amber-700 dark:text-amber-400 mb-0"><i class="fas fa-folder-open" aria-hidden="true"></i> Erst möglich, wenn alle vollständigen Antworten für die Schülerakte gedruckt sind.</p>
+                            @else
+                                <form method="POST" action="{{ route('elternabfragen.admin.inquiries.purge', $inquiry) }}" class="space-y-3"
+                                      onsubmit="return confirm('Alle Antworten dieser Abfrage endgültig löschen? Das kann nicht rückgängig gemacht werden.')">
+                                    @csrf
+                                    <input name="purge_reason" required maxlength="1000" class="ea-input" placeholder="Grund (wird protokolliert)">
+                                    <button class="ea-btn ea-btn-danger w-full"><i class="fas fa-trash-alt" aria-hidden="true"></i> Antworten endgültig löschen</button>
+                                </form>
+                            @endif
                         </div>
                     </section>
                 @endif

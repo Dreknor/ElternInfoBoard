@@ -43,7 +43,7 @@ class ParentInquiryController extends Controller
         $states = $assignments->mapWithKeys(fn (InquiryAssignment $a) => [$a->id => $this->access->state($user, $a)]);
 
         // Offen: noch nicht beantwortet oder vom Nutzer noch zu bestätigen
-        [$open, $done] = $assignments->partition(fn (InquiryAssignment $a) => (! $a->isAnswered() && $a->inquiry->isRunning()) || $states[$a->id]['can_confirm']);
+        [$open, $done] = $assignments->partition(fn (InquiryAssignment $a) => (! $a->isAnswered() && $a->acceptsAnswers()) || $states[$a->id]['can_confirm']);
 
         return view('elternabfragen.parent.index', compact('open', 'done', 'states'));
     }

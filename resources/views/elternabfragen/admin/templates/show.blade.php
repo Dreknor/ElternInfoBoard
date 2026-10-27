@@ -77,6 +77,7 @@
                         <x-elternabfragen.badge :color="$status->color()" dot>{{ $status->label() }}</x-elternabfragen.badge>
                         @if($version->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensible Inhalte</x-elternabfragen.badge> @endif
                         @if($version->requires_all_guardians) <x-elternabfragen.badge color="blue" icon="fas fa-user-friends">Bestätigung aller Sorgeberechtigten</x-elternabfragen.badge> @endif
+                        @if($version->record_relevant) <x-elternabfragen.badge color="amber" icon="fas fa-folder-open">aktenrelevant</x-elternabfragen.badge> @endif
                         @if($template->isArchived()) <x-elternabfragen.badge color="slate">archiviert</x-elternabfragen.badge> @endif
                     </div>
                     <a href="{{ route('elternabfragen.admin.templates.preview', $version) }}" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-eye" aria-hidden="true"></i> Elternvorschau</a>
@@ -100,7 +101,7 @@
                             ['fas fa-building', 'Zuständige Stelle', $version->responsible_office ?? '–'],
                             ['fas fa-users', 'Zielgruppe', $version->target_hint ?? '–'],
                             ['far fa-calendar-alt', 'Standardfrist', $version->default_deadline_days.' Tage'],
-                            ['fas fa-archive', 'Aufbewahrung', $version->retention_days ? $version->retention_days.' Tage nach Abschluss' : 'Standard'],
+                            ['fas fa-archive', 'Aufbewahrung', $version->retentionLabel()],
                         ] as [$icon, $term, $value])
                             <div class="rounded-xl p-3 ea-subtle">
                                 <dt class="text-xs ea-muted"><i class="{{ $icon }} mr-1" aria-hidden="true"></i> {{ $term }}</dt>

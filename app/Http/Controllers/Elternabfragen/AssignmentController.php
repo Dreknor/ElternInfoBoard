@@ -54,7 +54,7 @@ class AssignmentController extends Controller
         $assignment->load([
             'inquiry.templateVersion', 'child', 'group', 'recipients.user:id,name,email',
             'responses.user:id,name', 'responses.reviewer:id,name', 'deliveries.user:id,name', 'events.user:id,name',
-            'drafts.user:id,name', 'responses.confirmations.user:id,name',
+            'drafts.user:id,name', 'responses.confirmations.user:id,name', 'filer:id,name',
         ]);
 
         return view('elternabfragen.admin.assignment', [
@@ -103,6 +103,14 @@ class AssignmentController extends Controller
         $this->cases->unlockCorrection($assignment, Carbon::parse($data['correction_until']), $data['reason']);
 
         return back()->with(['type' => 'success', 'Meldung' => 'Korrektur für die Eltern freigegeben.']);
+    }
+
+    public function restart(Request $request, InquiryAssignment $assignment): RedirectResponse
+    {
+        $data = $request->validate(['restart_until' => 'required|date', 'reason' => 'required|string|max:1000']);
+        $this->cases->restart($assignment, Carbon::parse($data['restart_until']), $data['reason']);
+
+        return back()->with(['type' => 'success', 'Meldung' => 'Abfrage für die Familie neu gestartet. Die Sorgeberechtigten wurden benachrichtigt.']);
     }
 
     /**

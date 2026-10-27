@@ -152,7 +152,8 @@ class ResponseService
                 'child_id' => $locked->child_id,
                 'user_id' => $user->id,
                 'template_version_id' => $inquiry->template_version_id,
-                'version' => ($previous?->version ?? 0) + 1,
+                // Nach einem Neustart beginnt keine neue Zählung: Versionen bleiben je Auftrag eindeutig
+                'version' => (int) InquiryResponse::where('assignment_id', $locked->id)->max('version') + 1,
                 'answers' => $answers,
                 'form_hash' => $this->schema->formHash($inquiry->template_version_id, $inquiry->title, $inquiry->intro, $fields),
                 'answer_hash' => $this->schema->answerHash($answers),
@@ -221,6 +222,14 @@ class ResponseService
             return [];
         }
         $fields = $this->fields($assignment);
+
+        // Neu gestarteter Fall: letzte Antwort vorbefüllen (Dateien müssen neu hochgeladen werden)
+        $last = InquiryResponse::where('assignment_id', $assignment->id)->orderByDesc('version')->first();
+        if ($last !== null) {
+            $files = collect($fields)->filter(fn (array $f) => $f['type'] === InquiryFieldType::File->value)->pluck('key')->all();
+
+            return array_diff_key($last->answers ?? [], array_flip($files));
+        }
 
         return $this->previousAnswers->prefill($assignment, $fields, $this->childOptions($fields, $user));
     }

@@ -88,6 +88,10 @@
                 <div>
                     <label for="retention_days" class="ea-label">Aufbewahrungsfrist nach Abschluss (Tage)</label>
                     <input type="number" id="retention_days" name="retention_days" min="1" max="3650" value="{{ old('retention_days', $version->retention_days) }}" class="ea-input" placeholder="leer = Standard aus den Regeln">
+                    <label class="flex items-start gap-2 mt-2 text-sm ea-text">
+                        <input type="checkbox" name="retention_unlimited" value="1" class="ea-check mt-0.5" @checked(old('retention_unlimited', $version->retention_unlimited))>
+                        <span>Unbefristet aufbewahren – z. B. für Einwilligungen, die für die gesamte Schulzeit gelten. Keine automatische Löschung; die Verwaltung löscht die Antworten, wenn sie nicht mehr benötigt werden.</span>
+                    </label>
                 </div>
                 <div class="md:col-span-2">
                     <label for="retention_note" class="ea-label">Hinweise zu Aufbewahrung und Löschung</label>
@@ -101,6 +105,11 @@
                     <input type="checkbox" name="requires_all_guardians" value="1" class="ea-check mt-0.5" @checked(old('requires_all_guardians', $version->requires_all_guardians))>
                     <span class="text-sm ea-text"><strong><i class="fas fa-user-friends text-blue-500 mr-1" aria-hidden="true"></i> Alle Sorgeberechtigten müssen bestätigen</strong> (z. B. bei Erklärungen, die beide Elternteile gemeinsam abgeben müssen) –
                         eine Person füllt aus, alle weiteren Sorgeberechtigten bestätigen die Angaben. Erst dann gilt die Abfrage für das Kind als erledigt.</span>
+                </label>
+                <label class="md:col-span-2 ea-toggle-row">
+                    <input type="checkbox" name="record_relevant" value="1" class="ea-check mt-0.5" @checked(old('record_relevant', $version->record_relevant))>
+                    <span class="text-sm ea-text"><strong><i class="fas fa-folder-open text-amber-600 mr-1" aria-hidden="true"></i> Aktenrelevant</strong> (z. B. Foto-Einwilligungen, Abholberechtigungen, Wahlentscheidungen) –
+                        die Antworten werden als PDF zur Schülerakte genommen. Solange gültige Antworten noch nicht gedruckt sind, werden sie nach Ablauf der Aufbewahrungsfrist nicht automatisch gelöscht.</span>
                 </label>
             </div>
         </section>

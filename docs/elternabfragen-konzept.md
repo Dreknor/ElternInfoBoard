@@ -159,6 +159,23 @@ nachvollziehbar und unterliegen der Aufbewahrungsfrist der neuen Abfrage. Das Se
 **(O)** Die Rücklaufübersicht zeigt nie Antwortinhalte. Mitarbeitende sehen nur
 aktuelle, **geprüfte** Antworten von Abfragen mit „Für Mitarbeitende lesbar".
 
+### 6.2 Neustart für eine Familie
+
+`AssignmentAdminService::restart()` setzt einen Auftrag zurück (laufende oder abgeschlossene,
+nicht gelöschte Abfrage): gültige Antwort wird `is_current = false`, Entwürfe entfallen,
+Status `open`, individuelle Frist in `extended_until`, `reopened_at` gesetzt. Empfänger werden
+nach aktuellem Sorgerecht neu ermittelt und erneut benachrichtigt. Bei abgeschlossener Abfrage
+ist der Auftrag bis zur individuellen Frist wieder offen (`InquiryAssignment::acceptsAnswers()`);
+Erinnerungen gibt es dann nicht. Versionsnummern laufen je Auftrag weiter; die erste Antwort
+nach dem Neustart zählt als Eingang (`previous_response_id = null`), nicht als Korrektur.
+
+### 6.3 Ablage in der Schülerakte
+
+Vorlagen können als `record_relevant` („aktenrelevant“) gekennzeichnet werden.
+`RecordFilingService` erzeugt ein PDF (ein Blatt je Kind) einzeln oder je Abfrage/Klasse und
+vermerkt `filed_response_id`, `filed_at`, `filed_by`. Nur vollständige Antworten (alle
+Bestätigungen erteilt) gelten als gedruckt; eine neue Antwortversion muss erneut gedruckt werden.
+
 ## 8. Export (Kap. 9)
 
 Auswahl (Abfrage/Klasse, Felder, offene Fälle, Format XLSX/CSV, Ziel) → Vorschau
@@ -170,12 +187,19 @@ jeder Download werden protokolliert. **(O)** Formeln aus Freitext werden neutral
 ## 9. Aufbewahrung und Löschung (Kap. 7.4)
 
 Aufbewahrungsfrist je Vorlage (sonst Standard) wird bei Anlage in die Abfrage kopiert.
+Vorlagen mit `retention_unlimited` erzeugen Abfragen ohne Frist (`retention_days = null`);
+abgeschlossene Abfragen kann die Verwaltung jederzeit manuell löschen
+(`RetentionService::purgeManually()`, Grund wird protokolliert, aktenrelevante Antworten
+müssen vorher gedruckt sein).
 Geplante und laufende Abfragen können jederzeit (auch vor Fristende) mit optionaler
 Begründung beendet werden; das Protokoll vermerkt „vorzeitig“ bzw. „vor dem Start“.
 Laufende Abfragen werden 30 Tage nach Fristende automatisch abgeschlossen **(O)**, damit
 die Frist zuverlässig beginnt. Danach löscht `elternabfragen:process`: Antworten,
 Uploads, Entwürfe, Empfänger, Zustellprotokoll, fallbezogene Ereignisse, Exportdateien.
 Erhalten bleiben Abfrage und anonyme Statistik (Anzahl je Status) im Ereignisprotokoll.
+Nach Abschluss neu gestartete Fälle verschieben den Fristbeginn auf das Ende ihrer
+individuellen Frist. Aktenrelevante Abfragen werden zurückgehalten, solange vollständige
+Antworten nicht gedruckt sind (`RetentionService::held()`, Ausgabe in `elternabfragen:process`).
 
 ## 10. App-API v1
 

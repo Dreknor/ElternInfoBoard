@@ -248,6 +248,7 @@ class InquiryController extends ApiController
             'inquiry_status' => $inquiry->status->value,
             'deadline' => $state['deadline']->toIso8601String(),
             'extended' => $assignment->extended_until !== null,
+            'reopened' => $assignment->isReopened(),
             'submitted_at' => $assignment->last_submitted_at?->toIso8601String(),
             'can_view_answers' => $state['can_view_answers'],
             'can_submit' => $state['can_submit'],

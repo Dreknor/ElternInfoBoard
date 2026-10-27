@@ -19,7 +19,7 @@ class TemplateService
 {
     public const CONTENT_FIELDS = [
         'title', 'purpose', 'parent_info', 'responsible_office', 'target_hint', 'default_deadline_days',
-        'retention_days', 'retention_note', 'is_sensitive', 'requires_all_guardians', 'fields',
+        'retention_days', 'retention_unlimited', 'retention_note', 'is_sensitive', 'requires_all_guardians', 'record_relevant', 'fields',
     ];
 
     public function __construct(
@@ -164,10 +164,12 @@ class TemplateService
             'responsible_office' => $data['responsible_office'] ?? null,
             'target_hint' => $data['target_hint'] ?? null,
             'default_deadline_days' => (int) ($data['default_deadline_days'] ?? 14),
-            'retention_days' => isset($data['retention_days']) && $data['retention_days'] !== '' ? (int) $data['retention_days'] : null,
+            'retention_unlimited' => $unlimited = (bool) ($data['retention_unlimited'] ?? false),
+            'retention_days' => ! $unlimited && isset($data['retention_days']) && $data['retention_days'] !== '' ? (int) $data['retention_days'] : null,
             'retention_note' => $data['retention_note'] ?? null,
             'is_sensitive' => (bool) ($data['is_sensitive'] ?? false),
             'requires_all_guardians' => (bool) ($data['requires_all_guardians'] ?? false),
+            'record_relevant' => (bool) ($data['record_relevant'] ?? false),
             'fields' => $this->schema->normalizeDefinition($data['fields'] ?? []),
         ];
     }
