@@ -33,6 +33,7 @@ class ElternabfragenProcess extends Command
             foreach ($due as $inquiry) {
                 $this->line(' - #'.$inquiry->id.' '.$inquiry->title.' (abgeschlossen '.$inquiry->closed_at->format('d.m.Y').')');
             }
+            $this->reportHeld($retention);
 
             return self::SUCCESS;
         }
@@ -40,6 +41,7 @@ class ElternabfragenProcess extends Command
         // Löschfristen und Exportablauf gelten auch bei deaktiviertem Modul
         $this->info('Exportdateien gelöscht: '.$exports->purgeExpired());
         $this->info('Abfragen nach Aufbewahrungsfrist gelöscht: '.$retention->run());
+        $this->reportHeld($retention);
 
         $module = Module::where('setting', 'Elternabfragen')->first();
         $active = $module?->options['active'] ?? false;
@@ -54,5 +56,12 @@ class ElternabfragenProcess extends Command
         $this->info('Automatische Erinnerungen: '.$reminders->runAutomatic());
 
         return self::SUCCESS;
+    }
+
+    private function reportHeld(RetentionService $retention): void
+    {
+        foreach ($retention->held() as $held) {
+            $this->warn('Zurückgehalten: #'.$held['inquiry']->id.' '.$held['inquiry']->title.' – '.$held['unfiled'].' Antwort(en) noch nicht für die Schülerakte gedruckt.');
+        }
     }
 }

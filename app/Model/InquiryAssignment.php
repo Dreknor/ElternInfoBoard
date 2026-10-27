@@ -19,8 +19,9 @@ class InquiryAssignment extends Model
 {
     protected $fillable = [
         'inquiry_id', 'child_id', 'group_id', 'status', 'current_response_id', 'notified_at',
-        'first_submitted_at', 'last_submitted_at', 'extended_until', 'correction_until',
+        'first_submitted_at', 'last_submitted_at', 'extended_until', 'correction_until', 'reopened_at',
         'has_problem', 'problem_note', 'note', 'reminder_count', 'last_reminded_at',
+        'filed_response_id', 'filed_at', 'filed_by',
     ];
 
     protected function casts(): array
@@ -32,6 +33,8 @@ class InquiryAssignment extends Model
             'last_submitted_at' => 'datetime',
             'extended_until' => 'datetime',
             'correction_until' => 'datetime',
+            'reopened_at' => 'datetime',
+            'filed_at' => 'datetime',
             'has_problem' => 'boolean',
             'reminder_count' => 'integer',
             'last_reminded_at' => 'datetime',
@@ -73,6 +76,11 @@ class InquiryAssignment extends Model
         return $this->belongsTo(InquiryResponse::class, 'current_response_id');
     }
 
+    public function filer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'filed_by');
+    }
+
     public function deliveries(): HasMany
     {
         return $this->hasMany(InquiryDelivery::class, 'assignment_id')->orderByDesc('sent_at');
@@ -89,6 +97,41 @@ class InquiryAssignment extends Model
         $deadline = $this->inquiry->deadline_at;
 
         return $this->extended_until && $this->extended_until->greaterThan($deadline) ? $this->extended_until : $deadline;
+    }
+
+    /**
+     * Nach Abschluss der Abfrage für diese Familie neu gestartet: Abgabe, Korrektur und
+     * Bestätigung bis zur individuellen Frist möglich, obwohl die Abfrage abgeschlossen ist.
+     */
+    public function isReopened(): bool
+    {
+        $inquiry = $this->inquiry;
+
+        return $inquiry?->status === InquiryStatus::Closed
+            && $inquiry->purged_at === null
+            && $this->reopened_at !== null
+            && $inquiry->closed_at !== null
+            && $this->reopened_at->greaterThanOrEqualTo($inquiry->closed_at)
+            && $this->extended_until !== null
+            && now()->lessThanOrEqualTo($this->extended_until);
+    }
+
+    /** Abgaben, Korrekturen und Bestätigungen sind grundsätzlich möglich (Fristen prüft InquiryAccess). */
+    public function acceptsAnswers(): bool
+    {
+        return (bool) $this->inquiry?->isRunning() || $this->isReopened();
+    }
+
+    /** Die gültige Antwortversion wurde für die Schülerakte gedruckt. */
+    public function isFiled(): bool
+    {
+        return $this->current_response_id !== null && $this->filed_response_id === $this->current_response_id;
+    }
+
+    /** Aktenrelevante Vorlage, vollständige Antwort, aber noch nicht für die Akte gedruckt. */
+    public function needsFiling(): bool
+    {
+        return (bool) $this->inquiry?->templateVersion?->record_relevant && $this->isComplete() && ! $this->isFiled();
     }
 
     public function isAnswered(): bool
@@ -114,9 +157,10 @@ class InquiryAssignment extends Model
                 return InquiryAssignmentStatus::AwaitingConfirmation;
             }
 
-            $version = (int) InquiryResponse::whereKey($this->current_response_id)->value('version');
+            // Korrektur = Nachfolger einer gültigen Antwort (nach einem Neustart zählt die erste Antwort als Eingang)
+            $isCorrection = InquiryResponse::whereKey($this->current_response_id)->whereNotNull('previous_response_id')->exists();
 
-            return $version > 1 ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted;
+            return $isCorrection ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted;
         }
         if ($this->has_problem) {
             return InquiryAssignmentStatus::Problem;
@@ -137,7 +181,7 @@ class InquiryAssignment extends Model
      */
     public function displayLabel(): string
     {
-        if ($this->inquiry?->status === InquiryStatus::Closed) {
+        if ($this->inquiry?->status === InquiryStatus::Closed && ! $this->acceptsAnswers()) {
             if (! $this->isAnswered()) {
                 return 'Beendet – nicht beantwortet';
             }
@@ -151,7 +195,7 @@ class InquiryAssignment extends Model
 
     public function displayColor(): string
     {
-        if ($this->inquiry?->status === InquiryStatus::Closed
+        if ($this->inquiry?->status === InquiryStatus::Closed && ! $this->acceptsAnswers()
             && (! $this->isAnswered() || $this->status === InquiryAssignmentStatus::AwaitingConfirmation)) {
             return 'gray';
         }

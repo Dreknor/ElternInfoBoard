@@ -19,7 +19,7 @@ class TemplateService
 {
     public const CONTENT_FIELDS = [
         'title', 'purpose', 'parent_info', 'responsible_office', 'target_hint', 'default_deadline_days',
-        'retention_days', 'retention_note', 'is_sensitive', 'requires_all_guardians', 'fields',
+        'retention_days', 'retention_note', 'is_sensitive', 'requires_all_guardians', 'record_relevant', 'fields',
     ];
 
     public function __construct(
@@ -168,6 +168,7 @@ class TemplateService
             'retention_note' => $data['retention_note'] ?? null,
             'is_sensitive' => (bool) ($data['is_sensitive'] ?? false),
             'requires_all_guardians' => (bool) ($data['requires_all_guardians'] ?? false),
+            'record_relevant' => (bool) ($data['record_relevant'] ?? false),
             'fields' => $this->schema->normalizeDefinition($data['fields'] ?? []),
         ];
     }

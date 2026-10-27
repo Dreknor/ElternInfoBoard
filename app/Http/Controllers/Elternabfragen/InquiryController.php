@@ -15,7 +15,9 @@ use App\Model\InquiryTemplateVersion;
 use App\Model\User;
 use App\Services\Elternabfragen\FieldSchema;
 use App\Services\Elternabfragen\InquiryService;
+use App\Services\Elternabfragen\RecordFilingService;
 use App\Services\Elternabfragen\ReminderService;
+use App\Services\Elternabfragen\RetentionService;
 use App\Services\Elternabfragen\TargetResolver;
 use App\Settings\ElternabfragenSetting;
 use Carbon\Carbon;
@@ -159,6 +161,8 @@ class InquiryController extends Controller
             'users' => User::permission(['manage elternabfragen', 'approve elternabfragen'])->orderBy('name')->get(['id', 'name']),
             'statusOptions' => InquiryAssignmentStatus::options(),
             'changeCounts' => $inquiry->previous_inquiry_id ? $this->changeCounts($inquiry) : null,
+            'unfiledCount' => $inquiry->isReleased() && ! $inquiry->purged_at ? app(RecordFilingService::class)->pendingCount($inquiry) : 0,
+            'purgeDate' => app(RetentionService::class)->purgeDate($inquiry),
             'previousInquiries' => $user->can('manage elternabfragen') && ! $inquiry->purged_at
                 ? $this->inquiries->previousCandidates($inquiry)->filter(fn (Inquiry $i) => $i->templateVersion?->template_id === $inquiry->templateVersion->template_id)
                 : collect(),

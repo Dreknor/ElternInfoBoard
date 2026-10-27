@@ -243,6 +243,7 @@ class TemplateController extends Controller
             'retention_note' => 'nullable|string|max:2000',
             'is_sensitive' => 'nullable|boolean',
             'requires_all_guardians' => 'nullable|boolean',
+            'record_relevant' => 'nullable|boolean',
             'fields_json' => 'required|json',
         ], [
             'purpose.required' => 'Bitte beschreiben Sie den Zweck: Wofür werden die Angaben benötigt und wie werden sie verwendet?',
@@ -251,6 +252,7 @@ class TemplateController extends Controller
         $data['fields'] = json_decode($data['fields_json'], true) ?: [];
         $data['is_sensitive'] = $request->boolean('is_sensitive');
         $data['requires_all_guardians'] = $request->boolean('requires_all_guardians');
+        $data['record_relevant'] = $request->boolean('record_relevant');
 
         return $data;
     }

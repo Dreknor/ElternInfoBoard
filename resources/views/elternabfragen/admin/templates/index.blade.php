@@ -49,6 +49,7 @@
                             <x-elternabfragen.badge :color="$latest->status->color()" dot>v{{ $latest->version }}: {{ $latest->status->label() }}</x-elternabfragen.badge>
                         @endif
                         @if($latest?->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensibel</x-elternabfragen.badge> @endif
+                        @if($latest?->record_relevant) <x-elternabfragen.badge color="amber" icon="fas fa-folder-open">aktenrelevant</x-elternabfragen.badge> @endif
                     </div>
                     <div class="flex flex-wrap items-center gap-2 mt-auto pt-3" style="border-top: 1px solid var(--color-card-border)">
                         <a href="{{ route('elternabfragen.admin.templates.show', $latest) }}" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-eye" aria-hidden="true"></i> Ansehen</a>

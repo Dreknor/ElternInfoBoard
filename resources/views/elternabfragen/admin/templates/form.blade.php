@@ -102,6 +102,11 @@
                     <span class="text-sm ea-text"><strong><i class="fas fa-user-friends text-blue-500 mr-1" aria-hidden="true"></i> Alle Sorgeberechtigten müssen bestätigen</strong> (z. B. bei Erklärungen, die beide Elternteile gemeinsam abgeben müssen) –
                         eine Person füllt aus, alle weiteren Sorgeberechtigten bestätigen die Angaben. Erst dann gilt die Abfrage für das Kind als erledigt.</span>
                 </label>
+                <label class="md:col-span-2 ea-toggle-row">
+                    <input type="checkbox" name="record_relevant" value="1" class="ea-check mt-0.5" @checked(old('record_relevant', $version->record_relevant))>
+                    <span class="text-sm ea-text"><strong><i class="fas fa-folder-open text-amber-600 mr-1" aria-hidden="true"></i> Aktenrelevant</strong> (z. B. Foto-Einwilligungen, Abholberechtigungen, Wahlentscheidungen) –
+                        die Antworten werden als PDF zur Schülerakte genommen. Solange gültige Antworten noch nicht gedruckt sind, werden sie nach Ablauf der Aufbewahrungsfrist nicht automatisch gelöscht.</span>
+                </label>
             </div>
         </section>
 

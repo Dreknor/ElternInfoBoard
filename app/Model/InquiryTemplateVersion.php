@@ -22,7 +22,7 @@ class InquiryTemplateVersion extends Model
 
     protected $fillable = [
         'template_id', 'version', 'status', 'title', 'purpose', 'parent_info', 'responsible_office',
-        'target_hint', 'default_deadline_days', 'retention_days', 'retention_note', 'is_sensitive', 'requires_all_guardians',
+        'target_hint', 'default_deadline_days', 'retention_days', 'retention_note', 'is_sensitive', 'requires_all_guardians', 'record_relevant',
         'fields', 'review_note', 'created_by', 'submitted_at', 'reviewed_by', 'reviewed_at',
         'privacy_checked_by', 'privacy_checked_at',
     ];
@@ -34,6 +34,7 @@ class InquiryTemplateVersion extends Model
             'fields' => 'json:unicode',
             'is_sensitive' => 'boolean',
             'requires_all_guardians' => 'boolean',
+            'record_relevant' => 'boolean',
             'default_deadline_days' => 'integer',
             'retention_days' => 'integer',
             'submitted_at' => 'datetime',

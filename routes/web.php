@@ -806,6 +806,7 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
         $inquiries = \App\Http\Controllers\Elternabfragen\InquiryController::class;
         $cases = \App\Http\Controllers\Elternabfragen\AssignmentController::class;
         $exports = \App\Http\Controllers\Elternabfragen\ExportController::class;
+        $records = \App\Http\Controllers\Elternabfragen\RecordController::class;
 
         Route::get('/', [$admin, 'index'])->name('index');
         Route::get('freigaben', [$admin, 'approvals'])->middleware('permission:approve elternabfragen')->name('approvals');
@@ -864,10 +865,14 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
             Route::post('faelle/{assignment}/problem-geloest', [$cases, 'resolve'])->name('assignments.resolve');
             Route::post('faelle/{assignment}/notiz', [$cases, 'note'])->name('assignments.note');
             Route::post('faelle/{assignment}/korrektur', [$cases, 'unlockCorrection'])->name('assignments.correction');
+            Route::post('faelle/{assignment}/neustart', [$cases, 'restart'])->name('assignments.restart');
         });
         Route::get('faelle/{assignment}', [$cases, 'show'])->name('assignments.show');
-        Route::middleware('permission:view elternabfragen answers')->group(function () use ($cases) {
+        Route::middleware('permission:view elternabfragen answers')->group(function () use ($cases, $records) {
             Route::post('antworten/{response}/pruefung', [$cases, 'review'])->name('responses.review');
+            // Ablage in der Schülerakte
+            Route::get('faelle/{assignment}/akte.pdf', [$records, 'assignment'])->name('records.assignment');
+            Route::get('abfragen/{inquiry}/akte.pdf', [$records, 'inquiry'])->name('records.inquiry');
         });
         Route::get('antworten/{response}/datei/{field}', [$cases, 'file'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.file');
         Route::get('antworten/{response}', [$cases, 'response'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.show');

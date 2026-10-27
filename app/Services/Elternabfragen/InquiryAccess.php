@@ -76,7 +76,7 @@ class InquiryAccess
 
         if (! $custody) {
             $reason = 'Antworten können nur sorgeberechtigte Personen abgeben.';
-        } elseif (! $inquiry->isRunning()) {
+        } elseif (! $assignment->acceptsAnswers()) {
             $reason = $inquiry->closedEarly() ? 'Die Abfrage wurde vorzeitig beendet.' : 'Die Abfrage ist abgeschlossen.';
         } elseif (! $assignment->isAnswered()) {
             $canSubmit = $now->lessThanOrEqualTo($deadline);

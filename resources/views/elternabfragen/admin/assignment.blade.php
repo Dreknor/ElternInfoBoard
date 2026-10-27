@@ -17,12 +17,37 @@
             <section class="ea-card">
                 <div class="ea-card-header flex-wrap">
                     <x-elternabfragen.badge :color="$assignment->status->color()" dot class="text-sm">{{ $assignment->status->label() }}</x-elternabfragen.badge>
-                    <span class="text-sm ea-muted"><i class="far fa-clock" aria-hidden="true"></i> Frist: {{ $assignment->effectiveDeadline()->format('d.m.Y H:i') }}{{ $assignment->extended_until ? ' (Nachfrist)' : '' }}</span>
+                    <span class="text-sm ea-muted"><i class="far fa-clock" aria-hidden="true"></i> Frist: {{ $assignment->effectiveDeadline()->format('d.m.Y H:i') }}{{ $assignment->extended_until ? ($assignment->reopened_at ? ' (individuell)' : ' (Nachfrist)') : '' }}</span>
+                    @if($assignment->reopened_at)<span class="text-sm ea-muted">· Neu gestartet am {{ $assignment->reopened_at->format('d.m.Y H:i') }}</span>@endif
                     @if($assignment->correction_until)<span class="text-sm ea-muted">· Korrektur freigegeben bis {{ $assignment->correction_until->format('d.m.Y H:i') }}</span>@endif
                 </div>
                 <div class="ea-card-body space-y-4 text-sm">
                     @if($assignment->has_problem)
                         <div class="ea-alert ea-alert-danger"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i><p class="mb-0"><strong>Technisches Problem:</strong> {{ $assignment->problem_note }}</p></div>
+                    @endif
+                    @if($assignment->isReopened())
+                        <div class="ea-alert ea-alert-info"><i class="fas fa-redo" aria-hidden="true"></i><p class="mb-0">Die Abfrage ist abgeschlossen, für diese Familie aber bis {{ $assignment->extended_until->format('d.m.Y H:i') }} wieder geöffnet.</p></div>
+                    @endif
+                    @if($assignment->isAnswered())
+                        <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl ea-subtle">
+                            <p class="mb-0">
+                                <i class="fas fa-folder{{ $assignment->isFiled() ? '' : '-open' }} {{ $assignment->isFiled() ? 'text-emerald-600' : 'ea-muted' }}" aria-hidden="true"></i>
+                                @if($assignment->isFiled())
+                                    Für die Schülerakte gedruckt am {{ $assignment->filed_at->format('d.m.Y H:i') }} von {{ $assignment->filer?->name ?? 'unbekannt' }}.
+                                @elseif($assignment->filed_at)
+                                    Eine frühere Version wurde am {{ $assignment->filed_at->format('d.m.Y') }} gedruckt – die gültige Antwort noch nicht.
+                                @else
+                                    Noch nicht für die Schülerakte gedruckt.
+                                @endif
+                                @if($inquiry->templateVersion->record_relevant)<x-elternabfragen.badge color="amber" icon="fas fa-folder-open">aktenrelevant</x-elternabfragen.badge>@endif
+                            </p>
+                            @if($canSeeAnswers && ! $inquiry->purged_at)
+                                <a href="{{ route('elternabfragen.admin.records.assignment', $assignment) }}" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-file-pdf" aria-hidden="true"></i> PDF für die Akte</a>
+                            @endif
+                        </div>
+                        @if(! $assignment->isComplete())
+                            <p class="ea-hint mb-0">Solange Bestätigungen fehlen, wird ein Ausdruck nicht als „gedruckt“ vermerkt.</p>
+                        @endif
                     @endif
                     @if($assignment->note)
                         <div class="ea-alert ea-alert-neutral"><i class="fas fa-sticky-note" aria-hidden="true"></i><p class="mb-0"><strong>Bearbeitungshinweis:</strong> {{ $assignment->note }}</p></div>
@@ -148,6 +173,26 @@
                                 </form>
                             @endif
                         </div>
+                    </section>
+                @endif
+                @if(in_array($inquiry->status, [\App\Enums\InquiryStatus::Running, \App\Enums\InquiryStatus::Closed], true) && ! $inquiry->purged_at)
+                    <section class="ea-card">
+                        <div class="ea-card-header">
+                            <div class="ea-card-icon"><i class="fas fa-redo" aria-hidden="true"></i></div>
+                            <h2 class="ea-card-title">Für diese Familie neu starten</h2>
+                        </div>
+                        <form method="POST" action="{{ route('elternabfragen.admin.assignments.restart', $assignment) }}" class="ea-card-body space-y-2 text-sm"
+                              onsubmit="return confirm('Abfrage für diese Familie neu starten? Die bisherige Antwort gilt dann nicht mehr.')">@csrf
+                            <p class="ea-muted mb-2">
+                                Die Sorgeberechtigten werden nach aktuellem Stand neu ermittelt und benachrichtigt.
+                                @if($assignment->isAnswered()) Die bisherige Antwort bleibt als Version erhalten, gilt aber nicht mehr. @endif
+                                @if($inquiry->status === \App\Enums\InquiryStatus::Closed) Die Abfrage bleibt für alle anderen abgeschlossen. @endif
+                            </p>
+                            <label class="ea-label" for="a_restart">Abgabe möglich bis</label>
+                            <input id="a_restart" type="datetime-local" name="restart_until" required class="ea-input" value="{{ now()->addWeeks(2)->setTime(23, 59)->format('Y-m-d\TH:i') }}">
+                            <input name="reason" required maxlength="1000" class="ea-input" placeholder="Grund, z. B. Sorgerecht geändert (Pflicht)">
+                            <button class="ea-btn ea-btn-secondary w-full"><i class="fas fa-redo" aria-hidden="true"></i> Neu starten</button>
+                        </form>
                     </section>
                 @endif
                 <section class="ea-card">

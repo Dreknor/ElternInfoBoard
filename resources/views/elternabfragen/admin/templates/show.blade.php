@@ -77,6 +77,7 @@
                         <x-elternabfragen.badge :color="$status->color()" dot>{{ $status->label() }}</x-elternabfragen.badge>
                         @if($version->is_sensitive) <x-elternabfragen.badge color="red" icon="fas fa-user-shield">sensible Inhalte</x-elternabfragen.badge> @endif
                         @if($version->requires_all_guardians) <x-elternabfragen.badge color="blue" icon="fas fa-user-friends">Bestätigung aller Sorgeberechtigten</x-elternabfragen.badge> @endif
+                        @if($version->record_relevant) <x-elternabfragen.badge color="amber" icon="fas fa-folder-open">aktenrelevant</x-elternabfragen.badge> @endif
                         @if($template->isArchived()) <x-elternabfragen.badge color="slate">archiviert</x-elternabfragen.badge> @endif
                     </div>
                     <a href="{{ route('elternabfragen.admin.templates.preview', $version) }}" class="ea-btn ea-btn-secondary ea-btn-sm"><i class="fas fa-eye" aria-hidden="true"></i> Elternvorschau</a>

@@ -11,6 +11,7 @@ use App\Model\InquiryExport;
 use App\Model\InquiryRecipient;
 use App\Model\InquiryResponse;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,25 +20,86 @@ use Illuminate\Support\Facades\Storage;
  * Uploads, Exportdateien und personenbezogene Protokolldaten gelöscht. Erhalten
  * bleiben die Abfrage selbst und eine anonyme Statistik (Anzahl je Status).
  * Abfragen ohne Frist (retention_days = null) werden nie automatisch gelöscht.
+ *
+ * Die Frist beginnt mit dem Abschluss, bei nach Abschluss neu gestarteten Fällen mit
+ * dem Ende der letzten individuellen Frist. Aktenrelevante Abfragen werden zurück-
+ * gehalten, solange vollständige Antworten noch nicht für die Schülerakte gedruckt sind.
  */
 class RetentionService
 {
-    public function __construct(private readonly ExportService $exports) {}
+    public function __construct(
+        private readonly ExportService $exports,
+        private readonly RecordFilingService $filing,
+    ) {}
 
     /** @return list<Inquiry> */
     public function due(?CarbonInterface $now = null): array
     {
+        return array_values(array_filter($this->expired($now), fn (Inquiry $inquiry) => $this->unfiledCount($inquiry) === 0));
+    }
+
+    /**
+     * Abgelaufen, aber wegen noch nicht gedruckter Antworten zurückgehalten.
+     *
+     * @return list<array{inquiry: Inquiry, unfiled: int}>
+     */
+    public function held(?CarbonInterface $now = null): array
+    {
+        $held = [];
+        foreach ($this->expired($now) as $inquiry) {
+            if (($unfiled = $this->unfiledCount($inquiry)) > 0) {
+                $held[] = ['inquiry' => $inquiry, 'unfiled' => $unfiled];
+            }
+        }
+
+        return $held;
+    }
+
+    /** Beginn der Aufbewahrungsfrist. */
+    public function retentionStart(Inquiry $inquiry): ?CarbonInterface
+    {
+        if ($inquiry->closed_at === null) {
+            return null;
+        }
+
+        $reopenedUntil = $inquiry->assignments()
+            ->whereNotNull('reopened_at')
+            ->where('reopened_at', '>=', $inquiry->closed_at)
+            ->max('extended_until');
+
+        return $reopenedUntil && $inquiry->closed_at->lessThan($reopenedUntil)
+            ? Carbon::parse($reopenedUntil)
+            : $inquiry->closed_at;
+    }
+
+    /** Voraussichtlicher Löschzeitpunkt (ohne Rückhalt wegen der Aktenablage). */
+    public function purgeDate(Inquiry $inquiry): ?CarbonInterface
+    {
+        $start = $this->retentionStart($inquiry);
+
+        return $start && $inquiry->retention_days ? $start->copy()->addDays($inquiry->retention_days) : null;
+    }
+
+    /** @return list<Inquiry> */
+    private function expired(?CarbonInterface $now = null): array
+    {
         $now ??= now();
 
         return Inquiry::query()
+            ->with('templateVersion')
             ->where('status', InquiryStatus::Closed->value)
             ->whereNull('purged_at')
             ->whereNotNull('retention_days')
             ->whereNotNull('closed_at')
             ->get()
-            ->filter(fn (Inquiry $inquiry) => $inquiry->closed_at->copy()->addDays($inquiry->retention_days)->lessThanOrEqualTo($now))
+            ->filter(fn (Inquiry $inquiry) => $this->purgeDate($inquiry)->lessThanOrEqualTo($now))
             ->values()
             ->all();
+    }
+
+    private function unfiledCount(Inquiry $inquiry): int
+    {
+        return $inquiry->templateVersion?->record_relevant ? $this->filing->pendingCount($inquiry) : 0;
     }
 
     public function purge(Inquiry $inquiry): void
