@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Mail\NewUserPasswordMail;
+use App\Mail\VereinMembershipChangedMail;
+use App\Settings\EmailSetting;
 use App\Model\Group;
 use App\Model\User;
 use App\Services\Import\VereinImportService;
@@ -74,7 +76,7 @@ class VereinImportTest extends TestCase
         // Andere Gruppen und Rollen bleiben erhalten
         $this->assertTrue($parent->fresh()->hasRole('Eltern'));
         $this->assertTrue($parent->fresh()->groups()->whereKey($this->klasse->id)->exists());
-        Mail::assertNothingQueued();
+        Mail::assertNotQueued(NewUserPasswordMail::class);
     }
 
     /** @test */
@@ -200,7 +202,7 @@ class VereinImportTest extends TestCase
         Mail::assertQueued(NewUserPasswordMail::class, function (NewUserPasswordMail $mail) {
             $html = $mail->render();
 
-            return $mail->notice === VereinImportService::ACCESS_NOTICE
+            return $mail->notice === VereinImportService::accessNotice()
                 && str_contains($html, 'Einladungen zur Mitgliederversammlung')
                 && str_contains($html, 'Aktuelles aus dem Schulzentrum');
         });
@@ -318,6 +320,51 @@ class VereinImportTest extends TestCase
         $this->assertEqualsCanonicalizing(['Nie Angemeldet', 'Ohne Mail'], array_column($report->unreachable, 'name'));
         $categories = array_column($report->evaluationRows(), 0);
         $this->assertSame(['Nicht zugeordnet', 'Nicht erreichbar', 'Nicht erreichbar'], $categories);
+    }
+
+    /** @test */
+    public function bestehende_konten_werden_ueber_aufnahme_und_entfernung_benachrichtigt(): void
+    {
+        $neu = $this->user('Anna Beispiel', 'anna@example.com');
+        $bleibt = $this->user('Bleibt Mitglied', 'bleibt@example.com');
+        $bleibt->assignRole('Vereinsmitglied');
+        $bleibt->groups()->attach($this->verein->id);
+        $weg = $this->user('Weg Mitglied', 'weg@example.com');
+        $weg->assignRole('Vereinsmitglied');
+        $weg->groups()->attach($this->verein->id);
+
+        $report = $this->import([
+            $this->row('Anna Beispiel', 'anna@example.com'),
+            $this->row('Bleibt Mitglied', 'bleibt@example.com'),
+            $this->row('Ganz Neu', 'ganzneu@example.com'),
+        ]);
+
+        Mail::assertQueued(VereinMembershipChangedMail::class, 2);
+        Mail::assertQueued(VereinMembershipChangedMail::class, fn ($mail) => $mail->hasTo('anna@example.com')
+            && $mail->change === VereinMembershipChangedMail::ADDED
+            && str_contains($mail->render(), 'Mitgliederversammlung'));
+        Mail::assertQueued(VereinMembershipChangedMail::class, fn ($mail) => $mail->hasTo('weg@example.com')
+            && $mail->change === VereinMembershipChangedMail::REMOVED);
+        Mail::assertNotQueued(VereinMembershipChangedMail::class, fn ($mail) => $mail->hasTo('bleibt@example.com') || $mail->hasTo('ganzneu@example.com'));
+        $this->assertSame([1, 1], [$report->notifiedAdded, $report->notifiedRemoved]);
+    }
+
+    /** @test */
+    public function ohne_benachrichtigung_oder_text_wird_keine_mail_versendet(): void
+    {
+        $this->user('Anna Beispiel', 'anna@example.com');
+        app(VereinImportService::class)->run([$this->row('Anna Beispiel', 'anna@example.com')], dryRun: false, notify: false);
+        Mail::assertNotQueued(VereinMembershipChangedMail::class);
+
+        $settings = app(EmailSetting::class);
+        $settings->verein_added_text = '';
+        $settings->verein_access_notice = '';
+        $settings->save();
+
+        $this->user('Bernd Kurz', 'bernd@example.com');
+        $this->import([$this->row('Anna Beispiel', 'anna@example.com'), $this->row('Bernd Kurz', 'bernd@example.com'), $this->row('Neu', 'neu@example.com')]);
+        Mail::assertNotQueued(VereinMembershipChangedMail::class);
+        Mail::assertQueued(NewUserPasswordMail::class, fn ($mail) => $mail->notice === null && ! str_contains($mail->render(), 'Wozu dieser Zugang'));
     }
 
     /** @test */

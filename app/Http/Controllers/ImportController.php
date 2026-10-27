@@ -468,6 +468,7 @@ class ImportController extends Controller implements HasMiddleware
         $options = [
             'removeMissing' => $request->boolean('abgleich'),
             'sendEmail'     => ($data['send_email'] ?? '1') === '1',
+            'notify'        => $request->boolean('benachrichtigen'),
         ];
 
         $report = app(VereinImportService::class)->run($this->vereinRows($path), dryRun: true, removeMissing: $options['removeMissing']);
@@ -506,6 +507,7 @@ class ImportController extends Controller implements HasMiddleware
         $options = [
             'removeMissing' => $request->boolean('abgleich'),
             'sendEmail'     => ($data['send_email'] ?? '1') === '1',
+            'notify'        => $request->boolean('benachrichtigen'),
         ];
 
         $decisions = [];
@@ -523,6 +525,7 @@ class ImportController extends Controller implements HasMiddleware
                 sendEmail: $options['sendEmail'],
                 selection: isset($data['selection_sent']) ? array_values($data['selected'] ?? []) : null,
                 decisions: $decisions,
+                notify: $options['notify'],
             );
         } finally {
             Storage::delete($path);
@@ -530,7 +533,7 @@ class ImportController extends Controller implements HasMiddleware
 
         $stored = ['evaluation' => $report->evaluationRows()];
         if (! $options['sendEmail'] && $report->newUsers !== []) {
-            [$pdfContent, $filename] = $this->credentialsPdf($request, $report->newUsers, 'Vereins-Import', VereinImportService::ACCESS_NOTICE);
+            [$pdfContent, $filename] = $this->credentialsPdf($request, $report->newUsers, 'Vereins-Import', VereinImportService::accessNotice());
             $stored['pdf'] = base64_encode($pdfContent);
             $stored['pdfName'] = $filename;
         }

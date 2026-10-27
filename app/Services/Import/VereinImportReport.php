@@ -21,6 +21,11 @@ final class VereinImportReport
     /** Anzahl der Mitglieder nach dem Import */
     public int $membersAfter = 0;
 
+    /** Versandte Benachrichtigungen an bestehende Konten (Aufnahme / Entfernung) */
+    public int $notifiedAdded = 0;
+
+    public int $notifiedRemoved = 0;
+
     /** @var list<array{name: string, email: string, key: string, row: ?int}> bestehende Konten, die neu Vereinsmitglied werden */
     public array $linked = [];
 

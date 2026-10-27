@@ -386,6 +386,9 @@ class SettingsController extends Controller implements HasMiddleware
                     'mail_from_address' => 'required|max:255',
                     'mail_from_name' => 'required|max:255',
                     'new_user_welcome_text' => 'required|string|max:1000',
+                    'verein_access_notice' => 'nullable|string|max:1000',
+                    'verein_added_text' => 'nullable|string|max:2000',
+                    'verein_removed_text' => 'nullable|string|max:2000',
                     'log_sent_emails' => 'nullable|boolean',
                     'contact_default_name' => 'required|max:255',
                     'contact_default_email' => 'nullable|email|max:255',
@@ -400,6 +403,9 @@ class SettingsController extends Controller implements HasMiddleware
                 $mailSettings->mail_from_address = $validated['mail_from_address'];
                 $mailSettings->mail_from_name = $validated['mail_from_name'];
                 $mailSettings->new_user_welcome_text = $validated['new_user_welcome_text'];
+                $mailSettings->verein_access_notice = $validated['verein_access_notice'] ?? null;
+                $mailSettings->verein_added_text = $validated['verein_added_text'] ?? null;
+                $mailSettings->verein_removed_text = $validated['verein_removed_text'] ?? null;
                 $mailSettings->log_sent_emails = $validated['log_sent_emails'] ?? false;
                 $mailSettings->contact_default_name = $validated['contact_default_name'];
                 $mailSettings->contact_default_email = $validated['contact_default_email'] ?? null;

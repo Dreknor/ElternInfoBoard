@@ -44,11 +44,12 @@
         {{-- Formular --}}
         <form action="{{ url('/users/importVerein') }}" method="post" enctype="multipart/form-data"
               class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700"
-              x-data="{ fileName: '', dragging: false, sendMode: 'email', abgleich: true, submitting: false }"
+              x-data="{ fileName: '', dragging: false, sendMode: 'email', abgleich: true, notify: true, submitting: false }"
               @submit="submitting = true">
             @csrf
             <input type="hidden" name="send_email" :value="sendMode === 'email' ? '1' : '0'">
             <input type="hidden" name="abgleich" :value="abgleich ? '1' : '0'">
+            <input type="hidden" name="benachrichtigen" :value="notify ? '1' : '0'">
 
             {{-- 1: Datei --}}
             <section class="p-6">
@@ -88,7 +89,7 @@
             <section class="p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-semibold flex items-center justify-center">2</span>
-                    <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 m-0">Abgleich</h2>
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 m-0">Abgleich und Benachrichtigung</h2>
                 </div>
                 <button type="button" role="switch" :aria-checked="abgleich.toString()" @click="abgleich = !abgleich"
                         class="w-full flex items-start gap-4 p-4 rounded-xl border text-left transition-colors"
@@ -103,6 +104,22 @@
                         <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             Wer nicht in der Datei steht, verliert Gruppe und Rolle „Vereinsmitglied“. Das Konto selbst bleibt bestehen.
                             Die Vorschau zeigt alle Betroffenen namentlich.
+                        </span>
+                    </span>
+                </button>
+                <button type="button" role="switch" :aria-checked="notify.toString()" @click="notify = !notify"
+                        class="w-full flex items-start gap-4 p-4 mt-3 rounded-xl border text-left transition-colors"
+                        :class="notify ? 'border-amber-300 bg-amber-50/60 dark:border-amber-700 dark:bg-amber-900/10' : 'border-gray-200 dark:border-gray-700'">
+                    <span class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors mt-0.5"
+                          :class="notify ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600'">
+                        <span class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
+                              :class="notify ? 'translate-x-5' : ''"></span>
+                    </span>
+                    <span>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-gray-100">Bestehende Konten per E-Mail benachrichtigen</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Wer neu in den Verein aufgenommen oder daraus entfernt wird, erhält eine kurze E-Mail.
+                            Die Texte lassen sich unter Einstellungen › E-Mail anpassen.
                         </span>
                     </span>
                 </button>

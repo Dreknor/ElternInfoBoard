@@ -3,6 +3,7 @@
 namespace App\Services\Import;
 
 use App\Mail\NewUserPasswordMail;
+use App\Mail\VereinMembershipChangedMail;
 use App\Model\Group;
 use App\Model\User;
 use App\Settings\EmailSetting;
@@ -42,8 +43,14 @@ class VereinImportService
 
     public const ROLE_NAME = 'Vereinsmitglied';
 
-    /** Hinweis in der Zugangsdaten-Mail bzw. im Zugangsdaten-PDF neuer Vereinskonten */
-    public const ACCESS_NOTICE = 'Dieser Zugang wird Ihnen als Vereinsmitglied zur Verfügung gestellt, um Sie über Aktuelles aus dem Schulzentrum zu informieren und Ihnen Einladungen zur Mitgliederversammlung zu senden.';
+    /**
+     * Hinweis für die Zugangsdaten-Mail bzw. das Zugangsdaten-PDF neuer
+     * Vereinskonten (Einstellungen › E-Mail); leer = kein Hinweis.
+     */
+    public static function accessNotice(): ?string
+    {
+        return filled($notice = app(EmailSetting::class)->verein_access_notice) ? trim($notice) : null;
+    }
 
     /**
      * @param  iterable<array<string, mixed>>  $rows  Zeilen mit Überschriften als Schlüssel
@@ -51,7 +58,7 @@ class VereinImportService
      * @param  array<int|string, string>  $decisions  Entscheidungen zu Klärungsfällen je Zeile
      *                                                 (skip, link:ID, restore:ID, create, email:ADRESSE)
      */
-    public function run(iterable $rows, bool $dryRun = true, bool $removeMissing = true, bool $sendEmail = true, ?array $selection = null, array $decisions = []): VereinImportReport
+    public function run(iterable $rows, bool $dryRun = true, bool $removeMissing = true, bool $sendEmail = true, ?array $selection = null, array $decisions = [], bool $notify = true): VereinImportReport
     {
         $report = new VereinImportReport($dryRun);
 
@@ -196,6 +203,7 @@ class VereinImportService
             }
 
             $welcomeText = $sendEmail && $create !== [] ? app(EmailSetting::class)->new_user_welcome_text : null;
+            $notice = $create !== [] ? self::accessNotice() : null;
             foreach ($create as $data) {
                 $password = PasswordGenerator::generate();
                 $user = User::create([
@@ -209,7 +217,7 @@ class VereinImportService
 
                 if ($sendEmail) {
                     try {
-                        Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $welcomeText, self::ACCESS_NOTICE));
+                        Mail::to($user->email)->queue(new NewUserPasswordMail($user, $password, $welcomeText, $notice));
                     } catch (\Throwable $e) {
                         Log::error('Vereins-Import: Willkommens-Mail an '.$user->email.' fehlgeschlagen: '.$e->getMessage());
                     }
@@ -226,7 +234,41 @@ class VereinImportService
             }
         });
 
+        if ($notify) {
+            $settings = app(EmailSetting::class);
+            $added = array_filter($apply, fn (User $user) => ! isset($currentMembers[$user->id]));
+            $report->notifiedAdded = $this->notify($added, VereinMembershipChangedMail::ADDED, $settings->verein_added_text);
+            $report->notifiedRemoved = $this->notify($toRemove, VereinMembershipChangedMail::REMOVED, $settings->verein_removed_text);
+        }
+
         return $report;
+    }
+
+    /**
+     * Bestehende Konten über die geänderte Vereinszugehörigkeit informieren.
+     *
+     * @param  array<int, User>  $users
+     */
+    private function notify(array $users, string $change, ?string $text): int
+    {
+        if (blank($text)) {
+            return 0;
+        }
+
+        $sent = 0;
+        foreach ($users as $user) {
+            if (! filter_var((string) $user->email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            try {
+                Mail::to($user->email)->queue(new VereinMembershipChangedMail($user, $change, trim($text)));
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::error('Vereins-Import: Benachrichtigung an '.$user->email.' fehlgeschlagen: '.$e->getMessage());
+            }
+        }
+
+        return $sent;
     }
 
     /**

@@ -13,7 +13,7 @@
         [
             'key' => 'linked', 'open' => true,
             'title' => $report->dryRun ? 'Bestehende Konten in den Verein aufnehmen' : 'Bestehende Konten in den Verein aufgenommen',
-            'hint' => 'Über die E-Mail-Adresse erkannt – nur Gruppe und Rolle „Vereinsmitglied“ kommen hinzu.',
+            'hint' => 'Über die E-Mail-Adresse erkannt – nur Gruppe und Rolle „Vereinsmitglied“ kommen hinzu.'.($options['notify'] ? ' Die Konten werden per E-Mail benachrichtigt.' : ''),
             'icon' => 'fa-link', 'tone' => 'green',
         ],
         [
@@ -25,7 +25,7 @@
         [
             'key' => 'removed', 'open' => true,
             'title' => $report->dryRun ? 'Aus dem Verein entfernen' : 'Aus dem Verein entfernt',
-            'hint' => 'Nicht mehr in der Datei. Gruppe und Rolle „Vereinsmitglied“ werden entfernt, das Konto bleibt bestehen. Abgewählte Personen bleiben Mitglied.',
+            'hint' => 'Nicht mehr in der Datei. Gruppe und Rolle „Vereinsmitglied“ werden entfernt, das Konto bleibt bestehen. Abgewählte Personen bleiben Mitglied.'.($options['notify'] ? ' Die Konten werden per E-Mail benachrichtigt.' : ''),
             'icon' => 'fa-user-minus', 'tone' => 'red',
         ],
     ];
@@ -74,6 +74,7 @@
             {{ $report->rows }} {{ $report->rows === 1 ? 'Zeile' : 'Zeilen' }} gelesen ·
             Abgleich {{ $options['removeMissing'] ? 'eingeschaltet' : 'ausgeschaltet' }} ·
             Zugangsdaten {{ $options['sendEmail'] ? 'per E-Mail' : 'als PDF' }} ·
+            Benachrichtigung {{ $options['notify'] ? 'eingeschaltet' : 'ausgeschaltet' }} ·
             nur Gruppe und Rolle „Vereinsmitglied“ {{ $report->dryRun ? 'werden' : 'wurden' }} geändert
         </p>
         @if($preview)
@@ -353,6 +354,7 @@
                         <input type="hidden" name="token" value="{{ $token }}">
                         <input type="hidden" name="abgleich" value="{{ $options['removeMissing'] ? 1 : 0 }}">
                         <input type="hidden" name="send_email" value="{{ $options['sendEmail'] ? 1 : 0 }}">
+                        <input type="hidden" name="benachrichtigen" value="{{ $options['notify'] ? 1 : 0 }}">
                         <input type="hidden" name="selection_sent" value="1">
                         <button type="submit" :disabled="submitting"
                                 class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 whitespace-nowrap">
@@ -362,7 +364,15 @@
                     </form>
                 </div>
             @else
-                <p class="text-sm text-gray-600 dark:text-gray-300 m-0">Der Import wurde ausgeführt.</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 m-0">
+                    Der Import wurde ausgeführt.
+                    @if($report->notifiedAdded + $report->notifiedRemoved > 0)
+                        <span class="text-gray-500 dark:text-gray-400">
+                            {{ $report->notifiedAdded + $report->notifiedRemoved }} {{ $report->notifiedAdded + $report->notifiedRemoved === 1 ? 'Benachrichtigung' : 'Benachrichtigungen' }} versendet
+                            ({{ $report->notifiedAdded }} Aufnahme, {{ $report->notifiedRemoved }} Entfernung).
+                        </span>
+                    @endif
+                </p>
                 <div class="flex flex-wrap gap-2">
                     @if($hasPdf ?? false)
                         <a href="{{ route('users.import.verein.zugangsdaten', $evaluation) }}" class="{{ $btnSecondary }}">
