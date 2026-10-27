@@ -227,6 +227,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/notification/read/all', [NotificationController::class, 'readAll'])->name('notification.readAll');
         Route::post('markNotificationAsRead', [NotificationController::class, 'readByType']);
         Route::post('/push', [PushController::class, 'store']);
+        Route::delete('/push/{subscription}', [PushController::class, 'destroy'])->name('push.destroy');
 
         Route::get('/push/test', [PushController::class, 'testPush'])->name('push.test');
 

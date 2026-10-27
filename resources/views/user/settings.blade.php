@@ -356,6 +356,67 @@
                             </span>
                         </div>
 
+                        {{-- Geräte mit Push: Browser-Abos (entfernbar) und App-Geräte --}}
+                        @if($pushSubscriptions->isNotEmpty() || $appDevices->isNotEmpty())
+                            <div class="mb-7 rounded-lg border overflow-hidden" style="border-color: var(--color-card-border);">
+                                <div class="px-4 py-3 border-b" style="border-color: var(--color-card-border);">
+                                    <span class="block text-sm font-semibold" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-mobile-screen-button mr-1"></i>
+                                        Geräte mit Push-Benachrichtigungen
+                                    </span>
+                                    <span class="block text-xs mt-0.5" style="color: var(--color-text-secondary);">
+                                        Ist die App auf einem Gerät angemeldet, kommen Mitteilungen dort nur über die App – nicht zusätzlich über den Browser.
+                                    </span>
+                                </div>
+                                <ul class="divide-y" style="border-color: var(--color-card-border);">
+                                    @foreach($appDevices as $device)
+                                        <li class="px-4 py-3 flex items-center gap-3">
+                                            <i class="fab {{ $device->provider === \App\Model\UserDevice::PROVIDER_APNS ? 'fa-apple' : 'fa-android' }} w-5 text-center" style="color: var(--color-text-secondary);"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <span class="block text-sm truncate" style="color: var(--color-text-primary);">
+                                                    {{ $device->device_name ?: ($device->provider === \App\Model\UserDevice::PROVIDER_APNS ? 'iPhone/iPad' : 'Android-Gerät') }}
+                                                    <span class="ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded bg-blue-100 text-blue-700">App</span>
+                                                </span>
+                                                <span class="block text-xs" style="color: var(--color-text-secondary);">
+                                                    Zuletzt aktiv: {{ $device->last_seen_at?->format('d.m.Y H:i') ?? '–' }} · Abmelden in der App
+                                                </span>
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                    @foreach($pushSubscriptions as $subscription)
+                                        @php $covered = \App\Services\Push\WebPushRouting::coveredByApp($subscription, $appPushPlatforms); @endphp
+                                        <li class="px-4 py-3 flex items-center gap-3" data-push-endpoint="{{ $subscription->endpoint }}">
+                                            <i class="fas {{ $subscription->platform === 'desktop' ? 'fa-desktop' : 'fa-globe' }} w-5 text-center" style="color: var(--color-text-secondary);"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <span class="block text-sm truncate" style="color: var(--color-text-primary);">
+                                                    {{ $subscription->device_name ?? 'Unbekannter Browser' }}
+                                                    <span data-push-current class="hidden ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded bg-green-100 text-green-700">Dieses Gerät</span>
+                                                </span>
+                                                <span class="block text-xs" style="color: var(--color-text-secondary);">
+                                                    Zuletzt aktiv: {{ ($subscription->last_seen_at ?? $subscription->updated_at)?->format('d.m.Y H:i') ?? '–' }}
+                                                    @if($covered)
+                                                        · pausiert, Mitteilungen kommen über die App
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <button type="submit" form="push-remove-{{ $subscription->id }}" data-push-remove
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors"
+                                                    onclick="return confirm('Browser-Push für dieses Gerät entfernen?')">
+                                                <i class="fas fa-trash"></i>Entfernen
+                                            </button>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                @if($pushSubscriptions->isNotEmpty())
+                                    <p class="text-xs px-4 py-3 mb-0 border-t" style="color: var(--color-text-secondary); border-color: var(--color-card-border);">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Ein anderes Gerät meldet sich beim nächsten Öffnen des ElternInfoBoards wieder an, solange Push dort im Browser erlaubt ist.
+                                        Dauerhaft abschalten lässt es sich in den Browser-Einstellungen des Geräts.
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
@@ -466,6 +527,14 @@
                     </div>
 
                 </form>{{-- Ende gemeinsames Formular --}}
+
+                {{-- Formulare zum Entfernen von Browser-Abos (Buttons stehen im Einstellungsformular) --}}
+                @foreach($pushSubscriptions as $subscription)
+                    <form id="push-remove-{{ $subscription->id }}" action="{{ route('push.destroy', $subscription) }}" method="post" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endforeach
 
                 {{-- TAB: Kinder & Gruppen --}}
                 <div x-show="activeTab === 'kinder'" x-cloak class="p-8">
