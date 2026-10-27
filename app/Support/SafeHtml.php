@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
  * Bilder, Links, eingebettete Videos von YouTube/Vimeo); Skripte, Event-Handler, javascript:-Links,
  * Formulare und fremde iframes werden entfernt.
  *
+ * Klartext ohne HTML-Tags (z. B. aus der Eltern-App) wird escaped und behält seine Zeilenumbrüche.
+ *
  * In Blade: `@safeHtml($post->news)` statt `{!! $post->news !!}`.
  */
 class SafeHtml
@@ -24,8 +26,13 @@ class SafeHtml
     public static function clean(mixed $html): string
     {
         $html = (string) $html;
-        if ($html === '' || ! preg_match('/[<&]/', $html)) {
+        if ($html === '') {
             return $html;
+        }
+
+        // Klartext (App, Formulare ohne Editor): Absätze und Zeilenumbrüche erhalten
+        if (! preg_match('/<(\/?[a-z][a-z0-9]*[\s\/>]|!--)/i', $html)) {
+            return nl2br(e($html, false), false);
         }
 
         // HTMLPurifier ist langsam – bereinigtes Ergebnis je Inhalt eine Woche zwischenspeichern

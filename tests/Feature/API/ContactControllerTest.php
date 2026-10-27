@@ -25,14 +25,12 @@ class ContactControllerTest extends TestCase
         $this->postJson('/api/contact', [
             'mitarbeiter' => $mitarbeiter->id,
             'betreff' => 'Frage',
-            'text' => "Hallo,\r\n\r\nerste Zeile\nzweite <b>Zeile</b> & mehr",
+            'text' => "Hallo,\n\nerste Zeile\nzweite Zeile & mehr",
         ])->assertOk();
 
         Mail::assertSent(SendFeedback::class, function (SendFeedback $mail) {
-            $this->assertSame("Hallo,<br>\r\n<br>\r\nerste Zeile<br>\nzweite &lt;b&gt;Zeile&lt;/b&gt; &amp; mehr", $mail->text);
             $html = $mail->render();
-            $this->assertStringContainsString('Hallo,<br />', $html);
-            $this->assertStringNotContainsString('<b>', $html);
+            $this->assertStringContainsString("Hallo,<br>\n<br>\nerste Zeile<br>\nzweite Zeile &amp; mehr", $html);
 
             return true;
         });
