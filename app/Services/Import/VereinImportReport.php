@@ -18,19 +18,19 @@ final class VereinImportReport
     /** Nicht mehr in der Datei, aber behalten (Abgleich ausgeschaltet) */
     public int $kept = 0;
 
-    /** @var list<string> bestehende Konten, die neu Vereinsmitglied werden */
+    /** @var list<array{name: string, email: string}> bestehende Konten, die neu Vereinsmitglied werden */
     public array $linked = [];
 
-    /** @var list<string> bestehende Mitglieder, denen Gruppe oder Rolle fehlte */
+    /** @var list<array{name: string, email: string}> bestehende Mitglieder, denen Gruppe oder Rolle fehlte */
     public array $completed = [];
 
-    /** @var list<string> neu anzulegende Konten */
+    /** @var list<array{name: string, email: string}> neu anzulegende Konten */
     public array $created = [];
 
-    /** @var list<string> Mitglieder, die aus Gruppe und Rolle entfernt werden */
+    /** @var list<array{name: string, email: string}> Mitglieder, die aus Gruppe und Rolle entfernt werden */
     public array $removed = [];
 
-    /** @var list<array{row: int, message: string}> Klärungsfälle (keine Änderung) */
+    /** @var list<array{row: int, person: string, message: string}> Klärungsfälle (keine Änderung) */
     public array $review = [];
 
     /** @var list<array{name: string, email: string, password: string}> Zugangsdaten (nur PDF-Modus) */
@@ -38,9 +38,15 @@ final class VereinImportReport
 
     public function __construct(public readonly bool $dryRun) {}
 
-    public function review(int $row, string $message): void
+    public function review(int $row, string $person, string $message): void
     {
-        $this->review[] = ['row' => $row, 'message' => $message];
+        $this->review[] = ['row' => $row, 'person' => $person, 'message' => $message];
+    }
+
+    /** Anzahl der Mitglieder nach dem Import */
+    public function membersAfter(): int
+    {
+        return $this->unchanged + count($this->completed) + count($this->linked) + count($this->created) + $this->kept;
     }
 
     public function summary(): array

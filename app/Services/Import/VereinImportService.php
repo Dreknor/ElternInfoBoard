@@ -70,16 +70,16 @@ class VereinImportService
 
         foreach ($linked as $user) {
             if (! isset($currentMembers[$user->id])) {
-                $report->linked[] = $this->label($user);
+                $report->linked[] = $this->entry($user);
             } elseif (! $this->isComplete($user, $group, $role)) {
-                $report->completed[] = $this->label($user);
+                $report->completed[] = $this->entry($user);
             } else {
                 $report->unchanged++;
             }
         }
 
         foreach ($toCreate as $data) {
-            $report->created[] = $data['name'].' <'.$data['email'].'>';
+            $report->created[] = $data;
         }
 
         $toRemove = $removeMissing
@@ -87,7 +87,7 @@ class VereinImportService
             : [];
 
         foreach ($toRemove as $user) {
-            $report->removed[] = $this->label($user);
+            $report->removed[] = $this->entry($user);
         }
 
         if (! $removeMissing) {
@@ -152,13 +152,13 @@ class VereinImportService
         $label = $name !== '' ? $name : 'Zeile ohne Namen';
 
         foreach ($this->invalidEmails($rawEmails) as $invalid) {
-            $report->review($rowNumber, "{$label}: „{$invalid}“ ist keine gültige E-Mail-Adresse und wird ignoriert.");
+            $report->review($rowNumber, $label, "„{$invalid}“ ist keine gültige E-Mail-Adresse und wird ignoriert.");
         }
 
         if ($emails === []) {
             $candidates = $name !== '' ? $this->usersByName($name) : collect();
             $hint = $candidates->isNotEmpty() ? ' Mögliche Konten: '.$candidates->map(fn (User $u) => $this->label($u))->implode(', ').'.' : '';
-            $report->review($rowNumber, "{$label}: keine gültige E-Mail-Adresse – nicht zugeordnet.{$hint}");
+            $report->review($rowNumber, $label, "Keine gültige E-Mail-Adresse – nicht zugeordnet.{$hint}");
 
             return;
         }
@@ -178,7 +178,7 @@ class VereinImportService
         $people = $byEmail->unique('id');
 
         if ($people->count() > 1) {
-            $report->review($rowNumber, "{$label}: die E-Mail-Adressen gehören zu verschiedenen Konten (".$people->map(fn (User $u) => $this->label($u))->implode(', ').') – nicht zugeordnet.');
+            $report->review($rowNumber, $label, "Die E-Mail-Adressen gehören zu verschiedenen Konten (".$people->map(fn (User $u) => $this->label($u))->implode(', ').') – nicht zugeordnet.');
 
             return;
         }
@@ -186,7 +186,7 @@ class VereinImportService
         if ($people->count() === 1) {
             $user = $people->first();
             if (isset($linked[$user->id])) {
-                $report->review($rowNumber, "{$label}: Konto {$this->label($user)} steht bereits in einer anderen Zeile.");
+                $report->review($rowNumber, $label, "Konto {$this->label($user)} steht bereits in einer anderen Zeile.");
             }
             $linked[$user->id] = $user;
             $report->matchedRows++;
@@ -195,7 +195,7 @@ class VereinImportService
         }
 
         if ($trashed->isNotEmpty()) {
-            $report->review($rowNumber, "{$label}: Konto ".$trashed->map(fn (User $u) => $this->label($u))->implode(', ').' liegt im Papierkorb – bitte erst wiederherstellen.');
+            $report->review($rowNumber, $label, "Konto ".$trashed->map(fn (User $u) => $this->label($u))->implode(', ').' liegt im Papierkorb – bitte erst wiederherstellen.');
 
             return;
         }
@@ -203,13 +203,13 @@ class VereinImportService
         // Kein Konto mit dieser Adresse: gleichnamige Konten nicht doppelt anlegen.
         $sameName = $name !== '' ? $this->usersByName($name) : collect();
         if ($sameName->isNotEmpty()) {
-            $report->review($rowNumber, "{$label} <{$emails[0]}>: kein Konto mit dieser E-Mail, aber gleichnamige Konten vorhanden (".$sameName->map(fn (User $u) => $this->label($u))->implode(', ').') – kein neues Konto angelegt. Bitte E-Mail-Adresse prüfen oder das Konto über „Nicht-Vereinsmitglieder“ hinzufügen.');
+            $report->review($rowNumber, "{$label} <{$emails[0]}>", "Kein Konto mit dieser E-Mail, aber gleichnamige Konten vorhanden (".$sameName->map(fn (User $u) => $this->label($u))->implode(', ').') – kein neues Konto angelegt. Bitte E-Mail-Adresse prüfen oder das Konto über „Nicht-Vereinsmitglieder“ hinzufügen.');
 
             return;
         }
 
         if (isset($toCreate[$emails[0]])) {
-            $report->review($rowNumber, "{$label}: E-Mail {$emails[0]} steht bereits in einer anderen Zeile.");
+            $report->review($rowNumber, $label, "E-Mail {$emails[0]} steht bereits in einer anderen Zeile.");
 
             return;
         }
@@ -302,6 +302,14 @@ class VereinImportService
         }
 
         return preg_replace('/\s+/', ' ', $name);
+    }
+
+    /**
+     * @return array{name: string, email: string}
+     */
+    private function entry(User $user): array
+    {
+        return ['name' => $user->name, 'email' => (string) $user->email];
     }
 
     private function label(User $user): string
