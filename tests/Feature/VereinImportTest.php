@@ -339,9 +339,9 @@ class VereinImportTest extends TestCase
             $this->row('Ganz Neu', 'ganzneu@example.com'),
         ]);
 
-        $this->assertSame(['Willkommen im Vereinsbereich'], Notification::where('user_id', $neu->id)->pluck('title')->all());
+        $this->assertSame(['Gruppen angepasst'], Notification::where('user_id', $neu->id)->pluck('title')->all());
         $this->assertStringContainsString('Mitgliederversammlung', Notification::where('user_id', $neu->id)->value('message'));
-        $this->assertSame(['Änderung Ihrer Vereinsmitgliedschaft'], Notification::where('user_id', $weg->id)->pluck('title')->all());
+        $this->assertSame(['Gruppen angepasst'], Notification::where('user_id', $weg->id)->pluck('title')->all());
         $this->assertSame(0, Notification::where('user_id', $bleibt->id)->count());
         $this->assertSame(0, Notification::whereHas('user', fn ($q) => $q->where('email', 'ganzneu@example.com'))->count());
         $this->assertSame(2, Notification::where('type', 'Verein')->count());
@@ -366,6 +366,24 @@ class VereinImportTest extends TestCase
         $this->import([$this->row('Anna Beispiel', 'anna@example.com'), $this->row('Bernd Kurz', 'bernd@example.com'), $this->row('Neu', 'neu@example.com')]);
         $this->assertSame(0, Notification::count());
         Mail::assertQueued(NewUserPasswordMail::class, fn ($mail) => $mail->notice === null && ! str_contains($mail->render(), 'Wozu dieser Zugang'));
+    }
+
+    /** @test */
+    public function texte_aus_dem_editor_werden_als_reiner_text_verwendet(): void
+    {
+        $settings = app(EmailSetting::class);
+        $settings->verein_added_text = '<p>Ihr Benutzerkonto wurde f&uuml;r den Ev. Schulverein Radebeul e.V. freigeschaltet. Sie erhalten hier ab sofort Informationen &uuml;ber Aktuelles aus dem Schulzentrum und Einladungen zur Mitgliederversammlung.</p>'.str_repeat('<p>&nbsp;</p>', 20);
+        $settings->verein_access_notice = '<p>Zugang f&uuml;r&nbsp;Vereinsmitglieder</p>';
+        $settings->save();
+
+        $anna = $this->user('Anna Beispiel', 'anna@example.com');
+        $this->import([$this->row('Anna Beispiel', 'anna@example.com'), $this->row('Neu', 'neu@example.com')]);
+
+        $this->assertSame(
+            'Ihr Benutzerkonto wurde für den Ev. Schulverein Radebeul e.V. freigeschaltet. Sie erhalten hier ab sofort Informationen über Aktuelles aus dem Schulzentrum und Einladungen zur Mitgliederversammlung.',
+            Notification::where('user_id', $anna->id)->value('message')
+        );
+        Mail::assertQueued(NewUserPasswordMail::class, fn ($mail) => $mail->notice === 'Zugang für Vereinsmitglieder');
     }
 
     /** @test */
