@@ -69,12 +69,12 @@
                     return $eintragung->user_id == auth()->id();
                 })->count() == null or $liste->multiple)
                     <div class="border-b border-gray-200 px-6 py-4">
-                        <form action="{{ url('/listen/' . $liste->id . '/eintragungen/') }}" method="post" class="flex gap-3">
+                        <form action="{{ url('/listen/' . $liste->id . '/eintragungen/') }}" method="post" class="flex flex-wrap gap-3">
                             @csrf
                             <input type="text"
                                    name="eintragung"
                                    maxlength="100"
-                                   class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                                   class="flex-1 min-w-0 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                                    placeholder="Eintrag hinzufügen...">
                             @include('listen.partials.child_select')
                             <button type="submit"
@@ -88,13 +88,14 @@
             @endif
 
             <!-- Entries List -->
-            <div class="px-6 py-6" id="export">
+            <div class="px-3 py-4 sm:px-6 sm:py-6" id="export">
                 @if($liste->eintragungen->count() > 0)
                     <div class="space-y-2">
                         @foreach($liste->eintragungen as $eintrag)
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
-                                <div class="flex-1">
-                                    <p class="font-medium text-gray-800">{{ $eintrag->eintragung }}</p>
+                            {{-- Mobil: Eintragstext in voller Breite, Aktionen darunter; ab sm nebeneinander --}}
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium text-gray-800 break-words mb-0">{{ $eintrag->eintragung }}</p>
                                     @if($eintrag->bemerkung)
                                         <p class="text-sm text-gray-600 mb-0"><i class="fas fa-comment-dots mr-1"></i>{{ $eintrag->bemerkung }}</p>
                                     @endif
@@ -103,9 +104,9 @@
                                     @endif
                                 </div>
 
-                                <div class="flex items-center gap-3 ml-4">
+                                <div class="flex items-center gap-2 sm:ml-4 sm:flex-shrink-0">
                                     @if($eintrag->user_id != null)
-                                        <div class="text-right">
+                                        <div class="flex-1 sm:flex-none sm:text-right min-w-0">
                                             @if($liste->visible_for_all or (! $preview and (auth()->user()->can('edit terminliste') or $eintrag->user_id == auth()->id())))
                                                 <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                                                     <i class="fas fa-user mr-1"></i>
@@ -118,47 +119,48 @@
                                             @endif
                                         </div>
                                     @else
-                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" class="flex flex-wrap items-center justify-end gap-2">
+                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" class="flex flex-1 sm:flex-none flex-wrap items-center sm:justify-end gap-2 min-w-0">
                                             @csrf
                                             @method('PUT')
                                             <input type="text"
                                                    name="bemerkung"
                                                    maxlength="255"
-                                                   class="w-40 sm:w-56 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none text-sm"
+                                                   class="flex-1 basis-32 min-w-0 sm:flex-none sm:w-56 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none text-sm"
                                                    placeholder="Bemerkung (optional)"
                                                    aria-label="Bemerkung zu {{ $eintrag->eintragung }}">
                                             @include('listen.partials.child_select')
                                             <button type="submit"
-                                                    class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                                    class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200"
+                                                    title="Reservieren">
                                                 <i class="fas fa-check"></i>
                                                 <span class="hidden md:inline">Reservieren</span>
                                             </button>
                                         </form>
                                     @endif
+
+                                    @if($eintrag->user_id == null and $canManage)
+                                        <form method="post" action="{{ route('listen.eintragungen.copy', $eintrag->id) }}" class="flex-shrink-0 mb-0">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                                                    title="Kopieren">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    @if(! $preview and ($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste') or ($eintrag->user_id && app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), (int) $eintrag->user_id, $eintrag->child_id))))
+                                        <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" class="flex-shrink-0 mb-0">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="inline-flex items-center px-3 py-2 text-red-600 hover:text-red-700 font-medium transition-colors duration-200"
+                                                    title="{{ $eintrag->user_id == auth()->id() ? 'Absagen' : ($eintrag->user_id != null && ($eintrag->created_by == auth()->id() || auth()->user()->can('edit terminliste')) ? 'Freigeben' : 'Löschen') }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
-
-                                @if($eintrag->user_id == null and $canManage)
-                                    <form method="post" action="{{ route('listen.eintragungen.copy', $eintrag->id) }}" style="display: inline;" class="ml-2">
-                                        @csrf
-                                        <button type="submit"
-                                                class="inline-flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
-                                                title="Kopieren">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </form>
-                                @endif
-
-                                @if(! $preview and ($eintrag->user_id == auth()->id() or ($eintrag->created_by == auth()->id()) or auth()->user()->can('edit terminliste') or ($eintrag->user_id && app(\App\Services\App\ListenService::class)->mayCancel(auth()->user(), (int) $eintrag->user_id, $eintrag->child_id))))
-                                    <form method="post" action="{{ url("listen/eintragungen/" . $eintrag->id) }}" style="display: inline;" class="ml-2">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="inline-flex items-center px-3 py-2 text-red-600 hover:text-red-700 font-medium transition-colors duration-200"
-                                                title="{{ $eintrag->user_id == auth()->id() ? 'Absagen' : ($eintrag->user_id != null && ($eintrag->created_by == auth()->id() || auth()->user()->can('edit terminliste')) ? 'Freigeben' : 'Löschen') }}">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                @endif
                             </div>
                         @endforeach
                     </div>
