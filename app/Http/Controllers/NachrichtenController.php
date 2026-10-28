@@ -33,6 +33,7 @@ use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Contracts\View\Factory;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Redirector;
@@ -527,6 +528,12 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         ($posts->news == '') ? $posts->news = $posts->header : null;
 
+        // Bisherige Empfänger merken, damit bei einer bereits veröffentlichten Nachricht
+        // nur neu hinzugekommene Personen benachrichtigt werden
+        $previousRecipientIds = $push == 0
+            ? $posts->load(['users', 'recipientUsers'])->recipients()->pluck('id')->all()
+            : [];
+
         $posts->save();
 
         // Gruppen
@@ -561,6 +568,8 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         if ($posts->released and $push == 1) {
             $this->push($posts);
+        } elseif ($posts->released) {
+            $this->pushToNewRecipients($posts, $previousRecipientIds);
         }
 
         $Meldung = 'Nachricht bearbeitet';
@@ -991,9 +1000,24 @@ class NachrichtenController extends Controller implements HasMiddleware
     /**
      * @return RedirectResponse
      */
-    public function push(Post $post)
+    /**
+     * Benachrichtigt nur Empfänger, die beim Bearbeiten einer bereits veröffentlichten
+     * Nachricht (über neue Gruppen oder direkte Freigabe) hinzugekommen sind.
+     */
+    private function pushToNewRecipients(Post $post, array $previousRecipientIds): void
     {
-        $User = $post->load(['users', 'recipientUsers'])->recipients();
+        $newRecipients = $post->load(['users', 'recipientUsers'])->recipients()
+            ->whereNotIn('id', $previousRecipientIds)
+            ->values();
+
+        if ($newRecipients->isNotEmpty()) {
+            $this->push($post, $newRecipients);
+        }
+    }
+
+    public function push(Post $post, ?EloquentCollection $recipients = null)
+    {
+        $User = $recipients ?? $post->load(['users', 'recipientUsers'])->recipients();
 
         if ($post->external) {
             $header = 'Neues externes Angebot';
