@@ -126,19 +126,19 @@
             <div class="col-12">
                 <label class="label-control w-100">
                     Hinweis in der Zugangsdaten-Mail neuer Vereinskonten („Wozu dieser Zugang?“)
-                    <textarea class="form-control" name="verein_access_notice" rows="3">{{ $mailSettings->verein_access_notice }}</textarea>
+                    <textarea class="form-control no-tinymce" name="verein_access_notice" rows="3">{{ $mailSettings->verein_access_notice }}</textarea>
                 </label>
             </div>
             <div class="col-12">
                 <label class="label-control w-100">
                     Benachrichtigung in der Anwendung bei Aufnahme bestehender Konten in den Verein
-                    <textarea class="form-control" name="verein_added_text" rows="3" maxlength="255">{{ $mailSettings->verein_added_text }}</textarea>
+                    <textarea class="form-control no-tinymce" name="verein_added_text" rows="3" maxlength="255">{{ $mailSettings->verein_added_text }}</textarea>
                 </label>
             </div>
             <div class="col-12">
                 <label class="label-control w-100">
                     Benachrichtigung in der Anwendung bei Entfernung aus dem Verein
-                    <textarea class="form-control" name="verein_removed_text" rows="3" maxlength="255">{{ $mailSettings->verein_removed_text }}</textarea>
+                    <textarea class="form-control no-tinymce" name="verein_removed_text" rows="3" maxlength="255">{{ $mailSettings->verein_removed_text }}</textarea>
                 </label>
             </div>
         </div>

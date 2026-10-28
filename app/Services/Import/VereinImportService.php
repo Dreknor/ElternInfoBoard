@@ -51,7 +51,25 @@ class VereinImportService
      */
     public static function accessNotice(): ?string
     {
-        return filled($notice = app(EmailSetting::class)->verein_access_notice) ? trim($notice) : null;
+        return self::plainText(app(EmailSetting::class)->verein_access_notice);
+    }
+
+    /**
+     * Texte aus den Einstellungen als reinen Text liefern. Der Editor der
+     * Einstellungsseite kann HTML (Absätze, Entities) gespeichert haben.
+     */
+    public static function plainText(?string $text): ?string
+    {
+        if (blank($text)) {
+            return null;
+        }
+
+        $text = preg_replace('/<\s*br\s*\/?>|<\/p\s*>/i', "\n", $text);
+        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = str_replace("\u{00A0}", ' ', $text);
+        $text = preg_replace(['/[ \t]+/u', '/\s*\n\s*/u'], [' ', "\n"], $text);
+
+        return filled($text = trim($text)) ? $text : null;
     }
 
     /**
@@ -239,8 +257,8 @@ class VereinImportService
         if ($notify) {
             $settings = app(EmailSetting::class);
             $added = array_filter($apply, fn (User $user) => ! isset($currentMembers[$user->id]));
-            $report->notifiedAdded = $this->notify($added, 'Willkommen im Vereinsbereich', $settings->verein_added_text);
-            $report->notifiedRemoved = $this->notify($toRemove, 'Änderung Ihrer Vereinsmitgliedschaft', $settings->verein_removed_text);
+            $report->notifiedAdded = $this->notify($added, 'Gruppen angepasst', $settings->verein_added_text);
+            $report->notifiedRemoved = $this->notify($toRemove, 'Gruppen angepasst', $settings->verein_removed_text);
         }
 
         return $report;
@@ -254,22 +272,30 @@ class VereinImportService
      */
     private function notify(array $users, string $title, ?string $text): int
     {
-        if (blank($text)) {
+        if (($text = self::plainText($text)) === null) {
             return 0;
         }
 
+        // Die Mitgliedschaft ist zu diesem Zeitpunkt bereits gespeichert; eine
+        // fehlgeschlagene Benachrichtigung darf den Import nicht abbrechen.
+        $sent = 0;
         foreach ($users as $user) {
-            Notification::create([
-                'user_id' => $user->id,
-                'type' => 'Verein',
-                'title' => $title,
-                'message' => Str::limit(trim($text), 250),
-                'icon' => self::NOTIFICATION_ICON,
-                'url' => url('/'),
-            ]);
+            try {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'Verein',
+                    'title' => $title,
+                    'message' => Str::limit($text, 250),
+                    'icon' => self::NOTIFICATION_ICON,
+                    'url' => url('/'),
+                ]);
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::error('Vereins-Import: Benachrichtigung an Konto '.$user->id.' fehlgeschlagen: '.$e->getMessage());
+            }
         }
 
-        return count($users);
+        return $sent;
     }
 
     /**
