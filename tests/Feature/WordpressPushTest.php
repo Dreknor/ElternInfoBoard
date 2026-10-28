@@ -41,6 +41,7 @@ class WordpressPushTest extends TestCase
         ]);
 
         Storage::fake('public');
+        Storage::fake('media');
         $this->fakeWordpress();
     }
 
