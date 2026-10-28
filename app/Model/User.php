@@ -4,6 +4,7 @@ namespace App\Model;
 
 use App\Enums\GuardianRight;
 use App\Services\Family\FamilyResolver;
+use App\Services\Push\WebPushRouting;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,6 +47,12 @@ class User extends Authenticatable implements Auditable
     {
         parent::boot();
         static::creating(fn ($foo) => $foo->uuid = Str::uuid());
+    }
+
+    /** Browser-Abos ohne die Geräte, auf denen die App bereits Push erhält (sonst doppelte Mitteilungen). */
+    public function routeNotificationForWebPush(): EloquentCollection
+    {
+        return WebPushRouting::subscriptionsFor($this);
     }
 
     /**
