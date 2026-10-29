@@ -645,11 +645,29 @@ html, body {
 }
 
 .mobile-bottom-nav_item {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   max-width: 80px;
+}
+
+/* Beschriftungen nie überlappen lassen: einzeilig, mit Auslassungspunkten gekürzt */
+.mobile-bottom-nav_item-content a > span {
+  display: block;
+  max-width: 100%;
+  padding: 0 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sehr schmale Geräte: nur zwei Modul-Kurzlinks */
+@media (max-width: 359px) {
+  .mobile-bottom-nav-modules > .mobile-bottom-nav_item:nth-child(n+3) {
+    display: none;
+  }
 }
 
 .mobile-bottom-nav_item-content {
