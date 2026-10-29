@@ -49,7 +49,8 @@ class ModuleController extends Controller
     {
         $user = $request->user();
 
-        $modules = Module::where('category', 'module')
+        $modules = Module::available()
+            ->where('category', 'module')
             ->get()
             ->filter(function (Module $module) use ($user) {
                 $rights = $module->options['rights'] ?? [];

@@ -779,7 +779,7 @@ class SettingsController extends Controller implements HasMiddleware
      */
     public function module()
     {
-        $module = Module::orderBy('sort_order')->orderBy('id')->get();
+        $module = Module::available()->orderBy('sort_order')->orderBy('id')->get();
 
         return view('settings.module', [
             'module' => $module,
@@ -799,7 +799,7 @@ class SettingsController extends Controller implements HasMiddleware
         ]);
 
         foreach ($request->order as $position => $id) {
-            Module::where('id', $id)->update(['sort_order' => $position + 1]);
+            Module::available()->where('id', $id)->update(['sort_order' => $position + 1]);
         }
 
         Cache::forget('modules');
@@ -818,7 +818,7 @@ class SettingsController extends Controller implements HasMiddleware
 
     public function change_status(string $modulname)
     {
-        $modul = Module::where('setting', $modulname)->first();
+        $modul = Module::available()->where('setting', $modulname)->first();
 
         if (! $modul) {
             return redirect()->back()->with([
@@ -863,7 +863,13 @@ class SettingsController extends Controller implements HasMiddleware
      */
     public function change_nav(string $modulname)
     {
-        $modul = Module::where('setting', $modulname)->first();
+        $modul = Module::available()->where('setting', $modulname)->first();
+        if (! $modul) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Modul nicht gefunden.',
+            ]);
+        }
         $options = $modul->options;
         if (array_key_exists('nav', $modul->options)) {
             if (array_key_exists('bottom-nav', $options['nav']) and $options['nav']['bottom-nav'] == 'true') {
