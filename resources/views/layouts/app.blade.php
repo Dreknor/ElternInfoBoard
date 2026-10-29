@@ -66,7 +66,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="{{ $settings->app_name }}">
     <meta name="format-detection" content="telephone=no">
-    <link rel="apple-touch-icon" href="{{ asset('img/app_logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('img/icons/apple-touch-icon.png') }}">
 
     <title>{{$settings->app_name}} @yield('title')</title>
 
