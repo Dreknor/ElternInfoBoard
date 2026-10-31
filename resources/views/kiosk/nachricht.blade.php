@@ -29,7 +29,7 @@
             <div class="row">
                 <div class="col-md-6 col-sm-12">
                     <p>
-                        {!! $nachricht->news !!}
+                        @safeHtml($nachricht->news)
                     </p>
                 </div>
                 <div class="col-md-6 col-sm-12">
@@ -44,7 +44,7 @@
             </div>
         @else
             <p>
-                {!! $nachricht->news !!}
+                @safeHtml($nachricht->news)
             </p>
         @endif
     </div>

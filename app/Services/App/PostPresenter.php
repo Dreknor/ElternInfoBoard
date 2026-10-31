@@ -164,7 +164,7 @@ class PostPresenter
                 'mime_type' => $m->mime_type,
                 'size' => $m->size,
                 'collection' => $m->collection_name,
-                'url' => route('api.files.download', ['media_uuid' => $m->uuid]),
+                'url' => MediaAccess::downloadUrl($m),
                 'thumb_url' => str_starts_with((string) $m->mime_type, 'image/') ? $this->mediaUrl($m, 'thumb') : null,
                 'preview_url' => str_starts_with((string) $m->mime_type, 'image/') ? $this->mediaUrl($m, 'preview') : null,
                 'own' => (int) $m->getCustomProperty('uploaded_by') === $this->user->id,
@@ -197,6 +197,6 @@ class PostPresenter
 
     private function mediaUrl(Media $media, string $size): string
     {
-        return route('api.files.download', ['media_uuid' => $media->uuid]).'?size='.$size;
+        return MediaAccess::downloadUrl($media).'?size='.$size;
     }
 }

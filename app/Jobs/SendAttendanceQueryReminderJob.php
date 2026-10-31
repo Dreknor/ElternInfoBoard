@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Enums\GuardianRight;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
-use App\Model\Notification;
 use App\Model\User;
 use App\Notifications\AttendanceQueryNotification;
 use App\Services\Family\FamilyResolver;
@@ -85,16 +84,7 @@ class SendAttendanceQueryReminderJob implements ShouldQueue
                 ? "Die Anwesenheitsabfrage für Ihre Kinder ({$childrenNames}) läuft am {$lockDate} ab. Bitte geben Sie Ihre Rückmeldung."
                 : "Die Anwesenheitsabfrage für {$childrenNames} läuft am {$lockDate} ab. Bitte geben Sie Ihre Rückmeldung.";
 
-            // Erstelle Datenbank-Notification
-            Notification::create([
-                'user_id' => $parent->id,
-                'message' => $body,
-                'title' => $title,
-                'url' => url('schickzeiten'),
-                'type' => 'Anwesenheitsabfrage',
-            ]);
-
-            // Sende Push-Notification
+            // Glocken-Eintrag inkl. App-/Browser-Push (legt AttendanceQueryNotification selbst an)
             try {
                 $parent->notify(new AttendanceQueryNotification($title, $body));
                 Log::info("Anwesenheitsabfragen-Erinnerung an {$parent->name} (ID: {$parent->id}) gesendet");

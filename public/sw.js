@@ -6,8 +6,13 @@
  | serviceworker.js (Offline) / sw.js (Push) Aufteilung.
  */
 
-const CACHE_VERSION = 'eib-v1';
-const RUNTIME_CACHE = 'eib-runtime-v1';
+const CACHE_VERSION = 'eib-v2';
+// v3: neues Standard-Logo, alte Icons sollen nicht aus dem Cache kommen
+// v2: v1 enthielt fälschlich gecachte JSON-Antworten und wird beim Aktivieren gelöscht
+const RUNTIME_CACHE = 'eib-runtime-v3';
+
+// Request-Ziele, die per Stale-while-revalidate gecacht werden dürfen
+const STATIC_DESTINATIONS = ['style', 'script', 'image', 'font', 'manifest'];
 
 // App-Shell: nur garantiert vorhandene, statische Assets.
 // Wird "best effort" gecacht – fehlende Dateien brechen die Installation NICHT ab.
@@ -15,6 +20,7 @@ const APP_SHELL = [
     '/',
     '/img/app_logo.png',
     '/favicon.ico',
+    '/img/icons/icon-192.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -70,6 +76,13 @@ self.addEventListener('fetch', (event) => {
                     .then((res) => res || offlineResponse())
             )
         );
+        return;
+    }
+
+    // Nur statische Assets cachen. fetch()/AJAX-Aufrufe (destination === '')
+    // liefern dynamische Daten (JSON) und dürfen nie aus dem Cache kommen –
+    // sonst zeigt z.B. die Anwesenheitsabfrage nach einer Änderung den alten Stand.
+    if (!STATIC_DESTINATIONS.includes(request.destination)) {
         return;
     }
 

@@ -98,7 +98,8 @@
                                      loading="lazy"
                                      class="rounded-lg max-w-full cursor-zoom-in"
                                      style="max-height: 300px; object-fit: contain;"
-                                     onerror="this.parentElement.innerHTML='<span class=\'text-xs opacity-75 flex items-center gap-1\'><i class=\'fas fa-image\'></i> {{ e($media->file_name) }}</span>'">
+                                     data-file-name="{{ $media->file_name }}"
+                                     onerror="const s = document.createElement('span'); s.className = 'text-xs opacity-75 flex items-center gap-1'; s.innerHTML = '<i class=\'fas fa-image\'></i> '; s.append(this.dataset.fileName); this.parentElement.replaceChildren(s);">
                             </a>
                             @else
                             <a href="{{ route('messenger.attachment', $message) }}"

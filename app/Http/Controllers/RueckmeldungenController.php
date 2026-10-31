@@ -31,10 +31,26 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class RueckmeldungenController extends Controller
 {
     /**
+     * Rückmeldungen eines Beitrags anlegen, ändern oder löschen dürfen nur Autor, „edit posts“
+     * und „manage rueckmeldungen“. Vorher waren mehrere dieser Routen für jedes Konto offen.
+     */
+    private function authorizePost(?Post $post): void
+    {
+        $user = auth()->user();
+
+        abort_unless(
+            $post !== null && ($user->can('edit posts') || $user->can('manage rueckmeldungen') || (int) $post->author === $user->id),
+            403,
+            'Berechtigung fehlt'
+        );
+    }
+    /**
      * @return RedirectResponse
      */
     public function updateDate(updateRueckmeldeDateRequest $request, Rueckmeldungen $rueckmeldung)
     {
+        $this->authorizePost($rueckmeldung->post);
+
         $rueckmeldung->update([
             'ende' => $request->date,
         ]);
@@ -50,6 +66,8 @@ class RueckmeldungenController extends Controller
      */
     public function create(Post $post, $type)
     {
+        $this->authorizePost($post);
+
         if ($type == 'abfrage') {
             return view('nachrichten.createAbfrage', [
                 'nachricht' => $post,
@@ -102,6 +120,8 @@ class RueckmeldungenController extends Controller
      */
     public function editAbfrage(Rueckmeldungen $rueckmeldung)
     {
+        $this->authorizePost($rueckmeldung->post);
+
         if ($rueckmeldung->userRueckmeldungen()->count() > 0) {
             return redirect()->back()->with([
                 'type' => 'danger',
@@ -119,6 +139,8 @@ class RueckmeldungenController extends Controller
      */
     public function updateAbfrage(createAbfrageRequest $request, Rueckmeldungen $rueckmeldung)
     {
+        $this->authorizePost($rueckmeldung->post);
+
         if ($rueckmeldung->userRueckmeldungen->count() > 0) {
             return redirect()->back()->with([
                 'type' => 'danger',
@@ -157,6 +179,30 @@ class RueckmeldungenController extends Controller
     }
 
     /**
+     * Darf der Nutzer die Antworten zu dieser Rückmeldung einsehen und herunterladen?
+     * „manage rueckmeldungen" und der Autor immer, „view rueckmeldungen" nur für Beiträge, die der Nutzer sehen darf.
+     */
+    private function canViewAnswers(Rueckmeldungen $rueckmeldung): bool
+    {
+        $user = auth()->user();
+        $post = $rueckmeldung->post;
+
+        if ($user->can('manage rueckmeldungen')) {
+            return true;
+        }
+
+        if (is_null($post)) {
+            return false;
+        }
+
+        if ((int) $post->author === $user->id) {
+            return true;
+        }
+
+        return $user->can('view rueckmeldungen') && $user->can('view', $post);
+    }
+
+    /**
      * Show all Rueckmeldungen
      */
     public function index()
@@ -184,7 +230,7 @@ class RueckmeldungenController extends Controller
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
-        if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
+        if (! $this->canViewAnswers($rueckmeldung)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -220,7 +266,7 @@ class RueckmeldungenController extends Controller
      */
     public function download(Rueckmeldungen $rueckmeldung, $user_id)
     {
-        if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
+        if (! $this->canViewAnswers($rueckmeldung)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt',
@@ -240,7 +286,7 @@ class RueckmeldungenController extends Controller
      */
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
-        if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author != auth()->id()) {
+        if (! $this->canViewAnswers($rueckmeldung)) {
             return redirect()->back()->with([
                 'type' => 'warning',
                 'Meldung' => 'Berechtigung fehlt für den Download der Rückmeldungen ',
@@ -276,6 +322,8 @@ class RueckmeldungenController extends Controller
      */
     public function store(createRueckmeldungRequest $request, $posts_id)
     {
+        $this->authorizePost(Post::find($posts_id));
+
         if (! auth()->user()->can('manage rueckmeldungen')) {
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -335,7 +383,7 @@ class RueckmeldungenController extends Controller
             ]);
         }
 
-        $users = $rueckmeldung->post->users;
+        $users = $rueckmeldung->post->recipients();
 
         return view('rueckmeldungen.createUserRueckmeldungAbfrage', [
             'rueckmeldung' => $rueckmeldung,
@@ -404,6 +452,8 @@ class RueckmeldungenController extends Controller
      */
     public function storeAbfrage(createAbfrageRequest $request, $posts_id)
     {
+        $this->authorizePost(Post::find($posts_id));
+
 
         if ($request->options == null or count($request->options) < 1) {
             return redirect()->back()->with([
@@ -448,6 +498,8 @@ class RueckmeldungenController extends Controller
      */
     public function storeTerminliste(createTerminlisteRueckmeldungRequest $request, $posts_id)
     {
+        $this->authorizePost(Post::find($posts_id));
+
         if (! auth()->user()->can('create posts')) {
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -522,6 +574,8 @@ class RueckmeldungenController extends Controller
      */
     public function update(createRueckmeldungRequest $request, $post_id)
     {
+        $this->authorizePost(Post::find($post_id));
+
         $rueckmeldung = Rueckmeldungen::firstOrNew([
             'post_id' => $post_id,
         ]);
@@ -551,6 +605,8 @@ class RueckmeldungenController extends Controller
      */
     public function destroy(Rueckmeldungen $rueckmeldung)
     {
+        $this->authorizePost($rueckmeldung->post);
+
         Log::info('Rückmeldung gelöscht', [
             'id' => $rueckmeldung->id,
             'post_id' => $rueckmeldung->post_id,
@@ -569,6 +625,8 @@ class RueckmeldungenController extends Controller
      */
     public function destroyAbfrage(Post $post)
     {
+        $this->authorizePost($post);
+
         $rueckmeldung = $post->rueckmeldung;
 
         if (! $rueckmeldung->type == 'abfrage') {
@@ -600,6 +658,8 @@ class RueckmeldungenController extends Controller
      */
     public function destroyRueckmeldung(Rueckmeldungen $rueckmeldungen)
     {
+        $this->authorizePost($rueckmeldungen->post);
+
         Log::info('Rückmeldung gelöscht (destroyRueckmeldung)', [
             'id' => $rueckmeldungen->id,
             'post_id' => $rueckmeldungen->post_id,
@@ -660,6 +720,8 @@ class RueckmeldungenController extends Controller
      */
     public function updateCommentable(Rueckmeldungen $rueckmeldungen)
     {
+        $this->authorizePost($rueckmeldungen->post);
+
         if ($rueckmeldungen->commentable) {
             $rueckmeldungen->update([
                 'commentable' => false,
@@ -678,6 +740,8 @@ class RueckmeldungenController extends Controller
      */
     public function createImageRueckmeldung(Request $request, $posts_id)
     {
+        $this->authorizePost(Post::find($posts_id));
+
         $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
             'post_id' => $posts_id,
@@ -700,6 +764,8 @@ class RueckmeldungenController extends Controller
      */
     public function createDiskussionRueckmeldung(Request $request, $posts_id)
     {
+        $this->authorizePost(Post::find($posts_id));
+
         $posts = Post::find($posts_id);
         $rueckmeldung = new Rueckmeldungen([
             'post_id' => $posts_id,

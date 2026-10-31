@@ -12,6 +12,7 @@ use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\CommunityController;
 use App\Http\Controllers\API\V1\DashboardController;
 use App\Http\Controllers\API\V1\FeedbackController;
+use App\Http\Controllers\API\V1\InquiryController;
 use App\Http\Controllers\API\V1\InstanceController;
 use App\Http\Controllers\API\V1\ListenController;
 use App\Http\Controllers\API\V1\MeController;
@@ -95,10 +96,24 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
     Route::post('parent/krankmeldungen', [ParentController::class, 'storeKrankmeldung'])->name('krankmeldungen.store');
     Route::patch('parent/children/{child}', [ParentController::class, 'updateChild'])->name('children.update');
     Route::get('parent/children/{child}/stundenplan', [ParentController::class, 'stundenplan'])->name('children.stundenplan');
+    Route::put('parent/children/{child}/stundenplan-klasse', [ParentController::class, 'updateStundenplanKlasse'])->name('children.stundenplan-klasse');
+    Route::get('parent/stundenplan/klassen', [ParentController::class, 'stundenplanKlassen'])->name('stundenplan.klassen');
     Route::get('parent/ags', [ParentController::class, 'ags'])->name('ags');
     Route::post('parent/ags/{ag}/enrollments', [ParentController::class, 'enroll'])->name('ags.enroll');
     Route::get('parent/reinigung', [ParentController::class, 'reinigung'])->middleware('module:Reinigung')->name('reinigung');
     Route::get('vertretungsplan', [ParentController::class, 'vertretungsplan'])->name('vertretungsplan');
+
+    // Elternabfragen (je Kind; abgeben nur Sorgeberechtigte)
+    Route::middleware('module:Elternabfragen')->prefix('elternabfragen')->name('elternabfragen.')->group(function () {
+        Route::get('/', [InquiryController::class, 'index'])->name('index');
+        Route::get('{assignment}', [InquiryController::class, 'show'])->whereNumber('assignment')->name('show');
+        Route::put('{assignment}/draft', [InquiryController::class, 'saveDraft'])->whereNumber('assignment')->name('draft');
+        Route::delete('{assignment}/draft', [InquiryController::class, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
+        Route::post('{assignment}/submit', [InquiryController::class, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::post('{assignment}/confirm', [InquiryController::class, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
+        Route::get('{assignment}/pdf', [InquiryController::class, 'pdf'])->whereNumber('assignment')->name('pdf');
+        Route::get('{assignment}/files/{field}', [InquiryController::class, 'file'])->whereNumber('assignment')->name('file');
+    });
 
     // Infoseiten & Elternrat
     Route::get('sites', [CommunityController::class, 'sites'])->name('sites');

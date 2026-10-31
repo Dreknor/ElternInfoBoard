@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('title') - Einstellungen @endsection
 
+@php
+    $allowUserTheme = ($generalSettings->allow_user_theme ?? true) && isset($themes);
+    $showDesignTab  = $allowUserTheme || ($allowUserNavStyle ?? false);
+@endphp
+
 @section('content')
 
 <div class="container-fluid px-4 py-3"
@@ -26,7 +31,7 @@
                 </div>
                 <div class="px-6 py-5">
                     <div class="prose prose-sm max-w-none leading-relaxed changelog-content" style="color: var(--color-text-secondary);">
-                        {!! $changelog->text !!}
+                        @safeHtml($changelog->text)
                     </div>
                 </div>
                 <div class="px-6 py-3 border-t border-amber-200 dark:border-amber-800" style="background-color: rgba(254,243,199,0.15);">
@@ -351,6 +356,67 @@
                             </span>
                         </div>
 
+                        {{-- Geräte mit Push: Browser-Abos (entfernbar) und App-Geräte --}}
+                        @if($pushSubscriptions->isNotEmpty() || $appDevices->isNotEmpty())
+                            <div class="mb-7 rounded-lg border overflow-hidden" style="border-color: var(--color-card-border);">
+                                <div class="px-4 py-3 border-b" style="border-color: var(--color-card-border);">
+                                    <span class="block text-sm font-semibold" style="color: var(--color-text-primary);">
+                                        <i class="fas fa-mobile-screen-button mr-1"></i>
+                                        Geräte mit Push-Benachrichtigungen
+                                    </span>
+                                    <span class="block text-xs mt-0.5" style="color: var(--color-text-secondary);">
+                                        Ist die App auf einem Gerät angemeldet, kommen Mitteilungen dort nur über die App – nicht zusätzlich über den Browser.
+                                    </span>
+                                </div>
+                                <ul class="divide-y" style="border-color: var(--color-card-border);">
+                                    @foreach($appDevices as $device)
+                                        <li class="px-4 py-3 flex items-center gap-3">
+                                            <i class="fab {{ $device->provider === \App\Model\UserDevice::PROVIDER_APNS ? 'fa-apple' : 'fa-android' }} w-5 text-center" style="color: var(--color-text-secondary);"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <span class="block text-sm truncate" style="color: var(--color-text-primary);">
+                                                    {{ $device->device_name ?: ($device->provider === \App\Model\UserDevice::PROVIDER_APNS ? 'iPhone/iPad' : 'Android-Gerät') }}
+                                                    <span class="ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded bg-blue-100 text-blue-700">App</span>
+                                                </span>
+                                                <span class="block text-xs" style="color: var(--color-text-secondary);">
+                                                    Zuletzt aktiv: {{ $device->last_seen_at?->format('d.m.Y H:i') ?? '–' }} · Abmelden in der App
+                                                </span>
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                    @foreach($pushSubscriptions as $subscription)
+                                        @php $covered = \App\Services\Push\WebPushRouting::coveredByApp($subscription, $appPushPlatforms); @endphp
+                                        <li class="px-4 py-3 flex items-center gap-3" data-push-endpoint="{{ $subscription->endpoint }}">
+                                            <i class="fas {{ $subscription->platform === 'desktop' ? 'fa-desktop' : 'fa-globe' }} w-5 text-center" style="color: var(--color-text-secondary);"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <span class="block text-sm truncate" style="color: var(--color-text-primary);">
+                                                    {{ $subscription->device_name ?? 'Unbekannter Browser' }}
+                                                    <span data-push-current class="hidden ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded bg-green-100 text-green-700">Dieses Gerät</span>
+                                                </span>
+                                                <span class="block text-xs" style="color: var(--color-text-secondary);">
+                                                    Zuletzt aktiv: {{ ($subscription->last_seen_at ?? $subscription->updated_at)?->format('d.m.Y H:i') ?? '–' }}
+                                                    @if($covered)
+                                                        · pausiert, Mitteilungen kommen über die App
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <button type="submit" form="push-remove-{{ $subscription->id }}" data-push-remove
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors"
+                                                    onclick="return confirm('Browser-Push für dieses Gerät entfernen?')">
+                                                <i class="fas fa-trash"></i>Entfernen
+                                            </button>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                @if($pushSubscriptions->isNotEmpty())
+                                    <p class="text-xs px-4 py-3 mb-0 border-t" style="color: var(--color-text-secondary); border-color: var(--color-card-border);">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Ein anderes Gerät meldet sich beim nächsten Öffnen des ElternInfoBoards wieder an, solange Push dort im Browser erlaubt ist.
+                                        Dauerhaft abschalten lässt es sich in den Browser-Einstellungen des Geräts.
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="settings-form-grid grid grid-cols-1 lg:grid-cols-2 gap-7">
                             <div>
                                 <label class="block text-sm font-semibold mb-2" style="color: var(--color-text-primary);">
@@ -461,6 +527,14 @@
                     </div>
 
                 </form>{{-- Ende gemeinsames Formular --}}
+
+                {{-- Formulare zum Entfernen von Browser-Abos (Buttons stehen im Einstellungsformular) --}}
+                @foreach($pushSubscriptions as $subscription)
+                    <form id="push-remove-{{ $subscription->id }}" action="{{ route('push.destroy', $subscription) }}" method="post" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endforeach
 
                 {{-- TAB: Kinder & Gruppen --}}
                 <div x-show="activeTab === 'kinder'" x-cloak class="p-8">
@@ -734,7 +808,8 @@
                             <div class="p-4">
                                 <p class="text-sm mb-3" style="color: var(--color-text-secondary);">
                                     <i class="fas fa-shield-alt text-orange-600 mr-1"></i>
-                                    Mit dem API-Token können externe Anwendungen auf die Daten-Schnittstellen zugreifen.
+                                    Integrations-Tokens erlauben externen Anwendungen (z.&nbsp;B. Home Assistant) den Zugriff auf Ihre Daten.
+                                    Sie dürfen nur lesen und zusätzlich nur das, was Sie unten freigeben. Anmeldungen der ElternInfo-App erscheinen hier ebenfalls.
                                 </p>
 
                                 @if(auth()->user()->tokens->count() > 0)
@@ -743,15 +818,36 @@
                                             <thead class="border-b" style="background-color: var(--color-body-bg); border-color: var(--color-card-border);">
                                                 <tr>
                                                     <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Name</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Rechte</th>
                                                     <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Erstellt am</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Gültig bis</th>
+                                                    <th class="px-3 py-2 text-left text-xs font-semibold" style="color: var(--color-text-secondary);">Zuletzt genutzt</th>
                                                     <th class="px-3 py-2 text-right text-xs font-semibold" style="color: var(--color-text-secondary);">Aktionen</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach(auth()->user()->tokens as $token)
+                                                    @php $isIntegration = \App\Services\IntegrationTokens::isIntegration($token); @endphp
                                                     <tr class="border-b hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors" style="border-color: var(--color-card-border);">
                                                         <td class="px-3 py-2" style="color: var(--color-text-primary);">{{$token->name}}</td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">
+                                                            @if($isIntegration)
+                                                                {{ collect(\App\Services\IntegrationTokens::scopes($token))->map(fn ($s) => \App\Services\IntegrationTokens::SCOPES[$s])->prepend('Lesen')->implode(', ') }}
+                                                            @else
+                                                                Vollzugriff (App)
+                                                            @endif
+                                                        </td>
                                                         <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">{{$token->created_at->format('d.m.Y')}}</td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">
+                                                            @if($isIntegration)
+                                                                {{ $token->expires_at?->format('d.m.Y') ?? 'unbegrenzt' }}
+                                                            @elseif(config('sanctum.expiration'))
+                                                                {{ $token->created_at->copy()->addMinutes(config('sanctum.expiration'))->format('d.m.Y') }}
+                                                            @else
+                                                                unbegrenzt
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-3 py-2 text-xs" style="color: var(--color-text-secondary);">{{ $token->last_used_at?->format('d.m.Y H:i') ?? '–' }}</td>
                                                         <td class="px-3 py-2 text-right">
                                                             <form action="{{url('/einstellungen/token/'.$token->id)}}" method="post" class="inline">
                                                                 @csrf
@@ -774,14 +870,32 @@
                                 @endif
 
                                 <h6 class="text-sm font-semibold mb-2 flex items-center gap-1.5" style="color: var(--color-text-primary);">
-                                    <i class="fas fa-plus-circle text-orange-600"></i>Neues Token erstellen
+                                    <i class="fas fa-plus-circle text-orange-600"></i>Neues Integrations-Token erstellen
                                 </h6>
-                                <form action="{{url('/einstellungen/token')}}" method="post" class="flex gap-2">
+                                <form action="{{url('/einstellungen/token')}}" method="post" class="space-y-3">
                                     @csrf
-                                    <input type="text"
-                                           class="flex-1 px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
-                                           name="name" placeholder="Token-Name" required>
-                                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors flex-shrink-0">
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <input type="text"
+                                               class="flex-1 px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                                               name="name" placeholder="Name, z. B. Home Assistant" required>
+                                        <select name="lifetime"
+                                                class="px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                                                style="background-color: var(--color-input-bg); color: var(--color-text-primary);">
+                                            @foreach(\App\Services\IntegrationTokens::LIFETIMES as $value => $label)
+                                                <option value="{{ $value }}" @selected($value === '365')>Gültig: {{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm" style="color: var(--color-text-primary);">
+                                        <span style="color: var(--color-text-secondary);">Zusätzlich erlauben:</span>
+                                        @foreach(\App\Services\IntegrationTokens::SCOPES as $value => $label)
+                                            <label class="inline-flex items-center gap-1.5">
+                                                <input type="checkbox" name="scopes[]" value="{{ $value }}" class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                                {{ $label }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus"></i>Erstellen
                                     </button>
                                 </form>
@@ -791,17 +905,63 @@
                 </div>
 
                 {{-- TAB: Design --}}
-                @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
+                @if($showDesignTab)
                 <div x-show="activeTab === 'design'" x-cloak class="p-8">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="flex items-center justify-center w-10 h-10 rounded-xl" style="background-color: var(--color-widget-primary-bg);">
                             <i class="fas fa-palette" style="color: var(--color-primary);"></i>
                         </div>
                         <div>
-                            <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Design-Theme</h2>
+                            <h2 class="text-base font-bold mb-0" style="color: var(--color-text-primary);">Design &amp; Menü</h2>
                             <p class="text-xs mb-0" style="color: var(--color-text-secondary);">Ihr persönliches Erscheinungsbild</p>
                         </div>
                     </div>
+
+                    @if($allowUserNavStyle ?? false)
+                    <div class="mb-8 pb-8 border-b" style="border-color: var(--color-card-border);">
+                        <h3 class="text-sm font-bold mb-1" style="color: var(--color-text-primary);">Menü-Darstellung</h3>
+                        <p class="text-sm mb-4" style="color: var(--color-text-secondary);">
+                            Das kompakte Menü fasst die Einträge in einklappbaren Gruppen zusammen und bietet ein Suchfeld – so müssen Sie weniger scrollen.
+                        </p>
+                        <form action="{{ route('user.navigation.update') }}" method="post" id="navStyleForm">
+                            @csrf
+                            @method('PUT')
+                            @php
+                                $navOptions = [
+                                    ''        => ['icon' => 'fas fa-cog',       'label' => 'System-Standard', 'hint' => 'Aktuell: '.\Illuminate\Support\Str::before($navStyles[$defaultNavStyle] ?? $defaultNavStyle, ' (')],
+                                    'classic' => ['icon' => 'fas fa-list',      'label' => 'Klassisch',       'hint' => 'Alle Einträge untereinander'],
+                                    'compact' => ['icon' => 'fas fa-layer-group','label' => 'Kompakt',        'hint' => 'Gruppiert & einklappbar'],
+                                ];
+                            @endphp
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                                @foreach($navOptions as $value => $option)
+                                    @continue($value !== '' && ! array_key_exists($value, $navStyles))
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="nav_style" value="{{ $value }}" class="sr-only peer" @checked($userNavStyle === $value)>
+                                        <div class="flex items-center gap-3 border-2 rounded-xl p-3 transition-all duration-200 peer-checked:border-[var(--color-primary)] peer-checked:bg-[var(--color-widget-primary-bg)] peer-focus-visible:ring-2"
+                                             style="border-color: var(--color-card-border);">
+                                            <i class="{{ $option['icon'] }} text-lg w-6 text-center" style="color: var(--color-primary);"></i>
+                                            <div class="min-w-0">
+                                                <span class="text-sm font-semibold block" style="color: var(--color-text-primary);">{{ $option['label'] }}</span>
+                                                <span class="text-xs block" style="color: var(--color-text-secondary);">{{ $option['hint'] }}</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-lg transition-colors"
+                                    style="background-color: var(--color-primary)"
+                                    onmouseover="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary-dark')"
+                                    onmouseout="this.style.backgroundColor=getComputedStyle(document.documentElement).getPropertyValue('--color-primary')">
+                                <i class="fas fa-save"></i>Menü-Darstellung speichern
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
+                    @if($allowUserTheme)
+                    <h3 class="text-sm font-bold mb-1" style="color: var(--color-text-primary);">Design-Theme</h3>
                     <p class="text-sm mb-5" style="color: var(--color-text-secondary);">
                         Wählen Sie ein Design für Ihre persönliche Ansicht. Das Standard-Design wird vom Administrator festgelegt.
                     </p>
@@ -855,6 +1015,7 @@
                             <i class="fas fa-save"></i>Theme speichern
                         </button>
                     </form>
+                    @endif
                 </div>
                 @endif
 
@@ -978,8 +1139,8 @@ function settingsPage() {
             { id: 'erweitert',          icon: 'fas fa-sliders-h',   label: 'Erweiterte Einstell.' },
             { id: 'kinder',             icon: 'fas fa-child',       label: 'Kinder & Gruppen' },
             { id: 'integrationen',      icon: 'fas fa-plug',        label: 'Integrationen' },
-            @if(($generalSettings->allow_user_theme ?? true) && isset($themes))
-            { id: 'design',             icon: 'fas fa-palette',     label: 'Design-Theme' },
+            @if($showDesignTab)
+            { id: 'design',             icon: 'fas fa-palette',     label: 'Design & Menü' },
             @endif
         ],
         init() {

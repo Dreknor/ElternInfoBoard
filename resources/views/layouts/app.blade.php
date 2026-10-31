@@ -66,7 +66,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="{{ $settings->app_name }}">
     <meta name="format-detection" content="telephone=no">
-    <link rel="apple-touch-icon" href="{{ asset('img/app_logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('img/icons/apple-touch-icon.png') }}">
 
     <title>{{$settings->app_name}} @yield('title')</title>
 
@@ -135,12 +135,11 @@
                 </div>
             </div>
 
-            @stack('bottom-nav')
-
-            <!-- Hilfe-Button (Mobile) -->
-            @auth
-                <x-help-button variant="mobile" />
-            @endauth
+            {{-- Höchstens drei Modul-Kurzlinks (CSS), damit „Menü“ immer erreichbar bleibt.
+                 Hilfe ist mobil über den Header erreichbar. --}}
+            <div class="mobile-bottom-nav-modules">
+                @stack('bottom-nav')
+            </div>
 
             <!-- Menu Toggle Icon -->
             <div class="mobile-bottom-nav_item flex-1" id="toogleSidebarButton">
@@ -166,6 +165,9 @@
 
 
     <!-- Sidebar Navigation -->
+    @if(($navStyle ?? 'classic') === 'compact')
+        @include('layouts.elements.sidebar-compact')
+    @else
     {{-- Desktop: 70px Logo-Header + ~60px Footer = 130px abziehen; Mobile: Logo-Header ausgeblendet, nur ~60px Footer --}}
     <div class="sidebar-wrapper overflow-y-auto sidebar-nav-scroll" id="sidebar">
         <ul class="nav flex-column px-2 py-3 space-y-1">
@@ -185,6 +187,7 @@
             @stack('adm-nav')
         </ul>
     </div>
+    @endif
 
     <!-- User Info Footer in Sidebar -->
 
@@ -220,7 +223,7 @@
                                 <img src="{{url('storage/img/'.$settings->logo)}}" class="h-8 w-auto" alt="{{$settings->app_name}}">
                             @endif
                         </div>
-                        <span class="text-base font-bold" style="color: var(--color-navbar-text, #1f2937)">{{$settings->app_name}}</span>
+                        <span class="hidden sm:inline text-base font-bold" style="color: var(--color-navbar-text, #1f2937)">{{$settings->app_name}}</span>
                     </a>
                 </div>
 
@@ -613,10 +616,22 @@
                 $('#searchForm').addClass('w-75').removeClass('w-auto');
             });
 
-            $('button[type=submit]').click(function () {
-                if (this.form) {
-                    this.form.submit();
-                    this.disabled = true;
+            // Doppeltes Absenden verhindern, ohne die normale Übermittlung zu umgehen:
+            // form.submit() würde submit-Handler (z. B. Alpine), HTML5-Prüfung, den Wert des
+            // geklickten Buttons sowie formaction/formtarget überspringen. Die Buttons werden
+            // erst nach dem Zusammenstellen der Formulardaten deaktiviert.
+            $(document).on('submit', 'form', function (e) {
+                const submitter = e.originalEvent ? e.originalEvent.submitter : null;
+                if (e.isDefaultPrevented() || this.target === '_blank' || (submitter && submitter.formTarget === '_blank')) {
+                    return;
+                }
+                const buttons = $(this).find('button[type=submit]');
+                setTimeout(function () { buttons.prop('disabled', true); }, 0);
+            });
+            // Nach „Zurück“ aus dem Browser-Cache wieder bedienbar machen
+            window.addEventListener('pageshow', function (e) {
+                if (e.persisted) {
+                    $('button[type=submit]').prop('disabled', false);
                 }
             });
 

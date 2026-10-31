@@ -5,11 +5,8 @@ namespace App\Livewire\Messenger;
 use App\Model\Conversation;
 use App\Model\Message;
 use App\Model\Notification;
-use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class ChatWindow extends Component
@@ -191,34 +188,6 @@ class ChatWindow extends Component
         // kurz zuvor gelesen haben (keine ungelesenen Benachrichtigungen), trotzdem eine
         // neue In-App-Benachrichtigung erhalten.
         $conversation->notify($potentialRecipients, $title, "{$sender->name}: {$snippet}", false, $url, 'messenger', 'fas fa-comments', true);
-
-        // WebPush nur für Nutzer, die den Chat NICHT gerade aktiv lesen (last_read_at > 30 Sek.).
-        // Wer gerade aktiv im Chat ist, sieht die Nachricht direkt – kein Push-Spam nötig.
-        $pushRecipients = $potentialRecipients->filter(function ($u) {
-            $pivot = $u->pivot;
-            if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
-                return false;
-            }
-            return true;
-        });
-
-        // Cooldown: max. eine Push-Benachrichtigung pro Nutzer/Konversation alle 10 Minuten
-        $pushCooldownMinutes = 10;
-
-        foreach ($pushRecipients as $participant) {
-            try {
-                if ($participant->pushSubscriptions()->exists()) {
-                    $cacheKey = "messenger_push_{$participant->id}_{$conversation->id}";
-                    if (Cache::add($cacheKey, true, now()->addMinutes($pushCooldownMinutes))) {
-                        $participant->notify(
-                            new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
-                        );
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::warning("Messenger WebPush fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
-            }
-        }
     }
 }
 

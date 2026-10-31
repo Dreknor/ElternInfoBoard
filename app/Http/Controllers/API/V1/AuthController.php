@@ -19,7 +19,7 @@ use Laravel\Socialite\Facades\Socialite;
  * Anmeldung der Eltern-App: Passwort, SSO (Keycloak mit PKCE), Anmelde-Link per E-Mail.
  * SSO und Anmelde-Link liefern einen einmaligen Code, den die App gegen ein Token tauscht.
  *
- * @group App: Anmeldung
+ * @group Anmeldung
  */
 class AuthController extends Controller
 {
@@ -166,7 +166,13 @@ class AuthController extends Controller
             }
         }
 
-        return $this->tokenResponse(User::findOrFail($entry['user_id']), $request->device_name);
+        // Zwischen Anforderung und Einlösen deaktivierte Konten erhalten kein Token
+        $user = User::find($entry['user_id']);
+        if (! $user || $user->is_active === false) {
+            return response()->json(['message' => 'Der Anmeldecode ist abgelaufen. Bitte erneut anmelden.'], 422);
+        }
+
+        return $this->tokenResponse($user, $request->device_name);
     }
 
     /**
@@ -199,7 +205,8 @@ class AuthController extends Controller
      */
     public function webLink(Request $request): JsonResponse
     {
-        $request->validate(['path' => ['required', 'string', 'max:200', 'regex:#^/[A-Za-z0-9/_\-]*$#']]);
+        // Nur Pfade innerhalb der Seite: „//host“ wäre eine protokollrelative Weiterleitung nach außen
+        $request->validate(['path' => ['required', 'string', 'max:200', 'regex:#^/(?!/)[A-Za-z0-9/_\-]*$#']]);
 
         $generator = new LoginUrl($request->user());
         $generator->setRedirectUrl($request->path);

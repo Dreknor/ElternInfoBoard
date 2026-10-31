@@ -15,7 +15,7 @@ use Tests\TestCase;
 /**
  * Feature-Tests für App\Http\Controllers\Auth\UcsLoginController
  *
- * Deckt alle 10 Gelingenskriterien aus docs/todos/06-oidc-login.md ab.
+ * Deckt den OIDC-Login (Callback, JIT-Anlage, Single-Logout) ab.
  *
  * Socialite wird per Mockery abgefangen, damit kein echter OIDC-Flow stattfindet.
  * UcsSyncService wird für JIT-Tests als Mock injiziert.

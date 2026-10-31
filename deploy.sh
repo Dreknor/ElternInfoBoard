@@ -33,6 +33,10 @@ fi
 php artisan migrate --force
 # --force  Required to run when in production.
 
+# Mediendateien von der öffentlichen Disk (/storage/…) auf die private Disk umziehen
+# (idempotent; nach dem ersten Lauf ist nichts mehr zu tun)
+php artisan media:make-private
+
 # seed UCS permissions (idempotent; legt "manage ucs sync" an + weist Admin zu)
 php artisan db:seed --class=UcsSyncPermissionSeeder --force
 

@@ -66,6 +66,14 @@
                                 <i class="fas fa-pencil-alt w-4" style="color: var(--color-card-a-header-bg);"></i>
                                 <span>Bearbeiten</span>
                             </a>
+                            <a href="{{ route('listen.preview', $liste->id) }}"
+                               class="flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-150"
+                               style="color: var(--color-text-primary);"
+                               onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-body-bg')"
+                               onmouseout="this.style.background=''">
+                                <i class="fas fa-eye w-4" style="color: var(--color-card-a-header-bg);"></i>
+                                <span>Vorschau</span>
+                            </a>
                             <a href="{{ url("listen/$liste->id/ical/export") }}"
                                class="flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-150"
                                style="color: var(--color-text-primary);"
@@ -114,7 +122,7 @@
         <!-- Details Section (Collapsible) -->
         <div x-show="showInfo" x-transition class="mt-3 pt-3" style="border-top: 1px solid rgba(0,0,0,0.15);" x-cloak>
             @if($liste->comment)
-                <p class="text-xs mb-2 leading-relaxed" style="color: var(--color-card-a-header-text); opacity: 0.9;">{!! $liste->comment !!}</p>
+                <p class="text-xs mb-2 leading-relaxed" style="color: var(--color-card-a-header-text); opacity: 0.9;">@safeHtml($liste->comment)</p>
             @endif
             @if($liste->groups->count() > 0)
                 <div class="flex flex-wrap gap-1">

@@ -4,8 +4,10 @@ namespace App\Model;
 
 use App\Enums\GuardianRight;
 use App\Services\Family\FamilyResolver;
+use App\Services\Push\WebPushRouting;
 use Carbon\Carbon;
 use DevDojo\LaravelReactions\Traits\Reacts;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -47,6 +49,12 @@ class User extends Authenticatable implements Auditable
         static::creating(fn ($foo) => $foo->uuid = Str::uuid());
     }
 
+    /** Browser-Abos ohne die Geräte, auf denen die App bereits Push erhält (sonst doppelte Mitteilungen). */
+    public function routeNotificationForWebPush(): EloquentCollection
+    {
+        return WebPushRouting::subscriptionsFor($this);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -82,8 +90,8 @@ class User extends Authenticatable implements Auditable
             'last_online_at' => 'datetime',
             'track_login' => 'boolean',
             'changeSettings' => 'boolean',
-            'is_active' => 'boolean',        // TODO-2.5
-            'deactivated_at' => 'datetime',  // TODO-2.5
+            'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
             'messenger_discoverable' => 'boolean',
             'ucs_synced_at' => 'datetime',
         ];
@@ -103,7 +111,7 @@ class User extends Authenticatable implements Auditable
 
     public function files(): Collection
     {
-        return $this->groups()->with('media')->get()->pluck('media')->unique('file_name')->sortBy('file_name')->flatten();
+        return $this->groups()->with('media')->get()->pluck('media')->flatten()->unique('file_name')->sortBy('file_name')->values();
     }
 
     /**
@@ -216,6 +224,31 @@ class User extends Authenticatable implements Auditable
     {
         return $this->hasManyDeep(Post::class, ['group_user', Group::class, 'group_post'])
             ->where('archiv_ab', '>', now());
+    }
+
+    /**
+     * Beiträge, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält
+     * (ohne Prüfung von Freigabe/Archiv, ohne Duplikate).
+     */
+    public function visiblePosts(): Builder
+    {
+        return Post::query()->forRecipient($this);
+    }
+
+    /**
+     * Termine, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleTermine(): Builder
+    {
+        return Termin::query()->forRecipient($this);
+    }
+
+    /**
+     * Listen, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
+     */
+    public function visibleListen(): Builder
+    {
+        return Liste::query()->forRecipient($this);
     }
 
     /**

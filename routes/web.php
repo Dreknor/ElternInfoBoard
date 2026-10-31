@@ -97,9 +97,17 @@ Route::get('app/anmelden/{code}', function (string $code) {
         'appUrl' => config('services.app.scheme').'://auth?'.http_build_query(['code' => $code, 'type' => 'magic']),
     ]);
 })->middleware('throttle:30,1')->name('app.login.open');
+// Eltern-App: öffentliche Datenschutzerklärung (Pflicht-URL für Play Store / App Store)
+Route::get('app/datenschutz', fn () => view('app.datenschutz', [
+    'stand' => '15.10.2026',
+    'publisher' => str_replace('\n', "\n", (string) config('services.app.privacy_publisher')),
+    'contact' => str_replace('\n', "\n", (string) config('services.app.privacy_contact')),
+]))->name('app.privacy');
 Route::get('image/{media_id}', [ImageController::class, 'getImage']);
 Route::get('{uuid}/ical', [ICalController::class, 'createICal'])->middleware('throttle:30,1');
 Route::get('ical/publicEvents', [ICalController::class, 'publicICal']);
+// Öffentliche Termine als HTML-Seite (muss vor Route::resource('termine') stehen)
+Route::get('termine/oeffentlich', [ICalController::class, 'publicHtml'])->middleware('throttle:60,1')->name('termine.public');
 
 // API-Dokumentation nur für Admins zugänglich (enthält alle Endpunkte, Auth-Details etc.)
 Route::middleware(['auth', 'permission:edit settings'])->group(function () {
@@ -152,12 +160,13 @@ Route::middleware('auth')->group(function () {
         });
 
         // Routen für die Verwaltung der Rückmeldungen
+        // Berechtigung wird im Controller geprüft (manage, Autor oder view rueckmeldungen)
         Route::get('rueckmeldungen/{rueckmeldung}/show', [RueckmeldungenController::class, 'show']);
+        Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
+        Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
 
         Route::middleware('permission:manage rueckmeldungen')->group(function () {
             Route::get('rueckmeldungen', [RueckmeldungenController::class, 'index']);
-            Route::get('rueckmeldungen/{rueckmeldung}/download/{user_id}', [RueckmeldungenController::class, 'download']);
-            Route::get('rueckmeldungen/{rueckmeldung}/download', [RueckmeldungenController::class, 'downloadAll']);
         });
 
         // Vertretungsplan
@@ -169,6 +178,7 @@ Route::middleware('auth')->group(function () {
         Route::get('stundenplan/lehrer/{teacher}', [\App\Http\Controllers\StundenplanController::class, 'lehrerAnsicht'])->middleware('can:view stundenplan teacher')->name('stundenplan.lehrer');
         Route::get('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'showImport'])->middleware('permission:edit settings')->name('stundenplan.import');
         Route::post('stundenplan/import', [\App\Http\Controllers\StundenplanController::class, 'processImport'])->middleware('permission:edit settings')->name('stundenplan.import.process');
+        Route::get('stundenplan/import/status', [\App\Http\Controllers\API\StundenplanImportController::class, 'status'])->middleware('permission:edit settings')->name('stundenplan.import.status');
 
 
         Route::middleware('permission:edit Pflichtstunden')->group(function () {
@@ -217,6 +227,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/notification/read/all', [NotificationController::class, 'readAll'])->name('notification.readAll');
         Route::post('markNotificationAsRead', [NotificationController::class, 'readByType']);
         Route::post('/push', [PushController::class, 'store']);
+        Route::delete('/push/{subscription}', [PushController::class, 'destroy'])->name('push.destroy');
 
         Route::get('/push/test', [PushController::class, 'testPush'])->name('push.test');
 
@@ -381,6 +392,7 @@ Route::middleware('auth')->group(function () {
         Route::post('listen/{liste}/deactivate', [ListenController::class, 'deactivate']);
         Route::get('listen/{liste}/export/', [ListenController::class, 'pdf']);
         Route::get('listen/{liste}/ical/export/', [ListenController::class, 'icalExport'])->name('listen.ical.export');
+        Route::get('listen/{terminListe}/vorschau', [ListenController::class, 'preview'])->name('listen.preview');
         Route::get('listen/{terminListe}/auswahl', [ListenController::class, 'auswahl']);
 
         // TerminListe
@@ -396,6 +408,7 @@ Route::middleware('auth')->group(function () {
         // EintragListe
         Route::post('listen/{liste}/eintragungen', [ListenEintragungenController::class, 'store']);
         Route::put('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'update']);
+        Route::post('listen/eintragungen/{listen_eintragung}/copy', [ListenEintragungenController::class, 'copy'])->name('listen.eintragungen.copy');
         Route::delete('listen/eintragungen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
         Route::delete('eintragungen/absagen/{listen_eintragung}', [ListenEintragungenController::class, 'destroy']);
 
@@ -451,6 +464,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/einstellungen/theme', [\App\Http\Controllers\User\UserThemeController::class, 'update'])
             ->name('user.theme.update');
 
+        // Nutzer-Menüdarstellung (klassisch/kompakt)
+        Route::put('/einstellungen/navigation', [\App\Http\Controllers\User\UserNavigationController::class, 'update'])
+            ->name('user.navigation.update');
+
         // Downloads
         Route::get('/files', [FileController::class, 'index']);
         Route::post('/files', [FileController::class, 'store'])->middleware(['permission:upload files']);
@@ -478,6 +495,9 @@ Route::middleware('auth')->group(function () {
             Route::get('users/vorlage/schueler', [ImportController::class, 'downloadSchuelerVorlage'])->middleware(['permission:import user'])->name('users.vorlage.schueler');
             Route::get('users/importVerein', [ImportController::class, 'importVereinForm'])->middleware(['permission:import user']);
             Route::post('users/importVerein', [ImportController::class, 'importVerein'])->middleware(['permission:import user']);
+            Route::post('users/importVerein/bestaetigen', [ImportController::class, 'confirmVereinImport'])->middleware(['permission:import user'])->name('users.import.verein.confirm');
+            Route::get('users/importVerein/auswertung/{id}', [ImportController::class, 'downloadVereinAuswertung'])->middleware(['permission:import user'])->whereUuid('id')->name('users.import.verein.auswertung');
+            Route::get('users/importVerein/zugangsdaten/{id}', [ImportController::class, 'downloadVereinZugangsdaten'])->middleware(['permission:import user'])->whereUuid('id')->name('users.import.verein.zugangsdaten');
 
             Route::get('users/vorlage/eltern', [ImportController::class, 'downloadElternVorlage'])->middleware(['permission:import user'])->name('users.vorlage.eltern');
             Route::get('users/vorlage/aufnahme', [ImportController::class, 'downloadAufnahmeVorlage'])->middleware(['permission:import user'])->name('users.vorlage.aufnahme');
@@ -567,7 +587,7 @@ Route::middleware('auth')->group(function () {
                 ->name('settings.ucs.sync')
                 ->middleware('permission:manage ucs sync');
 
-            // UCS Link-Kandidaten (TODO-08)
+            // UCS Link-Kandidaten
             Route::post('settings/ucs/link-candidates/{candidate}/confirm',
                 [UcsLinkCandidateController::class, 'confirm'])
                 ->name('settings.ucs.link.confirm');
@@ -761,6 +781,115 @@ Route::middleware('auth')->group(function () {
         Route::post('/user/{user}/mute',         [MessengerAdminController::class, 'muteUser'])->name('messenger.admin.mute');
     });
 
+});
+
+/*
+|--------------------------------------------------------------------------
+| Elternabfragen (docs/elternabfragen-konzept.md)
+|--------------------------------------------------------------------------
+| Eltern: /elternabfragen · Verwaltung: /verwaltung/elternabfragen
+| Berechtigungen am Kind prüft InquiryAccess bei jedem Zugriff.
+*/
+Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(function () {
+    $parent = \App\Http\Controllers\Elternabfragen\ParentInquiryController::class;
+    Route::prefix('elternabfragen')->name('elternabfragen.')->group(function () use ($parent) {
+        Route::get('/', [$parent, 'index'])->name('index');
+        Route::get('abfrage/{inquiry}', [$parent, 'open'])->whereNumber('inquiry')->name('open');
+        Route::get('{assignment}', [$parent, 'show'])->whereNumber('assignment')->name('show');
+        Route::post('{assignment}/entwurf', [$parent, 'saveDraft'])->whereNumber('assignment')->name('draft');
+        Route::delete('{assignment}/entwurf', [$parent, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
+        Route::post('{assignment}/absenden', [$parent, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::post('{assignment}/bestaetigen', [$parent, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
+        Route::get('{assignment}/bestaetigung.pdf', [$parent, 'pdf'])->whereNumber('assignment')->name('pdf');
+        Route::get('{assignment}/datei/{field}', [$parent, 'file'])->whereNumber('assignment')->name('file');
+    });
+
+    Route::prefix('verwaltung/elternabfragen')->name('elternabfragen.admin.')->group(function () {
+        $admin = \App\Http\Controllers\Elternabfragen\AdminController::class;
+        $templates = \App\Http\Controllers\Elternabfragen\TemplateController::class;
+        $inquiries = \App\Http\Controllers\Elternabfragen\InquiryController::class;
+        $cases = \App\Http\Controllers\Elternabfragen\AssignmentController::class;
+        $exports = \App\Http\Controllers\Elternabfragen\ExportController::class;
+        $records = \App\Http\Controllers\Elternabfragen\RecordController::class;
+
+        Route::get('/', [$admin, 'index'])->name('index');
+        Route::get('freigaben', [$admin, 'approvals'])->middleware('permission:approve elternabfragen')->name('approvals');
+        Route::get('antworten', [$admin, 'staff'])->middleware('permission:read elternabfragen|view elternabfragen answers')->name('staff');
+        Route::get('einstellungen', [$admin, 'settings'])->middleware('permission:approve elternabfragen|edit settings')->name('settings');
+        Route::put('einstellungen', [$admin, 'updateSettings'])->middleware('permission:approve elternabfragen|edit settings')->name('settings.update');
+
+        // Vorlagen (Prozess A)
+        Route::get('vorlagen', [$templates, 'index'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.index');
+        Route::middleware('permission:manage elternabfragen')->group(function () use ($templates) {
+            Route::get('vorlagen/neu', [$templates, 'create'])->name('templates.create');
+            Route::post('vorlagen', [$templates, 'store'])->name('templates.store');
+            Route::post('vorlagen/import', [$templates, 'import'])->name('templates.import');
+            Route::get('vorlagen/versionen/{version}/bearbeiten', [$templates, 'edit'])->name('templates.edit');
+            Route::put('vorlagen/versionen/{version}', [$templates, 'update'])->name('templates.update');
+            Route::post('vorlagen/versionen/{version}/einreichen', [$templates, 'submit'])->name('templates.submit');
+            Route::post('vorlagen/{template}/neue-version', [$templates, 'newVersion'])->name('templates.new-version');
+            Route::post('vorlagen/{template}/archivieren', [$templates, 'archive'])->name('templates.archive');
+        });
+        Route::get('vorlagen/versionen/{version}', [$templates, 'show'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.show');
+        Route::get('vorlagen/versionen/{version}/vorschau', [$templates, 'preview'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.preview');
+        Route::match(['post', 'put'], 'vorlagen/vorschau', [$templates, 'previewDraft'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('templates.preview-draft');
+        Route::middleware('permission:approve elternabfragen')->group(function () use ($templates) {
+            Route::post('vorlagen/versionen/{version}/freigeben', [$templates, 'approve'])->name('templates.approve');
+            Route::post('vorlagen/versionen/{version}/zurueckgeben', [$templates, 'reject'])->name('templates.reject');
+        });
+
+        // Abfragen (Prozess B) und Rücklauf (Prozess D)
+        Route::middleware('permission:manage elternabfragen')->group(function () use ($inquiries) {
+            Route::get('abfragen/neu', [$inquiries, 'create'])->name('inquiries.create');
+            Route::post('abfragen', [$inquiries, 'store'])->name('inquiries.store');
+            Route::get('abfragen/{inquiry}/bearbeiten', [$inquiries, 'edit'])->name('inquiries.edit');
+            Route::put('abfragen/{inquiry}', [$inquiries, 'update'])->name('inquiries.update');
+            Route::post('abfragen/{inquiry}/einreichen', [$inquiries, 'submit'])->name('inquiries.submit');
+            Route::post('abfragen/{inquiry}/abgleichen', [$inquiries, 'sync'])->name('inquiries.sync');
+            Route::post('abfragen/{inquiry}/frist', [$inquiries, 'deadline'])->name('inquiries.deadline');
+            Route::put('abfragen/{inquiry}/einstellungen', [$inquiries, 'settings'])->name('inquiries.settings');
+            Route::put('abfragen/{inquiry}/vorabfrage', [$inquiries, 'previous'])->name('inquiries.previous');
+            Route::post('abfragen/{inquiry}/abschliessen', [$inquiries, 'close'])->name('inquiries.close');
+            Route::post('abfragen/{inquiry}/antworten-loeschen', [$inquiries, 'purge'])->name('inquiries.purge');
+            Route::post('abfragen/{inquiry}/duplizieren', [$inquiries, 'duplicate'])->name('inquiries.duplicate');
+            Route::delete('abfragen/{inquiry}', [$inquiries, 'destroy'])->name('inquiries.destroy');
+        });
+        Route::middleware('permission:approve elternabfragen')->group(function () use ($inquiries) {
+            Route::post('abfragen/{inquiry}/freigeben', [$inquiries, 'approve'])->name('inquiries.approve');
+            Route::post('abfragen/{inquiry}/zurueckgeben', [$inquiries, 'reject'])->name('inquiries.reject');
+        });
+        Route::get('abfragen/{inquiry}', [$inquiries, 'show'])->name('inquiries.show');
+        Route::get('abfragen/{inquiry}/aenderungen', [$inquiries, 'changes'])->middleware('permission:view elternabfragen answers')->name('inquiries.changes');
+        Route::get('abfragen/{inquiry}/vorschau', [$inquiries, 'preview'])->middleware('permission:manage elternabfragen|approve elternabfragen')->name('inquiries.preview');
+
+        // Einzelfälle
+        Route::middleware('permission:manage elternabfragen')->group(function () use ($cases) {
+            Route::post('abfragen/{inquiry}/erinnern', [$cases, 'remind'])->name('assignments.remind');
+            Route::post('faelle/{assignment}/nachfrist', [$cases, 'extend'])->name('assignments.extend');
+            Route::post('faelle/{assignment}/problem', [$cases, 'problem'])->name('assignments.problem');
+            Route::post('faelle/{assignment}/problem-geloest', [$cases, 'resolve'])->name('assignments.resolve');
+            Route::post('faelle/{assignment}/notiz', [$cases, 'note'])->name('assignments.note');
+            Route::post('faelle/{assignment}/korrektur', [$cases, 'unlockCorrection'])->name('assignments.correction');
+            Route::post('faelle/{assignment}/neustart', [$cases, 'restart'])->name('assignments.restart');
+        });
+        Route::get('faelle/{assignment}', [$cases, 'show'])->name('assignments.show');
+        Route::middleware('permission:view elternabfragen answers')->group(function () use ($cases, $records) {
+            Route::post('antworten/{response}/pruefung', [$cases, 'review'])->name('responses.review');
+            // Ablage in der Schülerakte
+            Route::get('faelle/{assignment}/akte.pdf', [$records, 'assignment'])->name('records.assignment');
+            Route::get('abfragen/{inquiry}/akte.pdf', [$records, 'inquiry'])->name('records.inquiry');
+        });
+        Route::get('antworten/{response}/datei/{field}', [$cases, 'file'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.file');
+        Route::get('antworten/{response}', [$cases, 'response'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.show');
+
+        // Export (Prozess E)
+        Route::middleware('permission:export elternabfragen')->group(function () use ($exports) {
+            Route::get('abfragen/{inquiry}/export', [$exports, 'create'])->name('exports.create');
+            Route::post('abfragen/{inquiry}/export/vorschau', [$exports, 'preview'])->name('exports.preview');
+            Route::post('abfragen/{inquiry}/export', [$exports, 'store'])->name('exports.store');
+            Route::get('exporte/{export}', [$exports, 'download'])->name('exports.download');
+        });
+    });
 });
 
 /*

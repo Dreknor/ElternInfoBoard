@@ -1,0 +1,134 @@
+# Elternabfragen verwalten
+
+Das Modul ersetzt wiederkehrende Papierabfragen. Der verbindliche Ablauf:
+
+1. **Vorlage** anlegen oder auswählen und prüfen lassen.
+2. **Abfrage** vorbereiten und zur **Freigabe** einreichen.
+3. Nach der Freigabe erzeugt das System die Aufträge **je Kind** und benachrichtigt die sorgeberechtigten Elternkonten.
+4. **Rücklauf** überwachen, erinnern, Einzelfälle klären.
+5. Ergebnisse **kontrolliert exportieren**.
+
+Zu finden unter **Verwaltung › Elternabfragen**.
+
+## Ablauf auf einen Blick
+
+| Schritt | Wer | Was passiert | Status |
+|---|---|---|---|
+| 1. Vorlage anlegen | Sekretariat | Zweck, Hinweise, Fristen und Formularfelder festlegen (auch aus einer Excel-Liste) | Vorlage: Entwurf |
+| 2. Vorlage prüfen | Schulleitung | Elternvorschau prüfen, freigeben oder zurückgeben | Vorlage: In Prüfung → Freigegeben |
+| 3. Abfrage vorbereiten | Sekretariat | Vorlage wählen, Titel, Zeitraum, Zielgruppe, Kanäle, ggf. Vorabfrage | Abfrage: Entwurf |
+| 4. Abfrage freigeben | Schulleitung | Zielgruppe, Frist und Kanäle bestätigen | Wartet auf Freigabe → Freigegeben (geplant) |
+| 5. Start | System | Aufträge je Kind, Benachrichtigung per E-Mail/Push | Läuft |
+| 6. Ausfüllen | Eltern | ausfüllen, Zusammenfassung prüfen, verbindlich absenden | je Kind: Offen → Eingereicht |
+| 7. Rücklauf | Sekretariat | Erinnern, Nachfristen, Probleme klären, Antworten prüfen | – |
+| 8. Abschluss & Export | Sekretariat | beenden (oder automatisch 30 Tage nach Frist), Export erstellen | Abgeschlossen |
+| 9. Löschung | System | nach Ablauf der Aufbewahrungsfrist | Antworten gelöscht |
+
+Auf der Seite einer Abfrage zeigt die **Ablaufleiste** oben (Entwurf → Freigabe → Geplant → Läuft → Abgeschlossen), wo die Abfrage gerade steht. Daneben liegen alle Aktionen, die im aktuellen Schritt möglich sind.
+
+## Rechte
+
+| Recht | Wofür |
+|---|---|
+| `manage elternabfragen` | Vorlagen und Abfragen vorbereiten, Rücklauf, Erinnerungen, Nachfristen (Sekretariat) |
+| `approve elternabfragen` | Vorlagen und Abfragen freigeben, Regeln einstellen (Schulleitung) |
+| `view elternabfragen answers` | Antwortinhalte einsehen und prüfen |
+| `export elternabfragen` | Exporte erstellen und herunterladen |
+| `read elternabfragen` | Mitarbeitende: geprüfte Antworten lesen |
+
+Das Modul muss unter **Einstellungen › Module** aktiviert werden.
+
+## 1. Vorlagen
+
+**Vorlagen › Neue Vorlage**. Eine Vorlage enthält Titel, Kategorie, **Zweck** (Pflicht – wofür die Angaben gebraucht werden), Elterninformation, zuständige Stelle, Standardfrist, Aufbewahrungsfrist und die Formularfelder.
+
+**Feldtypen:** Zustimmung/Ablehnung, Einwilligung (mit vollständigem Text), Mehrfachauswahl, Auswahl einer Option, Dropdown, Text ein-/mehrzeilig, Datum, Datei-Upload, **Auswahl eines eigenen Kindes** (Eltern wählen eines der Kinder, für die sie sorgeberechtigt sind; gespeichert wird der Name) sowie **Abschnitt/Hinweis** zur Gliederung. Jedes Feld kann Pflichtfeld sein und eine Formatprüfung (E-Mail, Telefon, PLZ, Zahl), Mindest-/Höchstlänge und eine eigene, verständliche Fehlermeldung bekommen.
+
+**Aus Excel-Liste übernehmen:** Im Formular-Editor eine Excel-, ODS- oder CSV-Datei wählen. Jede Spaltenüberschrift der ersten Zeile wird zu einem Feld. Stehen darunter bereits Werte (z. B. eine bisher auf Papier geführte Liste), wird der Feldtyp abgeleitet: Ja/Nein, Datum, wenige wiederkehrende Werte als Auswahl, lange Texte als mehrzeiliges Textfeld. Spalten wie Name, Vorname oder Klasse werden nicht übernommen – die Zuordnung zum Kind erfolgt automatisch. Übernommene Felder bitte prüfen und anpassen.
+
+**Vorschau:** „Vorschau (ohne Speichern)“ im Editor öffnet den aktuellen Stand in einem neuen Tab aus Sicht der Eltern. Gespeicherte Vorlagenversionen haben auf ihrer Detailseite den Button „Elternvorschau“.
+
+> Nur erheben, was für den Zweck nötig ist (Datenminimierung).
+
+**Alle Sorgeberechtigten müssen bestätigen:** Für Erklärungen, die beide Elternteile gemeinsam abgeben müssen. Ein Elternteil füllt aus, alle weiteren Sorgeberechtigten (aktuelles Sorgerecht zum Kind) bestätigen genau diese Antwortversion. Erst dann gilt der Fall als erledigt; eine Korrektur setzt die Bestätigungen zurück. Erinnerungen gehen in diesem Zustand nur an die noch fehlenden Personen.
+
+**Aktenrelevant:** Für Erklärungen, die zusätzlich ausgedruckt in die Schülerakte gehören, z. B. Foto-Einwilligungen, Abholberechtigungen oder Wahlentscheidungen. Solange vollständige Antworten noch nicht für die Akte gedruckt sind, zeigt die Abfrage einen Hinweis, und die Antworten werden nach Ablauf der Aufbewahrungsfrist nicht automatisch gelöscht.
+
+Mit **Zur Prüfung einreichen** geht die Vorlage an die Schulleitung. Kennzeichne Vorlagen mit Gesundheitsdaten oder Einwilligungen als **sensibel** – dann ist eine datenschutzrechtliche Zusatzprüfung Pflicht.
+
+Freigegebene Vorlagen sind **unveränderlich**. Änderungen: **Neue Version anlegen** – laufende Abfragen behalten ihre Version.
+
+## 2. Abfrage vorbereiten
+
+**Abfragen & Rücklauf › Neue Abfrage** (oder „Abfrage erstellen" an einer Vorlage):
+
+- Titel, Einführungstext, **Startzeitpunkt** und **Rückgabefrist**
+- **Zielgruppe**: einzelne Klassen, mehrere Gruppen, Jahrgang (Gruppe „Klassenstufe …") oder die gesamte Schule
+- verantwortliche Person, Kanäle (E-Mail, App/Web-Push), automatische Erinnerungen, Zeitfenster für Selbstkorrektur
+- „Für Mitarbeitende lesbar": nur dann sehen Lehrkräfte geprüfte Antworten (Zweckbindung)
+
+Über **Elternvorschau** siehst du das Formular aus Sicht der Eltern. Vor dem Start zeigt die Abfrage die **erwartete Anzahl** Kinder und Elternkonten sowie Kinder **ohne sorgeberechtigtes Konto** und Konten ohne E-Mail-Adresse.
+
+Nach dem Einreichen gibt die Schulleitung frei. Liegt der Start in der Zukunft, startet die Abfrage automatisch.
+
+### Nach dem Start
+
+Eine gestartete Abfrage kann **inhaltlich nicht mehr geändert** werden. Möglich sind:
+
+- **Frist ändern** (mit Begründung, wird protokolliert)
+- Einstellungen (Kanäle, Erinnerungen, Zuständigkeit, Mitarbeitersicht)
+- **Zielgruppe abgleichen**: neu hinzugekommene Kinder werden ergänzt und benachrichtigt
+- **Als neue Abfrage kopieren**, wenn sich der Inhalt ändern muss
+- **Abschließen** bzw. **Vorzeitig beenden** (mit optionaler Begründung) – danach keine Abgaben, Korrekturen, Bestätigungen und Erinnerungen mehr; bisherige Antworten bleiben erhalten. Laufende Abfragen werden automatisch 30 Tage nach Fristende abgeschlossen. Eine geplante Abfrage, die vor dem Start beendet wird, wird gar nicht versendet.
+- **Vorabfrage setzen** (Abschnitt „Vorabfrage (z. B. Vorjahr)“) – siehe unten
+
+### Wiederkehrende Abfragen (z. B. neues Schuljahr)
+
+Fragt ihr dieselben Angaben jedes Jahr ab, verknüpfe die neue Abfrage mit der **Vorabfrage** (gleiche Vorlage, Antworten noch nicht gelöscht):
+
+- Beim Anlegen unter „Angaben vorbefüllen aus“ oder nachträglich im Abschnitt **Vorabfrage** der Abfrage. **Als neue Abfrage kopieren** setzt sie automatisch.
+- Eltern, die noch nicht geantwortet haben, sehen ihre Angaben vom letzten Mal **vorausgefüllt** – ohne Einwilligungen und Dateien, die neu angegeben werden müssen.
+- Im Rücklauf zeigt ein Hinweis, wie viele Kinder **geänderte Angaben** haben. Unter **Änderungen anzeigen** steht je Kind „bisher“ und „neu“ gegenüber (Recht „Antwortinhalte einsehen“). Im Export gibt es dazu die Spalte „Änderungen zur Vorabfrage“.
+
+## 3. Rücklauf
+
+Oben siehst du den **Rücklauf in Prozent** (Kreisdiagramm) und je Status eine **Kachel mit der Anzahl**. Ein Klick auf eine Kachel filtert die Liste auf diesen Status, ein Klick auf den Rücklauf zeigt wieder alle Fälle.
+
+Die Übersicht zeigt je Kind Klasse, **Status**, berechtigte Konten, letzte Benachrichtigung/Erinnerung und Hinweise – **ohne Antwortinhalte**. Filter: Status, Klasse, Nachfrist, Suche nach Kind oder Elternkonto.
+
+| Status | Bedeutung |
+|---|---|
+| Offen | keine gültige Antwort |
+| In Bearbeitung | Entwurf begonnen, nicht abgesendet |
+| Eingereicht | vollständige Antwort liegt vor |
+| Korrektur eingereicht | neue Antwortversion abgegeben |
+| Bestätigung ausstehend | Antwort liegt vor, aber noch nicht alle Sorgeberechtigten haben bestätigt (nur bei entsprechender Vorlage) |
+| Technisches Problem | Zustellung oder Bearbeitung nicht möglich (z. B. kein Konto, keine E-Mail) |
+
+Bei Zustellproblemen erhält die verantwortliche Person eine Mitteilung.
+
+### Erinnern
+
+**Alle offenen erinnern** oder einzelne Fälle auswählen. Standardregeln (änderbar unter **Regeln**): erste Erinnerung frühestens nach 48 Stunden, danach höchstens alle 24 Stunden, keine Erinnerung nach erfolgreicher Abgabe. Bei technischem Problem oder Nachfrist entfällt die Wartezeit. Zeitpunkt, Kanal und Empfänger werden protokolliert.
+
+### Einzelfall („Details")
+
+- **Nachfrist** setzen (mit Grund)
+- **Technisches Problem** melden bzw. als gelöst markieren
+- **Bearbeitungshinweis** – z. B. zur Klärung widersprüchlicher Angaben
+- **Korrektur freigeben**, wenn das Zeitfenster der Eltern abgelaufen ist
+- Antwortversionen ansehen und **prüfen** (Geprüft / Klärung nötig) – nur mit Recht „Antwortinhalte einsehen"
+- **PDF für die Akte** – ein Blatt mit der gültigen Antwort, Einwilligungstexten, Bestätigungen und Prüfsummen
+- **Für diese Familie neu starten** – z. B. nach einer Änderung des Sorgerechts oder für Nachzügler. Die bisherige Antwort bleibt als Version erhalten, gilt aber nicht mehr. Die Sorgeberechtigten werden nach aktuellem Stand ermittelt und benachrichtigt und können bis zur gesetzten Frist antworten – auch wenn die Abfrage bereits abgeschlossen ist. Die letzte Antwort ist im Formular vorbefüllt.
+
+## Schülerakte
+
+**PDF für die Schülerakte** in der Abfrage erstellt ein Blatt je Kind mit vollständiger Antwort, wahlweise für eine Klasse und nur für noch nicht gedruckte Antworten. Jedes Blatt hat ein Feld für den Ablagevermerk. Beim Erstellen wird je Kind vermerkt, welche Antwortversion gedruckt wurde. Nach einer Korrektur oder einem Neustart muss erneut gedruckt werden. Antworten, bei denen noch Bestätigungen fehlen, gelten nicht als gedruckt.
+
+## 4. Export
+
+Der Export läuft in drei Schritten: **Auswahl → Vorschau prüfen → Datei erstellen**. **Export** in der Abfrage: Ebene (gesamte Abfrage oder Klasse), Felder, Format (Excel oder CSV) und **Ziel** wählen. Die **Vorschau** zeigt Anzahl der Datensätze, Felder, Antwortversion, fehlende oder auffällige Angaben, Ziel und verantwortliche Person. Jeder Export und jeder Download wird protokolliert; die Datei wird nach Ablauf (Standard 7 Tage) gelöscht. Die Übertragung in die Schulverwaltung erfolgt manuell.
+
+## Aufbewahrung
+
+Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten, Uploads, Exportdateien und personenbezogene Protokolldaten automatisch gelöscht. Erhalten bleiben die Abfrage selbst und eine anonyme Statistik. Für Einwilligungen, die die gesamte Schulzeit gelten, kann die Vorlage **unbefristet aufbewahren** vorsehen. Dann wird nichts automatisch gelöscht; abgeschlossene Abfragen lassen sich unter **Antworten löschen** manuell löschen (mit Grund, protokolliert), sobald sie nicht mehr benötigt werden – das geht auch vor Ablauf einer Frist, z. B. nach einem Widerruf. Wurde ein Fall nach Abschluss neu gestartet, beginnt die Frist erst mit dem Ende seiner individuellen Frist. Bei **aktenrelevanten** Abfragen wird die Löschung zurückgehalten, bis alle vollständigen Antworten für die Schülerakte gedruckt sind.

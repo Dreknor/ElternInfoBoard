@@ -92,12 +92,17 @@
                     </div>
                 </div>
             </div>
+            {{-- Empfänger in voller Breite, damit Gruppen und Personensuche Platz haben --}}
             <div class="row">
-                <div class="col-md-2">
-                    @include('include.formGroups')
+                <div class="col-12 mb-3">
+                    <div class="p-3 rounded-lg border" style="border-color: var(--color-card-border); background: var(--color-card-bg, transparent);">
+                        @include('include.formGroups', ['withPersons' => true])
+                    </div>
                 </div>
+            </div>
 
-                <div class="col-md-2">
+            <div class="row">
+                <div class="col-md-4">
                     <div class="row">
                         <div class="col-12">
                             <div class="form-group">

@@ -8,16 +8,18 @@ use App\Imports\AufnahmeImport;
 use App\Imports\MitarbeiterImport;
 use App\Imports\SchuelerImportRows;
 use App\Imports\UsersImport;
-use App\Imports\VereinImport;
+use App\Imports\VereinImportRows;
 use App\Services\Import\SchuelerImportService;
+use App\Services\Import\VereinImportService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\ElternImportVorlage;
 use App\Exports\MitarbeiterImportVorlage;
+use App\Exports\VereinImportAuswertung;
 use App\Exports\VereinImportVorlage;
 use App\Mail\ImportCredentialsMail;
 use App\Model\Group;
-use App\Model\group_user;
 use App\Scopes\GetGroupsScope;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Foundation\Application;
@@ -28,9 +30,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 
 class ImportController extends Controller implements HasMiddleware
@@ -291,34 +293,59 @@ class ImportController extends Controller implements HasMiddleware
         //   wird die PDF dem eingeloggten (importierenden) Benutzer zum Download angeboten
         //   UND zusätzlich per E-Mail an dessen Adresse verschickt.
         if (! $sendEmail && count($newUsers) > 0) {
-            $pdf = Pdf::loadView('pdf.import-credentials', [
-                'users'      => $newUsers,
-                'importType' => $importTypeLabel,
-            ]);
-            $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
-            $pdfContent = $pdf->output();
-
-            $currentUser = $request->user();
-            if ($currentUser && $currentUser->email) {
-                try {
-                    Mail::to($currentUser->email)->queue(
-                        new ImportCredentialsMail($pdfContent, $filename, $importTypeLabel, count($newUsers))
-                    );
-                } catch (\Exception $mailException) {
-                    \Log::error('Fehler beim Versenden der Zugangsdaten-PDF an ' . $currentUser->email . ': ' . $mailException->getMessage());
-                }
-            }
-
-            return response($pdfContent, 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ]);
+            return $this->credentialsPdfResponse($request, $newUsers, $importTypeLabel);
         }
 
         return redirect()->to(url('users'))->with([
             'type'    => 'success',
             'Meldung' => $Meldung . (! $sendEmail ? ' – keine neuen Benutzer angelegt.' : ''),
         ]);
+    }
+
+    /**
+     * PDF mit den Zugangsdaten neuer Benutzer zum Download anbieten und zusätzlich
+     * per E-Mail an den importierenden Benutzer schicken (PDF-Modus der Importe).
+     *
+     * @param  array<int, array{name: string, email: string, password: string}>  $newUsers
+     */
+    private function credentialsPdfResponse(Request $request, array $newUsers, string $importTypeLabel): \Symfony\Component\HttpFoundation\Response
+    {
+        [$pdfContent, $filename] = $this->credentialsPdf($request, $newUsers, $importTypeLabel);
+
+        return response($pdfContent, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Erzeugt das Zugangsdaten-PDF und schickt es an den importierenden Benutzer.
+     *
+     * @param  array<int, array{name: string, email: string, password: string}>  $newUsers
+     * @return array{0: string, 1: string} PDF-Inhalt und Dateiname
+     */
+    private function credentialsPdf(Request $request, array $newUsers, string $importTypeLabel, ?string $notice = null): array
+    {
+        $pdf = Pdf::loadView('pdf.import-credentials', [
+            'users'      => $newUsers,
+            'importType' => $importTypeLabel,
+            'notice'     => $notice,
+        ]);
+        $filename = 'zugangsdaten-' . now()->format('Y-m-d_H-i') . '.pdf';
+        $pdfContent = $pdf->output();
+
+        $currentUser = $request->user();
+        if ($currentUser && $currentUser->email) {
+            try {
+                Mail::to($currentUser->email)->queue(
+                    new ImportCredentialsMail($pdfContent, $filename, $importTypeLabel, count($newUsers))
+                );
+            } catch (\Exception $mailException) {
+                \Log::error('Fehler beim Versenden der Zugangsdaten-PDF an ' . $currentUser->email . ': ' . $mailException->getMessage());
+            }
+        }
+
+        return [$pdfContent, $filename];
     }
 
     /**
@@ -396,7 +423,11 @@ class ImportController extends Controller implements HasMiddleware
 
     public function importVereinForm()
     {
-        return view('user.importVerein');
+        $group = Group::withoutGlobalScopes()->where('name', VereinImportService::GROUP_NAME)->orderBy('id')->first();
+
+        return view('user.importVerein', [
+            'memberCount' => $group?->users()->count() ?? 0,
+        ]);
     }
 
     // ─── Vorlagen-Downloads ───────────────────────────────────────────────────
@@ -423,41 +454,141 @@ class ImportController extends Controller implements HasMiddleware
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Schritt 1 des Vereins-Imports: Datei ablegen und Probelauf anzeigen.
+     */
     public function importVerein(Request $request)
     {
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+        $data = $request->validate([
+            'file'       => ['required', 'file', 'mimes:xlsx,xls,ods,csv', 'max:10240'],
+            'send_email' => ['nullable', 'in:1,0'],
         ]);
 
-        if ($request->hasFile('file')) {
+        $path = $request->file('file')->store('imports');
+        $options = [
+            'removeMissing' => $request->boolean('abgleich'),
+            'sendEmail'     => ($data['send_email'] ?? '1') === '1',
+            'notify'        => $request->boolean('benachrichtigen'),
+        ];
 
-            $group = Group::firstOrCreate(['name' => 'Vereinsmitglied'], [
-                'protected' => 1,
-                'bereich' => 'Verein',
-            ]);
+        $report = app(VereinImportService::class)->run($this->vereinRows($path), dryRun: true, removeMissing: $options['removeMissing']);
 
-            group_user::where('group_id', $group->id)->delete();
+        return view('user.importVereinPreview', [
+            'report'     => $report,
+            'token'      => basename($path),
+            'options'    => $options,
+            'evaluation' => $this->rememberVereinResult($request, ['evaluation' => $report->evaluationRows()]),
+        ]);
+    }
 
-            $role = Role::firstOrCreate(['name' => 'Vereinsmitglied'], [
-                'guard_name' => 'web',
-            ]);
+    /**
+     * Schritt 2: Vereins-Import nach Bestätigung ausführen – nur mit den
+     * ausgewählten Änderungen und den Entscheidungen zu Klärungsfällen.
+     */
+    public function confirmVereinImport(Request $request)
+    {
+        $data = $request->validate([
+            'token'            => ['required', 'string', 'regex:/^[A-Za-z0-9._-]+$/'],
+            'send_email'       => ['nullable', 'in:1,0'],
+            'selection_sent'   => ['nullable', 'in:1'],
+            'selected'         => ['nullable', 'array'],
+            'selected.*'       => ['string', 'max:300'],
+            'decision'         => ['nullable', 'array'],
+            'decision.*'       => ['string', 'max:300'],
+            'decision_email'   => ['nullable', 'array'],
+            'decision_email.*' => ['nullable', 'string', 'max:255'],
+        ]);
+        $path = 'imports/'.$data['token'];
 
-            foreach ($role->users as $user) {
-                $user->removeRole($role);
-            }
-
-            Excel::import(new VereinImport($group), $request->file('file'));
-            $Meldung = 'Mitglieder wurden importiert';
-
-            return redirect()->to(url('users'))->with([
-                'type' => 'success',
-                'Meldung' => $Meldung,
-            ]);
-        } else {
-            return redirect()->back()->with([
-                'type' => 'danger',
-                'Meldung' => 'Keine Datei ausgewählt',
-            ]);
+        if (! Storage::exists($path)) {
+            return redirect()->to(url('users/importVerein'))->with(['type' => 'danger', 'Meldung' => 'Importdatei nicht mehr vorhanden – bitte erneut hochladen.']);
         }
+
+        $options = [
+            'removeMissing' => $request->boolean('abgleich'),
+            'sendEmail'     => ($data['send_email'] ?? '1') === '1',
+            'notify'        => $request->boolean('benachrichtigen'),
+        ];
+
+        $decisions = [];
+        foreach ($data['decision'] ?? [] as $row => $decision) {
+            $decisions[(int) $row] = $decision === 'email'
+                ? 'email:'.trim((string) ($data['decision_email'][$row] ?? ''))
+                : $decision;
+        }
+
+        try {
+            $report = app(VereinImportService::class)->run(
+                $this->vereinRows($path),
+                dryRun: false,
+                removeMissing: $options['removeMissing'],
+                sendEmail: $options['sendEmail'],
+                selection: isset($data['selection_sent']) ? array_values($data['selected'] ?? []) : null,
+                decisions: $decisions,
+                notify: $options['notify'],
+            );
+        } finally {
+            Storage::delete($path);
+        }
+
+        $stored = ['evaluation' => $report->evaluationRows()];
+        if (! $options['sendEmail'] && $report->newUsers !== []) {
+            [$pdfContent, $filename] = $this->credentialsPdf($request, $report->newUsers, 'Vereins-Import', VereinImportService::accessNotice());
+            $stored['pdf'] = base64_encode($pdfContent);
+            $stored['pdfName'] = $filename;
+        }
+
+        return view('user.importVereinPreview', [
+            'report'     => $report,
+            'token'      => null,
+            'options'    => $options,
+            'evaluation' => $this->rememberVereinResult($request, $stored),
+            'hasPdf'     => isset($stored['pdf']),
+        ]);
+    }
+
+    /**
+     * Auswertung (nicht zugeordnet / nicht erreichbar) als Excel-Datei.
+     */
+    public function downloadVereinAuswertung(Request $request, string $id)
+    {
+        $stored = Cache::get($this->vereinResultKey($request, $id));
+        abort_if($stored === null, 404, 'Auswertung nicht mehr vorhanden – bitte den Import erneut starten.');
+
+        return Excel::download(new VereinImportAuswertung($stored['evaluation']), 'verein-import-auswertung-'.now()->format('Y-m-d_H-i').'.xlsx');
+    }
+
+    /**
+     * Zugangsdaten-PDF neuer Konten (PDF-Modus) erneut herunterladen.
+     */
+    public function downloadVereinZugangsdaten(Request $request, string $id)
+    {
+        $stored = Cache::get($this->vereinResultKey($request, $id));
+        abort_if(! isset($stored['pdf']), 404);
+
+        return response(base64_decode($stored['pdf']), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$stored['pdfName'].'"',
+        ]);
+    }
+
+    private function rememberVereinResult(Request $request, array $data): string
+    {
+        $id = (string) Str::uuid();
+        Cache::put($this->vereinResultKey($request, $id), $data, now()->addDay());
+
+        return $id;
+    }
+
+    private function vereinResultKey(Request $request, string $id): string
+    {
+        return 'verein-import:'.$request->user()?->id.':'.$id;
+    }
+
+    private function vereinRows(string $path): array
+    {
+        $sheets = Excel::toArray(new VereinImportRows, Storage::path($path));
+
+        return $sheets[0] ?? [];
     }
 }

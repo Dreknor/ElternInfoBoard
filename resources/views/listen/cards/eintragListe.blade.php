@@ -59,6 +59,14 @@
                                 <i class="fas fa-pencil-alt w-4" style="color: var(--color-card-b-btn-text);"></i>
                                 <span>Bearbeiten</span>
                             </a>
+                            <a href="{{ route('listen.preview', $liste->id) }}"
+                               class="flex items-center gap-3 px-4 py-2 text-sm transition-colors duration-150"
+                               style="color: var(--color-text-primary);"
+                               onmouseover="this.style.background=getComputedStyle(document.documentElement).getPropertyValue('--color-widget-body-bg')"
+                               onmouseout="this.style.background=''">
+                                <i class="fas fa-eye w-4" style="color: var(--color-card-b-btn-text);"></i>
+                                <span>Vorschau</span>
+                            </a>
                             <div class="my-1" style="border-top: 1px solid var(--color-card-border);"></div>
                             @if($liste->active == 0)
                                 <form action="{{ url("listen/$liste->id/activate") }}" method="POST">
@@ -111,7 +119,7 @@
         <!-- Details Section (Collapsible) -->
         <div x-show="showInfo" x-transition class="mt-3 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);" x-cloak>
             @if($liste->comment)
-                <p class="text-xs mb-2 leading-relaxed" style="color: var(--color-card-b-header-text); opacity: 0.8;">{!! $liste->comment !!}</p>
+                <p class="text-xs mb-2 leading-relaxed" style="color: var(--color-card-b-header-text); opacity: 0.8;">@safeHtml($liste->comment)</p>
             @endif
             @if($liste->groups->count() > 0)
                 <div class="flex flex-wrap gap-1">
@@ -151,7 +159,7 @@
                                     </span>
                                 @endif
                             </p>
-                            <p class="text-sm" style="color: var(--color-text-secondary);">{{ $eintragung->eintragung }}</p>
+                            <p class="text-sm" style="color: var(--color-text-secondary);">{{ $eintragung->eintragung }}@if($eintragung->bemerkung) – {{ $eintragung->bemerkung }}@endif</p>
                         </div>
                         <form action="{{ url('eintragungen/absagen/' . $eintragung->id) }}" method="post" class="ml-2">
                             @csrf

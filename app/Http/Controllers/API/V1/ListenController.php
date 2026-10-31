@@ -12,14 +12,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @group App: Listen
+ * @group Listen
  */
 class ListenController extends ApiController
 {
     public function __construct(private readonly ListenService $service) {}
 
     /**
-     * Offene Listen mit eigenen Buchungen und freien Plätzen – B-32.
+     * Offene Listen mit eigenen Buchungen und freien Plätzen.
      */
     public function index(Request $request): JsonResponse
     {
@@ -29,12 +29,7 @@ class ListenController extends ApiController
         $listen = Liste::query()
             ->where('active', true)
             ->whereDate('ende', '>=', today())
-            ->whereExists(function ($q) use ($user) {
-                $q->selectRaw(1)->from('group_listen')
-                    ->join('group_user', 'group_listen.group_id', '=', 'group_user.group_id')
-                    ->whereColumn('group_listen.liste_id', 'listen.id')
-                    ->where('group_user.user_id', $user->id);
-            })
+            ->forRecipient($user)
             ->orderBy('ende')
             ->get();
 
@@ -59,7 +54,10 @@ class ListenController extends ApiController
     }
 
     /**
-     * Liste mit Terminen bzw. Einträgen. `mine` = Buchung der Familie; Namen anderer nur bei „für alle sichtbar“.
+     * Liste mit Terminen bzw. Einträgen.
+     *
+     * `mine` = Buchung der Familie; Namen anderer nur bei „für alle sichtbar“.
+     * Einträge enthalten `note`: Freitext der Person, die den Eintrag übernommen hat (z. B. Kuchensorte).
      */
     public function show(Request $request, Liste $liste): JsonResponse
     {
@@ -103,6 +101,7 @@ class ListenController extends ApiController
                 ->map(fn (Listen_Eintragungen $e) => [
                     'id' => $e->id,
                     'text' => $e->eintragung,
+                    'note' => $e->bemerkung,
                     'status' => $e->user_id === null ? 'free' : ($isMine((int) $e->user_id, $e->child_id) ? 'mine' : 'taken'),
                     'booked_by' => ($showNames || $isMine((int) $e->user_id, $e->child_id)) && $e->user_id ? $e->user?->name : null,
                     'child' => $childInfo($e->child, $showNames || $isMine((int) $e->user_id, $e->child_id)),
@@ -117,7 +116,7 @@ class ListenController extends ApiController
     }
 
     /**
-     * Termin buchen (atomar, 409 bei Konflikt) – B-31.
+     * Termin buchen (atomar, 409 bei Konflikt).
      *
      * @bodyParam child_id integer Kind der Buchung; Pflicht bei `booking_scope = child` und mehreren Kindern.
      */
@@ -155,14 +154,21 @@ class ListenController extends ApiController
         return response()->json(['data' => ['id' => $eintrag->id], 'message' => 'Eingetragen.'], 201);
     }
 
+    /**
+     * Vorhandenen Eintrag übernehmen.
+     *
+     * @bodyParam child_id integer Kind des Eintrags; Pflicht bei `booking_scope = child` und mehreren Kindern.
+     * @bodyParam note string Optionaler Freitext zum Eintrag, z. B. die Kuchensorte (max. 255 Zeichen).
+     */
     public function reserveEintrag(Request $request, Listen_Eintragungen $eintrag): JsonResponse
     {
-        $request->validate(['child_id' => 'nullable|integer']);
-        $this->service->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null);
+        $request->validate(['child_id' => 'nullable|integer', 'note' => 'nullable|string|max:255']);
+        $this->service->reserveEintrag($request->user(), $eintrag, $request->integer('child_id') ?: null, $request->input('note'));
 
         return response()->json(['message' => 'Eingetragen.'], 201);
     }
 
+    /** Eigenen Eintrag zurückgeben. */
     public function cancelEintrag(Request $request, Listen_Eintragungen $eintrag): JsonResponse
     {
         $this->service->cancelEintrag($request->user(), $eintrag);

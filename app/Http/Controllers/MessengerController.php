@@ -8,15 +8,14 @@ use App\Model\Message;
 use App\Model\MessageReport;
 use App\Model\Notification;
 use App\Model\User;
-use App\Notifications\MessengerPushNotification;
 use App\Settings\MessengerSetting;
+use App\Support\UploadGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -223,15 +222,6 @@ class MessengerController extends Controller
             'fas fa-comments',
             false
         );
-        try {
-            if ($targetUser->pushSubscriptions()->exists()) {
-                $targetUser->notify(
-                    new MessengerPushNotification($title, $user->name . ' möchte dir eine Nachricht schicken.', $url)
-                );
-            }
-        } catch (\Exception $e) {
-            Log::warning("Messenger WebPush (startDirect) fehlgeschlagen für User {$targetUser->id}: " . $e->getMessage());
-        }
 
         return redirect()->route('messenger.show', $conversation);
     }
@@ -382,39 +372,6 @@ class MessengerController extends Controller
             'fas fa-comments',
             true
         );
-
-        // WebPush nur für Nutzer, die den Chat NICHT gerade aktiv lesen (last_read_at > 30 Sek.)
-        // Wer gerade aktiv im Chat ist, sieht die Nachricht direkt – kein Push-Spam nötig.
-        $pushRecipients = $allRecipients->filter(function ($user) {
-            $pivot = $user->pivot;
-            if ($pivot->last_read_at && now()->diffInSeconds($pivot->last_read_at) < 30) {
-                return false;
-            }
-            return true;
-        });
-
-        // WebPush für User mit aktiven Push-Subscriptions.
-        // Cooldown: max. eine Push-Benachrichtigung pro Nutzer/Konversation alle 10 Minuten,
-        // damit bei Gruppen-Aktivität keine Flut von Meldungen entsteht.
-        $pushCooldownMinutes = 10;
-
-        foreach ($pushRecipients as $participant) {
-            try {
-                if ($participant->pushSubscriptions()->exists()) {
-                    $cacheKey = "messenger_push_{$participant->id}_{$conversation->id}";
-                    // Cache::add() setzt den Wert NUR, wenn der Key noch nicht existiert.
-                    // Gibt true zurück → erste Push-Mitteilung im Cooldown-Fenster → senden.
-                    // Gibt false zurück → innerhalb des Fensters bereits benachrichtigt → überspringen.
-                    if (Cache::add($cacheKey, true, now()->addMinutes($pushCooldownMinutes))) {
-                        $participant->notify(
-                            new MessengerPushNotification($title, "{$sender->name}: {$snippet}", $url)
-                        );
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::warning("Messenger WebPush fehlgeschlagen für User {$participant->id}: " . $e->getMessage());
-            }
-        }
     }
 
     /**
@@ -438,15 +395,10 @@ class MessengerController extends Controller
             abort(404, 'Datei nicht gefunden.');
         }
 
-        $isImage      = str_starts_with($media->mime_type, 'image/');
-        $disposition  = $isImage ? 'inline' : 'attachment';
-
         $response = new BinaryFileResponse($filePath);
         $response->headers->set('Content-Type', $media->mime_type);
-        $response->headers->set(
-            'Content-Disposition',
-            $disposition . '; filename="' . $media->file_name . '"'
-        );
+        // Rasterbilder inline, alles andere (auch SVG) als Download, ohne Skriptausführung
+        UploadGuard::harden($response, $media);
         // Caching verhindern (Inhalte sind nutzerspezifisch)
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
         $response->headers->set('Pragma', 'no-cache');

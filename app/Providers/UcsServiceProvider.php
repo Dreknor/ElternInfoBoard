@@ -145,7 +145,7 @@ class UcsServiceProvider extends ServiceProvider
      * Die eigentliche OIDC-Konfiguration (client_id, secret, redirect …)
      * wird in Paket 06 aus KeycloakSetting befüllt.
      *
-     * @see docs/todos/06-oidc-login.md
+     * @see docs/ucs-kelvin-integration-konzept.md
      */
     protected function registerUcsSocialiteDriver(): void
     {

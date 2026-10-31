@@ -107,10 +107,11 @@ class UcsPurgeStaleClasses extends Command
                 DB::table('group_post')->where('group_id', $group->id)->delete();
 
                 foreach ($postIds as $postId) {
-                    // Orphaned Post: nur noch in keiner anderen Gruppe → softDelete
+                    // Orphaned Post: in keiner anderen Gruppe und an keine Person direkt freigegeben → softDelete
                     $stillInOtherGroup = DB::table('group_post')
                         ->where('post_id', $postId)
-                        ->exists();
+                        ->exists()
+                        || DB::table('post_user')->where('post_id', $postId)->exists();
 
                     if (! $stillInOtherGroup) {
                         Post::withoutGlobalScopes()->where('id', $postId)->delete();

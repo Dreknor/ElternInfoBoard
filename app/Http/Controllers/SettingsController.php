@@ -326,6 +326,12 @@ class SettingsController extends Controller implements HasMiddleware
                     'login_tracking_mode' => 'required|in:user,always,never',
                     'protected_roles' => 'sometimes|array',
                     'protected_roles.*' => 'string|exists:roles,name',
+                    'allow_individual_recipients' => 'nullable|boolean',
+                    'public_termine_enabled' => 'sometimes|boolean',
+                    'public_termine_location_name' => 'nullable|string|max:255',
+                    'public_termine_location_street' => 'nullable|string|max:255',
+                    'public_termine_location_postal_code' => 'nullable|string|max:20',
+                    'public_termine_location_city' => 'nullable|string|max:255',
                 ]);
 
                 $settings = new GeneralSetting;
@@ -360,6 +366,12 @@ class SettingsController extends Controller implements HasMiddleware
                 }
                     $settings->login_tracking_mode = $validated['login_tracking_mode'];
                     $settings->protected_roles = $validated['protected_roles'] ?? [];
+                    $settings->allow_individual_recipients = $request->boolean('allow_individual_recipients');
+                    $settings->public_termine_enabled = $request->boolean('public_termine_enabled');
+                    $settings->public_termine_location_name = $validated['public_termine_location_name'] ?? null;
+                    $settings->public_termine_location_street = $validated['public_termine_location_street'] ?? null;
+                    $settings->public_termine_location_postal_code = $validated['public_termine_location_postal_code'] ?? null;
+                    $settings->public_termine_location_city = $validated['public_termine_location_city'] ?? null;
                     $settings->save();
 
                     break;
@@ -374,6 +386,9 @@ class SettingsController extends Controller implements HasMiddleware
                     'mail_from_address' => 'required|max:255',
                     'mail_from_name' => 'required|max:255',
                     'new_user_welcome_text' => 'required|string|max:1000',
+                    'verein_access_notice' => 'nullable|string|max:1000',
+                    'verein_added_text' => 'nullable|string|max:255',
+                    'verein_removed_text' => 'nullable|string|max:255',
                     'log_sent_emails' => 'nullable|boolean',
                     'contact_default_name' => 'required|max:255',
                     'contact_default_email' => 'nullable|email|max:255',
@@ -388,6 +403,9 @@ class SettingsController extends Controller implements HasMiddleware
                 $mailSettings->mail_from_address = $validated['mail_from_address'];
                 $mailSettings->mail_from_name = $validated['mail_from_name'];
                 $mailSettings->new_user_welcome_text = $validated['new_user_welcome_text'];
+                $mailSettings->verein_access_notice = $validated['verein_access_notice'] ?? null;
+                $mailSettings->verein_added_text = $validated['verein_added_text'] ?? null;
+                $mailSettings->verein_removed_text = $validated['verein_removed_text'] ?? null;
                 $mailSettings->log_sent_emails = $validated['log_sent_emails'] ?? false;
                 $mailSettings->contact_default_name = $validated['contact_default_name'];
                 $mailSettings->contact_default_email = $validated['contact_default_email'] ?? null;
@@ -761,7 +779,7 @@ class SettingsController extends Controller implements HasMiddleware
      */
     public function module()
     {
-        $module = Module::orderBy('sort_order')->orderBy('id')->get();
+        $module = Module::available()->orderBy('sort_order')->orderBy('id')->get();
 
         return view('settings.module', [
             'module' => $module,
@@ -781,7 +799,7 @@ class SettingsController extends Controller implements HasMiddleware
         ]);
 
         foreach ($request->order as $position => $id) {
-            Module::where('id', $id)->update(['sort_order' => $position + 1]);
+            Module::available()->where('id', $id)->update(['sort_order' => $position + 1]);
         }
 
         Cache::forget('modules');
@@ -800,7 +818,7 @@ class SettingsController extends Controller implements HasMiddleware
 
     public function change_status(string $modulname)
     {
-        $modul = Module::where('setting', $modulname)->first();
+        $modul = Module::available()->where('setting', $modulname)->first();
 
         if (! $modul) {
             return redirect()->back()->with([
@@ -845,7 +863,13 @@ class SettingsController extends Controller implements HasMiddleware
      */
     public function change_nav(string $modulname)
     {
-        $modul = Module::where('setting', $modulname)->first();
+        $modul = Module::available()->where('setting', $modulname)->first();
+        if (! $modul) {
+            return redirect()->back()->with([
+                'type'    => 'danger',
+                'Meldung' => 'Modul nicht gefunden.',
+            ]);
+        }
         $options = $modul->options;
         if (array_key_exists('nav', $modul->options)) {
             if (array_key_exists('bottom-nav', $options['nav']) and $options['nav']['bottom-nav'] == 'true') {

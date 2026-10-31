@@ -11,9 +11,9 @@ use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
- * Feature-Tests für SettingsController – UCS-Tab (TODO-07)
+ * Feature-Tests für SettingsController – UCS-Tab
  *
- * Deckt alle 9 Gelingenskriterien aus docs/todos/07-settings-tab-ucs.md ab.
+ * Deckt die Anforderungen an den UCS-Settings-Tab ab.
  */
 class SettingsControllerUcsTest extends TestCase
 {

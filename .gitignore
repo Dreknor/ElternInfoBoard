@@ -22,9 +22,11 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+/.phpunit.cache
 /.idea/
 /.nova
 /.scribe/
+/.scribe_basis/
 /public/docs/
 /storage/logs/
 

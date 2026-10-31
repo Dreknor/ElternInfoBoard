@@ -26,7 +26,7 @@
 
                 <div class="flex-1 min-w-0 bg-white rounded-lg p-4 shadow-sm">
                     <div class="prose max-w-none text-gray-700">
-                        {!! $rueckmeldung->text !!}
+                        @safeHtml($rueckmeldung->text)
                     </div>
                 </div>
 

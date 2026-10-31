@@ -7,6 +7,7 @@ use App\Mail\newFilesAddToPost;
 use App\Model\Group;
 use App\Model\Post;
 use App\Repositories\GroupsRepository;
+use App\Services\App\FeedbackService;
 use App\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
@@ -17,10 +18,12 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Cache as CacheAlias;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class FileController extends Controller implements HasMiddleware
 {
@@ -152,13 +155,25 @@ class FileController extends Controller implements HasMiddleware
      * @throws FileDoesNotExist
      * @throws FileIsTooBig
      */
-    public function saveFileRueckmeldung(Request $request, Post $posts)
+    public function saveFileRueckmeldung(Request $request, Post $posts, FeedbackService $feedback)
     {
+        // Nur Empfänger eines Beitrags mit offener Bild-Rückmeldung, nur Bilder (wie die App-API).
+        // Vorher konnte jedes Konto beliebige Dateien (auch HTML/SVG) an jeden Beitrag hängen.
+        try {
+            $feedback->requireFeedback($request->user(), $posts, 'bild');
+        } catch (HttpException $e) {
+            return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+        }
+        $request->validate([
+            'name' => ['nullable', 'string', 'max:191'],
+            'files' => ['required', 'image', 'max:10240'],
+        ]);
+
         if ($request->hasFile('files')) {
-            $posts->addAllMediaFromRequest()
-                ->each(fn ($fileAdder) => $fileAdder
-                    ->usingName($request->name)
-                    ->toMediaCollection('images'));
+            $posts->addMediaFromRequest('files')
+                ->usingName((string) $request->input('name', $request->user()->name))
+                ->withCustomProperties(['uploaded_by' => $request->user()->id])
+                ->toMediaCollection('images');
 
             @Mail::to($posts->autor->email)->queue(new newFilesAddToPost($request->user()->name, $posts->header, $posts->id));
         } else {
@@ -175,30 +190,34 @@ class FileController extends Controller implements HasMiddleware
     }
 
     /**
-     * @return array
+     * Verwaiste Medienordner suchen: Ordner `{id}/` auf einer Medien-Disk, zu denen es keinen
+     * Media-Eintrag (mehr) auf dieser Disk gibt. Andere Ordner (z. B. elternabfragen/, img/)
+     * werden nicht angefasst.
+     *
+     * @return array<string, array<int, string>> „disk:id“ => Dateien
      */
     protected function scanDir()
     {
-        $dirs = scandir(storage_path().'/app');
+        $disks = Media::query()->distinct()->pluck('disk')
+            ->merge(Media::query()->distinct()->pluck('conversions_disk'))
+            ->push(config('media-library.disk_name'))
+            ->filter(fn ($disk) => filled($disk) && config("filesystems.disks.$disk") !== null)
+            ->unique();
 
         $noMedia = [];
-        $Media = Media::all();
-
-        foreach ($dirs as $dir) {
-            if ($dir == '.' or $dir == '..' or $dir == '.gitignore' or $dir == 'public') {
+        foreach ($disks as $disk) {
+            $storage = Storage::disk($disk);
+            $dirs = collect($storage->directories())->filter(fn ($dir) => ctype_digit($dir));
+            if ($dirs->isEmpty()) {
                 continue;
             }
 
-            $MediaModel = $Media->filter(fn ($item) => $item->id == $dir)->first();
+            $known = Media::query()->whereIn('id', $dirs->all())
+                ->where(fn ($q) => $q->where('disk', $disk)->orWhere('conversions_disk', $disk))
+                ->pluck('id')->map(fn ($id) => (string) $id)->all();
 
-            if ($MediaModel == null) {
-                $scan = scandir(storage_path().'/app/'.$dir);
-                foreach ($scan as $key => $item) {
-                    if ($item == '.' or $item == '..' or $item == '.gitignore' or $item == 'public') {
-                        unset($scan[$key]);
-                    }
-                }
-                $noMedia[$dir] = $scan;
+            foreach ($dirs->diff($known) as $dir) {
+                $noMedia[$disk.':'.$dir] = $storage->allFiles($dir);
             }
         }
 
@@ -230,14 +249,9 @@ class FileController extends Controller implements HasMiddleware
      */
     public function deleteUnusedFiles()
     {
-        $noMedia = $this->scanDir();
-        foreach ($noMedia as $id => $mediaDir) {
-            foreach ($mediaDir as $media) {
-                $link = storage_path().'/app/'.$id.'/'.$media;
-                unlink($link);
-            }
-            $link = storage_path().'/app/'.$id;
-            rmdir($link);
+        foreach (array_keys($this->scanDir()) as $key) {
+            [$disk, $dir] = explode(':', $key, 2);
+            Storage::disk($disk)->deleteDirectory($dir);
         }
 
         return redirect()->back();

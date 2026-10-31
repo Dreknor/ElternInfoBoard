@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Log;
  *   - confirm() auf bereits bestätigten Kandidaten → no-op, gibt Child zurück.
  *   - reject() auf bereits verarbeitetem Kandidaten → no-op, kein Fehler.
  *
- * @see docs/todos/08-initial-linking-workflow.md
  * @see docs/ucs-kelvin-integration-konzept.md §5.2 / §8
  */
 class LinkCandidateService

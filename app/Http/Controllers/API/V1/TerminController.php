@@ -8,12 +8,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * @group App: Termine
+ * @group Termine
  */
 class TerminController extends ApiController
 {
     /**
-     * Termine im Zeitraum (Standard: heute bis +6 Monate), inkl. eigener Listen-Buchungen – B-30.
+     * Termine im Zeitraum (Standard: heute bis +6 Monate), inkl. eigener Listen-Buchungen.
      *
      * @queryParam from date Example: 2026-09-01
      * @queryParam to date Example: 2026-12-31

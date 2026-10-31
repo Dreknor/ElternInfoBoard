@@ -92,7 +92,7 @@
                         <div class="form-group">
                             <label>Nachrichtentext</label>
                             <textarea class="form-control border-input" name="news">
-                                {!! $post->news !!}
+                                {{ $post->news }}
                             </textarea>
                         </div>
                     </div>
@@ -156,7 +156,7 @@
                         </div>
                         <div class="row">
                             <div class="col-12">
-                                @include('include.formGroups')
+                                @include('include.formGroups', ['withPersons' => true])
                             </div>
                         </div>
                     </div>

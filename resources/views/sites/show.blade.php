@@ -64,7 +64,7 @@
                         @switch(class_basename($block->block))
                             @case('SiteBlockText')
                                 <div class="prose max-w-none text-gray-700">
-                                    {!!  $block->block->content !!}
+                                    @safeHtml($block->block->content)
                                 </div>
                                 @break
 
@@ -86,7 +86,7 @@
                             @case('SiteBlockFiles')
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @foreach($block->block->getMedia() as $media)
-                                        <a href="{{ $media->getUrl() }}" target="_blank"
+                                        <a href="{{ url('/image/'.$media->id) }}" target="_blank"
                                            class="block border border-gray-200 rounded-lg p-4 transition-all duration-200"
                                            onmouseover="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'"
                                            onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow=''">

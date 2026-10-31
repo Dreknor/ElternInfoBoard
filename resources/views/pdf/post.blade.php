@@ -413,7 +413,7 @@
 
     {{-- Eigentlicher Post-Inhalt --}}
     <div class="post-body">
-        {!! $post->news !!}
+        @safeHtml($post->news)
     </div>
 
     {{-- Angehängte Bilder (Media Library) --}}
