@@ -14,13 +14,14 @@ class UserDevice extends Model
 
     public const PROVIDER_APNS = 'apns';
 
-    protected $fillable = ['user_id', 'token', 'provider', 'platform', 'device_name', 'app_version', 'last_seen_at'];
+    protected $fillable = ['user_id', 'token', 'provider', 'platform', 'device_name', 'app_version', 'sound', 'last_seen_at'];
 
     protected $hidden = ['token'];
 
     protected function casts(): array
     {
         return [
+            'sound' => 'boolean',
             'last_seen_at' => 'datetime',
         ];
     }

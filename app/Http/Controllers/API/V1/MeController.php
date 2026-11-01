@@ -162,6 +162,8 @@ class MeController extends Controller
             'platform' => 'nullable|string|max:20',
             'device_name' => 'nullable|string|max:255',
             'app_version' => 'nullable|string|max:20',
+            // Ton bei Mitteilungen (B-101); ältere App-Versionen senden das Feld nicht.
+            'sound' => 'nullable|boolean',
         ]);
 
         UserDevice::updateOrCreate(
