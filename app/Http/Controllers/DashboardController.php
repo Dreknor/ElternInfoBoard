@@ -54,6 +54,7 @@ class DashboardController extends Controller implements HasMiddleware
             $termine = Termin::query()
                 ->select(['id', 'terminname', 'start', 'ende', 'fullDay'])
                 ->where('start', '>=', Carbon::today())
+                ->notHiddenFor($userId)
                 ->orderBy('start')
                 ->take(5)
                 ->get();
@@ -78,6 +79,7 @@ class DashboardController extends Controller implements HasMiddleware
                 ->select(['termine.id', 'termine.terminname', 'termine.start', 'termine.ende', 'termine.fullDay'])
                 ->where('termine.start', '>=', Carbon::today())
                 ->forRecipient($userId)
+                ->notHiddenFor($userId)
                 ->orderBy('termine.start')
                 ->take(5)
                 ->get();

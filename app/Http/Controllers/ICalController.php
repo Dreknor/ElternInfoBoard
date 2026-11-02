@@ -30,7 +30,8 @@ class ICalController extends Controller
             $prefix = ($user->calendar_prefix != null) ? '('.$user->calendar_prefix.') ' : '';
 
             if ($user->releaseCalendar) {
-                $Termine = $user->visibleTermine()->get();
+                // Ausgeblendete Termine fehlen auch im Kalender-Abo (B-102)
+                $Termine = $user->visibleTermine()->notHiddenFor($user)->get();
 
                 // Termine aus Listen holen
                 // Listentermine der ganzen Familie (FamilyResolver)

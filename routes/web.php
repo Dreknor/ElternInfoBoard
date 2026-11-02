@@ -296,6 +296,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('active-diseases/{disease}/delete', [ActiveDiseaseController::class, 'destroy'])->middleware('permission:manage diseases')->name('active-diseases.delete');
         Route::get('active-diseases/{disease}/extend', [ActiveDiseaseController::class, 'extend'])->middleware('permission:manage diseases')->name('active-diseases.extend');
         // Termine
+        Route::post('termine/{termin}/ausblenden', [TerminController::class, 'hide'])->whereNumber('termin')->name('termine.hide');
+        Route::delete('termine/{termin}/ausblenden', [TerminController::class, 'unhide'])->whereNumber('termin')->name('termine.unhide');
         Route::resource('termine', TerminController::class);
         Route::get('termine/create/{post}', [TerminController::class, 'createFromPost']);
 

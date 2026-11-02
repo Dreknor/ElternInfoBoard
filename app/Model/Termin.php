@@ -142,4 +142,43 @@ class Termin extends Model implements Auditable
 
         return $query;
     }
+
+    /**
+     * Nutzer, die den Termin für sich ausgeblendet haben (B-102).
+     */
+    public function hiddenBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'termin_hidden')->withTimestamps();
+    }
+
+    /**
+     * Ohne Termine, die der Nutzer ausgeblendet hat (B-102). Nur für Anzeigen (Web, App, iCal),
+     * nicht für Berechtigungen – ein ausgeblendeter Termin bleibt für den Nutzer sichtbar und lässt sich wieder einblenden.
+     */
+    public function scopeNotHiddenFor(Builder $query, User|int $user): Builder
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        return $query->whereNotExists(function ($sub) use ($userId) {
+            $sub->selectRaw(1)
+                ->from('termin_hidden')
+                ->whereColumn('termin_hidden.termin_id', 'termine.id')
+                ->where('termin_hidden.user_id', $userId);
+        });
+    }
+
+    /**
+     * Nur Termine, die der Nutzer ausgeblendet hat (B-102).
+     */
+    public function scopeHiddenFor(Builder $query, User|int $user): Builder
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+
+        return $query->whereExists(function ($sub) use ($userId) {
+            $sub->selectRaw(1)
+                ->from('termin_hidden')
+                ->whereColumn('termin_hidden.termin_id', 'termine.id')
+                ->where('termin_hidden.user_id', $userId);
+        });
+    }
 }
