@@ -1,6 +1,6 @@
 # Schülerkonten (optional)
 
-Stand: 03.11.2026 · Entwurf, Grundsatzfragen entschieden (§12) · standardmäßig aus
+Stand: 03.11.2026 · Konzept, Grundsatzfragen entschieden (§12) · **umgesetzt ist nur S-02**, alles Übrige ist Konzept
 
 Schulen können Schülerinnen und Schülern ein eigenes, stark eingeschränktes Konto geben.
 Wo ein Schul-Login (SSO) besteht, melden sich Schüler darüber an. Ohne SSO gibt es einen
@@ -249,10 +249,12 @@ Eltern / Eltern und Schüler / nur Schüler. Es erscheint nur, wenn das Modul ak
 
 ## 11. Arbeitspakete
 
+Umgesetzt ist nur S-02. Alle übrigen Pakete sind vorerst Konzept und werden nicht umgesetzt.
+
 | # | Paket | Abhängig |
 |---|---|---|
 | S-01 | Migrationen (§3), `User::isStudent()`, Scope `withoutStudents()`, Modul + Einstellungen | – |
-| S-02 | Keycloak-Login: Schüler per Claim erkennen und nie als normales Konto anlegen (unabhängig dringlich) | – |
+| S-02 | **umgesetzt:** SSO-Login erkennt Schüler an der Rolle (`ucsschoolRole` bzw. Keycloak-Rolle) und legt sie nie als normales Konto an; automatische Kontoanlage abschaltbar | – |
 | S-03 | Middleware `RestrictStudentAccounts`, `Gate::before`, Routen-Test (§5) | S-01 |
 | S-04 | Schutz in Gruppen- und Familienlogik (`group_user`-Sperre, FamilyBuilder, Importe, Schuljahreswechsel) | S-01 |
 | S-05 | `posts.zielgruppe`, Editor-Feld, `StudentPostQuery`, Schüler-Startseite mit Nachrichten und Terminen | S-03 |
