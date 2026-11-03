@@ -95,13 +95,29 @@
                                     return $value;
                                 }
                             });
+                            $ferienName = ($ferienWochen ?? [])[$Woche->copy()->startOfWeek()->format('Y-m-d')] ?? null;
                         @endphp
+                        @if($ferienName && $wocheEintraege->count() < 1)
+                            {{-- Ferienwoche: kein Reinigungseinsatz (ReinigungSetting::$skip_holidays) --}}
+                            <div class="rounded-lg px-4 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2"
+                                 style="border: 1px dashed var(--color-card-border); background: var(--color-card-bg);">
+                                <span class="text-sm d-flex align-items-center gap-2" style="color: var(--color-text-secondary);">
+                                    <i class="fas fa-umbrella-beach"></i>
+                                    {{$Woche->copy()->startOfWeek()->format('d.m.')}} - {{$Woche->copy()->endOfWeek()->format('d.m.Y')}}
+                                    · {{ $ferienName }} – keine Reinigung
+                                </span>
+                            </div>
+                            @continue
+                        @endif
                         <div class="rounded-lg overflow-hidden" style="border: 1px solid var(--color-card-border);">
                             <div class="px-4 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2"
                                  style="background: var(--color-widget-body-bg);">
                                 <span class="font-semibold d-flex align-items-center gap-2" style="color: var(--color-text-primary);">
                                     <i class="far fa-calendar-alt" style="color: var(--color-widget-primary-from);"></i>
                                     {{$Woche->copy()->startOfWeek()->format('d.m.')}} - {{$Woche->copy()->endOfWeek()->format('d.m.Y')}}
+                                    @if($ferienName)
+                                        <span class="badge badge-info badge-pill">{{ $ferienName }}</span>
+                                    @endif
                                 </span>
                                 @can('edit reinigung')
                                     <a href="{{url('reinigung/create/'.$Bereich.'/'.$Woche->startOfWeek()->format('Ymd'))}}"

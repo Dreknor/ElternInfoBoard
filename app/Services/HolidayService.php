@@ -12,6 +12,9 @@ class HolidayService
 {
     protected string $bundesland;
 
+    /** @var array<int, \Illuminate\Support\Collection> Ferien je Jahr (pro Instanz zwischengespeichert) */
+    protected array $loaded = [];
+
     public function __construct(?string $bundesland = null)
     {
         $this->bundesland = $bundesland ?? (new CareSetting)->bundesland;
@@ -30,15 +33,68 @@ class HolidayService
      */
     public function isHoliday(Carbon $date): bool
     {
-        $holidays = $this->getHolidaysForYear($date->year);
+        return $this->holidayOn($date) !== null;
+    }
 
-        foreach ($holidays as $holiday) {
-            if ($date->between($holiday->start, $holiday->end)) {
-                return true;
+    /**
+     * Liefert die Ferien, in die das Datum fällt (oder null).
+     *
+     * Berücksichtigt auch die Ferien des Vorjahres: Die Weihnachtsferien werden
+     * unter dem Jahr ihres Beginns gespeichert, reichen aber in den Januar.
+     */
+    public function holidayOn(Carbon $date): ?Holiday
+    {
+        $day = $date->copy()->startOfDay();
+
+        foreach ([$day->year, $day->year - 1] as $year) {
+            foreach ($this->holidaysFor($year) as $holiday) {
+                if ($day->between($holiday->start->copy()->startOfDay(), $holiday->end->copy()->endOfDay())) {
+                    return $holiday;
+                }
             }
         }
 
-        return false;
+        return null;
+    }
+
+    /**
+     * Ermittelt, ob die Woche des Datums eine Ferienwoche ist.
+     *
+     * Eine Woche gilt als Ferienwoche, wenn mindestens $minDays ihrer Schultage
+     * (Montag bis Freitag) in den Ferien liegen. Standard: 3 von 5, d. h. die
+     * Mehrheit der Schultage. Zurückgegeben werden die Ferien mit den meisten
+     * Tagen in dieser Woche, sonst null.
+     */
+    public function holidayForWeek(Carbon $date, int $minDays = 3): ?Holiday
+    {
+        $monday = $date->copy()->startOfWeek()->startOfDay();
+        $counts = [];
+        $byId = [];
+
+        for ($i = 0; $i < 5; $i++) {
+            $holiday = $this->holidayOn($monday->copy()->addDays($i));
+            if ($holiday) {
+                $counts[$holiday->id] = ($counts[$holiday->id] ?? 0) + 1;
+                $byId[$holiday->id] = $holiday;
+            }
+        }
+
+        if (array_sum($counts) < $minDays) {
+            return null;
+        }
+
+        arsort($counts);
+
+        return $byId[array_key_first($counts)];
+    }
+
+    /**
+     * Ferien eines Jahres, pro Instanz zwischengespeichert. Verhindert, dass bei
+     * fehlender Ferien-API für jede Woche erneut eine Anfrage gestellt wird.
+     */
+    protected function holidaysFor(int $year): \Illuminate\Support\Collection
+    {
+        return $this->loaded[$year] ??= $this->getHolidaysForYear($year);
     }
 
     /**
