@@ -35,6 +35,15 @@
                     Wähle den Zeitraum, für den der Reinigungsplan erstellt werden soll. Dann lege fest, welche Aufgaben verteilt werden sollen und ob bestimmte Gruppen ausgeschlossen werden sollen. Die Auswahl mehrerer Aufgaben und ausgeschlossener Gruppen ist möglich.
                 </p>
 
+                <p class="text-sm" style="color: var(--color-text-secondary);">
+                    <i class="fas fa-umbrella-beach mr-1"></i>
+                    @if($skipHolidays ?? false)
+                        Ferienwochen werden übersprungen (mindestens 3 Schultage in den Ferien).
+                    @else
+                        Ferienwochen werden mit eingeplant. Das lässt sich in den Einstellungen unter „Reinigung“ ändern.
+                    @endif
+                </p>
+
                 <form id="createForm" action="{{url('reinigung/'.$bereichName.'/auto')}}" method="post" class="space-y-3 mt-4">
                     @csrf
                     <div>

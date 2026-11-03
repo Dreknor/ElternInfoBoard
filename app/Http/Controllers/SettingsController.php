@@ -621,6 +621,8 @@ class SettingsController extends Controller implements HasMiddleware
                     'redirect_uri' => 'nullable|string|max:500',
                     'base_url' => 'nullable|string|max:500',
                     'maildomain' => 'nullable|string|max:255',
+                    'student_roles' => 'nullable|string|max:255',
+                    'auto_create_users' => 'nullable|boolean',
                 ]);
 
                 $keycloakSettings = new KeycloakSetting;
@@ -631,6 +633,8 @@ class SettingsController extends Controller implements HasMiddleware
                 $keycloakSettings->redirect_uri = $validated['redirect_uri'] ?? null;
                 $keycloakSettings->base_url = $validated['base_url'] ?? null;
                 $keycloakSettings->maildomain = $validated['maildomain'] ?? '*';
+                $keycloakSettings->student_roles = isset($validated['student_roles']) ? trim($validated['student_roles']) ?: null : null;
+                $keycloakSettings->auto_create_users = $request->has('auto_create_users');
                 $keycloakSettings->save();
 
                 Artisan::call('config:clear');

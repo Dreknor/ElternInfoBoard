@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
@@ -108,6 +109,7 @@ class ReinigungController extends Controller implements HasMiddleware
             'bereichName' => $bereich,
             'aufgaben' => $task,
             'roles' => Role::all(),
+            'skipHolidays' => $reinigungSetting->skip_holidays,
         ]);
     }
 
@@ -185,12 +187,14 @@ class ReinigungController extends Controller implements HasMiddleware
         $date = $start->copy();
 
         // Vorschlag 2 - Ferienausschluss: nur aktiv, wenn per Setting eingeschaltet.
-        $holidayService = $reinigungSetting->skip_holidays ? new HolidayService : null;
+        // Maßgeblich ist die ganze Woche (Mehrheit der Schultage Mo–Fr), nicht nur
+        // der Montag - sonst würden z. B. Weihnachtsferien ab Mittwoch nicht erkannt.
+        $holidayService = $reinigungSetting->skip_holidays ? app(HolidayService::class) : null;
 
         $created = collect();
 
         while ($date->lte($ende)) {
-            if ($holidayService and $holidayService->isHoliday($date)) {
+            if ($holidayService and $holidayService->holidayForWeek($date)) {
                 $date->addWeek();
 
                 continue;
@@ -334,6 +338,7 @@ class ReinigungController extends Controller implements HasMiddleware
         }
 
         return view('reinigung.show', [
+            'ferienWochen' => $this->ferienWochen($reinigungSetting, $datum, $ende),
             'Bereiche' => $Bereiche,
             'Familien' => $Reinigung,
             'datum' => $datum,
@@ -342,6 +347,31 @@ class ReinigungController extends Controller implements HasMiddleware
             'aufgaben' => ReinigungsTask::all(),
             'combinedMode' => $combined,
         ]);
+    }
+
+    /**
+     * Ferienwochen im Zeitraum als [Montag (Y-m-d) => Ferienname].
+     * Leer, wenn der Ferienausschluss nicht eingeschaltet ist.
+     *
+     * @return array<string, string>
+     */
+    protected function ferienWochen(ReinigungSetting $setting, Carbon $von, Carbon $bis): array
+    {
+        if (! $setting->skip_holidays) {
+            return [];
+        }
+
+        $holidayService = app(HolidayService::class);
+        $wochen = [];
+
+        for ($woche = $von->copy()->startOfWeek(); $woche->lte($bis); $woche->addWeek()) {
+            $holiday = $holidayService->holidayForWeek($woche);
+            if ($holiday) {
+                $wochen[$woche->format('Y-m-d')] = Str::ucfirst((string) $holiday->name);
+            }
+        }
+
+        return $wochen;
     }
 
     /**

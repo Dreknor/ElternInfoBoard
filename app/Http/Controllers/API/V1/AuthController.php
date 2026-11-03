@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Services\Auth\SsoStudentDetector;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -103,6 +104,11 @@ class AuthController extends Controller
             Log::warning('App-SSO: Keycloak-Rückmeldung fehlerhaft: '.$e->getMessage());
 
             return $this->toApp(['error' => 'sso_failed']);
+        }
+
+        // Schülerrolle: kein Zugang über die Eltern-App (docs/konzept-schuelerkonten.md, S-02).
+        if (app(SsoStudentDetector::class)->isStudent($keycloakUser)) {
+            return $this->toApp(['error' => 'student']);
         }
 
         // Nur bestehende Konten – neue Konten entstehen über Import/UCS bzw. die Web-Anmeldung.
