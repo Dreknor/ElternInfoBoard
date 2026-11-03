@@ -23,6 +23,22 @@
         </div>
     </div>
 
+    @if(($hiddenCount ?? 0) > 0 || ($showHidden ?? false))
+        <div class="row mb-3">
+            <div class="col-12 d-flex align-items-center justify-content-between">
+                <span style="color: var(--color-text-secondary);">
+                    <i class="far fa-eye-slash"></i>
+                    {{ $hiddenCount == 1 ? '1 Termin ausgeblendet' : $hiddenCount.' Termine ausgeblendet' }}
+                </span>
+                @if($showHidden)
+                    <a href="{{ url('/termine') }}" class="btn btn-sm btn-outline-secondary">Ausgeblendete verbergen</a>
+                @else
+                    <a href="{{ url('/termine?ausgeblendet=1') }}" class="btn btn-sm btn-outline-secondary">Ausgeblendete anzeigen</a>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="rounded-lg shadow-lg overflow-hidden" style="background-color: var(--color-card-bg)">
@@ -44,8 +60,9 @@
                                     @foreach($monthTermine as $termin)
                                         @php
                                             $isMultiDay = $termin->ende && $termin->start->format('Y-m-d') != $termin->ende->format('Y-m-d');
+                                            $isHidden = $termin->exists && in_array($termin->id, $hiddenIds ?? []);
                                         @endphp
-                                        <div class="p-4 rounded-lg hover:shadow-md transition-all duration-200"
+                                        <div class="p-4 rounded-lg hover:shadow-md transition-all duration-200 @if($isHidden) termin-hidden @endif"
                                              style="border: 1px solid {{ $isMultiDay ? 'var(--color-widget-warning-from)' : 'var(--color-card-border)' }};
                                                     background: {{ $isMultiDay ? 'var(--color-widget-body-bg)' : 'var(--color-card-bg)' }};">
                                             <div class="row">
@@ -108,6 +125,22 @@
                                                                title="Google-Kalender-Link">
                                                                 <img src="{{asset('img/icon-google-cal.png')}}" style="width: 16px; height: 16px;" alt="Google Calendar">
                                                             </a>
+
+                                                            @if($termin->exists && ! $termin->sourceUrl)
+                                                                <form method="post" action="{{ url('/termine/'.$termin->id.'/ausblenden') }}" class="d-inline mb-0">
+                                                                    @csrf
+                                                                    @if($isHidden)
+                                                                        @method('delete')
+                                                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Termin wieder anzeigen">
+                                                                            <i class="far fa-eye"></i> <span class="d-none d-md-inline">Wieder anzeigen</span>
+                                                                        </button>
+                                                                    @else
+                                                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Termin ausblenden – gilt auch in der App und im Kalender-Abo">
+                                                                            <i class="far fa-eye-slash"></i>
+                                                                        </button>
+                                                                    @endif
+                                                                </form>
+                                                            @endif
 
                                                             @if($termin->sourceUrl)
                                                                 <a href="{{ $termin->sourceUrl }}" class="btn btn-sm btn-outline-primary" title="Zum Reinigungsplan">
@@ -208,6 +241,9 @@
 
 @section('css')
 <style>
+    .termin-hidden {
+        opacity: 0.55;
+    }
     .space-y-3 > * + * {
         margin-top: 0.75rem;
     }

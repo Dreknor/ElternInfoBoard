@@ -84,6 +84,9 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
 
     // Termine & Listen
     Route::get('termine', [TerminController::class, 'index'])->name('termine');
+    Route::get('termine/hidden', [TerminController::class, 'hidden'])->name('termine.hidden');
+    Route::post('termine/{termin}/hide', [TerminController::class, 'hide'])->whereNumber('termin')->name('termine.hide');
+    Route::delete('termine/{termin}/hide', [TerminController::class, 'unhide'])->whereNumber('termin')->name('termine.unhide');
     Route::get('listen', [ListenController::class, 'index'])->name('listen');
     Route::get('listen/{liste}', [ListenController::class, 'show'])->whereNumber('liste')->name('listen.show');
     Route::post('listen/termine/{termin}/reservation', [ListenController::class, 'reserveTermin'])->name('listen.termin.reserve');

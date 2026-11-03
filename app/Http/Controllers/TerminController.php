@@ -51,36 +51,81 @@ class TerminController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        if (auth()->user()->can('view all')) {
-            $termine = Termin::query()
-                ->with(['groups', 'recipientUsers'])
-                ->where(function ($query) {
-                    $query->where('start', '>=', Carbon::today())
-                        ->orWhere('ende', '>=', Carbon::today());
-                })
-                ->orderBy('start')
-                ->get();
-        } else {
-            $termine = Termin::query()
-                ->with(['groups', 'recipientUsers'])
-                ->where(function ($query) {
-                    $query->where('start', '>=', Carbon::today())
-                        ->orWhere('ende', '>=', Carbon::today());
-                })
-                ->forRecipient(auth()->user())
-                ->orderBy('start')
-                ->get();
+        $user = auth()->user();
+        // B-102: ausgeblendete Termine nur auf Wunsch (?ausgeblendet=1) zeigen, dann zum Wieder-Einblenden.
+        $showHidden = request()->boolean('ausgeblendet');
+
+        $query = Termin::query()
+            ->with(['groups', 'recipientUsers'])
+            ->where(function ($query) {
+                $query->where('start', '>=', Carbon::today())
+                    ->orWhere('ende', '>=', Carbon::today());
+            })
+            ->orderBy('start');
+
+        if (! $user->can('view all')) {
+            $query->forRecipient($user);
+        }
+
+        $hiddenIds = $user->hiddenTermine()->pluck('termine.id')->all();
+        $termine = $query->get();
+        $hiddenCount = $termine->whereIn('id', $hiddenIds)->count();
+        if (! $showHidden) {
+            $termine = $termine->whereNotIn('id', $hiddenIds);
         }
 
         // Eigene Reinigungsdienste der Familie als (nicht gespeicherte) Wochentermine ergänzen
         $termine = $termine
-            ->concat(Reinigung::upcomingForFamily(auth()->user())->map->toTermin())
+            ->concat(Reinigung::upcomingForFamily($user)->map->toTermin())
             ->sortBy('start')
             ->values();
 
         return view('termine.index', [
             'termine' => $termine,
+            'hiddenIds' => $hiddenIds,
+            'hiddenCount' => $hiddenCount,
+            'showHidden' => $showHidden,
         ]);
+    }
+
+    /**
+     * Termin für sich ausblenden (B-102) – gilt auch in der App und im Kalender-Abo.
+     */
+    public function hide(int $termin): RedirectResponse
+    {
+        $model = $this->visibleTermin($termin);
+        auth()->user()->hiddenTermine()->syncWithoutDetaching([$model->id]);
+        Cache::forget('termine'.auth()->id());
+
+        return back()->with([
+            'type' => 'success',
+            'Meldung' => 'Der Termin „'.$model->terminname.'“ wird Ihnen nicht mehr angezeigt.',
+        ]);
+    }
+
+    /**
+     * Ausgeblendeten Termin wieder anzeigen (B-102).
+     */
+    public function unhide(int $termin): RedirectResponse
+    {
+        $model = $this->visibleTermin($termin);
+        auth()->user()->hiddenTermine()->detach($model->id);
+        Cache::forget('termine'.auth()->id());
+
+        return back()->with([
+            'type' => 'success',
+            'Meldung' => 'Der Termin „'.$model->terminname.'“ wird wieder angezeigt.',
+        ]);
+    }
+
+    private function visibleTermin(int $id): Termin
+    {
+        $query = Termin::query()->whereKey($id);
+        if (! auth()->user()->can('view all')) {
+            $query->forRecipient(auth()->user());
+        }
+
+        return $query->firstOrFail();
     }
 
     public function edit(Termin $termine)

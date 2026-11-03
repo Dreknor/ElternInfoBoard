@@ -244,6 +244,14 @@ class User extends Authenticatable implements Auditable
     }
 
     /**
+     * Termine, die der Nutzer für sich ausgeblendet hat (B-102).
+     */
+    public function hiddenTermine(): BelongsToMany
+    {
+        return $this->belongsToMany(Termin::class, 'termin_hidden')->withTimestamps();
+    }
+
+    /**
      * Listen, die der Nutzer über Gruppen oder als direkt freigegebene Person erhält.
      */
     public function visibleListen(): Builder
