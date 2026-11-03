@@ -1,6 +1,6 @@
 # Schülerkonten (optional)
 
-Stand: 03.11.2026 · Entwurf · standardmäßig aus
+Stand: 03.11.2026 · Entwurf, Grundsatzfragen entschieden (§12) · standardmäßig aus
 
 Schulen können Schülerinnen und Schülern ein eigenes, stark eingeschränktes Konto geben.
 Wo ein Schul-Login (SSO) besteht, melden sich Schüler darüber an. Ohne SSO gibt es einen
@@ -74,8 +74,11 @@ Listen und Buchungen, Pflichtstunden, Reinigung, Elternrat, Messenger, Kontaktfo
 Datei-Uploads, Personensuche, Datenschutz-Auskunft (geht über die Eltern) und jede
 Verwaltungsfunktion.
 
-Messenger und Kommentare können später als eigene Option kommen. Sie bleiben dann auf
-Lehrkräfte beschränkt, nie Eltern oder andere Schüler.
+**Messenger mit Lehrkräften** entscheidet die Schule (Einstellung `messenger_lehrkraefte`,
+Standard aus). Ist er an, dürfen Schüler nur Direktchats mit Lehrkräften ihrer Gruppen führen.
+Die Kontaktsuche zeigt dann nur diese Lehrkräfte. Es gibt keine Gruppenchats und keine Chats
+mit Eltern oder anderen Schülern. Lehrkräfte können Schüler-Chats stumm schalten oder sperren.
+Kommentare bleiben gesperrt.
 
 ## 5. Durchsetzung (mehrere Ebenen)
 
@@ -111,16 +114,18 @@ Lehrkräfte beschränkt, nie Eltern oder andere Schüler.
 * Zuordnung wie bei Eltern (`UcsLoginController`, §6.2 UCS-Konzept): zuerst `ucs_oidc_sub`,
   dann `username`. Die Zuordnung zum Kind läuft über `children.ucs_username`.
   **Nie über die E-Mail-Adresse.**
-* Ob jemand Schüler ist, ergibt sich aus der Kelvin-Rolle `student` bzw. aus einem
-  einstellbaren Claim (z. B. Gruppe `schueler` oder Rolle im Token) beim allgemeinen
-  Keycloak.
+* Ob jemand Schüler ist, ergibt sich **aus der Rolle**: bei UCS aus der Kelvin-Rolle
+  `student`, beim allgemeinen Keycloak aus einer Realm- oder Client-Rolle im Token
+  (Einstellung `keycloak_schuelerrolle`, z. B. `schueler`; ausgewertet werden
+  `realm_access.roles` und `resource_access.<client>.roles`). E-Mail-Domain oder
+  Gruppennamen werden nicht ausgewertet.
 * Ist kein Konto vorhanden:
   * Bei aktivierter **UCS-Provisionierung** (§7) wurde es bereits angelegt.
   * Sonst und bei `jit_anlage = an`: Das Konto wird beim ersten Login angelegt, aber nur,
     wenn ein passendes Kind existiert und die Klasse freigegeben ist (§9).
   * Sonst erscheint der Hinweis „Für Sie ist kein Zugang freigeschaltet.“
 * **S-02 (Pflicht, auch ohne Schülerkonten):** Der allgemeine Keycloak-Login legt
-  Schülerinnen und Schüler (Claim) nie als normale Konten an. Optional lässt sich die
+  Konten mit der Schülerrolle nie als normale Konten an. Optional lässt sich die
   automatische Anlage ganz abschalten.
 
 ### 6.2 Ohne SSO: Benutzername
@@ -154,13 +159,22 @@ Einstellung `ucs_provisionierung` (Standard: aus), nur wirksam bei `UcsSetting::
 
 ## 8. App (elterninfo_app)
 
-Die App ist laut Projektregel **nur für Eltern**. Vorschlag:
+Entschieden: **Schüler bekommen eine eigene Ansicht in der App.** Es wird bewusst keine
+zweite App. Die bestehende App zeigt je nach Kontoart eine andere Oberfläche. Die
+Projektregel der App („nur für Eltern“) wird entsprechend angepasst.
 
-* **Phase 1:** Schüler nutzen nur die Weboberfläche. `POST v1/token` und der SSO-Austausch
-  lehnen Schülerkonten mit 403 ab („Dieser Zugang ist nur im Browser nutzbar.“).
-* **Phase 2 (eigene Entscheidung):** Freigegebene Endpunkte unter `v1/student/*`, ein
-  Sanctum-Token mit der Fähigkeit `student` und eine eigene, reduzierte Ansicht in der App.
-  Dafür müsste die Projektregel der App angepasst werden.
+* **Backend:** Endpunkte unter `v1/student/*` (Start, Nachrichten, Termine, Vertretungs-
+  und Stundenplan, AGs, Profil, ggf. Messenger). Schüler-Tokens tragen die Sanctum-Fähigkeit
+  `student` und erreichen nur diese Endpunkte. Alle übrigen `v1`-Endpunkte liefern 403
+  bzw. 404 (gleiche Freigabeliste wie §5).
+* `v1/bootstrap` liefert `account_type`. Daran entscheidet die App, welche Tabs sie zeigt.
+* **Login in der App:** über SSO (wie Eltern), Benutzername und Passwort oder den
+  Einmal-Code/QR (§6.2).
+* **Push:** nur für Schülerbeiträge und Termine, ohne Inhalte im Push-Text.
+* **Offline-Cache:** wie bei Eltern verschlüsselt. Beim Wechsel der Kontoart wird er
+  gelöscht.
+* **Reihenfolge:** Die Weboberfläche kommt zuerst. Die App folgt, sobald S-03 bis S-07
+  stehen. Bis dahin lehnen `POST v1/token` und der SSO-Austausch Schülerkonten mit 403 ab.
 
 ## 9. Einstellungen (`SchuelerSetting`, Reiter „Schülerkonten“)
 
@@ -171,8 +185,10 @@ Die App ist laut Projektregel **nur für Eltern**. Vorschlag:
 | `login_benutzername` | aus | Login mit Benutzername + Passwort (ohne SSO) |
 | `jit_anlage` | aus | Konto beim ersten SSO-Login anlegen |
 | `ucs_provisionierung` | aus | Konten per UCS-Sync anlegen |
-| `freigegebene_gruppen` | leer | Klassen/Bereiche, für die Konten möglich sind (z. B. ab Klasse 5) |
-| `eltern_zustimmung` | an | Konto erst aktiv, wenn ein Elternteil zugestimmt hat |
+| `freigegebene_gruppen` | leer | Klassen/Bereiche, für die Konten möglich sind (z. B. ab Klasse 5). Leer heißt: keine Konten |
+| `keycloak_schuelerrolle` | leer | Rolle im Keycloak-Token, an der Schüler erkannt werden |
+| `eltern_zustimmung` | aus | Option der Schule: Konto erst aktiv, wenn ein Elternteil zugestimmt hat |
+| `messenger_lehrkraefte` | aus | Entscheidung der Schule: Schüler dürfen Lehrkräften schreiben (§4) |
 | `eltern_codes` | aus | Eltern dürfen Einmal-Codes erzeugen |
 | `loeschen_nach_tagen` | 30 | Löschfrist nach Austritt |
 | `vertretung_abwesenheiten` | aus | Abwesenheiten von Lehrkräften auch Schülern zeigen |
@@ -209,13 +225,21 @@ Eltern / Eltern und Schüler / nur Schüler. Es erscheint nur, wenn das Modul ak
 | S-09 | UCS-Provisionierung inkl. Aufräumen (§7) | S-08 |
 | S-10 | Eltern-Sicht: Status, Zustimmung, Codes | S-07 |
 | S-11 | Protokoll, Löschfrist, Datenschutz-Auskunft | S-01 |
-| S-12 | (Phase 2) API `v1/student/*` und App-Ansicht | Entscheidung §8 |
+| S-12 | API `v1/student/*`, Token-Fähigkeit `student`, `account_type` im Bootstrap | S-05, S-06 |
+| S-13 | App: Schüleransicht, Login per Code/QR, Projektregel anpassen | S-12 |
+| S-14 | Messenger Schüler ↔ Lehrkräfte (optional je Schule) | S-03 |
 
-## 12. Offene Fragen
+## 12. Entscheidungen und offene Fragen
 
-1. Welche Klassen bzw. welches Mindestalter? Soll das je Schule frei wählbar sein
-   (`freigegebene_gruppen`)?
-2. Ist die Zustimmung der Eltern Pflicht oder nur eine Option der Schule?
-3. Sollen Schüler Lehrkräften schreiben können (Messenger, nur Lehrkräfte)?
-4. Wie wird ein Schüler im allgemeinen Keycloak erkannt: Rolle, Gruppe oder E-Mail-Domain?
-5. App für Schüler (Phase 2): ja oder nein?
+| Frage | Entscheidung |
+|---|---|
+| Ab welcher Klasse / welchem Alter? | **offen** – vorerst frei wählbar je Schule (`freigegebene_gruppen`) |
+| Zustimmung der Eltern | **Option** der Schule (`eltern_zustimmung`) |
+| Schüler schreiben Lehrkräften | **Entscheidung der Schule** (`messenger_lehrkraefte`) |
+| Erkennung im Keycloak | **Rolle** im Token (`keycloak_schuelerrolle`) |
+| App für Schüler | **ja**, eigene Ansicht in der bestehenden App (§8) |
+
+Noch offen:
+
+1. Mindestalter bzw. Klassenstufe: Gibt es eine Vorgabe für alle Schulen oder bleibt es
+   ganz bei der Schule?
