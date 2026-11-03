@@ -12,6 +12,8 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Services\Auth\SsoStudentDetector;
+use App\Settings\KeycloakSetting;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -195,6 +197,17 @@ class LoginController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Schülerinnen und Schüler (Rolle im Token) nie als normales Konto anmelden
+        // oder anlegen (docs/konzept-schuelerkonten.md, S-02).
+        if (app(SsoStudentDetector::class)->isStudent($keycloakUser)) {
+            Log::info('Keycloak-Login abgelehnt: Schülerrolle');
+
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => SsoStudentDetector::MESSAGE,
+            ]);
+        }
+
         // Check if email exists
         if (!$keycloakUser->email) {
             return redirect()->route('login')->with([
@@ -212,6 +225,11 @@ class LoginController extends Controller implements HasMiddleware
             request()->session()->forget('passwordless_login');
 
 
+        } elseif (! (app(KeycloakSetting::class)->auto_create_users ?? true)) {
+            return redirect()->route('login')->with([
+                'type' => 'danger',
+                'Meldung' => 'Zu Ihrem Schulkonto gibt es kein Konto im ElternInfoBoard. Bitte wenden Sie sich an das Sekretariat.',
+            ]);
         } else {
             // Check email domain whitelist
             $domain = explode('@', $keycloakUser->email)[1];

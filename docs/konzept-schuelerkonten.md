@@ -114,11 +114,15 @@ Kommentare bleiben gesperrt.
 * Zuordnung wie bei Eltern (`UcsLoginController`, §6.2 UCS-Konzept): zuerst `ucs_oidc_sub`,
   dann `username`. Die Zuordnung zum Kind läuft über `children.ucs_username`.
   **Nie über die E-Mail-Adresse.**
-* Ob jemand Schüler ist, ergibt sich **aus der Rolle**: bei UCS aus der Kelvin-Rolle
-  `student`, beim allgemeinen Keycloak aus einer Realm- oder Client-Rolle im Token
-  (Einstellung `keycloak_schuelerrolle`, z. B. `schueler`; ausgewertet werden
-  `realm_access.roles` und `resource_access.<client>.roles`). E-Mail-Domain oder
-  Gruppennamen werden nicht ausgewertet.
+* Ob jemand Schüler ist, ergibt sich **aus der Rolle** (umgesetzt in
+  `App\Services\Auth\SsoStudentDetector`):
+  * **UCS@school:** Claim `ucsschoolRole` mit dem Wert `student:school:<Schule>`. Die Rolle
+    `student` gilt immer als Schüler, ohne Einstellung. Der Claim kommt nur ins Token, wenn
+    er im Keycloak eingerichtet ist (§6.3).
+  * **Allgemeiner Keycloak:** Realm- oder Client-Rolle im Token (`realm_access.roles`,
+    `resource_access.<client>.roles`, `roles`). Die Rollennamen stehen in der Einstellung
+    „Rollen für Schülerinnen und Schüler“ (`KeycloakSetting::$student_roles`).
+  * E-Mail-Domain oder Gruppennamen werden nicht ausgewertet.
 * Ist kein Konto vorhanden:
   * Bei aktivierter **UCS-Provisionierung** (§7) wurde es bereits angelegt.
   * Sonst und bei `jit_anlage = an`: Das Konto wird beim ersten Login angelegt, aber nur,
@@ -140,6 +144,39 @@ Kommentare bleiben gesperrt.
   Eltern erzeugen einen neuen Code.
 * Strengere Sperre bei Fehlversuchen (`throttle:login-student`). Sitzungen und
   App-Tokens laufen kürzer (Standard 30 Tage).
+
+### 6.3 UCS@school-Keycloak einrichten
+
+UCS@school speichert die Rolle im LDAP-Attribut `ucsschoolRole` (mehrwertig, Format
+`<rolle>:school:<schule>`, z. B. `student:school:ESZ`, `teacher:school:ESZ`,
+`legal_guardian:school:ESZ`). Der UCS-Keycloak übernimmt Nutzer aus dem LDAP, macht daraus
+aber **keine** Keycloak-Rollen. In `realm_access.roles` steht deshalb nur z. B.
+`default-roles-ucs`. Ohne Mapper enthält das Token keine Schülerrolle, und die Erkennung
+greift nicht.
+
+Einrichtung in der Keycloak-Admin-Konsole (Realm `ucs`):
+
+1. *User federation → LDAP-Provider → Mappers → Add mapper*, Typ
+   `user-attribute-ldap-mapper`: Name und User-Model-Attribut `ucsschoolRole`,
+   LDAP-Attribut `ucsschoolRole`, *Read only* an, *Always read value from LDAP* an.
+2. *Clients → (Client des ElternInfoBoards) → Client scopes → …-dedicated → Add mapper →
+   By configuration → User Attribute*: User-Attribut `ucsschoolRole`, Token-Claim-Name
+   `ucsschoolRole`, *Multivalued* an, *Add to ID token*, *Add to access token* und
+   *Add to userinfo* an.
+3. Prüfen: *Client scopes → Evaluate*, einen Test-Schüler wählen. Unter „Generated ID
+   token“ muss `"ucsschoolRole": ["student:school:…"]` stehen.
+
+Hinweise:
+
+* Die Schritte stammen aus dem Keycloak-Standard und dem UCS-Rollenformat im Projekt
+  (`KelvinClient`). Mit der Univention-Doku zur Keycloak-App sind sie noch nicht
+  abgeglichen. Bei Univention gibt es dafür ggf. auch das Kommando `univention-keycloak`.
+* Statt `ucsschoolRole` darf der Claim auch `ucsschool_role` heißen. Beide werden gelesen.
+* Ohne Mapper bleibt im UCS-Login trotzdem ein Schutz: Ein unbekannter Nutzer wird nur
+  angelegt, wenn Kelvin ihn als `legal_guardian` führt (`UcsSyncService::syncSingleParent`).
+  Schüler bekommen dort also kein Elternkonto. Schutzlos ist ohne Mapper nur der
+  **allgemeine** Keycloak-Login, der unbekannte Nutzer über die E-Mail anlegt. Dort hilft
+  zusätzlich „Unbekannte Nutzer automatisch anlegen“ = aus.
 
 ## 7. UCS@school-Provisionierung (optional)
 
