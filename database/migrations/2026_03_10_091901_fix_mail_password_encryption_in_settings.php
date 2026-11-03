@@ -36,6 +36,13 @@ return new class extends Migration
                     // Mit decryptString entschlüsseln (kein unserialize – wie von encryptString erwartet)
                     $plaintext = Crypt::decryptString($payload);
 
+                    // Schon mit encrypt() verschlüsselt (Neuinstallation: die Migration vom
+                    // 07.03. nutzt inzwischen encrypt()) → nichts tun, sonst würde der Wert
+                    // doppelt serialisiert und das Passwort wäre falsch.
+                    if ($plaintext === 'b:0;' || @unserialize($plaintext) !== false) {
+                        return;
+                    }
+
                     // Mit encrypt() neu verschlüsseln (mit Serialisierung – Spatie-kompatibel)
                     $reEncrypted = Crypt::encrypt($plaintext);
 
