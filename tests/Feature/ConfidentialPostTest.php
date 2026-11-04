@@ -76,6 +76,18 @@ class ConfidentialPostTest extends TestCase
     }
 
     /** @test */
+    public function directly_selected_persons_are_recipients_too(): void
+    {
+        $person = User::factory()->create(['changePassword' => false]);
+        $person->givePermissionTo('view all');
+        $this->post->recipientUsers()->attach($person);
+
+        $this->assertTrue($person->can('view', $this->post->fresh()));
+        $this->assertTrue(PostQuery::visibleTo($person)->pluck('id')->contains($this->post->id));
+        $this->assertFalse(PostQuery::visibleTo($this->staff)->pluck('id')->contains($this->post->id));
+    }
+
+    /** @test */
     public function post_lists_for_view_all_exclude_foreign_confidential_posts(): void
     {
         $normal = Post::factory()->create([

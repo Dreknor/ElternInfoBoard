@@ -28,12 +28,12 @@ Mit der Berechtigung **„create posts"** kannst du über **Nachrichten → Neue
 
 ## Vertrauliche Beiträge
 
-Mit **„Vertraulich: Ja"** sehen nur **du** und die **Mitglieder der gewählten Gruppen** den Beitrag. Für eine Nachricht an alle Eltern wählst du einfach **„Alle Gruppen"** – eine eigene geschützte Gruppe ist nicht nötig.
+Mit **„Vertraulich: Ja"** sehen nur **du** und die **gewählten Empfänger** den Beitrag – also die Mitglieder der gewählten Gruppen und direkt ausgewählte Personen. Für eine Nachricht an alle Eltern wählst du einfach **„Alle Gruppen"** – eine eigene geschützte Gruppe ist nicht nötig.
 
 - Mitarbeiter mit **„alle Beiträge sehen" (view all)** sehen den Beitrag **nicht** – auch nicht in Suche, Archiv, PDF-Export oder E-Mail-Zusammenfassung.
 - Auch **Bearbeiten, Freigeben, Kopieren und Archivieren** ist nur dir und den Empfängern möglich, unabhängig von weiteren Berechtigungen.
 - **Anhänge** und **Rückmeldungen** zum Beitrag sind ebenso nur für dich und die Empfänger zugänglich.
-- Wer selbst Mitglied einer gewählten Gruppe ist (z. B. als Elternteil), gehört zu den Empfängern und sieht den Beitrag.
+- Wer selbst Mitglied einer gewählten Gruppe ist (z. B. als Elternteil) oder direkt ausgewählt wurde, gehört zu den Empfängern und sieht den Beitrag.
 - Vertrauliche Beiträge werden **nicht an WordPress** übertragen und können **kein externes Angebot** sein.
 - Die Option steht nur zur Verfügung, wenn du Beiträge **selbst freigeben** darfst – sonst müsste jemand anderes den Beitrag zur Freigabe lesen.
 - Löschen bleibt mit der Permission „delete posts" möglich, ohne dass der Inhalt angezeigt wird.
