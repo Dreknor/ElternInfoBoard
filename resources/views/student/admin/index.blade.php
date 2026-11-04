@@ -81,7 +81,7 @@
             </form>
 
             {{-- Liste: Tabelle ab Tablet, Karten auf dem Handy --}}
-            <div class="hidden md:block">
+            <div class="hidden lg:block">
                 <table class="table table-hover w-full">
                     <thead>
                         <tr>
@@ -103,7 +103,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="space-y-3 md:hidden">
+            <div class="grid gap-3 sm:grid-cols-2 lg:hidden">
                 @forelse($children as $child)
                     @include('student.admin.partials.row', ['child' => $child, 'layout' => 'card'])
                 @empty

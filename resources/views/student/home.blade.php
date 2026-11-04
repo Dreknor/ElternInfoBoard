@@ -3,7 +3,7 @@
 @section('content')
     <div class="mb-5">
         <h1 class="text-2xl font-bold">Hallo {{ \Illuminate\Support\Str::before(auth()->user()->name, ' ') ?: auth()->user()->name }}!</h1>
-        @if($klasse)<p class="student-muted">Klasse {{ $klasse }}</p>@endif
+        @if($klasse)<p class="student-muted">{{ \Illuminate\Support\Str::startsWith($klasse, 'Klasse') ? $klasse : 'Klasse '.$klasse }}</p>@endif
     </div>
 
     @if(! $child)

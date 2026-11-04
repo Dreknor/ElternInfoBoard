@@ -24,7 +24,7 @@
             <tr>
                 <td>
                     <h2>{{ $appName }} – dein Zugang</h2>
-                    <div class="muted">{{ $slip['name'] }} · Klasse {{ $slip['klasse'] }}</div>
+                    <div class="muted">{{ $slip['name'] }} · {{ \Illuminate\Support\Str::startsWith((string) $slip['klasse'], 'Klasse') ? $slip['klasse'] : 'Klasse '.$slip['klasse'] }}</div>
                     <p style="margin: 4mm 0 1mm" class="label">Benutzername</p>
                     <div class="value">{{ $slip['username'] }}</div>
                     <p style="margin: 3mm 0 1mm" class="label">Einmal-Code (gültig bis {{ $slip['valid_until'] }})</p>
