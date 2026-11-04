@@ -107,8 +107,20 @@ class AuthController extends Controller
         }
 
         // Schülerrolle: kein Zugang über die Eltern-App (docs/konzept-schuelerkonten.md, S-02).
-        if (app(\App\Services\Students\StudentSsoLogin::class)->isStudent($keycloakUser, (string) ($keycloakUser->getId() ?? ''), data_get($keycloakUser->user ?? [], 'preferred_username'))) {
-            return $this->toApp(['error' => 'student']);
+        // Schüler: bei aktivem Modul und „Login über SSO“ ins Schülerkonto (S-12/S-13), sonst abgelehnt.
+        $studentLogin = app(\App\Services\Students\StudentSsoLogin::class);
+        $kcSub = (string) ($keycloakUser->getId() ?? '');
+        $kcUsername = data_get($keycloakUser->user ?? [], 'preferred_username');
+        if ($studentLogin->isStudent($keycloakUser, $kcSub, $kcUsername)) {
+            [$student] = $studentLogin->resolve($kcSub, $kcUsername);
+            if ($student === null) {
+                return $this->toApp(['error' => 'student']);
+            }
+
+            $code = Str::random(48);
+            Cache::put("app_login_code:{$code}", ['user_id' => $student->id, 'challenge' => $challenge, 'student' => true], now()->addMinutes(self::CODE_TTL_MINUTES));
+
+            return $this->toApp(['code' => $code]);
         }
 
         // Nur bestehende Konten – neue Konten entstehen über Import/UCS bzw. die Web-Anmeldung.
@@ -170,6 +182,16 @@ class AuthController extends Controller
             if (! hash_equals($entry['challenge'], $expected)) {
                 return response()->json(['message' => 'Die Anmeldung konnte nicht bestätigt werden.'], 422);
             }
+        }
+
+        // Schülerkonto aus der App-SSO: eigener Token mit Fähigkeit `student`
+        if (! empty($entry['student'])) {
+            $student = \App\Support\StudentAccounts::enabled() ? User::students()->find($entry['user_id']) : null;
+            if (! $student || $student->is_active === false) {
+                return response()->json(['message' => 'Der Anmeldecode ist abgelaufen. Bitte erneut anmelden.'], 422);
+            }
+
+            return StudentApiController::tokenResponse($student, $request->device_name);
         }
 
         // Zwischen Anforderung und Einlösen deaktivierte Konten erhalten kein Token

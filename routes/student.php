@@ -13,6 +13,7 @@ use App\Http\Controllers\Students\ParentStudentAccountController;
 use App\Http\Controllers\Students\StudentAccountAdminController;
 use App\Http\Controllers\Students\StudentImportController;
 use App\Http\Controllers\Students\StudentLoginController;
+use App\Http\Controllers\Students\StudentMessengerController;
 use App\Http\Controllers\Students\StudentPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,7 +39,20 @@ Route::middleware('student.enabled')->group(function () {
         Route::get('ags', [StudentPortalController::class, 'ags'])->name('ags');
         Route::get('profil', [StudentPortalController::class, 'profile'])->name('profile');
         Route::put('profil/passwort', [StudentPortalController::class, 'updatePassword'])->middleware('throttle:10,1')->name('profile.password');
+
+        // Chat mit Lehrkräften (S-14, nur mit Einstellung „messenger_lehrkraefte“)
+        Route::middleware('student.messenger')->group(function () {
+            Route::get('chat', [StudentMessengerController::class, 'index'])->name('messenger');
+            Route::post('chat', [StudentMessengerController::class, 'start'])->name('messenger.start');
+            Route::get('chat/{conversation}', [StudentMessengerController::class, 'show'])->whereNumber('conversation')->name('messenger.show');
+            Route::post('chat/{conversation}', [StudentMessengerController::class, 'send'])->whereNumber('conversation')->name('messenger.send');
+        });
     });
+
+    // ── Lehrkräfte: Schülerchat beenden (S-14) ─────────────────────────────
+    Route::middleware(['auth', 'password_expired', 'student.messenger', 'permission:use messenger'])
+        ->post('messenger/{conversation}/schuelerchat-beenden', [\App\Http\Controllers\Students\TeacherStudentChatController::class, 'close'])
+        ->whereNumber('conversation')->name('schuelerchat.close');
 
     // ── Verwaltung (Recht „edit user“, Import „import user“) ────────────────
     Route::middleware(['auth', 'password_expired'])->prefix('verwaltung/schuelerkonten')->name('schuelerkonten.')->group(function () {

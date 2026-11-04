@@ -83,6 +83,9 @@ class MessengerController extends Controller
     public function sendMessage(Request $request, Conversation $conversation): RedirectResponse
     {
         Gate::authorize('sendMessage', $conversation);
+        if ($conversation->isStudentChat() && $request->hasFile('attachment')) {
+            abort(422, 'In Schülerchats sind keine Anhänge möglich.');
+        }
 
         // Rate-Limiting: max. 30 Nachrichten/Minute
         $key = 'messenger_send_' . auth()->id();
@@ -338,6 +341,9 @@ class MessengerController extends Controller
     private function notifyParticipants(Conversation $conversation, Message $message): void
     {
         $sender = auth()->user();
+
+        // Schülerchat (S-14): Schüler bekommt eine App-Mitteilung ohne Text
+        \App\Services\Students\StudentMessenger::notifyStudent($conversation, $sender);
 
         // Alle nicht-stummgeschalteten Teilnehmer (außer Sender) für In-App-Benachrichtigungen
         $allRecipients = $conversation->users

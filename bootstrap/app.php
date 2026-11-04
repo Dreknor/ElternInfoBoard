@@ -54,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'student' => \App\Http\Middleware\EnsureStudentAccount::class,
             'student.enabled' => \App\Http\Middleware\EnsureStudentAccountsEnabled::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'student.messenger' => \App\Http\Middleware\EnsureStudentMessengerEnabled::class,
         ]);
 
         $middleware->priority([

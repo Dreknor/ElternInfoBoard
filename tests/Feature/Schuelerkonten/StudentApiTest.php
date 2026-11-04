@@ -108,4 +108,53 @@ class StudentApiTest extends TestCase
 
         $this->getJson('/api/v1/student/bootstrap', ['Authorization' => 'Bearer '.$token])->assertUnauthorized();
     }
+
+    /** @test */
+    public function code_can_be_redeemed_in_the_app(): void
+    {
+        $this->setUpStudent();
+        $code = app(StudentAccountService::class)->issueCode($this->student);
+
+        $this->postJson('/api/v1/student/code', ['username' => 'kind.api', 'code' => 'FALSCH00', 'password' => 'neu-12345678', 'password_confirmation' => 'neu-12345678', 'device_name' => 'T'])
+            ->assertStatus(422);
+
+        $this->postJson('/api/v1/student/code', ['username' => 'kind.api', 'code' => $code, 'password' => 'neu-12345678', 'password_confirmation' => 'neu-12345678', 'device_name' => 'T'])
+            ->assertOk()->assertJsonPath('data.account_type', 'student');
+        $this->assertTrue(Hash::check('neu-12345678', $this->student->fresh()->password));
+    }
+
+    /** @test */
+    public function instance_reports_student_login_only_when_enabled(): void
+    {
+        $this->getJson('/api/v1/instance')->assertOk()->assertJsonMissingPath('data.auth.student');
+
+        $this->setUpStudent();
+        \Illuminate\Support\Facades\Cache::flush();
+        $this->getJson('/api/v1/instance')->assertOk()->assertJsonPath('data.auth.student.password', true);
+    }
+
+    /** @test */
+    public function sso_exchange_issues_a_student_token(): void
+    {
+        $this->setUpStudent();
+        $code = 'abc'.str_repeat('x', 45);
+        \Illuminate\Support\Facades\Cache::put("app_login_code:{$code}", ['user_id' => $this->student->id, 'challenge' => null, 'student' => true], now()->addMinutes(5));
+
+        $token = $this->postJson('/api/v1/auth/exchange', ['code' => $code, 'device_name' => 'T'])
+            ->assertOk()->assertJsonPath('data.account_type', 'student')->json('data.token');
+
+        $this->getJson('/api/v1/student/bootstrap', ['Authorization' => 'Bearer '.$token])->assertOk();
+        $this->assertSame([StudentAccounts::TOKEN_ABILITY], $this->student->tokens()->first()->abilities);
+    }
+
+    /** @test */
+    public function student_token_can_be_refreshed(): void
+    {
+        $this->setUpStudent();
+        $token = $this->token();
+        $new = $this->postJson('/api/v1/student/token/refresh', [], ['Authorization' => 'Bearer '.$token])->assertOk()->json('data.token');
+
+        $this->assertNotSame($token, $new);
+        $this->assertSame(1, $this->student->tokens()->count());
+    }
 }

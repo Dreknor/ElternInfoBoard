@@ -198,18 +198,17 @@ class StudentAccountAdminController extends Controller
             'freigegebene_gruppen.*' => ['integer', Rule::exists('groups', 'id')],
             'eltern_zustimmung' => ['boolean'],
             'eltern_codes' => ['boolean'],
+            'messenger_lehrkraefte' => ['boolean'],
             'loeschen_nach_tagen' => ['required', 'integer', 'min:1', 'max:365'],
             'vertretung_abwesenheiten' => ['boolean'],
         ]);
 
         $settings = app(SchuelerSetting::class);
-        foreach (['login_sso', 'login_benutzername', 'jit_anlage', 'ucs_provisionierung', 'eltern_zustimmung', 'eltern_codes', 'vertretung_abwesenheiten'] as $flag) {
+        foreach (['login_sso', 'login_benutzername', 'jit_anlage', 'ucs_provisionierung', 'eltern_zustimmung', 'eltern_codes', 'messenger_lehrkraefte', 'vertretung_abwesenheiten'] as $flag) {
             $settings->{$flag} = (bool) ($data[$flag] ?? false);
         }
         $settings->freigegebene_gruppen = array_values(array_map('intval', $data['freigegebene_gruppen'] ?? []));
         $settings->loeschen_nach_tagen = (int) $data['loeschen_nach_tagen'];
-        // Messenger mit Lehrkräften (S-14) ist noch nicht umgesetzt und bleibt aus.
-        $settings->messenger_lehrkraefte = false;
         $settings->save();
 
         \App\Services\Students\StudentAccountLog::info('Schülerkonten: Einstellungen geändert', null);

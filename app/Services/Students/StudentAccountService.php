@@ -213,6 +213,7 @@ class StudentAccountService
             $this->forgetSessions($student);
             DB::table('notifications')->where('user_id', $student->id)->delete();
             $student->pushSubscriptions()->delete();
+            StudentMessenger::deleteFor($student->id);
             $student->forceDelete();
         });
 

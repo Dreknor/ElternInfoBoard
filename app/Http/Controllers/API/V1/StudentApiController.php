@@ -49,18 +49,60 @@ class StudentApiController extends Controller
             throw ValidationException::withMessages(['username' => [self::FAILED]]);
         }
 
+        StudentAccountLog::info('Schülerkonto: App-Login', $student);
+
+        return self::tokenResponse($student, $data['device_name']);
+    }
+
+    /** Einmal-Code einlösen, Passwort setzen und direkt anmelden (Erstzugang in der App). */
+    public function redeemCode(Request $request, \App\Services\Students\StudentAccountService $accounts): JsonResponse
+    {
+        abort_unless(StudentAccounts::usernameLoginEnabled(), 404);
+
+        $data = $request->validate([
+            'username' => ['required', 'string', 'max:120'],
+            'code' => ['required', 'string', 'max:20'],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
+            'device_name' => ['required', 'string', 'max:100'],
+        ]);
+
+        $student = $accounts->redeemCode($data['username'], $data['code'], $data['password']);
+        if ($student === null) {
+            throw ValidationException::withMessages(['code' => ['Der Code ist falsch oder abgelaufen.']]);
+        }
+        if ($student->is_active === false) {
+            throw ValidationException::withMessages(['code' => ['Dein Passwort ist gespeichert, aber dein Zugang ist noch nicht freigeschaltet.']]);
+        }
+
+        return self::tokenResponse($student, $data['device_name']);
+    }
+
+    /** Token verlängern: neues Token, altes widerrufen. */
+    public function refresh(Request $request): JsonResponse
+    {
+        $student = $request->user();
+        $current = $student->currentAccessToken();
+        $response = self::tokenResponse($student, $current->name ?? 'ElternInfo-App');
+        $current?->delete();
+
+        return $response;
+    }
+
+    /** Token mit Fähigkeit `student`, Laufzeit StudentAccounts::TOKEN_DAYS. */
+    public static function tokenResponse(User $student, string $deviceName): JsonResponse
+    {
         $token = $student->createToken(
-            mb_substr($data['device_name'], 0, 100),
+            mb_substr($deviceName, 0, 100),
             [StudentAccounts::TOKEN_ABILITY],
             now()->addDays(StudentAccounts::TOKEN_DAYS)
         );
 
-        StudentAccountLog::info('Schülerkonto: App-Login', $student);
-
         return response()->json(['data' => [
             'token' => $token->plainTextToken,
             'expires_at' => $token->accessToken->expires_at?->toIso8601String(),
+            'must_change_password' => false,
             'account_type' => User::ACCOUNT_STUDENT,
+            'user' => ['id' => $student->id, 'name' => $student->name, 'email' => null],
         ]]);
     }
 
@@ -81,7 +123,8 @@ class StudentApiController extends Controller
             'user' => ['id' => $student->id, 'name' => $student->name, 'username' => $student->username],
             'klasse' => StudentContext::className($student),
             'gruppen' => StudentContext::groupNames($student)->values(),
-            'bereiche' => ['nachrichten', 'termine', 'vertretungsplan', 'stundenplan', 'ags'],
+            'bereiche' => array_values(array_filter(['nachrichten', 'termine', 'vertretungsplan', 'stundenplan', 'ags', \App\Services\Students\StudentMessenger::enabled() ? 'chat' : null])),
+            'passwort_aenderbar' => $student->ucs_oidc_sub === null && $student->ucs_source !== 'kelvin' && StudentAccounts::usernameLoginEnabled(),
         ]]);
     }
 
@@ -195,6 +238,27 @@ class StudentApiController extends Controller
             'leitung' => $ag->manager?->name,
             'angemeldet' => in_array($ag->id, $enrolled, true),
         ])->values()]);
+    }
+
+    /** Passwort ändern (nur bei Anmeldung mit Benutzername, nicht bei SSO-Konten). */
+    public function password(Request $request): JsonResponse
+    {
+        $student = $request->user();
+        abort_unless($student->ucs_oidc_sub === null && $student->ucs_source !== 'kelvin' && StudentAccounts::usernameLoginEnabled(), 404);
+
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
+        ]);
+
+        if (! Hash::check($request->input('current_password'), $student->password)) {
+            throw ValidationException::withMessages(['current_password' => ['Das bisherige Passwort stimmt nicht.']]);
+        }
+
+        $student->forceFill(['password' => Hash::make($request->input('password')), 'changePassword' => false])->save();
+        StudentAccountLog::info('Passwort geändert (App)', $student);
+
+        return response()->json(['message' => 'Dein Passwort wurde geändert.']);
     }
 
     /** Push-Gerät registrieren (Mitteilungen enthalten nur den Titel). */

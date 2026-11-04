@@ -10,6 +10,10 @@
         ['route' => 'student.stundenplan', 'icon' => 'fa-table', 'label' => 'Stundenplan'],
         ['route' => 'student.ags', 'icon' => 'fa-users', 'label' => 'AGs'],
     ];
+    $studentChat = \App\Services\Students\StudentMessenger::enabled();
+    if ($studentChat) {
+        $studentNav[] = ['route' => 'student.messenger', 'icon' => 'fa-comments', 'label' => 'Chat'];
+    }
     $isActive = fn (string $route) => request()->routeIs($route) || request()->routeIs($route.'.*');
 @endphp
 <!DOCTYPE html>
@@ -43,6 +47,11 @@
             <span class="truncate">{{ $settings->app_name }}</span>
         </a>
         <div class="flex items-center gap-2">
+            @if($studentChat)
+                <a href="{{ route('student.messenger') }}" class="flex items-center rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10 md:hidden {{ $isActive('student.messenger') ? 'font-semibold' : '' }}" aria-label="Chat mit Lehrkräften">
+                    <i class="fas fa-comments text-lg"></i>
+                </a>
+            @endif
             <a href="{{ route('student.profile') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10 {{ $isActive('student.profile') ? 'font-semibold' : '' }}" aria-label="Mein Zugang">
                 <i class="fas fa-user-circle text-lg"></i>
                 <span class="hidden max-w-[12rem] truncate sm:inline">{{ auth()->user()->name }}</span>

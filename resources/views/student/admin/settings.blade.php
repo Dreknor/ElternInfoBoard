@@ -6,9 +6,10 @@
         'login_sso' => ['Login über SSO', 'Schülerinnen und Schüler melden sich mit dem Schul-Login an (UCS@school oder Keycloak).'],
         'login_benutzername' => ['Login mit Benutzername', 'Anmeldung mit Benutzername und Passwort auf einer eigenen Seite. Den Erstzugang gibt es über einen Einmal-Code.'],
         'jit_anlage' => ['Konto beim ersten SSO-Login anlegen', 'Nur für Kinder der unten freigegebenen Klassen, zugeordnet über den UCS-Benutzernamen des Kindes.'],
-        'ucs_provisionierung' => ['Konten per UCS-Abgleich anlegen', 'Der nächtliche UCS-Abgleich legt Konten für Kinder der freigegebenen Klassen an.'],
+        'ucs_provisionierung' => ['Konten per UCS-Abgleich anlegen', 'Die tägliche Pflege (04:10 Uhr) legt Konten für UCS-Kinder der freigegebenen Klassen an.'],
         'eltern_zustimmung' => ['Zustimmung der Eltern nötig', 'Ein Konto wird erst aktiv, wenn eine sorgeberechtigte Bezugsperson zugestimmt hat. Ein Widerspruch sperrt es wieder.'],
         'eltern_codes' => ['Eltern dürfen Codes erzeugen', 'Bezugspersonen mit Verwaltungsrecht sehen im Bereich „Kinder“ einen Knopf für einen neuen Einmal-Code.'],
+        'messenger_lehrkraefte' => ['Schüler dürfen Lehrkräften schreiben', 'Direktchats nur mit Lehrkräften ihrer Klasse oder Gruppen (Rechte „Messenger nutzen“ und „Beiträge für Schüler erstellen“). Keine Gruppenchats, keine Anhänge. Lehrkräfte können einen Chat beenden.'],
         'vertretung_abwesenheiten' => ['Abwesenheiten von Lehrkräften zeigen', 'Im Vertretungsplan der Schüler erscheinen abwesende Lehrkräfte.'],
     ];
 @endphp

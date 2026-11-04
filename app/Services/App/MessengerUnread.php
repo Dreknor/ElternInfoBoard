@@ -19,6 +19,7 @@ class MessengerUnread
             })
             ->join('conversations as c', 'c.id', '=', 'm.conversation_id')
             ->where('c.is_active', true)
+            ->when(! \App\Services\Students\StudentMessenger::enabled(), fn ($q) => $q->where('c.type', '!=', \App\Services\Students\StudentMessenger::TYPE))
             ->whereNull('m.deleted_at')
             ->where('m.sender_id', '!=', $userId)
             ->where(fn ($q) => $q->whereNull('cu.joined_at')->orWhereColumn('m.created_at', '>=', 'cu.joined_at'))
