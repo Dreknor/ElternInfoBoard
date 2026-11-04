@@ -97,26 +97,34 @@
                             });
                             $ferienName = ($ferienWochen ?? [])[$Woche->copy()->startOfWeek()->format('Y-m-d')] ?? null;
                         @endphp
-                        @if($ferienName && $wocheEintraege->count() < 1)
+                        @if($ferienName && ($ferienAuslassen ?? false) && $wocheEintraege->count() < 1)
                             {{-- Ferienwoche: kein Reinigungseinsatz (ReinigungSetting::$skip_holidays) --}}
-                            <div class="rounded-lg px-4 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2"
-                                 style="border: 1px dashed var(--color-card-border); background: var(--color-card-bg);">
+                            <div class="rounded-lg px-4 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2 reinigung-ferienwoche"
+                                 style="border: 1px dashed var(--color-widget-success-accent); border-left: 4px solid var(--color-widget-success-from); background: rgba(20, 184, 166, 0.08);">
                                 <span class="text-sm d-flex align-items-center gap-2" style="color: var(--color-text-secondary);">
-                                    <i class="fas fa-umbrella-beach"></i>
+                                    <i class="fas fa-umbrella-beach" style="color: var(--color-widget-success-from);"></i>
                                     {{$Woche->copy()->startOfWeek()->format('d.m.')}} - {{$Woche->copy()->endOfWeek()->format('d.m.Y')}}
                                     · {{ $ferienName }} – keine Reinigung
                                 </span>
                             </div>
                             @continue
                         @endif
-                        <div class="rounded-lg overflow-hidden" style="border: 1px solid var(--color-card-border);">
+                        <div class="rounded-lg overflow-hidden @if($ferienName) reinigung-ferienwoche @endif"
+                             style="border: 1px solid {{ $ferienName ? 'var(--color-widget-success-accent)' : 'var(--color-card-border)' }};
+                                    @if($ferienName) border-left: 4px solid var(--color-widget-success-from); @endif">
                             <div class="px-4 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2"
-                                 style="background: var(--color-widget-body-bg);">
-                                <span class="font-semibold d-flex align-items-center gap-2" style="color: var(--color-text-primary);">
-                                    <i class="far fa-calendar-alt" style="color: var(--color-widget-primary-from);"></i>
+                                 style="background: {{ $ferienName ? 'rgba(20, 184, 166, 0.12)' : 'var(--color-widget-body-bg)' }};">
+                                <span class="font-semibold d-flex align-items-center flex-wrap gap-2" style="color: var(--color-text-primary);">
+                                    @if($ferienName)
+                                        <i class="fas fa-umbrella-beach" style="color: var(--color-widget-success-from);" title="Ferienwoche"></i>
+                                    @else
+                                        <i class="far fa-calendar-alt" style="color: var(--color-widget-primary-from);"></i>
+                                    @endif
                                     {{$Woche->copy()->startOfWeek()->format('d.m.')}} - {{$Woche->copy()->endOfWeek()->format('d.m.Y')}}
                                     @if($ferienName)
-                                        <span class="badge badge-info badge-pill">{{ $ferienName }}</span>
+                                        <span class="badge badge-pill text-white" style="background: var(--color-widget-success-from);">
+                                            Ferien: {{ $ferienName }}
+                                        </span>
                                     @endif
                                 </span>
                                 @can('edit reinigung')
