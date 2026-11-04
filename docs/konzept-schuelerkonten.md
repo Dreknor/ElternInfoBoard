@@ -1,6 +1,6 @@
 # Schülerkonten (optional)
 
-Stand: 04.11.2026 · Konzept geprüft, Entscheidungen eingearbeitet (§12) · **umgesetzt: S-02, S-01**
+Stand: 04.11.2026 · Konzept geprüft, Entscheidungen eingearbeitet (§12) · **umgesetzt: S-01 bis S-12** (S-13 App und S-14 Messenger offen)
 
 Schulen können Schülerinnen und Schülern ein eigenes, stark eingeschränktes Konto geben.
 Wo ein Schul-Login (SSO) besteht, melden sich Schüler darüber an. Ohne SSO gibt es einen
@@ -340,17 +340,17 @@ Reihenfolge: S-01, S-03, dann S-04 bis S-07, direkt danach der Import S-07b.
 |---|---|---|---|
 | S-01 | Migrationen (§3), `User::isStudent()`, Scopes, `StudentAccounts::enabled()`, Modul (instanzgesperrt), Recht, Einstellungen, Rechteverwaltung blendet Modulrechte aus | – | umgesetzt |
 | S-02 | SSO-Login erkennt Schüler an der Rolle und legt sie nie als normales Konto an; automatische Kontoanlage abschaltbar | – | umgesetzt |
-| S-03 | Middleware `RestrictStudentAccounts`, `Gate::before`, Routen-Test, Login-Sperre bei ausgeschaltetem Modul (§1.1, §5) | S-01 | |
-| S-04 | Schutz in Gruppen- und Familienlogik (`group_user`-Sperre, FamilyBuilder, Importe, Schuljahreswechsel), Ausnahme in `EnsureUserHasEmail` und Mail-Pfaden | S-01 | |
-| S-05 | `zielgruppe` in Editor und Abfragen (Eltern sehen `schueler` nie), `StudentPostQuery`, Anhänge, Schüler-Startseite | S-03 | |
-| S-06 | Vertretungs- und Stundenplan, AGs für Schüler | S-03 | |
-| S-07 | Login mit Benutzername, Einmal-Code/QR, Verwaltung der Schülerkonten (Reiter, Sperren, Codes) | S-03 | |
-| S-07b | Schülerkonten-Import und Code-PDF (§9.1) | S-07 | |
-| S-08 | SSO: Zuordnung über `children.ucs_username`, JIT-Anlage | S-02, S-07 | |
-| S-09 | UCS-Provisionierung (§7) | S-08 | |
-| S-10 | Eltern-Sicht: Status, Zustimmung, Codes | S-07 | |
-| S-11 | Protokoll, Aufräumen und Löschfrist für alle Konten (§7), Datenschutz-Auskunft | S-01 | |
-| S-12 | API `v1/student/*`, Token-Fähigkeit `student`, `account_type` im Bootstrap | S-05, S-06 | |
+| S-03 | Middleware `RestrictStudentAccounts`, `Gate::before`, Routen-Test, Login-Sperre bei ausgeschaltetem Modul (§1.1, §5) | S-01 | umgesetzt |
+| S-04 | Schutz in Gruppen- und Familienlogik (`group_user`-Sperre, FamilyBuilder, Importe, Schuljahreswechsel), Ausnahme in `EnsureUserHasEmail` und Mail-Pfaden | S-01 | umgesetzt |
+| S-05 | `zielgruppe` in Editor und Abfragen (Eltern sehen `schueler` nie), `StudentPostQuery`, Anhänge, Schüler-Startseite | S-03 | umgesetzt |
+| S-06 | Vertretungs- und Stundenplan, AGs für Schüler | S-03 | umgesetzt |
+| S-07 | Login mit Benutzername, Einmal-Code/QR, Verwaltung der Schülerkonten (Reiter, Sperren, Codes) | S-03 | umgesetzt |
+| S-07b | Schülerkonten-Import und Code-PDF (§9.1) | S-07 | umgesetzt |
+| S-08 | SSO: Zuordnung über `children.ucs_username`, JIT-Anlage | S-02, S-07 | umgesetzt |
+| S-09 | UCS-Provisionierung (§7) | S-08 | umgesetzt |
+| S-10 | Eltern-Sicht: Status, Zustimmung, Codes | S-07 | umgesetzt |
+| S-11 | Protokoll, Aufräumen und Löschfrist für alle Konten (§7), Datenschutz-Auskunft | S-01 | umgesetzt |
+| S-12 | API `v1/student/*`, Token-Fähigkeit `student`, `account_type` im Bootstrap | S-05, S-06 | umgesetzt |
 | S-13 | App: Schüleransicht, Login per Code/QR, Projektregel anpassen | S-12 | |
 | S-14 | Messenger Schüler ↔ Lehrkräfte (optional je Schule) | S-03 | |
 
