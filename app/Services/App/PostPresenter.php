@@ -102,6 +102,7 @@ class PostPresenter
             'author' => $post->autor?->name ?? config('app.name'),
             'sticky' => (bool) $post->sticky,
             'external' => (bool) $post->external,
+            'confidential' => (bool) $post->confidential,
             'created_at' => $post->created_at?->toIso8601String(),
             'updated_at' => $post->updated_at?->toIso8601String(),
             'archiv_ab' => $post->archiv_ab?->toIso8601String(),

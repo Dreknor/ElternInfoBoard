@@ -40,6 +40,12 @@
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-4 mt-3 text-sm text-gray-600">
+        @if($nachricht->confidential)
+            <div class="flex items-center gap-2 @if($nachricht->released == 0) text-white @endif" title="Nur für Autor und Empfänger sichtbar">
+                <i class="fas fa-lock text-gray-400"></i>
+                <span>Vertraulich</span>
+            </div>
+        @endif
         <div class="flex items-center gap-2 @if($nachricht->released == 0) text-white @endif">
             <i class="far fa-clock text-gray-400"></i>
             <span>aktualisiert: {{ $nachricht->updated_at?->format('d.m.Y H:i') ?? '-' }}</span>

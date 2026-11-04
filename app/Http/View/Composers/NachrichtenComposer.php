@@ -45,7 +45,8 @@ class NachrichtenComposer
                 }
             } else {
 
-                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                $Nachrichten = Post::withoutForeignConfidential($user)
+                    ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                     ->where('external', 0)
                     ->orderByDesc('sticky')
                     ->orderByDesc('updated_at')

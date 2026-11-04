@@ -104,6 +104,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         if (auth()->user()->can('view all')) {
             $nachrichten = Post::query()
+                ->withoutForeignConfidential(auth()->user())
                 ->where(function ($query) {
                     $query->whereNull('archiv_ab')
                         ->orWhere('archiv_ab', '>', Carbon::now());
@@ -168,6 +169,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ->orderByDesc('updated_at')->paginate(15);
         } else {
             $Nachrichten = Post::query()
+                ->withoutForeignConfidential(auth()->user())
                 ->where('archiv_ab', '<=', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
                 ->where('archiv_ab', '>', $month->copy()->startOfMonth())
                 ->orderByDesc('updated_at')
@@ -262,6 +264,10 @@ class NachrichtenController extends Controller implements HasMiddleware
 
     public function edit(Post $posts): View|RedirectResponse
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -379,7 +385,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
         }
 
-        if ($request->wp_push and WordpressRepository::pushAllowedFor($user)) {
+        if ($request->wp_push and ! $post->confidential and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($post);
         }
 
@@ -511,6 +517,10 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $user = $request->user();
 
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -555,7 +565,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         // Erst nach dem Speichern der Dateien übertragen, damit neue Bilder mitkommen
-        if ($request->wp_push and WordpressRepository::pushAllowedFor($user)) {
+        if ($request->wp_push and ! $posts->confidential and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($posts);
         }
 
@@ -627,6 +637,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 $Nachrichten = $user->postsNotArchived;
             } else {
                 $Nachrichten = Post::query()
+                    ->withoutForeignConfidential($user)
                     ->where('updated_at', '>', (! is_null($user->lastEmail) ? $user->lastEmail : $user->created_at))
                     ->where('archiv_ab', '>', Carbon::now())
                     ->get();
@@ -767,6 +778,10 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function touch(Post $posts)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
             $newPost = $posts->replicate([
                 'id',
@@ -820,6 +835,10 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function release(Post $posts)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('release posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -845,6 +864,10 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function archiv(Post $posts)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('edit posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -887,7 +910,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
             $Nachrichten = $Nachrichten->unique()->sortByDesc('updated_at')->paginate(30);
         } else {
-            $Nachrichten = Post::with('media', 'autor', 'groups', 'rueckmeldung')->get();
+            $Nachrichten = Post::withoutForeignConfidential($user)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             if ($archiv) {
                 $Nachrichten = $Nachrichten->filter(fn ($nachricht) => $nachricht->updated_at->lessThan($archivDate))->sortByDesc('updated_at')->unique()->paginate(30);
             } else {
@@ -971,6 +994,10 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function storeComment(Post $posts, CommentPostRequest $request)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         $posts->comment([
             'body' => $request->comment, ],
             auth()->user()
@@ -1080,6 +1107,22 @@ class NachrichtenController extends Controller implements HasMiddleware
         return $sendTo;
     }
 
+    /**
+     * Vertrauliche Beiträge sind nur für Autor und Empfänger zugänglich – auch mit
+     * „edit posts“, „release posts“ oder „view all“ nicht (Bearbeiten zeigt den Inhalt).
+     */
+    private function denyIfConfidential(Post $post): ?RedirectResponse
+    {
+        if (! $post->isHiddenFrom(auth()->user())) {
+            return null;
+        }
+
+        return redirect()->to('/home')->with([
+            'type' => 'danger',
+            'Meldung' => 'Dieser Beitrag ist vertraulich.',
+        ]);
+    }
+
     public function findPost(Post $post)
     {
         if ($post->external) {
@@ -1106,7 +1149,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         $user = auth()->user();
 
         // Zugriffscheck
-        $canAccess = $user->can('view all')
+        $canAccess = ($user->can('view all') && ! $post->isHiddenFrom($user))
             || ($post->released == 1 && $post->groups->pluck('id')->intersect($user->groups->pluck('id'))->isNotEmpty())
             || $user->id === $post->author;
 

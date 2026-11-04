@@ -57,12 +57,14 @@ class SearchController extends Controller implements HasMiddleware
             }
         } else {
             if ($months->search($searchTerm)) {
-                $Nachrichten = Post::whereMonth('posts.updated_at', $months->search($searchTerm))
-                    ->orWhereLike(['header', 'news'], $searchTerm)
+                $Nachrichten = Post::withoutForeignConfidential($request->user())
+                    ->where(fn ($q) => $q->whereMonth('posts.updated_at', $months->search($searchTerm))
+                        ->orWhereLike(['header', 'news'], $searchTerm))
                     ->with('rueckmeldung', 'autor')
                     ->get();
             } else {
-                $Nachrichten = Post::whereLike(['header', 'news'], $searchTerm)
+                $Nachrichten = Post::withoutForeignConfidential($request->user())
+                    ->whereLike(['header', 'news'], $searchTerm)
                     ->with('rueckmeldung', 'autor')
                     ->get();
             }

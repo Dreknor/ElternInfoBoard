@@ -23,11 +23,16 @@ class MediaAccess
 {
     public static function canView(User $user, Media $media): bool
     {
+        $model = $media->model;
+
+        // Anhänge vertraulicher Beiträge: nur Autor und Empfänger, auch nicht mit „upload files“
+        if ($model instanceof Post && $model->isHiddenFrom($user)) {
+            return false;
+        }
+
         if ($user->can('upload files')) {
             return true;
         }
-
-        $model = $media->model;
 
         return match (true) {
             $model instanceof Post => $user->can('view', $model),

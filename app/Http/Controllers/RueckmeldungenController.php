@@ -169,7 +169,8 @@ class RueckmeldungenController extends Controller
         }
 
         return view('rueckmeldungen.index', [
-            'rueckmeldungen' => Rueckmeldungen::whereHas('post')
+            // Rückmeldungen auf vertrauliche Beiträge nur für Autor und Empfänger
+            'rueckmeldungen' => Rueckmeldungen::whereHas('post', fn ($q) => $q->withoutForeignConfidential(auth()->user()))
                 ->with(['post', 'liste'])
                 ->withCount('userRueckmeldungen as rueckmeldungen')
                 ->orderByDesc('ende')
@@ -184,6 +185,13 @@ class RueckmeldungenController extends Controller
      */
     public function show(Rueckmeldungen $rueckmeldung)
     {
+        if ($rueckmeldung->post?->isHiddenFrom(auth()->user())) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Dieser Beitrag ist vertraulich.',
+            ]);
+        }
+
         if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -220,6 +228,13 @@ class RueckmeldungenController extends Controller
      */
     public function download(Rueckmeldungen $rueckmeldung, $user_id)
     {
+        if ($rueckmeldung->post?->isHiddenFrom(auth()->user())) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Dieser Beitrag ist vertraulich.',
+            ]);
+        }
+
         if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author_id != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',
@@ -240,6 +255,13 @@ class RueckmeldungenController extends Controller
      */
     public function downloadAll(Rueckmeldungen $rueckmeldung)
     {
+        if ($rueckmeldung->post?->isHiddenFrom(auth()->user())) {
+            return redirect()->back()->with([
+                'type' => 'warning',
+                'Meldung' => 'Dieser Beitrag ist vertraulich.',
+            ]);
+        }
+
         if (! auth()->user()->can('manage rueckmeldungen') and $rueckmeldung->post->author != auth()->id()) {
             return redirect()->back()->with([
                 'type' => 'warning',

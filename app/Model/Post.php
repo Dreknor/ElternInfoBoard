@@ -41,7 +41,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     use Reactable;
     use SoftDeletes;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'confidential', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
 
     protected array $cloneable_relations = ['groups', 'rueckmeldung'];
 
@@ -54,6 +54,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
             'read_receipt_deadline' => 'datetime',
             'reactable' => 'boolean',
             'external' => 'boolean',
+            'confidential' => 'boolean',
             'read_receipt' => 'boolean',
             'no_header' => 'boolean',
         ];
@@ -99,6 +100,50 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     public function users(): HasManyDeep
     {
         return $this->hasManyDeep(User::class, ['group_post', Group::class, 'group_user']);
+    }
+
+    /**
+     * Vertrauliche Beiträge anderer ausblenden, die der Nutzer nicht als Empfänger
+     * (Mitglied einer Zielgruppe) erhält. Für alle Abfragen, die sonst über
+     * Berechtigungen wie „view all“, „create posts“ oder „edit posts“ alle Beiträge laden.
+     */
+    #[Scope]
+    protected function withoutForeignConfidential(Builder $query, User $user): void
+    {
+        $query->where(function ($q) use ($user) {
+            $q->where('posts.confidential', false)
+                ->orWhere('posts.author', $user->id)
+                ->orWhereExists(function ($sub) use ($user) {
+                    $sub->selectRaw(1)
+                        ->from('group_post')
+                        ->join('group_user', 'group_post.group_id', '=', 'group_user.group_id')
+                        ->whereColumn('group_post.post_id', 'posts.id')
+                        ->where('group_user.user_id', $user->id);
+                });
+        });
+    }
+
+    /** Ist der Nutzer Autor oder Empfänger (Mitglied einer Zielgruppe)? */
+    public function isAuthorOrRecipient(User $user): bool
+    {
+        if ((int) $this->author === $user->id) {
+            return true;
+        }
+
+        return \Illuminate\Support\Facades\DB::table('group_post')
+            ->join('group_user', 'group_post.group_id', '=', 'group_user.group_id')
+            ->where('group_post.post_id', $this->id)
+            ->where('group_user.user_id', $user->id)
+            ->exists();
+    }
+
+    /**
+     * Vertraulicher Beitrag, den der Nutzer weder verfasst noch erhalten hat –
+     * dann gilt keine Berechtigung („view all“, „edit posts“, …).
+     */
+    public function isHiddenFrom(User $user): bool
+    {
+        return (bool) $this->confidential && ! $this->isAuthorOrRecipient($user);
     }
 
     public function poll(): HasOne
