@@ -53,7 +53,13 @@ class SendKontaktMail implements ShouldBeEncrypted, ShouldQueue
             'mime' => $file['mime'],
         ], $this->attachments);
 
-        Mail::to($this->to)->send(new SendFeedback(
+        // Wie im Web-Kontaktformular erhält der Absender eine Kopie (CC).
+        $mail = Mail::to($this->to);
+        if ($this->userEmail) {
+            $mail->cc($this->userEmail);
+        }
+
+        $mail->send(new SendFeedback(
             $this->text,
             $this->betreff,
             ['attachments' => $attachments],

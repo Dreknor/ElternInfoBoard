@@ -87,4 +87,24 @@ class ContactControllerTest extends TestCase
         });
         $this->assertSame([], Storage::disk('local')->allFiles(SendKontaktMail::DIRECTORY));
     }
+
+    /** @test */
+    public function the_sender_receives_a_copy_like_in_the_web_form(): void
+    {
+        Mail::fake();
+        $absender = User::factory()->create(['email' => 'eltern@example.org']);
+        Sanctum::actingAs($absender);
+        $mitarbeiter = User::factory()->create(['email' => 'lehrkraft@example.org']);
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+
+        $this->postJson('/api/contact', [
+            'mitarbeiter' => $mitarbeiter->id,
+            'betreff' => 'Frage',
+            'text' => 'Hallo',
+        ])->assertOk();
+
+        Mail::assertSent(SendFeedback::class, function (SendFeedback $mail) {
+            return $mail->hasTo('lehrkraft@example.org') && $mail->hasCc('eltern@example.org');
+        });
+    }
 }
