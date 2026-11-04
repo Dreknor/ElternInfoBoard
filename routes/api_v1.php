@@ -141,3 +141,24 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::get('messages/{message}/attachment', [MessengerController::class, 'attachment'])->name('attachment');
     });
 });
+
+// ── Schülerkonten (docs/konzept-schuelerkonten.md §8, S-12) ─────────────────
+// Nur bei aktivem Modul; Tokens mit der Fähigkeit `student`. Alle anderen v1-Routen
+// lehnen Schülerkonten ab (RestrictStudentAccounts).
+Route::prefix('student')->name('student.')->middleware('student.enabled')->group(function () {
+    Route::post('token', [\App\Http\Controllers\API\V1\StudentApiController::class, 'login'])->middleware('throttle:login-student')->name('token');
+
+    Route::middleware(['auth:sanctum', 'student', 'abilities:'.\App\Support\StudentAccounts::TOKEN_ABILITY])->group(function () {
+        Route::get('bootstrap', [\App\Http\Controllers\API\V1\StudentApiController::class, 'bootstrap'])->name('bootstrap');
+        Route::post('token/logout', [\App\Http\Controllers\API\V1\StudentApiController::class, 'logout'])->name('token.logout');
+        Route::get('posts', [\App\Http\Controllers\API\V1\StudentApiController::class, 'posts'])->name('posts');
+        Route::get('posts/{post}', [\App\Http\Controllers\API\V1\StudentApiController::class, 'showPost'])->whereNumber('post')->name('posts.show');
+        Route::get('posts/{post}/dateien/{media}', [\App\Http\Controllers\Students\StudentPortalController::class, 'media'])->whereNumber(['post', 'media'])->name('media');
+        Route::get('termine', [\App\Http\Controllers\API\V1\StudentApiController::class, 'termine'])->name('termine');
+        Route::get('vertretungsplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'vertretungsplan'])->name('vertretungsplan');
+        Route::get('stundenplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'stundenplan'])->name('stundenplan');
+        Route::get('ags', [\App\Http\Controllers\API\V1\StudentApiController::class, 'ags'])->name('ags');
+        Route::post('devices', [\App\Http\Controllers\API\V1\StudentApiController::class, 'storeDevice'])->name('devices.store');
+        Route::delete('devices/{token}', [\App\Http\Controllers\API\V1\StudentApiController::class, 'destroyDevice'])->where('token', '.+')->name('devices.destroy');
+    });
+});

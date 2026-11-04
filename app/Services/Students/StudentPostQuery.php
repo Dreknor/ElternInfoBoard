@@ -60,4 +60,29 @@ class StudentPostQuery
                     ->whereIn('group_termine.group_id', $groupIds)))
             ->orderBy('start');
     }
+
+    /** Vertretungen der eigenen Klassen (ab heute), ohne Lehrkräfte-Abwesenheiten. */
+    public static function vertretungen(User $student): \Illuminate\Support\Collection
+    {
+        $groupIds = StudentContext::groupIds($student);
+        $child = StudentContext::child($student);
+        if ($child === null) {
+            return collect();
+        }
+
+        $provider = app(\App\Services\StundenplanDataProvider::class);
+        $data = $provider->getStundenplanData();
+        $kurzformen = $data ? $provider->klassenForChild($child, $data) : [];
+
+        return \App\Model\Vertretung::query()
+            ->with('group:id,name')
+            ->where(fn ($q) => $q->whereIn('klasse', $groupIds ?: [0])->orWhereIn('klasse_kurzform', $kurzformen ?: ['__none__']))
+            ->orderBy('date')->orderBy('stunde')
+            ->get()
+            ->map(function (\App\Model\Vertretung $v) {
+                $v->date = \Carbon\Carbon::parse($v->getRawOriginal('date'))->toDateString();
+
+                return $v;
+            });
+    }
 }

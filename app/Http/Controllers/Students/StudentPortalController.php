@@ -198,29 +198,9 @@ class StudentPortalController extends Controller
         return redirect()->route('student.profile')->with(['type' => 'success', 'Meldung' => 'Dein Passwort wurde geändert.']);
     }
 
-    /** Vertretungen der eigenen Klassen (ab heute), ohne Lehrkräfte-Abwesenheiten. */
     private function vertretungen($student)
     {
-        $groupIds = StudentContext::groupIds($student);
-        $child = StudentContext::child($student);
-        if ($child === null) {
-            return collect();
-        }
-
-        $provider = app(StundenplanDataProvider::class);
-        $data = $provider->getStundenplanData();
-        $kurzformen = $data ? $provider->klassenForChild($child, $data) : [];
-
-        return Vertretung::query()
-            ->with('group:id,name')
-            ->where(fn ($q) => $q->whereIn('klasse', $groupIds ?: [0])->orWhereIn('klasse_kurzform', $kurzformen ?: ['__none__']))
-            ->orderBy('date')->orderBy('stunde')
-            ->get()
-            ->map(function (Vertretung $v) {
-                $v->date = Carbon::parse($v->getRawOriginal('date'))->toDateString();
-
-                return $v;
-            });
+        return StudentPostQuery::vertretungen($student);
     }
 
     /** Passwort gibt es nur beim Login mit Benutzername (nicht bei SSO-Konten). */
