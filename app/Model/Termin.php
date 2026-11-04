@@ -30,7 +30,7 @@ class Termin extends Model implements Auditable
      */
     public ?string $sourceUrl = null;
 
-    protected $fillable = ['start', 'ende', 'terminname', 'fullDay', 'public'];
+    protected $fillable = ['start', 'ende', 'terminname', 'fullDay', 'public', 'zielgruppe'];
 
     protected $visible = ['start', 'ende', 'terminname', 'fullDay', 'public', 'id'];
 

@@ -319,7 +319,12 @@ class UserService
      */
     public function syncPermissions(User $user, ?array $permissions): void
     {
-        $user->syncPermissions($permissions ?? []);
+        // Rechte gesperrter Module stehen nicht im Formular und bleiben unverändert.
+        $keep = $user->getDirectPermissions()->pluck('name')
+            ->intersect(\App\Model\Module::lockedPermissionNames())
+            ->all();
+
+        $user->syncPermissions(array_merge($permissions ?? [], $keep));
     }
 
     /**

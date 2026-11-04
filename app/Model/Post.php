@@ -42,7 +42,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     use Reactable;
     use SoftDeletes;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header', 'zielgruppe'];
 
     protected array $cloneable_relations = ['groups', 'recipientUsers', 'rueckmeldung'];
 
