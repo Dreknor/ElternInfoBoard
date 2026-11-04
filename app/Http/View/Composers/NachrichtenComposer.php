@@ -26,8 +26,8 @@ class NachrichtenComposer
             $user = auth()->user();
 
             if (! $user->can('view all')) {
-                $Nachrichten = $user->postsNotArchived()
-                    ->distinct()
+                $Nachrichten = $user->visiblePosts()
+                    ->where('archiv_ab', '>', now())
                     ->where('external', 0)
                     ->orderByDesc('sticky')
                     ->orderByDesc('updated_at')

@@ -145,6 +145,16 @@ return [
         ],
 
         [
+            'slug'    => 'elternabfragen',
+            'title'   => 'Elternabfragen ausfüllen',
+            'excerpt' => 'Abfragen der Schule je Kind ausfüllen, zwischenspeichern, absenden und korrigieren.',
+            'icon'    => 'fas fa-clipboard-check',
+            'group'   => 'organisation',
+            'routes'  => ['elternabfragen.index', 'elternabfragen.show', 'elternabfragen'],
+            'order'   => 12,
+        ],
+
+        [
             'slug'       => 'pflichtstunden',
             'title'      => 'Pflichtstunden erfassen',
             'excerpt'    => 'Geleistete Elternstunden eintragen und einreichen.',
@@ -186,6 +196,39 @@ return [
             'permission' => 'manage rueckmeldungen',
             'routes'     => ['rueckmeldungen*'],
             'order'      => 10,
+        ],
+
+        [
+            'slug'       => 'verwaltung-elternabfragen',
+            'title'      => 'Elternabfragen verwalten',
+            'excerpt'    => 'Vorlagen anlegen, Abfragen vorbereiten, Rücklauf überwachen, erinnern und exportieren.',
+            'icon'       => 'fas fa-clipboard-check',
+            'group'      => 'verwaltung',
+            'permission' => 'manage elternabfragen',
+            'routes'     => ['elternabfragen.admin.*'],
+            'order'      => 12,
+        ],
+
+        [
+            'slug'       => 'elternabfragen-freigabe',
+            'title'      => 'Elternabfragen freigeben',
+            'excerpt'    => 'Vorlagen prüfen und Abfragen vor dem Versand verbindlich freigeben.',
+            'icon'       => 'fas fa-user-check',
+            'group'      => 'verwaltung',
+            'permission' => 'approve elternabfragen',
+            'routes'     => ['elternabfragen.admin.approvals', 'elternabfragen.admin.templates.show', 'elternabfragen.admin.inquiries.show', 'elternabfragen.admin.settings'],
+            'order'      => 13,
+        ],
+
+        [
+            'slug'       => 'elternabfragen-antworten',
+            'title'      => 'Antworten von Elternabfragen einsehen',
+            'excerpt'    => 'Geprüfte Antworten lesen und filtern (Mitarbeitende).',
+            'icon'       => 'fas fa-eye',
+            'group'      => 'verwaltung',
+            'permission' => 'read elternabfragen',
+            'routes'     => ['elternabfragen.admin.staff', 'elternabfragen.admin.responses.*'],
+            'order'      => 14,
         ],
 
         [

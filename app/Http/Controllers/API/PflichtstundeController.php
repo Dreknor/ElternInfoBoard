@@ -497,7 +497,7 @@ class PflichtstundeController extends Controller implements HasMiddleware
     }
 
     /**
-     * Familienauswertung für die App: 10 Minuten zwischengespeichert und ohne Schreibzugriff (B-50).
+     * Familienauswertung für die App: 10 Minuten zwischengespeichert und ohne Schreibzugriff.
      * Vorher wurden bei jedem Aufruf alle Familien berechnet und alle Konten neu gespeichert.
      * Neue/geänderte Pflichtstunden verwerfen den Cache (Pflichtstunde::booted).
      */

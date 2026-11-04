@@ -175,8 +175,15 @@
             </div>
 
             <p style="margin-bottom: 20px;">
-                {!! $welcomeText !!}
+                @safeHtml($welcomeText)
             </p>
+
+            @if(! empty($notice))
+                <div style="background-color: #eef2ff; border-left: 4px solid #667eea; border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: #2d3748;">
+                    <strong style="display: block; margin-bottom: 6px; color: #4c51bf;">Wozu dieser Zugang?</strong>
+                    {{ $notice }}
+                </div>
+            @endif
 
             <div class="credentials-box">
                 <h2>🔐 Ihre Zugangsdaten</h2>

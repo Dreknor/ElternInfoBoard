@@ -53,17 +53,18 @@ if (searchInput) {
                 if (!data.length) {
                     resultsDiv.innerHTML = '<p class="p-3 text-sm text-gray-400">Keine Treffer gefunden</p>';
                 } else {
+                    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
                     resultsDiv.innerHTML = data.map(u =>
                         `<button type="button"
-                            onclick="startDirect(${u.id})"
+                            onclick="startDirect(${parseInt(u.id, 10)})"
                             class="w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
                             onmouseover="this.style.backgroundColor='${primaryBg}'"
                             onmouseout="this.style.backgroundColor=''">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
                                  style="background-color: ${primary}">
-                                ${u.name.charAt(0).toUpperCase()}
+                                ${esc(u.name.charAt(0).toUpperCase())}
                             </div>
-                            <span class="text-sm font-medium text-gray-800">${u.name}</span>
+                            <span class="text-sm font-medium text-gray-800">${esc(u.name)}</span>
                         </button>`
                     ).join('');
                 }

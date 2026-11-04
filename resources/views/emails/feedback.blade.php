@@ -5,7 +5,7 @@
 </head>
 <body>
 <p>Nachricht von {{$von}}</p>
-<p>{!! $text !!}</p>
+<p>@safeHtml($text)</p>
 
 </body>
 </html>

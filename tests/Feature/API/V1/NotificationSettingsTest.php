@@ -11,6 +11,7 @@ use App\Model\UserDevice;
 use App\Model\Vertretung;
 use App\Services\Notifications\NotificationCategory;
 use App\Services\Notifications\NotificationPreferences;
+use App\Services\Push\ApnsSender;
 use App\Services\Push\FcmSender;
 use App\Services\Push\NativePushService;
 use Illuminate\Support\Facades\DB;
@@ -208,5 +209,44 @@ class NotificationSettingsTest extends AppApiTestCase
 
         $this->assertFalse(NotificationPreferences::allows($user, 'messenger', 'app'));
         $this->assertTrue(NotificationPreferences::allows($user, 'messenger', 'web'));
+    }
+
+    /** @test */
+    public function push_sound_follows_the_device_choice(): void
+    {
+        $group = $this->group();
+        $parent = $this->parentIn($group);
+        Sanctum::actingAs($parent);
+        $this->postJson('/api/v1/devices', ['token' => 'fcm-ton', 'provider' => 'fcm', 'sound' => true])->assertCreated();
+        $this->postJson('/api/v1/devices', ['token' => 'fcm-still', 'provider' => 'fcm', 'sound' => false])->assertCreated();
+        $this->postJson('/api/v1/devices', ['token' => 'fcm-alt', 'provider' => 'fcm'])->assertCreated();
+        $this->postJson('/api/v1/devices', ['token' => 'apns-ton', 'provider' => 'apns', 'sound' => true])->assertCreated();
+        $this->postJson('/api/v1/devices', ['token' => 'apns-still', 'provider' => 'apns', 'sound' => false])->assertCreated();
+        $this->assertNull(UserDevice::where('token', 'fcm-alt')->sole()->sound);
+
+        $channels = [];
+        $this->mock(FcmSender::class, function ($mock) use (&$channels) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('send')->times(3)->andReturnUsing(function ($token, $title, $body, $data, $channel) use (&$channels) {
+                $channels[$token] = $channel;
+
+                return true;
+            });
+        });
+        $sounds = [];
+        $this->mock(ApnsSender::class, function ($mock) use (&$sounds) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('send')->times(2)->andReturnUsing(function ($token, $payload) use (&$sounds) {
+                $sounds[$token] = $payload['aps']['sound'] ?? null;
+
+                return true;
+            });
+        });
+
+        (new SendPushNotifications([$parent->id], 'Neue Nachricht', 'Elternabend', url('post/1'), 'Nachrichten'))
+            ->handle(app(NativePushService::class));
+
+        $this->assertSame(['fcm-ton' => 'mitteilungen_ton', 'fcm-still' => 'mitteilungen_still', 'fcm-alt' => 'default'], $channels);
+        $this->assertSame(['apns-ton' => 'default', 'apns-still' => null], $sounds);
     }
 }

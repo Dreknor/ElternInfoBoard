@@ -79,7 +79,7 @@ class ProcessRemindersJob implements ShouldQueue
             ->whereNotNull('ende')
             ->whereBetween('ende', $window)
             ->whereHas('post', fn ($q) => $q->where('released', 1))
-            ->with(['post.users'])
+            ->with(['post.users', 'post.recipientUsers'])
             ->get();
 
         foreach ($rueckmeldungen as $rueckmeldung) {
@@ -153,7 +153,7 @@ class ProcessRemindersJob implements ShouldQueue
                 $q->whereBetween('read_receipt_deadline', $window)
                     ->orWhere(fn ($q) => $q->whereNull('read_receipt_deadline')->whereBetween('archiv_ab', $window));
             })
-            ->with(['users', 'receipts'])
+            ->with(['users', 'recipientUsers', 'receipts'])
             ->get();
 
         foreach ($posts as $post) {
@@ -167,7 +167,7 @@ class ProcessRemindersJob implements ShouldQueue
                 continue;
             }
 
-            $allUsers = $post->users->unique('id');
+            $allUsers = $post->recipients();
             $readReceiptStatus = app(\App\Services\ReadReceiptStatusService::class);
             $confirmedReceipts = $readReceiptStatus->confirmedReceipts($post);
 

@@ -17,7 +17,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 /**
  * Rückmeldungen, Abfragen, Bild-Rückmeldungen, Umfragen und Kommentare zu Beiträgen.
  *
- * @group App: Nachrichten
+ * @group Nachrichten
+ *
+ * @subgroup Rückmeldungen & Abfragen
  */
 class FeedbackController extends ApiController
 {
@@ -38,7 +40,7 @@ class FeedbackController extends ApiController
     }
 
     /**
-     * Text-Rückmeldung ändern (bis zur Frist, auch durch den Partner) – B-20.
+     * Text-Rückmeldung ändern (bis zur Frist, auch durch den Partner).
      */
     public function updateText(Request $request, UserRueckmeldungen $response): JsonResponse
     {
@@ -49,7 +51,7 @@ class FeedbackController extends ApiController
     }
 
     /**
-     * Abfrage beantworten – B-21.
+     * Abfrage beantworten.
      *
      * Nicht mehrfach erlaubte Abfragen: erneutes Senden ersetzt die Antwort der Familie.
      *
@@ -76,7 +78,7 @@ class FeedbackController extends ApiController
     }
 
     /**
-     * Bilder zu einer Bild-Rückmeldung hochladen – B-22.
+     * Bilder zu einer Bild-Rückmeldung hochladen.
      *
      * @bodyParam files file[] required Bilder (je max. 10 MB).
      */
@@ -121,6 +123,8 @@ class FeedbackController extends ApiController
 
     /**
      * Umfrage mit Ergebnissen.
+     *
+     * @subgroup Umfragen
      */
     public function poll(Request $request, Post $post): JsonResponse
     {
@@ -131,7 +135,9 @@ class FeedbackController extends ApiController
     }
 
     /**
-     * Abstimmen – B-24 (Enddatum, Höchstzahl, nur eigene Optionen).
+     * Abstimmen (Enddatum, Höchstzahl, nur eigene Optionen).
+     *
+     * @subgroup Umfragen
      *
      * @bodyParam option_ids int[] required
      */
@@ -172,7 +178,9 @@ class FeedbackController extends ApiController
     }
 
     /**
-     * Kommentare (paginiert, älteste zuerst) – B-14.
+     * Kommentare (paginiert, älteste zuerst).
+     *
+     * @subgroup Kommentare
      */
     public function comments(Request $request, Post $post): JsonResponse
     {
@@ -195,6 +203,8 @@ class FeedbackController extends ApiController
     /**
      * Kommentar schreiben (nur wenn der Beitrag Kommentare erlaubt).
      *
+     * @subgroup Kommentare
+     *
      * @bodyParam body string required
      */
     public function storeComment(Request $request, Post $post): JsonResponse
@@ -212,6 +222,11 @@ class FeedbackController extends ApiController
         ]], 201);
     }
 
+    /**
+     * Eigenen Kommentar löschen.
+     *
+     * @subgroup Kommentare
+     */
     public function destroyComment(Request $request, Comment $comment): JsonResponse
     {
         abort_unless((int) $comment->creator_id === $request->user()->id || $request->user()->can('delete posts'), 403);

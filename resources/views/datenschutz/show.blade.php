@@ -458,7 +458,7 @@
                         <td class="px-5 py-3 font-medium text-gray-900">{{ $krankmeldung->name }}</td>
                         <td class="px-5 py-3 text-gray-700">{{ $krankmeldung->start->format('d.m.Y') }}</td>
                         <td class="px-5 py-3 text-gray-700">{{ $krankmeldung->ende->format('d.m.Y') }}</td>
-                        <td class="px-5 py-3 text-gray-700">{!! $krankmeldung->kommentar !!}</td>
+                        <td class="px-5 py-3 text-gray-700">@safeHtml($krankmeldung->kommentar)</td>
                         <td class="px-5 py-3 text-gray-600">{{ $krankmeldung->created_at->format('d.m.Y H:i') }} Uhr</td>
                     </tr>
                     @endforeach
@@ -664,7 +664,7 @@
                     @foreach($user->userRueckmeldung as $rueckmeldung)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-3 font-medium text-gray-900">{{ $rueckmeldung?->nachricht?->header }}</td>
-                        <td class="px-5 py-3 text-gray-700">{!! $rueckmeldung->text !!}</td>
+                        <td class="px-5 py-3 text-gray-700">@safeHtml($rueckmeldung->text)</td>
                         <td class="px-5 py-3 text-gray-600">{{ $rueckmeldung->created_at?->format('d.m.Y H:i') ?? '–' }}</td>
                         <td class="px-5 py-3 text-gray-600">{{ $rueckmeldung->updated_at?->format('d.m.Y H:i') ?? '–' }}</td>
                     </tr>
@@ -765,7 +765,7 @@
                     @foreach($user->discussions as $discussion)
                     <tr class="hover:bg-gray-50">
                         <td class="px-5 py-3 font-medium text-gray-900">{{ $discussion->header }}</td>
-                        <td class="px-5 py-3 text-gray-700">{!! $discussion->text !!}</td>
+                        <td class="px-5 py-3 text-gray-700">@safeHtml($discussion->text)</td>
                         <td class="px-5 py-3 text-gray-600">{{ $discussion->created_at->format('d.m.Y H:i') }} Uhr</td>
                     </tr>
                     @endforeach

@@ -101,7 +101,7 @@ class UserRueckmeldungenController extends Controller
             ], 404);
         }
 
-        if (! $post->users->contains($user)) {
+        if (! $post->hasRecipient($user)) {
             return response()->json([
                 'success' => false,
                 'error' => 'User not allowed',
@@ -197,7 +197,7 @@ class UserRueckmeldungenController extends Controller
             ], 404);
         }
 
-        if (! $post->users->contains($user)) {
+        if (! $post->hasRecipient($user)) {
             return response()->json([
                 'success' => false,
                 'error' => 'User not allowed',
@@ -368,7 +368,7 @@ class UserRueckmeldungenController extends Controller
         }
 
         // Check if user has access to the post
-        if (!$post->users->contains($user)) {
+        if (!$post->hasRecipient($user)) {
             return response()->json([
                 'success' => false,
                 'error' => 'User not allowed',

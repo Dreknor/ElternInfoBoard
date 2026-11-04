@@ -1,0 +1,210 @@
+<?php
+
+namespace App\Model;
+
+use App\Enums\InquiryAssignmentStatus;
+use App\Enums\InquiryStatus;
+use App\Services\Elternabfragen\GuardianConfirmation;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * Abfrage-Auftrag je Kind. Eine gültige Antwort eines Sorgeberechtigten genügt –
+ * es sei denn, die Vorlage verlangt die Bestätigung aller Sorgeberechtigten.
+ * Empfänger (InquiryRecipient) sind die zum Startzeitpunkt berechtigten Konten.
+ */
+class InquiryAssignment extends Model
+{
+    protected $fillable = [
+        'inquiry_id', 'child_id', 'group_id', 'status', 'current_response_id', 'notified_at',
+        'first_submitted_at', 'last_submitted_at', 'extended_until', 'correction_until', 'reopened_at',
+        'has_problem', 'problem_note', 'note', 'reminder_count', 'last_reminded_at',
+        'filed_response_id', 'filed_at', 'filed_by',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => InquiryAssignmentStatus::class,
+            'notified_at' => 'datetime',
+            'first_submitted_at' => 'datetime',
+            'last_submitted_at' => 'datetime',
+            'extended_until' => 'datetime',
+            'correction_until' => 'datetime',
+            'reopened_at' => 'datetime',
+            'filed_at' => 'datetime',
+            'has_problem' => 'boolean',
+            'reminder_count' => 'integer',
+            'last_reminded_at' => 'datetime',
+        ];
+    }
+
+    public function inquiry(): BelongsTo
+    {
+        return $this->belongsTo(Inquiry::class);
+    }
+
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Child::class)->withTrashed();
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class)->withoutGlobalScopes();
+    }
+
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(InquiryRecipient::class, 'assignment_id');
+    }
+
+    public function drafts(): HasMany
+    {
+        return $this->hasMany(InquiryDraft::class, 'assignment_id');
+    }
+
+    public function responses(): HasMany
+    {
+        return $this->hasMany(InquiryResponse::class, 'assignment_id')->orderByDesc('version');
+    }
+
+    public function currentResponse(): BelongsTo
+    {
+        return $this->belongsTo(InquiryResponse::class, 'current_response_id');
+    }
+
+    public function filer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'filed_by');
+    }
+
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(InquiryDelivery::class, 'assignment_id')->orderByDesc('sent_at');
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(InquiryEvent::class, 'assignment_id')->orderByDesc('id');
+    }
+
+    /** Ende der Abgabemöglichkeit: Frist der Abfrage oder individuelle Nachfrist. */
+    public function effectiveDeadline(): CarbonInterface
+    {
+        $deadline = $this->inquiry->deadline_at;
+
+        return $this->extended_until && $this->extended_until->greaterThan($deadline) ? $this->extended_until : $deadline;
+    }
+
+    /**
+     * Nach Abschluss der Abfrage für diese Familie neu gestartet: Abgabe, Korrektur und
+     * Bestätigung bis zur individuellen Frist möglich, obwohl die Abfrage abgeschlossen ist.
+     */
+    public function isReopened(): bool
+    {
+        $inquiry = $this->inquiry;
+
+        return $inquiry?->status === InquiryStatus::Closed
+            && $inquiry->purged_at === null
+            && $this->reopened_at !== null
+            && $inquiry->closed_at !== null
+            && $this->reopened_at->greaterThanOrEqualTo($inquiry->closed_at)
+            && $this->extended_until !== null
+            && now()->lessThanOrEqualTo($this->extended_until);
+    }
+
+    /** Abgaben, Korrekturen und Bestätigungen sind grundsätzlich möglich (Fristen prüft InquiryAccess). */
+    public function acceptsAnswers(): bool
+    {
+        return (bool) $this->inquiry?->isRunning() || $this->isReopened();
+    }
+
+    /** Die gültige Antwortversion wurde für die Schülerakte gedruckt. */
+    public function isFiled(): bool
+    {
+        return $this->current_response_id !== null && $this->filed_response_id === $this->current_response_id;
+    }
+
+    /** Aktenrelevante Vorlage, vollständige Antwort, aber noch nicht für die Akte gedruckt. */
+    public function needsFiling(): bool
+    {
+        return (bool) $this->inquiry?->templateVersion?->record_relevant && $this->isComplete() && ! $this->isFiled();
+    }
+
+    public function isAnswered(): bool
+    {
+        return $this->current_response_id !== null;
+    }
+
+    /**
+     * Antwort liegt vor und alle erforderlichen Bestätigungen sind erteilt.
+     */
+    public function isComplete(): bool
+    {
+        return $this->isAnswered() && $this->status !== InquiryAssignmentStatus::AwaitingConfirmation;
+    }
+
+    /**
+     * Status aus den Daten ableiten (nach Abgabe, Bestätigung, Entwurf oder Klärung eines Problems).
+     */
+    public function recomputeStatus(): InquiryAssignmentStatus
+    {
+        if ($this->current_response_id !== null) {
+            if (app(GuardianConfirmation::class)->isPending($this)) {
+                return InquiryAssignmentStatus::AwaitingConfirmation;
+            }
+
+            // Korrektur = Nachfolger einer gültigen Antwort (nach einem Neustart zählt die erste Antwort als Eingang)
+            $isCorrection = InquiryResponse::whereKey($this->current_response_id)->whereNotNull('previous_response_id')->exists();
+
+            return $isCorrection ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted;
+        }
+        if ($this->has_problem) {
+            return InquiryAssignmentStatus::Problem;
+        }
+
+        return $this->drafts()->exists() ? InquiryAssignmentStatus::InProgress : InquiryAssignmentStatus::Open;
+    }
+
+    public function refreshStatus(): void
+    {
+        $this->status = $this->recomputeStatus();
+        $this->save();
+    }
+
+    /**
+     * Status für die Elternansicht: Nach Abschluss der Abfrage (Fristende oder
+     * vorzeitig beendet) ist ein unbeantworteter Auftrag nicht mehr "offen".
+     */
+    public function displayLabel(): string
+    {
+        if ($this->inquiry?->status === InquiryStatus::Closed && ! $this->acceptsAnswers()) {
+            if (! $this->isAnswered()) {
+                return 'Beendet – nicht beantwortet';
+            }
+            if ($this->status === InquiryAssignmentStatus::AwaitingConfirmation) {
+                return 'Beendet – Bestätigung unvollständig';
+            }
+        }
+
+        return $this->status->label();
+    }
+
+    public function displayColor(): string
+    {
+        if ($this->inquiry?->status === InquiryStatus::Closed && ! $this->acceptsAnswers()
+            && (! $this->isAnswered() || $this->status === InquiryAssignmentStatus::AwaitingConfirmation)) {
+            return 'gray';
+        }
+
+        return $this->status->color();
+    }
+
+    public function childName(): string
+    {
+        return trim(($this->child?->first_name ?? '').' '.($this->child?->last_name ?? '')) ?: 'Kind #'.$this->child_id;
+    }
+}

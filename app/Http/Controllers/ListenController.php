@@ -9,10 +9,12 @@ use App\Model\Group;
 use App\Model\Liste;
 use App\Model\Listen_Eintragungen;
 use App\Repositories\GroupsRepository;
+use App\Services\IndividualRecipients;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -73,7 +75,7 @@ class ListenController extends Controller
             $oldListen = Liste::where('ende', '<', Carbon::today())->orderByDesc('ende')->paginate(15);
         } else {
             $oldListen = '';
-            $listen = $request->user()->listen()->where('listen.active', 1)->where('listen.ende', '>=', Carbon::now())->get();
+            $listen = $request->user()->visibleListen()->where('listen.active', 1)->where('listen.ende', '>=', Carbon::now())->get();
             if ($request->user()->can('create terminliste')) {
                 $eigeneListen = Liste::where('besitzer', $request->user()->id)->where('ende', '>=', Carbon::now())->get();
 
@@ -137,10 +139,13 @@ class ListenController extends Controller
         }
 
         $gruppen = $request->input('gruppen');
-        if (is_null($gruppen)) {
+        $personen = IndividualRecipients::enabled() ? IndividualRecipients::idsFromRequest($request) : [];
+        if (is_null($gruppen) && empty($personen)) {
             return redirect()->back()->with([
                 'type' => 'warning',
-                'Meldung' => 'Es muss mindestens eine Gruppe ausgewählt werden.',
+                'Meldung' => IndividualRecipients::enabled()
+                    ? 'Es muss mindestens eine Gruppe oder Person ausgewählt werden.'
+                    : 'Es muss mindestens eine Gruppe ausgewählt werden.',
             ]);
         }
 
@@ -152,10 +157,11 @@ class ListenController extends Controller
 
         $gruppen = $this->grousRepository->getGroups($gruppen);
         $Liste->groups()->attach($gruppen);
+        IndividualRecipients::sync($Liste, $request);
 
         if ($Liste->active) {
             $Liste->notify(
-                users: $Liste->users,
+                users: $Liste->recipients(),
                 title: 'Neue Liste erstellt',
                 message: 'Es wurde eine die Liste '.$Liste->listenname.' veröffentlicht.',
                 url: url('listen/'.$Liste->id),
@@ -173,13 +179,33 @@ class ListenController extends Controller
      */
     public function show(Liste $terminListe)
     {
-        if (!auth()->user()->listen()->where('listen.id', $terminListe->id)->exists() and !auth()->user()->can('edit terminliste')) {
+        if (! $terminListe->hasRecipient(auth()->user()) and !auth()->user()->can('edit terminliste')) {
             return redirect()->back()->with([
                 'type' => 'error',
                 'Meldung' => 'Berechtigung fehlt',
             ]);
         }
 
+        return $this->renderListe($terminListe);
+    }
+
+    /**
+     * Vorschau: zeigt die Liste so, wie Eltern sie nach der Veröffentlichung sehen
+     * (ohne Verwaltungsfunktionen, ohne Interaktion).
+     *
+     * @return View
+     *
+     * @throws AuthorizationException
+     */
+    public function preview(Liste $terminListe)
+    {
+        Gate::authorize('editListe', $terminListe);
+
+        return $this->renderListe($terminListe, true);
+    }
+
+    private function renderListe(Liste $terminListe, bool $preview = false): View
+    {
         if ($terminListe->type == 'termin') {
             $terminListe->load('termine');
             $terminListe->termine->sortBy('termin');
@@ -189,6 +215,7 @@ class ListenController extends Controller
             return view('listen.terminListen.terminAuswahl', [
                 'liste' => $terminListe,
                 'allTermineInPast' => $allTermineInPast,
+                'preview' => $preview,
             ]);
         }
 
@@ -196,6 +223,7 @@ class ListenController extends Controller
 
         return view('listen.listenEintrag', [
             'liste' => $terminListe,
+            'preview' => $preview,
         ]);
     }
 
@@ -245,6 +273,7 @@ class ListenController extends Controller
 
         $terminListe->groups()->detach();
         $terminListe->groups()->attach($gruppen);
+        IndividualRecipients::sync($terminListe, $request);
 
         return redirect()->to(url('listen'));
     }
@@ -272,7 +301,7 @@ class ListenController extends Controller
 
         if (! $wasActive) {
             $liste->notify(
-                users: $liste->users->unique('id'),
+                users: $liste->recipients(),
                 title: 'Neue Liste',
                 message: 'Die Liste '.$liste->listenname.' wurde veröffentlicht.',
                 url: url('listen/'.$liste->id),
@@ -313,12 +342,15 @@ class ListenController extends Controller
 
         // Gruppen übernehmen
         $kopie->groups()->attach($liste->groups->pluck('id'));
+        $kopie->recipientUsers()->attach($liste->recipientUsers->pluck('id'));
 
         // Einträge kopieren – ohne Reservierungen (user_id = null)
         foreach ($liste->eintragungen as $eintragung) {
             $neuerEintrag = $eintragung->replicate();
             $neuerEintrag->listen_id = $kopie->id;
             $neuerEintrag->user_id = null;
+            $neuerEintrag->child_id = null;
+            $neuerEintrag->bemerkung = null;
             $neuerEintrag->created_by = auth()->id();
             $neuerEintrag->save();
         }

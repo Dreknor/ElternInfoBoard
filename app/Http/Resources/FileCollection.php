@@ -29,19 +29,29 @@ class FileCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
+        return ['data' => $this->collection];
+    }
+
+    /**
+     * Pagination-Metadaten im Format { total, current_page, per_page, last_page, from, to }.
+     *
+     * @param  array<string, mixed>  $paginated
+     * @param  array<string, mixed>  $default
+     * @return array<string, mixed>
+     */
+    public function paginationInformation(Request $request, array $paginated, array $default): array
+    {
         return [
-            'data' => $this->collection,
             'meta' => [
-                'total' => $this->total() ?? $this->collection->count(),
-                'current_page' => $this->currentPage() ?? 1,
-                'per_page' => $this->perPage() ?? $this->collection->count(),
-                'last_page' => $this->lastPage() ?? 1,
-                'from' => $this->firstItem(),
-                'to' => $this->lastItem(),
+                'total' => $paginated['total'],
+                'current_page' => $paginated['current_page'],
+                'per_page' => $paginated['per_page'],
+                'last_page' => $paginated['last_page'],
+                'from' => $paginated['from'],
+                'to' => $paginated['to'],
             ],
         ];
     }
-
     /**
      * Add additional meta data to the collection.
      *

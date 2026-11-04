@@ -51,7 +51,7 @@
                     <div id="{{$rueckmeldung->id.'_rueckmeldungen_text'}}" class="hidden">
                         <div class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                             <div class="prose max-w-none text-sm text-gray-700">
-                                {!! $rueckmeldung->text !!}
+                                @safeHtml($rueckmeldung->text)
                             </div>
                         </div>
                     </div>
@@ -121,7 +121,7 @@
                     <div id="{{$rueckmeldung->id.'_rueckmeldungen_text'}}" class="collapse">
                         <div class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                             <div class="prose max-w-none text-sm text-gray-700">
-                                {!! $rueckmeldung->text !!}
+                                @safeHtml($rueckmeldung->text)
                             </div>
                         </div>
                     </div>

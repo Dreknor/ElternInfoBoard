@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Model\PersonalAccessToken;
+use App\Services\IntegrationTokens;
 use App\Settings\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -53,6 +54,12 @@ class AppServiceProvider extends ServiceProvider
         // in Umgebungen, in denen PHP keine ausführbaren Speicherbereiche allokieren darf.
         ini_set('pcre.jit', '0');
 
+        // Keine ausführbaren bzw. im Browser aktiven Dateien in der (öffentlich gespeicherten) Medienbibliothek
+        \Spatie\MediaLibrary\MediaCollections\Models\Media::creating(fn ($media) => \App\Support\UploadGuard::assertAllowed($media));
+
+        // Editor-HTML bereinigt ausgeben: @safeHtml($post->news) statt {!! $post->news !!}
+        \Illuminate\Support\Facades\Blade::directive('safeHtml', fn (string $expression) => "<?php echo \\App\\Support\\SafeHtml::clean({$expression}); ?>");
+
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
@@ -60,6 +67,20 @@ class AppServiceProvider extends ServiceProvider
 
         // Use custom PersonalAccessToken model with explicit MySQL connection
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Integrations-Tokens laufen nach eigener Laufzeit ab (auch unbegrenzt), nicht nach `sanctum.expiration`.
+        // Deaktivierte Konten verlieren den Zugriff über alle Tokens (App, Integration, MCP) – wie im Web.
+        Sanctum::authenticateAccessTokensUsing(function ($token, bool $isValid) {
+            if ($token->tokenable?->is_active === false) {
+                return false;
+            }
+
+            if (! IntegrationTokens::isIntegration($token)) {
+                return $isValid;
+            }
+
+            return $token->tokenable !== null && (! $token->expires_at || $token->expires_at->isFuture());
+        });
 
         Paginator::useTailwind();
 
@@ -194,12 +215,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function bootRoute()
     {
+        // Scribe setzt das Kennzeichen nur für seine Beispielaufrufe (config/scribe*.php),
+        // sonst bestünde die API-Doku aus „429 Too Many Attempts“.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('global', function (Request $request) {
-            return Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
+            return config('app.generating_api_docs')
+                ? Limit::none()
+                : Limit::perMinute(80)->by($request->user()?->id ?: $request->ip());
         });
 
         // Dediziertes, strenges Rate-Limit für externe API-Key-Endpunkte (Vertretungsplan, Stundenplan).

@@ -6,7 +6,11 @@ use App\Http\Requests\CreateTokenRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Model\Changelog;
 use App\Model\UserAppSettings;
+use App\Model\UserDevice;
+use App\Services\IntegrationTokens;
+use App\Services\NavigationService;
 use App\Services\Notifications\NotificationPreferences;
+use App\Services\Push\WebPushRouting;
 use App\Settings\GeneralSetting;
 use App\Themes\ThemeRegistry;
 use App\Model\Child;
@@ -60,6 +64,8 @@ class BenutzerController extends Controller implements HasMiddleware
             $changelog = null;
         }
 
+        $navigation = app(NavigationService::class);
+
         return view('user.settings', [
             'user' => auth()->user(),
             'changelog' => $changelog,
@@ -70,7 +76,14 @@ class BenutzerController extends Controller implements HasMiddleware
                 ''
             ),
             'generalSettings' => app(GeneralSetting::class),
+            'allowUserNavStyle' => $navigation->allowUserStyle(),
+            'navStyles' => $navigation->styles(),
+            'userNavStyle' => $navigation->userStyle(auth()->user()),
+            'defaultNavStyle' => $navigation->defaultStyle(),
             'notificationPreferences' => NotificationPreferences::forUser(auth()->user()),
+            'pushSubscriptions' => auth()->user()->pushSubscriptions()->orderByDesc('last_seen_at')->orderByDesc('updated_at')->get(),
+            'appDevices' => UserDevice::where('user_id', auth()->id())->orderByDesc('last_seen_at')->get(),
+            'appPushPlatforms' => WebPushRouting::appPlatforms(auth()->user()),
         ]);
     }
 
@@ -128,8 +141,12 @@ class BenutzerController extends Controller implements HasMiddleware
      */
     public function createToken(CreateTokenRequest $request)
     {
-        $user = auth()->user();
-        $token = $user->createToken($request->name);
+        $token = IntegrationTokens::create(
+            auth()->user(),
+            $request->name,
+            $request->input('scopes', []),
+            $request->lifetime
+        );
 
         return redirect(url('einstellungen'))->with([
             'token' => $token->plainTextToken,

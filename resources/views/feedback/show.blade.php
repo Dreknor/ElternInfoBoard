@@ -137,7 +137,7 @@
 
                                 <!-- Mail Content -->
                                 <div class="prose max-w-none mb-3" style="color: var(--color-text-secondary)">
-                                    {!! $mail->text !!}
+                                    @safeHtml($mail->text)
                                 </div>
 
                                 <!-- Attachments -->

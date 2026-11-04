@@ -240,6 +240,10 @@
         resultsDiv.style.width = rect.width + 'px';
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
+
     function renderResults() {
         if (!currentResults.length) {
             resultsDiv.innerHTML = '<p class="p-3 text-sm" style="color: var(--color-text-muted)">Keine Treffer gefunden</p>';
@@ -259,8 +263,8 @@
                         class="express-result-item w-full text-left px-4 py-2.5 flex items-center justify-between border-b last:border-0"
                         style="${activeStyle} border-color: var(--color-card-border)">
                         <span>
-                            <span class="font-medium" style="color: var(--color-text-primary)">${child.first_name} ${child.last_name}</span>
-                            <span class="text-sm ml-2" style="color: var(--color-text-secondary)">${label}</span>
+                            <span class="font-medium" style="color: var(--color-text-primary)">${escapeHtml(child.first_name)} ${escapeHtml(child.last_name)}</span>
+                            <span class="text-sm ml-2" style="color: var(--color-text-secondary)">${escapeHtml(label)}</span>
                         </span>
                         ${sickBadge}
                     </button>`;

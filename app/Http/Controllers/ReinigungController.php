@@ -338,7 +338,8 @@ class ReinigungController extends Controller implements HasMiddleware
         }
 
         return view('reinigung.show', [
-            'ferienWochen' => $this->ferienWochen($reinigungSetting, $datum, $ende),
+            'ferienWochen' => $this->ferienWochen($datum, $ende),
+            'ferienAuslassen' => (bool) $reinigungSetting->skip_holidays,
             'Bereiche' => $Bereiche,
             'Familien' => $Reinigung,
             'datum' => $datum,
@@ -351,16 +352,13 @@ class ReinigungController extends Controller implements HasMiddleware
 
     /**
      * Ferienwochen im Zeitraum als [Montag (Y-m-d) => Ferienname].
-     * Leer, wenn der Ferienausschluss nicht eingeschaltet ist.
+     * Wird immer ermittelt, damit Ferienwochen im Plan markiert sind - unabhängig
+     * davon, ob sie beim automatischen Befüllen ausgelassen werden (skip_holidays).
      *
      * @return array<string, string>
      */
-    protected function ferienWochen(ReinigungSetting $setting, Carbon $von, Carbon $bis): array
+    protected function ferienWochen(Carbon $von, Carbon $bis): array
     {
-        if (! $setting->skip_holidays) {
-            return [];
-        }
-
         $holidayService = app(HolidayService::class);
         $wochen = [];
 

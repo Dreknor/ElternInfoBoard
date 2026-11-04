@@ -31,7 +31,7 @@
         Von: {{$Meldung->start->format('d.m.Y')}} Bis: {{$Meldung->ende->format('d.m.Y')}}
     </p>
     <p>
-        {!! $Meldung->kommentar !!}
+        @safeHtml($Meldung->kommentar)
     </p>
 
 @endforeach

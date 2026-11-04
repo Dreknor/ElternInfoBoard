@@ -164,7 +164,7 @@ class ReinigungFerienTest extends TestCase
     }
 
     /** @test */
-    public function plan_shows_no_holiday_weeks_when_setting_is_off(): void
+    public function plan_marks_holiday_weeks_also_when_setting_is_off(): void
     {
         $this->settings(false);
         Carbon::setTestNow('2026-12-01 10:00:00');
@@ -175,7 +175,9 @@ class ReinigungFerienTest extends TestCase
         $response = $this->actingAs($user)->get('reinigung');
 
         $response->assertOk();
-        $response->assertViewHas('ferienWochen', []);
+        $response->assertViewHas('ferienWochen', fn ($wochen) => array_keys($wochen) === ['2026-12-21', '2026-12-28']);
+        $response->assertViewHas('ferienAuslassen', false);
+        $response->assertSee('Ferien: Weihnachtsferien');
         $response->assertDontSee('keine Reinigung');
     }
 }

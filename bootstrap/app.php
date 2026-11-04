@@ -31,6 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->throttleApi();
 
+        // Integrations-Tokens: nur lesen bzw. freigegebene Bereiche schreiben
+        $middleware->api(append: [\App\Http\Middleware\EnforceIntegrationTokenScope::class]);
+
         // Wartungsmodus-Bypass wird vom Online-Updater gesetzt und vor dem
         // Entschlüsseln der Cookies geprüft – daher unverschlüsselt lassen.
         $middleware->encryptCookies(except: ['laravel_maintenance']);

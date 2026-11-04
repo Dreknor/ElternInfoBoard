@@ -31,6 +31,8 @@ final class NotificationCategory
 
     public const ELTERNRAT = 'elternrat';
 
+    public const ELTERNABFRAGEN = 'elternabfragen';
+
     public const SYSTEM = 'system';
 
     public const CHANNELS = ['app', 'web', 'mail'];
@@ -82,6 +84,11 @@ final class NotificationCategory
                 'description' => 'Erinnerungen und Änderungen beim Reinigungsdienst sowie Rückmeldungen zu Pflichtstunden.',
                 'channels' => ['app', 'web', 'mail'],
             ],
+            self::ELTERNABFRAGEN => [
+                'label' => 'Elternabfragen',
+                'description' => 'Neue Abfragen der Schule, Erinnerungen und Eingangsbestätigungen. Ob zusätzlich eine E-Mail kommt, legt die Schule je Abfrage fest.',
+                'channels' => ['app', 'web'],
+            ],
             self::ELTERNRAT => [
                 'label' => 'Elternrat',
                 'description' => 'Diskussionen und Termine des Elternrats.',
@@ -127,6 +134,7 @@ final class NotificationCategory
             self::HORT => $has('Krankmeldung') || Family::childIds($user) !== [],
             self::ORGANISATION => $has('Reinigung') || $has('Pflichtstunden') || $has('Arbeitsgemeinschaften'),
             self::ELTERNRAT => $has('Elternrat') && $user->can('view elternrat'),
+            self::ELTERNABFRAGEN => $has('Elternabfragen'),
             default => true,
         }));
     }
@@ -145,6 +153,7 @@ final class NotificationCategory
             'anwesenheit', 'anwesenheitsabfrage', 'krankmeldung', 'attendance', 'child' => self::HORT,
             'pflichtstunden', 'reinigung', 'ags' => self::ORGANISATION,
             'elternrat' => self::ELTERNRAT,
+            'elternabfragen', 'elternabfrage' => self::ELTERNABFRAGEN,
             default => null,
         };
         if ($byType) {
@@ -159,6 +168,7 @@ final class NotificationCategory
             'attendance', 'krankmeldung', 'child' => self::HORT,
             'pflichtstunden', 'reinigung', 'ags' => self::ORGANISATION,
             'elternrat' => self::ELTERNRAT,
+            'inquiry' => self::ELTERNABFRAGEN,
             default => self::SYSTEM,
         };
     }

@@ -51,6 +51,9 @@
                         für Sie wurde ein neues Benutzerkonto bei {{ config('app.name') }} angelegt.
                         Nachfolgend finden Sie Ihre persönlichen Zugangsdaten für die erste Anmeldung.
                     </p>
+                    @if(! empty($notice))
+                        <p><strong>Wozu dieser Zugang?</strong> {{ $notice }}</p>
+                    @endif
                 </div>
 
                 <div class="credentials-box">

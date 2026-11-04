@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * @group App: Anmeldung
+ * @group Anmeldung
  */
 class InstanceController extends Controller
 {
@@ -18,7 +18,7 @@ class InstanceController extends Controller
      * Informationen über die Schule (ohne Anmeldung).
      *
      * Schulname, Logos, Farben des Standard-Themes und angebotene Anmeldearten – die App
-     * nutzt das für Serverwahl und Anmeldebildschirm (B-01).
+     * nutzt das für Serverwahl und Anmeldebildschirm.
      *
      * @unauthenticated
      */

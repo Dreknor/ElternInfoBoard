@@ -4,12 +4,13 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\KontaktRequest;
-use App\Mail\SendFeedback;
+use App\Jobs\SendKontaktMail;
 use App\Model\User;
 use App\Settings\EmailSetting;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class ContactController
@@ -60,11 +61,13 @@ class ContactController extends Controller implements HasMiddleware
     /**
      * Send email.
      *
-     * Sends a email to the specified employee or to the default email address if no employee is specified.
+     * Queues an email to the specified employee or to the default email address if no employee is specified.
+     * Attachments are stored privately until the mail has been sent.
      *
      * @bodyParam mitarbeiter int required The ID of the employee to send the email to. If 0, the email is sent to the default address.
      * @bodyParam betreff string required The subject of the email.
      * @bodyParam text string required The content of the email.
+     * @bodyParam files file[] Up to 3 attachments, max. 8 MB each.
      *
      * @responseField success string The success message.
      * @responseField error string The error message.
@@ -89,11 +92,24 @@ class ContactController extends Controller implements HasMiddleware
             $email = $emailSettings->contact_default_email ?: config('mail.from.address');
         }
 
-        $attachmentsData = [];
+        // Anhänge bis zum Versand privat ablegen; der Job verschickt die Mail im Hintergrund,
+        // damit die App nicht auf Upload-Verarbeitung und SMTP-Versand warten muss.
+        $attachments = [];
+        $directory = null;
         foreach ((array) $request->file('files', []) as $file) {
             if ($file && $file->isValid()) {
-                $attachmentsData[] = [
-                    'path' => $file->getRealPath(),
+                $directory ??= SendKontaktMail::DIRECTORY.'/'.Str::uuid();
+                $path = $file->storeAs($directory, count($attachments).'_'.Str::random(8), 'local');
+                if ($path === false) {
+                    Storage::disk('local')->deleteDirectory($directory);
+
+                    return response()->json([
+                        'error' => 'Attachment not stored',
+                        'message' => 'Der Anhang konnte nicht gespeichert werden. Bitte versuchen Sie es später erneut.',
+                    ], 500);
+                }
+                $attachments[] = [
+                    'path' => $path,
                     'name' => $file->getClientOriginalName(),
                     'mime' => $file->getMimeType(),
                 ];
@@ -104,29 +120,20 @@ class ContactController extends Controller implements HasMiddleware
         Log::info('Kontaktformular (API)', [
             'user_id' => $user?->id,
             'recipient_id' => $recipientId,
-            'attachments' => count($attachmentsData),
+            'attachments' => count($attachments),
         ]);
 
-        try {
-            // Synchron, weil hochgeladene Anhänge nur während der Anfrage existieren.
-            Mail::to($email)->send(new SendFeedback(
-                $request->input('text'),
-                $request->input('betreff'),
-                ['attachments' => $attachmentsData],
-                $user?->name,
-                $user?->email,
-                $user?->name
-            ));
+        SendKontaktMail::dispatch(
+            $email,
+            $request->input('text'),
+            $request->input('betreff'),
+            $attachments,
+            $directory,
+            $user?->name,
+            $user?->email,
+        );
 
-            return response()->json(['success' => 'Mail sent'], 200);
-        } catch (\Exception $e) {
-            Log::error('Kontaktformular (API): Versand fehlgeschlagen', ['error' => $e->getMessage()]);
-
-            return response()->json([
-                'error' => 'Mail not sent',
-                'message' => 'Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.',
-            ], 500);
-        }
+        return response()->json(['success' => 'Mail sent'], 200);
     }
 
     /** Nutzer, die im Kontaktformular auswählbar sind. */

@@ -9,6 +9,10 @@
  | Status-Anzeige: Elemente mit [data-push-status] erhalten einen Text,
  | Elemente mit [data-push-state="<status>"] werden passend ein-/ausgeblendet.
  | Mögliche Status: granted, default, denied, ios-install, unsupported
+ |
+ | Geräteliste in den Einstellungen: Zeilen mit [data-push-endpoint] des eigenen
+ | Abos zeigen [data-push-current]. Wird das eigene Abo entfernt, meldet sich der
+ | Browser ab und erneuert es nicht mehr still, bis Push wieder aktiviert wird.
  */
 
 (function () {
@@ -25,6 +29,28 @@
         'unsupported': 'Dieser Browser unterstützt keine Push-Benachrichtigungen.',
     };
 
+    const OPT_OUT_KEY = 'elterninfo-push-removed';
+
+    function optedOut() {
+        try {
+            return localStorage.getItem(OPT_OUT_KEY) === '1';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function setOptedOut(value) {
+        try {
+            if (value) {
+                localStorage.setItem(OPT_OUT_KEY, '1');
+            } else {
+                localStorage.removeItem(OPT_OUT_KEY);
+            }
+        } catch (e) {
+            // ohne Speicher: Abo wird beim nächsten Besuch wieder erneuert
+        }
+    }
+
     function pushSupported() {
         return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     }
@@ -32,6 +58,9 @@
     function getStatus() {
         if (!pushSupported()) {
             return (isIOS && !isStandalone) ? 'ios-install' : 'unsupported';
+        }
+        if (Notification.permission === 'granted' && optedOut()) {
+            return 'default';
         }
         return Notification.permission;
     }
@@ -54,9 +83,10 @@
 
         navigator.serviceWorker.register('/sw.js')
             .then(() => {
-                if (pushSupported() && Notification.permission === 'granted') {
+                if (pushSupported() && Notification.permission === 'granted' && !optedOut()) {
                     subscribeUser();
                 }
+                markCurrentDevice();
             })
             .catch((err) => {
                 console.log(err);
@@ -78,6 +108,8 @@
             renderStatus();
             return Promise.resolve(getStatus());
         }
+
+        setOptedOut(false);
 
         return requestPermission()
             .then((permission) => {
@@ -118,12 +150,20 @@
         return outputArray;
     }
 
+    // Plattform des Abos: auf Geräten mit installierter App sendet der Server keinen Browser-Push
+    function platform() {
+        if (isIOS) {
+            return 'ios';
+        }
+        return /Android/i.test(navigator.userAgent) ? 'android' : 'desktop';
+    }
+
     function storePushSubscription(pushSubscription) {
         const token = document.querySelector('meta[name=csrf-token]').getAttribute('content');
 
         return fetch('/push', {
             method: 'POST',
-            body: JSON.stringify(pushSubscription),
+            body: JSON.stringify(Object.assign(pushSubscription.toJSON(), { platform: platform() })),
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -135,6 +175,47 @@
                 console.log(err);
             });
     }
+
+    function currentSubscription() {
+        if (!pushSupported()) {
+            return Promise.resolve(null);
+        }
+        return navigator.serviceWorker.ready
+            .then((registration) => registration.pushManager.getSubscription())
+            .catch(() => null);
+    }
+
+    function markCurrentDevice() {
+        currentSubscription().then((subscription) => {
+            if (!subscription) {
+                return;
+            }
+            document.querySelectorAll('[data-push-endpoint]').forEach((row) => {
+                const current = row.getAttribute('data-push-endpoint') === subscription.endpoint;
+                row.toggleAttribute('data-push-is-current', current);
+                row.querySelectorAll('[data-push-current]').forEach((el) => el.classList.toggle('hidden', !current));
+            });
+        });
+    }
+
+    // Eigenes Abo entfernen: zuerst im Browser abmelden, sonst würde es beim nächsten Laden erneuert
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!form.id || !form.id.startsWith('push-remove-')) {
+            return;
+        }
+        const button = document.querySelector('[form="' + form.id + '"]');
+        const row = button ? button.closest('[data-push-endpoint]') : null;
+        if (!row || !row.hasAttribute('data-push-is-current')) {
+            return;
+        }
+        event.preventDefault();
+        setOptedOut(true);
+        currentSubscription()
+            .then((subscription) => subscription ? subscription.unsubscribe() : null)
+            .catch((err) => console.log(err))
+            .finally(() => form.submit());
+    });
 
     document.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-push-enable]');

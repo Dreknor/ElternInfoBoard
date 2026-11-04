@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\App\MediaAccess;
+use App\Support\UploadGuard;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -24,9 +25,9 @@ class ImageController extends Controller implements HasMiddleware
         // Zugriff nur für Berechtigte (vorher: jede Datei per fortlaufender ID abrufbar).
         abort_unless(MediaAccess::canView(auth()->user(), $media_id), 403, 'Zugriff verweigert.');
 
-        if (! str_starts_with((string) $media_id->mime_type, 'image/')) {
-            // Nicht-Bilder als Download ausliefern (Media ist Responsable).
-            return $media_id;
+        if (! str_starts_with((string) $media_id->mime_type, 'image/') || str_contains((string) $media_id->mime_type, 'svg')) {
+            // Nicht-Bilder (und SVG, das Skripte enthalten kann) als Download ausliefern.
+            return UploadGuard::harden($media_id->toResponse(request()), $media_id, false);
         }
 
         // Optional verkleinerte Fassung (z. B. für Galerie-Kacheln); Fallback aufs Original.
@@ -40,10 +41,9 @@ class ImageController extends Controller implements HasMiddleware
         }
 
         $response = new BinaryFileResponse($path);
-        $response->headers->set('Content-Disposition', 'inline; filename="'.$media_id->file_name.'"');
         $response->headers->set('Content-Type', $mimeType);
 
-        return $response;
+        return UploadGuard::harden($response, $media_id);
     }
 
     public function changeCollection(Media $media, string $collection_name)

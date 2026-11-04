@@ -26,7 +26,7 @@
                     @endif
                 </h2>
                 @if($liste->comment)
-                    <p class="text-blue-100 text-sm mt-2">{!! $liste->comment !!}</p>
+                    <p class="text-blue-100 text-sm mt-2">@safeHtml($liste->comment)</p>
                 @endif
             </div>
 
@@ -38,6 +38,9 @@
                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 <div class="flex-1">
                                     <p class="font-medium text-gray-800">{{ $eintrag->eintragung }}</p>
+                                    @if($eintrag->bemerkung)
+                                        <p class="text-sm text-gray-600 mb-0">{{ $eintrag->bemerkung }}</p>
+                                    @endif
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">

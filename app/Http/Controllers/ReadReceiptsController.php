@@ -81,7 +81,7 @@ class ReadReceiptsController extends Controller
         $posts = Post::query()
             ->where('read_receipt', '1')
             ->where('released', '1')
-            ->with('users')
+            ->with(['users', 'recipientUsers'])
             ->with('receipts')
             ->get();
 
@@ -101,7 +101,7 @@ class ReadReceiptsController extends Controller
                 continue;
             }
 
-            $users = $post->users->unique('id');
+            $users = $post->recipients();
             $receipts = $post->receipts;
 
             foreach ($users as $user) {
@@ -172,7 +172,7 @@ class ReadReceiptsController extends Controller
         $posts = Post::query()
             ->where('read_receipt', '1')
             ->where('released', '1')
-            ->with('users')
+            ->with(['users', 'recipientUsers'])
             ->with('receipts')
             ->get();
 
@@ -190,7 +190,7 @@ class ReadReceiptsController extends Controller
                 continue;
             }
 
-            $users = $post->users->unique('id');
+            $users = $post->recipients();
             $receipts = $post->receipts;
 
             foreach ($users as $user) {

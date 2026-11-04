@@ -15,7 +15,21 @@ class ModulesComposer
             return;
         }
 
-        $modules = Cache::remember('modules', 30, function () {
+        $modules = self::activeModules();
+
+        if (! isset($modules)) {
+            $modules = collect([]);
+        }
+
+        $view->with('modules', $modules);
+    }
+
+    /**
+     * Aktive Module der Kategorie 'module' in Menü-Reihenfolge (30 s gecacht).
+     */
+    public static function activeModules()
+    {
+        return Cache::remember('modules', 30, function () {
             try {
                 // Lade alle Module der Kategorie 'module' und filtere dann nach active
                 $allModules = Module::where('category', 'module')->orderBy('sort_order')->orderBy('id')->get();
@@ -33,11 +47,5 @@ class ModulesComposer
                        ($module->options['active'] === '1' || $module->options['active'] === 1 || $module->options['active'] === true);
             });
         });
-
-        if (! isset($modules)) {
-            $modules = collect([]);
-        }
-
-        $view->with('modules', $modules);
     }
 }

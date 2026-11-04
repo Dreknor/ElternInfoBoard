@@ -43,7 +43,7 @@
                             </div>
                             <div class="px-5 py-4">
                                 <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed changelog-content">
-                                    {!! $changelog->text !!}
+                                    @safeHtml($changelog->text)
                                 </div>
                             </div>
                             <div class="px-5 py-2.5 bg-gradient-to-r from-amber-100 to-orange-100 border-t border-amber-200">

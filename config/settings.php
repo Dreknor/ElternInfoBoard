@@ -21,6 +21,7 @@ return [
         \App\Settings\KeycloakSetting::class,
         \App\Settings\ReinigungSetting::class,
         \App\Settings\UcsSetting::class,
+        \App\Settings\ElternabfragenSetting::class,
 
     ],
 

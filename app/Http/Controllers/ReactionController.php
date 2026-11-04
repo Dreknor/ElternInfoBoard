@@ -21,7 +21,8 @@ class ReactionController extends Controller implements HasMiddleware
      */
     public function react(Post $post, $reaction)
     {
-        $reactionModel = Reaction::where('name', $reaction)->first();
+        abort_unless(auth()->user()->can('react', $post), 403);
+        $reactionModel = Reaction::where('name', $reaction)->firstOrFail();
 
         auth()->user()->reactTo($post, $reactionModel);
 

@@ -77,7 +77,16 @@ class FeedbackController extends Controller implements HasMiddleware
     public function send(KontaktRequest $request)
     {
         if ($request->mitarbeiter != '') {
-            $email = User::query()->where('id', $request->mitarbeiter)->value('email');
+            // Nur Personen aus der Auswahlliste – nicht beliebige Konten über die Mailanlage der Schule anschreiben
+            $email = User::query()
+                ->where('id', $request->mitarbeiter)
+                ->where(fn ($q) => $q
+                    ->whereHas('roles', fn ($r) => $r->where('name', 'Mitarbeiter'))
+                    ->orWhereHas('permissions', fn ($r) => $r->where('name', 'show in contact form')))
+                ->value('email');
+            if (! $email) {
+                return redirect()->back()->withInput()->with(['type' => 'danger', 'Meldung' => 'Empfänger nicht gefunden.']);
+            }
         } else {
             $emailSettings = app(EmailSetting::class);
             $email = $emailSettings->contact_default_email ?: config('mail.from.address');
