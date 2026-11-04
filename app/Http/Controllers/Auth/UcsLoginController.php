@@ -134,14 +134,25 @@ class UcsLoginController extends Controller implements HasMiddleware
             ]);
         }
 
-        // Schülerrolle: weder anmelden noch verknüpfen (docs/konzept-schuelerkonten.md, S-02).
-        if (app(SsoStudentDetector::class)->isStudent($oidc)) {
-            Log::channel('ucs')->info('[UcsLoginController] Login abgelehnt: Schülerrolle', ['sub' => $sub]);
+        // Schüler: nie als Elternkonto anmelden oder verknüpfen (docs/konzept-schuelerkonten.md §6.1).
+        // Bei aktivem Modul und „Login über SSO“ ins Schülerkonto, sonst abgelehnt.
+        $studentLogin = app(\App\Services\Students\StudentSsoLogin::class);
+        if ($studentLogin->isStudent($oidc, $sub, $username)) {
+            [$student, $message] = Auth::check() ? [null, SsoStudentDetector::MESSAGE] : $studentLogin->resolve($sub, $username);
 
-            return redirect()->route('login')->with([
-                'type'    => 'danger',
-                'Meldung' => SsoStudentDetector::MESSAGE,
-            ]);
+            if ($student === null) {
+                Log::channel('ucs')->info('[UcsLoginController] Login abgelehnt: Schülerrolle', ['sub' => $sub]);
+
+                return redirect()->route('login')->with([
+                    'type'    => 'danger',
+                    'Meldung' => $message,
+                ]);
+            }
+
+            $this->rememberSsoSession($request, $idToken);
+            $studentLogin->login($request, $student);
+
+            return redirect()->route('student.home');
         }
 
         // ── Modus B: Eingeloggter Nutzer → Account-Linking ───────────────────

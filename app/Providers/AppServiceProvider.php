@@ -42,7 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // exists:/unique:users,… ignorieren Schülerkonten (S-04)
+        $this->app->extend('validation.presence', fn ($verifier, $app) => new \App\Validation\StudentAwarePresenceVerifier($app['db']));
     }
 
     /**

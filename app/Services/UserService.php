@@ -232,7 +232,7 @@ class UserService
      */
     public function syncGroups(User $user, ?array $groupInput): void
     {
-        if (is_null($groupInput)) {
+        if (is_null($groupInput) || $user->isStudent()) {
             return;
         }
 

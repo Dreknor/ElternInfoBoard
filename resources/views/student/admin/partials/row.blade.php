@@ -1,7 +1,7 @@
 @php
     $account = $child->studentAccount;
     $klasse = $child->class?->name ?? $child->group?->name ?? '–';
-    $statusLabel = ! $account ? 'kein Konto' : ($account->is_active ? 'aktiv' : (($settings->eltern_zustimmung && $account->student_consent !== 'ja') ? 'wartet auf Zustimmung' : 'gesperrt'));
+    $statusLabel = ! $account ? 'kein Konto' : ($account->is_active ? 'aktiv' : (($studentSettings->eltern_zustimmung && $account->student_consent !== 'ja') ? 'wartet auf Zustimmung' : 'gesperrt'));
     $statusClass = ! $account ? 'bg-gray-100 text-gray-700' : ($account->is_active ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800');
     $loginLabel = ! $account ? '' : ($account->ucs_oidc_sub || $account->ucs_source === 'kelvin' ? 'SSO' : 'Benutzername');
 @endphp

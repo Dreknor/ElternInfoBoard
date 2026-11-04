@@ -81,7 +81,7 @@ class RestrictStudentAccounts
 
     private function user(Request $request): ?User
     {
-        $user = Auth::guard('web')->user();
+        $user = Auth::guard('web')->user() ?? $request->user();
 
         if ($user === null && ($this->isApi($request) || $request->bearerToken())) {
             $user = Auth::guard('sanctum')->user();

@@ -31,7 +31,7 @@
                 @endif
                 <label class="flex items-start gap-3">
                     <input type="hidden" name="{{ $key }}" value="0">
-                    <input type="checkbox" name="{{ $key }}" value="1" class="mt-1" @checked($settings->{$key})>
+                    <input type="checkbox" name="{{ $key }}" value="1" class="mt-1" @checked($studentSettings->{$key})>
                     <span><span class="font-medium">{{ $label }}</span><br><span class="text-sm" style="color: var(--color-text-secondary);">{{ $hint }}</span></span>
                 </label>
             @endforeach
@@ -41,7 +41,7 @@
                 <p class="text-sm" style="color: var(--color-text-secondary);">Gilt nur für SSO-Anlage und UCS-Abgleich. Leer heißt: keine automatische Anlage. Anlegen in der Verwaltung und der Import sind davon unabhängig.</p>
                 <select id="freigegebene_gruppen" name="freigegebene_gruppen[]" multiple size="8" class="form-control mt-1">
                     @foreach($groups as $group)
-                        <option value="{{ $group->id }}" @selected(in_array($group->id, $settings->freigegebene_gruppen, true))>{{ $group->name }}</option>
+                        <option value="{{ $group->id }}" @selected(in_array($group->id, $studentSettings->freigegebene_gruppen, true))>{{ $group->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -49,7 +49,7 @@
             <div>
                 <label class="font-medium" for="loeschen_nach_tagen">Löschfrist nach Sperre (Tage)</label>
                 <p class="text-sm" style="color: var(--color-text-secondary);">Konten, deren Kind ausgeschieden ist, werden sofort gesperrt und nach dieser Frist gelöscht.</p>
-                <input id="loeschen_nach_tagen" type="number" min="1" max="365" name="loeschen_nach_tagen" value="{{ $settings->loeschen_nach_tagen }}" class="form-control mt-1 w-32">
+                <input id="loeschen_nach_tagen" type="number" min="1" max="365" name="loeschen_nach_tagen" value="{{ $studentSettings->loeschen_nach_tagen }}" class="form-control mt-1 w-32">
             </div>
 
             <button class="btn btn-primary w-full sm:w-auto"><i class="fas fa-save"></i> Speichern</button>

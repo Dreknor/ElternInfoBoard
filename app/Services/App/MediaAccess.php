@@ -38,7 +38,10 @@ class MediaAccess
             return true;
         }
 
-        $model = $media->model;
+        // Beiträge nur für Schüler blendet ParentAudienceScope aus – die Policy entscheidet selbst
+        $model = $media->model_type === (new Post)->getMorphClass()
+            ? Post::withStudentAudience()->find($media->model_id)
+            : $media->model;
 
         return match (true) {
             $model instanceof Post => $user->can('view', $model),

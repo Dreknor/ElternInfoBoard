@@ -65,7 +65,7 @@ class StudentAccountAdminController extends Controller
                 'aktiv' => User::students()->where('is_active', true)->count(),
                 'ohne' => Child::query()->where('status', '!=', Child::STATUS_LEFT)->whereNull('user_id')->count(),
             ],
-            'settings' => app(SchuelerSetting::class),
+            'studentSettings' => app(SchuelerSetting::class),
         ]);
     }
 
@@ -181,7 +181,7 @@ class StudentAccountAdminController extends Controller
     public function settings(): View
     {
         return view('student.admin.settings', [
-            'settings' => app(SchuelerSetting::class),
+            'studentSettings' => app(SchuelerSetting::class),
             'groups' => Group::active()->orderBy('name')->get(['id', 'name']),
             'ucsAvailable' => $this->ucsAvailable(),
         ]);

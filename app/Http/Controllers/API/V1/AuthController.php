@@ -107,7 +107,7 @@ class AuthController extends Controller
         }
 
         // Schülerrolle: kein Zugang über die Eltern-App (docs/konzept-schuelerkonten.md, S-02).
-        if (app(SsoStudentDetector::class)->isStudent($keycloakUser)) {
+        if (app(\App\Services\Students\StudentSsoLogin::class)->isStudent($keycloakUser, (string) ($keycloakUser->getId() ?? ''), data_get($keycloakUser->user ?? [], 'preferred_username'))) {
             return $this->toApp(['error' => 'student']);
         }
 

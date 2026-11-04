@@ -94,20 +94,20 @@ class StudentAccountsFoundationTest extends TestCase
     public function child_links_to_at_most_one_student_account(): void
     {
         $student = User::factory()->student()->create();
-        $child = Child::create(['first_name' => 'Max', 'last_name' => 'Muster', 'user_id' => $student->id]);
+        $child = Child::forceCreate(['first_name' => 'Max', 'last_name' => 'Muster', 'user_id' => $student->id]);
 
         $this->assertTrue($child->studentAccount->is($student));
         $this->assertTrue($student->studentChild->is($child));
 
         $this->expectException(\Illuminate\Database\QueryException::class);
-        Child::create(['first_name' => 'Moritz', 'last_name' => 'Muster', 'user_id' => $student->id]);
+        Child::forceCreate(['first_name' => 'Moritz', 'last_name' => 'Muster', 'user_id' => $student->id]);
     }
 
     /** @test */
     public function deleting_the_account_unlinks_the_child(): void
     {
         $student = User::factory()->student()->create();
-        $child = Child::create(['first_name' => 'Max', 'last_name' => 'Muster', 'user_id' => $student->id]);
+        $child = Child::forceCreate(['first_name' => 'Max', 'last_name' => 'Muster', 'user_id' => $student->id]);
 
         $student->forceDelete();
 

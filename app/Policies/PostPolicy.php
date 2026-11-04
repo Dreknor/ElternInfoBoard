@@ -12,7 +12,14 @@ class PostPolicy
 {
     public function view(User $user, Post $post): bool
     {
-        if ($user->can('view all') || (int) $post->author === $user->id) {
+        if ((int) $post->author === $user->id) {
+            return true;
+        }
+        // Nur für Schüler bestimmt: Eltern sehen den Beitrag nie, nur wer Schülerbeiträge verwaltet
+        if ($post->isStudentOnly()) {
+            return Post::managesStudentAudience($user);
+        }
+        if ($user->can('view all')) {
             return true;
         }
         if (! $post->released) {

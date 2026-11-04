@@ -29,9 +29,9 @@
                 <div class="rounded-lg border p-3" style="border-color: var(--color-card-border);"><div class="text-2xl font-bold">{{ $counts['ohne'] }}</div><div class="text-xs" style="color: var(--color-text-secondary);">Kinder ohne Konto</div></div>
             </div>
 
-            @if(! $settings->login_benutzername && ! $settings->login_sso)
+            @if(! $studentSettings->login_benutzername && ! $studentSettings->login_sso)
                 <div class="alert alert-warning text-sm">Weder SSO noch Benutzername-Login ist eingeschaltet. Schüler können sich so nicht anmelden.</div>
-            @elseif(! $settings->login_benutzername)
+            @elseif(! $studentSettings->login_benutzername)
                 <div class="alert alert-info text-sm">Der Login mit Benutzername ist aus. Einmal-Codes und Zugangszettel funktionieren erst, wenn er in den Einstellungen eingeschaltet ist.</div>
             @endif
 
@@ -115,7 +115,7 @@
             @if($orphans->isNotEmpty())
                 <div class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
                     <h6 class="mb-2 font-semibold"><i class="fas fa-exclamation-triangle"></i> Konten ohne aktives Kind</h6>
-                    <p class="mb-2">Diese Konten sind gesperrt und werden nach {{ $settings->loeschen_nach_tagen }} Tagen automatisch gelöscht.</p>
+                    <p class="mb-2">Diese Konten sind gesperrt und werden nach {{ $studentSettings->loeschen_nach_tagen }} Tagen automatisch gelöscht.</p>
                     <ul class="space-y-1">
                         @foreach($orphans as $orphan)
                             <li class="flex flex-wrap items-center justify-between gap-2">

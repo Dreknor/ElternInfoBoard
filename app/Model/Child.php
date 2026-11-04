@@ -46,8 +46,23 @@ class Child extends Model implements HasMedia
         'ucs_school',
         'ucs_synced_at',
         'ucs_source',
-        'user_id',
+        // `user_id` (Schülerkonto) bewusst nicht: nur StudentAccountService setzt es (forceFill)
     ];
+
+    protected static function booted(): void
+    {
+        // Kind ausgeschieden oder gelöscht → Schülerkonto sofort sperren (§7)
+        $lock = function (Child $child): void {
+            if ($child->user_id && ($child->trashed() || $child->status === self::STATUS_LEFT)) {
+                $student = User::students()->find($child->user_id);
+                if ($student) {
+                    app(\App\Services\Students\StudentAccountService::class)->deactivate($student, 'kind_ausgeschieden');
+                }
+            }
+        };
+        static::saved($lock);
+        static::deleted($lock);
+    }
 
     protected function casts(): array
     {
