@@ -89,11 +89,10 @@ class ContactControllerTest extends TestCase
     }
 
     /** @test */
-    public function the_sender_receives_a_copy_like_in_the_web_form(): void
+    public function the_sender_receives_a_copy_when_send_copy_is_enabled(): void
     {
         Mail::fake();
-        $absender = User::factory()->create(['email' => 'eltern@example.org']);
-        Sanctum::actingAs($absender);
+        Sanctum::actingAs(User::factory()->create(['email' => 'eltern@example.org', 'sendCopy' => 1]));
         $mitarbeiter = User::factory()->create(['email' => 'lehrkraft@example.org']);
         $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
 
@@ -105,6 +104,25 @@ class ContactControllerTest extends TestCase
 
         Mail::assertSent(SendFeedback::class, function (SendFeedback $mail) {
             return $mail->hasTo('lehrkraft@example.org') && $mail->hasCc('eltern@example.org');
+        });
+    }
+
+    /** @test */
+    public function the_sender_receives_no_copy_when_send_copy_is_disabled(): void
+    {
+        Mail::fake();
+        Sanctum::actingAs(User::factory()->create(['email' => 'eltern@example.org', 'sendCopy' => 0]));
+        $mitarbeiter = User::factory()->create(['email' => 'lehrkraft@example.org']);
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+
+        $this->postJson('/api/contact', [
+            'mitarbeiter' => $mitarbeiter->id,
+            'betreff' => 'Frage',
+            'text' => 'Hallo',
+        ])->assertOk();
+
+        Mail::assertSent(SendFeedback::class, function (SendFeedback $mail) {
+            return $mail->hasTo('lehrkraft@example.org') && ! $mail->hasCc('eltern@example.org');
         });
     }
 }

@@ -131,6 +131,7 @@ class ContactController extends Controller implements HasMiddleware
             $directory,
             $user?->name,
             $user?->email,
+            (bool) $user?->sendCopy,
         );
 
         return response()->json(['success' => 'Mail sent'], 200);
