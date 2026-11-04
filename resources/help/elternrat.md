@@ -13,6 +13,7 @@ Mit der Berechtigung **„view elternrat"** hast du Zugriff auf den geschützten
 
 - **Events anlegen** (z. B. Sitzungen, Aktionen).
 - **Teilnahme** zusagen, absagen oder offenhalten.
+- **Bearbeiten** (Stift-Symbol) und **Löschen** (Papierkorb) – auch bei vergangenen Terminen. Erlaubt für die Person, die den Termin angelegt hat, für alle Mitglieder der Rolle **„Elternrat"** sowie mit der Berechtigung „delete elternrat file".
 - Vor Sitzungen werden automatisch **Erinnerungen** versendet.
 
 ## Aufgaben (Tasks)

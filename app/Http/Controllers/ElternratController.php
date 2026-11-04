@@ -130,7 +130,7 @@ class ElternratController extends Controller implements HasMiddleware
 
         return redirect()->to(url('elternrat'))->with([
             'type' => 'success',
-            'meldung' => 'Beitrag erstellt',
+            'Meldung' => 'Beitrag erstellt',
         ]);
     }
 
@@ -148,13 +148,13 @@ class ElternratController extends Controller implements HasMiddleware
 
             return redirect()->to(url('elternrat'))->with([
                 'type' => 'success',
-                'meldung' => 'Beitrag gelöscht',
+                'Meldung' => 'Beitrag gelöscht',
             ]);
         }
 
         return redirect()->to(url('elternrat'))->with([
             'type' => 'danger',
-            'meldung' => 'Berechtigung fehlt',
+            'Meldung' => 'Berechtigung fehlt',
         ]);
     }
 
@@ -302,7 +302,7 @@ class ElternratController extends Controller implements HasMiddleware
 
         return back()->with([
             'type' => 'success',
-            'meldung' => 'Benachrichtigungen aktiviert',
+            'Meldung' => 'Benachrichtigungen aktiviert',
         ]);
     }
 
@@ -317,7 +317,7 @@ class ElternratController extends Controller implements HasMiddleware
 
         return back()->with([
             'type' => 'success',
-            'meldung' => 'Benachrichtigungen deaktiviert',
+            'Meldung' => 'Benachrichtigungen deaktiviert',
         ]);
     }
 
