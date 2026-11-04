@@ -114,8 +114,31 @@
             </div>
             <div class="col-md-6 col-sm-12 m-auto">
                 <div class="small">
-                    Wählen Sie das Bundesland aus, anhand dessen die Schulferien abgerufen werden. Dies wird für den automatischen täglichen Check-In und die Anzeige von Arbeitsgemeinschaften in der Anwesenheitsliste berücksichtigt.
+                    Wählen Sie das Bundesland aus, anhand dessen die Schulferien abgerufen werden. Dies wird für den automatischen täglichen Check-In, die Anzeige von Arbeitsgemeinschaften in der Anwesenheitsliste und die Ferienwochen im Reinigungsplan berücksichtigt.
                 </div>
+            </div>
+        </div>
+
+        <div class="form-row mt-1 p-2 border">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <strong>Geladene Ferien ({{ \App\Services\HolidayService::bundeslaender()[$careSettings->bundesland] ?? $careSettings->bundesland }})</strong>
+                    <button type="submit" form="refreshHolidaysForm" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-sync"></i> Ferien neu laden
+                    </button>
+                </div>
+                @if(($ferien ?? collect())->isEmpty())
+                    <div class="alert alert-warning small mb-0">
+                        Es sind keine aktuellen Ferien gespeichert. Ferienwochen im Reinigungsplan und der Ferien-Check-In funktionieren erst, wenn die Ferien geladen sind.
+                        Quellen: ferien-api.de, ersatzweise openholidaysapi.org. Der Server muss diese Adressen erreichen können.
+                    </div>
+                @else
+                    <ul class="small mb-0">
+                        @foreach($ferien as $holiday)
+                            <li>{{ \Illuminate\Support\Str::ucfirst($holiday->name) }}: {{ $holiday->start->format('d.m.Y') }} – {{ $holiday->end->format('d.m.Y') }}</li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         </div>
 
@@ -283,6 +306,10 @@
                 Save Settings
             </button>
         </div>
+    </form>
+    {{-- Eigenes Formular (verschachtelte Formulare sind nicht erlaubt) für „Ferien neu laden“ --}}
+    <form id="refreshHolidaysForm" method="POST" action="{{ route('settings.holidays.refresh') }}" class="d-none">
+        @csrf
     </form>
 </div>
 
