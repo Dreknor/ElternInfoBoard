@@ -29,6 +29,26 @@ class Module extends Model
         ));
     }
 
+    /**
+     * Rechte gesperrter Module (Spalte `permissions.module`). Sie erscheinen in keiner
+     * Rechteauswahl und bleiben beim Speichern unverändert.
+     *
+     * @return string[]
+     */
+    public static function lockedPermissionNames(): array
+    {
+        $locked = self::lockedSettings();
+
+        if (empty($locked)) {
+            return [];
+        }
+
+        return \Spatie\Permission\Models\Permission::query()
+            ->whereIn('module', $locked)
+            ->pluck('name')
+            ->all();
+    }
+
     public static function isLockedSetting(string $setting): bool
     {
         return in_array($setting, self::lockedSettings(), true);

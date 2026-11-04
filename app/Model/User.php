@@ -65,6 +65,7 @@ class User extends Authenticatable implements Auditable
         'is_active', 'deactivated_at', 'messenger_discoverable',
         'ucs_uuid', 'ucs_username', 'ucs_oidc_sub', 'ucs_school', 'ucs_synced_at', 'ucs_source',
         'family_id',
+        'account_type', 'username',
     ];
 
     /**
@@ -95,6 +96,40 @@ class User extends Authenticatable implements Auditable
             'messenger_discoverable' => 'boolean',
             'ucs_synced_at' => 'datetime',
         ];
+    }
+
+    /** Kontoart: normales Konto (Eltern, Mitarbeitende, Verwaltung). */
+    public const ACCOUNT_STANDARD = 'standard';
+
+    /** Kontoart: Schülerkonto (docs/konzept-schuelerkonten.md §3). */
+    public const ACCOUNT_STUDENT = 'student';
+
+    /**
+     * Ist das ein Schülerkonto? Die einzige Abfrage der Kontoart im restlichen Code.
+     */
+    public function isStudent(): bool
+    {
+        return $this->account_type === self::ACCOUNT_STUDENT;
+    }
+
+    /** Nur normale Konten (für „alle Nutzer“-Auswahlen in Verwaltungsmasken). */
+    public function scopeWithoutStudents(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where($q->qualifyColumn('account_type'), '!=', self::ACCOUNT_STUDENT)
+            ->orWhereNull($q->qualifyColumn('account_type')));
+    }
+
+    /** Nur Schülerkonten. */
+    public function scopeStudents(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('account_type'), self::ACCOUNT_STUDENT);
+    }
+
+    /** Das Kind, zu dem dieses Schülerkonto gehört (`children.user_id`). */
+    public function studentChild(): HasOne
+    {
+        return $this->hasOne(Child::class, 'user_id');
     }
 
     public function notifications(): HasMany

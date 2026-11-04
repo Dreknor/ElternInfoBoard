@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Module;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -19,6 +20,7 @@ class RolesController extends Controller
     {
         $permissionsByModule = Permission::query()
             ->where('guard_name', 'web')
+            ->whereNotIn('name', Module::lockedPermissionNames())
             ->orderBy('module')
             ->orderBy('name')
             ->get()
@@ -35,8 +37,12 @@ class RolesController extends Controller
      */
     public function update(Request $request)
     {
+        $hidden = Module::lockedPermissionNames();
+
         foreach (Role::all() as $role) {
-            $role->syncPermissions($request->input($role->name));
+            // Rechte gesperrter Module stehen nicht im Formular und bleiben unverändert.
+            $keep = $role->permissions->pluck('name')->intersect($hidden)->all();
+            $role->syncPermissions(array_merge((array) $request->input($role->name, []), $keep));
         }
 
         return redirect()->back()->with([

@@ -46,6 +46,7 @@ class Child extends Model implements HasMedia
         'ucs_school',
         'ucs_synced_at',
         'ucs_source',
+        'user_id',
     ];
 
     protected function casts(): array
@@ -57,6 +58,12 @@ class Child extends Model implements HasMedia
             'entry_date' => 'date',
             'exit_date' => 'date',
         ];
+    }
+
+    /** Schülerkonto des Kindes (docs/konzept-schuelerkonten.md §3), höchstens eines. */
+    public function studentAccount(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function group(): BelongsTo
