@@ -63,7 +63,8 @@ class Child extends Model implements HasMedia
     /** Schülerkonto des Kindes (docs/konzept-schuelerkonten.md §3), höchstens eines. */
     public function studentAccount(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')
+            ->withoutGlobalScope(\App\Model\Scopes\ExcludeStudentAccounts::class);
     }
 
     public function group(): BelongsTo

@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Model\Concerns\HasAudience;
 use App\Traits\NotificationTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class Termin extends Model implements Auditable
 {
+    use HasAudience;
     use HasFactory;
     use HasRelationships;
     use NotificationTrait;
@@ -54,6 +56,11 @@ class Termin extends Model implements Auditable
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_termine');
+    }
+
+    protected static function audienceManagePermission(): string
+    {
+        return 'edit termin';
     }
 
     protected static function boot()

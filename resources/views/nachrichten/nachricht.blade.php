@@ -1,3 +1,7 @@
+{{-- Zielgruppe nur bei aktivem Modul und nur, wenn sie nicht „Eltern“ ist (docs/konzept-schuelerkonten.md §1.1) --}}
+@if(($nachricht->zielgruppe ?? 'eltern') !== 'eltern' && \App\Support\StudentAccounts::enabled())
+    <div class="mb-1 flex"><span class="inline-flex items-center gap-1 rounded-full border border-indigo-300 bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-800"><i class="fas fa-user-graduate"></i>Sichtbar für: {{ \App\Support\AudienceField::label($nachricht->zielgruppe) }}</span></div>
+@endif
 @if((count($nachricht->getMedia('images'))>0 or count($nachricht->getMedia('files'))>0) and $nachricht->type == 'image')
         <!-- Image Gallery Type -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6 @foreach($nachricht->groups as $group) {{\Illuminate\Support\Str::camel($group->name)}} @endforeach">

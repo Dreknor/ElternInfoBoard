@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use App\Enums\GuardianRight;
+use App\Model\Scopes\ExcludeStudentAccounts;
 use App\Services\Family\FamilyResolver;
 use App\Services\Push\WebPushRouting;
 use Carbon\Carbon;
@@ -36,7 +37,12 @@ class User extends Authenticatable implements Auditable
     use HasFactory;
     use HasPushSubscriptions;
     use HasRelationships;
-    use HasRoles;
+    use HasRoles {
+        assignRole as protected traitAssignRole;
+        syncRoles as protected traitSyncRoles;
+        givePermissionTo as protected traitGivePermissionTo;
+        syncPermissions as protected traitSyncPermissions;
+    }
     use Notifiable;
     use \OwenIt\Auditing\Auditable;
     use Reacts;
@@ -47,6 +53,71 @@ class User extends Authenticatable implements Auditable
     {
         parent::boot();
         static::creating(fn ($foo) => $foo->uuid = Str::uuid());
+
+        // Schülerkonten fehlen in jeder Nutzerabfrage (docs/konzept-schuelerkonten.md §5).
+        static::addGlobalScope(new ExcludeStudentAccounts);
+
+        // Schülerkonten haben nie E-Mail, Benachrichtigungen, Kopie oder Messenger-Sichtbarkeit (§3, §5).
+        static::saving(function (self $user) {
+            if ($user->isStudent()) {
+                $user->email = null;
+                $user->benachrichtigung = 'off';
+                $user->sendCopy = 0;
+                $user->messenger_discoverable = false;
+                $user->track_login = false;
+                $user->changeSettings = false;
+                $user->publicMail = null;
+                $user->publicPhone = null;
+                $user->phone = null;
+                $user->sorg2 = null;
+                $user->family_id = null;
+            }
+        });
+    }
+
+    /**
+     * Schülerkonten bekommen nie Rollen oder Rechte (docs/konzept-schuelerkonten.md §5.2).
+     * Die Sperre greift für jeden Aufrufer, nicht nur für die Verwaltungsmasken.
+     */
+    public function assignRole(...$roles)
+    {
+        $this->guardStudentPermissions();
+
+        return $this->traitAssignRole(...$roles);
+    }
+
+    public function syncRoles(...$roles)
+    {
+        $this->guardStudentPermissions(! empty(array_filter(\Illuminate\Support\Arr::flatten($roles))));
+
+        return $this->traitSyncRoles(...$roles);
+    }
+
+    public function givePermissionTo(...$permissions)
+    {
+        $this->guardStudentPermissions();
+
+        return $this->traitGivePermissionTo(...$permissions);
+    }
+
+    public function syncPermissions(...$permissions)
+    {
+        $this->guardStudentPermissions(! empty(array_filter(\Illuminate\Support\Arr::flatten($permissions))));
+
+        return $this->traitSyncPermissions(...$permissions);
+    }
+
+    private function guardStudentPermissions(bool $granting = true): void
+    {
+        if ($granting && $this->isStudent()) {
+            throw new \LogicException('Schülerkonten erhalten keine Rollen oder Rechte.');
+        }
+    }
+
+    /** Schülerkonten bekommen nie Mails (docs/konzept-schuelerkonten.md §3). */
+    public function routeNotificationForMail($notification = null): ?string
+    {
+        return $this->isStudent() ? null : $this->email;
     }
 
     /** Browser-Abos ohne die Geräte, auf denen die App bereits Push erhält (sonst doppelte Mitteilungen). */
@@ -74,7 +145,7 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'student_code_hash',
     ];
 
     /**
@@ -95,6 +166,8 @@ class User extends Authenticatable implements Auditable
             'deactivated_at' => 'datetime',
             'messenger_discoverable' => 'boolean',
             'ucs_synced_at' => 'datetime',
+            'student_code_expires_at' => 'datetime',
+            'student_consent_at' => 'datetime',
         ];
     }
 
@@ -112,18 +185,26 @@ class User extends Authenticatable implements Auditable
         return $this->account_type === self::ACCOUNT_STUDENT;
     }
 
-    /** Nur normale Konten (für „alle Nutzer“-Auswahlen in Verwaltungsmasken). */
+    /**
+     * Nur normale Konten. Entspricht dem globalen Scope ExcludeStudentAccounts; bleibt für
+     * Abfragen, die globale Scopes aufheben (`withoutGlobalScopes()`).
+     */
     public function scopeWithoutStudents(Builder $query): Builder
     {
-        return $query->where(fn (Builder $q) => $q
-            ->where($q->qualifyColumn('account_type'), '!=', self::ACCOUNT_STUDENT)
-            ->orWhereNull($q->qualifyColumn('account_type')));
+        return $query->where($query->qualifyColumn('account_type'), '!=', self::ACCOUNT_STUDENT);
+    }
+
+    /** Normale Konten und Schülerkonten (nur Anmeldung, Schülerverwaltung, Schüleransicht). */
+    public function scopeWithStudents(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope(ExcludeStudentAccounts::class);
     }
 
     /** Nur Schülerkonten. */
     public function scopeStudents(Builder $query): Builder
     {
-        return $query->where($query->qualifyColumn('account_type'), self::ACCOUNT_STUDENT);
+        return $query->withoutGlobalScope(ExcludeStudentAccounts::class)
+            ->where($query->qualifyColumn('account_type'), self::ACCOUNT_STUDENT);
     }
 
     /** Das Kind, zu dem dieses Schülerkonto gehört (`children.user_id`). */

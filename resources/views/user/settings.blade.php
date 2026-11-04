@@ -613,6 +613,10 @@
                                                     @endforelse
                                                     <div class="mt-0.5" style="color: var(--color-text-muted);">Außerdem Verwaltung und Betreuungspersonal der Schule im Rahmen ihrer Aufgaben.</div>
                                                 </div>
+                                                {{-- Schülerkonto des Kindes: nur bei aktivem Modul (docs/konzept-schuelerkonten.md §9, S-10) --}}
+                                                @if(\App\Support\StudentAccounts::enabled())
+                                                    @include('student.parent.child-account', ['child' => $child])
+                                                @endif
                                             </div>
                                             @can('manage', $child)
                                             <div class="flex items-center gap-1.5">

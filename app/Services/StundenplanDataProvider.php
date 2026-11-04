@@ -194,5 +194,57 @@ class StundenplanDataProvider
         Cache::forget('stundenplan_data_from_db');
         Cache::forget('stundenplan_data'); // Old cache key
     }
-}
 
+    /**
+     * Stundenplan einer Klasse als [Tag 1–5][Stunde] => Eintrag (oder null).
+     */
+    public function timetableForClass(array $data, string $className): array
+    {
+        $maxStunde = 6;
+        foreach ((array) ($data['Zeitslots'] ?? []) as $slot) {
+            $maxStunde = max($maxStunde, (int) ($slot['Stunde'] ?? 0));
+        }
+
+        $timetable = [];
+        for ($tag = 1; $tag <= 5; $tag++) {
+            for ($stunde = 1; $stunde <= $maxStunde; $stunde++) {
+                $timetable[$tag][$stunde] = null;
+            }
+        }
+
+        foreach ((array) ($data['Klassen'] ?? []) as $klasse) {
+            if (($klasse['Kurzform'] ?? null) !== $className) {
+                continue;
+            }
+            foreach ((array) ($klasse['Plan'] ?? []) as $entry) {
+                $tag = (int) ($entry['PlTg'] ?? 0);
+                $stunde = (int) ($entry['PlSt'] ?? 0);
+                if ($tag >= 1 && $tag <= 5 && $stunde >= 1 && $stunde <= $maxStunde) {
+                    $timetable[$tag][$stunde] = $entry;
+                }
+            }
+            break;
+        }
+
+        return $timetable;
+    }
+
+    /**
+     * Zeitraster einer Klasse (Zeitslots ihres Schuljahres), nach Stunde sortiert.
+     */
+    public function zeitslotsForClass(array $data, string $className): array
+    {
+        $schuljahrId = null;
+        foreach ((array) ($data['Klassen'] ?? []) as $klasse) {
+            if (($klasse['Kurzform'] ?? null) === $className) {
+                $schuljahrId = $klasse['schuljahr_id'] ?? null;
+                break;
+            }
+        }
+
+        $slots = array_values(array_filter((array) ($data['Zeitslots'] ?? []), fn ($slot) => ($slot['schuljahr_id'] ?? null) === $schuljahrId));
+        usort($slots, fn ($a, $b) => (int) $a['Stunde'] <=> (int) $b['Stunde']);
+
+        return $slots;
+    }
+}

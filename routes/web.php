@@ -905,3 +905,10 @@ Route::middleware(['auth', 'password_expired'])->group(function () {
          ->middleware(['throttle:10,1', 'permission:use support widget|create support ticket'])
          ->name('support.ticket');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Schülerkonten (nur bei aktivem Modul, siehe routes/student.php)
+|--------------------------------------------------------------------------
+*/
+require __DIR__.'/student.php';

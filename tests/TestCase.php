@@ -21,6 +21,10 @@ abstract class TestCase extends BaseTestCase
         // (migrate:fresh resets auto-increment → gleiche User-IDs → gleiche Cache-Keys)
         Cache::flush();
 
+        // Modulstatus der Schülerkonten wird je Anfrage zwischengespeichert
+        \App\Support\StudentAccounts::flush();
+        \App\Services\Students\StudentContext::forget();
+
         // Spatie Permission-Cache vor jedem Test leeren, um PermissionAlreadyExists /
         // PermissionDoesNotExist-Fehler durch In-Memory-Cache-Kontamination zu vermeiden.
         $this->app->make(PermissionRegistrar::class)->forgetCachedPermissions();

@@ -112,4 +112,11 @@
             {{ $keycloakButtonText ?: 'Anmelden mit Schul-Login' }}
         </a>
     @endif
+
+    {{-- Schülerkonten: nur bei aktivem Modul und Login mit Benutzername (docs/konzept-schuelerkonten.md §6.2) --}}
+    @if(\App\Support\StudentAccounts::usernameLoginEnabled())
+        <p class="lg-hint" style="margin-top:1.25rem;text-align:center">
+            <a href="{{ route('student.login') }}" class="lg-link"><i class="fas fa-user-graduate"></i> Anmeldung für Schülerinnen und Schüler</a>
+        </p>
+    @endif
 @endsection
