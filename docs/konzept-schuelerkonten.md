@@ -1,6 +1,6 @@
 # Schülerkonten (optional)
 
-Stand: 04.11.2026 · Konzept geprüft, Entscheidungen eingearbeitet (§12) · **umgesetzt: S-01 bis S-12** (S-13 App und S-14 Messenger offen)
+Stand: 04.11.2026 · Konzept geprüft, Entscheidungen eingearbeitet (§12) · **umgesetzt: S-01 bis S-14** (S-13 im App-Repository, PR Dreknor/elterninfo_app#19)
 
 Schulen können Schülerinnen und Schülern ein eigenes, stark eingeschränktes Konto geben.
 Wo ein Schul-Login (SSO) besteht, melden sich Schüler darüber an. Ohne SSO gibt es einen
@@ -351,8 +351,8 @@ Reihenfolge: S-01, S-03, dann S-04 bis S-07, direkt danach der Import S-07b.
 | S-10 | Eltern-Sicht: Status, Zustimmung, Codes | S-07 | umgesetzt |
 | S-11 | Protokoll, Aufräumen und Löschfrist für alle Konten (§7), Datenschutz-Auskunft | S-01 | umgesetzt |
 | S-12 | API `v1/student/*`, Token-Fähigkeit `student`, `account_type` im Bootstrap | S-05, S-06 | umgesetzt |
-| S-13 | App: Schüleransicht, Login per Code/QR, Projektregel anpassen | S-12 | |
-| S-14 | Messenger Schüler ↔ Lehrkräfte (optional je Schule) | S-03 | |
+| S-13 | App: Schüleransicht, Login per Code/QR, Projektregel anpassen | S-12 | umgesetzt (App-PR #19) |
+| S-14 | Messenger Schüler ↔ Lehrkräfte (optional je Schule) | S-03 | umgesetzt |
 
 ## 12. Entscheidungen
 
