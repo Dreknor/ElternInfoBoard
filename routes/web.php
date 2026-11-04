@@ -585,6 +585,7 @@ Route::middleware('auth')->group(function () {
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);
             Route::post('settings/ucs/test', [SettingsController::class, 'ucsTestConnection'])->name('settings.ucs.test');
+            Route::post('settings/holidays/refresh', [SettingsController::class, 'refreshHolidays'])->name('settings.holidays.refresh');
             Route::post('settings/ucs/sync', [SettingsController::class, 'ucsRunSync'])
                 ->name('settings.ucs.sync')
                 ->middleware('permission:manage ucs sync');
@@ -634,6 +635,8 @@ Route::middleware('auth')->group(function () {
             Route::post('elternrat/events', [\App\Http\Controllers\ElternratEventController::class, 'store'])->name('elternrat.events.store');
             Route::post('elternrat/events/{event}/attendance', [\App\Http\Controllers\ElternratEventController::class, 'updateAttendance'])->name('elternrat.events.attendance');
             Route::delete('elternrat/events/{event}', [\App\Http\Controllers\ElternratEventController::class, 'destroy'])->name('elternrat.events.destroy');
+            Route::get('elternrat/events/{event}/edit', [\App\Http\Controllers\ElternratEventController::class, 'edit'])->name('elternrat.events.edit');
+            Route::put('elternrat/events/{event}', [\App\Http\Controllers\ElternratEventController::class, 'update'])->name('elternrat.events.update');
 
             // Tasks/Aufgaben (VOR resource, um Konflikte zu vermeiden)
             Route::get('elternrat/tasks', [\App\Http\Controllers\ElternratTaskController::class, 'index'])->name('elternrat.tasks.index');

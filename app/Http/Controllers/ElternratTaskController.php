@@ -66,7 +66,7 @@ class ElternratTaskController extends Controller implements HasMiddleware
 
         return back()->with([
             'type' => 'success',
-            'meldung' => 'Aufgabe erstellt',
+            'Meldung' => 'Aufgabe erstellt',
         ]);
     }
 
@@ -87,7 +87,7 @@ class ElternratTaskController extends Controller implements HasMiddleware
 
         return back()->with([
             'type' => 'success',
-            'meldung' => 'Status aktualisiert',
+            'Meldung' => 'Status aktualisiert',
         ]);
     }
 
@@ -101,13 +101,13 @@ class ElternratTaskController extends Controller implements HasMiddleware
 
             return back()->with([
                 'type' => 'success',
-                'meldung' => 'Aufgabe gelöscht',
+                'Meldung' => 'Aufgabe gelöscht',
             ]);
         }
 
         return back()->with([
             'type' => 'danger',
-            'meldung' => 'Keine Berechtigung',
+            'Meldung' => 'Keine Berechtigung',
         ]);
     }
 }

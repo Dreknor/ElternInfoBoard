@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        // Gleiches Formular für Anlegen und Bearbeiten
+        $event = $event ?? null;
+        $fmt = fn ($d) => $d ? $d->format('Y-m-d\\TH:i') : null;
+    @endphp
     <div class="container-fluid px-4 py-6">
         <div class="max-w-3xl mx-auto">
             <!-- Back Button -->
@@ -17,7 +22,7 @@
                 <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                     <h5 class="text-lg font-bold text-white flex items-center gap-2 mb-0">
                         <i class="fas fa-calendar-plus"></i>
-                        Neuer Termin
+                        {{ $event ? 'Termin bearbeiten' : 'Neuer Termin' }}
                     </h5>
                 </div>
 
@@ -40,8 +45,11 @@
                 @endif
 
                 <div class="p-6">
-                    <form action="{{route('elternrat.events.store')}}" method="POST" class="space-y-6">
+                    <form action="{{ $event ? route('elternrat.events.update', $event) : route('elternrat.events.store') }}" method="POST" class="space-y-6">
                         @csrf
+                        @if($event)
+                            @method('PUT')
+                        @endif
 
                         <!-- Title -->
                         <div>
@@ -50,7 +58,7 @@
                             </label>
                             <input type="text"
                                    name="title"
-                                   value="{{old('title')}}"
+                                   value="{{old('title', $event?->title)}}"
                                    required
                                    placeholder="z.B. Elternratssitzung November"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
@@ -64,7 +72,7 @@
                             <textarea name="description"
                                       rows="4"
                                       placeholder="Tagesordnung und weitere Informationen..."
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none">{{old('description')}}</textarea>
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none">{{old('description', $event?->description)}}</textarea>
                             <p class="mt-1 text-xs text-gray-500">
                                 <i class="fas fa-info-circle"></i>
                                 Optional: Fügen Sie Details zur Tagesordnung oder wichtige Hinweise hinzu
@@ -79,7 +87,7 @@
                                 </label>
                                 <input type="datetime-local"
                                        name="start_time"
-                                       value="{{old('start_time')}}"
+                                       value="{{old('start_time', $fmt($event?->start_time))}}"
                                        required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
                             </div>
@@ -89,7 +97,7 @@
                                 </label>
                                 <input type="datetime-local"
                                        name="end_time"
-                                       value="{{old('end_time')}}"
+                                       value="{{old('end_time', $fmt($event?->end_time))}}"
                                        required
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
                             </div>
@@ -102,7 +110,7 @@
                             </label>
                             <input type="text"
                                    name="location"
-                                   value="{{old('location')}}"
+                                   value="{{old('location', $event?->location)}}"
                                    placeholder="z.B. Schule, Raum 101"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
                             <p class="mt-1 text-xs text-gray-500">
@@ -122,7 +130,7 @@
                                     <input type="checkbox"
                                            name="send_reminder"
                                            value="1"
-                                           checked
+                                           @checked(old('send_reminder', $event ? $event->send_reminder : true))
                                            class="w-5 h-5 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2">
                                     <span class="text-sm text-gray-700">Erinnerung an Teilnehmer senden</span>
                                 </label>
@@ -130,14 +138,14 @@
                                     <label class="text-sm text-gray-700">Stunden vorher:</label>
                                     <select name="reminder_hours"
                                             class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white">
-                                        <option value="1">1 Stunde</option>
-                                        <option value="3">3 Stunden</option>
-                                        <option value="6">6 Stunden</option>
-                                        <option value="12">12 Stunden</option>
-                                        <option value="24" selected>24 Stunden</option>
-                                        <option value="48">48 Stunden</option>
-                                        <option value="72">72 Stunden</option>
-                                        <option value="168">1 Woche</option>
+                                        <option value="1" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 1)>1 Stunde</option>
+                                        <option value="3" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 3)>3 Stunden</option>
+                                        <option value="6" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 6)>6 Stunden</option>
+                                        <option value="12" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 12)>12 Stunden</option>
+                                        <option value="24" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 24)>24 Stunden</option>
+                                        <option value="48" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 48)>48 Stunden</option>
+                                        <option value="72" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 72)>72 Stunden</option>
+                                        <option value="168" @selected((int) old('reminder_hours', $event?->reminder_hours ?? 24) === 168)>1 Woche</option>
                                     </select>
                                 </div>
                             </div>
@@ -148,7 +156,7 @@
                             <button type="submit"
                                     class="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
                                 <i class="fas fa-save"></i>
-                                <span>Termin erstellen</span>
+                                <span>{{ $event ? 'Änderungen speichern' : 'Termin erstellen' }}</span>
                             </button>
                             <a href="{{route('elternrat.events.index')}}"
                                class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2">

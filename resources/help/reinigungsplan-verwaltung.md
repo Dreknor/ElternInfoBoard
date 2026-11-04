@@ -24,6 +24,7 @@ Nur im gemeinsamen Modus relevant: Über **„Bereiche vom gemeinsamen Plan auss
 - Ferienwochen sind im Plan immer mit einem Hinweis **„Ferien: …"** markiert.
 - Ist **„Ferienwochen im Reinigungsplan auslassen"** aktiviert (Einstellungen → Reinigung), werden Ferienwochen beim automatischen Befüllen nicht verplant; leere Ferienwochen erscheinen als kompakte Zeile **„keine Reinigung"**.
 - Als Ferienwoche gilt eine Woche, in der mindestens **3 Schultage (Mo–Fr)** in den Ferien liegen – auch über den Jahreswechsel (Weihnachtsferien). Grundlage ist das Bundesland aus den **Care-Einstellungen**.
+- Werden keine Ferien angezeigt, zeigt der Plan einen Hinweis. Unter **Einstellungen → Care** sind die geladenen Ferien aufgelistet; **„Ferien neu laden"** holt sie erneut (Quelle ferien-api.de, ersatzweise openholidaysapi.org – der Server muss diese Adressen erreichen). Auf dem Server geht das auch mit `php artisan holidays:refresh`.
 
 ## Eintrag manuell erstellen
 

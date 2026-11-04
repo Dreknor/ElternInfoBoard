@@ -14,6 +14,16 @@
             </div>
         </div>
 
+        @if(($ferienFehlen ?? false) && $user->can('edit reinigung'))
+            <div class="rounded-lg p-3 d-flex align-items-start gap-2" style="background: var(--color-widget-warning-bg); border: 1px solid var(--color-widget-warning-border);">
+                <i class="fas fa-exclamation-triangle mt-1" style="color: var(--color-widget-warning-from);"></i>
+                <span style="color: var(--color-text-primary);">
+                    Es sind keine Ferien geladen, deshalb werden keine Ferienwochen angezeigt.
+                    Prüfen Sie unter <a href="{{ url('settings#care') }}">Einstellungen → Care</a> das Bundesland und laden Sie die Ferien neu.
+                </span>
+            </div>
+        @endif
+
         @if(count($Bereiche) < 1)
             <div class="rounded-lg shadow-lg overflow-hidden" style="background: var(--color-card-bg);">
                 <div class="text-center py-5 px-4">
