@@ -42,7 +42,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     use Reactable;
     use SoftDeletes;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'confidential', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
 
     protected array $cloneable_relations = ['groups', 'recipientUsers', 'rueckmeldung'];
 
@@ -55,6 +55,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
             'read_receipt_deadline' => 'datetime',
             'reactable' => 'boolean',
             'external' => 'boolean',
+            'confidential' => 'boolean',
             'read_receipt' => 'boolean',
             'no_header' => 'boolean',
         ];
@@ -158,6 +159,37 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         self::constrainToRecipient($query, $user);
 
         return $query;
+    }
+
+    /**
+     * Vertrauliche Beiträge anderer ausblenden, die der Nutzer nicht als Empfänger
+     * (Gruppe oder direkt freigegeben) erhält. Für alle Abfragen, die sonst über
+     * Berechtigungen wie „view all“, „create posts“ oder „edit posts“ alle Beiträge laden.
+     */
+    #[Scope]
+    protected function withoutForeignConfidential(Builder $query, User $user): void
+    {
+        $query->where(function ($q) use ($user) {
+            $q->where('posts.confidential', false)
+                ->orWhere('posts.author', $user->id)
+                // Empfänger: Gruppenmitglieder und direkt freigegebene Personen
+                ->orWhere(fn ($r) => self::constrainToRecipient($r, $user));
+        });
+    }
+
+    /** Ist der Nutzer Autor oder Empfänger (Gruppe oder direkt freigegeben)? */
+    public function isAuthorOrRecipient(User $user): bool
+    {
+        return (int) $this->author === $user->id || $this->hasRecipient($user);
+    }
+
+    /**
+     * Vertraulicher Beitrag, den der Nutzer weder verfasst noch erhalten hat –
+     * dann gilt keine Berechtigung („view all“, „edit posts“, …).
+     */
+    public function isHiddenFrom(User $user): bool
+    {
+        return (bool) $this->confidential && ! $this->isAuthorOrRecipient($user);
     }
 
     public function poll(): HasOne

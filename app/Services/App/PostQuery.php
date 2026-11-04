@@ -16,7 +16,8 @@ class PostQuery
         $query = Post::query();
 
         if ($user->can('view all')) {
-            return $query->where(fn ($q) => $q->where('released', 1)->orWhere('author', $user->id));
+            return $query->withoutForeignConfidential($user)
+                ->where(fn ($q) => $q->where('released', 1)->orWhere('author', $user->id));
         }
 
         return $query->where(function ($q) use ($user) {
