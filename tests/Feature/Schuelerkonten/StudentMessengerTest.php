@@ -148,4 +148,12 @@ class StudentMessengerTest extends TestCase
 
         $this->assertSame(0, Conversation::withTrashed()->count());
     }
+
+    /** @test */
+    public function student_push_targets_open_the_student_view_in_the_app(): void
+    {
+        $this->assertSame(['type' => 'student_chat', 'id' => 7], \App\Services\Push\PushTarget::fromUrl('https://schule.de/schueler/chat/7'));
+        $this->assertSame(['type' => 'student_post', 'id' => 3], \App\Services\Push\PushTarget::fromUrl('https://schule.de/schueler/nachrichten/3'));
+        $this->assertSame(['type' => 'student_termin', 'id' => null], \App\Services\Push\PushTarget::fromUrl('https://schule.de/schueler/termine'));
+    }
 }
