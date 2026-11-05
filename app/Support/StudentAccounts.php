@@ -38,6 +38,12 @@ final class StudentAccounts
         self::ZIELGRUPPE_ELTERN_SCHUELER,
     ];
 
+    /** Sanctum-Fähigkeit der App-Tokens von Schülerkonten (§8). */
+    public const TOKEN_ABILITY = 'student';
+
+    /** Laufzeit der App-Tokens von Schülerkonten in Tagen (§6.2). */
+    public const TOKEN_DAYS = 30;
+
     /** Ist die Funktion auf dieser Instanz freigeschaltet und als Modul aktiv? */
     public static function enabled(): bool
     {
@@ -45,9 +51,40 @@ final class StudentAccounts
             return false;
         }
 
-        $module = Module::query()->where('setting', self::MODULE)->first();
-        $active = $module?->options['active'] ?? false;
+        // Je Anfrage einmal aus der Datenbank (wird bei Änderungen am Modul verworfen, siehe Module::booted)
+        $app = spl_object_id(app());
+        // In Konsole/Queue-Workern (langlebige Prozesse) nicht zwischenspeichern, außer in Tests
+        if (self::$active === null || self::$activeFor !== $app || (app()->runningInConsole() && ! app()->runningUnitTests())) {
+            $module = Module::query()->where('setting', self::MODULE)->first();
+            $active = $module?->options['active'] ?? false;
+            self::$active = $active === true || $active === 1 || $active === '1';
+            self::$activeFor = $app;
+        }
 
-        return $active === true || $active === 1 || $active === '1';
+        return self::$active;
+    }
+
+    private static ?bool $active = null;
+
+    private static ?int $activeFor = null;
+
+    /** Zwischengespeicherten Modulstatus verwerfen. */
+    public static function flush(): void
+    {
+        self::$active = null;
+    }
+
+    /** Login mit Benutzername für Schüler möglich (Modul aktiv und Einstellung an)? */
+    public static function usernameLoginEnabled(): bool
+    {
+        if (! self::enabled()) {
+            return false;
+        }
+
+        try {
+            return (bool) app(\App\Settings\SchuelerSetting::class)->login_benutzername;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

@@ -155,7 +155,15 @@ class DatenschutzController extends Controller
                     'gueltig_bis'   => $c->pivot->valid_until?->toDateString(),
                     'herkunft'      => $c->pivot->sourceLabel(),
                     'ungeprueft'    => $c->pivot->isPendingReview(),
-                ])
+                ] + (\App\Support\StudentAccounts::enabled() && $c->studentAccount ? [
+                    // Schülerkonto des Kindes (docs/konzept-schuelerkonten.md §9, S-11)
+                    'schuelerkonto' => [
+                        'benutzername' => $c->studentAccount->username,
+                        'aktiv'        => (bool) $c->studentAccount->is_active,
+                        'angelegt_am'  => $c->studentAccount->created_at?->toIso8601String(),
+                        'zustimmung'   => $c->studentAccount->student_consent,
+                    ],
+                ] : []))
                 ->values()->toArray(),
 
             'api_tokens' => $user->tokens

@@ -35,7 +35,13 @@ class InstanceController extends Controller
                     'sso' => (bool) config('services.keycloak.enabled'),
                     'sso_label' => config('services.keycloak.button_text', 'Mit Schulkonto anmelden'),
                     'magic_link' => true,
-                ],
+                ] + (\App\Support\StudentAccounts::enabled() ? [
+                    // Schülerkonten (S-13): nur bei aktivem Modul, sonst fehlt der Schlüssel
+                    'student' => [
+                        'password' => \App\Support\StudentAccounts::usernameLoginEnabled(),
+                        'sso' => (bool) config('services.keycloak.enabled') && (bool) app(\App\Settings\SchuelerSetting::class)->login_sso,
+                    ],
+                ] : []),
                 'api_version' => 1,
                 'min_app_version' => config('services.app.min_version'),
             ],

@@ -163,7 +163,7 @@ class TerminController extends Controller implements HasMiddleware
         }
 
         try {
-            $termine->update(
+            $termine->fill(
                 [
                     'terminname' => $request->terminname,
                     'start' => $start,
@@ -172,6 +172,8 @@ class TerminController extends Controller implements HasMiddleware
                     'public' => $this->publicAllowed() && $request->boolean('public'),
                 ]
             );
+            \App\Support\AudienceField::apply($termine, $request);
+            $termine->save();
         } catch (\Exception $e) {
 
             Log::error('Termin: Fehler beim Aktualisieren des Termins: '.$e->getMessage());
@@ -306,6 +308,7 @@ class TerminController extends Controller implements HasMiddleware
                 'fullDay' => $request->fullDay,
                 'public' => $this->publicAllowed() && $request->boolean('public'),
             ]);
+            \App\Support\AudienceField::apply($termin, $request);
             $termin->save();
 
             $gruppen = $request->input('gruppen');
@@ -314,13 +317,17 @@ class TerminController extends Controller implements HasMiddleware
             $termin->groups()->attach($gruppen);
             IndividualRecipients::sync($termin, $request);
 
-            $users = $termin->recipients();
+            // „nur für Schüler“: Eltern werden nicht benachrichtigt
+            if (! $termin->isStudentOnly()) {
+                $users = $termin->recipients();
 
-            $termin->notify(
-                users: $users,
-                title: 'Neuer Termin',
-                message: 'Neuer Termin: '.$termin->terminname,
-                type: 'Termine');
+                $termin->notify(
+                    users: $users,
+                    title: 'Neuer Termin',
+                    message: 'Neuer Termin: '.$termin->terminname,
+                    type: 'Termine');
+            }
+            \App\Services\Students\StudentNotifier::terminCreated($termin);
 
             Cache::forget('termine'.auth()->id());
         } catch (\Exception $e) {

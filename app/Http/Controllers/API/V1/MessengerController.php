@@ -93,6 +93,9 @@ class MessengerController extends LegacyMessengerController
     public function send(Request $request, Conversation $conversation): JsonResponse
     {
         Gate::authorize('sendMessage', $conversation);
+        if ($conversation->isStudentChat() && $request->hasFile('attachment')) {
+            abort(422, 'In Schülerchats sind keine Anhänge möglich.');
+        }
 
         $key = 'messenger_api_send_'.$request->user()->id;
         if (RateLimiter::tooManyAttempts($key, 30)) {

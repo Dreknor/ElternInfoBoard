@@ -42,7 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // exists:/unique:users,… ignorieren Schülerkonten (S-04)
+        $this->app->extend('validation.presence', fn ($verifier, $app) => new \App\Validation\StudentAwarePresenceVerifier($app['db']));
     }
 
     /**
@@ -60,6 +61,19 @@ class AppServiceProvider extends ServiceProvider
         // Editor-HTML bereinigt ausgeben: @safeHtml($post->news) statt {!! $post->news !!}
         \Illuminate\Support\Facades\Blade::directive('safeHtml', fn (string $expression) => "<?php echo \\App\\Support\\SafeHtml::clean({$expression}); ?>");
 
+        // Schülerkonten haben keine Rechte: jede Berechtigung und jede Policy sagt „nein“
+        // (docs/konzept-schuelerkonten.md §5.2). Was Schüler dürfen, regeln allein die `student.*`-Routen.
+        Gate::before(function ($user, string $ability) {
+            if ($user instanceof \App\Model\User && $user->isStudent()) {
+                return false;
+            }
+
+            return null;
+        });
+
+        // Anmeldung stellt auch Sitzungen von Schülerkonten wieder her (globaler Scope auf User).
+        \Illuminate\Support\Facades\Auth::provider('eloquent-students', fn ($app, array $config) => new \App\Auth\StudentAwareUserProvider($app['hash'], $config['model']));
+
         // Policy-Registrierung
         Gate::policy(Liste::class, TerminListenPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
@@ -73,6 +87,11 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::authenticateAccessTokensUsing(function ($token, bool $isValid) {
             if ($token->tokenable?->is_active === false) {
                 return false;
+            }
+
+            // Schülerkonten: nur Tokens mit der Fähigkeit `student`, nur bei aktivem Modul (§8, S-12)
+            if ($token->tokenable instanceof \App\Model\User && $token->tokenable->isStudent()) {
+                return $isValid && \App\Support\StudentAccounts::enabled() && $token->can(\App\Support\StudentAccounts::TOKEN_ABILITY);
             }
 
             if (! IntegrationTokens::isIntegration($token)) {
@@ -239,6 +258,17 @@ class AppServiceProvider extends ServiceProvider
         // Verhindert E-Mail-Bombing und Brute-Force auf Passwörter.
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Schülerkonten (Benutzername, Code): je Benutzername streng, je IP großzügig, damit eine
+        // ganze Klasse hinter einer Schul-IP sich gleichzeitig anmelden kann (docs/konzept-schuelerkonten.md §6.2).
+        RateLimiter::for('login-student', function (Request $request) {
+            $name = mb_strtolower(trim((string) $request->input('username')));
+
+            return [
+                Limit::perMinute(5)->by('student-login:'.$name.'|'.$request->ip()),
+                Limit::perMinute(150)->by('student-login-ip:'.$request->ip()),
+            ];
         });
 
         // Rate-Limit für UCS OIDC-JIT-Callback (schützt vor Kellvin-API-Überlast).

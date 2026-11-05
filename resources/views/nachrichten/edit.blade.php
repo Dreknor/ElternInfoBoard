@@ -157,6 +157,7 @@
                         <div class="row">
                             <div class="col-12">
                                 @include('include.formGroups', ['withPersons' => true])
+                                @include('student.partials.audience-field', ['value' => $post->zielgruppe])
                             </div>
                         </div>
                     </div>

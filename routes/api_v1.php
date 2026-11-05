@@ -139,5 +139,38 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::delete('messages/{message}', [MessengerController::class, 'destroy'])->name('destroy');
         Route::post('messages/{message}/report', [MessengerController::class, 'report'])->name('report');
         Route::get('messages/{message}/attachment', [MessengerController::class, 'attachment'])->name('attachment');
+        Route::post('conversations/{conversation}/close-student-chat', [\App\Http\Controllers\Students\TeacherStudentChatController::class, 'apiClose'])->middleware('student.messenger')->name('close-student-chat');
+    });
+});
+
+// ── Schülerkonten (docs/konzept-schuelerkonten.md §8, S-12) ─────────────────
+// Nur bei aktivem Modul; Tokens mit der Fähigkeit `student`. Alle anderen v1-Routen
+// lehnen Schülerkonten ab (RestrictStudentAccounts).
+Route::prefix('student')->name('student.')->middleware('student.enabled')->group(function () {
+    Route::post('token', [\App\Http\Controllers\API\V1\StudentApiController::class, 'login'])->middleware('throttle:login-student')->name('token');
+    Route::post('code', [\App\Http\Controllers\API\V1\StudentApiController::class, 'redeemCode'])->middleware('throttle:login-student')->name('code');
+
+    Route::middleware(['auth:sanctum', 'student', 'abilities:'.\App\Support\StudentAccounts::TOKEN_ABILITY])->group(function () {
+        Route::get('bootstrap', [\App\Http\Controllers\API\V1\StudentApiController::class, 'bootstrap'])->name('bootstrap');
+        Route::post('token/logout', [\App\Http\Controllers\API\V1\StudentApiController::class, 'logout'])->name('token.logout');
+        Route::post('token/refresh', [\App\Http\Controllers\API\V1\StudentApiController::class, 'refresh'])->name('token.refresh');
+        Route::get('posts', [\App\Http\Controllers\API\V1\StudentApiController::class, 'posts'])->name('posts');
+        Route::get('posts/{post}', [\App\Http\Controllers\API\V1\StudentApiController::class, 'showPost'])->whereNumber('post')->name('posts.show');
+        Route::get('posts/{post}/dateien/{media}', [\App\Http\Controllers\Students\StudentPortalController::class, 'media'])->whereNumber(['post', 'media'])->name('media');
+        Route::get('termine', [\App\Http\Controllers\API\V1\StudentApiController::class, 'termine'])->name('termine');
+        Route::get('vertretungsplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'vertretungsplan'])->name('vertretungsplan');
+        Route::get('stundenplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'stundenplan'])->name('stundenplan');
+        Route::get('ags', [\App\Http\Controllers\API\V1\StudentApiController::class, 'ags'])->name('ags');
+        Route::post('devices', [\App\Http\Controllers\API\V1\StudentApiController::class, 'storeDevice'])->name('devices.store');
+        Route::put('me/password', [\App\Http\Controllers\API\V1\StudentApiController::class, 'password'])->middleware('throttle:10,1')->name('me.password');
+
+        // Chat mit Lehrkräften (S-14)
+        Route::middleware('student.messenger')->prefix('messenger')->name('messenger.')->group(function () {
+            Route::get('conversations', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiIndex'])->name('conversations');
+            Route::post('conversations', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiStart'])->name('start');
+            Route::get('conversations/{conversation}/messages', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiShow'])->whereNumber('conversation')->name('messages');
+            Route::post('conversations/{conversation}/messages', [\App\Http\Controllers\Students\StudentMessengerController::class, 'apiSend'])->whereNumber('conversation')->name('send');
+        });
+        Route::delete('devices/{token}', [\App\Http\Controllers\API\V1\StudentApiController::class, 'destroyDevice'])->where('token', '.+')->name('devices.destroy');
     });
 });

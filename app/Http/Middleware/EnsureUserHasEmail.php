@@ -52,6 +52,11 @@ class EnsureUserHasEmail
         /** @var \App\Model\User $user */
         $user = auth()->user();
 
+        // Schülerkonten haben weder E-Mail noch Changelog-Hinweise (docs/konzept-schuelerkonten.md §2)
+        if (auth()->user()?->isStudent()) {
+            return $next($request);
+        }
+
         // Nur Nutzer mit leerem E-Mail-Feld UND UCS-Herkunft betreffen
         if (! empty($user->email) || $user->ucs_source !== 'kelvin') {
             return $next($request);

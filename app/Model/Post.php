@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Model\Concerns\HasAudience;
 use App\Observers\PostObserver;
 use App\Traits\HasCommentsWithOptionalParent;
 use App\Traits\NotificationTrait;
@@ -37,6 +38,7 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     use HasFactory;
     use HasRelationships;
     use InteractsWithMedia;
+    use HasAudience;
     use NotificationTrait;
     use \OwenIt\Auditing\Auditable;
     use Reactable;
@@ -60,6 +62,16 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         ];
     }
 
+
+    protected static function audienceManagePermission(): string
+    {
+        return 'edit posts';
+    }
+
+    protected static function audienceAuthorColumn(): ?string
+    {
+        return 'author';
+    }
 
     public static function cacheVersion(): int
     {

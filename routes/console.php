@@ -127,6 +127,8 @@ try {
         Schedule::command('users:cleanup --purge-days=400')->dailyAt('04:00');
         // Monatlicher Inaktivitätsbericht an Administratoren
         Schedule::command('users:cleanup --report')->monthlyOn(1, '09:00');
+        // Schülerkonten: ausgeschiedene Kinder sperren, Löschfrist, UCS-Anlage
+        Schedule::command('schuelerkonten:pflege')->dailyAt('04:10');
 
         // ── UCS@school-Scheduler ─────────────────────────────────────────────
         // Läuft vollständig über den Scheduler (kein Queue-Worker / Supervisor nötig).

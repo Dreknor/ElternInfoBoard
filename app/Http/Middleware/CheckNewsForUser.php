@@ -23,6 +23,11 @@ class CheckNewsForUser
             return $next($request);
         }
 
+        // Schülerkonten haben weder E-Mail noch Changelog-Hinweise (docs/konzept-schuelerkonten.md §2)
+        if (auth()->user()?->isStudent()) {
+            return $next($request);
+        }
+
         if (auth()->user()->changeSettings) {
             $user = auth()->user();
             $user->changeSettings = 0;

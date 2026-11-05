@@ -89,6 +89,9 @@ class MessengerController extends Controller
     public function send(Request $request, Conversation $conversation): JsonResponse
     {
         Gate::authorize('sendMessage', $conversation);
+        if ($conversation->isStudentChat() && $request->hasFile('attachment')) {
+            abort(422, 'In Schülerchats sind keine Anhänge möglich.');
+        }
 
         // Rate-Limiting
         $key = 'messenger_api_send_' . auth()->id();
@@ -161,6 +164,9 @@ class MessengerController extends Controller
         if (! $sender) {
             return;
         }
+
+        // Schülerchat (S-14): Schüler bekommt eine App-Mitteilung ohne Text
+        \App\Services\Students\StudentMessenger::notifyStudent($conversation, $sender);
 
         $url = route('messenger.show', $conversation);
 

@@ -15,6 +15,13 @@ class Module extends Model
 
     protected $fillable = ['setting', 'category', 'description', 'options', 'sort_order'];
 
+    protected static function booted(): void
+    {
+        // Modulstatus der Schülerkonten neu lesen, sobald sich ein Modul ändert
+        static::saved(fn () => \App\Support\StudentAccounts::flush());
+        static::deleted(fn () => \App\Support\StudentAccounts::flush());
+    }
+
     /**
      * Für diese Instanz gesperrte Module (`config/modules.php`):
      * eingeschränkt und nicht per MODULES_UNLOCKED freigeschaltet.

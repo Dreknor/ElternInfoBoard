@@ -68,6 +68,7 @@
                             <div class="card">
                                 <div class="card-body">
                                     @include('include.formGroups', ['withPersons' => true])
+                                    @include('student.partials.audience-field', ['value' => null])
                                 </div>
                             </div>
                         </div>

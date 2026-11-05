@@ -81,6 +81,7 @@ class FamilyBuilder
             ->join('users', 'users.id', '=', 'child_user.user_id')
             ->whereNull('children.deleted_at')
             ->whereNull('users.deleted_at')
+            ->where(fn ($q) => $q->whereNull('users.account_type')->orWhere('users.account_type', '!=', User::ACCOUNT_STUDENT))
             ->whereNotIn('child_user.user_id', $lockedUserIds)
             ->where(fn ($q) => $q->whereNull('child_user.valid_until')->orWhereDate('child_user.valid_until', '>=', today()))
             ->get(['child_user.user_id', 'child_user.child_id']);
