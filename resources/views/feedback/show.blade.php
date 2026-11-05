@@ -23,19 +23,90 @@
                         <i class="fas fa-user mr-1" style="color: var(--color-widget-primary-from)"></i>
                         Empfänger
                     </label>
-                    {{-- Durchsuchbar (Select2); leere Option = Sekretariat (Standard) --}}
-                    @include('partials.select-search')
-                    <select name="mitarbeiter"
-                            id="mitarbeiter"
-                            class="js-select-search w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
-                            style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
-                        <option value="">Sekretariat (Standard)</option>
-                        @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
-                            <option value="{{$Mitarbeiter->id}}" @if($Mitarbeiter->id == $id) selected @endif>
-                                {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
-                            </option>
-                        @endforeach
-                    </select>
+                    {{-- Empfängersuche im Stil der Personensuche bei Nachrichten (include/formGroups) --}}
+                    @php
+                        $kontaktPersonen = $mitarbeiter->sortBy('familieName')->values()->map(fn ($m) => [
+                            'id' => $m->id,
+                            'name' => trim($m->familieName.', '.$m->vorname, ', '),
+                        ]);
+                        $vorauswahl = old('mitarbeiter', $id);
+                    @endphp
+                    <div x-data="{
+                            persons: @js($kontaktPersonen),
+                            selected: @js($vorauswahl ? (int) $vorauswahl : null),
+                            query: '',
+                            open: false,
+                            active: 0,
+                            get chosen() { return this.persons.find(p => p.id === this.selected) || null; },
+                            get matches() {
+                                const q = this.query.trim().toLowerCase();
+                                return this.persons.filter(p => q === '' || p.name.toLowerCase().includes(q));
+                            },
+                            choose(person) {
+                                if (!person) return;
+                                this.selected = person.id;
+                                this.query = '';
+                                this.open = false;
+                            },
+                            reset() {
+                                this.selected = null;
+                                this.$nextTick(() => this.$refs.search.focus());
+                            },
+                            move(step) {
+                                const n = this.matches.length;
+                                if (n) { this.open = true; this.active = (this.active + step + n) % n; }
+                            },
+                         }"
+                         @click.outside="open = false">
+                        <input type="hidden" name="mitarbeiter" :value="selected ?? ''">
+
+                        {{-- Gewählte Person (oder Sekretariat) als Chip --}}
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <span class="inline-flex items-center gap-1 pl-3 pr-1 py-1 rounded-full text-sm"
+                                  :style="chosen ? 'background: var(--color-primary); color: #fff;' : 'background: var(--color-body-bg); color: var(--color-text-primary); border: 1px solid var(--color-card-border);'">
+                                <i class="fas text-[10px]" :class="chosen ? 'fa-user' : 'fa-building'"></i>
+                                <span x-text="chosen ? chosen.name : 'Sekretariat'">Sekretariat</span>
+                                <button type="button" class="w-6 h-6 rounded-full hover:opacity-70" x-show="chosen" x-cloak
+                                        :aria-label="chosen ? chosen.name + ' entfernen, an das Sekretariat senden' : ''" @click="reset()">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                                <span class="w-2" x-show="!chosen"></span>
+                            </span>
+                            <span class="text-xs" x-show="!chosen" style="color: var(--color-text-muted);">Standard – oder unten eine Person wählen</span>
+                        </div>
+
+                        <div class="relative">
+                            <i class="fas fa-search absolute text-sm" style="left: 1rem; top: 1.3rem; transform: translateY(-50%); color: var(--color-text-muted);"></i>
+                            {{-- gleicher Feldstil wie Betreff/Datei auf dieser Seite --}}
+                            <input type="search" id="mitarbeiter" x-ref="search" x-model="query"
+                                   class="w-full pl-10 pr-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                                   style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)"
+                                   placeholder="Person suchen …" autocomplete="off"
+                                   aria-label="Empfänger suchen"
+                                   @focus="open = true" @input="open = true; active = 0"
+                                   @keydown.arrow-down.prevent="move(1)"
+                                   @keydown.arrow-up.prevent="move(-1)"
+                                   @keydown.enter.prevent="choose(matches[active])"
+                                   @keydown.escape="open = false; query = ''">
+
+                            {{-- Treffer direkt unter dem Feld (kein schwebendes Dropdown) --}}
+                            <ul class="mt-1 rounded-lg overflow-y-auto border-2" x-show="open && matches.length" x-cloak
+                                style="border-color: var(--color-input-border); background-color: var(--color-input-bg); max-height: 16rem;">
+                                <template x-for="(person, index) in matches" :key="person.id">
+                                    <li>
+                                        <button type="button" class="w-full text-left px-4 py-2 text-sm flex items-center justify-between gap-2"
+                                                :style="index === active ? 'background: var(--color-body-bg);' : ''"
+                                                @mouseenter="active = index" @click="choose(person)">
+                                            <span class="truncate" x-text="person.name" style="color: var(--color-text-primary);"></span>
+                                            <i class="fas text-xs flex-shrink-0" :class="person.id === selected ? 'fa-check' : 'fa-plus'" style="color: var(--color-primary);"></i>
+                                        </button>
+                                    </li>
+                                </template>
+                            </ul>
+                            <p class="text-xs mt-1 mb-0" x-show="open && query.trim() !== '' && !matches.length" x-cloak
+                               style="color: var(--color-text-muted);">Keine passende Person gefunden.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
