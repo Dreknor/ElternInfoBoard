@@ -447,4 +447,17 @@ class User extends Authenticatable implements Auditable
     {
         return $this->hasMany(ReminderLog::class, 'user_id');
     }
+
+    /**
+     * Im Kontaktformular auswählbare Personen: alle mit der Permission
+     * „show in contact form“ – direkt vergeben oder über eine ihrer Rollen.
+     */
+    public function scopeContactRecipients(Builder $query): Builder
+    {
+        $permission = fn ($p) => $p->where('name', 'show in contact form');
+
+        return $query->where(fn ($q) => $q
+            ->whereHas('permissions', $permission)
+            ->orWhereHas('roles.permissions', $permission));
+    }
 }

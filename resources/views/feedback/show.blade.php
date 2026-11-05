@@ -23,11 +23,13 @@
                         <i class="fas fa-user mr-1" style="color: var(--color-widget-primary-from)"></i>
                         Empfänger
                     </label>
+                    {{-- Durchsuchbar (Select2); leere Option = Sekretariat (Standard) --}}
+                    @include('partials.select-search')
                     <select name="mitarbeiter"
                             id="mitarbeiter"
-                            class="w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
+                            class="js-select-search w-full px-4 py-2 border-2 rounded-lg transition-all duration-200 outline-none"
                             style="border-color: var(--color-input-border); background-color: var(--color-input-bg); color: var(--color-text-primary)">
-                        <option value="">Sekretariat</option>
+                        <option value="">Sekretariat (Standard)</option>
                         @foreach($mitarbeiter->sortBy('FamilieName') as $Mitarbeiter)
                             <option value="{{$Mitarbeiter->id}}" @if($Mitarbeiter->id == $id) selected @endif>
                                 {{$Mitarbeiter->familieName}}, {{$Mitarbeiter->vorname}}
