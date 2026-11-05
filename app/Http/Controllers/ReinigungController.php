@@ -83,7 +83,7 @@ class ReinigungController extends Controller implements HasMiddleware
 
     public function autoCreateStart($bereich)
     {
-        $task = ReinigungsTask::all();
+        $task = ReinigungsTask::query()->orderBy('task')->get();
         $reinigungSetting = new ReinigungSetting;
 
         $bereichGroups = Group::query();
@@ -430,7 +430,7 @@ class ReinigungController extends Controller implements HasMiddleware
             ->orderBy('datum')
             ->get();
 
-        $Aufgaben = ReinigungsTask::all();
+        $Aufgaben = ReinigungsTask::query()->orderBy('task')->get();
 
         return view('reinigung.edit', [
             'Bereich' => $Bereich,
