@@ -36,6 +36,7 @@ Ablauf von Exporten, Löschfristen. `--dry-run` zeigt fällige Löschungen.
 | `inquiry_recipients` | berechtigte Konten je Auftrag inkl. Zustellstatus |
 | `inquiry_drafts` | Entwurf je Konto (gilt nicht als Rückmeldung) |
 | `inquiry_responses` | unveränderliche Antwortversionen (Kap. 7.2), ggf. mit Änderungen gegenüber der Vorabfrage (`baseline_changes`) |
+| `inquiry_change_requests` | Änderungsmeldungen der Eltern zu einer abgegebenen Antwort: vollständiger neuer Datensatz, Nachricht, Bezugsversion, Stand (offen/übernommen/abgelehnt/zurückgezogen), Bearbeitung, entstandene Version |
 | `inquiry_deliveries` | Protokoll jeder Benachrichtigung/Erinnerung (Zeit, Kanal, Empfänger, Ergebnis, manuell/automatisch) |
 | `inquiry_events` | Prozessprotokoll (Freigaben, Fristen, Nachfristen, Korrekturfreigaben, Prüfungen, Exporte, Löschung) |
 | `inquiry_exports` | Exportprotokoll mit Ablaufdatum |
@@ -176,6 +177,34 @@ Vorlagen können als `record_relevant` („aktenrelevant“) gekennzeichnet werd
 vermerkt `filed_response_id`, `filed_at`, `filed_by`. Nur vollständige Antworten (alle
 Bestätigungen erteilt) gelten als gedruckt; eine neue Antwortversion muss erneut gedruckt werden.
 
+### 6.4 Änderungsmeldungen der Eltern **(O)**
+
+Ändern sich Angaben nach der Abgabe (z. B. Umzug im Schuljahr), melden Sorgeberechtigte die
+Änderung, ohne auf die nächste Abfrage zu warten (`ChangeRequestService`). Möglich, sobald eine
+gültige Antwort vorliegt und die Selbstkorrektur nicht (mehr) möglich ist – bei laufenden und
+abgeschlossenen, nicht gelöschten Abfragen mit `inquiries.allow_change_requests` (Standard: an,
+nach dem Start änderbar). Gibt es eine freigegebene Folgeabfrage (`previous_inquiry_id`-Kette)
+mit Auftrag für das Kind, wird dorthin verwiesen.
+
+**Entscheidung: Übernahme durch die Verwaltung statt direkter Wirkung.** Die Meldung erzeugt
+keine Antwortversion, sondern eine `inquiry_change_requests`-Zeile mit dem vollständigen neuen
+Datensatz (gleiche Validierung wie beim Absenden; unveränderte Angaben werden abgelehnt) und einer
+Pflichtnachricht. Gründe: Exporte, Schülerakte und Schulverwaltung wurden aus der bisherigen Version
+befüllt und müssen bewusst nachgezogen werden; nach Fristende gilt bereits „Korrektur nur über das
+Sekretariat“. Die Meldung selbst dokumentiert Zeitpunkt und Erklärung (z. B. einen Widerruf).
+
+* je Auftrag eine offene Meldung; eine erneute Meldung derselben Person ersetzt die alte
+  (`withdrawn`), andere Sorgeberechtigte werden bis zur Bearbeitung blockiert
+* Hinweis per Glocke an die verantwortliche Person (ohne Inhalte); Reiter „Änderungen“ mit Zähler
+  (`view elternabfragen answers`), Vergleich bisher/neu je Feld
+* **Übernehmen:** neue Antwortversion der meldenden Person (`ResponseService::createVersion`,
+  Protokoll `response.changed`), Prüfstatus „Geprüft“ durch die bearbeitende Person, Korrekturgrund
+  „Änderungsmeldung: …“. Bei gemeinsamer Erklärung sind Bestätigungen auch nach Abschluss möglich
+  (`GuardianConfirmation::fromChangeRequest`)
+* **Ablehnen:** Begründung Pflicht, sichtbar für die Eltern (nicht in der E-Mail); neu hochgeladene
+  Dateien werden entfernt
+* Löschung der Antworten entfernt auch die Meldungen
+
 ## 8. Export (Kap. 9)
 
 Auswahl (Abfrage/Klasse, Felder, offene Fälle, Format XLSX/CSV, Ziel) → Vorschau
@@ -212,6 +241,8 @@ Präfix `/api/v1/elternabfragen` (hinter `module:Elternabfragen`):
 | PUT | `/{id}/draft` | Entwurf speichern |
 | DELETE | `/{id}/draft` | Entwurf verwerfen |
 | POST | `/{id}/submit` | absenden/korrigieren (JSON oder multipart) |
+| POST | `/{id}/change` | Änderung melden (`can_request_change`; `answers`, `message`, `confirm`) |
+| DELETE | `/{id}/change` | eigene offene Änderungsmeldung zurückziehen |
 | GET | `/{id}/pdf` | PDF-Bestätigung |
 | GET | `/{id}/files/{key}` | eigene Datei |
 

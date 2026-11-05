@@ -28,7 +28,19 @@ class ElternratEvent extends Model
             'start_time' => 'datetime',
             'end_time' => 'datetime',
             'send_reminder' => 'boolean',
+            'created_by' => 'integer',
         ];
+    }
+
+    /**
+     * Bearbeiten und Löschen: Ersteller, Mitglieder der Rolle „Elternrat“
+     * und Nutzer mit „delete elternrat file“ (Moderation).
+     */
+    public function canBeManagedBy(User $user): bool
+    {
+        return (int) $this->created_by === (int) $user->id
+            || $user->can('delete elternrat file')
+            || $user->hasRole('Elternrat');
     }
 
     /**

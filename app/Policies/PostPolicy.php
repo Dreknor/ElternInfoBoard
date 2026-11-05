@@ -12,6 +12,10 @@ class PostPolicy
 {
     public function view(User $user, Post $post): bool
     {
+        // Vertraulich: nur Autor und Empfänger, keine Berechtigung hebt das auf
+        if ($post->isHiddenFrom($user)) {
+            return false;
+        }
         if ((int) $post->author === $user->id) {
             return true;
         }

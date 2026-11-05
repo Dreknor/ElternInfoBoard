@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\KontaktEmpfaenger;
 use App\Http\Requests\KontaktRequest;
 use App\Mail\dailyMailReport;
 use App\Mail\SendFeedback;
 use App\Model\Mail as MailModel;
 use App\Model\User;
-use App\Settings\EmailSetting;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\View\View;
@@ -59,11 +59,8 @@ class FeedbackController extends Controller implements HasMiddleware
         }
 
         return view('feedback.show', [
-            'mitarbeiter' => User::whereHas('roles', function ($q) {
-                $q->where('name', 'Mitarbeiter');
-            })->orWhereHas('permissions', function ($q) {
-                $q->where('name', 'show in contact form');
-            })->orderBy('name')->get(),
+            // Alle mit „show in contact form“ – direkt oder über eine Rolle
+            'mitarbeiter' => User::contactRecipients()->orderBy('name')->get(),
             'mails' => $mails,
             'id' => $id,
         ]);
@@ -76,20 +73,11 @@ class FeedbackController extends Controller implements HasMiddleware
      */
     public function send(KontaktRequest $request)
     {
-        if ($request->mitarbeiter != '') {
-            // Nur Personen aus der Auswahlliste – nicht beliebige Konten über die Mailanlage der Schule anschreiben
-            $email = User::query()
-                ->where('id', $request->mitarbeiter)
-                ->where(fn ($q) => $q
-                    ->whereHas('roles', fn ($r) => $r->where('name', 'Mitarbeiter'))
-                    ->orWhereHas('permissions', fn ($r) => $r->where('name', 'show in contact form')))
-                ->value('email');
-            if (! $email) {
-                return redirect()->back()->withInput()->with(['type' => 'danger', 'Meldung' => 'Empfänger nicht gefunden.']);
-            }
-        } else {
-            $emailSettings = app(EmailSetting::class);
-            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
+        // Nur Personen aus der Auswahlliste – nicht beliebige Konten über die Mailanlage der Schule anschreiben
+        $recipientIds = KontaktEmpfaenger::ids($request->input('mitarbeiter'));
+        $email = KontaktEmpfaenger::emails($recipientIds);
+        if ($email === null) {
+            return redirect()->back()->withInput()->with(['type' => 'danger', 'Meldung' => 'Empfänger nicht gefunden.']);
         }
 
         Log::debug('FeedbackController: send() method called', [
@@ -97,7 +85,7 @@ class FeedbackController extends Controller implements HasMiddleware
             'user_email' => $request->user()?->email,
             'text_length' => strlen($request->input('text')),
             'betreff' => $request->input('betreff'),
-            'mitarbeiterId' => $request->input('mitarbeiter'),
+            'mitarbeiterIds' => $recipientIds,
             'has_files' => $request->hasFile('files'),
             'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
         ]);
@@ -147,7 +135,12 @@ class FeedbackController extends Controller implements HasMiddleware
         */
         try {
             $user = $request->user();
-            Mail::to($email)->cc($user->email)->send(new SendFeedback(
+            // Kopie an den Absender nur bei Einstellung „Kopie meiner Rückmeldungen“
+            $mail = Mail::to($email);
+            if ($user->sendCopy) {
+                $mail->cc($user->email);
+            }
+            $mail->send(new SendFeedback(
                 $request->text,
                 $request->betreff,
                 $data,

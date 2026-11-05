@@ -40,6 +40,7 @@ class DashboardController extends Controller implements HasMiddleware
         // Hole nur die neuesten 5 Nachrichten mit optimiertem Eager Loading
         if (auth()->user()->can('view all')) {
             $nachrichten = Post::query()
+                ->withoutForeignConfidential(auth()->user())
                 ->select(['id', 'header', 'news', 'created_at'])
                 ->where(function ($query) {
                     $query->whereNull('archiv_ab')

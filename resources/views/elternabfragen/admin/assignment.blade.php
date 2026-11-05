@@ -75,6 +75,27 @@
                 </div>
             </section>
 
+            @if($canSeeAnswers && $assignment->changeRequests->isNotEmpty())
+                <section class="ea-card">
+                    <div class="ea-card-header">
+                        <div class="ea-card-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></div>
+                        <h2 class="ea-card-title">Änderungsmeldungen der Eltern</h2>
+                    </div>
+                    <ul class="ea-divide mb-0 text-sm">
+                        @foreach($assignment->changeRequests as $change)
+                            <li class="px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+                                <span class="min-w-0">
+                                    <x-elternabfragen.badge :color="$change->status->color()" dot>{{ $change->status->label() }}</x-elternabfragen.badge>
+                                    <span class="ea-muted">{{ $change->created_at->format('d.m.Y H:i') }} · {{ $change->user?->name ?? 'unbekannt' }}</span>
+                                    <span class="block ea-text truncate">{{ $change->message }}</span>
+                                </span>
+                                <a href="{{ route('elternabfragen.admin.change-requests.show', $change) }}" class="ea-btn {{ $change->isPending() ? 'ea-btn-primary' : 'ea-btn-secondary' }} ea-btn-sm">{{ $change->isPending() ? 'Bearbeiten' : 'Ansehen' }}</a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
             <section class="ea-card">
                 <div class="ea-card-header">
                     <div class="ea-card-icon"><i class="fas fa-code-branch" aria-hidden="true"></i></div>

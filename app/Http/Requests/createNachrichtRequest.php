@@ -63,6 +63,21 @@ class createNachrichtRequest extends FormRequest
             'no_header' => [
                 'nullable', 'sometimes', 'boolean',
             ],
+            // Vertraulich: nur Autor und Empfänger; nur mit „release posts“ (Autor gibt selbst frei)
+            'confidential' => [
+                'nullable', 'sometimes', 'boolean',
+                function ($attribute, $value, $fail) {
+                    if (! $value) {
+                        return;
+                    }
+                    if (! auth()->user()?->can('release posts')) {
+                        $fail('Vertrauliche Beiträge können nur Nutzer anlegen, die Beiträge selbst freigeben dürfen.');
+                    }
+                    if (request()->boolean('external')) {
+                        $fail('Externe Angebote können nicht vertraulich sein.');
+                    }
+                },
+            ],
 
         ];
     }

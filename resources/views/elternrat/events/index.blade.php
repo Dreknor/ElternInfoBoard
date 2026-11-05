@@ -116,15 +116,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @if(auth()->user()->can('delete elternrat file') || $event->created_by === auth()->id())
-                                        <form action="{{route('elternrat.events.destroy', $event)}}" method="POST" class="inline-block flex-shrink-0"
-                                              onsubmit="return confirm('Termin wirklich löschen?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-md">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                    @if($event->canBeManagedBy(auth()->user()))
+                                        @include('elternrat.events.partials.actions', ['event' => $event])
                                     @endif
                                 </div>
                             </div>
@@ -178,6 +171,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                @if($event->canBeManagedBy(auth()->user()))
+                                    <div class="mt-3 flex justify-end">
+                                        @include('elternrat.events.partials.actions', ['event' => $event])
+                                    </div>
+                                @endif
                             </div>
                         @empty
                             <div class="text-center py-16 text-gray-500">

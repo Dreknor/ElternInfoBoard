@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Model\Group;
 use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
+use App\Model\InquiryChangeRequest;
 use App\Model\InquiryDelivery;
 use App\Model\InquiryResponse;
 use App\Model\InquiryTemplateVersion;
@@ -56,6 +57,7 @@ class InquiryController extends Controller
             'notify_push' => true,
             'auto_reminders' => true,
             'staff_visible' => false,
+            'allow_change_requests' => true,
             'correction_window_days' => $settings->correction_window_days,
         ]));
     }
@@ -167,6 +169,7 @@ class InquiryController extends Controller
                 ? $this->inquiries->previousCandidates($inquiry)->filter(fn (Inquiry $i) => $i->templateVersion?->template_id === $inquiry->templateVersion->template_id)
                 : collect(),
             'pendingApprovals' => AdminController::pendingApprovalCount(),
+            'pendingChanges' => $user->can('view elternabfragen answers') ? InquiryChangeRequest::pending()->where('inquiry_id', $inquiry->id)->count() : 0,
         ]);
     }
 
@@ -285,6 +288,7 @@ class InquiryController extends Controller
             'notify_push' => $request->boolean('notify_push'),
             'auto_reminders' => $request->boolean('auto_reminders'),
             'staff_visible' => $request->boolean('staff_visible'),
+            'allow_change_requests' => $request->boolean('allow_change_requests'),
         ];
 
         $this->inquiries->updateSettings($inquiry, $data);
@@ -367,6 +371,7 @@ class InquiryController extends Controller
             'notify_push' => $request->boolean('notify_push'),
             'auto_reminders' => $request->boolean('auto_reminders'),
             'staff_visible' => $request->boolean('staff_visible'),
+            'allow_change_requests' => $request->boolean('allow_change_requests'),
         ];
     }
 

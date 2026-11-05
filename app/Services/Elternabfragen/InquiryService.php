@@ -162,12 +162,13 @@ class InquiryService
     }
 
     /**
-     * Änderbare Einstellungen nach der Freigabe (Kanäle, Erinnerungen, Zuständigkeit, Mitarbeitersicht).
+     * Änderbare Einstellungen nach der Freigabe (Kanäle, Erinnerungen, Zuständigkeit, Mitarbeitersicht,
+     * Änderungsmeldungen der Eltern).
      */
     public function updateSettings(Inquiry $inquiry, array $data): void
     {
         $inquiry->fill(collect($data)->only([
-            'responsible_user_id', 'notify_mail', 'notify_push', 'auto_reminders', 'staff_visible', 'correction_window_days',
+            'responsible_user_id', 'notify_mail', 'notify_push', 'auto_reminders', 'staff_visible', 'allow_change_requests', 'correction_window_days',
         ])->all());
 
         if ($inquiry->isDirty()) {
@@ -231,7 +232,7 @@ class InquiryService
 
         $copy = Inquiry::create(collect($inquiry->only([
             'title', 'intro', 'target_type', 'target_group_ids', 'responsible_user_id', 'notify_mail', 'notify_push',
-            'auto_reminders', 'staff_visible', 'correction_window_days', 'retention_days',
+            'auto_reminders', 'staff_visible', 'allow_change_requests', 'correction_window_days', 'retention_days',
         ]))->all() + [
             'template_version_id' => $approved->status === InquiryTemplateStatus::Approved ? $approved->id : $version->id,
             // Angaben dieser Abfrage vorbefüllen und Änderungen ausweisen
@@ -357,6 +358,7 @@ class InquiryService
             'notify_push' => (bool) ($data['notify_push'] ?? false),
             'auto_reminders' => (bool) ($data['auto_reminders'] ?? false),
             'staff_visible' => (bool) ($data['staff_visible'] ?? false),
+            'allow_change_requests' => (bool) ($data['allow_change_requests'] ?? true),
             'correction_window_days' => (int) ($data['correction_window_days'] ?? $this->settings->correction_window_days),
         ];
     }

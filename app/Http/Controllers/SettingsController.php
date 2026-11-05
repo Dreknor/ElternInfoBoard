@@ -157,6 +157,12 @@ class SettingsController extends Controller implements HasMiddleware
             'notifySettings' => $notifySettings,
             'schickzeitenSettings' => $schickzeitenSetting,
             'careSettings' => $careSettings,
+            // Geladene Ferien (nur Datenbank, kein Abruf) – Anzeige im Reiter „Care“
+            'ferien' => \App\Model\Holiday::query()
+                ->where('bundesland', $careSettings->bundesland)
+                ->whereDate('end', '>=', now()->subMonths(2))
+                ->orderBy('start')
+                ->get(),
             'pflichtstundenSettings' => $pflichtstundenSetting,
             'stundenplanSettings' => $stundenplanSettings,
             'reminderSettings' => $reminderSettings,
@@ -895,5 +901,19 @@ class SettingsController extends Controller implements HasMiddleware
             'type' => 'danger',
             'Meldung' => 'Fehlgeschlagen',
         ]);
+    }
+
+    /**
+     * Ferien des laufenden und des nächsten Jahres neu laden (Reiter „Care“).
+     */
+    public function refreshHolidays(): RedirectResponse
+    {
+        $service = app(HolidayService::class);
+        $year = now()->year;
+        $count = $service->refresh($year) + $service->refresh($year + 1);
+
+        return redirect()->to(url('settings#care'))->with($count > 0
+            ? ['type' => 'success', 'Meldung' => "Ferien neu geladen ({$count} Zeiträume)."]
+            : ['type' => 'danger', 'Meldung' => 'Die Ferien konnten nicht geladen werden. Die Ferien-Dienste sind nicht erreichbar – bitte später erneut versuchen.']);
     }
 }

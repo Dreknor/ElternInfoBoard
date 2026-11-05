@@ -83,7 +83,7 @@ class ReinigungController extends Controller implements HasMiddleware
 
     public function autoCreateStart($bereich)
     {
-        $task = ReinigungsTask::all();
+        $task = ReinigungsTask::query()->orderBy('task')->get();
         $reinigungSetting = new ReinigungSetting;
 
         $bereichGroups = Group::query();
@@ -338,14 +338,19 @@ class ReinigungController extends Controller implements HasMiddleware
         }
 
         return view('reinigung.show', [
-            'ferienWochen' => $this->ferienWochen($datum, $ende),
+            'ferienWochen' => $ferienWochen = $this->ferienWochen($datum, $ende),
+            // Hinweis für die Verwaltung: ohne geladene Ferien kann nichts markiert werden
+            'ferienFehlen' => $ferienWochen === [] && ! \App\Model\Holiday::query()
+                ->where('bundesland', (new \App\Settings\CareSetting)->bundesland)
+                ->whereDate('end', '>=', now())
+                ->exists(),
             'ferienAuslassen' => (bool) $reinigungSetting->skip_holidays,
             'Bereiche' => $Bereiche,
             'Familien' => $Reinigung,
             'datum' => $datum,
             'user' => $user,
             'ende' => $ende,
-            'aufgaben' => ReinigungsTask::all(),
+            'aufgaben' => ReinigungsTask::query()->orderBy('task')->get(),
             'combinedMode' => $combined,
         ]);
     }
@@ -425,7 +430,7 @@ class ReinigungController extends Controller implements HasMiddleware
             ->orderBy('datum')
             ->get();
 
-        $Aufgaben = ReinigungsTask::all();
+        $Aufgaben = ReinigungsTask::query()->orderBy('task')->get();
 
         return view('reinigung.edit', [
             'Bereich' => $Bereich,

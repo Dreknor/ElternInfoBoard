@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Support\KontaktEmpfaenger;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\KontaktRequest;
 use App\Jobs\SendKontaktMail;
@@ -29,7 +30,7 @@ class ContactController extends Controller implements HasMiddleware
     /**
      * Display a listing of employees.
      *
-     * Retrieves a list of employees who have the role 'Mitarbeiter' or the permission 'show in contact form'.
+     * Retrieves a list of users who have the permission 'show in contact form' (directly or via one of their roles).
      * Prepends the list with a default 'Sekretariat' entry.
      *
      * @responseField data array The list of employees.
@@ -45,17 +46,16 @@ class ContactController extends Controller implements HasMiddleware
         $emailSettings = new EmailSetting;
         $defaultName = $emailSettings->contact_default_name ?? 'Sekretariat';
 
-        $mitarbeiter = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Mitarbeiter');
-        })->orWhereHas('permissions', function ($q) {
-            $q->where('name', 'show in contact form');
-        })->orderBy('name')->get(['id', 'name']);
+        $mitarbeiter = User::contactRecipients()->orderBy('name')->get(['id', 'name']);
 
         $mitarbeiter->prepend(['id' => 0, 'name' => $defaultName]);
 
-        return response()->json(
-            ['data' => $mitarbeiter]
-        );
+        // meta.multiple: Server nimmt mehrere Empfänger an (mitarbeiter[] beim Senden).
+        // Ältere Server liefern kein meta – die App bleibt dann bei einem Empfänger.
+        return response()->json([
+            'data' => $mitarbeiter,
+            'meta' => ['multiple' => true, 'max' => KontaktEmpfaenger::MAX],
+        ]);
     }
 
     /**
@@ -79,17 +79,11 @@ class ContactController extends Controller implements HasMiddleware
     public function send(KontaktRequest $request)
     {
         $user = $request->user();
-        $recipientId = (int) $request->input('mitarbeiter');
-
-        if ($recipientId !== 0) {
-            // Nur Empfänger aus der Kontaktliste – nicht beliebige Nutzer-IDs.
-            $email = $this->contactQuery()->where('id', $recipientId)->value('email');
-            if (! $email) {
-                return response()->json(['error' => 'Empfänger nicht gefunden', 'message' => 'Empfänger nicht gefunden'], 404);
-            }
-        } else {
-            $emailSettings = new EmailSetting;
-            $email = $emailSettings->contact_default_email ?: config('mail.from.address');
+        // Einzelne ID (ältere Apps) oder Liste; nur Empfänger aus der Kontaktliste – nicht beliebige Nutzer-IDs.
+        $recipientIds = KontaktEmpfaenger::ids($request->input('mitarbeiter'));
+        $email = KontaktEmpfaenger::emails($recipientIds);
+        if ($email === null) {
+            return response()->json(['error' => 'Empfänger nicht gefunden', 'message' => 'Empfänger nicht gefunden'], 404);
         }
 
         // Anhänge bis zum Versand privat ablegen; der Job verschickt die Mail im Hintergrund,
@@ -119,7 +113,7 @@ class ContactController extends Controller implements HasMiddleware
         // Keine Inhalte protokollieren (B-61) – nur Metadaten.
         Log::info('Kontaktformular (API)', [
             'user_id' => $user?->id,
-            'recipient_id' => $recipientId,
+            'recipient_ids' => $recipientIds,
             'attachments' => count($attachments),
         ]);
 
@@ -131,17 +125,9 @@ class ContactController extends Controller implements HasMiddleware
             $directory,
             $user?->name,
             $user?->email,
+            (bool) $user?->sendCopy,
         );
 
         return response()->json(['success' => 'Mail sent'], 200);
-    }
-
-    /** Nutzer, die im Kontaktformular auswählbar sind. */
-    private function contactQuery()
-    {
-        return User::query()->where(function ($q) {
-            $q->whereHas('roles', fn ($r) => $r->where('name', 'Mitarbeiter'))
-                ->orWhereHas('permissions', fn ($p) => $p->where('name', 'show in contact form'));
-        });
     }
 }
