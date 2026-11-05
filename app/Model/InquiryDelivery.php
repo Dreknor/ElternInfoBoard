@@ -25,6 +25,12 @@ class InquiryDelivery extends Model
     /** Bitte an weitere Sorgeberechtigte, die eingereichte Antwort zu bestätigen. */
     public const KIND_CONFIRMATION_REQUEST = 'confirmation_request';
 
+    /** Hinweis an die verantwortliche Person: Eltern haben eine Änderung gemeldet. */
+    public const KIND_CHANGE_NOTICE = 'change_notice';
+
+    /** Rückmeldung an die Eltern: Änderungsmeldung übernommen bzw. abgelehnt. */
+    public const KIND_CHANGE_RESULT = 'change_result';
+
     public const REMINDER_KINDS = [self::KIND_REMINDER_BEFORE, self::KIND_REMINDER_AFTER, self::KIND_REMINDER_MANUAL];
 
     public const CHANNEL_MAIL = 'mail';
@@ -65,6 +71,8 @@ class InquiryDelivery extends Model
             self::KIND_CONFIRMATION => 'Eingangsbestätigung',
             self::KIND_PROBLEM_NOTICE => 'Hinweis Zustellproblem',
             self::KIND_CONFIRMATION_REQUEST => 'Bitte um Bestätigung',
+            self::KIND_CHANGE_NOTICE => 'Hinweis Änderungsmeldung',
+            self::KIND_CHANGE_RESULT => 'Rückmeldung zur Änderungsmeldung',
             default => $this->kind,
         };
     }

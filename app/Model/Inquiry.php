@@ -31,7 +31,7 @@ class Inquiry extends Model
     protected $fillable = [
         'template_version_id', 'previous_inquiry_id', 'title', 'intro', 'status', 'starts_at', 'deadline_at', 'target_type',
         'target_group_ids', 'responsible_user_id', 'created_by', 'notify_mail', 'notify_push',
-        'auto_reminders', 'staff_visible', 'correction_window_days', 'retention_days', 'review_note',
+        'auto_reminders', 'staff_visible', 'allow_change_requests', 'correction_window_days', 'retention_days', 'review_note',
         'submitted_at', 'approved_by', 'approved_at', 'expected_children', 'expected_accounts',
         'released_at', 'closed_at', 'purged_at',
     ];
@@ -47,6 +47,7 @@ class Inquiry extends Model
             'notify_push' => 'boolean',
             'auto_reminders' => 'boolean',
             'staff_visible' => 'boolean',
+            'allow_change_requests' => 'boolean',
             'correction_window_days' => 'integer',
             'retention_days' => 'integer',
             'submitted_at' => 'datetime',
@@ -87,6 +88,11 @@ class Inquiry extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(InquiryResponse::class);
+    }
+
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(InquiryChangeRequest::class)->orderByDesc('id');
     }
 
     public function events(): HasMany

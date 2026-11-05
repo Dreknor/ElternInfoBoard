@@ -44,6 +44,11 @@
                 @if($inquiry->isRunning() && $inquiry->deadlinePassed())
                     <x-elternabfragen.badge color="red" icon="far fa-clock">Frist abgelaufen</x-elternabfragen.badge>
                 @endif
+                @if(($pendingChanges ?? 0) > 0)
+                    <a href="{{ route('elternabfragen.admin.change-requests.index', ['abfrage' => $inquiry->id]) }}" class="hover:no-underline">
+                        <x-elternabfragen.badge color="amber" icon="fas fa-exchange-alt">{{ $pendingChanges }} {{ $pendingChanges === 1 ? 'Änderungsmeldung' : 'Änderungsmeldungen' }} offen</x-elternabfragen.badge>
+                    </a>
+                @endif
             </div>
             {{-- Aktionen --}}
             <div class="flex flex-wrap gap-2">
@@ -412,6 +417,7 @@
                     <div><dt><i class="fas fa-bell" aria-hidden="true"></i> Autom. Erinnerungen</dt><dd>{{ $inquiry->auto_reminders ? 'ja' : 'nein' }}</dd></div>
                     <div><dt><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> Für Mitarbeitende lesbar</dt><dd>{{ $inquiry->staff_visible ? 'ja (nur geprüfte Antworten)' : 'nein' }}</dd></div>
                     <div><dt><i class="fas fa-pen" aria-hidden="true"></i> Selbstkorrektur</dt><dd>{{ $inquiry->correction_window_days }} Tage</dd></div>
+                    <div><dt><i class="fas fa-exchange-alt" aria-hidden="true"></i> Änderungsmeldungen</dt><dd>{{ $inquiry->allow_change_requests ? 'erlaubt (Übernahme durch die Verwaltung)' : 'nicht erlaubt' }}</dd></div>
                     <div><dt><i class="fas fa-archive" aria-hidden="true"></i> Aufbewahrung</dt><dd>{{ $inquiry->retention_days ? $inquiry->retention_days.' Tage nach Abschluss' : 'unbefristet (manuelle Löschung)' }}@if($purgeDate && ! $inquiry->purged_at)<span class="block text-xs ea-muted">Löschung ab {{ $purgeDate->format('d.m.Y') }}</span>@endif</dd></div>
                     @if($inquiry->templateVersion->record_relevant)<div><dt><i class="fas fa-folder-open" aria-hidden="true"></i> Schülerakte</dt><dd>aktenrelevant</dd></div>@endif
                     @if($inquiry->approved_at)<div><dt><i class="fas fa-user-check" aria-hidden="true"></i> Freigegeben</dt><dd>{{ $inquiry->approved_at->format('d.m.Y H:i') }} von {{ $inquiry->approver?->name }}</dd></div>@endif
@@ -506,6 +512,7 @@
                                 <label class="flex items-center gap-2"><input type="checkbox" class="ea-check" name="notify_push" value="1" @checked($inquiry->notify_push)> App/Web-Push</label>
                                 <label class="flex items-center gap-2"><input type="checkbox" class="ea-check" name="auto_reminders" value="1" @checked($inquiry->auto_reminders)> Automatische Erinnerungen</label>
                                 <label class="flex items-center gap-2"><input type="checkbox" class="ea-check" name="staff_visible" value="1" @checked($inquiry->staff_visible)> Für Mitarbeitende lesbar</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="ea-check" name="allow_change_requests" value="1" @checked($inquiry->allow_change_requests)> Änderungsmeldungen durch Eltern</label>
                             </div>
                             <button class="ea-btn ea-btn-secondary w-full">Speichern</button>
                         </form>
@@ -530,6 +537,29 @@
                                 <button class="ea-btn ea-btn-danger w-full"><i class="fas fa-lock" aria-hidden="true"></i> Jetzt beenden</button>
                             </form>
                         </div>
+                    </section>
+                @endif
+            @endcan
+
+            @can('manage elternabfragen')
+                @if($status === 'closed' && ! $inquiry->purged_at)
+                    <section class="ea-card">
+                        <div class="ea-card-header">
+                            <div class="ea-card-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></div>
+                            <h2 class="ea-card-title">Änderungsmeldungen</h2>
+                        </div>
+                        <form method="POST" action="{{ route('elternabfragen.admin.inquiries.settings', $inquiry) }}" class="ea-card-body space-y-3 text-sm">
+                            @csrf @method('PUT')
+                            {{-- Übrige Einstellungen unverändert übernehmen --}}
+                            <input type="hidden" name="responsible_user_id" value="{{ $inquiry->responsible_user_id }}">
+                            <input type="hidden" name="correction_window_days" value="{{ $inquiry->correction_window_days }}">
+                            @foreach(['notify_mail', 'notify_push', 'auto_reminders', 'staff_visible'] as $flag)
+                                @if($inquiry->{$flag})<input type="hidden" name="{{ $flag }}" value="1">@endif
+                            @endforeach
+                            <p class="ea-muted mb-0">Eltern können auch nach Abschluss Änderungen zu ihren Angaben melden (z. B. Umzug). Sie werden erst nach Prüfung übernommen.</p>
+                            <label class="flex items-center gap-2 ea-text"><input type="checkbox" class="ea-check" name="allow_change_requests" value="1" @checked($inquiry->allow_change_requests)> Änderungsmeldungen erlauben</label>
+                            <button class="ea-btn ea-btn-secondary w-full">Speichern</button>
+                        </form>
                     </section>
                 @endif
             @endcan

@@ -4,6 +4,7 @@ namespace App\Services\Elternabfragen;
 
 use App\Enums\InquiryStatus;
 use App\Model\Inquiry;
+use App\Model\InquiryChangeRequest;
 use App\Model\InquiryDelivery;
 use App\Model\InquiryDraft;
 use App\Model\InquiryEvent;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Kap. 7.4: Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten,
- * Uploads, Exportdateien und personenbezogene Protokolldaten gelöscht. Erhalten
+ * Uploads, Änderungsmeldungen, Exportdateien und personenbezogene Protokolldaten gelöscht. Erhalten
  * bleiben die Abfrage selbst und eine anonyme Statistik (Anzahl je Status).
  * Abfragen ohne Frist (retention_days = null) werden nie automatisch gelöscht.
  *
@@ -135,6 +136,7 @@ class RetentionService
 
             InquiryResponse::whereIn('assignment_id', $assignmentIds)->delete();
             InquiryDraft::whereIn('assignment_id', $assignmentIds)->delete();
+            InquiryChangeRequest::whereIn('assignment_id', $assignmentIds)->delete();
             InquiryRecipient::whereIn('assignment_id', $assignmentIds)->delete();
             InquiryDelivery::where('inquiry_id', $inquiry->id)->delete();
             InquiryEvent::where('inquiry_id', $inquiry->id)->whereNotNull('assignment_id')->delete();

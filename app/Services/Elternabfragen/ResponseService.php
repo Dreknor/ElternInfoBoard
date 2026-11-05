@@ -144,59 +144,75 @@ class ResponseService
             $answers = $this->schema->sanitize($fields, $input, $children);
             $answers += $this->storeFiles($locked, $fields, $files, $previous?->answers ?? []);
 
-            $inquiry = $assignment->inquiry;
-            $baseline = $this->previousAnswers->baseline($locked);
-            $response = InquiryResponse::create([
-                'assignment_id' => $locked->id,
-                'inquiry_id' => $inquiry->id,
-                'child_id' => $locked->child_id,
-                'user_id' => $user->id,
-                'template_version_id' => $inquiry->template_version_id,
-                // Nach einem Neustart beginnt keine neue Zählung: Versionen bleiben je Auftrag eindeutig
-                'version' => (int) InquiryResponse::where('assignment_id', $locked->id)->max('version') + 1,
-                'answers' => $answers,
-                'form_hash' => $this->schema->formHash($inquiry->template_version_id, $inquiry->title, $inquiry->intro, $fields),
-                'answer_hash' => $this->schema->answerHash($answers),
-                'previous_response_id' => $previous?->id,
-                'baseline_response_id' => $baseline?->id,
-                'baseline_changes' => $baseline ? $this->previousAnswers->changes($fields, $baseline, $answers) : null,
-                'correction_reason' => $previous ? (Str::limit(trim((string) $correctionReason), 1000, '') ?: null) : null,
-                'is_current' => true,
-                'channel' => in_array($meta['channel'] ?? null, ['web', 'app'], true) ? $meta['channel'] : 'web',
-                'ip_anonymized' => self::anonymizeIp($meta['ip'] ?? null),
-                'user_agent' => isset($meta['user_agent']) ? Str::limit((string) $meta['user_agent'], 250, '') : null,
-                'submitted_at' => now(),
-                'review_status' => InquiryReviewStatus::Pending,
-            ]);
-
-            $previous?->update(['is_current' => false]);
-
-            $locked->forceFill([
-                'current_response_id' => $response->id,
-                'first_submitted_at' => $locked->first_submitted_at ?? $response->submitted_at,
-                'last_submitted_at' => $response->submitted_at,
-                'has_problem' => false,
-                'status' => $previous ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted,
-            ])->save();
-            // Ggf. „Bestätigung ausstehend“, wenn weitere Sorgeberechtigte bestätigen müssen
-            $locked->refreshStatus();
-
+            $response = $this->createVersion($locked, $user, $answers, $meta, $correctionReason);
             InquiryDraft::where('assignment_id', $locked->id)->where('user_id', $user->id)->delete();
-
-            InquiryEvent::create([
-                'inquiry_id' => $inquiry->id,
-                'assignment_id' => $locked->id,
-                'user_id' => $user->id,
-                'action' => $previous ? 'response.corrected' : 'response.submitted',
-                'note' => $response->correction_reason,
-                'data' => ['version' => $response->version, 'answer_hash' => $response->answer_hash],
-            ]);
 
             return $response;
         });
 
         $assignment->refresh();
         $this->delivery->confirm($response->setRelation('assignment', $assignment));
+
+        return $response;
+    }
+
+    /**
+     * Neue gültige Antwortversion anlegen (Aufruf innerhalb einer Transaktion mit gesperrtem Auftrag).
+     * Wird beim Absenden durch Eltern und bei der Übernahme einer Änderungsmeldung verwendet.
+     *
+     * @param  array<string, mixed>  $answers  bereinigte Antworten inkl. Dateiangaben
+     * @param  array{channel?: string, ip?: ?string, user_agent?: ?string}  $meta
+     * @param  array{review_status?: InquiryReviewStatus, reviewed_by?: ?int, reviewed_at?: mixed, review_note?: ?string}  $review
+     */
+    public function createVersion(InquiryAssignment $locked, User $user, array $answers, array $meta, ?string $reason, array $review = [], string $action = ''): InquiryResponse
+    {
+        $inquiry = $locked->inquiry;
+        $fields = $this->fields($locked);
+        $previous = $locked->current_response_id ? InquiryResponse::find($locked->current_response_id) : null;
+        $baseline = $this->previousAnswers->baseline($locked);
+
+        $response = InquiryResponse::create([
+            'assignment_id' => $locked->id,
+            'inquiry_id' => $inquiry->id,
+            'child_id' => $locked->child_id,
+            'user_id' => $user->id,
+            'template_version_id' => $inquiry->template_version_id,
+            // Nach einem Neustart beginnt keine neue Zählung: Versionen bleiben je Auftrag eindeutig
+            'version' => (int) InquiryResponse::where('assignment_id', $locked->id)->max('version') + 1,
+            'answers' => $answers,
+            'form_hash' => $this->schema->formHash($inquiry->template_version_id, $inquiry->title, $inquiry->intro, $fields),
+            'answer_hash' => $this->schema->answerHash($answers),
+            'previous_response_id' => $previous?->id,
+            'baseline_response_id' => $baseline?->id,
+            'baseline_changes' => $baseline ? $this->previousAnswers->changes($fields, $baseline, $answers) : null,
+            'correction_reason' => $previous ? (Str::limit(trim((string) $reason), 1000, '') ?: null) : null,
+            'is_current' => true,
+            'channel' => in_array($meta['channel'] ?? null, ['web', 'app'], true) ? $meta['channel'] : 'web',
+            'ip_anonymized' => self::anonymizeIp($meta['ip'] ?? null),
+            'user_agent' => isset($meta['user_agent']) ? Str::limit((string) $meta['user_agent'], 250, '') : null,
+            'submitted_at' => now(),
+        ] + $review + ['review_status' => InquiryReviewStatus::Pending]);
+
+        $previous?->update(['is_current' => false]);
+
+        $locked->forceFill([
+            'current_response_id' => $response->id,
+            'first_submitted_at' => $locked->first_submitted_at ?? $response->submitted_at,
+            'last_submitted_at' => $response->submitted_at,
+            'has_problem' => false,
+            'status' => $previous ? InquiryAssignmentStatus::Corrected : InquiryAssignmentStatus::Submitted,
+        ])->save();
+        // Ggf. „Bestätigung ausstehend“, wenn weitere Sorgeberechtigte bestätigen müssen
+        $locked->refreshStatus();
+
+        InquiryEvent::create([
+            'inquiry_id' => $inquiry->id,
+            'assignment_id' => $locked->id,
+            'user_id' => $user->id,
+            'action' => $action ?: ($previous ? 'response.corrected' : 'response.submitted'),
+            'note' => $response->correction_reason,
+            'data' => ['version' => $response->version, 'answer_hash' => $response->answer_hash],
+        ]);
 
         return $response;
     }
@@ -244,7 +260,7 @@ class ResponseService
     /**
      * @return array<string, array{name: string, path: string, size: int, mime: ?string}>
      */
-    private function storeFiles(InquiryAssignment $assignment, array $fields, array $files, array $previous): array
+    public function storeFiles(InquiryAssignment $assignment, array $fields, array $files, array $previous): array
     {
         $stored = [];
         foreach ($fields as $field) {

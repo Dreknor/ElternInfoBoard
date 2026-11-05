@@ -54,7 +54,7 @@ class AssignmentController extends Controller
         $assignment->load([
             'inquiry.templateVersion', 'child', 'group', 'recipients.user:id,name,email',
             'responses.user:id,name', 'responses.reviewer:id,name', 'deliveries.user:id,name', 'events.user:id,name',
-            'drafts.user:id,name', 'responses.confirmations.user:id,name', 'filer:id,name',
+            'drafts.user:id,name', 'responses.confirmations.user:id,name', 'filer:id,name', 'changeRequests.user:id,name',
         ]);
 
         return view('elternabfragen.admin.assignment', [

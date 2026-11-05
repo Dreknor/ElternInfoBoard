@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\API\V1;
 
 use App\Enums\InquiryFieldType;
+use App\Enums\InquiryChangeRequestStatus;
 use App\Model\InquiryAssignment;
+use App\Model\InquiryChangeRequest;
 use App\Model\InquiryDraft;
 use App\Model\InquiryResponse;
+use App\Services\Elternabfragen\ChangeRequestService;
 use App\Services\Elternabfragen\FieldSchema;
 use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
@@ -29,6 +32,7 @@ class InquiryController extends ApiController
         private readonly ResponseService $responses,
         private readonly FieldSchema $schema,
         private readonly GuardianConfirmation $confirmation,
+        private readonly ChangeRequestService $changes,
     ) {}
 
     /**
@@ -38,6 +42,8 @@ class InquiryController extends ApiController
      * `can_confirm`: die Antwort liegt vor und muss vom Nutzer noch bestätigt werden (Vorlagen mit
      * `requires_all_guardians`).
      * `can_submit`/`can_correct` steuern die Buttons; `reason` erklärt, warum nicht.
+     * `can_request_change`: nach Ablauf der Selbstkorrektur bzw. nach Abschluss eine Änderung melden
+     * (`change_pending` = offene Meldung liegt vor, `change_reason` = warum nicht).
      *
      * @queryParam filter string `open` = nur offene, die der Nutzer abgeben darf. Example: open
      */
@@ -99,6 +105,7 @@ class InquiryController extends ApiController
                 'answers' => $prefill,
             ] : null,
             'response' => $current && $state['can_view_answers'] ? $this->presentResponse($assignment, $current) : null,
+            'change_request' => $state['can_view_answers'] ? $this->presentChange($request, $assignment) : null,
             'versions' => $state['can_view_answers'] ? $assignment->responses->map(fn (InquiryResponse $r) => [
                 'version' => $r->version,
                 'submitted_at' => $r->submitted_at->toIso8601String(),
@@ -199,6 +206,55 @@ class InquiryController extends ApiController
     }
 
     /**
+     * Änderung zu einer abgegebenen Antwort melden (nur bei `can_request_change`), z. B. nach
+     * einem Umzug. `answers` enthält den vollständigen neuen Datensatz (vorbefüllt aus
+     * `response.answers`). Die Schule prüft die Meldung und übernimmt sie als neue Version;
+     * eine eigene offene Meldung wird ersetzt. 409, wenn keine Meldung möglich ist
+     * (`change_reason`), 422 bei ungültigen oder unveränderten Angaben.
+     *
+     * @bodyParam answers object required Antworten je Feldschlüssel.
+     * @bodyParam message string required Was hat sich geändert? Example: Umzug zum 01.03.
+     * @bodyParam confirm boolean required Bestätigung der Richtigkeit. Example: true
+     */
+    public function requestChange(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate([
+            'answers' => 'present|array',
+            'message' => 'required|string|max:2000',
+            'confirm' => 'accepted',
+        ], [
+            'message.required' => 'Bitte beschreiben Sie kurz, was sich geändert hat.',
+            'confirm.accepted' => 'Bitte bestätigen Sie die Richtigkeit Ihrer Angaben.',
+        ]);
+
+        $files = collect($assignment->inquiry->templateVersion->fields)
+            ->filter(fn ($f) => $f['type'] === InquiryFieldType::File->value && $request->hasFile('answers.'.$f['key']))
+            ->mapWithKeys(fn ($f) => [$f['key'] => $request->file('answers.'.$f['key'])])
+            ->all();
+
+        $this->changes->submit($assignment, $request->user(), (array) $request->input('answers', []), $files, (string) $request->input('message'),
+            ['channel' => 'app', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()]);
+        $assignment->refresh()->load(['inquiry', 'child']);
+
+        return response()->json([
+            'message' => 'Vielen Dank! Ihre Änderung wurde an die Schule übermittelt.',
+            'data' => $this->summary($request, $assignment) + ['change_request' => $this->presentChange($request, $assignment)],
+        ], 201);
+    }
+
+    /**
+     * Eigene offene Änderungsmeldung zurückziehen.
+     */
+    public function withdrawChange(Request $request, InquiryAssignment $assignment): JsonResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $this->changes->withdraw($assignment, $request->user());
+
+        return response()->json(['message' => 'Änderungsmeldung zurückgezogen.']);
+    }
+
+    /**
      * PDF-Bestätigung der gültigen Antwort.
      */
     public function pdf(Request $request, InquiryAssignment $assignment): Response
@@ -232,6 +288,7 @@ class InquiryController extends ApiController
     private function summary(Request $request, InquiryAssignment $assignment): array
     {
         $state = $this->access->state($request->user(), $assignment);
+        $change = $this->changes->state($request->user(), $assignment);
         $inquiry = $assignment->inquiry;
 
         return [
@@ -257,6 +314,9 @@ class InquiryController extends ApiController
             'awaiting_confirmation' => $state['awaiting_confirmation'],
             'correction_until' => $state['correction_until']?->toIso8601String(),
             'reason' => $state['reason'],
+            'can_request_change' => $change['allowed'],
+            'change_reason' => $change['visible'] && ! $change['allowed'] ? $change['reason'] : null,
+            'change_pending' => $change['pending'] !== null,
         ];
     }
 
@@ -301,6 +361,32 @@ class InquiryController extends ApiController
             'answer_hash' => $response->answer_hash,
             'pdf_url' => route('api.v1.elternabfragen.pdf', $assignment),
         ];
+    }
+
+    /**
+     * Letzte eigene bzw. offene Änderungsmeldung: status pending|accepted|rejected,
+     * `note` = Begründung bzw. Vermerk der Schule.
+     */
+    private function presentChange(Request $request, InquiryAssignment $assignment): ?array
+    {
+        /** @var InquiryChangeRequest|null $change */
+        $change = $assignment->changeRequests()->with(['user:id,name', 'response:id,version'])
+            ->where(fn ($q) => $q->where('user_id', $request->user()->id)->orWhere('status', InquiryChangeRequestStatus::Pending->value))
+            ->where('status', '!=', InquiryChangeRequestStatus::Withdrawn->value)
+            ->first();
+
+        return $change ? [
+            'id' => $change->id,
+            'status' => $change->status->value,
+            'status_label' => $change->status->label(),
+            'message' => $change->message,
+            'requested_at' => $change->created_at->toIso8601String(),
+            'requested_by' => $change->user?->name,
+            'own' => $change->user_id === $request->user()->id,
+            'handled_at' => $change->isPending() ? null : $change->handled_at?->toIso8601String(),
+            'note' => $change->status === InquiryChangeRequestStatus::Rejected ? $change->handled_note : null,
+            'version' => $change->response?->version,
+        ] : null;
     }
 
     private function authorizeView(Request $request, InquiryAssignment $assignment): void

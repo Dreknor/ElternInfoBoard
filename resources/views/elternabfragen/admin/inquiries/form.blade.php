@@ -153,6 +153,7 @@
                     <label class="ea-toggle-row"><input type="checkbox" class="ea-check mt-0.5" name="notify_push" value="1" @checked($check('notify_push'))> <span><i class="fas fa-mobile-alt ea-muted mr-1" aria-hidden="true"></i> App-/Web-Push und Glocke</span></label>
                     <label class="ea-toggle-row"><input type="checkbox" class="ea-check mt-0.5" name="auto_reminders" value="1" @checked($check('auto_reminders'))> <span><i class="fas fa-bell ea-muted mr-1" aria-hidden="true"></i> Automatische Erinnerungen (Regeln)</span></label>
                     <label class="ea-toggle-row"><input type="checkbox" class="ea-check mt-0.5" name="staff_visible" value="1" @checked($check('staff_visible'))> <span><i class="fas fa-chalkboard-teacher ea-muted mr-1" aria-hidden="true"></i> Geprüfte Antworten für Mitarbeitende lesbar</span></label>
+                    <label class="ea-toggle-row"><input type="checkbox" class="ea-check mt-0.5" name="allow_change_requests" value="1" @checked($check('allow_change_requests'))> <span><i class="fas fa-exchange-alt ea-muted mr-1" aria-hidden="true"></i> Eltern dürfen später Änderungen melden (z. B. Umzug) – Übernahme durch die Verwaltung</span></label>
                 </div>
             </div>
         </section>
