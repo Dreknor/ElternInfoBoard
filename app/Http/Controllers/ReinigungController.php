@@ -350,7 +350,7 @@ class ReinigungController extends Controller implements HasMiddleware
             'datum' => $datum,
             'user' => $user,
             'ende' => $ende,
-            'aufgaben' => ReinigungsTask::query()->orderBy('name')->get(),
+            'aufgaben' => ReinigungsTask::query()->orderBy('task')->get(),
             'combinedMode' => $combined,
         ]);
     }
