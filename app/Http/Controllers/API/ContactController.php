@@ -29,7 +29,7 @@ class ContactController extends Controller implements HasMiddleware
     /**
      * Display a listing of employees.
      *
-     * Retrieves a list of employees who have the role 'Mitarbeiter' or the permission 'show in contact form'.
+     * Retrieves a list of users who have the permission 'show in contact form' (directly or via one of their roles).
      * Prepends the list with a default 'Sekretariat' entry.
      *
      * @responseField data array The list of employees.
@@ -45,11 +45,7 @@ class ContactController extends Controller implements HasMiddleware
         $emailSettings = new EmailSetting;
         $defaultName = $emailSettings->contact_default_name ?? 'Sekretariat';
 
-        $mitarbeiter = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Mitarbeiter');
-        })->orWhereHas('permissions', function ($q) {
-            $q->where('name', 'show in contact form');
-        })->orderBy('name')->get(['id', 'name']);
+        $mitarbeiter = User::contactRecipients()->orderBy('name')->get(['id', 'name']);
 
         $mitarbeiter->prepend(['id' => 0, 'name' => $defaultName]);
 
@@ -140,9 +136,6 @@ class ContactController extends Controller implements HasMiddleware
     /** Nutzer, die im Kontaktformular auswählbar sind. */
     private function contactQuery()
     {
-        return User::query()->where(function ($q) {
-            $q->whereHas('roles', fn ($r) => $r->where('name', 'Mitarbeiter'))
-                ->orWhereHas('permissions', fn ($p) => $p->where('name', 'show in contact form'));
-        });
+        return User::contactRecipients();
     }
 }

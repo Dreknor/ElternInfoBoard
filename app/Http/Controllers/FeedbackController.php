@@ -59,11 +59,8 @@ class FeedbackController extends Controller implements HasMiddleware
         }
 
         return view('feedback.show', [
-            'mitarbeiter' => User::whereHas('roles', function ($q) {
-                $q->where('name', 'Mitarbeiter');
-            })->orWhereHas('permissions', function ($q) {
-                $q->where('name', 'show in contact form');
-            })->orderBy('name')->get(),
+            // Alle mit „show in contact form“ – direkt oder über eine Rolle
+            'mitarbeiter' => User::contactRecipients()->orderBy('name')->get(),
             'mails' => $mails,
             'id' => $id,
         ]);
@@ -78,11 +75,8 @@ class FeedbackController extends Controller implements HasMiddleware
     {
         if ($request->mitarbeiter != '') {
             // Nur Personen aus der Auswahlliste – nicht beliebige Konten über die Mailanlage der Schule anschreiben
-            $email = User::query()
+            $email = User::contactRecipients()
                 ->where('id', $request->mitarbeiter)
-                ->where(fn ($q) => $q
-                    ->whereHas('roles', fn ($r) => $r->where('name', 'Mitarbeiter'))
-                    ->orWhereHas('permissions', fn ($r) => $r->where('name', 'show in contact form')))
                 ->value('email');
             if (! $email) {
                 return redirect()->back()->withInput()->with(['type' => 'danger', 'Meldung' => 'Empfänger nicht gefunden.']);

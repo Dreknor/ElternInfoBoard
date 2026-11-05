@@ -19,7 +19,7 @@ class KontaktKopieTest extends TestCase
     private function sendAs(User $absender): void
     {
         $mitarbeiter = User::factory()->create(['email' => 'lehrkraft@example.org']);
-        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web')->givePermissionTo(\Spatie\Permission\Models\Permission::findOrCreate('show in contact form', 'web')));
 
         $this->actingAs($absender)->post('/feedback', [
             'mitarbeiter' => $mitarbeiter->id,

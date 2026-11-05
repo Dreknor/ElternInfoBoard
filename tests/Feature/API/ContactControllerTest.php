@@ -24,7 +24,7 @@ class ContactControllerTest extends TestCase
         Mail::fake();
         Sanctum::actingAs(User::factory()->create());
         $mitarbeiter = User::factory()->create();
-        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web')->givePermissionTo(\Spatie\Permission\Models\Permission::findOrCreate('show in contact form', 'web')));
 
         $this->postJson('/api/contact', [
             'mitarbeiter' => $mitarbeiter->id,
@@ -47,7 +47,7 @@ class ContactControllerTest extends TestCase
         Storage::fake('local');
         Sanctum::actingAs(User::factory()->create());
         $mitarbeiter = User::factory()->create();
-        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web')->givePermissionTo(\Spatie\Permission\Models\Permission::findOrCreate('show in contact form', 'web')));
 
         $this->post('/api/contact', [
             'mitarbeiter' => $mitarbeiter->id,
@@ -67,7 +67,7 @@ class ContactControllerTest extends TestCase
         Storage::fake('local');
         Sanctum::actingAs(User::factory()->create());
         $mitarbeiter = User::factory()->create();
-        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web')->givePermissionTo(\Spatie\Permission\Models\Permission::findOrCreate('show in contact form', 'web')));
 
         $this->post('/api/contact', [
             'mitarbeiter' => $mitarbeiter->id,
@@ -94,7 +94,7 @@ class ContactControllerTest extends TestCase
         Mail::fake();
         Sanctum::actingAs(User::factory()->create(['email' => 'eltern@example.org', 'sendCopy' => 1]));
         $mitarbeiter = User::factory()->create(['email' => 'lehrkraft@example.org']);
-        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web')->givePermissionTo(\Spatie\Permission\Models\Permission::findOrCreate('show in contact form', 'web')));
 
         $this->postJson('/api/contact', [
             'mitarbeiter' => $mitarbeiter->id,
@@ -113,7 +113,7 @@ class ContactControllerTest extends TestCase
         Mail::fake();
         Sanctum::actingAs(User::factory()->create(['email' => 'eltern@example.org', 'sendCopy' => 0]));
         $mitarbeiter = User::factory()->create(['email' => 'lehrkraft@example.org']);
-        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web'));
+        $mitarbeiter->assignRole(Role::findOrCreate('Mitarbeiter', 'web')->givePermissionTo(\Spatie\Permission\Models\Permission::findOrCreate('show in contact form', 'web')));
 
         $this->postJson('/api/contact', [
             'mitarbeiter' => $mitarbeiter->id,
