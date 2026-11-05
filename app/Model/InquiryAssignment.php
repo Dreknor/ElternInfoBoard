@@ -71,6 +71,12 @@ class InquiryAssignment extends Model
         return $this->hasMany(InquiryResponse::class, 'assignment_id')->orderByDesc('version');
     }
 
+    /** Änderungsmeldungen der Eltern, neueste zuerst. */
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(InquiryChangeRequest::class, 'assignment_id')->orderByDesc('id');
+    }
+
     public function currentResponse(): BelongsTo
     {
         return $this->belongsTo(InquiryResponse::class, 'current_response_id');

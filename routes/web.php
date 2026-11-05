@@ -804,6 +804,8 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
         Route::post('{assignment}/entwurf', [$parent, 'saveDraft'])->whereNumber('assignment')->name('draft');
         Route::delete('{assignment}/entwurf', [$parent, 'discardDraft'])->whereNumber('assignment')->name('draft.discard');
         Route::post('{assignment}/absenden', [$parent, 'submit'])->whereNumber('assignment')->middleware('throttle:20,1')->name('submit');
+        Route::post('{assignment}/aenderung', [$parent, 'requestChange'])->whereNumber('assignment')->middleware('throttle:20,1')->name('change');
+        Route::delete('{assignment}/aenderung', [$parent, 'withdrawChange'])->whereNumber('assignment')->name('change.withdraw');
         Route::post('{assignment}/bestaetigen', [$parent, 'confirm'])->whereNumber('assignment')->middleware('throttle:20,1')->name('confirm');
         Route::get('{assignment}/bestaetigung.pdf', [$parent, 'pdf'])->whereNumber('assignment')->name('pdf');
         Route::get('{assignment}/datei/{field}', [$parent, 'file'])->whereNumber('assignment')->name('file');
@@ -886,6 +888,16 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
         });
         Route::get('antworten/{response}/datei/{field}', [$cases, 'file'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.file');
         Route::get('antworten/{response}', [$cases, 'response'])->middleware('permission:view elternabfragen answers|read elternabfragen')->name('responses.show');
+
+        // Änderungsmeldungen der Eltern
+        Route::middleware('permission:view elternabfragen answers')->group(function () {
+            $changes = \App\Http\Controllers\Elternabfragen\ChangeRequestController::class;
+            Route::get('aenderungen', [$changes, 'index'])->name('change-requests.index');
+            Route::get('aenderungen/{changeRequest}', [$changes, 'show'])->name('change-requests.show');
+            Route::post('aenderungen/{changeRequest}/uebernehmen', [$changes, 'accept'])->name('change-requests.accept');
+            Route::post('aenderungen/{changeRequest}/ablehnen', [$changes, 'reject'])->name('change-requests.reject');
+            Route::get('aenderungen/{changeRequest}/datei/{field}', [$changes, 'file'])->name('change-requests.file');
+        });
 
         // Export (Prozess E)
         Route::middleware('permission:export elternabfragen')->group(function () use ($exports) {

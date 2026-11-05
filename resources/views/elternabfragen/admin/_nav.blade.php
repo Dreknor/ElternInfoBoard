@@ -6,6 +6,8 @@
             ? ['label' => 'Abfragen & Rücklauf', 'icon' => 'fas fa-tasks'] : null,
         'elternabfragen.admin.templates.index' => $user->canAny(['manage elternabfragen', 'approve elternabfragen'])
             ? ['label' => 'Vorlagen', 'icon' => 'fas fa-layer-group'] : null,
+        'elternabfragen.admin.change-requests.index' => $user->can('view elternabfragen answers')
+            ? ['label' => 'Änderungen', 'icon' => 'fas fa-exchange-alt', 'count' => \App\Services\Elternabfragen\ChangeRequestService::pendingCount()] : null,
         'elternabfragen.admin.approvals' => $user->can('approve elternabfragen')
             ? ['label' => 'Freigaben', 'icon' => 'fas fa-user-check', 'count' => $pendingApprovals ?? 0] : null,
         'elternabfragen.admin.staff' => $user->canAny(['read elternabfragen', 'view elternabfragen answers'])
@@ -47,6 +49,7 @@
                         'elternabfragen.admin.index' => ['elternabfragen.admin.index', 'elternabfragen.admin.inquiries.', 'elternabfragen.admin.assignments.', 'elternabfragen.admin.exports.'],
                         'elternabfragen.admin.templates.index' => ['elternabfragen.admin.templates.'],
                         'elternabfragen.admin.staff' => ['elternabfragen.admin.staff', 'elternabfragen.admin.responses.'],
+                        'elternabfragen.admin.change-requests.index' => ['elternabfragen.admin.change-requests.'],
                         default => [$route],
                     };
                     $active = \Illuminate\Support\Str::startsWith((string) $current, $prefixes);

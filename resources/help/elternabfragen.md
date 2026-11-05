@@ -52,8 +52,18 @@ Bei Einwilligungen (z. B. Fotos auf der Website) wird der **vollständige Einwil
 ## Korrigieren
 
 - Innerhalb des angezeigten **Zeitfensters** nach dem Absenden kannst du über **Angaben korrigieren** selbst eine neue Version abgeben.
-- Danach ist eine Korrektur nur noch **über das Sekretariat** möglich – es kann die Korrektur für dich freischalten.
+- Danach kannst du **Änderungen melden** (siehe unten). Das Sekretariat kann die Korrektur auch für dich freischalten.
 - Die bisherige Antwort wird nie überschrieben: Jede Korrektur ist eine neue Version, die gültige ist gekennzeichnet (siehe „Versionsverlauf").
+
+## Änderung melden (z. B. nach einem Umzug)
+
+Hat sich nach dem Absenden etwas geändert – etwa die **Anschrift** oder die **Notfallnummer** –, musst du nicht auf die nächste Abfrage warten:
+
+1. Öffne die beantwortete Abfrage und tippe auf **Änderung melden**. Die Felder enthalten deine bisherigen Angaben.
+2. Ändere, was nicht mehr stimmt, und beschreibe kurz, was sich geändert hat (z. B. „Umzug zum 01.03.").
+3. Prüfe die Zusammenfassung und tippe auf **Änderung melden**.
+
+Die Schule prüft deine Meldung und übernimmt sie als neue Version – bis dahin gelten die bisherigen Angaben. Du wirst benachrichtigt, sobald die Änderung übernommen wurde; lehnt die Schule sie ab, siehst du die Begründung in der Abfrage. Solange deine Meldung offen ist, kannst du sie **zurückziehen** oder durch eine neue ersetzen. Das geht auch, wenn die Abfrage bereits abgeschlossen ist. Gibt es inzwischen eine neuere Abfrage (z. B. für das neue Schuljahr), meldest du Änderungen dort. Bei einer gemeinsamen Erklärung müssen die anderen Sorgeberechtigten die übernommene Änderung wieder bestätigen.
 
 ## Fristen und Erinnerungen
 

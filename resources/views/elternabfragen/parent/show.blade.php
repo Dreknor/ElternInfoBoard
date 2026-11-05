@@ -5,7 +5,10 @@
 @section('content')
 @php
     $current = $assignment->currentResponse;
-    $isCorrection = $assignment->isAnswered() && $state['can_correct'] && $editing;
+    $changing = $changing ?? false;
+    $changeState = $changeState ?? null;
+    $latestChange = $latestChange ?? null;
+    $isCorrection = ! $changing && $assignment->isAnswered() && $state['can_correct'] && $editing;
     $existing = $current?->answers ?? [];
     $overdue = $state['deadline']->isPast();
 @endphp
@@ -135,7 +138,7 @@
     @endif
 
     @if($editing)
-        <form method="POST" action="{{ $preview ? '#' : route('elternabfragen.submit', $assignment) }}" enctype="multipart/form-data"
+        <form method="POST" action="{{ $preview ? '#' : route($changing ? 'elternabfragen.change' : 'elternabfragen.submit', $assignment) }}" enctype="multipart/form-data"
               x-data="elternabfrageForm()" x-on:submit="if (!$event.submitter || !$event.submitter.hasAttribute('formnovalidate')) { if (step === 'form') { $event.preventDefault(); review(); } }"
               novalidate>
             @csrf
@@ -152,11 +155,20 @@
                 </li>
                 <li class="ea-step">
                     <span class="ea-step-dot">3</span>
-                    <span class="ea-step-label">Eingereicht</span>
+                    <span class="ea-step-label">{{ $changing ? 'Gemeldet' : 'Eingereicht' }}</span>
                 </li>
             </ol>
 
-            @if($isCorrection)
+            @if($changing)
+                <div class="ea-alert ea-alert-info mb-4" role="status"><i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                    <p class="mb-0">
+                        <strong>Änderung melden.</strong> Die Felder enthalten Ihre bisherigen Angaben (Version {{ $current->version }}).
+                        Ändern Sie, was nicht mehr stimmt – z. B. die Anschrift nach einem Umzug.
+                        Die Schule prüft Ihre Meldung und übernimmt sie; bis dahin gelten die bisherigen Angaben.
+                        @if($changeState['pending'] ?? null) Ihre noch offene Meldung vom {{ $changeState['pending']->created_at->format('d.m.Y') }} wird dabei ersetzt. @endif
+                    </p>
+                </div>
+            @elseif($isCorrection)
                 <div class="ea-alert ea-alert-warning mb-4"><i class="fas fa-pen" aria-hidden="true"></i>
                     <p class="mb-0">
                         Sie korrigieren die eingereichte Antwort (Version {{ $current->version }}). Die bisherige Version bleibt nachvollziehbar gespeichert.
@@ -192,12 +204,14 @@
                     <button type="submit" class="ea-btn ea-btn-primary ea-btn-lg w-full sm:w-auto">
                         Weiter zur Zusammenfassung <i class="fas fa-arrow-right" aria-hidden="true"></i>
                     </button>
-                    @unless($preview)
+                    @if($changing)
+                        <a href="{{ route('elternabfragen.show', $assignment) }}" class="ea-btn ea-btn-secondary ea-btn-lg w-full sm:w-auto">Abbrechen</a>
+                    @elseif(! $preview)
                         <button type="submit" formaction="{{ route('elternabfragen.draft', $assignment) }}" formnovalidate
                                 class="ea-btn ea-btn-secondary ea-btn-lg w-full sm:w-auto">
                             <i class="fas fa-save" aria-hidden="true"></i> Entwurf speichern
                         </button>
-                    @endunless
+                    @endif
                 </div>
             </div>
 
@@ -222,7 +236,14 @@
                 </div>
 
                 <div class="ea-card p-5 space-y-4">
-                    @if($isCorrection)
+                    @if($changing)
+                        <div>
+                            <label for="change_message" class="ea-label">Was hat sich geändert? <span class="text-red-600">*</span></label>
+                            <textarea id="change_message" name="message" rows="3" maxlength="2000" required class="ea-input"
+                                      placeholder="z. B. Umzug zum 01.03. – neue Anschrift">{{ old('message') }}</textarea>
+                            <p class="ea-hint">Die Nachricht erhält die Schule zusammen mit Ihren neuen Angaben.</p>
+                        </div>
+                    @elseif($isCorrection)
                         <div>
                             <label for="correction_reason" class="ea-label">Grund der Korrektur (optional)</label>
                             <textarea id="correction_reason" name="correction_reason" rows="2" maxlength="1000" class="ea-input">{{ old('correction_reason') }}</textarea>
@@ -236,7 +257,7 @@
 
                     <div class="flex flex-col sm:flex-row gap-3">
                         <button type="submit" class="ea-btn ea-btn-success ea-btn-lg w-full sm:w-auto" @disabled($preview)>
-                            <i class="fas fa-paper-plane" aria-hidden="true"></i> Verbindlich absenden
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i> {{ $changing ? 'Änderung melden' : 'Verbindlich absenden' }}
                         </button>
                         <button type="button" x-on:click="step = 'form'" class="ea-btn ea-btn-secondary ea-btn-lg w-full sm:w-auto">
                             <i class="fas fa-pen" aria-hidden="true"></i> Angaben ändern
@@ -300,6 +321,47 @@
             </section>
         @endif
 
+        @if($latestChange)
+            @php($own = $latestChange->user_id === auth()->id())
+            <section class="ea-card mb-5" aria-labelledby="aenderung"
+                     style="border-color: {{ match ($latestChange->status) { \App\Enums\InquiryChangeRequestStatus::Pending => '#f59e0b', \App\Enums\InquiryChangeRequestStatus::Rejected => '#f87171', default => '#34d399' } }}">
+                <div class="ea-card-header">
+                    <div class="ea-card-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></div>
+                    <div>
+                        <h2 id="aenderung" class="ea-card-title">
+                            @switch($latestChange->status)
+                                @case(\App\Enums\InquiryChangeRequestStatus::Pending) Änderung gemeldet – wird bearbeitet @break
+                                @case(\App\Enums\InquiryChangeRequestStatus::Accepted) Änderung übernommen @break
+                                @default Änderung nicht übernommen
+                            @endswitch
+                        </h2>
+                        <p class="ea-card-sub">
+                            Gemeldet von {{ $own ? 'Ihnen' : ($latestChange->user?->name ?? 'unbekannt') }} am {{ $latestChange->created_at->format('d.m.Y, H:i') }} Uhr
+                            @if($latestChange->handled_at && ! $latestChange->isPending()) · bearbeitet am {{ $latestChange->handled_at->format('d.m.Y') }} @endif
+                        </p>
+                    </div>
+                </div>
+                <div class="ea-card-body space-y-3 text-sm">
+                    <p class="whitespace-pre-line ea-text mb-0"><span class="ea-muted">Ihre Nachricht:</span> {{ $latestChange->message }}</p>
+                    @if($latestChange->isPending())
+                        <p class="ea-muted mb-0">Bis die Schule die Änderung übernommen hat, gelten die unten aufgeführten bisherigen Angaben.</p>
+                        @if($own)
+                            <form method="POST" action="{{ route('elternabfragen.change.withdraw', $assignment) }}" onsubmit="return confirm('Änderungsmeldung zurückziehen?')">
+                                @csrf @method('DELETE')
+                                <button class="ea-btn ea-btn-ghost ea-btn-sm"><i class="fas fa-undo" aria-hidden="true"></i> Meldung zurückziehen</button>
+                            </form>
+                        @endif
+                    @elseif($latestChange->status === \App\Enums\InquiryChangeRequestStatus::Rejected)
+                        @if($latestChange->handled_note)
+                            <div class="ea-alert ea-alert-danger"><i class="fas fa-comment" aria-hidden="true"></i><p class="mb-0 whitespace-pre-line"><strong>Begründung der Schule:</strong> {{ $latestChange->handled_note }}</p></div>
+                        @endif
+                    @else
+                        <p class="ea-muted mb-0">Die Angaben gelten ab Version {{ $latestChange->response?->version ?? '–' }}.</p>
+                    @endif
+                </div>
+            </section>
+        @endif
+
         <section class="ea-card mb-5" aria-labelledby="eingereicht">
             <div class="ea-card-header">
                 <div class="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300"><i class="fas fa-check" aria-hidden="true"></i></div>
@@ -324,10 +386,23 @@
                         <a href="{{ route('elternabfragen.show', [$assignment, 'korrigieren' => 1]) }}" class="ea-btn ea-btn-primary w-full sm:w-auto">
                             <i class="fas fa-pen" aria-hidden="true"></i> Angaben korrigieren
                         </a>
+                    @elseif($changeState['allowed'] ?? false)
+                        <a href="{{ route('elternabfragen.show', [$assignment, 'aendern' => 1]) }}" class="ea-btn ea-btn-primary w-full sm:w-auto">
+                            <i class="fas fa-exchange-alt" aria-hidden="true"></i> {{ ($changeState['pending'] ?? null) ? 'Meldung ersetzen' : 'Änderung melden' }}
+                        </a>
                     @endif
                 </div>
                 @if($state['can_correct'] && $state['correction_until'])
-                    <p class="ea-hint">Korrektur selbst möglich bis {{ $state['correction_until']->format('d.m.Y, H:i') }} Uhr. Danach bitte an das Sekretariat wenden.</p>
+                    <p class="ea-hint">Korrektur selbst möglich bis {{ $state['correction_until']->format('d.m.Y, H:i') }} Uhr. Danach können Sie Änderungen melden.</p>
+                @elseif($changeState['allowed'] ?? false)
+                    <p class="ea-hint">Hat sich etwas geändert, z. B. Ihre Anschrift? Melden Sie die Änderung hier – die Schule übernimmt sie, ohne dass Sie auf die nächste Abfrage warten müssen.</p>
+                @elseif($changeState['visible'] ?? false)
+                    <p class="ea-hint">
+                        {{ $changeState['reason'] }}
+                        @if($changeState['successor'] ?? null)
+                            <a href="{{ route('elternabfragen.show', $changeState['successor']) }}" class="ea-link">Zur aktuellen Abfrage</a>
+                        @endif
+                    </p>
                 @elseif($state['reason'])
                     <p class="ea-hint">{{ $state['reason'] }}</p>
                 @endif

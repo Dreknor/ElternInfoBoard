@@ -121,6 +121,18 @@ Bei Zustellproblemen erhält die verantwortliche Person eine Mitteilung.
 - **PDF für die Akte** – ein Blatt mit der gültigen Antwort, Einwilligungstexten, Bestätigungen und Prüfsummen
 - **Für diese Familie neu starten** – z. B. nach einer Änderung des Sorgerechts oder für Nachzügler. Die bisherige Antwort bleibt als Version erhalten, gilt aber nicht mehr. Die Sorgeberechtigten werden nach aktuellem Stand ermittelt und benachrichtigt und können bis zur gesetzten Frist antworten – auch wenn die Abfrage bereits abgeschlossen ist. Die letzte Antwort ist im Formular vorbefüllt.
 
+## Änderungsmeldungen
+
+Eltern können zu einer bereits abgegebenen Antwort jederzeit eine **Änderung melden** (z. B. neue Anschrift nach einem Umzug) – sobald ihre Selbstkorrektur abgelaufen ist, auch nach Abschluss der Abfrage. Die Meldung enthält den vollständigen neuen Datensatz und eine kurze Nachricht der Eltern. Sie wird **nicht automatisch wirksam**:
+
+- Die verantwortliche Person der Abfrage wird benachrichtigt. Offene Meldungen zeigt der Reiter **Änderungen** (Recht „Antwortinhalte einsehen"), außerdem die Abfrage und der Einzelfall.
+- Die Meldung zeigt **bisher** und **neu** nebeneinander, geänderte Angaben sind markiert.
+- **Übernehmen** speichert die Angaben als neue, bereits **geprüfte** Antwortversion der Eltern (mit optionalem Vermerk). Die bisherige Version bleibt erhalten. Übertrage die Änderung bei Bedarf in die Schulverwaltung; bei aktenrelevanten Abfragen muss die neue Version gedruckt werden.
+- **Ablehnen** erfordert eine Begründung, die die Eltern in der Abfrage sehen (in der E-Mail steht sie aus Datenschutzgründen nicht).
+- Bei **gemeinsamen Erklärungen** werden die weiteren Sorgeberechtigten nach der Übernahme automatisch um Bestätigung gebeten – auch bei abgeschlossener Abfrage.
+
+Je Kind ist eine offene Meldung möglich; meldet derselbe Elternteil erneut, ersetzt die neue Meldung die alte. Gibt es eine neuere Abfrage derselben Reihe (z. B. „Als neue Abfrage kopieren" fürs neue Schuljahr), werden Eltern dorthin verwiesen. Unter **Einstellungen** der Abfrage lässt sich „Änderungsmeldungen durch Eltern" abschalten, z. B. für einmalige Abfragen wie eine Ausflugsteilnahme. Mit der Löschung der Antworten werden auch die Meldungen gelöscht.
+
 ## Schülerakte
 
 **PDF für die Schülerakte** in der Abfrage erstellt ein Blatt je Kind mit vollständiger Antwort, wahlweise für eine Klasse und nur für noch nicht gedruckte Antworten. Jedes Blatt hat ein Feld für den Ablagevermerk. Beim Erstellen wird je Kind vermerkt, welche Antwortversion gedruckt wurde. Nach einer Korrektur oder einem Neustart muss erneut gedruckt werden. Antworten, bei denen noch Bestätigungen fehlen, gelten nicht als gedruckt.
@@ -131,4 +143,4 @@ Der Export läuft in drei Schritten: **Auswahl → Vorschau prüfen → Datei er
 
 ## Aufbewahrung
 
-Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten, Uploads, Exportdateien und personenbezogene Protokolldaten automatisch gelöscht. Erhalten bleiben die Abfrage selbst und eine anonyme Statistik. Für Einwilligungen, die die gesamte Schulzeit gelten, kann die Vorlage **unbefristet aufbewahren** vorsehen. Dann wird nichts automatisch gelöscht; abgeschlossene Abfragen lassen sich unter **Antworten löschen** manuell löschen (mit Grund, protokolliert), sobald sie nicht mehr benötigt werden – das geht auch vor Ablauf einer Frist, z. B. nach einem Widerruf. Wurde ein Fall nach Abschluss neu gestartet, beginnt die Frist erst mit dem Ende seiner individuellen Frist. Bei **aktenrelevanten** Abfragen wird die Löschung zurückgehalten, bis alle vollständigen Antworten für die Schülerakte gedruckt sind.
+Nach Ablauf der Aufbewahrungsfrist (ab Abschluss) werden Antworten, Uploads, Änderungsmeldungen, Exportdateien und personenbezogene Protokolldaten automatisch gelöscht. Erhalten bleiben die Abfrage selbst und eine anonyme Statistik. Für Einwilligungen, die die gesamte Schulzeit gelten, kann die Vorlage **unbefristet aufbewahren** vorsehen. Dann wird nichts automatisch gelöscht; abgeschlossene Abfragen lassen sich unter **Antworten löschen** manuell löschen (mit Grund, protokolliert), sobald sie nicht mehr benötigt werden – das geht auch vor Ablauf einer Frist, z. B. nach einem Widerruf. Wurde ein Fall nach Abschluss neu gestartet, beginnt die Frist erst mit dem Ende seiner individuellen Frist. Bei **aktenrelevanten** Abfragen wird die Löschung zurückgehalten, bis alle vollständigen Antworten für die Schülerakte gedruckt sind.

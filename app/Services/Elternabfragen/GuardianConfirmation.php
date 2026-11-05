@@ -4,6 +4,7 @@ namespace App\Services\Elternabfragen;
 
 use App\Enums\GuardianRight;
 use App\Model\InquiryAssignment;
+use App\Model\InquiryChangeRequest;
 use App\Model\InquiryConfirmation;
 use App\Model\InquiryEvent;
 use App\Model\InquiryResponse;
@@ -75,8 +76,19 @@ class GuardianConfirmation
 
     public function canConfirm(User $user, InquiryAssignment $assignment): bool
     {
-        return $assignment->acceptsAnswers()
+        return ($assignment->acceptsAnswers() || $this->fromChangeRequest($assignment))
             && $this->pendingUsers($assignment)->contains('id', $user->id);
+    }
+
+    /**
+     * Die gültige Version stammt aus einer übernommenen Änderungsmeldung: Bestätigungen sind
+     * dann auch nach Abschluss der Abfrage möglich (solange die Antworten nicht gelöscht sind).
+     */
+    public function fromChangeRequest(InquiryAssignment $assignment): bool
+    {
+        return $assignment->current_response_id !== null
+            && $assignment->inquiry?->purged_at === null
+            && InquiryChangeRequest::where('response_id', $assignment->current_response_id)->exists();
     }
 
     /**

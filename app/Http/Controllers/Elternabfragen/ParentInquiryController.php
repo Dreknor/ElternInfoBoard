@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
 use App\Model\InquiryResponse;
+use App\Services\Elternabfragen\ChangeRequestService;
 use App\Services\Elternabfragen\FieldSchema;
 use App\Services\Elternabfragen\GuardianConfirmation;
 use App\Services\Elternabfragen\InquiryAccess;
@@ -29,6 +30,7 @@ class ParentInquiryController extends Controller
         private readonly ResponseService $responses,
         private readonly FieldSchema $schema,
         private readonly GuardianConfirmation $confirmation,
+        private readonly ChangeRequestService $changes,
     ) {}
 
     public function index(Request $request): View
@@ -74,8 +76,15 @@ class ParentInquiryController extends Controller
             ->where('inquiry_id', $assignment->inquiry_id)
             ->with('child')
             ->get();
-        $hasDraft = $assignment->drafts()->where('user_id', $user->id)->exists();
-        $answers = $state['can_view_answers'] ? $this->responses->prefill($assignment, $user) : [];
+        $changeState = $this->changes->state($user, $assignment);
+        // Änderung melden: Formular mit der gültigen Antwort vorbefüllt
+        $changing = $changeState['allowed'] && $request->boolean('aendern');
+        $hasDraft = ! $changing && $assignment->drafts()->where('user_id', $user->id)->exists();
+        $answers = match (true) {
+            ! $state['can_view_answers'] => [],
+            $changing => $assignment->currentResponse?->answers ?? [],
+            default => $this->responses->prefill($assignment, $user),
+        };
 
         return view('elternabfragen.parent.show', [
             'assignment' => $assignment,
@@ -91,7 +100,16 @@ class ParentInquiryController extends Controller
             'siblings' => $siblings,
             'childOptions' => $this->responses->childOptions($assignment->inquiry->templateVersion->fields, $user),
             'schema' => $this->schema,
-            'editing' => ($state['can_submit'] || ($state['can_correct'] && $request->boolean('korrigieren'))),
+            'editing' => $changing || ($state['can_submit'] || ($state['can_correct'] && $request->boolean('korrigieren'))),
+            'changing' => $changing,
+            'changeState' => $changeState,
+            // Letzte eigene bzw. offene Änderungsmeldung (Stand für die Eltern)
+            'latestChange' => $state['can_view_answers']
+                ? $assignment->changeRequests()->with(['user:id,name', 'response:id,version'])
+                    ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('status', \App\Enums\InquiryChangeRequestStatus::Pending->value))
+                    ->where('status', '!=', \App\Enums\InquiryChangeRequestStatus::Withdrawn->value)
+                    ->first()
+                : null,
             'preview' => false,
             'confirmations' => $state['can_view_answers'] ? $this->confirmation->overview($assignment) : [],
         ]);
@@ -137,22 +155,49 @@ class ParentInquiryController extends Controller
             'confirm.accepted' => 'Bitte bestätigen Sie die Richtigkeit Ihrer Angaben.',
         ]);
 
-        $files = collect($assignment->inquiry->templateVersion->fields)
-            ->filter(fn ($f) => $f['type'] === InquiryFieldType::File->value && $request->hasFile('answers.'.$f['key']))
-            ->mapWithKeys(fn ($f) => [$f['key'] => $request->file('answers.'.$f['key'])])
-            ->all();
-
         $this->responses->submit(
             $assignment,
             $request->user(),
             (array) $request->input('answers', []),
-            $files,
+            $this->uploadedFiles($request, $assignment),
             ['channel' => 'web', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()],
             $request->input('correction_reason'),
         );
 
         return redirect()->route('elternabfragen.show', $assignment)
             ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Angaben wurden verbindlich übermittelt.', 'submitted' => true]);
+    }
+
+    /**
+     * Änderung zu einer abgegebenen Antwort melden (z. B. Umzug). Das Sekretariat übernimmt sie.
+     */
+    public function requestChange(Request $request, InquiryAssignment $assignment): RedirectResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $request->validate(['message' => 'required|string|max:2000', 'confirm' => 'accepted'], [
+            'message.required' => 'Bitte beschreiben Sie kurz, was sich geändert hat.',
+            'confirm.accepted' => 'Bitte bestätigen Sie die Richtigkeit Ihrer Angaben.',
+        ]);
+
+        $this->changes->submit(
+            $assignment,
+            $request->user(),
+            (array) $request->input('answers', []),
+            $this->uploadedFiles($request, $assignment),
+            (string) $request->input('message'),
+            ['channel' => 'web', 'ip' => $request->ip(), 'user_agent' => $request->userAgent()],
+        );
+
+        return redirect()->route('elternabfragen.show', $assignment)
+            ->with(['type' => 'success', 'Meldung' => 'Vielen Dank! Ihre Änderung wurde an die Schule übermittelt. Sie werden benachrichtigt, sobald sie übernommen wurde.']);
+    }
+
+    public function withdrawChange(Request $request, InquiryAssignment $assignment): RedirectResponse
+    {
+        $this->authorizeView($request, $assignment);
+        $this->changes->withdraw($assignment, $request->user());
+
+        return redirect()->route('elternabfragen.show', $assignment)->with(['type' => 'info', 'Meldung' => 'Änderungsmeldung zurückgezogen.']);
     }
 
     public function pdf(Request $request, InquiryAssignment $assignment): Response
@@ -185,6 +230,15 @@ class ParentInquiryController extends Controller
         abort_unless($file, 404);
 
         return Storage::disk(ResponseService::DISK)->download($file['path'], $file['name']);
+    }
+
+    /** @return array<string, \Illuminate\Http\UploadedFile> */
+    private function uploadedFiles(Request $request, InquiryAssignment $assignment): array
+    {
+        return collect($assignment->inquiry->templateVersion->fields)
+            ->filter(fn ($f) => $f['type'] === InquiryFieldType::File->value && $request->hasFile('answers.'.$f['key']))
+            ->mapWithKeys(fn ($f) => [$f['key'] => $request->file('answers.'.$f['key'])])
+            ->all();
     }
 
     /**

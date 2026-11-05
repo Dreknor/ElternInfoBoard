@@ -3,9 +3,11 @@
 namespace App\Services\Elternabfragen;
 
 use App\Enums\InquiryAssignmentStatus;
+use App\Enums\InquiryChangeRequestStatus;
 use App\Mail\ElternabfrageMail;
 use App\Model\Inquiry;
 use App\Model\InquiryAssignment;
+use App\Model\InquiryChangeRequest;
 use App\Model\InquiryDelivery;
 use App\Model\InquiryRecipient;
 use App\Model\InquiryResponse;
@@ -161,6 +163,95 @@ class DeliveryService
             'url' => url('elternabfragen/'.$assignment->id),
             'icon' => self::ICON,
         ]));
+    }
+
+    /**
+     * Neue Änderungsmeldung: Hinweis an die verantwortliche Person (Glocke inkl. Push).
+     * Enthält keine Antwortinhalte.
+     */
+    public function changeRequested(InquiryChangeRequest $request): void
+    {
+        $assignment = $request->assignment;
+        $inquiry = $assignment->inquiry;
+        $userId = $inquiry->responsible_user_id ?? $inquiry->created_by;
+        if (! $userId) {
+            return;
+        }
+
+        Notification::create([
+            'type' => self::NOTIFICATION_TYPE,
+            'user_id' => $userId,
+            'title' => 'Änderung zu einer Elternabfrage gemeldet',
+            'message' => ($request->user?->name ?? 'Eine sorgeberechtigte Person').' hat eine Änderung zu „'.$inquiry->title.'“ für '.$assignment->childName().' gemeldet.',
+            'url' => url('verwaltung/elternabfragen/aenderungen/'.$request->id),
+            'icon' => 'fas fa-exchange-alt',
+            'important' => true,
+        ]);
+        $this->log($assignment, $userId, InquiryDelivery::KIND_CHANGE_NOTICE, InquiryDelivery::CHANNEL_BELL, 'auto', null, true);
+    }
+
+    /**
+     * Änderungsmeldung bearbeitet: Rückmeldung an die meldende Person. Nach Übernahme werden
+     * weitere Sorgeberechtigte informiert bzw. – bei gemeinsamer Erklärung – um Bestätigung gebeten.
+     */
+    public function changeHandled(InquiryChangeRequest $request): void
+    {
+        $assignment = $request->assignment;
+        $inquiry = $assignment->inquiry;
+        $requester = $request->user;
+        $accepted = $request->status === InquiryChangeRequestStatus::Accepted;
+        $url = url('elternabfragen/'.$assignment->id);
+        $child = $assignment->child?->first_name ?? $assignment->childName();
+
+        if ($requester) {
+            Notification::create([
+                'type' => self::NOTIFICATION_TYPE,
+                'user_id' => $requester->id,
+                'title' => $accepted ? 'Änderung übernommen' : 'Änderung nicht übernommen',
+                'message' => $accepted
+                    ? 'Ihre Änderung zu „'.$inquiry->title.'“ für '.$child.' wurde übernommen.'
+                    : 'Ihre Änderung zu „'.$inquiry->title.'“ für '.$child.' wurde nicht übernommen. Bitte beachten Sie die Begründung.',
+                'url' => $url,
+                'icon' => self::ICON,
+                'important' => ! $accepted,
+            ]);
+            $this->log($assignment, $requester->id, InquiryDelivery::KIND_CHANGE_RESULT, InquiryDelivery::CHANNEL_BELL, 'auto', $request->handled_by, true);
+
+            if (filled($requester->email)) {
+                $this->sendMail($assignment, $requester, InquiryDelivery::KIND_CHANGE_RESULT, 'auto', $request->handled_by, new ElternabfrageMail(
+                    kind: $accepted ? ElternabfrageMail::KIND_CHANGE_ACCEPTED : ElternabfrageMail::KIND_CHANGE_REJECTED,
+                    userName: $requester->name,
+                    inquiryTitle: $inquiry->title,
+                    childName: $assignment->childName(),
+                    deadline: $assignment->effectiveDeadline()->format('d.m.Y H:i'),
+                    url: $url,
+                    version: $request->response?->version,
+                ));
+            }
+        }
+
+        if (! $accepted) {
+            return;
+        }
+
+        $confirmation = app(GuardianConfirmation::class);
+        if ($confirmation->required($assignment)) {
+            $confirmation->pendingUsers($assignment)
+                ->each(fn (User $user) => $this->requestConfirmation($assignment, $user, 'auto', $request->handled_by, $requester));
+
+            return;
+        }
+
+        $assignment->recipients()->with('user')->get()
+            ->filter(fn (InquiryRecipient $r) => $r->user && $r->user_id !== $request->user_id)
+            ->each(fn (InquiryRecipient $r) => Notification::create([
+                'type' => self::NOTIFICATION_TYPE,
+                'user_id' => $r->user_id,
+                'title' => 'Angaben geändert',
+                'message' => '„'.$inquiry->title.'“ für '.$child.': Eine von '.($requester?->name ?? 'einer sorgeberechtigten Person').' gemeldete Änderung wurde übernommen.',
+                'url' => $url,
+                'icon' => self::ICON,
+            ]));
     }
 
     /**
