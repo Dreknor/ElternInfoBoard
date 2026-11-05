@@ -42,6 +42,7 @@ class SendKontaktMail implements ShouldBeEncrypted, ShouldQueue
         protected ?string $directory,
         protected ?string $userName,
         protected ?string $userEmail,
+        protected bool $sendCopy = false,
     ) {}
 
     public function handle(): void
@@ -53,7 +54,13 @@ class SendKontaktMail implements ShouldBeEncrypted, ShouldQueue
             'mime' => $file['mime'],
         ], $this->attachments);
 
-        Mail::to($this->to)->send(new SendFeedback(
+        // Kopie an den Absender nur bei Einstellung „Kopie meiner Rückmeldungen“ (wie im Web).
+        $mail = Mail::to($this->to);
+        if ($this->sendCopy && $this->userEmail) {
+            $mail->cc($this->userEmail);
+        }
+
+        $mail->send(new SendFeedback(
             $this->text,
             $this->betreff,
             ['attachments' => $attachments],

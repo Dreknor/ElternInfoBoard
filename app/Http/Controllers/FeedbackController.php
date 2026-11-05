@@ -147,7 +147,12 @@ class FeedbackController extends Controller implements HasMiddleware
         */
         try {
             $user = $request->user();
-            Mail::to($email)->cc($user->email)->send(new SendFeedback(
+            // Kopie an den Absender nur bei Einstellung „Kopie meiner Rückmeldungen“
+            $mail = Mail::to($email);
+            if ($user->sendCopy) {
+                $mail->cc($user->email);
+            }
+            $mail->send(new SendFeedback(
                 $request->text,
                 $request->betreff,
                 $data,
