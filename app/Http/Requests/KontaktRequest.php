@@ -31,8 +31,17 @@ class KontaktRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            // Einzelne ID (ältere Apps, 0/leer = Sekretariat) oder Liste von IDs
             'mitarbeiter' => [
-                'present',
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if (is_array($value) && count(\App\Support\KontaktEmpfaenger::ids($value)) > \App\Support\KontaktEmpfaenger::MAX) {
+                        $fail('Höchstens '.\App\Support\KontaktEmpfaenger::MAX.' Empfänger möglich.');
+                    }
+                },
+            ],
+            'mitarbeiter.*' => [
+                'nullable', 'integer',
             ],
             'files' => [
                 'nullable',
