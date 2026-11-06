@@ -14,6 +14,7 @@ use App\Http\Controllers\API\V1\DashboardController;
 use App\Http\Controllers\API\V1\FeedbackController;
 use App\Http\Controllers\API\V1\InquiryController;
 use App\Http\Controllers\API\V1\InstanceController;
+use App\Http\Controllers\API\V1\LinkController;
 use App\Http\Controllers\API\V1\ListenController;
 use App\Http\Controllers\API\V1\MeController;
 use App\Http\Controllers\API\V1\MessengerController;
@@ -119,6 +120,9 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::get('{assignment}/pdf', [InquiryController::class, 'pdf'])->whereNumber('assignment')->name('pdf');
         Route::get('{assignment}/files/{field}', [InquiryController::class, 'file'])->whereNumber('assignment')->name('file');
     });
+
+    // Links (Modul „Links“)
+    Route::get('links', [LinkController::class, 'index'])->middleware('module:Links')->name('links');
 
     // Infoseiten & Elternrat
     Route::get('sites', [CommunityController::class, 'sites'])->name('sites');
