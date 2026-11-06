@@ -266,9 +266,19 @@ class ListenController extends Controller
             ]);
         }
 
+        $gruppen = $request->input('gruppen');
+        $personen = IndividualRecipients::enabled() ? IndividualRecipients::idsFromRequest($request) : [];
+        if (empty($gruppen) && empty($personen)) {
+            return redirect()->back()->withInput()->with([
+                'type' => 'warning',
+                'Meldung' => IndividualRecipients::enabled()
+                    ? 'Es muss mindestens eine Gruppe oder Person ausgewählt werden.'
+                    : 'Es muss mindestens eine Gruppe ausgewählt werden.',
+            ]);
+        }
+
         $terminListe->update($request->validated());
 
-        $gruppen = $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);
 
         $terminListe->groups()->detach();
