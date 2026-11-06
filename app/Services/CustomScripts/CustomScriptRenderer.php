@@ -54,10 +54,10 @@ class CustomScriptRenderer
     /**
      * Chat-Eintrag für die App (bootstrap) oder null, wenn nicht angeboten.
      *
-     * Ist `url` gesetzt, öffnet die App diese Seite direkt. Sonst holt sie über
-     * POST auth/web-link einen Anmeldelink für `web_path` und öffnet diesen.
+     * Nur gesetzt, wenn tatsächlich ein aktives Snippet existiert. Die App holt
+     * über POST auth/web-link einen Anmeldelink für `web_path` und öffnet ihn.
      *
-     * @return array{label: string, url: ?string, web_path: string}|null
+     * @return array{label: string, web_path: string}|null
      */
     public function appChat(): ?array
     {
@@ -69,7 +69,6 @@ class CustomScriptRenderer
 
         return [
             'label' => $setting->app_label !== '' ? $setting->app_label : 'Chat',
-            'url' => $setting->app_url ?: null,
             'web_path' => self::CHAT_PATH,
         ];
     }

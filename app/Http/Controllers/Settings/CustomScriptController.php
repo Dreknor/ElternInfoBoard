@@ -54,7 +54,6 @@ class CustomScriptController extends Controller
             'show_for_guests' => 'nullable|boolean',
             'app_enabled' => 'nullable|boolean',
             'app_label' => 'nullable|string|max:30',
-            'app_url' => 'nullable|url:https|max:500',
         ]);
 
         $snippet = trim((string) ($validated['snippet'] ?? ''));
@@ -74,7 +73,6 @@ class CustomScriptController extends Controller
         $setting->show_for_guests = $request->boolean('show_for_guests');
         $setting->app_enabled = $request->boolean('app_enabled');
         $setting->app_label = trim((string) ($validated['app_label'] ?? '')) ?: 'Chat';
-        $setting->app_url = ($validated['app_url'] ?? null) ?: null;
         $setting->updated_by = $request->user()->id;
         $setting->updated_at = now()->toIso8601String();
         $setting->save();
@@ -85,7 +83,6 @@ class CustomScriptController extends Controller
             'position' => $setting->position,
             'show_for_guests' => $setting->show_for_guests,
             'app_enabled' => $setting->app_enabled,
-            'app_url' => $setting->app_url,
             'snippet_changed' => $changed,
             'snippet_sha256' => $snippet === '' ? null : hash('sha256', $snippet),
         ]);

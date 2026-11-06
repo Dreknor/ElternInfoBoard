@@ -22,14 +22,11 @@ class CustomScriptSetting extends Settings
     /** Auch für nicht angemeldete Besucher (Login, Passwort vergessen …) ausgeben. */
     public bool $show_for_guests = false;
 
-    /** Chat in der Eltern-App anbieten (Button, öffnet /chat bzw. app_url im In-App-Browser). */
+    /** Chat in der Eltern-App anbieten (Button öffnet /chat im In-App-Browser). */
     public bool $app_enabled = false;
 
     /** Beschriftung des Buttons in der App. */
     public string $app_label = 'Chat';
-
-    /** Optional: eigene Chat-Seite des Anbieters (https). Leer = /chat dieser Instanz. */
-    public ?string $app_url = null;
 
     /** Wer das Snippet zuletzt geändert hat (User-ID) und wann (ISO-8601). */
     public ?int $updated_by = null;

@@ -93,9 +93,9 @@
                                @checked(old('app_enabled', $setting->app_enabled))>
                         <span>Chat auch in der App anbieten</span>
                     </label>
-                    <p class="text-xs opacity-75 mb-0">Die App zeigt dann einen Button, der den Chat im In-App-Browser öffnet:
-                        entweder die Chat-Seite dieser Instanz (<a href="{{ route('chat') }}" target="_blank" class="underline">{{ url('chat') }}</a>, angemeldet)
-                        oder die unten eingetragene Chat-Seite des Anbieters.</p>
+                    <p class="text-xs opacity-75 mb-0">Die App zeigt dann einen Button, der die Chat-Seite dieser Instanz
+                        (<a href="{{ route('chat') }}" target="_blank" class="underline">{{ url('chat') }}</a>) angemeldet im In-App-Browser öffnet.
+                        Der Button erscheint nur, solange das Snippet aktiv ist und Inhalt hat.</p>
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
@@ -104,14 +104,6 @@
                                    value="{{ old('app_label', $setting->app_label) }}" placeholder="Chat"
                                    class="w-full rounded-lg p-2"
                                    style="background-color: var(--color-body-bg); border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
-                        </div>
-                        <div>
-                            <label for="app_url" class="block font-semibold mb-1">Chat-Seite des Anbieters (optional)</label>
-                            <input type="url" id="app_url" name="app_url" maxlength="500"
-                                   value="{{ old('app_url', $setting->app_url) }}" placeholder="https://…"
-                                   class="w-full rounded-lg p-2"
-                                   style="background-color: var(--color-body-bg); border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
-                            <p class="text-xs mt-1 opacity-75">Leer lassen, um die Chat-Seite dieser Instanz zu verwenden.</p>
                         </div>
                     </div>
                 </fieldset>

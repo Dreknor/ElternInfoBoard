@@ -230,12 +230,14 @@ class CustomScriptsTest extends TestCase
         $this->storeSnippet(['app_enabled' => true, 'app_label' => 'Hilfe-Chat']);
         $this->getJson('/api/v1/bootstrap')->assertOk()
             ->assertJsonPath('data.chat.label', 'Hilfe-Chat')
-            ->assertJsonPath('data.chat.url', null)
             ->assertJsonPath('data.chat.web_path', '/chat');
 
-        $this->storeSnippet(['app_enabled' => true, 'app_url' => 'https://chat.example/s/abc']);
-        $this->getJson('/api/v1/bootstrap')->assertOk()
-            ->assertJsonPath('data.chat.url', 'https://chat.example/s/abc');
+        // Ohne Snippet kein Button, auch wenn für die App aktiviert
+        $this->storeSnippet(['app_enabled' => true, 'snippet' => '  ']);
+        $this->getJson('/api/v1/bootstrap')->assertOk()->assertJsonPath('data.chat', null);
+
+        $this->storeSnippet(['app_enabled' => true, 'active' => false]);
+        $this->getJson('/api/v1/bootstrap')->assertOk()->assertJsonPath('data.chat', null);
     }
 
     public function test_app_chat_path_is_accepted_by_web_link(): void
@@ -253,18 +255,12 @@ class CustomScriptsTest extends TestCase
 
         $this->actingAs($admin)->put('/settings/custom-scripts', [
             'active' => '1', 'snippet' => self::SNIPPET, 'position' => 'body',
-            'app_enabled' => '1', 'app_url' => 'http://unsicher.example',
-        ])->assertSessionHasErrors('app_url');
-
-        $this->actingAs($admin)->put('/settings/custom-scripts', [
-            'active' => '1', 'snippet' => self::SNIPPET, 'position' => 'body',
-            'app_enabled' => '1', 'app_label' => '', 'app_url' => '',
+            'app_enabled' => '1', 'app_label' => '',
         ])->assertSessionHasNoErrors();
 
         $this->app->forgetScopedInstances();
         $setting = app(CustomScriptSetting::class);
         $this->assertTrue($setting->app_enabled);
         $this->assertSame('Chat', $setting->app_label);
-        $this->assertNull($setting->app_url);
     }
 }
