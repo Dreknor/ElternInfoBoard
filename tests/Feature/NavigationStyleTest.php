@@ -199,4 +199,25 @@ class NavigationStyleTest extends TestCase
             ->assertSee('Termine &amp; Pläne', false)
             ->assertSee('Vertretungsplan');
     }
+
+    /** @test */
+    public function every_module_with_a_menu_entry_has_a_compact_group(): void
+    {
+        $this->seed(\Database\Seeders\CreateSettingsSeeder::class);
+
+        $missing = [];
+        foreach (Module::where('category', 'module')->get() as $module) {
+            $options = $module->options ?? [];
+            if (isset($options['nav']['name']) && ! isset($options['nav']['group'])
+                && ! array_key_exists($module->setting, config('navigation.modules'))) {
+                $missing[] = $module->setting.' (Menü)';
+            }
+            if (isset($options['adm-nav']['name']) && ! isset($options['adm-nav']['group'])
+                && ! array_key_exists($module->setting, config('navigation.admin_modules'))) {
+                $missing[] = $module->setting.' (Verwaltung)';
+            }
+        }
+
+        $this->assertSame([], $missing, 'Module ohne Gruppe in config/navigation.php landen in „Weitere“.');
+    }
 }
