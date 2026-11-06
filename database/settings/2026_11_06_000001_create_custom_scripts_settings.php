@@ -11,7 +11,7 @@ return new class extends SettingsMigration
         $this->migrator->add('custom_scripts.position', 'body');
         $this->migrator->add('custom_scripts.show_for_guests', false);
         $this->migrator->add('custom_scripts.app_enabled', false);
-        $this->migrator->add('custom_scripts.app_label', 'Chat');
+        $this->migrator->add('custom_scripts.app_label', 'Chatbot');
         $this->migrator->add('custom_scripts.updated_by', null);
         $this->migrator->add('custom_scripts.updated_at', null);
     }

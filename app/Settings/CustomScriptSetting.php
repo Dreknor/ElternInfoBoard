@@ -26,7 +26,7 @@ class CustomScriptSetting extends Settings
     public bool $app_enabled = false;
 
     /** Beschriftung des Buttons in der App. */
-    public string $app_label = 'Chat';
+    public string $app_label = 'Chatbot';
 
     /** Wer das Snippet zuletzt geändert hat (User-ID) und wann (ISO-8601). */
     public ?int $updated_by = null;

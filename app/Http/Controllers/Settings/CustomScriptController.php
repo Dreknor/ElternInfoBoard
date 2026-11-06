@@ -72,7 +72,7 @@ class CustomScriptController extends Controller
         $setting->position = $validated['position'];
         $setting->show_for_guests = $request->boolean('show_for_guests');
         $setting->app_enabled = $request->boolean('app_enabled');
-        $setting->app_label = trim((string) ($validated['app_label'] ?? '')) ?: 'Chat';
+        $setting->app_label = trim((string) ($validated['app_label'] ?? '')) ?: 'Chatbot';
         $setting->updated_by = $request->user()->id;
         $setting->updated_at = now()->toIso8601String();
         $setting->save();

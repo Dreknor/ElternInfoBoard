@@ -68,7 +68,7 @@ class CustomScriptRenderer
         }
 
         return [
-            'label' => $setting->app_label !== '' ? $setting->app_label : 'Chat',
+            'label' => $setting->app_label !== '' ? $setting->app_label : 'Chatbot',
             'web_path' => self::CHAT_PATH,
         ];
     }

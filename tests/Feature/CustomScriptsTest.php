@@ -261,6 +261,6 @@ class CustomScriptsTest extends TestCase
         $this->app->forgetScopedInstances();
         $setting = app(CustomScriptSetting::class);
         $this->assertTrue($setting->app_enabled);
-        $this->assertSame('Chat', $setting->app_label);
+        $this->assertSame('Chatbot', $setting->app_label);
     }
 }

@@ -101,7 +101,7 @@
                         <div>
                             <label for="app_label" class="block font-semibold mb-1">Beschriftung des Buttons</label>
                             <input type="text" id="app_label" name="app_label" maxlength="30"
-                                   value="{{ old('app_label', $setting->app_label) }}" placeholder="Chat"
+                                   value="{{ old('app_label', $setting->app_label) }}" placeholder="Chatbot"
                                    class="w-full rounded-lg p-2"
                                    style="background-color: var(--color-body-bg); border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
                         </div>
