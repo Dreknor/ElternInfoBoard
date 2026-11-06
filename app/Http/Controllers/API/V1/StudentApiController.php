@@ -123,7 +123,7 @@ class StudentApiController extends Controller
             'user' => ['id' => $student->id, 'name' => $student->name, 'username' => $student->username],
             'klasse' => StudentContext::className($student),
             'gruppen' => StudentContext::groupNames($student)->values(),
-            'bereiche' => array_values(array_filter(['nachrichten', 'termine', 'vertretungsplan', 'stundenplan', 'ags', \App\Services\Students\StudentMessenger::enabled() ? 'chat' : null])),
+            'bereiche' => array_values(array_filter(['nachrichten', 'termine', 'vertretungsplan', 'stundenplan', 'ags', StudentPostQuery::linksEnabled($student) ? 'links' : null, \App\Services\Students\StudentMessenger::enabled() ? 'chat' : null])),
             'passwort_aenderbar' => $student->ucs_oidc_sub === null && $student->ucs_source !== 'kelvin' && StudentAccounts::usernameLoginEnabled(),
         ]]);
     }
@@ -213,6 +213,25 @@ class StudentApiController extends Controller
             'zeitslots' => $klasse ? $provider->zeitslotsForClass($data, $klasse) : [],
             'stunden' => $klasse ? $provider->timetableForClass($data, $klasse) : [],
         ]]);
+    }
+
+    /** Modul „Links“ (nur bei aktivem Modul, sonst 404; `bereiche` enthält dann kein „links“). */
+    public function links(Request $request): JsonResponse
+    {
+        abort_unless(StudentPostQuery::linksEnabled($request->user()), 404);
+
+        return response()->json(['data' => StudentPostQuery::links($request->user())
+            ->map(fn (\App\Model\Link $l) => [
+                'id' => $l->id,
+                'titel' => $l->title,
+                'beschreibung' => $l->description,
+                'url' => $l->href(),
+                'art' => $l->type(),
+                'adresse' => $l->displayHost(),
+                'kategorie' => $l->category,
+                'symbol' => $l->iconKey(),
+                'startseite' => $l->pinned,
+            ])->values()]);
     }
 
     public function ags(Request $request): JsonResponse

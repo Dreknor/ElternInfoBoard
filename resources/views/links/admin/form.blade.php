@@ -99,6 +99,12 @@
                     @include('include.formGroups', ['groups' => true, 'selectedGroups' => $selectedGroups])
                 </div>
 
+                @include('student.partials.audience-field', [
+                    'value' => $link->zielgruppe,
+                    'permission' => \App\Model\Link::MANAGE_PERMISSION,
+                    'hint' => 'Schüler sehen den Link, wenn er für alle oder für ihre Klasse bzw. Gruppe freigegeben ist. Links „nur Schüler“ sehen Eltern nie. Interne Links funktionieren für Schüler nur innerhalb der Schüleransicht (/schueler…).',
+                ])
+
                 <label class="ea-toggle-row text-sm ea-text">
                     <input type="checkbox" name="pinned" value="1" class="ea-check mt-0.5" @checked(old('pinned', $link->pinned))>
                     <span><strong>Auf der Startseite anzeigen</strong> – zusätzlich als Schnellzugriff im Dashboard und in der App.</span>

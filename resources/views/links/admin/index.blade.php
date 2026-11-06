@@ -46,6 +46,9 @@
                                     @if($link->pinned)
                                         <x-elternabfragen.badge color="blue" icon="fas fa-thumbtack">Startseite</x-elternabfragen.badge>
                                     @endif
+                                    @if($studentAudience && $link->zielgruppe !== \App\Support\StudentAccounts::ZIELGRUPPE_ELTERN)
+                                        <x-elternabfragen.badge color="teal" icon="fas fa-user-graduate">{{ \App\Support\AudienceField::label($link->zielgruppe) }}</x-elternabfragen.badge>
+                                    @endif
                                 </p>
                                 <a href="{{ $link->href() }}" @if($link->opensInNewTab()) target="_blank" rel="noopener noreferrer" @endif class="text-sm ea-link break-all">{{ \Illuminate\Support\Str::limit($link->url, 80) }}</a>
                                 <p class="text-xs ea-muted mt-1 mb-0">

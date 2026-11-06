@@ -10,6 +10,9 @@
         ['route' => 'student.stundenplan', 'icon' => 'fa-table', 'label' => 'Stundenplan'],
         ['route' => 'student.ags', 'icon' => 'fa-users', 'label' => 'AGs'],
     ];
+    if (auth()->user() && \App\Services\Students\StudentPostQuery::linksEnabled(auth()->user())) {
+        $studentNav[] = ['route' => 'student.links', 'icon' => 'fa-link', 'label' => 'Links'];
+    }
     $studentChat = \App\Services\Students\StudentMessenger::enabled();
     if ($studentChat) {
         $studentNav[] = ['route' => 'student.messenger', 'icon' => 'fa-comments', 'label' => 'Chat'];

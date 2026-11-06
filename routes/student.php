@@ -37,6 +37,7 @@ Route::middleware('student.enabled')->group(function () {
         Route::get('vertretungsplan', [StudentPortalController::class, 'vertretungsplan'])->name('vertretungsplan');
         Route::get('stundenplan', [StudentPortalController::class, 'stundenplan'])->name('stundenplan');
         Route::get('ags', [StudentPortalController::class, 'ags'])->name('ags');
+        Route::get('links', [StudentPortalController::class, 'links'])->name('links');
         Route::get('profil', [StudentPortalController::class, 'profile'])->name('profile');
         Route::put('profil/passwort', [StudentPortalController::class, 'updatePassword'])->middleware('throttle:10,1')->name('profile.password');
 

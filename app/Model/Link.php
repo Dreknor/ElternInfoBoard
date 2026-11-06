@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Model\Concerns\HasAudience;
 use App\Scopes\GetGroupsScope;
 use App\Support\LinkUrl;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,9 +17,17 @@ use Illuminate\Support\Str;
  *
  * Sichtbar ist ein aktiver Link für alle angemeldeten Nutzer (`for_all`) oder für
  * Mitglieder der zugeordneten Gruppen. `pinned` zeigt ihn zusätzlich auf der Startseite.
+ *
+ * Zielgruppe (`zielgruppe`, nur mit Schülerkonten): wie bei Beiträgen. Links „nur für Schüler“
+ * fehlen dank HasAudience überall außer in Verwaltung und Schüleransicht.
  */
 class Link extends Model
 {
+    use HasAudience;
+
+    /** Recht für die Verwaltung der Links (auch der Schülerlinks). */
+    public const MANAGE_PERMISSION = 'edit links';
+
     /**
      * Auswählbare Symbole (Font Awesome 5) mit Bezeichnung. Die App bildet sie auf
      * eigene Symbole ab; der Schlüssel `icon_key` in der API ist der Teil nach „fa-“.
@@ -55,6 +64,15 @@ class Link extends Model
         'for_all', 'pinned', 'is_active', 'position', 'created_by', 'updated_by',
     ];
 
+    protected $attributes = [
+        'zielgruppe' => 'eltern',
+    ];
+
+    protected static function audienceManagePermission(): string
+    {
+        return self::MANAGE_PERMISSION;
+    }
+
     protected function casts(): array
     {
         return [
@@ -88,6 +106,38 @@ class Link extends Model
                     ->join('group_user', 'link_group.group_id', '=', 'group_user.group_id')
                     ->whereColumn('link_group.link_id', 'links.id')
                     ->where('group_user.user_id', $user->id)));
+    }
+
+    /**
+     * Aktive Links für ein Schülerkonto: Zielgruppe mit Schülern und für alle oder für eine
+     * Gruppe des verknüpften Kindes (nie über die Gruppen des Kontos selbst).
+     *
+     * @param  int[]  $groupIds  StudentContext::groupIds()
+     */
+    public function scopeVisibleToStudentGroups(Builder $query, array $groupIds): Builder
+    {
+        return $query->forStudentAudience()
+            ->where('links.is_active', true)
+            ->where(fn (Builder $q) => $q->where('links.for_all', true)
+                ->when($groupIds !== [], fn (Builder $q) => $q->orWhereExists(fn ($sub) => $sub->selectRaw(1)
+                    ->from('link_group')
+                    ->whereColumn('link_group.link_id', 'links.id')
+                    ->whereIn('link_group.group_id', $groupIds))));
+    }
+
+    /**
+     * Für Schüler nutzbar: interne Pfade nur in die Schüleransicht (`/schueler…`),
+     * weil Schülerkonten alle anderen Seiten des Boards nicht erreichen.
+     */
+    public function usableByStudents(): bool
+    {
+        if ($this->type() !== 'internal') {
+            return true;
+        }
+
+        $path = (string) (parse_url($this->href(), PHP_URL_PATH) ?? '/');
+
+        return $path === '/schueler' || str_starts_with($path, '/schueler/');
     }
 
     public function scopeOrdered(Builder $query): Builder

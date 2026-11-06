@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Model\Link;
 use App\Model\Post;
 use App\Model\Termin;
 use App\Model\User;
@@ -11,9 +12,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 /**
- * Feld „Sichtbar für“ in Nachrichten und Terminen (docs/konzept-schuelerkonten.md §9, Paket S-05).
+ * Feld „Sichtbar für“ in Nachrichten, Terminen und Links (docs/konzept-schuelerkonten.md §9, Paket S-05).
  *
- * Erscheint und wirkt nur bei aktivem Modul und mit dem Recht „create student posts“. Ohne das
+ * Erscheint und wirkt nur bei aktivem Modul und mit dem Recht „create student posts“
+ * (bei Links: „edit links“, weil die Verwaltung der Links an diesem Recht hängt). Ohne das
  * Recht bleibt ein vorhandener Wert beim Bearbeiten unverändert; neue Einträge sind `eltern`.
  * Einträge „nur für Schüler“ bekommen keine Elternfunktionen (Lesebestätigung, Reaktionen,
  * externes Angebot, öffentliche Termine), weil deren Empfänger Eltern wären.
@@ -26,17 +28,19 @@ final class AudienceField
         StudentAccounts::ZIELGRUPPE_SCHUELER => 'nur Schüler',
     ];
 
-    public static function available(?User $user): bool
+    public static function available(?User $user, ?string $permission = null): bool
     {
         return $user !== null
             && ! $user->isStudent()
             && StudentAccounts::enabled()
-            && $user->can(StudentAccounts::PERMISSION_CREATE_POSTS);
+            && $user->can($permission ?? StudentAccounts::PERMISSION_CREATE_POSTS);
     }
 
-    public static function apply(Post|Termin $model, Request $request): void
+    public static function apply(Post|Termin|Link $model, Request $request): void
     {
-        if (self::available($request->user()) && $request->has('zielgruppe')) {
+        $permission = $model instanceof Link ? Link::MANAGE_PERMISSION : null;
+
+        if (self::available($request->user(), $permission) && $request->has('zielgruppe')) {
             $value = Validator::make($request->only('zielgruppe'), [
                 'zielgruppe' => ['required', Rule::in(StudentAccounts::ZIELGRUPPEN)],
             ], [], ['zielgruppe' => 'Sichtbar für'])->validate()['zielgruppe'];
@@ -46,7 +50,7 @@ final class AudienceField
             $model->zielgruppe = StudentAccounts::ZIELGRUPPE_ELTERN;
         }
 
-        if ($model->zielgruppe !== StudentAccounts::ZIELGRUPPE_SCHUELER) {
+        if ($model instanceof Link || $model->zielgruppe !== StudentAccounts::ZIELGRUPPE_SCHUELER) {
             return;
         }
 

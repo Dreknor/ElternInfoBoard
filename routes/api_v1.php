@@ -167,6 +167,7 @@ Route::prefix('student')->name('student.')->middleware('student.enabled')->group
         Route::get('vertretungsplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'vertretungsplan'])->name('vertretungsplan');
         Route::get('stundenplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'stundenplan'])->name('stundenplan');
         Route::get('ags', [\App\Http\Controllers\API\V1\StudentApiController::class, 'ags'])->name('ags');
+        Route::get('links', [\App\Http\Controllers\API\V1\StudentApiController::class, 'links'])->name('links');
         Route::post('devices', [\App\Http\Controllers\API\V1\StudentApiController::class, 'storeDevice'])->name('devices.store');
         Route::put('me/password', [\App\Http\Controllers\API\V1\StudentApiController::class, 'password'])->middleware('throttle:10,1')->name('me.password');
 
