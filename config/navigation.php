@@ -71,6 +71,7 @@ return [
         'Seiten' => 'informationen',
         'externe Angebote' => 'informationen',
         'Schulsoftware' => 'informationen',
+        'Links' => 'informationen',
     ],
 
     // Modulname => Gruppe (Verwaltung)
@@ -84,6 +85,7 @@ return [
         'Krankmeldung' => 'adm-inhalte',
         'meldepfl. Erkrankungen' => 'adm-inhalte',
         'bearbeite Rueckmeldungen' => 'adm-inhalte',
+        'Links' => 'adm-inhalte',
 
         'Benutzerverwaltung' => 'adm-personen',
         'Rechte' => 'adm-personen',
