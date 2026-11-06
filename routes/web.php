@@ -143,6 +143,9 @@ Route::middleware('auth')->group(function () {
     Route::get('hilfe/{slug}', [HelpController::class, 'show'])->name('help.show');
 
     Route::middleware(['password_expired'])->group(function () {
+        // Eigenständige Chat-Seite für das instanzspezifische Snippet (u. a. für die App)
+        Route::get('chat', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat');
+
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
         Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');

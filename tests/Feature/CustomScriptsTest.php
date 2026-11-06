@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Model\User;
 use App\Services\CustomScripts\CustomScriptRenderer;
 use App\Settings\CustomScriptSetting;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -185,5 +186,85 @@ class CustomScriptsTest extends TestCase
 
         config(['custom_scripts.enabled' => true]);
         $this->actingAs($admin)->get('/settings')->assertOk()->assertSee('Eigene Skripte');
+    }
+
+    public function test_chat_page_renders_snippet_only_when_active(): void
+    {
+        $user = User::factory()->create(['changePassword' => false]);
+
+        // Nicht freigeschaltet
+        $this->storeSnippet(['position' => 'head']);
+        $this->actingAs($user)->get('/chat')->assertNotFound();
+
+        // Freigeschaltet, aber inaktiv
+        config(['custom_scripts.enabled' => true]);
+        $this->storeSnippet(['active' => false]);
+        $this->actingAs($user)->get('/chat')->assertNotFound();
+
+        // Aktiv: unabhängig vom Ausgabeort genau einmal ausgegeben
+        $this->storeSnippet(['position' => 'head']);
+        $html = $this->actingAs($user)->get('/chat')->assertOk()->getContent();
+        $this->assertSame(1, substr_count($html, self::SNIPPET));
+    }
+
+    public function test_chat_page_requires_login(): void
+    {
+        config(['custom_scripts.enabled' => true]);
+        $this->storeSnippet();
+
+        $this->get('/chat')->assertRedirect();
+    }
+
+    public function test_bootstrap_offers_chat_only_when_enabled_for_app(): void
+    {
+        $user = User::factory()->create(['changePassword' => false]);
+        Sanctum::actingAs($user);
+
+        $this->storeSnippet(['app_enabled' => true]);
+        $this->getJson('/api/v1/bootstrap')->assertOk()->assertJsonPath('data.chat', null);
+
+        config(['custom_scripts.enabled' => true]);
+        $this->storeSnippet(['app_enabled' => false]);
+        $this->getJson('/api/v1/bootstrap')->assertOk()->assertJsonPath('data.chat', null);
+
+        $this->storeSnippet(['app_enabled' => true, 'app_label' => 'Hilfe-Chat']);
+        $this->getJson('/api/v1/bootstrap')->assertOk()
+            ->assertJsonPath('data.chat.label', 'Hilfe-Chat')
+            ->assertJsonPath('data.chat.url', null)
+            ->assertJsonPath('data.chat.web_path', '/chat');
+
+        $this->storeSnippet(['app_enabled' => true, 'app_url' => 'https://chat.example/s/abc']);
+        $this->getJson('/api/v1/bootstrap')->assertOk()
+            ->assertJsonPath('data.chat.url', 'https://chat.example/s/abc');
+    }
+
+    public function test_app_chat_path_is_accepted_by_web_link(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['changePassword' => false]));
+
+        $this->postJson('/api/v1/auth/web-link', ['path' => CustomScriptRenderer::CHAT_PATH])
+            ->assertOk()->assertJsonStructure(['data' => ['url']]);
+    }
+
+    public function test_app_settings_are_saved_and_validated(): void
+    {
+        config(['custom_scripts.enabled' => true]);
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->put('/settings/custom-scripts', [
+            'active' => '1', 'snippet' => self::SNIPPET, 'position' => 'body',
+            'app_enabled' => '1', 'app_url' => 'http://unsicher.example',
+        ])->assertSessionHasErrors('app_url');
+
+        $this->actingAs($admin)->put('/settings/custom-scripts', [
+            'active' => '1', 'snippet' => self::SNIPPET, 'position' => 'body',
+            'app_enabled' => '1', 'app_label' => '', 'app_url' => '',
+        ])->assertSessionHasNoErrors();
+
+        $this->app->forgetScopedInstances();
+        $setting = app(CustomScriptSetting::class);
+        $this->assertTrue($setting->app_enabled);
+        $this->assertSame('Chat', $setting->app_label);
+        $this->assertNull($setting->app_url);
     }
 }

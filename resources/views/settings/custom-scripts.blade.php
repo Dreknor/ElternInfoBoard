@@ -84,6 +84,38 @@
                     </div>
                 </div>
 
+                <fieldset class="rounded-lg p-4 space-y-4" style="border: 1px solid var(--color-card-border);">
+                    <legend class="px-1 font-semibold"><i class="fas fa-mobile-alt mr-1"></i> Eltern-App</legend>
+
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="hidden" name="app_enabled" value="0">
+                        <input type="checkbox" name="app_enabled" value="1" class="w-4 h-4"
+                               @checked(old('app_enabled', $setting->app_enabled))>
+                        <span>Chat auch in der App anbieten</span>
+                    </label>
+                    <p class="text-xs opacity-75 mb-0">Die App zeigt dann einen Button, der den Chat im In-App-Browser öffnet:
+                        entweder die Chat-Seite dieser Instanz (<a href="{{ route('chat') }}" target="_blank" class="underline">{{ url('chat') }}</a>, angemeldet)
+                        oder die unten eingetragene Chat-Seite des Anbieters.</p>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="app_label" class="block font-semibold mb-1">Beschriftung des Buttons</label>
+                            <input type="text" id="app_label" name="app_label" maxlength="30"
+                                   value="{{ old('app_label', $setting->app_label) }}" placeholder="Chat"
+                                   class="w-full rounded-lg p-2"
+                                   style="background-color: var(--color-body-bg); border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
+                        </div>
+                        <div>
+                            <label for="app_url" class="block font-semibold mb-1">Chat-Seite des Anbieters (optional)</label>
+                            <input type="url" id="app_url" name="app_url" maxlength="500"
+                                   value="{{ old('app_url', $setting->app_url) }}" placeholder="https://…"
+                                   class="w-full rounded-lg p-2"
+                                   style="background-color: var(--color-body-bg); border: 1px solid var(--color-card-border); color: var(--color-text-primary);">
+                            <p class="text-xs mt-1 opacity-75">Leer lassen, um die Chat-Seite dieser Instanz zu verwenden.</p>
+                        </div>
+                    </div>
+                </fieldset>
+
                 <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
                     <p class="text-xs opacity-75 mb-0">
                         @if($setting->updated_at)
@@ -101,7 +133,7 @@
 
             <p class="text-xs opacity-75 mb-0">
                 Notaus für den Betreiber: <code>CUSTOM_SCRIPTS_ENABLED=false</code> in der <code>.env</code> schaltet die Ausgabe
-                sofort ab. Das Snippet erscheint nicht in der Kiosk-Ansicht, der Anwesenheitsliste und der Eltern-App.
+                sofort ab. Das Snippet erscheint nicht in der Kiosk-Ansicht und der Anwesenheitsliste; in der App nur über den Chat-Button.
             </p>
         </div>
     </div>
