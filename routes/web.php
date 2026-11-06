@@ -143,6 +143,9 @@ Route::middleware('auth')->group(function () {
     Route::get('hilfe/{slug}', [HelpController::class, 'show'])->name('help.show');
 
     Route::middleware(['password_expired'])->group(function () {
+        // Eigenständige Chat-Seite für das instanzspezifische Snippet (u. a. für die App)
+        Route::get('chat', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat');
+
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');
         Route::delete('settings/removeUnusedFiles', [FileController::class, 'deleteUnusedFiles'])->middleware('can:scan files');
@@ -581,6 +584,10 @@ Route::middleware('auth')->group(function () {
                 ->name('settings.custom-theme.update');
             Route::post('settings/custom-theme/reset', [\App\Http\Controllers\Settings\CustomThemeController::class, 'reset'])
                 ->name('settings.custom-theme.reset');
+            Route::get('settings/custom-scripts', [\App\Http\Controllers\Settings\CustomScriptController::class, 'edit'])
+                ->name('settings.custom-scripts.edit');
+            Route::put('settings/custom-scripts', [\App\Http\Controllers\Settings\CustomScriptController::class, 'update'])
+                ->name('settings.custom-scripts.update');
             Route::post('settings/pflichtstunden/preview', [SettingsController::class, 'pflichtstundenPreview'])->name('settings.pflichtstunden.preview');
             Route::put('settings/{group}', [SettingsController::class, 'update']);
             Route::post('settings/stundenplan/regenerate-key', [SettingsController::class, 'regenerateStundenplanApiKey']);

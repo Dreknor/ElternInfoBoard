@@ -58,6 +58,8 @@ class MeController extends Controller
             'icon_url' => InstanceController::imageUrl($general->favicon, 'app_logo.png'),
             'school_name' => $general->app_name ?: config('app.name'),
             'ical_url' => $user->releaseCalendar ? url($user->uuid.'/ical') : null,
+            // Instanzspezifischer Chat (null, wenn nicht freigeschaltet/angeboten)
+            'chat' => app(\App\Services\CustomScripts\CustomScriptRenderer::class)->appChat(),
         ]]);
     }
 

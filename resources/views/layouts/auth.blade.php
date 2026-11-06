@@ -369,6 +369,7 @@
         .lg-back .lg-link { gap: .45rem; }
         .lg-field-hint { margin: .4rem 0 0; font-size: .75rem; color: var(--lg-muted); }
     </style>
+    @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
 
 <body class="antialiased">
@@ -412,5 +413,6 @@
     </main>
 </div>
 
+@include('layouts.elements.custom-scripts', ['position' => 'body'])
 </body>
 </html>
