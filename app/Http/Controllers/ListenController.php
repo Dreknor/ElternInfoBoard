@@ -238,9 +238,16 @@ class ListenController extends Controller
             ]);
         }
 
+        $gruppen = $request->input('gruppen');
+        if (empty($gruppen)) {
+            return redirect()->back()->withInput()->with([
+                'type' => 'warning',
+                'Meldung' => 'Es muss mindestens eine Gruppe ausgewählt werden.',
+            ]);
+        }
+
         $terminListe->update($request->validated());
 
-        $gruppen = $request->input('gruppen');
         $gruppen = $this->grousRepository->getGroups($gruppen);
 
         $terminListe->groups()->detach();
