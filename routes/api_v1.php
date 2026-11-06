@@ -14,6 +14,7 @@ use App\Http\Controllers\API\V1\DashboardController;
 use App\Http\Controllers\API\V1\FeedbackController;
 use App\Http\Controllers\API\V1\InquiryController;
 use App\Http\Controllers\API\V1\InstanceController;
+use App\Http\Controllers\API\V1\LinkController;
 use App\Http\Controllers\API\V1\ListenController;
 use App\Http\Controllers\API\V1\MeController;
 use App\Http\Controllers\API\V1\MessengerController;
@@ -120,6 +121,9 @@ Route::middleware(['auth:sanctum', 'api.password', 'idempotency', 'etag'])->grou
         Route::get('{assignment}/files/{field}', [InquiryController::class, 'file'])->whereNumber('assignment')->name('file');
     });
 
+    // Links (Modul „Links“)
+    Route::get('links', [LinkController::class, 'index'])->middleware('module:Links')->name('links');
+
     // Infoseiten & Elternrat
     Route::get('sites', [CommunityController::class, 'sites'])->name('sites');
     Route::get('sites/{site}', [CommunityController::class, 'site'])->whereNumber('site')->name('sites.show');
@@ -163,6 +167,7 @@ Route::prefix('student')->name('student.')->middleware('student.enabled')->group
         Route::get('vertretungsplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'vertretungsplan'])->name('vertretungsplan');
         Route::get('stundenplan', [\App\Http\Controllers\API\V1\StudentApiController::class, 'stundenplan'])->name('stundenplan');
         Route::get('ags', [\App\Http\Controllers\API\V1\StudentApiController::class, 'ags'])->name('ags');
+        Route::get('links', [\App\Http\Controllers\API\V1\StudentApiController::class, 'links'])->name('links');
         Route::post('devices', [\App\Http\Controllers\API\V1\StudentApiController::class, 'storeDevice'])->name('devices.store');
         Route::put('me/password', [\App\Http\Controllers\API\V1\StudentApiController::class, 'password'])->middleware('throttle:10,1')->name('me.password');
 

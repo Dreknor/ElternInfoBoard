@@ -2,10 +2,13 @@
 
 namespace App\Services\Students;
 
+use App\Model\Link;
 use App\Model\Post;
 use App\Model\Termin;
 use App\Model\User;
+use App\Services\App\Modules;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /**
  * Was ein Schülerkonto sieht (docs/konzept-schuelerkonten.md §4, §5.3, Paket S-05).
@@ -84,5 +87,27 @@ class StudentPostQuery
 
                 return $v;
             });
+    }
+
+    /** Ist das Modul „Links“ aktiv (gleiche Regel wie Navigation und Middleware `module:Links`)? */
+    public static function linksEnabled(User $student): bool
+    {
+        return Modules::isActiveFor($student, 'Links');
+    }
+
+    /**
+     * Links für das Schülerkonto (Modul „Links“): Zielgruppe mit Schülern, für alle oder für eine
+     * Gruppe des verknüpften Kindes. Interne Links nur in die Schüleransicht.
+     *
+     * @return Collection<int, Link>
+     */
+    public static function links(User $student): Collection
+    {
+        return Link::query()
+            ->visibleToStudentGroups(StudentContext::groupIds($student))
+            ->ordered()
+            ->get()
+            ->filter(fn (Link $link) => $link->usableByStudents())
+            ->values();
     }
 }

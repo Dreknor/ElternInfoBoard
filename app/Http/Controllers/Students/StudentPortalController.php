@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Students;
 
 use App\Http\Controllers\Controller;
 use App\Model\Arbeitsgemeinschaft;
+use App\Model\Link;
 use App\Model\Vertretung;
 use App\Model\VertretungsplanAbsence;
 use App\Model\VertretungsplanNews;
@@ -43,6 +44,9 @@ class StudentPortalController extends Controller
             'posts' => StudentPostQuery::currentPosts($student)->with('media')->limit(5)->get(),
             'termine' => StudentPostQuery::termine($student)->limit(5)->get(),
             'vertretungen' => $vertretungen,
+            'links' => StudentPostQuery::linksEnabled($student)
+                ? StudentPostQuery::links($student)->where('pinned', true)->take(6)->values()
+                : null,
         ]);
     }
 
@@ -165,6 +169,19 @@ class StudentPortalController extends Controller
         $enrolled = $child ? $child->arbeitsgemeinschaften()->pluck('arbeitsgemeinschaften.id')->all() : [];
 
         return view('student.ags', ['ags' => $ags, 'enrolled' => $enrolled]);
+    }
+
+    /** Modul „Links“: Links für Schüler (nur bei aktivem Modul, Route `student.links`). */
+    public function links(Request $request): View
+    {
+        abort_unless(StudentPostQuery::linksEnabled($request->user()), 404);
+
+        $links = StudentPostQuery::links($request->user());
+
+        return view('student.links', [
+            'links' => $links,
+            'categories' => Link::grouped($links),
+        ]);
     }
 
     public function profile(Request $request): View

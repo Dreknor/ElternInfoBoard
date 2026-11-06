@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Model\ActiveDisease;
 use App\Model\Child;
 use App\Model\Conversation;
+use App\Model\Link;
 use App\Model\Losung;
 use App\Model\Module;
 use App\Model\Post;
@@ -13,6 +14,7 @@ use App\Model\Reinigung;
 use App\Model\Rueckmeldungen;
 use App\Model\Termin;
 use App\Model\UserRueckmeldungen;
+use App\Services\App\Modules;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -209,7 +211,13 @@ class DashboardController extends Controller implements HasMiddleware
             $unreadConversations = $this->getUnreadConversations($userId);
         }
 
+        // ── Links (Modul „Links“): auf der Startseite angeheftete Links ──
+        $dashboardLinks = Modules::isActiveFor(auth()->user(), 'Links')
+            ? Link::query()->visibleTo(auth()->user())->where('pinned', true)->ordered()->limit(12)->get()
+            : collect();
+
         return view('dashboard.index', [
+            'dashboardLinks' => $dashboardLinks,
             'nachrichten' => $nachrichten,
             'termine' => $termine,
             'reinigungen' => $reinigungen,

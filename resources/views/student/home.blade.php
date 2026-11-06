@@ -58,9 +58,26 @@
                 <a href="{{ route('student.termine') }}" class="mt-2 inline-block text-sm" style="color: var(--color-primary);">Alle Termine</a>
             </section>
 
+            @if($links !== null && $links->isNotEmpty())
+                <section class="student-card rounded-xl p-4" aria-labelledby="h-links">
+                    <h2 id="h-links" class="font-semibold"><i class="fas fa-link mr-2"></i>Wichtige Links</h2>
+                    <ul class="divide-y" style="border-color: var(--color-card-border);">
+                        @foreach($links as $link)
+                            @include('student.partials.link-row', ['link' => $link, 'withDescription' => false])
+                        @endforeach
+                    </ul>
+                    <a href="{{ route('student.links') }}" class="mt-2 inline-block text-sm" style="color: var(--color-primary);">Alle Links</a>
+                </section>
+            @endif
+
             <a href="{{ route('student.ags') }}" class="student-card flex items-center justify-between rounded-xl p-4 md:hidden">
                 <span class="font-semibold"><i class="fas fa-users mr-2"></i>AGs</span><i class="fas fa-chevron-right"></i>
             </a>
+            @if($links !== null)
+                <a href="{{ route('student.links') }}" class="student-card flex items-center justify-between rounded-xl p-4 md:hidden">
+                    <span class="font-semibold"><i class="fas fa-link mr-2"></i>Links</span><i class="fas fa-chevron-right"></i>
+                </a>
+            @endif
         </div>
     </div>
 @endsection

@@ -911,6 +911,28 @@ Route::middleware(['auth', 'password_expired', 'module:Elternabfragen'])->group(
 
 /*
 |--------------------------------------------------------------------------
+| Links (Modul „Links“)
+|--------------------------------------------------------------------------
+| Nutzer: /links · Verwaltung (Recht „edit links“): /links/verwaltung
+*/
+Route::middleware(['auth', 'password_expired', 'module:Links'])->prefix('links')->name('links.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Links\LinkController::class, 'index'])->name('index');
+
+    Route::middleware('permission:edit links')->prefix('verwaltung')->name('admin.')->group(function () {
+        $admin = \App\Http\Controllers\Links\LinkAdminController::class;
+        Route::get('/', [$admin, 'index'])->name('index');
+        Route::get('neu', [$admin, 'create'])->name('create');
+        Route::post('/', [$admin, 'store'])->name('store');
+        Route::get('{link}/bearbeiten', [$admin, 'edit'])->whereNumber('link')->name('edit');
+        Route::put('{link}', [$admin, 'update'])->whereNumber('link')->name('update');
+        Route::delete('{link}', [$admin, 'destroy'])->whereNumber('link')->name('destroy');
+        Route::post('{link}/aktiv', [$admin, 'toggle'])->whereNumber('link')->name('toggle');
+        Route::post('{link}/verschieben', [$admin, 'move'])->whereNumber('link')->name('move');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
 | Support-Widget (FreeScout-Anbindung)
 |--------------------------------------------------------------------------
 | Nur für eingeloggte, aktive Nutzer – mit Rate-Limit gegen Spam.

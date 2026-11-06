@@ -199,6 +199,17 @@ return [
         ],
 
         [
+            'slug'       => 'links-verwalten',
+            'title'      => 'Links verwalten',
+            'excerpt'    => 'Wichtige Links für alle oder für Gruppen anlegen, sortieren und auf der Startseite anheften.',
+            'icon'       => 'fas fa-link',
+            'group'      => 'verwaltung',
+            'permission' => 'edit links',
+            'routes'     => ['links.admin.*'],
+            'order'      => 40,
+        ],
+
+        [
             'slug'       => 'verwaltung-elternabfragen',
             'title'      => 'Elternabfragen verwalten',
             'excerpt'    => 'Vorlagen anlegen, Abfragen vorbereiten, Rücklauf überwachen, erinnern und exportieren.',
