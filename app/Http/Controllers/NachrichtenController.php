@@ -15,6 +15,7 @@ use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Module;
 use App\Model\Notification;
+use App\Services\Notifications\NotificationAccess;
 use App\Services\Notifications\NotificationPreferences;
 use App\Services\Notifications\NotificationCategory;
 use App\Services\Notifications\PushDispatcher;
@@ -641,6 +642,13 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $users->load('roles');
 
+        // Abschnitte zu Modulen nur bei aktivem Modul und vorhandenem Modulrecht
+        $canElternrat = NotificationAccess::checker('elternrat');
+        $canListen = NotificationAccess::checker('listen');
+        $canTermine = NotificationAccess::checker('termine');
+        $canAgs = NotificationAccess::checker('ags');
+        $canPflichtstunden = NotificationAccess::checker('pflichtstunden');
+
         foreach ($users as $user) {
             if (! $user->can('view all')) {
                 $Nachrichten = $user->visiblePosts()->where('archiv_ab', '>', now())->get();
@@ -663,21 +671,23 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
 
             // Elternrats-Diskussionen
-            if ($user->hasRole('Elternrat')) {
+            if ($user->hasRole('Elternrat') && $canElternrat($user)) {
                 $diskussionen = Discussion::whereDate('updated_at', '>=', $user->lastEmail)->get();
             } else {
                 $diskussionen = [];
             }
 
             // Neue Listen
-            $listen = $user->visibleListen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get();
-            $listen = $listen->unique();
+            $listen = $canListen($user)
+                ? $user->visibleListen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get()->unique()
+                : collect();
             // neue Termine
-            $termine = $user->visibleTermine()->where('termine.created_at', '>', $user->lastEmail)->get();
-            $termine = $termine->unique();
+            $termine = $canTermine($user)
+                ? $user->visibleTermine()->where('termine.created_at', '>', $user->lastEmail)->get()->unique()
+                : collect();
 
             // Neue Arbeitsgemeinschaften
-            if ($user->can('view GTA')) {
+            if ($user->can('view GTA') && $canAgs($user)) {
                 $arbeitsgemeinschaften = Arbeitsgemeinschaft::query()
                     ->where('created_at', '>', $user->lastEmail)
                     ->whereHas('groups', function ($query) use ($user) {
@@ -689,7 +699,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 $gta = [];
             }
 
-            $pflichtstunden = $this->pflichtstundenMailData($user);
+            $pflichtstunden = $canPflichtstunden($user) ? $this->pflichtstundenMailData($user) : null;
 
             // @ToDo neue Dateien
 
