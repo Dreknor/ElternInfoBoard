@@ -65,6 +65,8 @@ return [
         'Listen' => 'organisation',
         'Elternabfragen' => 'organisation',
         'Arbeitsgemeinschaften' => 'organisation',
+        'Hort' => 'organisation',
+        'Schickzeiten' => 'organisation', // älterer Modulname von „Hort“
 
         'Archiv' => 'informationen',
         'Dateien' => 'informationen',
@@ -92,10 +94,13 @@ return [
         'Kinderverwaltung' => 'adm-personen',
         'Anwesenheitsliste' => 'adm-personen',
         'Moderation' => 'adm-personen',
+        'Gruppen' => 'adm-personen',
 
         'Pflichtstunden' => 'adm-organisation',
         'Arbeitsgemeinschaften' => 'adm-organisation',
         'Elternabfragen' => 'adm-organisation',
+        'Hort' => 'adm-organisation',
+        'Schickzeiten' => 'adm-organisation',
 
         'Modules' => 'adm-system',
         'Settings' => 'adm-system',
