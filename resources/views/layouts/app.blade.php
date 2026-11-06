@@ -108,6 +108,7 @@
             }
         }
     </style>
+    @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
 
 {{-- Body: dark: prefix für Tailwind Dark Mode, bg via CSS-Var. Body-Klasse vom Theme angehängt. --}}
@@ -644,5 +645,6 @@
     }
 </script>
 
+@include('layouts.elements.custom-scripts', ['position' => 'body'])
 </body>
 </html>
