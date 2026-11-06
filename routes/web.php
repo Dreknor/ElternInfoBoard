@@ -145,6 +145,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['password_expired'])->group(function () {
         // Eigenständige Chat-Seite für das instanzspezifische Snippet (u. a. für die App)
         Route::get('chat', [\App\Http\Controllers\ChatController::class, 'show'])->name('chat');
+        // Kurzlebiges, nur lesendes MCP-Token für den Chatbot des angemeldeten Nutzers (nur mit MCP_ENABLED)
+        Route::post('chat/mcp-token', [\App\Http\Controllers\ChatController::class, 'mcpToken'])
+            ->middleware('throttle:10,1')->name('chat.mcp-token');
 
         Route::get('settings/scan', [FileController::class, 'showScan'])->middleware('can:scan files');
         Route::delete('settings/removeFiles', [FileController::class, 'removeOldFiles'])->middleware('can:scan files');

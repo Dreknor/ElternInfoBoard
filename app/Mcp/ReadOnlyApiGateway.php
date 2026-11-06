@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -45,16 +46,23 @@ class ReadOnlyApiGateway
         $guard->setUser($user);
         $request->setUserResolver(fn () => $user);
 
+        // Zweite Sicherung neben „nur GET“: Was eine Route beim Lesen doch in die Datenbank schreibt,
+        // wird verworfen. So bleibt der MCP-Server auch dann ohne Schreibzugriff, wenn eine GET-Route
+        // später eine Nebenwirkung bekommt.
+        $connection = DB::connection();
+        $connection->beginTransaction();
+
         try {
             $response = $this->router->dispatch($request);
         } catch (Throwable $e) {
             $this->handler->report($e);
             $response = $this->handler->render($request, $e);
         } finally {
+            $connection->rollBack();
             app()->instance('request', $original);
             Facade::clearResolvedInstance('request');
             Auth::shouldUse($previousDefault);
-            $previousUser ? $guard->setUser($previousUser) : null;
+            $previousUser ? $guard->setUser($previousUser) : $guard->forgetUser();
         }
 
         return ['status' => $response->getStatusCode(), 'body' => $this->content($response)];
