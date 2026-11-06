@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Model\Notification;
+use App\Services\Notifications\NotificationAccess;
 use App\Services\Notifications\PushDispatcher;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -17,6 +18,9 @@ trait NotificationTrait
      */
     public function notify(Collection $users, string $title, string $message, bool $important = false, ?string $url = null, string $type = 'info', string $icon = '', bool $updateExisting = false): void
     {
+        // Modulbezogene Benachrichtigungen nur an Nutzer mit Zugriff auf das Modul.
+        $users = NotificationAccess::filter($users, $type, $url);
+
         if ($users->isEmpty()) {
             return;
         }

@@ -23,6 +23,7 @@ return [
         \App\Settings\UcsSetting::class,
         \App\Settings\ElternabfragenSetting::class,
         \App\Settings\SchuelerSetting::class,
+        \App\Settings\CustomScriptSetting::class,
 
     ],
 

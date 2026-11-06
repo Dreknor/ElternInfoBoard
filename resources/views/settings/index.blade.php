@@ -55,6 +55,15 @@
                         </button>
                     @endforeach
 
+                    @if(\App\Services\CustomScripts\CustomScriptRenderer::enabled())
+                        <a href="{{ route('settings.custom-scripts.edit') }}"
+                           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/5"
+                           style="color: var(--color-text-primary);">
+                            <i class="fas fa-code w-4 text-center text-sm flex-shrink-0" style="color: var(--color-primary);"></i>
+                            <span class="leading-tight flex-1">Eigene Skripte</span>
+                        </a>
+                    @endif
+
                     @if(config('updater.enabled') && auth()->user()->can('manage updates'))
                         @php($updatesAvailable = app(\App\Services\Updater\UpdateService::class)->lastCheck()['behind'] ?? 0)
                         <a href="{{ route('updater.index') }}"

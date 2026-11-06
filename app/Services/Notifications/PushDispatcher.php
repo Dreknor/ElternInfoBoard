@@ -17,6 +17,7 @@ class PushDispatcher
     public static function dispatch(array $userIds, string $title, string $message, ?string $url, string $type = 'info'): void
     {
         $userIds = array_values(array_unique(array_map('intval', $userIds)));
+        $userIds = NotificationAccess::filterIds($userIds, $type, $url);
         if ($userIds === [] || ! self::hasReceivers($userIds)) {
             return;
         }

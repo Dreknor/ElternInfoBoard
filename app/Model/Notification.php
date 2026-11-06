@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Services\Notifications\NotificationAccess;
 use App\Services\Notifications\PushDispatcher;
 use App\Services\Push\PushTarget;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -47,6 +48,14 @@ class Notification extends Model
 
     protected static function booted(): void
     {
+        // Modulbezogene Benachrichtigung ohne Zugriff auf das Modul (z. B. Recht entzogen,
+        // Modul deaktiviert) gar nicht erst anlegen – damit entfallen auch die Pushes.
+        static::creating(function (Notification $notification) {
+            if (! NotificationAccess::allows($notification->user_id, $notification->type, $notification->url)) {
+                return false;
+            }
+        });
+
         // App- und Browser-Push nach den Kanälen des Nutzers (Einstellungen → Benachrichtigungen).
         static::created(function (Notification $notification) {
             PushDispatcher::dispatch(
