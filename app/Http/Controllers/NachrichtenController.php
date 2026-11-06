@@ -680,11 +680,11 @@ class NachrichtenController extends Controller implements HasMiddleware
             // Neue Listen
             $listen = $canListen($user)
                 ? $user->visibleListen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get()->unique()
-                : collect();
+                : new \Illuminate\Database\Eloquent\Collection;
             // neue Termine
             $termine = $canTermine($user)
                 ? $user->visibleTermine()->where('termine.created_at', '>', $user->lastEmail)->get()->unique()
-                : collect();
+                : new \Illuminate\Database\Eloquent\Collection;
 
             // Neue Arbeitsgemeinschaften
             if ($user->can('view GTA') && $canAgs($user)) {
