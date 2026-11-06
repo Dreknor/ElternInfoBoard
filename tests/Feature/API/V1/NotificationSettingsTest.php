@@ -18,9 +18,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\ActivatesModules;
 
 class NotificationSettingsTest extends AppApiTestCase
 {
+    use ActivatesModules;
+
     /** @test */
     public function settings_have_defaults_and_can_be_changed_per_category_and_channel(): void
     {
@@ -131,6 +134,7 @@ class NotificationSettingsTest extends AppApiTestCase
     /** @test */
     public function substitutions_notify_the_class_once_and_dispatch_push(): void
     {
+        $this->activateModule('Vertretungsplan');
         $group = $this->group('3b');
         $parent = $this->parentIn($group);
         UserDevice::create(['user_id' => $parent->id, 'token' => 'tok', 'provider' => UserDevice::PROVIDER_FCM]);
@@ -149,6 +153,7 @@ class NotificationSettingsTest extends AppApiTestCase
     public function activating_a_list_notifies_its_groups(): void
     {
         Permission::findOrCreate('edit terminliste', 'web');
+        $this->activateModule('Listen');
         $group = $this->group();
         $parent = $this->parentIn($group);
         $owner = $this->parentIn($this->group('Verwaltung'));
