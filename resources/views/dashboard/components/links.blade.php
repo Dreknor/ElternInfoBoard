@@ -11,7 +11,12 @@
                 Alle Links <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
         </div>
-        <ul class="p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 list-none m-0">
+        <ul class="sm:hidden ea-divide list-none p-0 m-0">
+            @foreach($dashboardLinks as $link)
+                <li>@include('links._link', ['link' => $link, 'row' => true])</li>
+            @endforeach
+        </ul>
+        <ul class="hidden sm:grid p-4 gap-3 sm:grid-cols-2 lg:grid-cols-3 list-none m-0">
             @foreach($dashboardLinks as $link)
                 <li>@include('links._link', ['link' => $link])</li>
             @endforeach

@@ -117,9 +117,8 @@ class LinkUrl
     {
         return match (self::type($url)) {
             'mail', 'phone' => Str::before(Str::after($url, ':'), '?'),
-            default => str_starts_with($url, '/')
-                ? $url
-                : (string) preg_replace('/^www\./i', '', (string) parse_url($url, PHP_URL_HOST)),
+            'internal' => 'Seite im ElternInfoBoard',
+            default => (string) preg_replace('/^www\./i', '', (string) parse_url($url, PHP_URL_HOST)),
         };
     }
 }

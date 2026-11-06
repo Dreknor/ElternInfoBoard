@@ -69,7 +69,7 @@
                     <div>
                         <label for="icon" class="ea-label">Symbol</label>
                         <div class="flex items-center gap-2">
-                            <span class="ea-card-icon" aria-hidden="true"><i :class="icon || 'fas fa-link'" class="{{ $currentIcon ?: 'fas fa-link' }}"></i></span>
+                            <span class="ea-card-icon" aria-hidden="true"><i :class="icon || 'fas fa-link'"></i></span>
                             <select id="icon" name="icon" x-model="icon" class="ea-input @error('icon') ea-input-invalid @enderror">
                                 <option value="">Automatisch (nach Art des Links)</option>
                                 @foreach(\App\Model\Link::ICONS as $class => $label)
