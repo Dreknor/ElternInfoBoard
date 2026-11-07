@@ -10,6 +10,68 @@ use Illuminate\Http\Request;
 class LogController extends Controller
 {
     /**
+     * Vordefinierte Kategorien für den Schnellfilter. Die Zuordnung erfolgt
+     * über Schlüsselwörter in der Log-Nachricht (Groß-/Kleinschreibung egal).
+     */
+    public const CATEGORIES = [
+        'login' => [
+            'label' => 'Login & Anmeldung',
+            'icon' => 'fa-sign-in-alt',
+            'keywords' => ['login', 'logout', 'keycloak', 'impersonation', 'anmeldung', 'passwort', 'password'],
+        ],
+        'mail' => [
+            'label' => 'E-Mail',
+            'icon' => 'fa-envelope',
+            'keywords' => ['mail', 'zugangsdaten', 'kontaktformular'],
+        ],
+        'push' => [
+            'label' => 'Push & Benachrichtigungen',
+            'icon' => 'fa-bell',
+            'keywords' => ['push', 'benachrichtigung', 'notification', 'erinnerung', 'reminder'],
+        ],
+        'nachrichten' => [
+            'label' => 'Nachrichten & Rückmeldungen',
+            'icon' => 'fa-newspaper',
+            'keywords' => ['post ', 'nachricht', 'rückmeldung', 'rueckmeldung', 'lesebestätigung', 'wordpress'],
+        ],
+        'termine' => [
+            'label' => 'Termine & Listen',
+            'icon' => 'fa-calendar-alt',
+            'keywords' => ['termin', 'liste'],
+        ],
+        'pflichtstunden' => [
+            'label' => 'Pflichtstunden',
+            'icon' => 'fa-clock',
+            'keywords' => ['pflichtstunde'],
+        ],
+        'krankmeldung' => [
+            'label' => 'Krankmeldungen',
+            'icon' => 'fa-notes-medical',
+            'keywords' => ['krankmeldung'],
+        ],
+        'hort' => [
+            'label' => 'Hort & Schickzeiten',
+            'icon' => 'fa-child',
+            'keywords' => ['schickzeit', 'anwesenheit', 'abgeholt', 'abholvollmacht'],
+        ],
+        'import' => [
+            'label' => 'Import',
+            'icon' => 'fa-file-import',
+            'keywords' => ['import'],
+        ],
+        'ucs' => [
+            'label' => 'UCS & Synchronisation',
+            'icon' => 'fa-sync-alt',
+            'keywords' => ['ucs', '[sync'],
+        ],
+        'system' => [
+            'label' => 'System & Wartung',
+            'icon' => 'fa-cogs',
+            'keywords' => ['wartungsmodus', 'update', 'ausnahme', 'exception', 'schuljahreswechsel', 'cleanup', 'setting'],
+        ],
+    ];
+
+    /**
      * Display a listing of the logs with filtering
      */
     public function index(Request $request)
@@ -26,20 +88,55 @@ class LogController extends Controller
             $query->where('channel', 'like', '%'.$request->channel.'%');
         }
 
-        // Search in message
+        // Filter by category (Login, E-Mail, ...)
+        $category = $request->input('category');
+        if (is_string($category) && isset(self::CATEGORIES[$category])) {
+            $keywords = self::CATEGORIES[$category]['keywords'];
+            $query->where(function ($q) use ($keywords) {
+                foreach ($keywords as $keyword) {
+                    $q->orWhereRaw('LOWER(message) LIKE ?', ['%'.mb_strtolower($keyword).'%']);
+                }
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('from') && ($from = $this->parseDate($request->input('from')))) {
+            $query->where('created_at', '>=', $from->startOfDay());
+        }
+        if ($request->filled('to') && ($to = $this->parseDate($request->input('to')))) {
+            $query->where('created_at', '<=', $to->endOfDay());
+        }
+
+        // Search in message and context (z.B. E-Mail-Adresse oder User-ID)
         if ($request->filled('search')) {
-            $query->where('message', 'like', '%'.$request->search.'%');
+            $search = '%'.$request->search.'%';
+            $query->where(function ($q) use ($search) {
+                $q->where('message', 'like', $search)
+                    ->orWhere('context', 'like', $search);
+            });
         }
 
         $logs = $query->paginate(50)->withQueryString();
         $totalLogs = LogToDB::model()->count();
+        $channels = LogToDB::model()->whereNotNull('channel')->distinct()->orderBy('channel')->pluck('channel');
         $searchStats = $this->buildSearchStats();
 
         return view('logs.index', [
             'logs' => $logs,
             'totalLogs' => $totalLogs,
+            'channels' => $channels,
+            'categories' => self::CATEGORIES,
             'searchStats' => $searchStats,
         ]);
+    }
+
+    protected function parseDate($value): ?Carbon
+    {
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

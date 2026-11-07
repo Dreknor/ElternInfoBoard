@@ -92,7 +92,7 @@
                         <div class="form-group">
                             <label>Nachrichtentext</label>
                             <textarea class="form-control border-input" name="news">
-                                {!! $post->news !!}
+                                {{ $post->news }}
                             </textarea>
                         </div>
                     </div>
@@ -155,8 +155,22 @@
                             </div>
                         </div>
                         <div class="row">
+                            @can('release posts')
                             <div class="col-12">
-                                @include('include.formGroups')
+                                <div class="form-group">
+                                    <label>Vertraulich</label>
+                                    <select class="custom-select" name="confidential">
+                                        <option value="0" @if(!$post->confidential) selected @endif>nein</option>
+                                        <option value="1" @if($post->confidential) selected @endif>Ja – nur für die gewählten Empfänger</option>
+                                    </select>
+                                    <small class="form-text text-muted">Nur Sie und die gewählten Empfänger (Gruppen und Personen) sehen den Beitrag. Mitarbeiter mit „alle Beiträge sehen“ sehen ihn nicht. Wird nicht an WordPress übertragen und ist kein externes Angebot.</small>
+                                </div>
+                            </div>
+                            @endcan
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                @include('include.formGroups', ['withPersons' => true])
                             </div>
                         </div>
                     </div>

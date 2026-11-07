@@ -26,8 +26,8 @@ class NachrichtenComposer
             $user = auth()->user();
 
             if (! $user->can('view all')) {
-                $Nachrichten = $user->postsNotArchived()
-                    ->distinct()
+                $Nachrichten = $user->visiblePosts()
+                    ->where('archiv_ab', '>', now())
                     ->where('external', 0)
                     ->orderByDesc('sticky')
                     ->orderByDesc('updated_at')
@@ -45,7 +45,8 @@ class NachrichtenComposer
                 }
             } else {
 
-                $Nachrichten = Post::whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                $Nachrichten = Post::withoutForeignConfidential($user)
+                    ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
                     ->where('external', 0)
                     ->orderByDesc('sticky')
                     ->orderByDesc('updated_at')

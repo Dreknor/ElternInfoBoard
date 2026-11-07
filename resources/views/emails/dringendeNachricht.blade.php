@@ -210,7 +210,7 @@
             @endif
 
             <div class="message-content">
-                {!! $nachricht !!}
+                @safeHtml($nachricht)
             </div>
 
             @if($post->getMedia('images')->isNotEmpty())

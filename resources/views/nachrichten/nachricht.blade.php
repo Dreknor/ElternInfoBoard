@@ -131,7 +131,7 @@
 
             <div class="p-6">
                 <div class="prose max-w-none">
-                    {!! $nachricht->news !!}
+                    @safeHtml($nachricht->news)
                 </div>
             </div>
             {{-- Beitrag melden --}}
@@ -219,7 +219,7 @@
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div class="lg:col-span-2">
                                 <div class="prose max-w-none text-gray-700 leading-relaxed">
-                                    {!! $nachricht->news !!}
+                                    @safeHtml($nachricht->news)
                                 </div>
                             </div>
                             <div class="lg:col-span-1 space-y-4">
@@ -235,7 +235,7 @@
                     @else
                         <!-- Content without Media -->
                         <div class="prose max-w-none text-gray-700 leading-relaxed">
-                            {!! $nachricht->news !!}
+                            @safeHtml($nachricht->news)
                         </div>
                     @endif
                 </div>

@@ -21,6 +21,7 @@ class PushTarget
         $fragment = parse_url($url, PHP_URL_FRAGMENT);
 
         $patterns = [
+            '#^/elternabfragen/(\d+)#' => 'inquiry',
             '#/(?:post|home|posts)/(\d+)#' => 'post',
             '#/messenger/conversation/(\d+)#' => 'conversation',
             '#/listen/(\d+)#' => 'liste',

@@ -7,6 +7,7 @@ use App\Model\AbfrageAntworten;
 use App\Model\Post;
 use App\Model\Rueckmeldungen;
 use App\Model\UserRueckmeldungen;
+use App\Services\App\FeedbackService;
 use App\Services\Rueckmeldungen\RueckmeldungStatusService;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -17,6 +18,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class UserRueckmeldungenController extends Controller implements HasMiddleware
 {
@@ -34,6 +36,11 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
      */
     public function store(Request $request, Rueckmeldungen $rueckmeldung)
     {
+        // Beitrag sichtbar und Frist offen (wie die App-API) – vorher für jeden Beitrag möglich
+        if ($denied = $this->denyFeedback($request, $rueckmeldung->post)) {
+            return $denied;
+        }
+
         // Antwortziel (Kind bzw. Familie/Person) prüfen – E2/E7
         $resolved = $this->status->resolveTarget($request->user(), $rueckmeldung->post, $request->integer('child_id') ?: null);
         if ($resolved['error'] !== null) {
@@ -83,6 +90,9 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
     {
         $user = $request->user();
         $post_id = Post::find($post_id);
+        if ($denied = $this->denyFeedback($request, $post_id)) {
+            return $denied;
+        }
 
         // Antwortziel (Kind bzw. Familie/Person) prüfen – E2/E7
         $resolved = $this->status->resolveTarget($user, $post_id, $request->integer('child_id') ?: null);
@@ -265,5 +275,18 @@ class UserRueckmeldungenController extends Controller implements HasMiddleware
         if (! empty($answers)) {
             AbfrageAntworten::insert($answers);
         }
+    }
+
+    /** Rückmeldung nur zu sichtbaren Beiträgen mit offener Frist (gemeinsame Regel mit der App-API). */
+    private function denyFeedback(Request $request, ?Post $post): ?RedirectResponse
+    {
+        try {
+            abort_if($post === null, 404, 'Beitrag nicht gefunden.');
+            app(FeedbackService::class)->requireFeedback($request->user(), $post);
+        } catch (HttpException $e) {
+            return redirect()->back()->with(['type' => 'warning', 'Meldung' => $e->getMessage()]);
+        }
+
+        return null;
     }
 }

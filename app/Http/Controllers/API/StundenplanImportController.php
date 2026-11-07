@@ -98,7 +98,15 @@ class StundenplanImportController extends Controller
     }
 
     /**
-     * Get import status and info
+     * Import-Status für externe Systeme – nur mit gültigem API-Key (vorher ohne Authentifizierung).
+     */
+    public function apiStatus(ApiImportStundenplanRequest $request): JsonResponse
+    {
+        return $this->status();
+    }
+
+    /**
+     * Get import status and info (Einstellungsseite: Web-Route mit „edit settings“)
      *
      * @return JsonResponse
      */

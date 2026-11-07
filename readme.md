@@ -110,6 +110,8 @@ npm run build
 php artisan storage:link
 ```
 
+> Über den Symlink sind nur Logo und Favicon öffentlich. Hochgeladene Dateien (Beiträge, Messenger, Krankmeldungen …) liegen auf der privaten Disk `media` (`storage/app/media`) und werden ausschließlich mit Rechteprüfung über `/image/{id}` ausgeliefert. `MEDIA_DISK` nicht auf `public` setzen. Ältere Installationen ziehen ihre Dateien mit `php artisan media:make-private` um (passiert in `deploy.sh` automatisch).
+
 ### 5. CronJob einrichten
 
 ```bash

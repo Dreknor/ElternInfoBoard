@@ -36,7 +36,7 @@ class AufnahmeImport implements ToCollection, WithHeadingRow
     {
         $this->header = $header;
         $this->sendEmail = $sendEmail;
-        // TODO-1.10: GetGroupsScope umgehen, damit alle Gruppen geladen werden
+        // GetGroupsScope umgehen, damit alle Gruppen geladen werden
         $this->groups = Group::withoutGlobalScope(GetGroupsScope::class)->get();
         // Einmal pro Import statt einmal pro Sorgeberechtigtem laden, um unnötige
         // Settings-Abfragen bei vielen Zeilen zu vermeiden.

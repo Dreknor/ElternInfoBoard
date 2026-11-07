@@ -15,6 +15,7 @@ use App\Model\Discussion;
 use App\Model\Group;
 use App\Model\Module;
 use App\Model\Notification;
+use App\Services\Notifications\NotificationAccess;
 use App\Services\Notifications\NotificationPreferences;
 use App\Services\Notifications\NotificationCategory;
 use App\Services\Notifications\PushDispatcher;
@@ -24,6 +25,7 @@ use App\Model\Rueckmeldungen;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Repositories\WordpressRepository;
+use App\Services\IndividualRecipients;
 use App\Services\PflichtstundenFamilyService;
 use App\Settings\GeneralSetting;
 use App\Settings\PflichtstundenSetting;
@@ -32,7 +34,7 @@ use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Contracts\View\Factory;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Redirector;
@@ -104,6 +106,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         if (auth()->user()->can('view all')) {
             $nachrichten = Post::query()
+                ->withoutForeignConfidential(auth()->user())
                 ->where(function ($query) {
                     $query->whereNull('archiv_ab')
                         ->orWhere('archiv_ab', '>', Carbon::now());
@@ -119,9 +122,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                     $query->whereNull('archiv_ab')
                         ->orWhere('archiv_ab', '>', Carbon::now());
                 })
-                ->whereHas('groups', function ($query) {
-                    $query->whereIn('groups.id', auth()->user()->groups->pluck('id'));
-                })
+                ->forRecipient(auth()->user())
                 ->with(['autor', 'groups', 'media'])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -149,7 +150,7 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function postsArchiv($month = null)
     {
-        $first_post = (auth()->user()->can('view all')) ? Post::first() : auth()->user()->posts()->orderBy('updated_at')->first();
+        $first_post = (auth()->user()->can('view all')) ? Post::first() : auth()->user()->visiblePosts()->orderBy('updated_at')->first();
 
         if ($month == null) {
             $month = Carbon::now();
@@ -161,13 +162,14 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         if (! auth()->user()->can('view all')) {
-            $Nachrichten = auth()->user()->posts()
+            $Nachrichten = auth()->user()->visiblePosts()
                 ->where('archiv_ab', '<', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
                 ->where('archiv_ab', '>', $month->copy()->startOfMonth())
                 ->where('archiv_ab', '>', auth()->user()->created_at)
                 ->orderByDesc('updated_at')->paginate(15);
         } else {
             $Nachrichten = Post::query()
+                ->withoutForeignConfidential(auth()->user())
                 ->where('archiv_ab', '<=', ($month->copy()->endOfMonth()->greaterThan(Carbon::now())) ? Carbon::now() : $month->copy()->endOfMonth())
                 ->where('archiv_ab', '>', $month->copy()->startOfMonth())
                 ->orderByDesc('updated_at')
@@ -196,8 +198,8 @@ class NachrichtenController extends Controller implements HasMiddleware
             $user = auth()->user();
 
             if (! $user->can('view all')) {
-                $Nachrichten = $user->postsNotArchived()
-                    ->distinct()
+                $Nachrichten = $user->visiblePosts()
+                    ->where('archiv_ab', '>', now())
                     ->where('external', 1)
                     ->orderByDesc('updated_at')
                     ->get();
@@ -262,6 +264,10 @@ class NachrichtenController extends Controller implements HasMiddleware
 
     public function edit(Post $posts): View|RedirectResponse
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -349,6 +355,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         $gruppen = $this->groupsRepository->getGroups($gruppen);
 
         $post->groups()->attach($gruppen);
+        IndividualRecipients::sync($post, $request);
 
         if (! auth()->user()->can('release posts')) {
             $permission = Permission::query()->where('name', 'release posts')->first();
@@ -379,7 +386,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
         }
 
-        if ($request->wp_push and WordpressRepository::pushAllowedFor($user)) {
+        if ($request->wp_push and ! $post->confidential and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($post);
         }
 
@@ -387,7 +394,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         // Versenden dringender Nachrichten (Berechtigung und Passwort wurden oben geprüft)
         if ($urgent) {
-            $sendTo = $this->sendMailToGroupsUsers($gruppen, $post);
+            $sendTo = $this->sendMailToRecipients($post);
 
             Log::info('Dringende Nachricht versandt', [
                 'post' => $post->header,
@@ -511,6 +518,10 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $user = $request->user();
 
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('edit posts') and auth()->user()->id != $posts->author) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -528,6 +539,12 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         ($posts->news == '') ? $posts->news = $posts->header : null;
 
+        // Bisherige Empfänger merken, damit bei einer bereits veröffentlichten Nachricht
+        // nur neu hinzugekommene Personen benachrichtigt werden
+        $previousRecipientIds = $push == 0
+            ? $posts->load(['users', 'recipientUsers'])->recipients()->pluck('id')->all()
+            : [];
+
         $posts->save();
 
         // Gruppen
@@ -537,6 +554,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $posts->groups()->detach();
         $posts->groups()->attach($gruppen);
+        IndividualRecipients::sync($posts, $request);
 
         if ($request->hasFile('files')) {
 
@@ -555,12 +573,14 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         // Erst nach dem Speichern der Dateien übertragen, damit neue Bilder mitkommen
-        if ($request->wp_push and WordpressRepository::pushAllowedFor($user)) {
+        if ($request->wp_push and ! $posts->confidential and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($posts);
         }
 
         if ($posts->released and $push == 1) {
             $this->push($posts);
+        } elseif ($posts->released) {
+            $this->pushToNewRecipients($posts, $previousRecipientIds);
         }
 
         $Meldung = 'Nachricht bearbeitet';
@@ -579,7 +599,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ]);
             }
 
-            $sendTo = $this->sendMailToGroupsUsers($gruppen, $posts);
+            $sendTo = $this->sendMailToRecipients($posts);
 
             @Mail::to(auth()->user()->email)->send(new dringendeNachrichtStatus($sendTo, auth()->user()->email, auth()->user()->name));
             $Meldung = 'Es wurden '.count($sendTo).' Benutzer per Mail benachrichtigt.';
@@ -622,11 +642,19 @@ class NachrichtenController extends Controller implements HasMiddleware
 
         $users->load('roles');
 
+        // Abschnitte zu Modulen nur bei aktivem Modul und vorhandenem Modulrecht
+        $canElternrat = NotificationAccess::checker('elternrat');
+        $canListen = NotificationAccess::checker('listen');
+        $canTermine = NotificationAccess::checker('termine');
+        $canAgs = NotificationAccess::checker('ags');
+        $canPflichtstunden = NotificationAccess::checker('pflichtstunden');
+
         foreach ($users as $user) {
             if (! $user->can('view all')) {
-                $Nachrichten = $user->postsNotArchived;
+                $Nachrichten = $user->visiblePosts()->where('archiv_ab', '>', now())->get();
             } else {
                 $Nachrichten = Post::query()
+                    ->withoutForeignConfidential($user)
                     ->where('updated_at', '>', (! is_null($user->lastEmail) ? $user->lastEmail : $user->created_at))
                     ->where('archiv_ab', '>', Carbon::now())
                     ->get();
@@ -643,21 +671,23 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
 
             // Elternrats-Diskussionen
-            if ($user->hasRole('Elternrat')) {
+            if ($user->hasRole('Elternrat') && $canElternrat($user)) {
                 $diskussionen = Discussion::whereDate('updated_at', '>=', $user->lastEmail)->get();
             } else {
                 $diskussionen = [];
             }
 
             // Neue Listen
-            $listen = $user->listen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get();
-            $listen = $listen->unique();
+            $listen = $canListen($user)
+                ? $user->visibleListen()->where('listen.updated_at', '>=', $user->lastEmail)->where('listen.active', 1)->get()->unique()
+                : new \Illuminate\Database\Eloquent\Collection;
             // neue Termine
-            $termine = $user->termine()->where('termine.created_at', '>', $user->lastEmail)->get();
-            $termine = $termine->unique();
+            $termine = $canTermine($user)
+                ? $user->visibleTermine()->where('termine.created_at', '>', $user->lastEmail)->get()->unique()
+                : new \Illuminate\Database\Eloquent\Collection;
 
             // Neue Arbeitsgemeinschaften
-            if ($user->can('view GTA')) {
+            if ($user->can('view GTA') && $canAgs($user)) {
                 $arbeitsgemeinschaften = Arbeitsgemeinschaft::query()
                     ->where('created_at', '>', $user->lastEmail)
                     ->whereHas('groups', function ($query) use ($user) {
@@ -669,7 +699,7 @@ class NachrichtenController extends Controller implements HasMiddleware
                 $gta = [];
             }
 
-            $pflichtstunden = $this->pflichtstundenMailData($user);
+            $pflichtstunden = $canPflichtstunden($user) ? $this->pflichtstundenMailData($user) : null;
 
             // @ToDo neue Dateien
 
@@ -767,6 +797,12 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function touch(Post $posts)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+        // Vorher ohne Prüfung: jedes Konto konnte fremde (auch nicht sichtbare) Beiträge als eigene Kopie anlegen
+        abort_unless(auth()->user()->can('edit posts') || (int) $posts->author === auth()->id(), 403, 'Berechtigung fehlt');
+
         if ($posts->archiv_ab->lessThan(Carbon::now()->subWeeks(3))) {
             $newPost = $posts->replicate([
                 'id',
@@ -820,6 +856,10 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function release(Post $posts)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('release posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -845,6 +885,10 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function archiv(Post $posts)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+
         if (! auth()->user()->can('edit posts')) {
             return redirect()->to('/home')->with([
                 'type' => 'danger',
@@ -873,7 +917,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         $archivDate = Carbon::now()->endOfDay()->subWeeks();
 
         if (! $user->can('create posts')) {
-            $Nachrichten = $user->posts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
+            $Nachrichten = $user->visiblePosts()->with('media', 'autor', 'groups', 'rueckmeldung')->get();
 
             if ($archiv) {
                 $Nachrichten = $Nachrichten->filter(function ($nachricht) use ($archivDate) {
@@ -887,7 +931,7 @@ class NachrichtenController extends Controller implements HasMiddleware
 
             $Nachrichten = $Nachrichten->unique()->sortByDesc('updated_at')->paginate(30);
         } else {
-            $Nachrichten = Post::with('media', 'autor', 'groups', 'rueckmeldung')->get();
+            $Nachrichten = Post::withoutForeignConfidential($user)->with('media', 'autor', 'groups', 'rueckmeldung')->get();
             if ($archiv) {
                 $Nachrichten = $Nachrichten->filter(fn ($nachricht) => $nachricht->updated_at->lessThan($archivDate))->sortByDesc('updated_at')->unique()->paginate(30);
             } else {
@@ -920,6 +964,7 @@ class NachrichtenController extends Controller implements HasMiddleware
             ]);
 
             $post->groups()->detach();
+            $post->recipientUsers()->detach();
             if (! is_null($post->rueckmeldung())) {
                 $post->rueckmeldung()->delete();
 
@@ -971,6 +1016,12 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function storeComment(Post $posts, CommentPostRequest $request)
     {
+        if ($response = $this->denyIfConfidential($posts)) {
+            return $response;
+        }
+        // Nur Empfänger eines Beitrags mit freigegebenen Kommentaren (wie die App-API)
+        abort_unless($request->user()->can('comment', $posts), 403, 'Kommentare sind für diesen Beitrag nicht möglich.');
+
         $posts->comment([
             'body' => $request->comment, ],
             auth()->user()
@@ -984,10 +1035,24 @@ class NachrichtenController extends Controller implements HasMiddleware
     /**
      * @return RedirectResponse
      */
-    public function push(Post $post)
+    /**
+     * Benachrichtigt nur Empfänger, die beim Bearbeiten einer bereits veröffentlichten
+     * Nachricht (über neue Gruppen oder direkte Freigabe) hinzugekommen sind.
+     */
+    private function pushToNewRecipients(Post $post, array $previousRecipientIds): void
     {
-        $User = $post->users;
-        $User = $User->unique('id');
+        $newRecipients = $post->load(['users', 'recipientUsers'])->recipients()
+            ->whereNotIn('id', $previousRecipientIds)
+            ->values();
+
+        if ($newRecipients->isNotEmpty()) {
+            $this->push($post, $newRecipients);
+        }
+    }
+
+    public function push(Post $post, ?EloquentCollection $recipients = null)
+    {
+        $User = $recipients ?? $post->load(['users', 'recipientUsers'])->recipients();
 
         if ($post->external) {
             $header = 'Neues externes Angebot';
@@ -1052,21 +1117,12 @@ class NachrichtenController extends Controller implements HasMiddleware
     }
 
     /**
-     * @param  array  $gruppen
+     * Versendet eine dringende Nachricht per Mail an alle Empfänger des Beitrags
+     * (Gruppenmitglieder und direkt freigegebene Personen).
      */
-    public function sendMailToGroupsUsers(Collection|array $gruppen, Post $post): array
+    public function sendMailToRecipients(Post $post): array
     {
-        $MailGruppen = [];
-
-        foreach ($gruppen as $gruppe) {
-            $MailGruppen[] = $gruppe->name;
-        }
-
-        $users = User::whereHas('posts', function ($q) use ($MailGruppen) {
-            $q->whereIn('name', $MailGruppen);
-        })->get();
-
-        $users = $users->unique('id');
+        $users = $post->load(['users', 'recipientUsers'])->recipients();
 
         $sendTo = [];
         foreach ($users as $mailUser) {
@@ -1078,6 +1134,22 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         return $sendTo;
+    }
+
+    /**
+     * Vertrauliche Beiträge sind nur für Autor und Empfänger zugänglich – auch mit
+     * „edit posts“, „release posts“ oder „view all“ nicht (Bearbeiten zeigt den Inhalt).
+     */
+    private function denyIfConfidential(Post $post): ?RedirectResponse
+    {
+        if (! $post->isHiddenFrom(auth()->user())) {
+            return null;
+        }
+
+        return redirect()->to('/home')->with([
+            'type' => 'danger',
+            'Meldung' => 'Dieser Beitrag ist vertraulich.',
+        ]);
     }
 
     public function findPost(Post $post)
@@ -1099,15 +1171,16 @@ class NachrichtenController extends Controller implements HasMiddleware
      * Lädt einen einzelnen Post als PDF herunter.
      *
      * Zugriffslogik: Nutzer mit „view all"-Berechtigung dürfen alle Posts laden.
-     * Alle anderen Nutzer dürfen nur freigegebene Posts aus ihren Gruppen abrufen.
+     * Alle anderen Nutzer dürfen nur freigegebene Posts abrufen, die sie über eine Gruppe
+     * oder als direkt freigegebene Person erhalten.
      */
     public function downloadPdf(Post $post): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
     {
         $user = auth()->user();
 
         // Zugriffscheck
-        $canAccess = $user->can('view all')
-            || ($post->released == 1 && $post->groups->pluck('id')->intersect($user->groups->pluck('id'))->isNotEmpty())
+        $canAccess = ($user->can('view all') && ! $post->isHiddenFrom($user))
+            || ($post->released == 1 && $post->hasRecipient($user))
             || $user->id === $post->author;
 
         if (! $canAccess) {

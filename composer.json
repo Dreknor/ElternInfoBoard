@@ -21,6 +21,7 @@
         "grosv/laravel-passwordless-login": "^2.0",
         "laravel-notification-channels/webpush": "^10.0",
         "laravel/framework": "^12.49",
+        "laravel/mcp": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.17",
         "laravel/tinker": "^2.10.1",

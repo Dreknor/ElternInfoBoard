@@ -18,7 +18,7 @@
                                 <h4 class="card-title">
                                     {{$info->header}}   @if($info->released == 0) (unveröffentlicht) @endif
                                 </h4>
-                                <p class="card-text">{!! $info->news !!}</p>
+                                <p class="card-text">@safeHtml($info->news)</p>
                             </div>
                             <div class="card-footer">
                                 {{ strlen($info->news)}}

@@ -297,6 +297,29 @@ class FamilyWeeklyTest extends TestCase
         $this->assertSame($this->child->id, $response->json('children.0.child_id'));
     }
 
+    #[Test]
+    public function api_weekly_returns_lists_for_every_day(): void
+    {
+        foreach ([0, 2] as $offset) {
+            Schickzeiten::create([
+                'child_id' => $this->child->id, 'users_id' => $this->parent->id, 'child_name' => $this->child->first_name,
+                'specific_date' => $this->thisMonday()->addDays($offset)->toDateString(),
+                'time' => '15:30:00', 'type' => 'genau', 'changedBy' => $this->parent->id,
+            ]);
+        }
+        Sanctum::actingAs($this->parent);
+
+        $days = json_decode($this->getJson('/api/family/weekly')->assertOk()->getContent(), true)['children'][0]['days'];
+
+        // Die App (wochenplan.tsx) durchläuft diese Felder als Listen; Objekte ließen sie abstürzen.
+        foreach ($days as $day) {
+            foreach (['schickzeiten', 'gtas', 'vertretungen'] as $key) {
+                $this->assertTrue(array_is_list($day[$key]), "{$key} am Tag {$day['day']} ist keine Liste");
+            }
+        }
+        $this->assertCount(1, $days['3']['schickzeiten']);
+    }
+
     // ── 13. API: Fremdes Kind → 403 ────────────────────────────────────
 
     #[Test]

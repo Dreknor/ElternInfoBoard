@@ -22,7 +22,7 @@ class FcmSender
     /**
      * @return bool|null true = zugestellt, false = Token ungültig (löschen), null = anderer Fehler
      */
-    public function send(string $token, string $title, string $body, array $data): ?bool
+    public function send(string $token, string $title, string $body, array $data, string $channel = 'default'): ?bool
     {
         $credentials = $this->credentials();
         $response = Http::withToken($this->accessToken())
@@ -33,7 +33,7 @@ class FcmSender
                     'notification' => ['title' => $title, 'body' => $body],
                     // FCM erlaubt nur String-Werte im data-Block.
                     'data' => array_map('strval', array_filter($data, fn ($v) => $v !== null)),
-                    'android' => ['priority' => 'high', 'notification' => ['channel_id' => 'default']],
+                    'android' => ['priority' => 'high', 'notification' => ['channel_id' => $channel]],
                 ],
             ]);
 

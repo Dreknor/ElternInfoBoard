@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Services\Auth\SsoStudentDetector;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -19,7 +20,7 @@ use Laravel\Socialite\Facades\Socialite;
  * Anmeldung der Eltern-App: Passwort, SSO (Keycloak mit PKCE), Anmelde-Link per E-Mail.
  * SSO und Anmelde-Link liefern einen einmaligen Code, den die App gegen ein Token tauscht.
  *
- * @group App: Anmeldung
+ * @group Anmeldung
  */
 class AuthController extends Controller
 {
@@ -105,6 +106,11 @@ class AuthController extends Controller
             return $this->toApp(['error' => 'sso_failed']);
         }
 
+        // Schülerrolle: kein Zugang über die Eltern-App (docs/konzept-schuelerkonten.md, S-02).
+        if (app(SsoStudentDetector::class)->isStudent($keycloakUser)) {
+            return $this->toApp(['error' => 'student']);
+        }
+
         // Nur bestehende Konten – neue Konten entstehen über Import/UCS bzw. die Web-Anmeldung.
         $user = $keycloakUser->email ? User::where('email', $keycloakUser->email)->first() : null;
         if (! $user || $user->is_active === false) {
@@ -166,7 +172,13 @@ class AuthController extends Controller
             }
         }
 
-        return $this->tokenResponse(User::findOrFail($entry['user_id']), $request->device_name);
+        // Zwischen Anforderung und Einlösen deaktivierte Konten erhalten kein Token
+        $user = User::find($entry['user_id']);
+        if (! $user || $user->is_active === false) {
+            return response()->json(['message' => 'Der Anmeldecode ist abgelaufen. Bitte erneut anmelden.'], 422);
+        }
+
+        return $this->tokenResponse($user, $request->device_name);
     }
 
     /**
@@ -199,7 +211,8 @@ class AuthController extends Controller
      */
     public function webLink(Request $request): JsonResponse
     {
-        $request->validate(['path' => ['required', 'string', 'max:200', 'regex:#^/[A-Za-z0-9/_\-]*$#']]);
+        // Nur Pfade innerhalb der Seite: „//host“ wäre eine protokollrelative Weiterleitung nach außen
+        $request->validate(['path' => ['required', 'string', 'max:200', 'regex:#^/(?!/)[A-Za-z0-9/_\-]*$#']]);
 
         $generator = new LoginUrl($request->user());
         $generator->setRedirectUrl($request->path);

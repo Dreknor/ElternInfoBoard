@@ -87,7 +87,7 @@
                                 <!-- Main Content -->
                                 <div class="lg:col-span-2">
                                     <div class="prose prose-gray max-w-none">
-                                        {!! $nachricht->news !!}
+                                        @safeHtml($nachricht->news)
                                     </div>
                                 </div>
 
@@ -116,7 +116,7 @@
                             </div>
                         @else
                             <div class="prose prose-gray max-w-none">
-                                {!! $nachricht->news !!}
+                                @safeHtml($nachricht->news)
                             </div>
                         @endif
                     </div>
@@ -133,7 +133,7 @@
                     <!-- Main Content -->
                     <div class="lg:col-span-2">
                         <div class="prose prose-gray max-w-none">
-                            {!! $nachricht->news !!}
+                            @safeHtml($nachricht->news)
                         </div>
                     </div>
 
@@ -162,7 +162,7 @@
                 </div>
             @else
                 <div class="prose prose-gray max-w-none">
-                    {!! $nachricht->news !!}
+                    @safeHtml($nachricht->news)
                 </div>
             @endif
         </div>

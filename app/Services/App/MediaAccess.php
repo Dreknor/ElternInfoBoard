@@ -21,13 +21,29 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class MediaAccess
 {
+    /**
+     * Download-Adresse einer Mediendatei. Ältere Einträge (vor der Spalte `uuid`) haben keine UUID –
+     * dann über die ID (gleiche Zugriffsprüfung), statt dass `route()` die ganze Antwort abbricht.
+     */
+    public static function downloadUrl(Media $media): string
+    {
+        return filled($media->uuid)
+            ? route('api.files.download', ['media_uuid' => $media->uuid])
+            : url('api/image/'.$media->id);
+    }
+
     public static function canView(User $user, Media $media): bool
     {
+        $model = $media->model;
+
+        // Anhänge vertraulicher Beiträge: nur Autor und Empfänger, auch nicht mit „upload files“
+        if ($model instanceof Post && $model->isHiddenFrom($user)) {
+            return false;
+        }
+
         if ($user->can('upload files')) {
             return true;
         }
-
-        $model = $media->model;
 
         return match (true) {
             $model instanceof Post => $user->can('view', $model),

@@ -29,6 +29,7 @@
     <link href="{{asset('css/anwesenheit.css')}}" rel="stylesheet" />
 
     @stack('head')
+    @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
 <body id="app-layout">
 <div class="content">
@@ -55,13 +56,10 @@
 </footer>
 
 <style>
+    /* Normale Fußzeile am Seitenende – nicht sticky, sonst überdeckt sie beim Scrollen die Übersicht */
     .anwesenheit-footer {
-        position: sticky;
-        bottom: 0;
-        background: rgba(248, 249, 250, 0.96);
+        background: #f8f9fa;
         border-top: 1px solid rgba(0, 0, 0, 0.08);
-        backdrop-filter: blur(2px);
-        z-index: 10;
     }
 </style>
 
@@ -167,5 +165,6 @@
 </script>
 
 @stack('js')
+@include('layouts.elements.custom-scripts', ['position' => 'body'])
 </body>
 </html>

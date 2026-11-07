@@ -160,7 +160,7 @@
 
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <h3 class="font-semibold text-gray-700 mb-3">Gruppen zuweisen</h3>
-                            @include('include.formGroups')
+                            @include('include.formGroups', ['withPersons' => true])
                         </div>
                     </div>
 

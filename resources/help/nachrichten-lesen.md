@@ -8,6 +8,10 @@ Unter **Nachrichten** findest du alle Beiträge, die für dich freigegeben sind.
 - **Angeheftete Beiträge** stehen oben in der Liste.
 - Klicke auf einen Beitrag, um ihn vollständig zu lesen, Anhänge zu öffnen oder zu antworten.
 
+## Vertrauliche Beiträge
+
+Beiträge mit dem Hinweis **🔒 Vertraulich** sind nur für die Empfänger und den Verfasser sichtbar – nicht für weitere Mitarbeiter der Einrichtung. In der App erscheint dafür ein Schloss-Symbol.
+
 ## Lesebestätigung
 
 Manche Beiträge fordern eine **Lesebestätigung**. Sie wird **nicht automatisch** gegeben:

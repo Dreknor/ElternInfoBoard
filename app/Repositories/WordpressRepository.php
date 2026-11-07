@@ -80,6 +80,10 @@ class WordpressRepository
      */
     public function pushPost(Post $post): void
     {
+        if ($post->confidential) {
+            throw new WordpressPushException('Vertrauliche Beiträge werden nicht an WordPress übertragen.');
+        }
+
         if (! $this->isConfigured()) {
             throw new WordpressPushException('WordPress-Push ist nicht konfiguriert (WP_URL, WP_USER_NAME, WP_PASSWORD).');
         }

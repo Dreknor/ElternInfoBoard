@@ -10,7 +10,6 @@ use App\Mail\SchickzeitenReminder;
 use App\Model\Child;
 use App\Model\ChildCheckIn;
 use App\Model\ChildNotice;
-use App\Model\Notification;
 use App\Model\Schickzeiten;
 use App\Model\User;
 use App\Notifications\AttendanceQueryNotification;
@@ -1335,16 +1334,7 @@ class SchickzeitenController extends Controller implements HasMiddleware
                 $body .= " Bitte geben Sie Ihre Rückmeldung.";
             }
 
-            // Erstelle Datenbank-Notification
-            Notification::create([
-                'user_id' => $parent->id,
-                'message' => $body,
-                'title' => $title,
-                'url' => url('schickzeiten'),
-                'type' => 'Anwesenheitsabfrage',
-            ]);
-
-            // Sende Push-Notification
+            // Glocken-Eintrag inkl. App-/Browser-Push (legt AttendanceQueryNotification selbst an)
             try {
                 $parent->notify(new AttendanceQueryNotification($title, $body));
                 Log::info("Neue Anwesenheitsabfrage-Benachrichtigung an {$parent->name} (ID: {$parent->id}) gesendet");

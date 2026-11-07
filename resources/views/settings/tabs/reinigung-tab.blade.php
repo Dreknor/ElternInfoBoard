@@ -43,14 +43,14 @@
         <div class="form-row mt-1 p-2 border">
             <div class="col-md-6 col-sm-12">
                 <label class="label-control w-100">
-                    Ferienwochen beim automatischen Befüllen überspringen
+                    Ferienwochen im Reinigungsplan auslassen
                     <input type="checkbox" class="form-control" name="skip_holidays"
                            value="1" @if($reinigungSettings->skip_holidays) checked @endif>
                 </label>
             </div>
             <div class="col-md-6 col-sm-12 m-auto">
                 <div class="small">
-                    Wenn aktiviert, werden beim automatischen Befüllen des Reinigungsplans Wochen übersprungen, die (anhand des unter Care hinterlegten Bundeslandes) in die Schulferien fallen.
+                    Wenn aktiviert, werden Ferienwochen beim automatischen Befüllen übersprungen und im Plan als „keine Reinigung“ angezeigt. Als Ferienwoche gilt eine Woche, in der mindestens 3 Schultage (Mo–Fr) in den Ferien liegen. Grundlage ist das Bundesland aus den Einstellungen unter „Care“.
                 </div>
             </div>
         </div>

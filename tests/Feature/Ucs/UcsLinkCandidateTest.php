@@ -9,11 +9,11 @@ use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
- * Feature-Tests für UcsLinkCandidateController + LinkCandidateService (TODO-08)
+ * Feature-Tests für UcsLinkCandidateController + LinkCandidateService
  *
- * Deckt Gelingenskriterien 2, 4, 5, 6, 7 aus docs/todos/08-initial-linking-workflow.md ab.
- * Kriterium 1 (Detection im Sync) ist bereits in UcsSyncServiceTest abgedeckt.
- * Kriterium 3 (nächster Sync erzeugt Pivots nach Linking) ist implizit durch TODO-04 abgedeckt.
+ * Deckt Bestätigen und Verwerfen von Verknüpfungsvorschlägen über UI und Service ab.
+ * Die Erkennung im Sync ist bereits in UcsSyncServiceTest abgedeckt.
+ * Dass der nächste Sync nach dem Verknüpfen die Pivots erzeugt, ist durch die Sync-Tests implizit abgedeckt.
  */
 class UcsLinkCandidateTest extends TestCase
 {

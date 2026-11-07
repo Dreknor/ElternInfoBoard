@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -34,9 +35,18 @@ class AktuelleInformationen extends Mailable
      *
      * @return void
      */
-    public function __construct(Collection|array $news, string $name, Collection|array $diskussionen, Collection|array $listen, Collection|array $termine, Collection|array $gta, ?array $pflichtstunden = null)
+    /**
+     * Abschnitte dürfen als Eloquent- oder einfache Collection bzw. Array kommen
+     * (z. B. collect() bei fehlendem Modulrecht). Intern Eloquent-Collections, damit
+     * die Warteschlange Modelle nur als ID serialisiert.
+     */
+    public function __construct(BaseCollection|array $news, string $name, BaseCollection|array $diskussionen, BaseCollection|array $listen, BaseCollection|array $termine, BaseCollection|array $gta, ?array $pflichtstunden = null)
     {
-        $news = new Collection($news);
+        $news = self::models($news);
+        $diskussionen = self::models($diskussionen);
+        $listen = self::models($listen);
+        $termine = self::models($termine);
+        $gta = self::models($gta);
 
         $this->news = $news->filter(function ($post) {
             return $post->external == 0;
@@ -53,6 +63,11 @@ class AktuelleInformationen extends Mailable
         $this->gta = $gta;
         $this->pflichtstunden = $pflichtstunden;
 
+    }
+
+    private static function models(BaseCollection|array $items): Collection
+    {
+        return $items instanceof Collection ? $items : new Collection($items instanceof BaseCollection ? $items->all() : $items);
     }
 
     /**

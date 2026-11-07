@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\V1;
 use App\Http\Resources\V1\ChildResource;
 use App\Model\ActiveDisease;
 use App\Model\Child;
+use App\Model\Link;
 use App\Model\Losung;
 use App\Services\App\Family;
 use App\Services\App\Modules;
@@ -16,16 +17,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * @group App: Start
+ * @group Start
  */
 class DashboardController extends ApiController
 {
     /**
-     * Startseite in einer Anfrage – B-03.
+     * Startseite in einer Anfrage.
      *
      * Offene Aufgaben, Kinder heute, nächste Termine, neueste Beiträge, Losung, Erkrankungen.
      * `care_active` gibt an, ob das Care-Modul (Anwesenheitsliste) aktiv ist; nur dann enthält
      * `children.*.today.check_in` den CheckIn-Status, sonst ist er immer `null`.
+     * `links` enthält die auf der Startseite angehefteten Links (Format wie `GET /v1/links`).
      */
     public function index(Request $request, TodoService $todos): JsonResponse
     {
@@ -89,11 +91,16 @@ class DashboardController extends ApiController
             'active_diseases' => ActiveDisease::query()->where('active', true)->whereDate('end', '>=', today())
                 ->with('disease:id,name')->get()->map(fn ($d) => ['name' => $d->disease?->name, 'start' => $d->start?->toDateString()])
                 ->filter(fn ($d) => $d['name'])->values(),
+            // Modul „Links“: angeheftete Links (leer, wenn das Modul nicht aktiv ist)
+            'links' => Modules::isActiveFor($user, 'Links')
+                ? Link::query()->visibleTo($user)->where('pinned', true)->ordered()->limit(12)->get()
+                    ->map(fn (Link $link) => LinkController::present($link))->values()
+                : [],
         ]]);
     }
 
     /**
-     * Offene Aufgaben der Familie – B-25.
+     * Offene Aufgaben der Familie.
      */
     public function todo(Request $request, TodoService $todos): JsonResponse
     {

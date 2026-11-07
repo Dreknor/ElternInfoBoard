@@ -9,7 +9,10 @@ return new class extends SettingsMigration
         $this->migrator->add('email.mail_server', env('MAIL_HOST', 'example.com')) ?? 'example.com';
         $this->migrator->add('email.mail_port', env('MAIL_PORT', '587')) ?? 587;
         $this->migrator->add('email.mail_username', env('MAIL_USERNAME', 'info@example.com') ?? 'info@example.com');
-        $this->migrator->add('email.mail_password', env('MAIL_PASSWORD', 'null') ?? now()->timestamp);
+        // Verschlüsselt speichern (EmailSetting::encrypted()). Ohne Passwort bleibt der
+        // Wert leer – kein Platzhalter, sonst schlägt das Entschlüsseln später fehl.
+        $password = env('MAIL_PASSWORD');
+        $this->migrator->addEncrypted('email.mail_password', is_string($password) && $password !== '' ? $password : null);
         $this->migrator->add('email.mail_encryption', config('mail.mailers.smtp.encryption') ?? 'tls');
         $this->migrator->add('email.mail_from_address', env('MAIL_FROM_ADDRESS') ?? 'info@example.com');
         $this->migrator->add('email.mail_from_name', env('MAIL_FROM_NAME') ?? 'ElternInfoBoard');

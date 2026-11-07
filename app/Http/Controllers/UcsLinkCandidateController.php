@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
  * der Settings-Routen abgesichert.
  *
  * @see resources/views/settings/tabs/_ucs-link-candidates.blade.php
- * @see docs/todos/08-initial-linking-workflow.md
+ * @see docs/ucs-kelvin-integration-konzept.md
  */
 class UcsLinkCandidateController extends Controller
 {

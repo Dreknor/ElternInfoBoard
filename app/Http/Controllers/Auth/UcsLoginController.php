@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Auth\SsoStudentDetector;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -130,6 +131,16 @@ class UcsLoginController extends Controller implements HasMiddleware
             return redirect()->route('login')->with([
                 'type'    => 'danger',
                 'Meldung' => 'Der Schul-Login hat keine Benutzerkennung geliefert.',
+            ]);
+        }
+
+        // Schülerrolle: weder anmelden noch verknüpfen (docs/konzept-schuelerkonten.md, S-02).
+        if (app(SsoStudentDetector::class)->isStudent($oidc)) {
+            Log::channel('ucs')->info('[UcsLoginController] Login abgelehnt: Schülerrolle', ['sub' => $sub]);
+
+            return redirect()->route('login')->with([
+                'type'    => 'danger',
+                'Meldung' => SsoStudentDetector::MESSAGE,
             ]);
         }
 

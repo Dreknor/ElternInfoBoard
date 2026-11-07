@@ -43,7 +43,7 @@ class TerminController extends Controller implements HasMiddleware
         if ($user->hasPermissionTo('edit termin', 'web')) {
             $termine = Termin::all();
         } else {
-            $termine = $user->termine;
+            $termine = $user->visibleTermine()->get();
         }
 
         $termine = $termine->unique('id');

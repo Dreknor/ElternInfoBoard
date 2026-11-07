@@ -202,7 +202,7 @@ function loadImportStatus() {
     const container = document.getElementById('import-status-container');
     container.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Lade Status...';
 
-    fetch('{{ url('api/stundenplan/status') }}')
+    fetch('{{ route('stundenplan.import.status') }}', { headers: { 'Accept': 'application/json' } })
         .then(response => response.json())
         .then(data => {
             if (data.success && data.imported) {
