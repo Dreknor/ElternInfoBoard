@@ -29,6 +29,7 @@
     <link href="{{asset('css/anwesenheit.css')}}" rel="stylesheet" />
 
     @stack('head')
+    @include('layouts.elements.custom-scripts', ['position' => 'head'])
 </head>
 <body id="app-layout">
 <div class="content">
@@ -164,5 +165,6 @@
 </script>
 
 @stack('js')
+@include('layouts.elements.custom-scripts', ['position' => 'body'])
 </body>
 </html>
