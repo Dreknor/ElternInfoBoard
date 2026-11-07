@@ -41,7 +41,7 @@
             <span>Bearbeiten</span>
         </a>
 
-        @if($nachricht->updated_at->greaterThan(\Carbon\Carbon::now()->subWeeks(3)) or $nachricht->archiv_ab->greaterThan(\Carbon\Carbon::now()))
+        @if($nachricht->updated_at?->greaterThan(\Carbon\Carbon::now()->subWeeks(3)) or $nachricht->archiv_ab?->greaterThan(\Carbon\Carbon::now()))
             <a href="{{url('/posts/touch/'.$nachricht->id)}}"
                class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                 <i class="fas fa-redo text-blue-500"></i>
