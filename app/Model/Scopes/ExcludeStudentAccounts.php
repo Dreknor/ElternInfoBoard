@@ -33,6 +33,16 @@ class ExcludeStudentAccounts implements Scope
      * Ältere Migrationen nutzen das Model, bevor die Spalte existiert. Nur ein positives
      * Ergebnis wird gemerkt, damit ein frisch migrierter Testlauf den Scope trotzdem anwendet.
      */
+    /**
+     * Vor jeder Migration vergessen (AppServiceProvider): `migrate:fresh` im selben Prozess,
+     * z. B. aus `demo:setup`, baut die Tabelle neu auf – ältere Migrationen laufen dann
+     * wieder ohne die Spalte.
+     */
+    public static function forgetColumn(): void
+    {
+        self::$columnKnown = false;
+    }
+
     private static function columnExists(Model $model): bool
     {
         if (self::$columnKnown) {

@@ -55,6 +55,12 @@ class AppServiceProvider extends ServiceProvider
         // in Umgebungen, in denen PHP keine ausführbaren Speicherbereiche allokieren darf.
         ini_set('pcre.jit', '0');
 
+        // Gemerkte Spalte „account_type“ vergessen, sobald migriert wird (migrate:fresh im selben Prozess)
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Database\Events\MigrationStarted::class,
+            fn () => \App\Model\Scopes\ExcludeStudentAccounts::forgetColumn()
+        );
+
         // Keine ausführbaren bzw. im Browser aktiven Dateien in der (öffentlich gespeicherten) Medienbibliothek
         \Spatie\MediaLibrary\MediaCollections\Models\Media::creating(fn ($media) => \App\Support\UploadGuard::assertAllowed($media));
 
