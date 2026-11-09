@@ -8,9 +8,11 @@
                 <p>
                     Übersicht aller Kinder
                 </p>
-                <p>
-                    <a href="{{ route('child.create') }}" class="btn btn-primary">Neues Kind anlegen</a>
-                </p>
+                @can('edit schickzeiten')
+                    <p>
+                        <a href="{{ route('child.create') }}" class="btn btn-primary">Neues Kind anlegen</a>
+                    </p>
+                @endcan
 
 
                 <div class="form-row mt-3">
@@ -97,16 +99,41 @@
                                     </div>
                                 @endforeach
                             </td>
+                            @php
+                                $custodianContacts = $child->parents
+                                    ->filter(function ($guardian) {
+                                        $validUntil = $guardian->pivot->valid_until;
+
+                                        return $guardian->pivot->has_custody
+                                            && ($validUntil === null || $validUntil->isToday() || $validUntil->isFuture());
+                                    })
+                                    ->map(fn ($guardian) => [
+                                        'name' => $guardian->name,
+                                        'relation' => $guardian->pivot->relationType()->label(),
+                                        'email' => $guardian->email,
+                                        'publicMail' => $guardian->publicMail,
+                                        'phone' => $guardian->phone,
+                                        'publicPhone' => $guardian->publicPhone,
+                                    ])
+                                    ->values();
+                            @endphp
                             <td>
-                                <a href="{{ route('child.edit', $child->id) }}" class="btn btn-primary btn-sm mb-1 mb-md-0">Edit</a>
-                                <a href="{{ route('child.mandates.edit', $child->id) }}" class="btn btn-info btn-sm mb-1 mb-md-0">Vollmachten</a>
+                                <button type="button" class="btn btn-secondary btn-sm mb-1 mb-md-0 js-show-contacts"
+                                        data-child="{{ $child->first_name }} {{ $child->last_name }}"
+                                        data-contacts='@json($custodianContacts)'
+                                        title="Kontaktdaten der Sorgeberechtigten">
+                                    <i class="fas fa-address-book"></i> Kontakte
+                                </button>
+                                @can('edit schickzeiten')
+                                    <a href="{{ route('child.edit', $child->id) }}" class="btn btn-primary btn-sm mb-1 mb-md-0">Edit</a>
+                                    <a href="{{ route('child.mandates.edit', $child->id) }}" class="btn btn-info btn-sm mb-1 mb-md-0">Vollmachten</a>
 
-
-                                <form action="{{ route('child.destroy', $child->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                </form>
+                                    <form action="{{ route('child.destroy', $child->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                @endcan
                             </td>
 
                         </tr>
@@ -118,7 +145,68 @@
         </div>
     </div>
 
+    <div class="modal fade" id="contactsModal" tabindex="-1" role="dialog" aria-labelledby="contactsModalTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactsModalTitle">Kontaktdaten der Sorgeberechtigten</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Schließen">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="contactsModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        (function () {
+            function escapeHtml(value) {
+                var div = document.createElement('div');
+                div.textContent = value == null ? '' : String(value);
+                return div.innerHTML;
+            }
+
+            function contactLine(icon, label, value, href) {
+                if (!value) {
+                    return '';
+                }
+                return '<div><i class="fas ' + icon + ' fa-fw text-muted"></i> '
+                    + '<small class="text-muted">' + escapeHtml(label) + ':</small> '
+                    + '<a href="' + escapeHtml(href) + '">' + escapeHtml(value) + '</a></div>';
+            }
+
+            document.querySelectorAll('.js-show-contacts').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var contacts = JSON.parse(button.dataset.contacts || '[]');
+                    var html = '';
+
+                    if (contacts.length === 0) {
+                        html = '<p class="text-muted mb-0">Keine aktuell Sorgeberechtigten hinterlegt.</p>';
+                    } else {
+                        contacts.forEach(function (c, index) {
+                            html += '<div class="' + (index > 0 ? 'border-top pt-2 mt-2' : '') + '">'
+                                + '<strong>' + escapeHtml(c.name) + '</strong> '
+                                + '<small class="text-muted">(' + escapeHtml(c.relation) + ')</small>'
+                                + contactLine('fa-envelope', 'E-Mail', c.email, 'mailto:' + c.email)
+                                + (c.publicMail && c.publicMail !== c.email ? contactLine('fa-envelope-open', 'Öffentliche E-Mail', c.publicMail, 'mailto:' + c.publicMail) : '')
+                                + contactLine('fa-phone', 'Telefon (nichtöffentlich)', c.phone, 'tel:' + c.phone)
+                                + (c.publicPhone && c.publicPhone !== c.phone ? contactLine('fa-phone-alt', 'Öffentliches Telefon', c.publicPhone, 'tel:' + c.publicPhone) : '')
+                                + (!c.email && !c.phone && !c.publicPhone && !c.publicMail ? '<div class="text-muted small">Keine Kontaktdaten hinterlegt.</div>' : '')
+                                + '</div>';
+                        });
+                    }
+
+                    document.getElementById('contactsModalTitle').textContent = 'Sorgeberechtigte von ' + button.dataset.child;
+                    document.getElementById('contactsModalBody').innerHTML = html;
+                    $('#contactsModal').modal('show');
+                });
+            });
+        })();
+
         function filterChildren() {
             var value = document.getElementById('search').value.toLowerCase().trim();
             var group = document.getElementById('groupFilter').value;

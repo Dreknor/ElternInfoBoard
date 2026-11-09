@@ -334,14 +334,14 @@
                     @endif
 
                     @if($modules->where('setting', 'Kinderverwaltung')->isNotEmpty())
-                        @can('view child')
+                        @canany(['view children overview', 'edit schickzeiten'])
                             <div class="col-md-3 col-sm-6 mb-3">
                                 <a href="{{ url('/care/children') }}" class="d-block p-3 text-center border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 text-decoration-none">
                                     <i class="fas fa-child text-purple-600" style="font-size: 2rem;"></i>
                                     <p class="text-gray-800 font-semibold mt-2 mb-0">Kinder</p>
                                 </a>
                             </div>
-                        @endcan
+                        @endcanany
                     @endif
 
                     @if($modules->where('setting', 'Listen')->isNotEmpty())

@@ -35,7 +35,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $admin = Role::findByName('Administrator', 'web');
         $elternrat = Role::findByName('Elternrat', 'web');
 
-        $admin->givePermissionTo(['edit permission', 'edit user']);
+        $admin->givePermissionTo(['edit permission', 'edit user', 'view children overview']);
+        Role::findByName('Mitarbeiter', 'web')->givePermissionTo(['view children overview']);
         $elternrat->givePermissionTo(['view elternrat']);
 
         $user = User::find(1);
@@ -131,6 +132,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'create termine', 'guard_name' => 'web', 'module' => 'Termine', 'description' => 'Einzelne Termine erstellen.'],
             ['name' => 'edit settings', 'guard_name' => 'web', 'module' => 'Einstellungen', 'description' => 'Systemeinstellungen und Module verwalten.'],
             ['name' => 'view child', 'guard_name' => 'web', 'module' => 'Care', 'description' => 'Kindbezogene Daten einsehen.'],
+            ['name' => 'view children overview', 'guard_name' => 'web', 'module' => 'Care', 'description' => 'Kinderübersicht aufrufen und Kontaktdaten der Sorgeberechtigten einsehen.'],
             ['name' => 'view listen', 'guard_name' => 'web', 'module' => 'Listen', 'description' => 'Listen einsehen.'],
             ['name' => 'testing', 'guard_name' => 'web', 'module' => 'System', 'description' => 'Interne Testberechtigung.'],
         ];
