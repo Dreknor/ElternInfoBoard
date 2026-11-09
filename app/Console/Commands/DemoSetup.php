@@ -884,6 +884,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Eltern und Sorgeberechtigte,</p><p>wir begrüßen Sie herzlich zum neuen Schuljahr am <strong>Evangelischen Schulzentrum Radebeul</strong>! Wir freuen uns auf eine gemeinsame Zeit voller Lernen, Lachen und Wachsen.</p><p>Über dieses Portal erhalten Sie alle wichtigen Informationen zu Ihrem Kind, können Krankmeldungen absenden, Termine einsehen und vieles mehr.</p><p>Bei Fragen steht Ihnen unser Sekretariat gerne zur Verfügung.</p><p>Herzliche Grüße<br>Die Schulleitung</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $schulleitungId,
                 'type' => 'post',
                 'reactable' => true,
@@ -898,6 +899,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Eltern der Klasse 3b,</p><p>wir planen für den <strong>' . Carbon::now()->addWeeks(3)->format('d.m.Y') . '</strong> einen Tagesausflug ins Elbsandsteingebirge zur Bastei. Die Kinder erkunden auf einem kindgerechten Wanderweg die Felsen und lernen die Landschaft kennen.</p><p><strong>Details:</strong></p><ul><li>Abfahrt: 8:00 Uhr am Schulhof</li><li>Rückkehr: ca. 16:30 Uhr</li><li>Kosten: 8,50 € (Bus + Eintritt)</li><li>Bitte festes Schuhwerk und Lunchpaket mitbringen</li></ul><p>Bitte melden Sie Ihr Kind verbindlich an:</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $lehrerinId,
                 'type' => 'post',
                 'reactable' => false,
@@ -931,6 +933,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Eltern der Klasse 1a,</p><p>wir laden Sie herzlich zum Elternabend am <strong>' . Carbon::now()->addWeeks(2)->format('d.m.Y') . ' um 19:00 Uhr</strong> in den Konferenzraum der Schule ein.</p><p>Auf der Tagesordnung stehen:</p><ul><li>Rückblick auf das erste Schulhalbjahr</li><li>Informationen zum Förderunterricht</li><li>Planung des Sommerfestes</li><li>Verschiedenes</li></ul><p>Bitte melden Sie Ihre Teilnahme bis ' . Carbon::now()->addWeeks(1)->format('d.m.Y') . ' zurück.</p>',
                 'released' => false,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $this->users['lehrer2']->id,
                 'type' => 'post',
                 'reactable' => false,
@@ -963,7 +966,7 @@ class DemoSetup extends Command
                 'external' => false,
                 'read_receipt' => true,
                 'read_receipt_deadline' => Carbon::now()->addWeeks(2),
-                'archived_at' => Carbon::now()->addWeeks(2),
+                'archiv_ab' => Carbon::now()->addWeeks(4),
             ]
         );
         $this->attachGroupToPost($post4, 'gesamtelternschaft');
@@ -981,6 +984,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Schulgemeinschaft,</p><p>unsere Schulbibliothek benötigt dringend neue Bücher! Im Rahmen unserer Spendenaktion möchten wir bis zum <strong>' . Carbon::now()->addMonths(2)->format('d.m.Y') . '</strong> insgesamt <strong>500 €</strong> sammeln, um neue altersgerechte Bücher für alle Klassenstufen anzuschaffen.</p><p>Spenden können Sie:</p><ul><li>Direkt an das Sekretariat (Bar oder Überweisung)</li><li>Über den Förderverein</li><li>Durch Buchspenden (Absprache mit der Bibliothekarin)</li></ul><p>Jeder Beitrag hilft! Herzlichen Dank für Ihre Unterstützung.</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $this->users['elternrat']->id,
                 'type' => 'post',
                 'reactable' => true,
@@ -995,6 +999,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Liebe Schulgemeinschaft,</p><p>herzliche Einladung zu unserem diesjährigen <strong>Sommerfest am ' . Carbon::now()->addMonths(3)->format('d.m.Y') . ' ab 14:00 Uhr</strong> auf dem Schulgelände!</p><p>Es erwartet Sie und Ihre Kinder:</p><ul><li>Auftritte der Schulchöre und -kapelle</li><li>Kaffee, Kuchen und Grillen</li><li>Spiele und Aktivitäten für Kinder</li><li>Flohmarkt</li><li>Ausstellung der Kunstprojekte</li></ul><p>Wir freuen uns auf einen gemeinsamen Nachmittag!</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $schulleitungId,
                 'type' => 'post',
                 'reactable' => true,
@@ -1009,6 +1014,7 @@ class DemoSetup extends Command
             [
                 'news' => '<p>Die Musikschule Radebeul bietet ab September neue Kurse für Kinder ab 5 Jahren an:</p><ul><li>Musikalische Früherziehung (5–7 Jahre)</li><li>Blockflöte Anfänger</li><li>Keyboard für Kinder</li><li>Kinderchor</li></ul><p>Anmeldungen sind bis 15. August möglich unter musikschule-radebeul.de</p>',
                 'released' => true,
+                'archiv_ab' => Carbon::now()->addWeeks(6), // ohne Datum gelten Beiträge teils als archiviert
                 'author' => $adminId,
                 'type' => 'post',
                 'reactable' => false,
