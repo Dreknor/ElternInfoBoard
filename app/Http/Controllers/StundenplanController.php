@@ -49,7 +49,7 @@ class StundenplanController extends Controller
         $classes = $allClasses;
 
         // Filter classes for parents
-        if ($user->hasRole('eltern')) {
+        if ($this->isRestrictedParent($user)) {
             $allowedClasses = $this->getAllowedClassesForParent($user);
             $classes = array_intersect($allClasses, $allowedClasses);
         }
@@ -60,7 +60,7 @@ class StundenplanController extends Controller
             'classes' => $classes,
             'teachers' => $this->extractTeachers($data),
             'rooms' => $this->extractRooms($data),
-            'isParent' => $user->hasRole('eltern'),
+            'isParent' => $this->isRestrictedParent($user),
             'canViewTeacher' => $user->can('view stundenplan teacher'),
             'canViewRoom' => $user->can('view stundenplan room'),
         ]);
@@ -207,7 +207,7 @@ class StundenplanController extends Controller
         }
 
         // Check parent permissions
-        if ($user->hasRole('eltern')) {
+        if ($this->isRestrictedParent($user)) {
             $allowedClasses = $this->getAllowedClassesForParent($user);
             if (!in_array($class, $allowedClasses)) {
                 return redirect()->route('stundenplan.index')->with([
@@ -779,5 +779,15 @@ class StundenplanController extends Controller
                 'Meldung' => 'Import fehlgeschlagen: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Eltern sehen nur die Klassen ihrer Kinder. Rollenname „Eltern“ (vorher klein
+     * geschrieben abgefragt – hasRole unterscheidet Groß-/Kleinschreibung, Eltern sahen
+     * dadurch alle Klassen). Mitarbeitende mit eigenem Kind behalten die volle Ansicht.
+     */
+    private function isRestrictedParent($user): bool
+    {
+        return $user->hasRole('Eltern') && ! $user->can('view stundenplan teacher');
     }
 }

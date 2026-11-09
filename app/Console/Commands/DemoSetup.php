@@ -287,6 +287,7 @@ class DemoSetup extends Command
                 'view krankmeldung', 'view schickzeiten', 'view rueckmeldungen',
                 'view vertretungsplan', 'view mitarbeiterboard', 'view groups',
                 'manage rueckmeldungen', 'view external offer',
+                'view stundenplan', 'view stundenplan teacher', 'view stundenplan room',
             ],
             'Elternrat' => [
                 'view elternrat', 'view groups', 'manage elternrat events', 'manage elternrat tasks',
