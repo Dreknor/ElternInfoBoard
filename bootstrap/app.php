@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/home');
 
         $middleware->web([
+            // Schülerkonten: Freigabeliste vor allen übrigen Prüfungen (docs/konzept-schuelerkonten.md §5)
+            \App\Http\Middleware\RestrictStudentAccounts::class,
             \App\Http\Middleware\CheckNewsForUser::class,
             \App\Http\Middleware\LastOnlineAt::class,
             \App\Http\Middleware\CheckUserActive::class,
@@ -32,7 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
 
         // Integrations-Tokens: nur lesen bzw. freigegebene Bereiche schreiben
-        $middleware->api(append: [\App\Http\Middleware\EnforceIntegrationTokenScope::class]);
+        $middleware->api(append: [
+            \App\Http\Middleware\RestrictStudentAccounts::class,
+            \App\Http\Middleware\EnforceIntegrationTokenScope::class,
+        ]);
 
         // MCP-Tokens (Chatbot) gelten nur für den MCP-Endpunkt – vorn in der Gruppe, damit vor
         // Route-Model-Binding und Controller nichts mit einem solchen Token läuft.
@@ -50,6 +55,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'etag' => \App\Http\Middleware\ETagResponses::class,
             'api.password' => \App\Http\Middleware\ApiPasswordChangeRequired::class,
             'module' => \App\Http\Middleware\EnsureModuleActive::class,
+            'student' => \App\Http\Middleware\EnsureStudentAccount::class,
+            'student.enabled' => \App\Http\Middleware\EnsureStudentAccountsEnabled::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'student.messenger' => \App\Http\Middleware\EnsureStudentMessengerEnabled::class,
         ]);
 
         $middleware->priority([

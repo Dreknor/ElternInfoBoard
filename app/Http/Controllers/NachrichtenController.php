@@ -128,6 +128,15 @@ class NachrichtenController extends Controller implements HasMiddleware
                 ->get();
         }
 
+        // Beiträge „nur für Schüler“: nur für Autor und Berechtigte (docs/konzept-schuelerkonten.md §3)
+        if (\App\Support\StudentAccounts::enabled()) {
+            $nachrichten = $nachrichten->concat(Post::query()
+                ->studentOnlyManagedBy(auth()->user())
+                ->where(fn ($query) => $query->whereNull('archiv_ab')->orWhere('archiv_ab', '>', Carbon::now()))
+                ->with(['autor', 'groups', 'media'])
+                ->get())->unique('id')->values();
+        }
+
         // Hole alle Nachrichten für die Übersichtsseite
 
         $openReportsCount = 0;
@@ -345,6 +354,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         $post = new Post($request->validated());
+        \App\Support\AudienceField::apply($post, $request);
 
         $post->author = $user->id;
         ($post->news == '') ? $post->news = $post->header : null;
@@ -386,7 +396,8 @@ class NachrichtenController extends Controller implements HasMiddleware
             }
         }
 
-        if ($request->wp_push and ! $post->confidential and WordpressRepository::pushAllowedFor($user)) {
+        // Weder vertrauliche noch „nur für Schüler“ bestimmte Beiträge auf die öffentliche Homepage
+        if ($request->wp_push and ! $post->confidential and ! $post->isStudentOnly() and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($post);
         }
 
@@ -409,8 +420,8 @@ class NachrichtenController extends Controller implements HasMiddleware
             ]);
         }
 
-        // Umleitung bei Rückmeldungsbedarf
-        switch ($request->input('rueckmeldung')) {
+        // Umleitung bei Rückmeldungsbedarf (nicht bei „nur für Schüler“: Rückmeldungen kämen von Eltern)
+        switch ($post->isStudentOnly() ? null : $request->input('rueckmeldung')) {
             case 'abfrage':
                 return redirect(url('rueckmeldung/create/'.$post->id.'/abfrage'));
                 break;
@@ -530,6 +541,7 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         $posts->fill($request->validated());
+        \App\Support\AudienceField::apply($posts, $request);
 
         $posts->updated_at = $request->input('updated_at');
 
@@ -573,7 +585,8 @@ class NachrichtenController extends Controller implements HasMiddleware
         }
 
         // Erst nach dem Speichern der Dateien übertragen, damit neue Bilder mitkommen
-        if ($request->wp_push and ! $posts->confidential and WordpressRepository::pushAllowedFor($user)) {
+        // Weder vertrauliche noch „nur für Schüler“ bestimmte Beiträge auf die öffentliche Homepage
+        if ($request->wp_push and ! $posts->confidential and ! $posts->isStudentOnly() and WordpressRepository::pushAllowedFor($user)) {
             PushPostToWordpress::dispatch($posts);
         }
 
@@ -1052,6 +1065,15 @@ class NachrichtenController extends Controller implements HasMiddleware
 
     public function push(Post $post, ?EloquentCollection $recipients = null)
     {
+        // Schüler erhalten eine eigene Benachrichtigung (nur Titel), Eltern nie bei „nur für Schüler“.
+        if ($recipients === null) {
+            \App\Services\Students\StudentNotifier::postReleased($post);
+        }
+
+        if ($post->isStudentOnly()) {
+            return redirect()->back();
+        }
+
         $User = $recipients ?? $post->load(['users', 'recipientUsers'])->recipients();
 
         if ($post->external) {
@@ -1122,6 +1144,11 @@ class NachrichtenController extends Controller implements HasMiddleware
      */
     public function sendMailToRecipients(Post $post): array
     {
+        // „nur für Schüler“: keine Mail an Eltern (Schülerkonten haben keine E-Mail)
+        if ($post->isStudentOnly()) {
+            return [];
+        }
+
         $users = $post->load(['users', 'recipientUsers'])->recipients();
 
         $sendTo = [];

@@ -232,7 +232,7 @@ class UserService
      */
     public function syncGroups(User $user, ?array $groupInput): void
     {
-        if (is_null($groupInput)) {
+        if (is_null($groupInput) || $user->isStudent()) {
             return;
         }
 
@@ -319,7 +319,12 @@ class UserService
      */
     public function syncPermissions(User $user, ?array $permissions): void
     {
-        $user->syncPermissions($permissions ?? []);
+        // Rechte gesperrter Module stehen nicht im Formular und bleiben unverändert.
+        $keep = $user->getDirectPermissions()->pluck('name')
+            ->intersect(\App\Model\Module::lockedPermissionNames())
+            ->all();
+
+        $user->syncPermissions(array_merge($permissions ?? [], $keep));
     }
 
     /**

@@ -14,5 +14,5 @@ use Laravel\Mcp\Facades\Mcp;
 */
 Route::middleware(EnsureMcpAccess::class)->group(function () {
     Mcp::web('/api/v1/mcp', ElternServer::class)
-        ->middleware(['auth:sanctum', 'api.password', 'throttle:mcp']);
+        ->middleware(['auth:sanctum', \App\Http\Middleware\RestrictStudentAccounts::class, 'api.password', 'throttle:mcp']);
 });

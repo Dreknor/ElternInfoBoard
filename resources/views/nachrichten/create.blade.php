@@ -97,6 +97,7 @@
                 <div class="col-12 mb-3">
                     <div class="p-3 rounded-lg border" style="border-color: var(--color-card-border); background: var(--color-card-bg, transparent);">
                         @include('include.formGroups', ['withPersons' => true])
+                        @include('student.partials.audience-field', ['value' => null])
                     </div>
                 </div>
             </div>

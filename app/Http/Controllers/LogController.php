@@ -64,12 +64,32 @@ class LogController extends Controller
             'icon' => 'fa-sync-alt',
             'keywords' => ['ucs', '[sync'],
         ],
+        'schuelerkonten' => [
+            'label' => 'Schülerkonten',
+            'icon' => 'fa-user-graduate',
+            'keywords' => ['schülerkonto', 'schuelerkonto'],
+        ],
         'system' => [
             'label' => 'System & Wartung',
             'icon' => 'fa-cogs',
             'keywords' => ['wartungsmodus', 'update', 'ausnahme', 'exception', 'schuljahreswechsel', 'cleanup', 'setting'],
         ],
     ];
+
+    /**
+     * Kategorien für den Filter. „Schülerkonten“ nur bei aktivem Modul
+     * (docs/konzept-schuelerkonten.md §1.1).
+     */
+    public static function categories(): array
+    {
+        $categories = self::CATEGORIES;
+
+        if (! \App\Support\StudentAccounts::enabled()) {
+            unset($categories['schuelerkonten']);
+        }
+
+        return $categories;
+    }
 
     /**
      * Display a listing of the logs with filtering
@@ -90,8 +110,10 @@ class LogController extends Controller
 
         // Filter by category (Login, E-Mail, ...)
         $category = $request->input('category');
-        if (is_string($category) && isset(self::CATEGORIES[$category])) {
-            $keywords = self::CATEGORIES[$category]['keywords'];
+        $categories = self::categories();
+
+        if (is_string($category) && isset($categories[$category])) {
+            $keywords = $categories[$category]['keywords'];
             $query->where(function ($q) use ($keywords) {
                 foreach ($keywords as $keyword) {
                     $q->orWhereRaw('LOWER(message) LIKE ?', ['%'.mb_strtolower($keyword).'%']);
@@ -125,7 +147,7 @@ class LogController extends Controller
             'logs' => $logs,
             'totalLogs' => $totalLogs,
             'channels' => $channels,
-            'categories' => self::CATEGORIES,
+            'categories' => $categories,
             'searchStats' => $searchStats,
         ]);
     }

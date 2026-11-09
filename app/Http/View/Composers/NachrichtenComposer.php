@@ -56,6 +56,16 @@ class NachrichtenComposer
 
             }
 
+            // Beiträge „nur für Schüler“ sehen nur Autor und Berechtigte, mit Hinweis im Beitrag
+            if (\App\Support\StudentAccounts::enabled()) {
+                $Nachrichten = $Nachrichten->concat(Post::query()
+                    ->studentOnlyManagedBy($user)
+                    ->whereDate('archiv_ab', '>', Carbon::now()->startOfDay())
+                    ->where('external', 0)
+                    ->with('media', 'autor', 'groups')
+                    ->get());
+            }
+
             $Nachrichten = $Nachrichten->unique('id');
             $Nachrichten = $Nachrichten->load('userRueckmeldung');
             $Nachrichten = $Nachrichten->load('reactions');

@@ -199,13 +199,24 @@ class LoginController extends Controller implements HasMiddleware
 
         // Schülerinnen und Schüler (Rolle im Token) nie als normales Konto anmelden
         // oder anlegen (docs/konzept-schuelerkonten.md, S-02).
-        if (app(SsoStudentDetector::class)->isStudent($keycloakUser)) {
-            Log::info('Keycloak-Login abgelehnt: Schülerrolle');
+        $studentLogin = app(\App\Services\Students\StudentSsoLogin::class);
+        $kcSub = (string) ($keycloakUser->getId() ?? '');
+        $kcUsername = data_get($keycloakUser->user ?? [], 'preferred_username');
+        if ($studentLogin->isStudent($keycloakUser, $kcSub, $kcUsername)) {
+            [$student, $message] = $studentLogin->resolve($kcSub, $kcUsername);
 
-            return redirect()->route('login')->with([
-                'type' => 'danger',
-                'Meldung' => SsoStudentDetector::MESSAGE,
-            ]);
+            if ($student === null) {
+                Log::info('Keycloak-Login abgelehnt: Schülerrolle');
+
+                return redirect()->route('login')->with([
+                    'type' => 'danger',
+                    'Meldung' => $message,
+                ]);
+            }
+
+            $studentLogin->login(request(), $student);
+
+            return redirect()->route('student.home');
         }
 
         // Check if email exists

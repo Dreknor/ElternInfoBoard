@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Links\LinkRequest;
 use App\Model\Group;
 use App\Model\Link;
+use App\Support\AudienceField;
+use App\Support\StudentAccounts;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,11 +18,12 @@ class LinkAdminController extends Controller
 {
     public function index(): View
     {
-        $links = Link::query()->with('groups:id,name')->ordered()->get();
+        $links = Link::query()->withStudentAudience()->with('groups:id,name')->ordered()->get();
 
         return view('links.admin.index', [
             'links' => $links,
             'categories' => Link::grouped($links),
+            'studentAudience' => StudentAccounts::enabled(),
         ]);
     }
 
@@ -37,11 +40,13 @@ class LinkAdminController extends Controller
     public function store(LinkRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            $link = Link::create($request->linkData() + [
-                'position' => (int) Link::max('position') + 1,
+            $link = new Link($request->linkData() + [
+                'position' => (int) Link::query()->withStudentAudience()->max('position') + 1,
                 'created_by' => $request->user()->id,
                 'updated_by' => $request->user()->id,
             ]);
+            AudienceField::apply($link, $request);
+            $link->save();
             $link->groups()->sync($request->groupIds());
         });
 
@@ -54,7 +59,9 @@ class LinkAdminController extends Controller
     public function update(LinkRequest $request, Link $link): RedirectResponse
     {
         DB::transaction(function () use ($request, $link) {
-            $link->update($request->linkData() + ['updated_by' => $request->user()->id]);
+            $link->fill($request->linkData() + ['updated_by' => $request->user()->id]);
+            AudienceField::apply($link, $request);
+            $link->save();
             $link->groups()->sync($request->groupIds());
         });
 
@@ -91,7 +98,7 @@ class LinkAdminController extends Controller
         $direction = $request->validate(['direction' => ['required', 'in:up,down']])['direction'];
 
         DB::transaction(function () use ($link, $direction) {
-            $all = Link::query()->ordered()->lockForUpdate()->get(['id', 'category']);
+            $all = Link::query()->withStudentAudience()->ordered()->lockForUpdate()->get(['id', 'category']);
             $ids = $all->pluck('id')->all();
 
             $siblings = $all->filter(fn (Link $l) => (string) $l->category === (string) $link->category)->pluck('id')->values()->all();
@@ -106,7 +113,7 @@ class LinkAdminController extends Controller
 
             // Positionen lückenlos neu vergeben, damit gleiche Werte das Tauschen nicht blockieren.
             foreach ($ids as $position => $id) {
-                Link::whereKey($id)->where('position', '!=', $position)->update(['position' => $position]);
+                Link::query()->withStudentAudience()->whereKey($id)->where('position', '!=', $position)->update(['position' => $position]);
             }
         });
 
@@ -118,7 +125,7 @@ class LinkAdminController extends Controller
         return view('links.admin.form', [
             'link' => $link,
             'gruppen' => Group::active()->get(),
-            'categories' => Link::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
+            'categories' => Link::query()->withStudentAudience()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
         ]);
     }
 }

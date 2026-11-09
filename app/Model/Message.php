@@ -41,7 +41,8 @@ class Message extends Model implements HasMedia
 
     public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        // Auch Schülerkonten (nur in Schülerchats mit Lehrkräften, S-14)
+        return $this->belongsTo(User::class, 'sender_id')->withoutGlobalScope(\App\Model\Scopes\ExcludeStudentAccounts::class);
     }
 
     public function replyTo(): BelongsTo

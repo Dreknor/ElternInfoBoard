@@ -14,6 +14,7 @@ use App\Model\listen_termine;
 use App\Model\Poll;
 use App\Model\Poll_Votes;
 use App\Model\Post;
+use App\Model\Module;
 use App\Model\User;
 use App\Repositories\GroupsRepository;
 use App\Services\UserService;
@@ -180,7 +181,7 @@ class UserController extends Controller implements HasMiddleware
             }),
             'permissions' => Cache::remember('permissions', 60 * 5, function () {
                 return Permission::all();
-            }),
+            })->whereNotIn('name', Module::lockedPermissionNames())->values(),
             'roles' => $roles,
             // Kandidaten für die Familienverknüpfung: alle außer bisherigen Familienmitgliedern
             'users' => User::query()

@@ -89,7 +89,14 @@ class Conversation extends Model
      */
     public function scopeForUser(Builder $query, int $userId): Builder
     {
-        return $query->whereHas('users', fn ($q) => $q->where('users.id', $userId));
+        return $query->whereHas('users', fn ($q) => $q->where('users.id', $userId))
+            // Schülerchats (S-14) nur, solange Modul und Einstellung an sind
+            ->when(! \App\Services\Students\StudentMessenger::enabled(), fn ($q) => $q->where('type', '!=', \App\Services\Students\StudentMessenger::TYPE));
+    }
+
+    public function isStudentChat(): bool
+    {
+        return $this->type === \App\Services\Students\StudentMessenger::TYPE;
     }
 
     // ── Hilfsmethoden ────────────────────────────────────────────

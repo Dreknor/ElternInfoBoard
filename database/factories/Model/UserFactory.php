@@ -31,4 +31,17 @@ class UserFactory extends Factory
             'track_login' => $this->faker->boolean(),
         ];
     }
+
+    /**
+     * Schülerkonto: keine E-Mail, Login über Benutzername (docs/konzept-schuelerkonten.md §3).
+     */
+    public function student(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'account_type' => \App\Model\User::ACCOUNT_STUDENT,
+            'email' => null,
+            'username' => \Illuminate\Support\Str::lower(\Illuminate\Support\Str::slug($this->faker->unique()->firstName().' '.$this->faker->lastName(), '.')).$this->faker->unique()->numberBetween(1, 99999),
+            'email_verified_at' => null,
+        ]);
+    }
 }

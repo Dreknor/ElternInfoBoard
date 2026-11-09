@@ -29,6 +29,13 @@
                             <span class="md:hidden hidden sm:inline">Verein</span>
                         </a>
                     @endcan
+                    {{-- Schülerkonten: eigener Reiter, nur bei aktivem Modul (docs/konzept-schuelerkonten.md §1.1) --}}
+                    @if(\App\Support\StudentAccounts::enabled())
+                        <a href="{{ route('schuelerkonten.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-graduate"></i>
+                            <span class="hidden sm:inline">Schülerkonten</span>
+                        </a>
+                    @endif
                     @can('manage families')
                         <a href="{{ route('families.index') }}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-house-user"></i>

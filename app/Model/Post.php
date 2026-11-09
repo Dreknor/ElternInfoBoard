@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Model\Concerns\HasAudience;
 use App\Observers\PostObserver;
 use App\Traits\HasCommentsWithOptionalParent;
 use App\Traits\NotificationTrait;
@@ -37,12 +38,13 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
     use HasFactory;
     use HasRelationships;
     use InteractsWithMedia;
+    use HasAudience;
     use NotificationTrait;
     use \OwenIt\Auditing\Auditable;
     use Reactable;
     use SoftDeletes;
 
-    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'confidential', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header'];
+    protected $fillable = ['header', 'news', 'released', 'author', 'archiv_ab', 'type', 'reactable', 'external', 'confidential', 'published_wp_id', 'send_at', 'read_receipt', 'read_receipt_deadline', 'read_receipt_scope', 'no_header', 'zielgruppe'];
 
     protected array $cloneable_relations = ['groups', 'recipientUsers', 'rueckmeldung'];
 
@@ -61,6 +63,16 @@ class Post extends Model implements Auditable, HasMedia, ReactableInterface
         ];
     }
 
+
+    protected static function audienceManagePermission(): string
+    {
+        return 'edit posts';
+    }
+
+    protected static function audienceAuthorColumn(): ?string
+    {
+        return 'author';
+    }
 
     public static function cacheVersion(): int
     {

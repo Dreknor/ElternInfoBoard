@@ -21,6 +21,7 @@ return [
 
     'restricted' => [
         // 'Messenger',
+        'Schülerkonten',
     ],
 
     'unlocked' => array_values(array_filter(array_map(

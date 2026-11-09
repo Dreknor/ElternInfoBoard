@@ -34,7 +34,10 @@ class MediaAccess
 
     public static function canView(User $user, Media $media): bool
     {
-        $model = $media->model;
+        // Beiträge nur für Schüler blendet ParentAudienceScope aus – die Policy entscheidet selbst
+        $model = $media->model_type === (new Post)->getMorphClass()
+            ? Post::withStudentAudience()->find($media->model_id)
+            : $media->model;
 
         // Anhänge vertraulicher Beiträge: nur Autor und Empfänger, auch nicht mit „upload files“
         if ($model instanceof Post && $model->isHiddenFrom($user)) {

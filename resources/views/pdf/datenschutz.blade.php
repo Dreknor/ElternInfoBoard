@@ -244,7 +244,7 @@
         <tbody>
             @foreach($user->children_rel as $child)
                 <tr>
-                    <td>{{ $child->first_name }} {{ $child->last_name }}</td>
+                    <td>{{ $child->first_name }} {{ $child->last_name }}@if(\App\Support\StudentAccounts::enabled() && $child->studentAccount)<br><small>Schülerkonto: {{ $child->studentAccount->username }} ({{ $child->studentAccount->is_active ? 'aktiv' : 'gesperrt' }})</small>@endif</td>
                     <td>{{ $child->group?->name ?? '–' }}</td>
                     <td>
                         {{ $child->pivot->relationType()->label() }}:
